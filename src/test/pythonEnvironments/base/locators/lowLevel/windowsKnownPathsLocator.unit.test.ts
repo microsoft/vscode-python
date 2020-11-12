@@ -157,7 +157,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
     }
 
     suite('onChanged()', () => {
-        test('not triggered if not initialized', async () => {
+        test('not triggered if not activated', async () => {
             const locator = new WindowsKnownPathsLocator();
             let triggered: PythonEnvsChangedEvent | undefined;
 
@@ -212,7 +212,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
             assert.deepEqual(envs, expected);
         });
 
-        test('Python executables found (initialized)', async () => {
+        test('Python executables found (activated)', async () => {
             const expected: PythonEnvInfo[] = [
                 // On Windows we do not assume 2.7 for "python.exe".
                 createMinEnv('', '/x/y/z/python.exe'),
@@ -235,7 +235,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
                 '  python3.11.exe',
             ]);
             stubs.getInfo.resolvesArg(0);
-            await locator.initialize();
+            await locator.activate();
             const query: PythonLocatorQuery | undefined = undefined;
 
             const iterator = locator.iterEnvs(query);
@@ -244,7 +244,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
             assert.deepEqual(envs, expected);
         });
 
-        test('Python executables found (not initialized)', async () => {
+        test('Python executables found (not activated)', async () => {
             const expected: PythonEnvInfo[] = [
                 createMinEnv('2.7', '/x/y/z/python2.exe'),
                 createMinEnv('3.8', '/x/y/z/python3.8.exe'),
@@ -289,7 +289,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
                 '  python3.exe', // env1
                 '  python3.8.exe', // env2
             ]);
-            await locator.initialize();
+            await locator.activate();
 
             const resolved = await locator.resolveEnv(filename);
 
@@ -306,7 +306,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
                 '  python3.exe', // env1
                 '  python3.8.exe', // env2
             ]);
-            // Note that we do not call `locator.initialize()`.
+            // Note that we do not call `locator.activate()`.
 
             const resolved = await locator.resolveEnv(filename);
 
@@ -321,7 +321,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
                 '  python3.exe', // env1
                 '  python3.8.exe', // env2
             ]);
-            await locator.initialize();
+            await locator.activate();
 
             const resolved = await locator.resolveEnv(filename);
 
@@ -341,7 +341,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
                 '  python3.exe', // env1
                 '  python3.8.exe', // env2
             ]);
-            await locator.initialize();
+            await locator.activate();
 
             const resolved = await locator.resolveEnv(partialEnv);
 
@@ -358,7 +358,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
                 '  python3.exe', // env1
                 '  python3.8.exe', // env2
             ]);
-            await locator.initialize();
+            await locator.activate();
 
             const resolved = await locator.resolveEnv(partialEnv);
 
@@ -372,7 +372,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
                 '  python3.exe', // env1
                 '  python3.8.exe', // env2
             ]);
-            await locator.initialize();
+            await locator.activate();
 
             const resolved = await locator.resolveEnv('');
 
@@ -386,7 +386,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
                 '  python3.exe', // env1
                 '  python3.8.exe', // env2
             ]);
-            await locator.initialize();
+            await locator.activate();
 
             const resolved = await locator.resolveEnv({});
 
