@@ -277,7 +277,10 @@ class ComponentAdapter implements IComponentAdapter {
     }
 }
 
-export function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): void {
+export function registerLegacyDiscoveryForIOC(
+    serviceManager: IServiceManager,
+    envInfoService: IEnvironmentInfoService,
+): void {
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
@@ -359,10 +362,13 @@ export function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): 
     );
     serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
 
-    serviceManager.addSingletonInstance<IEnvironmentInfoService>(IEnvironmentInfoService, new EnvironmentInfoService());
+    serviceManager.addSingletonInstance<IEnvironmentInfoService>(IEnvironmentInfoService, envInfoService);
 }
 
-export function registerNewDiscoveryForIOC(serviceManager: IServiceManager, api:IPythonEnvironments): void {
+export function registerNewDiscoveryForIOC(
+    serviceManager: IServiceManager,
+    api:IPythonEnvironments,
+): void {
     serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, new ComponentAdapter(api));
 }
 
@@ -375,7 +381,9 @@ export function registerForIOC(
     serviceContainer: IServiceContainer,
     api:IPythonEnvironments,
 ): void{
-    registerLegacyDiscoveryForIOC(serviceManager);
+    const envInfoService = new EnvironmentInfoService();
+    envInfoService.activate();
+    registerLegacyDiscoveryForIOC(serviceManager, envInfoService);
     initializeExternalDependencies(serviceContainer);
     registerNewDiscoveryForIOC(serviceManager, api);
 }

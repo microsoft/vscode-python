@@ -45,13 +45,13 @@ async function getInitializedLocator(initialEnvs: PythonEnvInfo[]): Promise<[Sim
         resolve: null,
     });
     const locator = new CachingLocator(cache, subLocator);
-    await locator.initialize();
+    await locator.activate();
     return [subLocator, locator];
 }
 
 suite('Python envs locator - CachingLocator', () => {
-    suite('initialize', () => {
-        test('cache initialized', async () => {
+    suite('activate', () => {
+        test('cache activated', async () => {
             const loadDeferred = createDeferred<void>();
             const storeDeferred = createDeferred<void>();
             let storedEnvs: PythonEnvInfo[] | undefined;
@@ -77,7 +77,7 @@ suite('Python envs locator - CachingLocator', () => {
             });
             const locator = new CachingLocator(cache, subLocator);
 
-            locator.initialize().ignoreErrors(); // in the background
+            locator.activate().ignoreErrors(); // in the background
             await loadDeferred.promise; // This lets the load finish.
             const resultBefore = await getEnvs(locator.iterEnvs());
             subDeferred.resolve(); // This lets the refresh continue.
@@ -102,7 +102,7 @@ suite('Python envs locator - CachingLocator', () => {
 
             let changeEvent: PythonEnvsChangedEvent | undefined;
             locator.onChanged((e) => { changeEvent = e; });
-            await locator.initialize();
+            await locator.activate();
 
             assert.deepEqual(changeEvent, expected);
         });

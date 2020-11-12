@@ -9,9 +9,7 @@ import {
     PythonEnvInfo, PythonEnvKind, PythonVersion, UNKNOWN_PYTHON_VERSION,
 } from '../../../base/info';
 import { parseVersion } from '../../../base/info/pythonVersion';
-import {
-    IDisposableLocator, IPythonEnvsIterator, Locator,
-} from '../../../base/locator';
+import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getFileInfo } from '../../../common/externalDependencies';
 import { getInterpreterDataFromRegistry, IRegistryInterpreterData, readRegistryKeys } from '../../../common/windowsUtils';
 
@@ -45,7 +43,7 @@ function getArchitecture(data:IRegistryInterpreterData) {
     return arch;
 }
 
-class WindowsRegistryLocator extends Locator {
+export class WindowsRegistryLocator extends Locator {
     private kind:PythonEnvKind = PythonEnvKind.OtherGlobal;
 
     public iterEnvs(): IPythonEnvsIterator {
@@ -93,9 +91,4 @@ class WindowsRegistryLocator extends Locator {
             defaultDisplayName: data.displayName,
         };
     }
-}
-
-export function createWindowsRegistryLocator(): Promise<IDisposableLocator> {
-    const locator = new WindowsRegistryLocator();
-    return Promise.resolve(locator);
 }

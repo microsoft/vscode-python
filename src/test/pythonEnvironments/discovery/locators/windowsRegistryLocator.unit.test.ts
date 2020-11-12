@@ -12,10 +12,9 @@ import {
     PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION,
 } from '../../../../client/pythonEnvironments/base/info';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
-import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as winutils from '../../../../client/pythonEnvironments/common/windowsUtils';
-import { createWindowsRegistryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryLocator';
+import { WindowsRegistryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
@@ -23,7 +22,7 @@ suite('Windows Registry', () => {
     let stubReadRegistryValues: sinon.SinonStub;
     let stubReadRegistryKeys: sinon.SinonStub;
     let stubGetInterpreterDataFromRegistry: sinon.SinonStub;
-    let locator:IDisposableLocator;
+    let locator: WindowsRegistryLocator;
 
     const regTestRoot = path.join(TEST_LAYOUT_ROOT, 'winreg');
 
@@ -305,7 +304,7 @@ suite('Windows Registry', () => {
         stubReadRegistryKeys.callsFake(fakeRegistryKeys);
         stubGetInterpreterDataFromRegistry.callsFake(fakeGetInterpreterDataFromRegistry);
 
-        locator = await createWindowsRegistryLocator();
+        locator = new WindowsRegistryLocator();
     });
 
     teardown(() => {

@@ -1,17 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as platformUtils from '../../../../client/common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { buildEnvInfo } from '../../../../client/pythonEnvironments/base/info/env';
-import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as fileUtils from '../../../../client/pythonEnvironments/common/externalDependencies';
 import {
-    createPyenvLocator,
-    IPyenvVersionStrings, isPyenvEnvironment, parsePyenvVersion,
+    IPyenvVersionStrings,
+    isPyenvEnvironment,
+    parsePyenvVersion,
+    PyenvLocator,
 } from '../../../../client/pythonEnvironments/discovery/locators/services/pyenvLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
@@ -201,7 +203,7 @@ suite('Pyenv Versions Parser Test', () => {
 suite('Pyenv Locator Tests', () => {
     let getEnvVariableStub: sinon.SinonStub;
     let getOsTypeStub: sinon.SinonStub;
-    let locator: IDisposableLocator;
+    let locator: PyenvLocator;
 
     const testPyenvRoot = path.join(TEST_LAYOUT_ROOT, 'pyenvhome', '.pyenv');
     const testPyenvVersionsDir = path.join(testPyenvRoot, 'versions');
@@ -213,7 +215,7 @@ suite('Pyenv Locator Tests', () => {
         getOsTypeStub = sinon.stub(platformUtils, 'getOSType');
         getOsTypeStub.returns(platformUtils.OSType.Linux);
 
-        locator = await createPyenvLocator();
+        locator = new PyenvLocator();
     });
 
     teardown(() => {

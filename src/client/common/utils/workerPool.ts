@@ -243,8 +243,6 @@ export function createWorkerPool<T, R>(
     workerFunc: WorkFunc<T, R>,
     numWorkers: number = 2,
     name: string = 'Worker'
-): IWorkerPool<T, R> {
-    const pool = new WorkerPool<T, R>(workerFunc, numWorkers, name);
-    pool.start();
-    return pool;
+): WorkerPool<T, R> {
+    return new WorkerPool<T, R>(workerFunc, numWorkers, name);
 }

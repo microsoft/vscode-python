@@ -2,70 +2,59 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-import * as sinon from 'sinon';
 import { PythonEnvInfoCache } from '../../../client/pythonEnvironments/base/envsCache';
 import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
-import * as externalDependencies from '../../../client/pythonEnvironments/common/externalDependencies';
+
+const allEnvsComplete = () => true;
+
+const envInfoArray = [
+    {
+        kind: PythonEnvKind.Conda, executable: { filename: 'my-conda-env' },
+    },
+    {
+        kind: PythonEnvKind.Venv, executable: { filename: 'my-venv-env' },
+    },
+    {
+        kind: PythonEnvKind.Pyenv, executable: { filename: 'my-pyenv-env' },
+    },
+] as PythonEnvInfo[];
 
 suite('Environment Info cache', () => {
-    let getGlobalPersistentStoreStub: sinon.SinonStub;
+    let loadedValues: PythonEnvInfo[] | undefined;
     let updatedValues: PythonEnvInfo[] | undefined;
 
-    const allEnvsComplete = () => true;
-    const envInfoArray = [
-        {
-            kind: PythonEnvKind.Conda, executable: { filename: 'my-conda-env' },
-        },
-        {
-            kind: PythonEnvKind.Venv, executable: { filename: 'my-venv-env' },
-        },
-        {
-            kind: PythonEnvKind.Pyenv, executable: { filename: 'my-pyenv-env' },
-        },
-    ] as PythonEnvInfo[];
-
-    setup(() => {
-        getGlobalPersistentStoreStub = sinon.stub(externalDependencies, 'getGlobalPersistentStore');
-        getGlobalPersistentStoreStub.returns({
-            get() { return envInfoArray; },
-            set(envs: PythonEnvInfo[]) {
+    function getGlobalPersistentStore() {
+        return {
+            load: () => {
+                const values = loadedValues;
+                loadedValues = undefined;
+                return Promise.resolve(values);
+            },
+            store: (envs: PythonEnvInfo[]) => {
                 updatedValues = envs;
                 return Promise.resolve();
             },
-        });
-    });
-
-    function getGlobalPersistentStore() {
-        // It may look like we are making this call directly, but note
-        // that in `setup()` we have already stubbed the function out.
-        // We take this approach so the tests more closely match how
-        // `PythonEnvInfoCache` will actually be used in the VS Code
-        // extension.
-        const store = externalDependencies.getGlobalPersistentStore<PythonEnvInfo[]>('PYTHON_ENV_INFO_CACHE');
-        return {
-            load: async () => store.get(),
-            store: (envs: PythonEnvInfo[]) => store.set(envs),
         };
     }
 
-    teardown(() => {
-        getGlobalPersistentStoreStub.restore();
+    setup(() => {
+        loadedValues = envInfoArray;
         updatedValues = undefined;
     });
 
-    test('`initialize` reads from persistent storage', async () => {
+    test('`activate` reads from persistent storage', async () => {
         const envsCache = new PythonEnvInfoCache(allEnvsComplete, getGlobalPersistentStore);
 
-        await envsCache.initialize();
+        await envsCache.activate();
 
-        assert.ok(getGlobalPersistentStoreStub.calledOnce);
+        assert.equal(loadedValues, undefined);
     });
 
     test('The in-memory env info array is undefined if there is no value in persistent storage when initializing the cache', async () => {
         const envsCache = new PythonEnvInfoCache(allEnvsComplete, getGlobalPersistentStore);
 
-        getGlobalPersistentStoreStub.returns({ get() { return undefined; } });
-        await envsCache.initialize();
+        loadedValues = undefined;
+        await envsCache.activate();
         const result = envsCache.getAllEnvs();
 
         assert.strictEqual(result, undefined);
@@ -74,7 +63,7 @@ suite('Environment Info cache', () => {
     test('`getAllEnvs` should return a deep copy of the environments currently in memory', async () => {
         const envsCache = new PythonEnvInfoCache(allEnvsComplete, getGlobalPersistentStore);
 
-        await envsCache.initialize();
+        await envsCache.activate();
         const envs = envsCache.getAllEnvs()!;
 
         envs[0].name = 'some-other-name';
@@ -104,7 +93,7 @@ suite('Environment Info cache', () => {
         const env:PythonEnvInfo = { executable: { filename: 'my-venv-env' } } as unknown as PythonEnvInfo;
         const envsCache = new PythonEnvInfoCache(allEnvsComplete, getGlobalPersistentStore);
 
-        await envsCache.initialize();
+        await envsCache.activate();
 
         const result = envsCache.filterEnvs(env);
 
@@ -132,14 +121,14 @@ suite('Environment Info cache', () => {
         const env:PythonEnvInfo = { executable: { filename: 'my-nonexistent-env' } } as unknown as PythonEnvInfo;
         const envsCache = new PythonEnvInfoCache(allEnvsComplete, getGlobalPersistentStore);
 
-        await envsCache.initialize();
+        await envsCache.activate();
 
         const result = envsCache.filterEnvs(env);
 
         assert.deepStrictEqual(result, []);
     });
 
-    test('`filterEnvs` should return undefined if the cache hasn\'t been initialized', () => {
+    test('`filterEnvs` should return undefined if the cache hasn\'t been activated', () => {
         const env:PythonEnvInfo = { executable: { filename: 'my-nonexistent-env' } } as unknown as PythonEnvInfo;
         const envsCache = new PythonEnvInfoCache(allEnvsComplete, getGlobalPersistentStore);
 
@@ -165,7 +154,7 @@ suite('Environment Info cache', () => {
             getGlobalPersistentStore,
         );
 
-        await envsCache.initialize();
+        await envsCache.activate();
         envsCache.setAllEnvs(updatedEnvInfoArray);
         await envsCache.flush();
 
@@ -189,7 +178,7 @@ suite('Environment Info cache', () => {
             getGlobalPersistentStore,
         );
 
-        await envsCache.initialize();
+        await envsCache.activate();
         await envsCache.flush();
 
         assert.strictEqual(updatedValues, undefined);

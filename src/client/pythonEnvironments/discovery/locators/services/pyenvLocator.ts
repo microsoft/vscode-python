@@ -9,7 +9,7 @@ import {
     PythonEnvInfo, PythonEnvKind,
 } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
-import { IDisposableLocator, IPythonEnvsIterator, Locator } from '../../../base/locator';
+import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import {
     getEnvironmentDirFromPath, getInterpreterPathFromDir, getPythonVersionFromPath,
 } from '../../../common/commonUtils';
@@ -293,7 +293,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
     }
 }
 
-class PyenvLocator extends Locator {
+export class PyenvLocator extends Locator {
     // eslint-disable-next-line class-methods-use-this
     public iterEnvs(): IPythonEnvsIterator {
         return getPyenvEnvironments();
@@ -327,9 +327,4 @@ class PyenvLocator extends Locator {
         }
         return undefined;
     }
-}
-
-export function createPyenvLocator(): Promise<IDisposableLocator> {
-    const locator = new PyenvLocator();
-    return Promise.resolve(locator);
 }

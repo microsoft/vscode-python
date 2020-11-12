@@ -35,7 +35,7 @@ import { traceError } from './common/logger';
 import { IAsyncDisposableRegistry, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
-import { activateComponents } from './extensionActivation';
+import { activateComponents, activateLegacy } from './extensionActivation';
 import { initializeCommon, initializeComponents, initializeGlobals } from './extensionInit';
 import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
@@ -99,11 +99,21 @@ async function activateUnsafe(
     //===============================================
     // activation starts here
 
-    const [serviceManager, serviceContainer] = initializeGlobals(context);
-    activatedServiceContainer = serviceContainer;
-    initializeCommon(context, serviceManager, serviceContainer);
-    await initializeComponents(context, serviceManager, serviceContainer);
-    const { activationPromise } = await activateComponents(context, serviceManager, serviceContainer);
+    // First we initialize.
+    const ext = initializeGlobals(context);
+    activatedServiceContainer = ext.serviceContainer;
+    initializeCommon(ext);
+    const components = initializeComponents(ext);
+
+    // Then we finish activating.
+    const componentsActivated = await activateComponents(ext, components);
+    const legacyActivated = await activateLegacy(ext);
+    const activationPromise = (async () => {
+        await Promise.all([
+            ...componentsActivated.filter((r) => !!r.finished).map((r) => r.finished!),
+            legacyActivated.finished!
+        ]);
+    })();
 
     //===============================================
     // activation ends here
@@ -111,8 +121,8 @@ async function activateUnsafe(
     startupDurations.endActivateTime = startupStopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    const api = buildApi(activationPromise, serviceManager, serviceContainer);
-    return [api, activationPromise, serviceContainer];
+    const api = buildApi(activationPromise, ext.serviceManager, ext.serviceContainer);
+    return [api, activationPromise, ext.serviceContainer];
 }
 
 // tslint:disable-next-line:no-any

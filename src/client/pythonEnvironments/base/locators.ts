@@ -2,11 +2,10 @@
 // Licensed under the MIT License.
 
 import { EventEmitter } from 'vscode';
-import { traceVerbose } from '../../common/logger';
 import { chain } from '../../common/utils/async';
 import { PythonEnvInfo } from './info';
 import {
-    IDisposableLocator,
+    ILocator,
     IPythonEnvsIterator,
     PythonEnvUpdatedEvent,
     PythonLocatorQuery,
@@ -48,10 +47,10 @@ export function combineIterators(iterators: IPythonEnvsIterator[]): IPythonEnvsI
  *
  * Events and iterator results are combined.
  */
-export class Locators extends PythonEnvsWatchers implements IDisposableLocator {
+export class Locators extends PythonEnvsWatchers implements ILocator {
     constructor(
         // The locators will be watched as well as iterated.
-        private readonly locators: ReadonlyArray<IDisposableLocator>,
+        private readonly locators: ReadonlyArray<ILocator>,
     ) {
         super(locators);
     }
@@ -69,15 +68,5 @@ export class Locators extends PythonEnvsWatchers implements IDisposableLocator {
             }
         }
         return undefined;
-    }
-
-    public dispose(): void {
-        this.locators.forEach((locator) => {
-            try {
-                locator.dispose();
-            } catch (ex) {
-                traceVerbose(`Dispose failed for ${typeof locator} locator:`, ex);
-            }
-        });
     }
 }

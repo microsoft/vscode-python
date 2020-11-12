@@ -2,50 +2,72 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { IDisposableRegistry } from '../common/types';
 import { getOSType, OSType } from '../common/utils/platform';
-import { IServiceContainer, IServiceManager } from '../ioc/types';
+import {
+    Component,
+    ExtensionState,
+    getGlobalStorage,
+    IMaybeActive,
+} from '../components';
 import { PythonEnvInfoCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
 import {
-    IDisposableLocator, IPythonEnvsIterator, PythonLocatorQuery,
+    ILocator, IPythonEnvsIterator, PythonLocatorQuery,
 } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsChangedEvent } from './base/watcher';
-import { getGlobalPersistentStore, initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
+import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
 import { ExtensionLocators, WorkspaceLocators } from './discovery/locators';
-import { createGlobalVirtualEnvironmentLocator } from './discovery/locators/services/globalVirtualEnvronmentLocator';
-import { createPosixKnownPathsLocator } from './discovery/locators/services/posixKnownPathsLocator';
-import { createPyenvLocator } from './discovery/locators/services/pyenvLocator';
-import { createWindowsRegistryLocator } from './discovery/locators/services/windowsRegistryLocator';
-import { createWindowsStoreLocator } from './discovery/locators/services/windowsStoreLocator';
+import { GlobalVirtualEnvironmentLocator } from './discovery/locators/services/globalVirtualEnvronmentLocator';
+import { PosixKnownPathsLocator } from './discovery/locators/services/posixKnownPathsLocator';
+import { PyenvLocator } from './discovery/locators/services/pyenvLocator';
+import { WindowsRegistryLocator } from './discovery/locators/services/windowsRegistryLocator';
+import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreLocator';
 import { EnvironmentInfoService } from './info/environmentInfoService';
 import { registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
 
 /**
- * Activate the Python environments component (during extension activation).'
+ * Set up the Python environments component (during extension activation).'
  */
-export async function activate(serviceManager: IServiceManager, serviceContainer: IServiceContainer): Promise<void> {
-    registerLegacyDiscoveryForIOC(serviceManager);
-    initializeLegacyExternalDependencies(serviceContainer);
+export function initialize(ext: ExtensionState): Component {
+    const component = new Component('Python environments', ext);
 
-    const api = await createAPI();
+    // Initialize the component.
+    const envInfoService = new EnvironmentInfoService();
+    component.addInitialized(envInfoService);
+    const api = createAPI(component, envInfoService);
 
-    const disposables: IDisposableRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-    disposables.push(api);
+    component.addActivation(async () => {
+        // Deal with legacy IOC.
+        registerLegacyDiscoveryForIOC(
+            ext.serviceManager,
+            envInfoService,
+        );
+        initializeLegacyExternalDependencies(
+            ext.serviceContainer,
+        );
+        registerNewDiscoveryForIOC(
+            ext.serviceManager,
+            api,
+        );
+        await Promise.resolve();
+    });
 
-    registerNewDiscoveryForIOC(serviceManager, api);
+    return component;
 }
+
+// The activation func we return from `initialize()` is sufficient
+// so we do not have an `activate()` func for this component.
 
 /**
  * The public API for the Python environments component.
  *
  * Note that this is composed of sub-components.
  */
-export class PythonEnvironments implements IDisposableLocator {
+export class PythonEnvironments implements ILocator {
     constructor(
         // These are the sub-components the full component is composed of:
-        private readonly locators: IDisposableLocator,
+        private readonly locators: ILocator,
     ) {}
 
     public get onChanged(): vscode.Event<PythonEnvsChangedEvent> {
@@ -59,10 +81,6 @@ export class PythonEnvironments implements IDisposableLocator {
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         return this.locators.resolveEnv(env);
     }
-
-    public dispose():void{
-        this.locators.dispose();
-    }
 }
 
 /**
@@ -70,65 +88,50 @@ export class PythonEnvironments implements IDisposableLocator {
  *
  * An activation function is also returned, which should be called soon.
  */
-export async function createAPI(): Promise<PythonEnvironments> {
-    const locators = await initLocators();
-
-    const envInfoService = new EnvironmentInfoService();
-    const envsCache = new PythonEnvInfoCache(
-        (env: PythonEnvInfo) => envInfoService.isInfoProvided(env.executable.filename), // "isComplete"
-        () => {
-            const storage = getGlobalPersistentStore<PythonEnvInfo[]>('PYTHON_ENV_INFO_CACHE');
-            return {
-                load: async () => storage.get(),
-                store: async (e) => storage.set(e),
-            };
-        },
+export function createAPI(
+    component: Component,
+    envInfoService: EnvironmentInfoService,
+): PythonEnvironments {
+    const locators = new ExtensionLocators(
+        initNonWorkspaceLocators(component),
+        initWorkspaceLocators(component),
     );
-    const cachingLocator = new CachingLocator(envsCache, locators);
 
-    envsCache.initialize().ignoreErrors();
-    cachingLocator.initialize().ignoreErrors();
-    // Any other activation needed for the API will go here later.
+    const locatorStack = initLocatorStack(
+        locators,
+        component,
+        envInfoService,
+    );
 
-    return new PythonEnvironments(cachingLocator);
+    // Any other init/activation needed for the API will go here later.
+
+    return new PythonEnvironments(locatorStack);
 }
 
-async function initLocators(): Promise<ExtensionLocators> {
-    // We will add locators in similar order
+interface IMaybeActiveLocator extends IMaybeActive, ILocator {}
+
+function initNonWorkspaceLocators(component: Component): ILocator[] {
+    // We put locators here in similar order
     // to PythonInterpreterLocatorService.getLocators().
-    const nonWorkspaceLocators = await initNonWorkspaceLocators();
-
-    const workspaceLocators = new WorkspaceLocators([
-        // Add an ILocator factory func here for each kind of workspace-rooted locator.
-    ]);
-
-    // Any non-workspace locator activation goes here.
-    workspaceLocators.activate(getWorkspaceFolders());
-
-    return new ExtensionLocators(nonWorkspaceLocators, workspaceLocators);
-}
-
-async function initNonWorkspaceLocators(): Promise<IDisposableLocator[]> {
-    const locatorFactories:(()=> Promise<IDisposableLocator>)[] = [
-        // Common locator factory goes here.
-        createGlobalVirtualEnvironmentLocator,
-        createPyenvLocator,
-    ];
-
+    let locators: IMaybeActiveLocator[];
     if (getOSType() === OSType.Windows) {
         // Windows specific locators go here
-        locatorFactories.push(
-            createWindowsRegistryLocator,
-            createWindowsStoreLocator,
-        );
+        locators = [
+            new GlobalVirtualEnvironmentLocator(),
+            new PyenvLocator(),
+            new WindowsRegistryLocator(),
+            new WindowsStoreLocator(),
+        ];
     } else {
         // Linux/Mac locators go here
-        locatorFactories.push(
-            createPosixKnownPathsLocator,
-        );
+        locators = [
+            new GlobalVirtualEnvironmentLocator(),
+            new PyenvLocator(),
+            new PosixKnownPathsLocator(),
+        ];
     }
-
-    return Promise.all(locatorFactories.map((create) => create()));
+    locators.forEach((loc) => component.addInitialized(loc));
+    return locators;
 }
 
 function getWorkspaceFolders() {
@@ -148,4 +151,49 @@ function getWorkspaceFolders() {
         onAdded: rootAdded.event,
         onRemoved: rootRemoved.event,
     };
+}
+
+function initWorkspaceLocators(component: Component): WorkspaceLocators {
+    const locators = new WorkspaceLocators(
+        getWorkspaceFolders,
+        [
+            // Add an ILocator factory func here for each kind of workspace-rooted locator.
+        ],
+    );
+    component.addInitialized(locators);
+    return locators;
+}
+
+function initLocatorStack(
+    locators: ILocator,
+    component: Component,
+    envInfoService: EnvironmentInfoService,
+): ILocator {
+    // Create the cache used by CachingLocator.
+    const envsCache = new PythonEnvInfoCache(
+        (env: PythonEnvInfo) => envInfoService.isInfoProvided(env.executable.filename), // "isComplete"
+        () => {
+            const storage = getGlobalStorage<PythonEnvInfo[]>(
+                component.ext.context,
+                'PYTHON_ENV_INFO_CACHE',
+            );
+            return {
+                load: async () => storage.get(),
+                store: async (e) => storage.set(e),
+            };
+        },
+    );
+    component.addActivation(() => {
+        // We don't need to block extension activation for this.
+        envsCache.activate().ignoreErrors();
+    });
+
+    // Create the locator stack.
+    const cachingLocator = new CachingLocator(envsCache, locators);
+    component.addActivation(() => {
+        // We don't need to block extension activation for this.
+        cachingLocator.activate().ignoreErrors();
+    });
+
+    return cachingLocator;
 }
