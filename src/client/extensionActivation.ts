@@ -68,7 +68,7 @@ export async function activateComponents(
     ext: ExtensionState,
     components: IComponent[]
 ): Promise<ActivationResult[]> {
-    const componentFuncs = components.map((c) => c.activate);
+    const componentFuncs = components.map((c) => () => c.activate());
     const extraFuncs: ActivationFunc[] = [
         // In cases where the component activator cannot be returned
         // from the initializer, a separate activation func can be
