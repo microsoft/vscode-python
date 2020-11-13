@@ -6,13 +6,13 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { ImportMock } from 'ts-mock-imports';
-import * as platformUtils from '../../../../client/common/utils/platform';
-import { PythonReleaseLevel, PythonVersion } from '../../../../client/pythonEnvironments/base/info';
-import * as fileUtils from '../../../../client/pythonEnvironments/common/externalDependencies';
+import * as platformUtils from '../../../../../client/common/utils/platform';
+import { PythonReleaseLevel, PythonVersion } from '../../../../../client/pythonEnvironments/base/info';
+import * as fileUtils from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import {
     getPythonVersionFromVenv, isVenvEnvironment, isVirtualenvEnvironment, isVirtualenvwrapperEnvironment,
-} from '../../../../client/pythonEnvironments/discovery/locators/services/virtualEnvironmentIdentifier';
-import { TEST_DATA_ROOT, TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
+} from '../../../../../client/pythonEnvironments/base/locators/lowLevel/virtualEnvironmentIdentifier';
+import { TEST_DATA_ROOT, TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 
 suite('isVenvEnvironment Tests', () => {
     const pyvenvCfg = 'pyvenv.cfg';

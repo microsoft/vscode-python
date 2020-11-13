@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { isCondaEnvironment } from '../discovery/locators/services/condaLocator';
-import { isPipenvEnvironment } from '../discovery/locators/services/pipEnvHelper';
-import { isPyenvEnvironment } from '../discovery/locators/services/pyenvLocator';
-import { isVenvEnvironment, isVirtualenvEnvironment, isVirtualenvwrapperEnvironment } from '../discovery/locators/services/virtualEnvironmentIdentifier';
-import { isWindowsStoreEnvironment } from '../discovery/locators/services/windowsStoreLocator';
+import { isCondaEnvironment } from '../base/locators/lowLevel/condaLocator';
+import { isPipenvEnvironment } from '../base/locators/lowLevel/pipEnvHelper';
+import { isPyenvEnvironment } from '../base/locators/lowLevel/pyenvLocator';
+import { isVenvEnvironment, isVirtualenvEnvironment, isVirtualenvwrapperEnvironment } from '../base/locators/lowLevel/virtualEnvironmentIdentifier';
+import { isWindowsStoreEnvironment } from '../base/locators/lowLevel/windowsStoreLocator';
 import { EnvironmentType } from '../info';
 
 /**

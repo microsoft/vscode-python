@@ -4,13 +4,13 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as platformUtils from '../../../../client/common/utils/platform';
-import * as fileUtils from '../../../../client/pythonEnvironments/common/externalDependencies';
+import * as platformUtils from '../../../../../client/common/utils/platform';
+import * as fileUtils from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import {
     IPyenvVersionStrings,
     isPyenvEnvironment,
     parsePyenvVersion,
-} from '../../../../client/pythonEnvironments/discovery/locators/services/pyenvLocator';
+} from '../../../../../client/pythonEnvironments/base/locators/lowLevel/pyenvLocator';
 
 suite('Pyenv Identifier Tests', () => {
     const home = platformUtils.getUserHomeDir() || '';

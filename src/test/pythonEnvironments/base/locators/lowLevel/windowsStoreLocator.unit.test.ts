@@ -4,21 +4,21 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as fsWatcher from '../../../../client/common/platform/fileSystemWatcher';
-import { ExecutionResult } from '../../../../client/common/process/types';
-import * as platformApis from '../../../../client/common/utils/platform';
+import * as fsWatcher from '../../../../../client/common/platform/fileSystemWatcher';
+import { ExecutionResult } from '../../../../../client/common/process/types';
+import * as platformApis from '../../../../../client/common/utils/platform';
 import {
     PythonEnvInfo,
     PythonEnvKind,
     PythonReleaseLevel,
     PythonVersion,
-} from '../../../../client/pythonEnvironments/base/info';
-import { getEmptyVersion, parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
-import * as externalDep from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { getWindowsStorePythonExes, WindowsStoreLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
-import { InterpreterInformation } from '../../../../client/pythonEnvironments/info/environmentInfoService';
-import { getEnvs } from '../../base/common';
-import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
+} from '../../../../../client/pythonEnvironments/base/info';
+import { getEmptyVersion, parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
+import * as externalDep from '../../../../../client/pythonEnvironments/common/externalDependencies';
+import { getWindowsStorePythonExes, WindowsStoreLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsStoreLocator';
+import { InterpreterInformation } from '../../../../../client/pythonEnvironments/info/environmentInfoService';
+import { getEnvs } from '../../../base/common';
+import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
 suite('Windows Store', () => {

@@ -4,14 +4,14 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as fsWatcher from '../../../../client/common/platform/fileSystemWatcher';
-import * as platformUtils from '../../../../client/common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { getEmptyVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
-import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
-import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { GlobalVirtualEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvronmentLocator';
-import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
+import * as fsWatcher from '../../../../../client/common/platform/fileSystemWatcher';
+import * as platformUtils from '../../../../../client/common/utils/platform';
+import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { getEmptyVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
+import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
+import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
+import { GlobalVirtualEnvironmentLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/globalVirtualEnvronmentLocator';
+import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
 suite('GlobalVirtualEnvironment Locator', () => {

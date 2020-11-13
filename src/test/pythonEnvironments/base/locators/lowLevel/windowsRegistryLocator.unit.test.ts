@@ -7,18 +7,18 @@ import * as sinon from 'sinon';
 import {
     HKCU, HKLM, Options, REG_SZ,
 } from 'winreg';
-import { Architecture } from '../../../../client/common/utils/platform';
+import { Architecture } from '../../../../../client/common/utils/platform';
 import {
     PythonEnvInfo,
     PythonEnvKind,
     PythonReleaseLevel,
     PythonVersion,
-} from '../../../../client/pythonEnvironments/base/info';
-import { getEmptyVersion, parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
-import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
-import * as winutils from '../../../../client/pythonEnvironments/common/windowsUtils';
-import { WindowsRegistryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryLocator';
-import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
+} from '../../../../../client/pythonEnvironments/base/info';
+import { getEmptyVersion, parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
+import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
+import * as winutils from '../../../../../client/pythonEnvironments/common/windowsUtils';
+import { WindowsRegistryLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsRegistryLocator';
+import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
 suite('Windows Registry', () => {

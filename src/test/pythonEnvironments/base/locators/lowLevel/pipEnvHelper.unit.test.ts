@@ -1,9 +1,9 @@
 import * as assert from 'assert';
 import * as pathModule from 'path';
 import * as sinon from 'sinon';
-import * as platformApis from '../../../../client/common/utils/platform';
-import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { _getAssociatedPipfile, isPipenvEnvironment, isPipenvEnvironmentRelatedToFolder } from '../../../../client/pythonEnvironments/discovery/locators/services/pipEnvHelper';
+import * as platformApis from '../../../../../client/common/utils/platform';
+import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
+import { _getAssociatedPipfile, isPipenvEnvironment, isPipenvEnvironmentRelatedToFolder } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/pipEnvHelper';
 
 const path = platformApis.getOSType() === platformApis.OSType.Windows ? pathModule.win32 : pathModule.posix;
 

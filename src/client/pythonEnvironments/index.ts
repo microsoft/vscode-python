@@ -24,11 +24,11 @@ import { WindowsKnownPathsLocator } from './base/locators/lowLevel/windowsKnownP
 import { PythonEnvsChangedEvent } from './base/watcher';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
 import { ExtensionLocators, WorkspaceLocators } from './discovery/locators';
-import { GlobalVirtualEnvironmentLocator } from './discovery/locators/services/globalVirtualEnvronmentLocator';
-import { PosixKnownPathsLocator } from './discovery/locators/services/posixKnownPathsLocator';
-import { PyenvLocator } from './discovery/locators/services/pyenvLocator';
-import { WindowsRegistryLocator } from './discovery/locators/services/windowsRegistryLocator';
-import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreLocator';
+import { GlobalVirtualEnvironmentLocator } from './base/locators/lowLevel/globalVirtualEnvronmentLocator';
+import { PosixKnownPathsLocator } from './base/locators/lowLevel/posixKnownPathsLocator';
+import { PyenvLocator } from './base/locators/lowLevel/pyenvLocator';
+import { WindowsRegistryLocator } from './base/locators/lowLevel/windowsRegistryLocator';
+import { WindowsStoreLocator } from './base/locators/lowLevel/windowsStoreLocator';
 import { EnvironmentInfoService } from './info/environmentInfoService';
 import { registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
 

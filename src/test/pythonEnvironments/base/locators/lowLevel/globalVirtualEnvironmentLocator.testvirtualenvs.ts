@@ -4,14 +4,14 @@
 // eslint-disable-next-line max-classes-per-file
 import { assert } from 'chai';
 import * as path from 'path';
-import { FileChangeType } from '../../../../client/common/platform/fileSystemWatcher';
-import { createDeferred, Deferred, sleep } from '../../../../client/common/utils/async';
-import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
-import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
-import { GlobalVirtualEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvronmentLocator';
-import { deleteFiles, PYTHON_PATH } from '../../../common';
-import { TEST_TIMEOUT } from '../../../constants';
-import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
+import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
+import { createDeferred, Deferred, sleep } from '../../../../../client/common/utils/async';
+import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
+import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
+import { GlobalVirtualEnvironmentLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/globalVirtualEnvronmentLocator';
+import { deleteFiles, PYTHON_PATH } from '../../../../common';
+import { TEST_TIMEOUT } from '../../../../constants';
+import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { run } from './envTestUtils';
 
 const testVirtualHomeDir = path.join(TEST_LAYOUT_ROOT, 'virtualhome');

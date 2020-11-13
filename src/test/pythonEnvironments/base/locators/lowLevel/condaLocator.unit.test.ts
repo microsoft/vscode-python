@@ -4,10 +4,10 @@ import * as assert from 'assert';
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { PythonReleaseLevel, PythonVersion } from '../../../../client/pythonEnvironments/base/info';
-import * as externalDeps from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { getPythonVersionFromConda } from '../../../../client/pythonEnvironments/discovery/locators/services/condaLocator';
-import { TEST_DATA_ROOT } from '../../common/commonTestConstants';
+import { PythonReleaseLevel, PythonVersion } from '../../../../../client/pythonEnvironments/base/info';
+import * as externalDeps from '../../../../../client/pythonEnvironments/common/externalDependencies';
+import { getPythonVersionFromConda } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/condaLocator';
+import { TEST_DATA_ROOT } from '../../../common/commonTestConstants';
 
 suite('Conda Python Version Parser Tests', () => {
     let readFileStub: sinon.SinonStub;

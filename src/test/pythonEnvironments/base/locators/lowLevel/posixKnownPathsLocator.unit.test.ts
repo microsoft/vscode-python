@@ -3,16 +3,16 @@
 
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as executablesAPI from '../../../../client/common/utils/exec';
-import { Architecture } from '../../../../client/common/utils/platform';
+import * as executablesAPI from '../../../../../client/common/utils/exec';
+import { Architecture } from '../../../../../client/common/utils/platform';
 import {
     PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion,
-} from '../../../../client/pythonEnvironments/base/info';
-import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
-import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
-import { PosixKnownPathsLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/posixKnownPathsLocator';
-import { InterpreterInformation } from '../../../../client/pythonEnvironments/info/environmentInfoService';
-import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
+} from '../../../../../client/pythonEnvironments/base/info';
+import { parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
+import { PosixKnownPathsLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/posixKnownPathsLocator';
+import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
+import { InterpreterInformation } from '../../../../../client/pythonEnvironments/info/environmentInfoService';
+import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
 suite('Posix Known Path Locator', () => {

@@ -4,16 +4,16 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { traceWarning } from '../../../../client/common/logger';
-import { FileChangeType } from '../../../../client/common/platform/fileSystemWatcher';
-import { createDeferred, Deferred, sleep } from '../../../../client/common/utils/async';
-import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
-import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
-import { arePathsSame } from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { WindowsStoreLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
-import { TEST_TIMEOUT } from '../../../constants';
-import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
+import { traceWarning } from '../../../../../client/common/logger';
+import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
+import { createDeferred, Deferred, sleep } from '../../../../../client/common/utils/async';
+import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
+import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
+import { arePathsSame } from '../../../../../client/pythonEnvironments/common/externalDependencies';
+import { WindowsStoreLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsStoreLocator';
+import { TEST_TIMEOUT } from '../../../../constants';
+import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 
 class WindowsStoreEnvs {
     private executables: string[] = [];

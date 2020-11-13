@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import { exec } from 'child_process';
 import { zip } from 'lodash';
 import { promisify } from 'util';
-import { PythonEnvInfo } from '../../../../client/pythonEnvironments/base/info';
+import { PythonEnvInfo } from '../../../../../client/pythonEnvironments/base/info';
 
 const execAsync = promisify(exec);
 export async function run(argv: string[], options?: { cwd?: string; env?: NodeJS.ProcessEnv }): Promise<void> {

@@ -3,12 +3,12 @@
 
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as platformUtils from '../../../../client/common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { buildEnvInfo } from '../../../../client/pythonEnvironments/base/info/env';
-import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
-import { PyenvLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/pyenvLocator';
-import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
+import * as platformUtils from '../../../../../client/common/utils/platform';
+import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { buildEnvInfo } from '../../../../../client/pythonEnvironments/base/info/env';
+import { PyenvLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/pyenvLocator';
+import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
+import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
 suite('Pyenv Locator Tests', () => {

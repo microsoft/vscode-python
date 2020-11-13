@@ -1,10 +1,10 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as platformApis from '../../../../client/common/utils/platform';
-import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { isPipenvEnvironmentRelatedToFolder } from '../../../../client/pythonEnvironments/discovery/locators/services/pipEnvHelper';
-import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
+import * as platformApis from '../../../../../client/common/utils/platform';
+import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
+import { isPipenvEnvironmentRelatedToFolder } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/pipEnvHelper';
+import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 
 suite('Pipenv utils', () => {
     let readFile: sinon.SinonStub;
