@@ -49,7 +49,9 @@ suite('Propose Pylance Banner', () => {
     let appEnv: typemoq.IMock<IApplicationEnvironment>;
     let settings: typemoq.IMock<IPythonSettings>;
     let sendTelemetryStub: sinon.SinonStub;
-    let telemetryEvent: { eventName: EventName; properties: { userAction: string } } | undefined;
+    let telemetryEvent:
+        | { eventName: EventName; properties: { userAction: string; experimentName: string } }
+        | undefined;
 
     const message = Pylance.proposePylanceMessage();
     const yes = Pylance.tryItNow();
@@ -66,7 +68,7 @@ suite('Propose Pylance Banner', () => {
 
         sendTelemetryStub = sinon
             .stub(Telemetry, 'sendTelemetryEvent')
-            .callsFake((eventName: EventName, _, properties: { userAction: string }) => {
+            .callsFake((eventName: EventName, _, properties: { userAction: string; experimentName: string }) => {
                 telemetryEvent = {
                     eventName,
                     properties
@@ -136,7 +138,7 @@ suite('Propose Pylance Banner', () => {
         sinon.assert.calledOnce(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, {
             eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
-            properties: { userAction: 'no' }
+            properties: { userAction: 'no', experimentName: TryPylance.experiment }
         });
     });
     test('Clicking Later should disable banner in session', async () => {
@@ -166,7 +168,7 @@ suite('Propose Pylance Banner', () => {
         assert.deepEqual(telemetryEvent, {
             eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
             properties: {
-                userAction: 'later'
+                userAction: 'later', experimentName: TryPylance.experiment
             }
         });
     });
@@ -194,7 +196,8 @@ suite('Propose Pylance Banner', () => {
         assert.deepEqual(telemetryEvent, {
             eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
             properties: {
-                userAction: 'yes'
+                userAction: 'yes',
+                experimentName: TryPylance.experiment
             }
         });
     });

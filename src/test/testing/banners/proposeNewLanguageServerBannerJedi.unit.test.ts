@@ -5,7 +5,6 @@
 
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
-import { anything } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Extension } from 'vscode';
 import { LanguageServerType } from '../../../client/activation/types';
@@ -31,22 +30,23 @@ import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
 
 interface IExperimentLsCombination {
-    experiment: TryPylance;
+    experiment: TryPylance ;
     lsType: LanguageServerType;
     shouldShowBanner: boolean;
 }
 const testData: IExperimentLsCombination[] = [
-    { experiment: TryPylance.jediPrompt1, lsType: LanguageServerType.None, shouldShowBanner: true },
-    { experiment: TryPylance.jediPrompt1, lsType: LanguageServerType.Microsoft, shouldShowBanner: true },
+    // Expected Result is shouldShowBanner
+    { experiment: TryPylance.jediPrompt1, lsType: LanguageServerType.None, shouldShowBanner: false },
+    { experiment: TryPylance.jediPrompt1, lsType: LanguageServerType.Microsoft, shouldShowBanner: false },
     { experiment: TryPylance.jediPrompt1, lsType: LanguageServerType.Node, shouldShowBanner: false },
-    { experiment: TryPylance.jediPrompt1, lsType: LanguageServerType.Jedi, shouldShowBanner: false },
+    { experiment: TryPylance.jediPrompt1, lsType: LanguageServerType.Jedi, shouldShowBanner: true },
     { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.None, shouldShowBanner: false },
     { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.Microsoft, shouldShowBanner: false },
     { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.Node, shouldShowBanner: false },
-    { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.Jedi, shouldShowBanner: false }
+    { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.Jedi, shouldShowBanner: true }
 ];
 
-suite('Propose Pylance Banner To Jedi', () => {
+suite('Jedi Propose Pylance Banner', () => {
     let config: typemoq.IMock<IConfigurationService>;
     let appShell: typemoq.IMock<IApplicationShell>;
     let appEnv: typemoq.IMock<IApplicationEnvironment>;
@@ -56,6 +56,7 @@ suite('Propose Pylance Banner To Jedi', () => {
         | { eventName: EventName; properties: { userAction: string; experimentName: string } }
         | undefined;
 
+    const message = 'Sample value1';
     const yes = Pylance.tryItNow();
     const no = Common.bannerLabelNo();
     const later = Pylance.remindMeLater();
@@ -106,7 +107,7 @@ suite('Propose Pylance Banner To Jedi', () => {
         appShell
             .setup((a) =>
                 a.showInformationMessage(
-                    anything(),
+                    typemoq.It.isValue(message),
                     typemoq.It.isValue(yes),
                     typemoq.It.isValue(no),
                     typemoq.It.isValue(later)
@@ -128,7 +129,7 @@ suite('Propose Pylance Banner To Jedi', () => {
         appShell
             .setup((a) =>
                 a.showInformationMessage(
-                    anything(),
+                    typemoq.It.isValue(message),
                     typemoq.It.isValue(yes),
                     typemoq.It.isValue(no),
                     typemoq.It.isValue(later)
@@ -137,6 +138,8 @@ suite('Propose Pylance Banner To Jedi', () => {
             .returns(async () => no)
             .verifiable(typemoq.Times.once());
         appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.never());
+
+        settings.setup((x) => x.languageServer).returns(() => LanguageServerType.Jedi);
 
         const testBanner = preparePopup(
             true,
@@ -161,7 +164,7 @@ suite('Propose Pylance Banner To Jedi', () => {
         appShell
             .setup((a) =>
                 a.showInformationMessage(
-                    anything(),
+                    typemoq.It.isValue(message),
                     typemoq.It.isValue(yes),
                     typemoq.It.isValue(no),
                     typemoq.It.isValue(later)
@@ -170,6 +173,8 @@ suite('Propose Pylance Banner To Jedi', () => {
             .returns(async () => later)
             .verifiable(typemoq.Times.once());
         appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.never());
+
+        settings.setup((x) => x.languageServer).returns(() => LanguageServerType.Jedi);
 
         const testBanner = preparePopup(
             true,
@@ -189,7 +194,7 @@ suite('Propose Pylance Banner To Jedi', () => {
 
         sinon.assert.calledOnce(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, {
-            eventName: EventName.BANNER_NAME_PROPOSE_LS_FOR_JEDI_USERS,
+            eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
             properties: {
                 userAction: 'later',
                 experimentName: TryPylance.jediPrompt1
@@ -200,7 +205,7 @@ suite('Propose Pylance Banner To Jedi', () => {
         appShell
             .setup((a) =>
                 a.showInformationMessage(
-                    anything(),
+                    typemoq.It.isValue(message),
                     typemoq.It.isValue(yes),
                     typemoq.It.isValue(no),
                     typemoq.It.isValue(later)
@@ -209,6 +214,8 @@ suite('Propose Pylance Banner To Jedi', () => {
             .returns(async () => yes)
             .verifiable(typemoq.Times.once());
         appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.once());
+
+        settings.setup((x) => x.languageServer).returns(() => LanguageServerType.Jedi);
 
         const testBanner = preparePopup(
             true,
@@ -225,7 +232,7 @@ suite('Propose Pylance Banner To Jedi', () => {
 
         sinon.assert.calledOnce(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, {
-            eventName: EventName.BANNER_NAME_PROPOSE_LS_FOR_JEDI_USERS,
+            eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
             properties: {
                 userAction: 'yes',
                 experimentName: TryPylance.jediPrompt1
