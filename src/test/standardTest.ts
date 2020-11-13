@@ -42,7 +42,7 @@ async function installJupyterExtension(vscodeExecutablePath: string) {
     console.info('Installing Jupyter Extension');
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
 
-    // For now install pylance from the marketplace
+    // For now install Jupyter from the marketplace
     spawnSync(cliPath, ['--install-extension', JUPYTER_EXTENSION_ID], {
         encoding: 'utf-8',
         stdio: 'inherit'
