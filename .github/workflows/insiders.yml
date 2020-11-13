@@ -15,7 +15,6 @@ env:
   VSIX_NAME: ms-python-insiders.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
-  VSIX_NAME_JUPYTER: ms-toolsai-jupyter-insiders.vsix
 
 jobs:
   build-vsix:
@@ -371,9 +370,6 @@ jobs:
         run: npx tsc -p ./
         shell: bash
 
-      - name: Download Jupyter VSIX
-        run: curl --output ${{ env.VSIX_NAME_JUPYTER }} https://pvsc.blob.core.windows.net/extension-builds-jupyter/${{ env.VSIX_NAME_JUPYTER }}
-
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
           echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
@@ -434,9 +430,6 @@ jobs:
       - name: Prepare for insiders tests
         run: npm run prePublish
         shell: bash
-
-      - name: Download Jupyter VSIX
-        run: curl --output ${{ env.VSIX_NAME_JUPYTER }} https://pvsc.blob.core.windows.net/extension-builds-jupyter/${{ env.VSIX_NAME_JUPYTER }}
 
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
