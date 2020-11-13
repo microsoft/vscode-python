@@ -129,7 +129,7 @@ export class NotebookConverter implements Disposable {
 
     public toIncomingWorkspaceSymbols(symbols: SymbolInformation[] | null | undefined) {
         if (Array.isArray(symbols)) {
-            return symbols.map((s) => this.toIncomingWorkspaceSymbol(s));
+            return symbols.map(this.toIncomingWorkspaceSymbol.bind(this));
         }
         return symbols;
     }
