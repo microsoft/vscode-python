@@ -284,6 +284,11 @@ export namespace Linters {
         'Linter.replaceWithSelectedLinter',
         "Multiple linters are enabled in settings. Replace with '{0}'?"
     );
+
+    export const installMessage = localize('Linter.install', 'Install a linter to get error reporting.');
+    export const installPylint = localize('Linter.installPylint', 'Install pylint');
+    export const installFlake8 = localize('Linter.installFlake8', 'Install flake8');
+    export const selectLinter = localize('Linter.selectLinter', 'Select Linter');
 }
 
 export namespace Installer {

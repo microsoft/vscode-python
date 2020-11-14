@@ -80,3 +80,10 @@ export enum JoinMailingListPromptVariants {
 export enum SendSelectionToREPL {
     experiment = 'pythonSendEntireLineToREPL'
 }
+
+// Experiment to show a prompt asking users to install or select linter
+export enum LinterInstallationPromptVariants {
+    pylintFirst = 'pythonInstallPylintButtonFirst',
+    flake8First = 'pythonInstallFlake8ButtonFirst',
+    noPrompt = 'pythonNotDisplayLinterPrompt'
+}
