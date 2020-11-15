@@ -40,6 +40,11 @@ export class BlackFormatter extends BaseFormatter {
         }
 
         const blackArgs = ['--diff', '--quiet'];
+
+        if (document.fileName.endsWith('.pyi')) {
+            blackArgs.push('--pyi');
+        }
+
         const promise = super.provideDocumentFormattingEdits(document, options, token, blackArgs);
         sendTelemetryWhenDone(EventName.FORMAT, promise, stopWatch, { tool: 'black', hasCustomArgs, formatSelection });
         return promise;
