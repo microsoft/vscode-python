@@ -6,8 +6,8 @@
 import * as minimatch from 'minimatch';
 import * as path from 'path';
 import { FileChangeType, watchLocationForPattern } from '../../common/platform/fileSystemWatcher';
-import { IDisposable } from '../../common/utils/resourceLifecycle';
 import { getOSType, OSType } from '../../common/utils/platform';
+import { IDisposable } from '../../common/utils/resourceLifecycle';
 
 const [executable, binName] = getOSType() === OSType.Windows ? ['python.exe', 'Scripts'] : ['python', 'bin'];
 
