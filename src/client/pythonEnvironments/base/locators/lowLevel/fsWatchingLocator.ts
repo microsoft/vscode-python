@@ -3,9 +3,10 @@
 
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
+import { IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
 import { PythonEnvKind } from '../../info';
-import { IDisposable, ResourceBasedLocator } from '../../locators/common/resourceBasedLocator';
+import { ResourceBasedLocator } from '../../locators/common/resourceBasedLocator';
 
 /**
  * The base for Python envs locators who watch the file system.
@@ -46,10 +47,12 @@ export abstract class FSWatchingLocator extends ResourceBasedLocator {
         if (typeof roots === 'string') {
             roots = [roots];
         }
-        return roots.map((root) => this.startWatcher(root));
+        const disposables: IDisposable[] = [];
+        roots.forEach((root) => disposables.push(...this.startWatcher(root)));
+        return disposables;
     }
 
-    private startWatcher(root: string): IDisposable {
+    private startWatcher(root: string): IDisposable[] {
         return watchLocationForPythonBinaries(
             root,
             async (type: FileChangeType, executable: string) => {

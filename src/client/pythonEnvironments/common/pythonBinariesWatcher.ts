@@ -6,8 +6,7 @@
 import * as minimatch from 'minimatch';
 import * as path from 'path';
 import { FileChangeType, watchLocationForPattern } from '../../common/platform/fileSystemWatcher';
-import { DisposableRegistry } from '../../common/syncDisposableRegistry';
-import { IDisposable } from '../../common/types';
+import { IDisposable } from '../../common/utils/resourceLifecycle';
 import { getOSType, OSType } from '../../common/utils/platform';
 
 const [executable, binName] = getOSType() === OSType.Windows ? ['python.exe', 'Scripts'] : ['python', 'bin'];
@@ -21,14 +20,14 @@ export function watchLocationForPythonBinaries(
     baseDir: string,
     callback: (type: FileChangeType, absPath: string) => void,
     executableBaseGlob: string = executable,
-): IDisposable {
+): IDisposable[] {
     if (executableBaseGlob.includes(path.sep)) {
         throw new Error('Glob basename contains invalid characters');
     }
     const patterns = [executableBaseGlob, `*/${executableBaseGlob}`, `*/${binName}/${executableBaseGlob}`];
-    const disposables = new DisposableRegistry();
+    const disposables: IDisposable[] = [];
     for (const pattern of patterns) {
-        disposables.push(watchLocationForPattern(baseDir, pattern, (type: FileChangeType, e: string) => {
+        disposables.push(...watchLocationForPattern(baseDir, pattern, (type: FileChangeType, e: string) => {
             const isMatch = minimatch(path.basename(e), executableBaseGlob, { nocase: getOSType() === OSType.Windows });
             if (!isMatch) {
                 // When deleting the file for some reason path to all directories leading up to python are reported
