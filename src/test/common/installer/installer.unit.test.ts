@@ -19,7 +19,7 @@ import { LinterInstallationPromptVariants } from '../../../client/common/experim
 import { ExperimentsManager } from '../../../client/common/experiments/manager';
 import '../../../client/common/extensions';
 import {
-    CTagsInsllationScript,
+    CTagsInstallationScript,
     CTagsInstaller,
     FormatterInstaller,
     LinterInstaller,
@@ -224,21 +224,21 @@ suite('Module Installer only', () => {
                                 .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
                                 .returns(() => platformService.object);
                             platformService.setup((p) => p.isWindows).returns(() => false);
-                            const termianlService = TypeMoq.Mock.ofType<ITerminalService>();
+                            const terminalService = TypeMoq.Mock.ofType<ITerminalService>();
                             const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
                             serviceContainer
                                 .setup((c) => c.get(TypeMoq.It.isValue(ITerminalServiceFactory)))
                                 .returns(() => terminalServiceFactory.object);
                             terminalServiceFactory
                                 .setup((p) => p.getTerminalService(resource))
-                                .returns(() => termianlService.object);
-                            termianlService
-                                .setup((t) => t.sendCommand(CTagsInsllationScript, []))
+                                .returns(() => terminalService.object);
+                            terminalService
+                                .setup((t) => t.sendCommand(CTagsInstallationScript, []))
                                 .returns(() => Promise.resolve())
                                 .verifiable(TypeMoq.Times.once());
                             const response = await installer.install(product.value, resource);
                             expect(response).to.be.equal(InstallerResponse.Ignore);
-                            termianlService.verifyAll();
+                            terminalService.verifyAll();
                         });
                         test(`If platform is not Windows, for module installer ${product.name} (${
                             resource ? 'With a resource' : 'without a resource'
@@ -248,21 +248,21 @@ suite('Module Installer only', () => {
                                 .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
                                 .returns(() => platformService.object);
                             platformService.setup((p) => p.isWindows).returns(() => false);
-                            const termianlService = TypeMoq.Mock.ofType<ITerminalService>();
+                            const terminalService = TypeMoq.Mock.ofType<ITerminalService>();
                             const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
                             serviceContainer
                                 .setup((c) => c.get(TypeMoq.It.isValue(ITerminalServiceFactory)))
                                 .returns(() => terminalServiceFactory.object);
                             terminalServiceFactory
                                 .setup((p) => p.getTerminalService(resource))
-                                .returns(() => termianlService.object);
-                            termianlService
-                                .setup((t) => t.sendCommand(CTagsInsllationScript, []))
+                                .returns(() => terminalService.object);
+                            terminalService
+                                .setup((t) => t.sendCommand(CTagsInstallationScript, []))
                                 .returns(() => Promise.reject('Kaboom'))
                                 .verifiable(TypeMoq.Times.once());
                             const response = await installer.install(product.value, resource);
                             expect(response).to.be.equal(InstallerResponse.Ignore);
-                            termianlService.verifyAll();
+                            terminalService.verifyAll();
                         });
                         test(`If 'Yes' is selected on the install prompt for the the module installer ${
                             product.name

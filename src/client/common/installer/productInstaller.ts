@@ -41,7 +41,7 @@ import {
 
 export { Product } from '../types';
 
-export const CTagsInsllationScript =
+export const CTagsInstallationScript =
     os.platform() === 'darwin' ? 'brew install ctags' : 'sudo apt-get install exuberant-ctags';
 
 export abstract class BaseInstaller {
@@ -170,8 +170,8 @@ export class CTagsInstaller extends BaseInstaller {
                 .get<ITerminalServiceFactory>(ITerminalServiceFactory)
                 .getTerminalService(resource);
             terminalService
-                .sendCommand(CTagsInsllationScript, [])
-                .catch((ex) => traceError(`Failed to install ctags. Script sent '${CTagsInsllationScript}', ${ex}`));
+                .sendCommand(CTagsInstallationScript, [])
+                .catch((ex) => traceError(`Failed to install ctags. Script sent '${CTagsInstallationScript}', ${ex}`));
         }
         return InstallerResponse.Ignore;
     }
