@@ -70,19 +70,35 @@ export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
     // An absolute path to the program to debug.
     module?: string;
     program?: string;
-    pythonPath: string;
+    python?: string;
     // Automatically stop target after launch. If not specified, target does not stop.
     stopOnEntry?: boolean;
-    args: string[];
+    args?: string[];
     cwd?: string;
     debugOptions?: DebugOptions[];
     env?: Record<string, string | undefined>;
-    envFile: string;
+    envFile?: string;
     console?: ConsoleType;
 
-    // Internal field used to set custom python debug adapter (for testing)
+    // The following are all internal properties that are not publicly documented or
+    // exposed in launch.json schema for the extension.
+
+    // Python interpreter used by the extension to spawn the debug adapter.
+    debugAdapterPython?: string;
+
+    // Debug adapter to use in lieu of the one bundled with the extension.
+    // This must be a full path that is executable with "python <debugAdapterPath>";
+    // for debugpy, this is ".../src/debugpy/adapter".
     debugAdapterPath?: string;
+
+    // Python interpreter used by the debug adapter to spawn the debug launcher.
+    debugLauncherPython?: string;
+
+    // Legacy interpreter setting. Equivalent to setting "python", "debugAdapterPython",
+    // and "debugLauncherPython" all at once.
+    pythonPath?: string;
 }
+
 // tslint:disable-next-line:interface-name
 export interface LaunchRequestArguments
     extends DebugProtocol.LaunchRequestArguments,

@@ -24,17 +24,36 @@ import { IDebugConfigurationResolver } from '../types';
 export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
     implements IDebugConfigurationResolver<T> {
     protected pythonPathSource: PythonPathSource = PythonPathSource.launchJson;
+
     constructor(
         protected readonly workspaceService: IWorkspaceService,
         protected readonly documentManager: IDocumentManager,
         protected readonly platformService: IPlatformService,
         protected readonly configurationService: IConfigurationService
     ) {}
-    public abstract resolveDebugConfiguration(
+
+    // This is a legacy hook used solely for backwards-compatible manual substitution
+    // of ${command:python.interpreterPath} in "pythonPath", for the sake of other
+    // existing implementations of resolveDebugConfiguration() that may rely on it.
+    //
+    // For all future config variables, expansion should be performed by VSCode itself,
+    // and validation of debug configuration in derived classes should be performed in
+    // resolveDebugConfigurationWithSubstitutedVariables() instead, where all variables
+    // are already substituted.
+    public async resolveDebugConfiguration(
+        _folder: WorkspaceFolder | undefined,
+        debugConfiguration: DebugConfiguration,
+        _token?: CancellationToken
+    ): Promise<T | undefined> {
+        return debugConfiguration as T;
+    }
+
+    public abstract resolveDebugConfigurationWithSubstitutedVariables(
         folder: WorkspaceFolder | undefined,
         debugConfiguration: DebugConfiguration,
         token?: CancellationToken
     ): Promise<T | undefined>;
+
     protected getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
         if (folder) {
             return folder.uri;
@@ -56,12 +75,14 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
             }
         }
     }
+
     protected getProgram(): string | undefined {
         const editor = this.documentManager.activeTextEditor;
         if (editor && editor.document.languageId === PYTHON_LANGUAGE) {
             return editor.document.fileName;
         }
     }
+
     protected resolveAndUpdatePaths(
         workspaceFolder: Uri | undefined,
         debugConfiguration: LaunchRequestArguments
@@ -69,6 +90,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         this.resolveAndUpdateEnvFilePath(workspaceFolder, debugConfiguration);
         this.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
     }
+
     protected resolveAndUpdateEnvFilePath(
         workspaceFolder: Uri | undefined,
         debugConfiguration: LaunchRequestArguments
@@ -84,6 +106,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
             debugConfiguration.envFile = systemVariables.resolveAny(debugConfiguration.envFile);
         }
     }
+
     protected resolveAndUpdatePythonPath(
         workspaceFolder: Uri | undefined,
         debugConfiguration: LaunchRequestArguments
@@ -99,16 +122,19 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
             this.pythonPathSource = PythonPathSource.launchJson;
         }
     }
+
     protected debugOption(debugOptions: DebugOptions[], debugOption: DebugOptions) {
         if (debugOptions.indexOf(debugOption) >= 0) {
             return;
         }
         debugOptions.push(debugOption);
     }
+
     protected isLocalHost(hostName?: string) {
         const LocalHosts = ['localhost', '127.0.0.1', '::1'];
         return hostName && LocalHosts.indexOf(hostName.toLowerCase()) >= 0 ? true : false;
     }
+
     protected fixUpPathMappings(
         pathMappings: PathMapping[],
         defaultLocalRoot?: string,
@@ -153,9 +179,11 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
 
         return pathMappings;
     }
+
     protected isDebuggingFlask(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
         return debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK' ? true : false;
     }
+
     protected sendTelemetry(
         trigger: 'launch' | 'attach' | 'test',
         debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>

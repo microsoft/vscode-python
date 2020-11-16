@@ -623,9 +623,9 @@
                                 "description": "Absolute path to the program.",
                                 "default": "${file}"
                             },
-                            "pythonPath": {
+                            "python": {
                                 "type": "string",
-                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings",
+                                "description": "Absolute path to the Python interpreter executable; overrides workspace configuration if set.",
                                 "default": "${command:python.interpreterPath}"
                             },
                             "pythonArgs": {

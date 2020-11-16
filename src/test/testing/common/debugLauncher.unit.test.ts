@@ -119,7 +119,6 @@ suite('Unit Tests - Debug Launcher', () => {
             .setup((d) => d.getEnvironmentVariables(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(expected.env));
 
-        //debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
         debugService
             .setup((d) => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
             .returns((_wspc: WorkspaceFolder, _expectedParam: DebugConfiguration) => {
@@ -207,8 +206,14 @@ suite('Unit Tests - Debug Launcher', () => {
         }
 
         // added by LaunchConfigurationResolver:
-        if (!expected.pythonPath) {
-            expected.pythonPath = 'python';
+        if (!expected.python) {
+            expected.python = 'python';
+        }
+        if (!expected.debugAdapterPython) {
+            expected.debugAdapterPython = 'python';
+        }
+        if (!expected.debugLauncherPython) {
+            expected.debugLauncherPython = 'python';
         }
         expected.workspaceFolder = workspaceFolders[0].uri.fsPath;
         expected.debugOptions = [];
@@ -324,7 +329,9 @@ suite('Unit Tests - Debug Launcher', () => {
             name: 'my tests',
             type: DebuggerTypeName,
             request: 'launch',
-            pythonPath: 'some/dir/bin/py3',
+            python: 'some/dir/bin/py3',
+            debugAdapterPython: 'some/dir/bin/py3',
+            debugLauncherPython: 'some/dir/bin/py3',
             stopOnEntry: true,
             showReturnValue: true,
             console: 'integratedTerminal',
@@ -345,7 +352,7 @@ suite('Unit Tests - Debug Launcher', () => {
                 name: 'my tests',
                 type: DebuggerTypeName,
                 request: 'test',
-                pythonPath: expected.pythonPath,
+                pythonPath: expected.python,
                 stopOnEntry: expected.stopOnEntry,
                 showReturnValue: expected.showReturnValue,
                 console: expected.console,
