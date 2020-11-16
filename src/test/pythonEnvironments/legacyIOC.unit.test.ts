@@ -6,7 +6,7 @@
 // tslint:disable: no-any
 
 import {
-    anything, instance, mock, verify,
+    instance, mock, verify,
 } from 'ts-mockito';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -59,16 +59,13 @@ import {
     WorkspaceVirtualEnvService,
 } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvWatcherService';
-import { EnvironmentInfoService, IEnvironmentInfoService } from '../../client/pythonEnvironments/info/environmentInfoService';
 import { registerLegacyDiscoveryForIOC } from '../../client/pythonEnvironments/legacyIOC';
 
 suite('Interpreters - Service Registry', () => {
     test('Registrations', () => {
         const serviceManager = mock(ServiceManager);
-        const envInfo = mock(EnvironmentInfoService);
         registerLegacyDiscoveryForIOC(
             instance(serviceManager),
-            instance(envInfo),
         );
         verify(serviceManager.addSingleton(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters)).once();
         verify(serviceManager.addSingleton(IVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvironmentsSearchPathProvider, 'global')).once();
@@ -137,9 +134,6 @@ suite('Interpreters - Service Registry', () => {
                 WorkspaceVirtualEnvWatcherService,
                 WORKSPACE_VIRTUAL_ENV_SERVICE,
             ),
-        ).once();
-        verify(
-            serviceManager.addSingletonInstance<IEnvironmentInfoService>(IEnvironmentInfoService, anything()),
         ).once();
     });
 });
