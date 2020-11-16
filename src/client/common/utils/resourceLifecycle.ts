@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// tslint:disable:max-classes-per-file
+
 import { logWarning } from '../../logging';
 
 export interface IDisposable {
@@ -19,7 +21,7 @@ async function disposeAll(disposables: IDisposable[]): Promise<void> {
             } catch (err) {
                 logWarning(`dispose() #${index} failed (${err})`);
             }
-        }),
+        })
     );
 }
 
@@ -30,7 +32,7 @@ export class Disposables implements IDisposables {
     private disposables: IDisposable[] = [];
 
     public push(...disposables: IDisposable[]) {
-        this.disposables.push(...disposables)
+        this.disposables.push(...disposables);
     }
 
     public async dispose(): Promise<void> {
@@ -41,9 +43,9 @@ export class Disposables implements IDisposables {
 }
 
 export interface IActivatable {
+    readonly active: boolean;
     activate(): Promise<void>;
     dispose(): Promise<void>;
-    readonly active: boolean;
 }
 
 export class Activatable implements IActivatable {
@@ -54,15 +56,20 @@ export class Activatable implements IActivatable {
     private readonly disposables: IDisposable[] = [];
 
     constructor(
-        private readonly do_activation: () => Promise<IDisposable[]>,
+        // The disposables are tracked.
+        private readonly doActivation: () => Promise<IDisposable[]>
     ) {}
+
+    public get active(): boolean {
+        return this.activated;
+    }
 
     public async activate(): Promise<void> {
         if (this.pending || this.activated) {
             return;
         }
         this.pending = true;
-        const disposables = await this.do_activation();
+        const disposables = await this.doActivation();
         this.disposables.push(...disposables);
         this.pending = false;
         this.activated = true;
@@ -76,9 +83,5 @@ export class Activatable implements IActivatable {
         this.activated = false;
         await disposeAll(this.disposables);
         this.pending = false;
-    }
-
-    public get active(): boolean {
-        return this.activated;
     }
 }

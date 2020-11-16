@@ -6,7 +6,7 @@ import { sleep } from '../../../../common/utils/async';
 import { IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
 import { PythonEnvKind } from '../../info';
-import { ResourceBasedLocator } from '../../locators/common/resourceBasedLocator';
+import { ResourceBasedLocator } from '../common/resourceBasedLocator';
 
 /**
  * The base for Python envs locators who watch the file system.
@@ -38,7 +38,7 @@ export abstract class FSWatchingLocator extends ResourceBasedLocator {
         super();
     }
 
-    protected async do_activation(): Promise<IDisposable[]> {
+    protected async doActivation(): Promise<IDisposable[]> {
         return this.startWatchers();
     }
 

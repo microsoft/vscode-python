@@ -128,7 +128,5 @@ function watchLocationUsingChokidar(
         }
     });
 
-    return [
-        { dispose: () => stopWatcher().ignoreErrors() },
-    ];
+    return [{ dispose: () => stopWatcher().ignoreErrors() }];
 }

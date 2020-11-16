@@ -1,7 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Activatable, Disposables, IActivatable, IDisposable } from '../../../../common/utils/resourceLifecycle';
+// tslint:disable-next-line:no-single-line-block-comment
+/* eslint-disable max-classes-per-file */
+
+import {
+    Activatable,
+    Disposables,
+    IActivatable,
+    IDisposable,
+} from '../../../../common/utils/resourceLifecycle';
 import { Locator } from '../../locator';
 
 /**
@@ -13,7 +21,7 @@ export abstract class ResourceBasedLocator extends Locator implements IActivatab
     constructor() {
         super();
         this.activatable = new Activatable(
-            () => this.do_activation(),
+            () => this.doActivation(),
         );
     }
 
@@ -29,7 +37,7 @@ export abstract class ResourceBasedLocator extends Locator implements IActivatab
         return this.activatable.active;
     }
 
-    protected abstract async do_activation(): Promise<IDisposable[]>;
+    protected abstract async doActivation(): Promise<IDisposable[]>;
 }
 
 /**
@@ -38,7 +46,7 @@ export abstract class ResourceBasedLocator extends Locator implements IActivatab
 export abstract class DisposableLocator extends Locator {
     protected readonly disposables = new Disposables();
 
-    public dispose(): void {
-        this.disposables.dispose();
+    public async dispose(): Promise<void> {
+        await this.disposables.dispose();
     }
 }
