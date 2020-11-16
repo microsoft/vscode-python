@@ -292,7 +292,6 @@ suite('Windows Registry', () => {
     });
 
     teardown(() => {
-        locator.dispose();
         sinon.restore();
     });
 

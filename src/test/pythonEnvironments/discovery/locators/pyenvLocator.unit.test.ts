@@ -221,7 +221,6 @@ suite('Pyenv Locator Tests', () => {
     teardown(() => {
         getEnvVariableStub.restore();
         getOsTypeStub.restore();
-        locator.dispose();
     });
 
     function getExpectedPyenvInfo(name:string) : PythonEnvInfo | undefined {

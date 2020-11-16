@@ -70,7 +70,6 @@ suite('Posix Known Path Locator', () => {
     });
     teardown(() => {
         getPathEnvVar.restore();
-        locator.dispose();
     });
 
     test('iterEnvs(): get python bin from known test roots', async () => {

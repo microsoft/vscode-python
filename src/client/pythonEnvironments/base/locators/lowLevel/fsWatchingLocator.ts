@@ -5,7 +5,7 @@ import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
 import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
 import { PythonEnvKind } from '../../info';
-import { Locator } from '../../locator';
+import { IDisposable, ResourceBasedLocator } from '../../locators/common/resourceBasedLocator';
 
 /**
  * The base for Python envs locators who watch the file system.
@@ -13,9 +13,7 @@ import { Locator } from '../../locator';
  *
  * Subclasses can call `this.emitter.fire()` * to emit events.
  */
-export abstract class FSWatchingLocator extends Locator {
-    private active = false;
-
+export abstract class FSWatchingLocator extends ResourceBasedLocator {
     constructor(
         /**
          * Location(s) to watch for python binaries.
@@ -39,51 +37,35 @@ export abstract class FSWatchingLocator extends Locator {
         super();
     }
 
-    public async activate(): Promise<void> {
-        if (this.active) {
-            return;
-        }
-        this.active = true;
-
-        await this.startWatchers();
+    protected async do_activation(): Promise<IDisposable[]> {
+        return this.startWatchers();
     }
 
-    public dispose(): void {
-        if (!this.active) {
-            return;
-        }
-        this.active = false;
-
-        super.dispose();
-    }
-
-    private async startWatchers(): Promise<void> {
+    private async startWatchers(): Promise<IDisposable[]> {
         let roots = await this.getRoots();
         if (typeof roots === 'string') {
             roots = [roots];
         }
-        roots.forEach((root) => this.startWatcher(root));
+        return roots.map((root) => this.startWatcher(root));
     }
 
-    private startWatcher(root: string): void {
-        this.disposables.push(
-            watchLocationForPythonBinaries(
-                root,
-                async (type: FileChangeType, executable: string) => {
-                    if (type === FileChangeType.Created) {
-                        if (this.opts.delayOnCreated !== undefined) {
-                            // Note detecting kind of env depends on the file structure around the
-                            // executable, so we need to wait before attempting to detect it.
-                            await sleep(this.opts.delayOnCreated);
-                        }
+    private startWatcher(root: string): IDisposable {
+        return watchLocationForPythonBinaries(
+            root,
+            async (type: FileChangeType, executable: string) => {
+                if (type === FileChangeType.Created) {
+                    if (this.opts.delayOnCreated !== undefined) {
+                        // Note detecting kind of env depends on the file structure around the
+                        // executable, so we need to wait before attempting to detect it.
+                        await sleep(this.opts.delayOnCreated);
                     }
-                    // Fetching kind after deletion normally fails because the file structure around the
-                    // executable is no longer available, so ignore the errors.
-                    const kind = await this.getKind(executable).catch(() => undefined);
-                    this.emitter.fire({ type, kind });
-                },
-                this.opts.executableBaseGlob,
-            ),
+                }
+                // Fetching kind after deletion normally fails because the file structure around the
+                // executable is no longer available, so ignore the errors.
+                const kind = await this.getKind(executable).catch(() => undefined);
+                this.emitter.fire({ type, kind });
+            },
+            this.opts.executableBaseGlob,
         );
     }
 }
