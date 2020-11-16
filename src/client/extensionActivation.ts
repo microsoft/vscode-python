@@ -31,7 +31,7 @@ import {
 import { OutputChannelNames } from './common/utils/localize';
 import { noop } from './common/utils/misc';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
-import { ActivationFunc, ActivationResult, ExtensionState, IComponent } from './components';
+import { ActivationResult, ExtensionState, IComponent } from './components';
 import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
@@ -68,19 +68,12 @@ export async function activateComponents(
     ext: ExtensionState,
     components: IComponent[]
 ): Promise<ActivationResult[]> {
-    const componentFuncs = components.map((c) => () => c.activate());
-    const extraFuncs: ActivationFunc[] = [
-        // In cases where the component activator cannot be returned
-        // from the initializer, a separate activation func can be
-        // registered here.
-        // For example:
-        //   (ext) => pythonEnvironments.activate(serviceManager, serviceContainer),
-        // We will be factoring them out of activateLegacy().
+    const promises: Promise<ActivationResult>[] = [
+        ...components.map((c) => c.activate()),
+        // These will go away eventually.
+        activateLegacy(ext)
     ];
-    const allFuncs = [...componentFuncs, ...extraFuncs];
-    const promises = allFuncs.map((func) => func(ext));
-    const results = await Promise.all(promises);
-    return results.filter((res) => !!res);
+    return Promise.all(promises);
 }
 
 /////////////////////////////
@@ -93,7 +86,7 @@ export async function activateComponents(
 // init and activation: move them to activateComponents().
 // See https://github.com/microsoft/vscode-python/issues/10454.
 
-export async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
+async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const { context, serviceManager, serviceContainer } = ext;
 
     // register "services"

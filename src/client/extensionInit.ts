@@ -52,9 +52,13 @@ export function initializeCommon(ext: ExtensionState): void {
  * Initialize all components in the extension.
  */
 export function initializeComponents(ext: ExtensionState): IComponent[] {
-    return [
-        pythonEnvironments.initialize(ext)
-        // Other component initializers go here.
-        // We will be factoring them out of activateLegacy().
-    ];
+    const components: IComponent[] = [];
+
+    const envs = pythonEnvironments.initialize(ext);
+    components.push(envs);
+
+    // Other component initializers go here.
+    // We will be factoring them out of activateLegacy().
+
+    return components;
 }
