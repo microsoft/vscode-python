@@ -44,7 +44,7 @@ export abstract class FSWatchingLocator extends Locator {
             return;
         }
         this.initialized = true;
-        await this.startWatchers();
+        this.startWatchers().ignoreErrors();
     }
 
     public dispose(): void {

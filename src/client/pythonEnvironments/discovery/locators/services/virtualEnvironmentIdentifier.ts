@@ -5,7 +5,7 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import '../../../../common/extensions';
 import {
-    getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
+    getEnvironmentVariable, getOSType, getUserHomeDir, OSType
 } from '../../../../common/utils/platform';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
 import { comparePythonVersionSpecificity } from '../../../base/info/env';
@@ -158,11 +158,12 @@ export async function getPythonVersionFromVenv(interpreterPath:string): Promise<
                         }
                         return undefined;
                     })
-                    .filter((v) => v !== undefined);
+                    .filter((v) => v !== undefined)
+                    .map((v) => v!);
 
                 if (pythonVersions.length > 0) {
                     for (const v of pythonVersions) {
-                        if (v && comparePythonVersionSpecificity(v, version) > 0) {
+                        if (comparePythonVersionSpecificity(v, version) > 0) {
                             version = v;
                         }
                     }
