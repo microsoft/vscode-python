@@ -35,7 +35,7 @@ import { traceError } from './common/logger';
 import { IAsyncDisposableRegistry, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
-import { activateComponents, activateLegacy } from './extensionActivation';
+import { activateComponents } from './extensionActivation';
 import { initializeCommon, initializeComponents, initializeGlobals } from './extensionInit';
 import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
@@ -107,12 +107,9 @@ async function activateUnsafe(
 
     // Then we finish activating.
     const componentsActivated = await activateComponents(ext, components);
-    const legacyActivated = await activateLegacy(ext);
+    const nonBlocking = componentsActivated.map((r) => r.finished);
     const activationPromise = (async () => {
-        await Promise.all([
-            ...componentsActivated.filter((r) => !!r.finished).map((r) => r.finished!),
-            legacyActivated.finished!
-        ]);
+        await Promise.all(nonBlocking);
     })();
 
     //===============================================

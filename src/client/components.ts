@@ -30,17 +30,15 @@ export interface IMaybeActive {
  * may be used by the rest of the extension.
  *
  * If the component started any non-critical activation-related
- * operations during activation then the "finished" property will be set
- * and the promise will resolve once all those operations complete.
+ * operations during activation then the "finished" property will only
+ * resolve once all those operations complete.
  *
  * The component may have also started long-running background helpers.
  * Those are not exposed here.
  */
 export type ActivationResult = {
-    finished?: Promise<void>;
+    finished: Promise<void>;
 };
-
-export type ActivationFunc = (ext?: ExtensionState) => Promise<ActivationResult>;
 
 export interface IComponent {
     activate(): Promise<ActivationResult>;
@@ -79,7 +77,9 @@ export class Component implements IComponent {
                 await func();
             })
         );
-        return {};
+        return {
+            finished: Promise.resolve()
+        };
     }
 }
 
