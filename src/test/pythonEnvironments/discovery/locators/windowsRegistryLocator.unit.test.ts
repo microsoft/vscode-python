@@ -311,7 +311,6 @@ suite('Windows Registry', () => {
         stubReadRegistryValues.restore();
         stubReadRegistryKeys.restore();
         stubGetInterpreterDataFromRegistry.restore();
-        locator.dispose();
     });
 
     test('iterEnvs()', async () => {

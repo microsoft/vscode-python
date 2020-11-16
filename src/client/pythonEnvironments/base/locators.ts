@@ -7,6 +7,7 @@ import { PythonEnvInfo } from './info';
 import {
     ILocator,
     IPythonEnvsIterator,
+    Locator,
     PythonEnvUpdatedEvent,
     PythonLocatorQuery,
 } from './locator';
@@ -69,4 +70,77 @@ export class Locators extends PythonEnvsWatchers implements ILocator {
         }
         return undefined;
     }
+}
+
+// TODO: Move `Activatable` to an appropriate location.  (`src/client/common/utils/resources`?)
+
+export interface IActivatable {
+    activate(): Promise<void>;
+    dispose(): Promise<void>;
+    readonly active: boolean;
+}
+
+class Activatable implements IActivatable {
+    private pending = false;
+    private activated = false;
+
+    constructor(
+        private readonly do_activation: () => Promise<void>,
+        private readonly do_disposal: () => Promise<void>,
+    ) {}
+
+    public async activate(): Promise<void> {
+        if (this.pending || this.activated) {
+            return;
+        }
+        this.pending = true;
+        await this.do_activation();
+        this.pending = false;
+        this.activated = true;
+    }
+
+    public async dispose(): Promise<void> {
+        if (this.pending || !this.activated) {
+            return;
+        }
+        this.pending = true;
+        this.activated = false;
+        await this.do_disposal();
+        this.pending = false;
+    }
+
+    public get active(): boolean {
+        return this.activated;
+    }
+}
+
+/**
+ * A locator that has resources to be activated and disposed.
+ */
+export abstract class ResourceBasedLocator extends Locator {
+    private activatable: Activatable;
+
+    constructor() {
+        super();
+        this.activatable = new Activatable(
+            () => this.do_activation(),
+            () => this.do_disposal(),
+        );
+    }
+
+    public async activate(): Promise<void> {
+        await this.activatable.activate();
+    }
+
+    public async dispose(): Promise<void> {
+        await this.activatable.dispose();
+    }
+
+    public get active(): boolean {
+        return this.activatable.active;
+    }
+
+    protected abstract async do_activation(): Promise<void>;
+
+    protected abstract async do_disposal(): Promise<void>;
 }

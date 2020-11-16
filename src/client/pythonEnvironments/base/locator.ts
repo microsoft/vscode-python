@@ -5,7 +5,6 @@
 /* eslint-disable max-classes-per-file */
 
 import { Event, Uri } from 'vscode';
-import { DisposableRegistry } from '../../common/syncDisposableRegistry';
 import { IAsyncIterableIterator, iterEmpty } from '../../common/utils/async';
 import { PythonEnvInfo, PythonEnvKind } from './info';
 import {
@@ -188,8 +187,6 @@ implements ILocator<E> {
 
     protected readonly emitter: IEmitter<E>;
 
-    protected readonly disposables = new DisposableRegistry();
-
     constructor(watcher: IPythonEnvsWatcher<E> & IEmitter<E>) {
         this.emitter = watcher;
         this.onChanged = watcher.onChanged;
@@ -201,10 +198,6 @@ implements ILocator<E> {
     // eslint-disable-next-line class-methods-use-this,@typescript-eslint/no-unused-vars
     public async resolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         return undefined;
-    }
-
-    public dispose(): void {
-        this.disposables.dispose();
     }
 }
 
