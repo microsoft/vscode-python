@@ -51,6 +51,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.OpenStartPage]: [];
     [LSCommands.ClearAnalyisCache]: [];
     [LSCommands.RestartLS]: [];
+    [Commands.LaunchTensorBoard]: [];
 }
 
 /**

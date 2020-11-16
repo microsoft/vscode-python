@@ -19,3 +19,4 @@ ProductNames.set(Product.pylint, 'pylint');
 ProductNames.set(Product.pytest, 'pytest');
 ProductNames.set(Product.yapf, 'yapf');
 ProductNames.set(Product.rope, 'rope');
+ProductNames.set(Product.tensorboard, 'tensorboard');

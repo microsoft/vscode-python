@@ -104,7 +104,8 @@ export enum Product {
     notebook = 20,
     kernelspec = 21,
     nbconvert = 22,
-    pandas = 23
+    pandas = 23,
+    tensorboard = 24
 }
 
 export enum ModuleNamePurpose {
@@ -188,6 +189,7 @@ export interface IPythonSettings {
     readonly languageServer: LanguageServerType;
     readonly defaultInterpreterPath: string;
     readonly logging: ILoggingSettings;
+    readonly tensorboardPath: string;
 }
 export interface ISortImportSettings {
     readonly path: string;

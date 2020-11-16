@@ -57,6 +57,9 @@ import { activateSimplePythonRefactorProvider } from './providers/simpleRefactor
 import { TerminalProvider } from './providers/terminalProvider';
 import { ISortImportsEditingProvider } from './providers/types';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
+import { registerTypes as dataScienceRegisterTypes } from './tensorBoard/serviceRegistry';
+import { TensorBoardSessionProvider } from './tensorBoard/tensorBoardSessionProvider';
+import { ITensorBoardSessionProvider } from './tensorBoard/types';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
 import { TEST_OUTPUT_CHANNEL } from './testing/common/constants';
@@ -117,6 +120,7 @@ async function activateLegacy(
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
+    dataScienceRegisterTypes(serviceManager);
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
@@ -212,6 +216,9 @@ async function activateLegacy(
     });
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
+
+    const tensorBoardSessionProvider = serviceManager.get<TensorBoardSessionProvider>(ITensorBoardSessionProvider);
+    cmdManager.registerCommand(Commands.LaunchTensorBoard, () => tensorBoardSessionProvider.getOrCreate());
 
     return { activationPromise };
 }

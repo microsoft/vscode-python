@@ -83,6 +83,7 @@
         "onCommand:python.resetInterpreterSecurityStorage",
         "onCommand:python.startPage.open",
         "onCommand:python.enableSourceMapSupport",
+        "onCommand:python.launchTensorBoard",
         "workspaceContains:mspythonconfig.json",
         "workspaceContains:pyproject.toml"
     ],
@@ -352,6 +353,11 @@
                 "command": "python.analysis.restartLanguageServer",
                 "title": "%python.command.python.analysis.restartLanguageServer.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.launchTensorBoard",
+                "title": "%python.command.python.launchTensorBoard.title%",
+                "category": "Python"
             }
         ],
         "menus": {
@@ -485,6 +491,10 @@
                 {
                     "command": "python.startPage.open",
                     "title": "%python.command.python.startPage.open.title%",
+                    "category": "Python"
+                },
+                {
+                    "command": "python.launchTensorBoard",
                     "category": "Python"
                 }
             ],
@@ -1828,6 +1838,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Show the Python Start Page when a new update is released.",
+                    "scope": "application"
+                },
+                "python.tensorboardPath": {
+                    "type": "string",
+                    "default": "tensorboard",
+                    "description": "Path to the tensorboard executable.",
                     "scope": "application"
                 }
             }

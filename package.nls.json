@@ -36,6 +36,7 @@
     "python.command.python.startPage.open.title": "Open Start Page",
     "python.command.python.analysis.clearCache.title": "Clear Module Analysis Cache",
     "python.command.python.analysis.restartLanguageServer.title": "Restart Language Server",
+    "python.command.python.launchTensorBoard.title": "Launch TensorBoard",
     "python.snippet.launch.standard.label": "Python: Current File",
     "python.snippet.launch.module.label": "Python: Module",
     "python.snippet.launch.module.default": "enter-your-module-name",

@@ -133,6 +133,30 @@ export namespace Jupyter {
     );
 }
 
+export namespace TensorBoard {
+    export const logDirectoryPrompt = localize(
+        'TensorBoard.logDirectoryPrompt',
+        'Specify the TensorBoard log directory'
+    );
+    export const installTensorBoardPrompt = localize(
+        'TensorBoard.installPrompt',
+        'The package TensorBoard is required in order to launch a TensorBoard session. Would you like to install it?'
+    );
+    export const invalidLogDirectory = localize(
+        'TensorBoard.invalidLogDirectory',
+        'Please provide a valid log directory. We cannot start a TensorBoard session without it.'
+    );
+    export const logDirectoryPlaceholder = localize('TensorBoard.logDirectoryPlaceholder', 'e.g. /runs/experiment');
+    export const failedToStartSessionError = localize(
+        'TensorBoard.failedToStartSessionError',
+        'We failed to start a TensorBoard session due to the following error: {0}'
+    );
+    export const tensorBoardInstallRequired = localize(
+        'TensorBoard.tensorBoardInstallRequired',
+        'We cannot start a TensorBoard session without the TensorBoard package.'
+    );
+}
+
 export namespace LanguageService {
     export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi Python language engine.');
     export const startingMicrosoft = localize(
