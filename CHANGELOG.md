@@ -7,6 +7,8 @@
 
 ### Fixes
 
+1. Fix for Process Id Picker no longer showing up
+   ([#14678](https://github.com/Microsoft/vscode-python/issues/14678)))
 1. Fix workspace symbol searching always returning empty.
    ([#14727](https://github.com/Microsoft/vscode-python/issues/14727))
 
