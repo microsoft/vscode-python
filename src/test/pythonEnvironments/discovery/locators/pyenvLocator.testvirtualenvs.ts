@@ -17,11 +17,7 @@ suite('Pyenv Locator', async () => {
     });
     testLocatorWatcher(
         testPyenvVersionsDir,
-        async () => {
-            const locator = new PyenvLocator();
-            await locator.activate();
-            return locator;
-        },
+        async () => new PyenvLocator(),
         { kind: PythonEnvKind.Pyenv },
     );
     suiteTeardown(() => {

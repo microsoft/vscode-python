@@ -149,7 +149,7 @@ export class WindowsStoreLocator extends FSWatchingLocator {
         );
     }
 
-    public iterEnvs(): IPythonEnvsIterator {
+    protected doIterEnvs(): IPythonEnvsIterator {
         const iterator = async function* (kind: PythonEnvKind) {
             const exes = await getWindowsStorePythonExes();
             yield* exes.map(async (executable: string) => buildEnvInfo({
@@ -164,7 +164,7 @@ export class WindowsStoreLocator extends FSWatchingLocator {
         return iterator(this.kind);
     }
 
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+    protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
         if (await isWindowsStoreEnvironment(executablePath)) {
             return buildEnvInfo({

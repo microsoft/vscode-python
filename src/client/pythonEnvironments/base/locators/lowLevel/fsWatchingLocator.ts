@@ -3,10 +3,10 @@
 
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
-import { IDisposable } from '../../../../common/utils/resourceLifecycle';
+import { disposeAll, IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
-import { PythonEnvKind } from '../../info';
-import { ResourceBasedLocator } from '../common/resourceBasedLocator';
+import { PythonEnvInfo, PythonEnvKind } from '../../info';
+import { IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator';
 
 /**
  * The base for Python envs locators who watch the file system.
@@ -14,7 +14,9 @@ import { ResourceBasedLocator } from '../common/resourceBasedLocator';
  *
  * Subclasses can call `this.emitter.fire()` * to emit events.
  */
-export abstract class FSWatchingLocator extends ResourceBasedLocator {
+export abstract class FSWatchingLocator extends Locator {
+    private disposables: IDisposable[] | undefined;
+
     constructor(
         /**
          * Location(s) to watch for python binaries.
@@ -38,9 +40,32 @@ export abstract class FSWatchingLocator extends ResourceBasedLocator {
         super();
     }
 
-    protected async doActivation(): Promise<IDisposable[]> {
-        return this.startWatchers();
+    public async dispose(): Promise<void> {
+        if (this.disposables !== undefined) {
+            // tslint:disable-next-line:no-this-assignment
+            const { disposables } = this;
+            this.disposables = undefined;
+            await disposeAll(disposables);
+        }
     }
+
+    public async* iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+        if (this.disposables === undefined) {
+            this.disposables = await this.startWatchers();
+        }
+        yield* this.doIterEnvs(query);
+    }
+
+    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        if (this.disposables === undefined) {
+            this.disposables = await this.startWatchers();
+        }
+        return this.doResolveEnv(env);
+    }
+
+    protected abstract doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator;
+
+    protected abstract async doResolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
 
     private async startWatchers(): Promise<IDisposable[]> {
         let roots = await this.getRoots();

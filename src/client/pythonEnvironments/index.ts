@@ -1,13 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// tslint:disable-next-line:no-single-line-block-comment
+/* eslint-disable max-classes-per-file */
+
 import * as vscode from 'vscode';
 import { getOSType, OSType } from '../common/utils/platform';
+import { IDisposable } from '../common/utils/resourceLifecycle';
 import {
+    ActivationFunc,
+    BaseExtensionState as ExtensionState,
     Component,
-    ExtensionState,
+    ExtensionState as LegacyExtensionState,
     getGlobalStorage,
-    IMaybeActive,
 } from '../components';
 import { PythonEnvInfoCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
@@ -28,31 +33,39 @@ import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreL
 import { EnvironmentInfoService } from './info/environmentInfoService';
 import { registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
 
+class PythonEnvironmentsComponent extends Component {
+    public readonly api: PythonEnvironments;
+
+    constructor(
+        ext: ExtensionState,
+        activations: ActivationFunc[] = [],
+    ) {
+        const api = createAPI(ext, activations);
+        super('Python environments', activations);
+        this.api = api;
+    }
+}
+
 /**
  * Set up the Python environments component (during extension activation).'
  */
-export function initialize(ext: ExtensionState): Component {
-    const component = new Component('Python environments', ext);
-
+export function initialize(ext: LegacyExtensionState): PythonEnvironmentsComponent {
     // Initialize the component.
-    const envInfoService = new EnvironmentInfoService();
-    component.addInitialized(envInfoService);
-    const api = createAPI(component, envInfoService);
+    const activations: ActivationFunc[] = [];
+    const component = new PythonEnvironmentsComponent(ext, activations);
 
-    component.addActivation(async () => {
+    activations.push(async () => {
         // Deal with legacy IOC.
         registerLegacyDiscoveryForIOC(
-            ext.serviceManager,
-            envInfoService,
+            ext.legacyIOC.serviceManager,
         );
         initializeLegacyExternalDependencies(
-            ext.serviceContainer,
+            ext.legacyIOC.serviceContainer,
         );
         registerNewDiscoveryForIOC(
-            ext.serviceManager,
-            api,
+            ext.legacyIOC.serviceManager,
+            component.api,
         );
-        await Promise.resolve();
     });
 
     return component;
@@ -91,18 +104,18 @@ export class PythonEnvironments implements ILocator {
  * An activation function is also returned, which should be called soon.
  */
 export function createAPI(
-    component: Component,
-    envInfoService: EnvironmentInfoService,
+    ext: ExtensionState,
+    activations: ActivationFunc[],
 ): PythonEnvironments {
     const locators = new ExtensionLocators(
-        initNonWorkspaceLocators(component),
-        initWorkspaceLocators(component),
+        initNonWorkspaceLocators(ext),
+        initWorkspaceLocators(ext),
     );
 
     const locatorStack = initLocatorStack(
         locators,
-        component,
-        envInfoService,
+        ext,
+        activations,
     );
 
     // Any other init/activation needed for the API will go here later.
@@ -110,12 +123,12 @@ export function createAPI(
     return new PythonEnvironments(locatorStack);
 }
 
-interface IMaybeActiveLocator extends IMaybeActive, ILocator {}
-
-function initNonWorkspaceLocators(component: Component): ILocator[] {
+function initNonWorkspaceLocators(
+    ext: ExtensionState,
+): ILocator[] {
     // We put locators here in similar order
     // to PythonInterpreterLocatorService.getLocators().
-    let locators: IMaybeActiveLocator[];
+    let locators: (ILocator & Partial<IDisposable>)[];
     if (getOSType() === OSType.Windows) {
         // Windows specific locators go here
         locators = [
@@ -132,7 +145,8 @@ function initNonWorkspaceLocators(component: Component): ILocator[] {
             new PosixKnownPathsLocator(),
         ];
     }
-    locators.forEach((loc) => component.addInitialized(loc));
+    const disposables = (locators.filter((d) => d.dispose !== undefined)) as IDisposable[];
+    ext.disposables.push(...disposables);
     return locators;
 }
 
@@ -155,28 +169,34 @@ function getWorkspaceFolders() {
     };
 }
 
-function initWorkspaceLocators(component: Component): WorkspaceLocators {
+function initWorkspaceLocators(
+    ext: ExtensionState,
+): WorkspaceLocators {
     const locators = new WorkspaceLocators(
         getWorkspaceFolders,
         [
             // Add an ILocator factory func here for each kind of workspace-rooted locator.
         ],
     );
-    component.addInitialized(locators);
+    ext.disposables.push(locators);
     return locators;
 }
 
 function initLocatorStack(
     locators: ILocator,
-    component: Component,
-    envInfoService: EnvironmentInfoService,
+    ext: ExtensionState,
+    activations: ActivationFunc[],
 ): ILocator {
+    // Create the env info service used by ResolvingLocator and CachingLocator.
+    const envInfoService = new EnvironmentInfoService();
+    ext.disposables.push(envInfoService);
+
     // Create the cache used by CachingLocator.
     const envsCache = new PythonEnvInfoCache(
         (env: PythonEnvInfo) => envInfoService.isInfoProvided(env.executable.filename), // "isComplete"
         () => {
             const storage = getGlobalStorage<PythonEnvInfo[]>(
-                component.ext.context,
+                ext.context,
                 'PYTHON_ENV_INFO_CACHE',
             );
             return {
@@ -185,14 +205,14 @@ function initLocatorStack(
             };
         },
     );
-    component.addActivation(() => {
+    activations.push(() => {
         // We don't need to block extension activation for this.
         envsCache.activate().ignoreErrors();
     });
 
     // Create the locator stack.
     const cachingLocator = new CachingLocator(envsCache, locators);
-    component.addActivation(() => {
+    activations.push(() => {
         // We don't need to block extension activation for this.
         cachingLocator.activate().ignoreErrors();
     });

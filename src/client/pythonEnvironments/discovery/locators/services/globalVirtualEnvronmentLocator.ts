@@ -109,7 +109,7 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
         });
     }
 
-    public iterEnvs(): IPythonEnvsIterator {
+    protected doIterEnvs(): IPythonEnvsIterator {
         // Number of levels of sub-directories to recurse when looking for
         // interpreters
         const searchDepth = this.searchDepth ?? DEFAULT_SEARCH_DEPTH;
@@ -149,7 +149,7 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+    protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
         if (await pathExists(executablePath)) {
             // We should extract the kind here to avoid doing is*Environment()

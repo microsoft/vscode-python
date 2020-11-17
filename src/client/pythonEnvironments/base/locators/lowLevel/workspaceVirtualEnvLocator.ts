@@ -85,7 +85,7 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
         });
     }
 
-    public iterEnvs(): IPythonEnvsIterator {
+    protected doIterEnvs(): IPythonEnvsIterator {
         async function* iterator(root: string) {
             const envRootDirs = getWorkspaceVirtualEnvDirs(root);
             const envGenerators = envRootDirs.map((envRootDir) => {
@@ -121,7 +121,7 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+    protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
         if (isParentPath(executablePath, this.root) && await pathExists(executablePath)) {
             // We should extract the kind here to avoid doing is*Environment()

@@ -307,12 +307,12 @@ export class PyenvLocator extends FSWatchingLocator {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public iterEnvs(): IPythonEnvsIterator {
+    public doIterEnvs(): IPythonEnvsIterator {
         return getPyenvEnvironments();
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+    public async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
 
         if (await isPyenvEnvironment(executablePath)) {

@@ -49,7 +49,6 @@ suite('Environment Info Service', () => {
     });
     test('Add items to queue and get results', async () => {
         const envService = new EnvironmentInfoService();
-        envService.activate();
         const promises: Promise<InterpreterInformation | undefined>[] = [];
         const expected: InterpreterInformation[] = [];
         for (let i = 0; i < 10; i = i + 1) {
@@ -73,7 +72,6 @@ suite('Environment Info Service', () => {
 
     test('Add same item to queue', async () => {
         const envService = new EnvironmentInfoService();
-        envService.activate();
         const promises: Promise<InterpreterInformation | undefined>[] = [];
         const expected: InterpreterInformation[] = [];
 
@@ -96,7 +94,6 @@ suite('Environment Info Service', () => {
 
     test('isInfoProvided() returns true for items already processed', async () => {
         const envService = new EnvironmentInfoService();
-        envService.activate();
         let result: boolean;
         const promises: Promise<InterpreterInformation | undefined>[] = [];
         const path1 = 'any-path1';
@@ -114,7 +111,6 @@ suite('Environment Info Service', () => {
 
     test('isInfoProvided() returns false otherwise', async () => {
         const envService = new EnvironmentInfoService();
-        envService.activate();
         const promises: Promise<InterpreterInformation | undefined>[] = [];
         const path1 = 'any-path1';
         const path2 = 'any-path2';

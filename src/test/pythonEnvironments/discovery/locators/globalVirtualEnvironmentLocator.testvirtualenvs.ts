@@ -16,11 +16,7 @@ suite('GlobalVirtualEnvironment Locator', async () => {
     });
     testLocatorWatcher(
         testWorkOnHomePath,
-        async () => {
-            const locator = new GlobalVirtualEnvironmentLocator();
-            await locator.activate();
-            return locator;
-        },
+        async () => new GlobalVirtualEnvironmentLocator(),
     );
     suiteTeardown(() => {
         process.env.WORKON_HOME = workonHomeOldValue;
