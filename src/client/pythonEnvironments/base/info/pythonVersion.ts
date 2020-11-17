@@ -78,7 +78,7 @@ export function parseVersion(versionStr: string): PythonVersion {
  */
 export function parseVersionInfo(versionInfoStr: string): PythonVersion {
     const parts = versionInfoStr.split('.');
-    const version: PythonVersion = cloneDeep(UNKNOWN_PYTHON_VERSION);
+    const version = cloneDeep(UNKNOWN_PYTHON_VERSION);
     if (parts.length >= 2) {
         version.major = parseInt(parts[0], 10);
         version.minor = parseInt(parts[1], 10);

@@ -152,7 +152,7 @@ export type PythonEnvInfo = _PythonEnvInfo & {
 };
 
 /**
- * A dummy python version object containing fields.
+ * A dummy python version object containing default fields.
  *
  * Note this object is immutable. So if it is assigned to another object, the properties of the other object
  * also cannot be modified by reference. For eg. `otherVersionObject.major = 3` won't work.

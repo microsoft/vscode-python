@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { findInterpretersInDir, getEnvironmentDirFromPath, getPythonVersionFromPath } from '../../../common/commonUtils';
-import { getFileInfo, pathExists } from '../../../common/externalDependencies';
+import { getFileInfo, normCasePath, pathExists } from '../../../common/externalDependencies';
 import { isCondaEnvironment } from '../../../discovery/locators/services/condaLocator';
 import { isPipenvEnvironment } from '../../../discovery/locators/services/pipEnvHelper';
 import { isVenvEnvironment, isVirtualenvEnvironment } from '../../../discovery/locators/services/virtualEnvironmentIdentifier';
@@ -52,13 +51,14 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
 async function buildSimpleVirtualEnvInfo(executablePath: string, kind: PythonEnvKind): Promise<PythonEnvInfo> {
     const envInfo = buildEnvInfo({
         kind,
-        version: cloneDeep(await getPythonVersionFromPath(executablePath)),
+        version: await getPythonVersionFromPath(executablePath),
         executable: executablePath,
     });
     const location = getEnvironmentDirFromPath(executablePath);
     envInfo.location = location;
     envInfo.name = path.basename(location);
-    // Call a general display name provider here to build display name.
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO: Call a general display name provider here to build display name.
     const fileData = await getFileInfo(executablePath);
     envInfo.executable.ctime = fileData.ctime;
     envInfo.executable.mtime = fileData.mtime;
@@ -91,7 +91,7 @@ export class WorkspaceVirtualEnvironmentLocator extends Locator {
                         // Other version like python3.exe or python3.8 are often symlinks to
                         // python.exe or python in the same directory in the case of virtual
                         // environments.
-                        const name = path.basename(env).toLowerCase();
+                        const name = normCasePath(path.basename(env));
                         if (name === 'python.exe' || name === 'python') {
                             // We should extract the kind here to avoid doing is*Environment()
                             // check multiple times. Those checks are file system heavy and
@@ -116,7 +116,7 @@ export class WorkspaceVirtualEnvironmentLocator extends Locator {
     // eslint-disable-next-line class-methods-use-this
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
-        if (await pathExists(executablePath)) {
+        if (normCasePath(executablePath).startsWith(normCasePath(this.root)) && await pathExists(executablePath)) {
             // We should extract the kind here to avoid doing is*Environment()
             // check multiple times. Those checks are file system heavy and
             // we can use the kind to determine this anyway.
