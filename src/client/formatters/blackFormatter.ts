@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { IApplicationShell } from '../common/application/types';
 import { Product } from '../common/installer/productInstaller';
@@ -41,7 +42,7 @@ export class BlackFormatter extends BaseFormatter {
 
         const blackArgs = ['--diff', '--quiet'];
 
-        if (document.fileName.endsWith('.pyi')) {
+        if (path.extname(document.fileName) === '.pyi') {
             blackArgs.push('--pyi');
         }
 
