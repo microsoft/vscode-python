@@ -43,7 +43,7 @@ export class CachingLocator implements ILocator {
     }
 
     /**
-     * Finish pPreparing the locator for use.
+     * Finish Preparing the locator for use.
      *
      * This must be called before using the locator.  It is distinct
      * from the constructor to avoid the problems that come from doing
