@@ -124,8 +124,6 @@ export function createAPI(
 function initNonWorkspaceLocators(
     ext: ExtensionState,
 ): ILocator[] {
-    // We put locators here in similar order
-    // to PythonInterpreterLocatorService.getLocators().
     let locators: (ILocator & Partial<IDisposable>)[];
     if (getOSType() === OSType.Windows) {
         // Windows specific locators go here
