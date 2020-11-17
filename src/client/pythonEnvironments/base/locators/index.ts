@@ -21,7 +21,7 @@ import { DisableableEnvsWatcher, PythonEnvsWatchers } from '../watchers';
  */
 export function combineIterators(iterators: IPythonEnvsIterator[]): IPythonEnvsIterator {
     const result: IPythonEnvsIterator = chain(iterators);
-    const events = iterators.map((it) => it.onUpdated).filter((v) => v);
+    const events = iterators.map((it) => it.onUpdated).filter((v) => !!v);
     if (!events || events.length === 0) {
         // There are no sub-events, so we leave `onUpdated` undefined.
         return result;
@@ -30,6 +30,8 @@ export function combineIterators(iterators: IPythonEnvsIterator[]): IPythonEnvsI
     const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
     let numActive = events.length;
     events.forEach((event) => {
+        // We already filtered so `event` will never be undefined.
+        // However, the compiler isn't smart enough (yet) to know that.
         event!((e: PythonEnvUpdatedEvent | null) => {
             if (e === null) {
                 numActive -= 1;
