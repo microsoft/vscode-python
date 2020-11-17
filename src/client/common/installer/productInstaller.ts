@@ -232,6 +232,7 @@ export class FormatterInstaller extends BaseInstaller {
 }
 
 export class LinterInstaller extends BaseInstaller {
+    private static promptSeen: boolean = false;
     private readonly experimentsManager: IExperimentsManager;
     private readonly linterManager: ILinterManager;
 
@@ -245,6 +246,17 @@ export class LinterInstaller extends BaseInstaller {
         resource?: Uri,
         cancel?: CancellationToken
     ): Promise<InstallerResponse> {
+        // This is a hack, really we should be handling this in a service that
+        // controls the prompts we show. The issue here was that if we show
+        // a prompt to install pylint and flake8, and user selects flake8
+        // we immediately show this prompt again saying install flake8, while the
+        // installation is on going.
+        if (LinterInstaller.promptSeen) {
+            return InstallerResponse.Ignore;
+        }
+
+        LinterInstaller.promptSeen = true;
+
         // Conditions to use experiment prompt:
         // 1. There should be no linter set in any scope
         // 2. The default linter should be pylint
