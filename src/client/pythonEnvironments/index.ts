@@ -31,6 +31,9 @@ import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreL
 import { EnvironmentInfoService } from './info/environmentInfoService';
 import { registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
 
+/**
+ * The component for info and functionality related to Python environments.
+ */
 class PythonEnvironmentsComponent extends Component {
     public readonly api: PythonEnvironments;
 
