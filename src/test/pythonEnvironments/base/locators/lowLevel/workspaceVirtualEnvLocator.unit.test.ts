@@ -27,10 +27,11 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
         kind: PythonEnvKind,
         version: PythonVersion = UNKNOWN_PYTHON_VERSION,
         name = '',
+        location = path.join(testWorkspaceFolder, name),
     ): PythonEnvInfo {
         return {
             name,
-            location: path.join(testWorkspaceFolder, name),
+            location,
             kind,
             executable: {
                 filename: interpreterPath,
@@ -77,10 +78,11 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
                 'win1',
             ),
             createExpectedEnvInfo(
-                path.join(testWorkspaceFolder, 'win2', 'Scripts', 'python.exe'),
+                path.join(testWorkspaceFolder, '.direnv', 'win2', 'Scripts', 'python.exe'),
                 PythonEnvKind.Venv,
                 { major: 3, minor: 6, micro: 1 },
                 'win2',
+                path.join(testWorkspaceFolder, '.direnv', 'win2'),
             ),
             createExpectedEnvInfo(
                 path.join(testWorkspaceFolder, '.venv', 'Scripts', 'python.exe'),
@@ -114,10 +116,11 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
                 'posix2conda',
             ),
             createExpectedEnvInfo(
-                path.join(testWorkspaceFolder, 'posix1virtualenv', 'bin', 'python'),
+                path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv', 'bin', 'python'),
                 PythonEnvKind.VirtualEnv,
                 { major: 3, minor: 8, micro: -1 },
                 'posix1virtualenv',
+                path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv'),
             ),
             createExpectedEnvInfo(
                 path.join(testWorkspaceFolder, 'posix3custom', 'bin', 'python'),
