@@ -37,11 +37,7 @@ export async function* findInterpretersInDir(
 
             if (stat.isDirectory()) {
                 if (recurseLevels && recurseLevels > 0) {
-                    const subItems = findInterpretersInDir(fullPath, recurseLevels - 1);
-
-                    for await (const subItem of subItems) {
-                        yield subItem;
-                    }
+                    yield* findInterpretersInDir(fullPath, recurseLevels - 1);
                 }
             } else if (checkBin(fullPath)) {
                 yield fullPath;
