@@ -5,14 +5,23 @@
 
 import { logWarning } from '../../logging';
 
+/**
+ * An object that can be disposed, like vscode.Disposable.
+ */
 export interface IDisposable {
     dispose(): void | Promise<void>;
 }
 
+/**
+ * A registry of disposables.
+ */
 export interface IDisposables extends IDisposable {
     push(...disposable: IDisposable[]): void;
 }
 
+/**
+ * Safely dispose each of the disposables.
+ */
 export async function disposeAll(disposables: IDisposable[]): Promise<void> {
     await Promise.all(
         disposables.map(async (d, index) => {
