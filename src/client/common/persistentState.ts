@@ -5,7 +5,14 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
-import { GLOBAL_MEMENTO, IMemento, IPersistentState, IPersistentStateFactory, WORKSPACE_MEMENTO } from './types';
+import {
+    GLOBAL_MEMENTO,
+    IExtensionContext,
+    IMemento,
+    IPersistentState,
+    IPersistentStateFactory,
+    WORKSPACE_MEMENTO,
+} from './types';
 
 export class PersistentState<T> implements IPersistentState<T> {
     constructor(
@@ -57,4 +64,29 @@ export class PersistentStateFactory implements IPersistentStateFactory {
     ): IPersistentState<T> {
         return new PersistentState<T>(this.workspaceState, key, defaultValue, expiryDurationMs);
     }
+}
+
+/////////////////////////////
+// a simpler, alternate API
+// for components to use
+
+interface IPersistentStorage<T> {
+    get(): T | undefined;
+    set(value: T): Promise<void>;
+}
+
+/**
+ * Build a global storage object for the given key.
+ */
+export function getGlobalStorage<T>(context: IExtensionContext, key: string): IPersistentStorage<T> {
+    const raw = new PersistentState<T>(context.globalState, key);
+    return {
+        // We adapt between PersistentState and IPersistentStorage.
+        get() {
+            return raw.value;
+        },
+        set(value: T) {
+            return raw.updateValue(value);
+        }
+    };
 }

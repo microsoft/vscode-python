@@ -5,6 +5,7 @@
 /* eslint-disable max-classes-per-file */
 
 import * as vscode from 'vscode';
+import { getGlobalStorage } from '../common/persistentState';
 import { getOSType, OSType } from '../common/utils/platform';
 import { IDisposable } from '../common/utils/resourceLifecycle';
 import {
@@ -12,7 +13,6 @@ import {
     BaseExtensionState as ExtensionState,
     Component,
     ExtensionState as LegacyExtensionState,
-    getGlobalStorage,
 } from '../components';
 import { PythonEnvInfoCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';

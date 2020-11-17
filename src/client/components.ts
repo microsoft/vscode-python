@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { PersistentState } from './common/persistentState';
 import { IDisposableRegistry, IExtensionContext } from './common/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 
@@ -57,28 +56,4 @@ export class Component implements IComponent {
         await Promise.all(promises);
         return { finished: Promise.resolve() };
     }
-}
-
-/////////////////////////////
-// helpers
-
-interface IPersistentStorage<T> {
-    get(): T | undefined;
-    set(value: T): Promise<void>;
-}
-
-/**
- * Build a global storage object for the given key.
- */
-export function getGlobalStorage<T>(context: IExtensionContext, key: string): IPersistentStorage<T> {
-    const raw = new PersistentState<T>(context.globalState, key);
-    return {
-        // We adapt between PersistentState and IPersistentStorage.
-        get() {
-            return raw.value;
-        },
-        set(value: T) {
-            return raw.updateValue(value);
-        }
-    };
 }
