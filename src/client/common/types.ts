@@ -462,6 +462,7 @@ export interface IPythonExtensionBanner {
     showBanner(): Promise<void>;
 }
 export const BANNER_NAME_PROPOSE_LS: string = 'ProposePylance';
+export const BANNER_NAME_PROPOSE_LS_FOR_JEDI_USERS: string = 'ProposePylanceJedi';
 
 export type DeprecatedSettingAndValue = {
     setting: string;
