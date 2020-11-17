@@ -13,6 +13,9 @@ import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { buildEnvInfo } from '../../info/env';
 import { IPythonEnvsIterator, Locator } from '../../locator';
 
+/**
+ * Default number of levels of sub-directories to recurse when looking for interpreters.
+ */
 const DEFAULT_SEARCH_DEPTH = 2;
 
 /**
@@ -69,22 +72,18 @@ async function buildSimpleVirtualEnvInfo(executablePath: string, kind: PythonEnv
  * Finds and resolves virtual environments created in workspace roots.
  */
 export class WorkspaceVirtualEnvironmentLocator extends Locator {
-    public constructor(private readonly root: string, private readonly searchDepth?: number) {
+    public constructor(private readonly root: string) {
         super();
     }
 
     public iterEnvs(): IPythonEnvsIterator {
-        // Number of levels of sub-directories to recurse when looking for
-        // interpreters
-        const searchDepth = this.searchDepth ?? DEFAULT_SEARCH_DEPTH;
-
         async function* iterator(root: string) {
             const envRootDirs = getWorkspaceVirtualEnvDirs(root);
             const envGenerators = envRootDirs.map((envRootDir) => {
                 async function* generator() {
                     traceVerbose(`Searching for workspace virtual envs in: ${envRootDir}`);
 
-                    const envGenerator = findInterpretersInDir(envRootDir, searchDepth);
+                    const envGenerator = findInterpretersInDir(envRootDir, DEFAULT_SEARCH_DEPTH);
 
                     for await (const env of envGenerator) {
                         // We only care about python.exe (on windows) and python (on linux/mac)
