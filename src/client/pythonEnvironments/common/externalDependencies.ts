@@ -31,6 +31,15 @@ export function readFile(filePath: string): Promise<string> {
     return fsapi.readFile(filePath, 'utf-8');
 }
 
+/**
+ * Returns true if given file path exists within the given parent directory, false otherwise.
+ * @param filePath File path to check for
+ * @param parentPath The potential parent path to check for
+ */
+export function isParentPath(filePath: string, parentPath: string): boolean {
+    return normCasePath(filePath).startsWith(normCasePath(parentPath));
+}
+
 export function normCasePath(filePath: string): string {
     return getOSType() === OSType.Windows ? path.normalize(filePath).toUpperCase() : path.normalize(filePath);
 }

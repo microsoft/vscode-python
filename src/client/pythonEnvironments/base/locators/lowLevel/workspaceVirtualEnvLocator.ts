@@ -7,7 +7,9 @@ import { chain, iterable } from '../../../../common/utils/async';
 import {
     findInterpretersInDir, getEnvironmentDirFromPath, getPythonVersionFromPath, isStandardPythonBinary
 } from '../../../common/commonUtils';
-import { getFileInfo, normCasePath, pathExists } from '../../../common/externalDependencies';
+import {
+    getFileInfo, isParentPath, pathExists
+} from '../../../common/externalDependencies';
 import { isCondaEnvironment } from '../../../discovery/locators/services/condaLocator';
 import { isPipenvEnvironment } from '../../../discovery/locators/services/pipEnvHelper';
 import { isVenvEnvironment, isVirtualenvEnvironment } from '../../../discovery/locators/services/virtualEnvironmentIdentifier';
@@ -116,7 +118,7 @@ export class WorkspaceVirtualEnvironmentLocator extends Locator {
     // eslint-disable-next-line class-methods-use-this
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
-        if (normCasePath(executablePath).startsWith(normCasePath(this.root)) && await pathExists(executablePath)) {
+        if (isParentPath(executablePath, this.root) && await pathExists(executablePath)) {
             // We should extract the kind here to avoid doing is*Environment()
             // check multiple times. Those checks are file system heavy and
             // we can use the kind to determine this anyway.

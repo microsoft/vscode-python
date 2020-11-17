@@ -78,7 +78,7 @@ export async function getPythonVersionFromNearByFiles(interpreterPath:string): P
  */
 export async function getPythonVersionFromPath(
     interpreterPath: string | undefined,
-    hint?: string | undefined,
+    hint?: string,
 ): Promise<PythonVersion> {
     let versionA;
     try {
