@@ -12,8 +12,7 @@ import {
     IExperimentService,
     IExtensions,
     IPersistentStateFactory,
-    // tslint:disable-next-line: prettier
-    IPythonExtensionBanner,
+    IPythonExtensionBanner
 } from '../common/types';
 import { Common, Pylance } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';

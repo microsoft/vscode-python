@@ -168,7 +168,8 @@ suite('Propose Pylance Banner', () => {
         assert.deepEqual(telemetryEvent, {
             eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
             properties: {
-                userAction: 'later', experimentName: TryPylance.experiment
+                userAction: 'later',
+                experimentName: TryPylance.experiment
             }
         });
     });

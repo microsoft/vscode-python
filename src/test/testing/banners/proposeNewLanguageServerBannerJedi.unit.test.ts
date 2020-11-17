@@ -30,7 +30,7 @@ import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
 
 interface IExperimentLsCombination {
-    experiment: TryPylance ;
+    experiment: TryPylance;
     lsType: LanguageServerType;
     shouldShowBanner: boolean;
 }
