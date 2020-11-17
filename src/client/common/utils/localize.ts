@@ -155,6 +155,10 @@ export namespace TensorBoard {
         'TensorBoard.tensorBoardInstallRequired',
         'We cannot start a TensorBoard session without the TensorBoard package.'
     );
+    export const nativeTensorBoardPrompt = localize(
+        'TensorBoard.nativeTensorBoardPrompt',
+        'VS Code now has native TensorBoard support. Would you like to launch TensorBoard?'
+    );
 }
 
 export namespace LanguageService {

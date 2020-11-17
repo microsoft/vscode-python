@@ -52,13 +52,13 @@ export class WorkspaceService implements IWorkspaceService {
     }
     public createFileSystemWatcher(
         globPattern: GlobPattern,
-        _ignoreCreateEvents?: boolean,
+        ignoreCreateEvents?: boolean,
         ignoreChangeEvents?: boolean,
         ignoreDeleteEvents?: boolean
     ): FileSystemWatcher {
         return workspace.createFileSystemWatcher(
             globPattern,
-            ignoreChangeEvents,
+            ignoreCreateEvents,
             ignoreChangeEvents,
             ignoreDeleteEvents
         );
