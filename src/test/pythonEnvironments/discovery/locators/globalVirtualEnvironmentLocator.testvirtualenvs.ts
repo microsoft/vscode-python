@@ -63,13 +63,12 @@ suite('GlobalVirtualEnvironment Locator', async () => {
         process.env.WORKON_HOME = testWorkOnHomePath;
 
         locator = new GlobalVirtualEnvironmentLocator();
-        await locator.activate();
 
         // Wait for watchers to get ready
         await sleep(1000);
     });
     teardown(async () => {
-        locator.dispose();
+        await locator.dispose();
         await globalVenvs.cleanUp();
     });
     suiteTeardown(() => globalVenvs.cleanUp());

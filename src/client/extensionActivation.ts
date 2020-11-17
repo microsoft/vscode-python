@@ -87,7 +87,8 @@ export async function activateComponents(
 // See https://github.com/microsoft/vscode-python/issues/10454.
 
 async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
-    const { context, serviceManager, serviceContainer } = ext;
+    const { context, legacyIOC } = ext;
+    const { serviceManager, serviceContainer } = legacyIOC;
 
     // register "services"
 

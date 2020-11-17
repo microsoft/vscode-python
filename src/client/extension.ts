@@ -101,7 +101,7 @@ async function activateUnsafe(
 
     // First we initialize.
     const ext = initializeGlobals(context);
-    activatedServiceContainer = ext.serviceContainer;
+    activatedServiceContainer = ext.legacyIOC.serviceContainer;
     initializeCommon(ext);
     const components = initializeComponents(ext);
 
@@ -118,8 +118,8 @@ async function activateUnsafe(
     startupDurations.endActivateTime = startupStopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    const api = buildApi(activationPromise, ext.serviceManager, ext.serviceContainer);
-    return [api, activationPromise, ext.serviceContainer];
+    const api = buildApi(activationPromise, ext.legacyIOC.serviceManager, ext.legacyIOC.serviceContainer);
+    return [api, activationPromise, ext.legacyIOC.serviceContainer];
 }
 
 // tslint:disable-next-line:no-any

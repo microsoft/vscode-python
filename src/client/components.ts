@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable } from 'vscode';
 import { PersistentState } from './common/persistentState';
 import { IDisposableRegistry, IExtensionContext } from './common/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
@@ -9,19 +8,17 @@ import { IServiceContainer, IServiceManager } from './ioc/types';
 /**
  * The global extension state needed by components.
  */
-export type ExtensionState = {
+export type BaseExtensionState = {
     context: IExtensionContext;
-    serviceManager: IServiceManager;
-    serviceContainer: IServiceContainer;
     disposables: IDisposableRegistry;
 };
 
-type ActivationBasicFunc = () => Promise<void> | void;
-
-export interface IMaybeActive {
-    activate?: ActivationBasicFunc;
-    dispose?(): void;
-}
+export type ExtensionState = BaseExtensionState & {
+    legacyIOC: {
+        serviceManager: IServiceManager;
+        serviceContainer: IServiceContainer;
+    };
+};
 
 /**
  * The result of activating a component of the extension.
@@ -41,45 +38,24 @@ export type ActivationResult = {
 };
 
 export interface IComponent {
+    readonly name: string;
+
     activate(): Promise<ActivationResult>;
 }
 
-export class Component implements IComponent {
-    private readonly funcs: ActivationBasicFunc[] = [];
+export type ActivationFunc = () => Promise<void> | void;
 
+export class Component implements IComponent {
     constructor(
-        // The name is mostly useful just for debugging for now.
+        // `name` is here mostly just for debugging purposes.
         public readonly name: string,
-        public readonly ext: ExtensionState
+        private readonly activations: ActivationFunc[]
     ) {}
 
-    public addInitialized(...initialized: IMaybeActive[]): void {
-        initialized.forEach((init) => {
-            if (init.activate !== undefined) {
-                this.funcs.push(() => init.activate!());
-            }
-            if (init.dispose !== undefined) {
-                this.ext.disposables.push(init as Disposable);
-            }
-        });
-    }
-
-    public addActivation(...funcs: ActivationBasicFunc[]): void {
-        funcs.forEach((func) => {
-            this.funcs.push(func);
-        });
-    }
-
     public async activate(): Promise<ActivationResult> {
-        await Promise.all(
-            this.funcs.map(async (func) => {
-                // We do not expect any activation results.
-                await func();
-            })
-        );
-        return {
-            finished: Promise.resolve()
-        };
+        const promises = this.activations.map((activate) => activate());
+        await Promise.all(promises);
+        return { finished: Promise.resolve() };
     }
 }
 

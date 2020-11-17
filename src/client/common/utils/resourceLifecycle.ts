@@ -13,7 +13,7 @@ export interface IDisposables extends IDisposable {
     push(...disposable: IDisposable[]): void;
 }
 
-async function disposeAll(disposables: IDisposable[]): Promise<void> {
+export async function disposeAll(disposables: IDisposable[]): Promise<void> {
     await Promise.all(
         disposables.map(async (d, index) => {
             try {

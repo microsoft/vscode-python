@@ -84,7 +84,6 @@ suite('Windows Store Locator', async () => {
 
     async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
         locator = new WindowsStoreLocator();
-        await locator.activate();
         // Wait for watchers to get ready
         await sleep(1000);
         locator.onChanged(onChanged);
@@ -92,7 +91,7 @@ suite('Windows Store Locator', async () => {
 
     teardown(async () => {
         await windowsStoreEnvs.cleanUp();
-        locator.dispose();
+        await locator.dispose();
     });
     suiteTeardown(async () => {
         process.env.LOCALAPPDATA = localAppDataOldValue;

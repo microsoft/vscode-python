@@ -38,12 +38,16 @@ export function initializeGlobals(
     serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
     serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, context);
 
-    return { context, serviceManager, serviceContainer, disposables };
+    return {
+        context,
+        disposables,
+        legacyIOC: { serviceManager, serviceContainer }
+    };
 }
 
 export function initializeCommon(ext: ExtensionState): void {
     // Core registrations (non-feature specific).
-    commonRegisterTypes(ext.serviceManager);
+    commonRegisterTypes(ext.legacyIOC.serviceManager);
 
     // We will be pulling other code over from activateLegacy().
 }

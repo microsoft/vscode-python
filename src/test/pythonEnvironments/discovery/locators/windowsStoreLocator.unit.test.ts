@@ -122,14 +122,13 @@ suite('Windows Store', () => {
             watchLocationForPatternStub.returns({ dispose: () => { /* do nothing */ } });
 
             locator = new WindowsStoreLocator();
-            await locator.activate();
         });
 
-        teardown(() => {
+        teardown(async () => {
+            await locator.dispose();
             stubShellExec.restore();
             getEnvVar.restore();
             watchLocationForPatternStub.restore();
-            locator.dispose();
         });
 
         test('iterEnvs()', async () => {

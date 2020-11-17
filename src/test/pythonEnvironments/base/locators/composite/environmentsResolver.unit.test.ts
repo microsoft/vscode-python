@@ -23,7 +23,6 @@ suite('Python envs locator - Environments Resolver', () => {
 
     setup(() => {
         envInfoService = new EnvironmentInfoService();
-        envInfoService.activate();
     });
     teardown(() => {
         envInfoService.dispose();
