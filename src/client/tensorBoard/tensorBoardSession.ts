@@ -2,15 +2,15 @@
 // Licensed under the MIT License.
 
 import { ChildProcess, spawn } from 'child_process';
+import * as path from 'path';
 import { CancellationTokenSource, ViewColumn, WebviewPanel, window } from 'vscode';
 import { createPromiseFromCancellation } from '../common/cancellation';
 import { traceError, traceInfo } from '../common/logger';
+import { _SCRIPTS_DIR } from '../common/process/internal/scripts';
 import { IInstaller, InstallerResponse, Product } from '../common/types';
+import { sleep } from '../common/utils/async';
 import { TensorBoard } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
-import * as path from 'path';
-import { _SCRIPTS_DIR } from '../common/process/internal/scripts';
-import { sleep } from '../common/utils/async';
 
 const LAUNCH_TENSORBOARD = path.join(_SCRIPTS_DIR, 'tensorboard_launcher.py');
 

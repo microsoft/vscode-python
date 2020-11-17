@@ -189,7 +189,6 @@ export interface IPythonSettings {
     readonly languageServer: LanguageServerType;
     readonly defaultInterpreterPath: string;
     readonly logging: ILoggingSettings;
-    readonly tensorboardPath: string;
 }
 export interface ISortImportSettings {
     readonly path: string;
