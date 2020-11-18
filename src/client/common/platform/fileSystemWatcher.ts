@@ -6,7 +6,7 @@
 import * as chokidar from 'chokidar';
 import * as path from 'path';
 import { RelativePattern, workspace } from 'vscode';
-import { traceError, traceVerbose, traceWarning } from '../logger';
+import { traceError, traceVerbose } from '../logger';
 import { DisposableRegistry } from '../syncDisposableRegistry';
 import { IDisposable } from '../types';
 import { normCasePath } from './fs-paths';
@@ -124,7 +124,7 @@ function watchLocationUsingChokidar(
                 traceError(`Inotify limit reached (ENOSPC) for ${baseDir} with pattern ${pattern}`);
                 await stopWatcher();
             } else {
-                traceWarning(error.toString());
+                traceVerbose(error.toString());
             }
         }
     });
