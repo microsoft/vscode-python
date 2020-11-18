@@ -50,10 +50,7 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
     ) {}
 
     public get enabled(): boolean {
-        return (
-            !this.disabledInCurrentSession &&
-            this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value
-        );
+        return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
     }
 
     public async showBanner(): Promise<void> {
@@ -95,6 +92,10 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
     }
 
     public async getPromptMessage(): Promise<string | undefined> {
+        if (this.disabledInCurrentSession) {
+            return undefined;
+        }
+
         // Do not prompt if Pylance is already installed.
         if (this.extensions.getExtension(PYLANCE_EXTENSION_ID)) {
             return undefined;

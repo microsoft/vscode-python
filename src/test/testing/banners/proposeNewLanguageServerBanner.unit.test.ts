@@ -104,8 +104,10 @@ suite('Propose Pylance Banner', () => {
             const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, t.experiment, false);
             const message = await testBanner.getPromptMessage();
             if (t.experiment) {
-                expect(!!message).to.be.equal(t.shouldShowBanner, `shouldShowBanner() returned ${message}`);
-                expect(message).to.be.equal(expectedMessages[t.experiment]);
+                expect(message).to.be.equal(
+                    t.shouldShowBanner ? expectedMessages[t.experiment] : undefined,
+                    `getPromptMessage() returned ${message}`
+                );
             } else {
                 expect(message).to.be.equal(undefined, `message should be undefined`);
             }
@@ -116,7 +118,7 @@ suite('Propose Pylance Banner', () => {
             settings.setup((x) => x.languageServer).returns(() => t.lsType);
             const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, t.experiment, true);
             const message = await testBanner.getPromptMessage();
-            expect(message).to.be.equal(undefined, `shouldShowBanner() returned ${message}`);
+            expect(message).to.be.equal(undefined, `getPromptMessage() returned ${message}`);
         });
     });
     test('Do not show banner when it is disabled', async () => {
