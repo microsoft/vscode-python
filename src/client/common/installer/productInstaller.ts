@@ -232,6 +232,11 @@ export class FormatterInstaller extends BaseInstaller {
 }
 
 export class LinterInstaller extends BaseInstaller {
+    // This is a hack, really we should be handling this in a service that
+    // controls the prompts we show. The issue here was that if we show
+    // a prompt to install pylint and flake8, and user selects flake8
+    // we immediately show this prompt again saying install flake8, while the
+    // installation is on going.
     private static promptSeen: boolean = false;
     private readonly experimentsManager: IExperimentsManager;
     private readonly linterManager: ILinterManager;
@@ -241,6 +246,12 @@ export class LinterInstaller extends BaseInstaller {
         this.experimentsManager = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
         this.linterManager = serviceContainer.get<ILinterManager>(ILinterManager);
     }
+
+    public static reset() {
+        // Read notes where this is defined.
+        LinterInstaller.promptSeen = false;
+    }
+
     protected async promptToInstallImplementation(
         product: Product,
         resource?: Uri,

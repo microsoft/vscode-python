@@ -26,6 +26,7 @@ import {
     ProductInstaller
 } from '../../../client/common/installer/productInstaller';
 import { ProductNames } from '../../../client/common/installer/productNames';
+import { LinterProductPathService } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
 import {
     IInstallationChannelManager,
@@ -960,6 +961,7 @@ suite('Module Installer only', () => {
 [undefined, Uri.file('resource')].forEach((resource) => {
     suite(`Test LinterInstaller with resource: ${resource}`, () => {
         class LinterInstallerTest extends LinterInstaller {
+            public isModuleExecutable: boolean = true;
             // tslint:disable-next-line:no-unnecessary-override
             public async promptToInstallImplementation(product: Product, uri?: Uri): Promise<InstallerResponse> {
                 return super.promptToInstallImplementation(product, uri);
@@ -968,7 +970,7 @@ suite('Module Installer only', () => {
                 return false;
             }
             protected isExecutableAModule(_product: Product, _resource?: Uri) {
-                return true;
+                return this.isModuleExecutable;
             }
         }
 
@@ -980,8 +982,11 @@ suite('Module Installer only', () => {
         let cmdManager: ICommandManager;
         let experimentsManager: IExperimentsManager;
         let linterManager: ILinterManager;
+        let serviceContainer: IServiceContainer;
+        let productPathService: IProductPathService;
+        let outputChannel: TypeMoq.IMock<IOutputChannel>;
         setup(() => {
-            const serviceContainer = mock(ServiceContainer);
+            serviceContainer = mock(ServiceContainer);
             appShell = mock(ApplicationShell);
             configService = mock(ConfigurationService);
             workspaceService = mock(WorkspaceService);
@@ -989,7 +994,8 @@ suite('Module Installer only', () => {
             cmdManager = mock(CommandManager);
             experimentsManager = mock(ExperimentsManager);
             linterManager = mock(LinterManager);
-            const outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
+            productPathService = mock(LinterProductPathService);
+            outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
 
             when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
             when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
@@ -1004,19 +1010,25 @@ suite('Module Installer only', () => {
             when(experimentsManager.inExperiment(anything())).thenReturn(false);
 
             when(serviceContainer.get<ILinterManager>(ILinterManager)).thenReturn(instance(linterManager));
+            when(serviceContainer.get<IProductPathService>(IProductPathService, ProductType.Linter)).thenReturn(
+                instance(productPathService)
+            );
 
             installer = new LinterInstallerTest(instance(serviceContainer), outputChannel.object);
         });
 
         teardown(() => {
             sinon.restore();
+            LinterInstaller.reset();
         });
 
         test('Ensure 3 options for pylint', async () => {
             const product = Product.pylint;
             const options = ['Select Linter', 'Do not show again'];
             const productName = ProductNames.get(product)!;
+
             await installer.promptToInstallImplementation(product, resource);
+
             verify(
                 appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])
             ).once();
@@ -1069,10 +1081,52 @@ suite('Module Installer only', () => {
             const product = Product.pylint;
             const options = ['Select Linter', 'Do not show again'];
             const productName = ProductNames.get(product)!;
+
             await installer.promptToInstallImplementation(product, resource);
+
             verify(experimentsManager.inExperiment(LinterInstallationPromptVariants.noPrompt)).never();
             verify(
                 appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])
+            ).once();
+        });
+
+        test('Do not show prompt if linter path is set', async () => {
+            when(workspaceService.getConfiguration('python')).thenReturn(
+                new MockWorkspaceConfiguration({
+                    'linting.pylintPath': {
+                        globalValue: 'path/to/something'
+                    }
+                })
+            );
+            when(productService.getProductType(Product.pylint)).thenReturn(ProductType.Linter);
+            when(productPathService.getExecutableNameFromSettings(Product.pylint, resource)).thenReturn(
+                'path/to/something'
+            );
+            when(experimentsManager.inExperiment(LinterInstallationPromptVariants.flake8First)).thenReturn(true);
+            installer.isModuleExecutable = false;
+
+            const product = Product.pylint;
+            const options = ['Select Linter', 'Do not show again'];
+            const productName = ProductNames.get(product)!;
+            await installer.promptToInstallImplementation(product, resource);
+            verify(experimentsManager.inExperiment(LinterInstallationPromptVariants.flake8First)).once();
+            verify(
+                appShell.showInformationMessage(
+                    Linters.installMessage(),
+                    Linters.installPylint(),
+                    Linters.installFlake8(),
+                    Common.doNotShowAgain()
+                )
+            ).never();
+            verify(
+                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])
+            ).never();
+            verify(
+                appShell.showErrorMessage(
+                    `Path to the ${productName} linter is invalid (path/to/something)`,
+                    options[0],
+                    options[1]
+                )
             ).once();
         });
 
@@ -1081,7 +1135,9 @@ suite('Module Installer only', () => {
             const options = ['Select Linter', 'Do not show again'];
             const productName = ProductNames.get(product)!;
             when(experimentsManager.inExperiment(LinterInstallationPromptVariants.noPrompt)).thenReturn(true);
+
             const response = await installer.promptToInstallImplementation(product, resource);
+
             verify(experimentsManager.inExperiment(LinterInstallationPromptVariants.noPrompt)).once();
             verify(
                 appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])
@@ -1092,7 +1148,9 @@ suite('Module Installer only', () => {
         test('pylint first Experiment: Linter should install pylint first and install flake8 next', async () => {
             const product = Product.pylint;
             when(experimentsManager.inExperiment(LinterInstallationPromptVariants.pylintFirst)).thenReturn(true);
+
             await installer.promptToInstallImplementation(product, resource);
+
             verify(experimentsManager.inExperiment(LinterInstallationPromptVariants.pylintFirst)).once();
             verify(
                 appShell.showInformationMessage(
@@ -1107,7 +1165,9 @@ suite('Module Installer only', () => {
         test('flake8 first Experiment: Linter should install flake8 first and install pylint next', async () => {
             const product = Product.pylint;
             when(experimentsManager.inExperiment(LinterInstallationPromptVariants.flake8First)).thenReturn(true);
+
             await installer.promptToInstallImplementation(product, resource);
+
             verify(experimentsManager.inExperiment(LinterInstallationPromptVariants.flake8First)).once();
             verify(
                 appShell.showInformationMessage(
