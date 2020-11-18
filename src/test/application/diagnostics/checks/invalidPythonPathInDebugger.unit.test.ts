@@ -25,6 +25,7 @@ import {
 } from '../../../../client/application/diagnostics/types';
 import { CommandsWithoutArgs } from '../../../../client/common/application/commands';
 import { IDocumentManager, IWorkspaceService } from '../../../../client/common/application/types';
+import { IFileSystem } from '../../../../client/common/platform/types';
 import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
 import { PythonPathSource } from '../../../../client/debugger/extension/types';
 import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
@@ -35,7 +36,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
     let messageHandler: typemoq.IMock<IDiagnosticHandlerService<MessageCommandPrompt>>;
     let commandFactory: typemoq.IMock<IDiagnosticsCommandFactory>;
     let configService: typemoq.IMock<IConfigurationService>;
-    let helper: typemoq.IMock<IInterpreterHelper>;
+    let fileSystem: typemoq.IMock<IFileSystem>;
     let workspaceService: typemoq.IMock<IWorkspaceService>;
     let docMgr: typemoq.IMock<IDocumentManager>;
     setup(() => {
@@ -58,8 +59,8 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         serviceContainer
             .setup((s) => s.get(typemoq.It.isValue(IConfigurationService)))
             .returns(() => configService.object);
-        helper = typemoq.Mock.ofType<IInterpreterHelper>();
-        serviceContainer.setup((s) => s.get(typemoq.It.isValue(IInterpreterHelper))).returns(() => helper.object);
+        fileSystem = typemoq.Mock.ofType<IFileSystem>();
+        serviceContainer.setup((s) => s.get(typemoq.It.isValue(IInterpreterHelper))).returns(() => fileSystem.object);
         workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
         serviceContainer
             .setup((s) => s.get(typemoq.It.isValue(IWorkspaceService)))
@@ -75,7 +76,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             serviceContainer.object,
             workspaceService.object,
             commandFactory.object,
-            helper.object,
+            fileSystem.object,
             docMgr.object,
             configService.object,
             [],
@@ -239,16 +240,16 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .setup((c) => c.getSettings(typemoq.It.isAny()))
             .returns(() => settings.object)
             .verifiable(typemoq.Times.once());
-        helper
-            .setup((h) => h.getInterpreterInformation(typemoq.It.isValue('p')))
-            .returns(() => Promise.resolve({}))
+        fileSystem
+            .setup((h) => h.fileExists(typemoq.It.isValue('p')))
+            .returns(() => Promise.resolve(true))
             .verifiable(typemoq.Times.once());
 
         const valid = await diagnosticService.validatePythonPath(pythonPath);
 
         settings.verifyAll();
         configService.verifyAll();
-        helper.verifyAll();
+        fileSystem.verifyAll();
         expect(valid).to.be.equal(true, 'not valid');
     });
     test('Ensure ${workspaceFolder} is not expanded when a resource is not passed', async () => {
@@ -258,15 +259,15 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .setup((c) => c.getWorkspaceFolder(typemoq.It.isAny()))
             .returns(() => undefined)
             .verifiable(typemoq.Times.never());
-        helper
-            .setup((h) => h.getInterpreterInformation(typemoq.It.isAny()))
-            .returns(() => Promise.resolve({}))
+        fileSystem
+            .setup((h) => h.fileExists(typemoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
             .verifiable(typemoq.Times.once());
 
         await diagnosticService.validatePythonPath(pythonPath);
 
         configService.verifyAll();
-        helper.verifyAll();
+        fileSystem.verifyAll();
     });
     test('Ensure ${workspaceFolder} is expanded', async () => {
         const pythonPath = '${workspaceFolder}/venv/bin/python';
@@ -278,9 +279,9 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .setup((c) => c.getWorkspaceFolder(typemoq.It.isAny()))
             .returns(() => workspaceFolder)
             .verifiable(typemoq.Times.once());
-        helper
-            .setup((h) => h.getInterpreterInformation(typemoq.It.isValue(expectedPath)))
-            .returns(() => Promise.resolve({}))
+        fileSystem
+            .setup((h) => h.fileExists(typemoq.It.isValue(expectedPath)))
+            .returns(() => Promise.resolve(true))
             .verifiable(typemoq.Times.once());
 
         const valid = await diagnosticService.validatePythonPath(
@@ -290,7 +291,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         );
 
         configService.verifyAll();
-        helper.verifyAll();
+        fileSystem.verifyAll();
         expect(valid).to.be.equal(true, 'not valid');
     });
     test('Ensure ${env:XYZ123} is expanded', async () => {
@@ -302,15 +303,15 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .setup((c) => c.getWorkspaceFolder(typemoq.It.isAny()))
             .returns(() => undefined)
             .verifiable(typemoq.Times.once());
-        helper
-            .setup((h) => h.getInterpreterInformation(typemoq.It.isValue(expectedPath)))
-            .returns(() => Promise.resolve({}))
+        fileSystem
+            .setup((h) => h.fileExists(typemoq.It.isValue(expectedPath)))
+            .returns(() => Promise.resolve(true))
             .verifiable(typemoq.Times.once());
 
         const valid = await diagnosticService.validatePythonPath(pythonPath);
 
         configService.verifyAll();
-        helper.verifyAll();
+        fileSystem.verifyAll();
         expect(valid).to.be.equal(true, 'not valid');
     });
     test('Ensure we get python path from config when path = undefined', async () => {
@@ -325,16 +326,16 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .setup((c) => c.getSettings(typemoq.It.isAny()))
             .returns(() => settings.object)
             .verifiable(typemoq.Times.once());
-        helper
-            .setup((h) => h.getInterpreterInformation(typemoq.It.isValue('p')))
-            .returns(() => Promise.resolve({}))
+        fileSystem
+            .setup((h) => h.fileExists(typemoq.It.isValue('p')))
+            .returns(() => Promise.resolve(true))
             .verifiable(typemoq.Times.once());
 
         const valid = await diagnosticService.validatePythonPath(pythonPath);
 
         settings.verifyAll();
         configService.verifyAll();
-        helper.verifyAll();
+        fileSystem.verifyAll();
         expect(valid).to.be.equal(true, 'not valid');
     });
     test('Ensure we do not get python path from config when path is provided', async () => {
@@ -345,15 +346,15 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .setup((c) => c.getSettings(typemoq.It.isAny()))
             .returns(() => settings.object)
             .verifiable(typemoq.Times.never());
-        helper
-            .setup((h) => h.getInterpreterInformation(typemoq.It.isValue(pythonPath)))
-            .returns(() => Promise.resolve({}))
+        fileSystem
+            .setup((h) => h.fileExists(typemoq.It.isValue(pythonPath)))
+            .returns(() => Promise.resolve(true))
             .verifiable(typemoq.Times.once());
 
         const valid = await diagnosticService.validatePythonPath(pythonPath);
 
         configService.verifyAll();
-        helper.verifyAll();
+        fileSystem.verifyAll();
         expect(valid).to.be.equal(true, 'not valid');
     });
     test('Ensure InvalidPythonPathInDebuggerLaunch diagnostic is handled when path is invalid in launch.json', async () => {
@@ -373,14 +374,14 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             }
             return Promise.resolve();
         };
-        helper
-            .setup((h) => h.getInterpreterInformation(typemoq.It.isValue(pythonPath)))
-            .returns(() => Promise.resolve(undefined))
+        fileSystem
+            .setup((h) => h.fileExists(typemoq.It.isValue(pythonPath)))
+            .returns(() => Promise.resolve(false))
             .verifiable(typemoq.Times.once());
 
         const valid = await diagnosticService.validatePythonPath(pythonPath, PythonPathSource.launchJson);
 
-        helper.verifyAll();
+        fileSystem.verifyAll();
         expect(valid).to.be.equal(false, 'should be invalid');
         expect(handleInvoked).to.be.equal(true, 'should be invoked');
     });
@@ -405,14 +406,14 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             }
             return Promise.resolve();
         };
-        helper
-            .setup((h) => h.getInterpreterInformation(typemoq.It.isValue('p')))
-            .returns(() => Promise.resolve(undefined))
+        fileSystem
+            .setup((h) => h.fileExists(typemoq.It.isValue('p')))
+            .returns(() => Promise.resolve(false))
             .verifiable(typemoq.Times.once());
 
         const valid = await diagnosticService.validatePythonPath(pythonPath, PythonPathSource.settingsJson);
 
-        helper.verifyAll();
+        fileSystem.verifyAll();
         expect(valid).to.be.equal(false, 'should be invalid');
         expect(handleInvoked).to.be.equal(true, 'should be invoked');
     });

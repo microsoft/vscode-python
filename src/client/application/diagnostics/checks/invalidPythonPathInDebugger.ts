@@ -9,11 +9,11 @@ import { DiagnosticSeverity, Uri, workspace as workspc, WorkspaceFolder } from '
 import { IDocumentManager, IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
 import { traceError } from '../../../common/logger';
+import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { Diagnostics } from '../../../common/utils/localize';
 import { SystemVariables } from '../../../common/variables/systemVariables';
 import { PythonPathSource } from '../../../debugger/extension/types';
-import { IInterpreterHelper } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
@@ -52,7 +52,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDiagnosticsCommandFactory) private readonly commandFactory: IDiagnosticsCommandFactory,
-        @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
@@ -79,7 +79,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
         if (pythonPath === '${command:python.interpreterPath}' || !pythonPath) {
             pythonPath = this.configService.getSettings(resource).pythonPath;
         }
-        if (await this.interpreterHelper.getInterpreterInformation(pythonPath).catch(() => undefined)) {
+        if (await this.fs.fileExists(pythonPath)) {
             return true;
         }
         traceError(`Invalid Python Path '${pythonPath}'`);
