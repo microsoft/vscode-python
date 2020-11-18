@@ -142,7 +142,7 @@ suite('Propose Pylance Banner', () => {
         await testBanner.showBanner();
         appShell.verifyAll();
     });
-    test.only('Clicking No should disable the banner', async () => {
+    test('Clicking No should disable the banner', async () => {
         settings.setup((x) => x.languageServer).returns(() => LanguageServerType.Microsoft);
         appShell
             .setup((a) =>
