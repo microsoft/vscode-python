@@ -28,20 +28,37 @@ import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
 
 interface IExperimentLsCombination {
-    inExperiment: boolean;
+    experiment?: TryPylance;
     lsType: LanguageServerType;
     shouldShowBanner: boolean;
 }
 const testData: IExperimentLsCombination[] = [
-    { inExperiment: true, lsType: LanguageServerType.None, shouldShowBanner: true },
-    { inExperiment: true, lsType: LanguageServerType.Microsoft, shouldShowBanner: true },
-    { inExperiment: true, lsType: LanguageServerType.Node, shouldShowBanner: false },
-    { inExperiment: true, lsType: LanguageServerType.Jedi, shouldShowBanner: false },
-    { inExperiment: false, lsType: LanguageServerType.None, shouldShowBanner: false },
-    { inExperiment: false, lsType: LanguageServerType.Microsoft, shouldShowBanner: false },
-    { inExperiment: false, lsType: LanguageServerType.Node, shouldShowBanner: false },
-    { inExperiment: false, lsType: LanguageServerType.Jedi, shouldShowBanner: false }
+    { experiment: undefined, lsType: LanguageServerType.None, shouldShowBanner: false },
+    { experiment: undefined, lsType: LanguageServerType.Microsoft, shouldShowBanner: false },
+    { experiment: undefined, lsType: LanguageServerType.Node, shouldShowBanner: false },
+    { experiment: undefined, lsType: LanguageServerType.Jedi, shouldShowBanner: false },
+
+    { experiment: TryPylance.experiment, lsType: LanguageServerType.None, shouldShowBanner: true },
+    { experiment: TryPylance.experiment, lsType: LanguageServerType.Microsoft, shouldShowBanner: true },
+    { experiment: TryPylance.experiment, lsType: LanguageServerType.Node, shouldShowBanner: false },
+    { experiment: TryPylance.experiment, lsType: LanguageServerType.Jedi, shouldShowBanner: false },
+
+    { experiment: TryPylance.jediPrompt1, lsType: LanguageServerType.None, shouldShowBanner: false },
+    { experiment: TryPylance.jediPrompt1, lsType: LanguageServerType.Microsoft, shouldShowBanner: false },
+    { experiment: TryPylance.jediPrompt1, lsType: LanguageServerType.Node, shouldShowBanner: false },
+    { experiment: TryPylance.jediPrompt1, lsType: LanguageServerType.Jedi, shouldShowBanner: true },
+
+    { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.None, shouldShowBanner: false },
+    { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.Microsoft, shouldShowBanner: false },
+    { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.Node, shouldShowBanner: false },
+    { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.Jedi, shouldShowBanner: true }
 ];
+
+const expectedMessages = {
+    [TryPylance.experiment]: Pylance.proposePylanceMessage(),
+    [TryPylance.jediPrompt1]: 'Message for jediPrompt1',
+    [TryPylance.jediPrompt2]: 'Message for jediPrompt2'
+};
 
 suite('Propose Pylance Banner', () => {
     let config: typemoq.IMock<IConfigurationService>;
@@ -51,7 +68,6 @@ suite('Propose Pylance Banner', () => {
     let sendTelemetryStub: sinon.SinonStub;
     let telemetryEvent: { eventName: EventName; properties: { userAction: string } } | undefined;
 
-    const message = Pylance.proposePylanceMessage();
     const yes = Pylance.tryItNow();
     const no = Common.bannerLabelNo();
     const later = Pylance.remindMeLater();
@@ -81,11 +97,11 @@ suite('Propose Pylance Banner', () => {
     });
 
     testData.forEach((t) => {
-        test(`${t.inExperiment ? 'In' : 'Not in'} experiment and "python.languageServer": "${t.lsType}" should ${
+        test(`${t.experiment} experiment and "python.languageServer": "${t.lsType}" should ${
             t.shouldShowBanner ? 'show' : 'not show'
         } banner`, async () => {
             settings.setup((x) => x.languageServer).returns(() => t.lsType);
-            const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, t.inExperiment, false);
+            const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, t.experiment, false);
             const actual = await testBanner.shouldShowBanner();
             expect(actual).to.be.equal(t.shouldShowBanner, `shouldShowBanner() returned ${actual}`);
         });
@@ -93,31 +109,40 @@ suite('Propose Pylance Banner', () => {
     testData.forEach((t) => {
         test(`When Pylance is installed, banner should not be shown when "python.languageServer": "${t.lsType}"`, async () => {
             settings.setup((x) => x.languageServer).returns(() => t.lsType);
-            const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, t.inExperiment, true);
+            const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, t.experiment, true);
             const actual = await testBanner.shouldShowBanner();
             expect(actual).to.be.equal(false, `shouldShowBanner() returned ${actual}`);
         });
     });
     test('Do not show banner when it is disabled', async () => {
+        settings.setup((x) => x.languageServer).returns(() => LanguageServerType.Microsoft);
         appShell
             .setup((a) =>
                 a.showInformationMessage(
-                    typemoq.It.isValue(message),
+                    typemoq.It.isValue(expectedMessages[TryPylance.experiment]),
                     typemoq.It.isValue(yes),
                     typemoq.It.isValue(no),
                     typemoq.It.isValue(later)
                 )
             )
             .verifiable(typemoq.Times.never());
-        const testBanner = preparePopup(false, appShell.object, appEnv.object, config.object, true, false);
+        const testBanner = preparePopup(
+            false,
+            appShell.object,
+            appEnv.object,
+            config.object,
+            TryPylance.experiment,
+            false
+        );
         await testBanner.showBanner();
         appShell.verifyAll();
     });
-    test('Clicking No should disable the banner', async () => {
+    test.only('Clicking No should disable the banner', async () => {
+        settings.setup((x) => x.languageServer).returns(() => LanguageServerType.Microsoft);
         appShell
             .setup((a) =>
                 a.showInformationMessage(
-                    typemoq.It.isValue(message),
+                    typemoq.It.isValue(expectedMessages[TryPylance.experiment]),
                     typemoq.It.isValue(yes),
                     typemoq.It.isValue(no),
                     typemoq.It.isValue(later)
@@ -127,7 +152,14 @@ suite('Propose Pylance Banner', () => {
             .verifiable(typemoq.Times.once());
         appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.never());
 
-        const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, true, false);
+        const testBanner = preparePopup(
+            true,
+            appShell.object,
+            appEnv.object,
+            config.object,
+            TryPylance.experiment,
+            false
+        );
         await testBanner.showBanner();
 
         expect(testBanner.enabled).to.be.equal(false, 'Banner should be permanently disabled when user clicked No');
@@ -140,10 +172,11 @@ suite('Propose Pylance Banner', () => {
         });
     });
     test('Clicking Later should disable banner in session', async () => {
+        settings.setup((x) => x.languageServer).returns(() => LanguageServerType.Microsoft);
         appShell
             .setup((a) =>
                 a.showInformationMessage(
-                    typemoq.It.isValue(message),
+                    typemoq.It.isValue(expectedMessages[TryPylance.experiment]),
                     typemoq.It.isValue(yes),
                     typemoq.It.isValue(no),
                     typemoq.It.isValue(later)
@@ -153,7 +186,14 @@ suite('Propose Pylance Banner', () => {
             .verifiable(typemoq.Times.once());
         appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.never());
 
-        const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, true, false);
+        const testBanner = preparePopup(
+            true,
+            appShell.object,
+            appEnv.object,
+            config.object,
+            TryPylance.experiment,
+            false
+        );
         await testBanner.showBanner();
 
         expect(testBanner.enabled).to.be.equal(
@@ -171,10 +211,11 @@ suite('Propose Pylance Banner', () => {
         });
     });
     test('Clicking Yes opens the extension marketplace entry', async () => {
+        settings.setup((x) => x.languageServer).returns(() => LanguageServerType.Microsoft);
         appShell
             .setup((a) =>
                 a.showInformationMessage(
-                    typemoq.It.isValue(message),
+                    typemoq.It.isValue(expectedMessages[TryPylance.experiment]),
                     typemoq.It.isValue(yes),
                     typemoq.It.isValue(no),
                     typemoq.It.isValue(later)
@@ -184,7 +225,14 @@ suite('Propose Pylance Banner', () => {
             .verifiable(typemoq.Times.once());
         appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.once());
 
-        const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, true, false);
+        const testBanner = preparePopup(
+            true,
+            appShell.object,
+            appEnv.object,
+            config.object,
+            TryPylance.experiment,
+            false
+        );
         await testBanner.showBanner();
 
         expect(testBanner.enabled).to.be.equal(false, 'Banner should be permanently disabled after opening store URL');
@@ -205,7 +253,7 @@ function preparePopup(
     appShell: IApplicationShell,
     appEnv: IApplicationEnvironment,
     config: IConfigurationService,
-    inExperiment: boolean,
+    experiment: TryPylance | undefined,
     pylanceInstalled: boolean
 ): ProposePylanceBanner {
     const myfactory = typemoq.Mock.ofType<IPersistentStateFactory>();
@@ -237,7 +285,12 @@ function preparePopup(
         });
 
     const experiments = typemoq.Mock.ofType<IExperimentService>();
-    experiments.setup((x) => x.inExperiment(TryPylance.experiment)).returns(() => Promise.resolve(inExperiment));
+    Object.values(TryPylance).forEach((exp) => {
+        experiments.setup((x) => x.inExperiment(exp)).returns(() => Promise.resolve(exp === experiment));
+        if (exp !== TryPylance.experiment) {
+            experiments.setup((x) => x.getExperimentValue(exp)).returns(() => Promise.resolve(expectedMessages[exp]));
+        }
+    });
 
     const extensions = typemoq.Mock.ofType<IExtensions>();
     // tslint:disable-next-line: no-any

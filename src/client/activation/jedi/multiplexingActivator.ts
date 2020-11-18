@@ -17,7 +17,7 @@ import { isTestExecution } from '../../common/constants';
 import { JediLSP } from '../../common/experiments/groups';
 import { IFileSystem } from '../../common/platform/types';
 import {
-    BANNER_NAME_PROPOSE_LS_FOR_JEDI_USERS,
+    BANNER_NAME_PROPOSE_LS,
     IConfigurationService,
     IExperimentService,
     IPythonExtensionBanner,
@@ -47,7 +47,7 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
         @inject(IServiceManager) private readonly manager: IServiceManager,
         @inject(IExperimentService) experimentService: IExperimentService,
         @inject(IPythonExtensionBanner)
-        @named(BANNER_NAME_PROPOSE_LS_FOR_JEDI_USERS)
+        @named(BANNER_NAME_PROPOSE_LS)
         private proposePylancePopup: IPythonExtensionBanner
     ) {
         // Check experiment service to see if using new Jedi LSP protocol

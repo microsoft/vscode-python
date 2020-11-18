@@ -46,15 +46,10 @@ import {
     LanguageServerType
 } from '../../client/activation/types';
 import { INugetRepository } from '../../client/common/nuget/types';
-import {
-    BANNER_NAME_PROPOSE_LS,
-    BANNER_NAME_PROPOSE_LS_FOR_JEDI_USERS,
-    IPythonExtensionBanner
-} from '../../client/common/types';
+import { BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../../client/common/types';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceManager } from '../../client/ioc/types';
 import { ProposePylanceBanner } from '../../client/languageServices/proposeLanguageServerBanner';
-import { ProposePylanceBannerJedi } from '../../client/languageServices/proposeLanguageServerBannerJedi';
 
 // tslint:disable:max-func-body-length
 
@@ -93,13 +88,6 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
                 IPythonExtensionBanner,
                 ProposePylanceBanner,
                 BANNER_NAME_PROPOSE_LS
-            )
-        ).once();
-        verify(
-            serviceManager.addSingleton<IPythonExtensionBanner>(
-                IPythonExtensionBanner,
-                ProposePylanceBannerJedi,
-                BANNER_NAME_PROPOSE_LS_FOR_JEDI_USERS
             )
         ).once();
         verify(

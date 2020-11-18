@@ -50,11 +50,10 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
     ) {}
 
     public get enabled(): boolean {
-        const lsType = this.configuration.getSettings().languageServer ?? LanguageServerType.Jedi;
-        if (lsType === LanguageServerType.Jedi || lsType === LanguageServerType.Node) {
-            return false;
-        }
-        return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
+        return (
+            !this.disabledInCurrentSession &&
+            this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value
+        );
     }
 
     public async showBanner(): Promise<void> {
@@ -62,13 +61,13 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
             return;
         }
 
-        const show = await this.shouldShowBanner();
-        if (!show) {
+        const message = await this.getPromptMessage();
+        if (!message) {
             return;
         }
 
         const response = await this.appShell.showInformationMessage(
-            Pylance.proposePylanceMessage(),
+            message,
             Pylance.tryItNow(),
             Common.bannerLabelNo(),
             Pylance.remindMeLater()
@@ -90,18 +89,35 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
     }
 
     public async shouldShowBanner(): Promise<boolean> {
-        // Do not prompt if Pylance is already installed.
-        if (this.extensions.getExtension(PYLANCE_EXTENSION_ID)) {
-            return false;
-        }
-        // Only prompt for users in experiment.
-        const inExperiment = await this.experiments.inExperiment(TryPylance.experiment);
-        return inExperiment && this.enabled && !this.disabledInCurrentSession;
+        return !!(await this.getPromptMessage());
     }
 
     public async disable(): Promise<void> {
         await this.persistentState
             .createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, false)
             .updateValue(false);
+    }
+
+    public async getPromptMessage(): Promise<string | undefined> {
+        // Do not prompt if Pylance is already installed.
+        if (this.extensions.getExtension(PYLANCE_EXTENSION_ID)) {
+            return undefined;
+        }
+
+        const lsType = this.configuration.getSettings().languageServer ?? LanguageServerType.Jedi;
+
+        if (lsType === LanguageServerType.Jedi) {
+            if (await this.experiments.inExperiment(TryPylance.jediPrompt1)) {
+                return this.experiments.getExperimentValue<string>(TryPylance.jediPrompt1);
+            } else if (await this.experiments.inExperiment(TryPylance.jediPrompt2)) {
+                return this.experiments.getExperimentValue<string>(TryPylance.jediPrompt2);
+            }
+        } else if (lsType === LanguageServerType.Microsoft || lsType === LanguageServerType.None) {
+            if (await this.experiments.inExperiment(TryPylance.experiment)) {
+                return Pylance.proposePylanceMessage();
+            }
+        }
+
+        return undefined;
     }
 }
