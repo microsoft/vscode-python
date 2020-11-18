@@ -66,14 +66,11 @@ export class ProposePylanceBannerJedi implements IPythonExtensionBanner {
             return;
         }
 
-        let experimentName = '';
         let promptContent: string | undefined;
         if (await this.experiments.inExperiment(TryPylance.jediPrompt1)) {
             promptContent = await this.experiments.getExperimentValue<string>(TryPylance.jediPrompt1);
-            experimentName = TryPylance.jediPrompt1;
         } else if (await this.experiments.inExperiment(TryPylance.jediPrompt2)) {
             promptContent = await this.experiments.getExperimentValue<string>(TryPylance.jediPrompt2);
-            experimentName = TryPylance.jediPrompt2;
         }
 
         if (promptContent === undefined) {
@@ -99,7 +96,7 @@ export class ProposePylanceBannerJedi implements IPythonExtensionBanner {
             this.disabledInCurrentSession = true;
             userAction = 'later';
         }
-        sendTelemetryEvent(EventName.LANGUAGE_SERVER_TRY_PYLANCE, undefined, { userAction, experimentName });
+        sendTelemetryEvent(EventName.LANGUAGE_SERVER_TRY_PYLANCE, undefined, { userAction });
     }
 
     public async shouldShowBanner(): Promise<boolean> {

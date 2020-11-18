@@ -1305,7 +1305,6 @@ export interface IEventNamePropertyMapping {
          * @type {string}
          */
         userAction: string;
-        experimentName: string;
     };
     /**
      * Telemetry captured for enabling reload.

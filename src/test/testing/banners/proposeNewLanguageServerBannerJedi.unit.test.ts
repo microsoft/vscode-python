@@ -52,9 +52,7 @@ suite('Jedi Propose Pylance Banner', () => {
     let appEnv: typemoq.IMock<IApplicationEnvironment>;
     let settings: typemoq.IMock<IPythonSettings>;
     let sendTelemetryStub: sinon.SinonStub;
-    let telemetryEvent:
-        | { eventName: EventName; properties: { userAction: string; experimentName: string } }
-        | undefined;
+    let telemetryEvent: { eventName: EventName; properties: { userAction: string } } | undefined;
 
     const message = 'Sample value1';
     const yes = Pylance.tryItNow();
@@ -71,7 +69,7 @@ suite('Jedi Propose Pylance Banner', () => {
 
         sendTelemetryStub = sinon
             .stub(Telemetry, 'sendTelemetryEvent')
-            .callsFake((eventName: EventName, _, properties: { userAction: string; experimentName: string }) => {
+            .callsFake((eventName: EventName, _, properties: { userAction: string }) => {
                 telemetryEvent = {
                     eventName,
                     properties
@@ -157,7 +155,7 @@ suite('Jedi Propose Pylance Banner', () => {
         sinon.assert.calledOnce(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, {
             eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
-            properties: { userAction: 'no', experimentName: TryPylance.jediPrompt1 }
+            properties: { userAction: 'no' }
         });
     });
     test('Clicking Later should disable banner in session', async () => {
@@ -196,8 +194,7 @@ suite('Jedi Propose Pylance Banner', () => {
         assert.deepEqual(telemetryEvent, {
             eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
             properties: {
-                userAction: 'later',
-                experimentName: TryPylance.jediPrompt1
+                userAction: 'later'
             }
         });
     });
@@ -234,8 +231,7 @@ suite('Jedi Propose Pylance Banner', () => {
         assert.deepEqual(telemetryEvent, {
             eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
             properties: {
-                userAction: 'yes',
-                experimentName: TryPylance.jediPrompt1
+                userAction: 'yes'
             }
         });
     });
