@@ -28,19 +28,6 @@ export enum PythonEnvKind {
     OtherVirtual = 'virt-other'
 }
 
-export function getGlobalEnvKinds() : PythonEnvKind[] {
-    return [
-        PythonEnvKind.System,
-        PythonEnvKind.MacDefault,
-        PythonEnvKind.WindowsStore,
-        PythonEnvKind.Pyenv,
-        PythonEnvKind.CondaBase,
-        PythonEnvKind.Poetry,
-        PythonEnvKind.Custom,
-        PythonEnvKind.OtherGlobal,
-    ];
-}
-
 /**
  * A (system-global) unique ID for a single Python environment.
  */

@@ -27,7 +27,7 @@ import {
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import {
-    getGlobalEnvKinds, PythonEnvInfo, PythonEnvKind, PythonReleaseLevel,
+    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel,
 } from './base/info';
 import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
@@ -275,9 +275,6 @@ class ComponentAdapter implements IComponentAdapter {
                 };
             }
         }
-
-        // Ensure that global environments are always included.
-        query.kinds = getGlobalEnvKinds();
 
         const iterator = this.api.iterEnvs(query);
         const envs = await getEnvs(iterator);
