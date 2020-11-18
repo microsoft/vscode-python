@@ -33,7 +33,7 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
         return this.values.has(section);
     }
     public inspect<T>(
-        _section: string
+        section: string
     ):
         | {
               key: string;
@@ -43,7 +43,7 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
               workspaceFolderValue?: T | undefined;
           }
         | undefined {
-        return;
+        return this.values.get(section);
     }
     public update(
         section: string,
