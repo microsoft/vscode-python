@@ -17,6 +17,6 @@
             "**/.vscode-test/insider/**": true,
             "**/.vscode-test/stable/**": true,
             "**/out/**": true
-        },
+        }
     }
 }
