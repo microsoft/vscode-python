@@ -52,9 +52,9 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
     ) {
         // Check experiment service to see if using new Jedi LSP protocol
         this.realLanguageServerPromise = experimentService.inExperiment(JediLSP.experiment).then((inExperiment) => {
-            // Pick how to launch jedi based on if in the experiment or not.
             this.realLanguageServer = !inExperiment
-                ? new JediExtensionActivator(this.manager)
+                ? // Pick how to launch jedi based on if in the experiment or not.
+                  new JediExtensionActivator(this.manager)
                 : new JediLanguageServerActivator(
                       this.manager.get<ILanguageServerManager>(ILanguageServerManager),
                       this.manager.get<IWorkspaceService>(IWorkspaceService),
