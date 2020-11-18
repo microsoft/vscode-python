@@ -13,7 +13,7 @@ import { ensureFSTree } from '../../../../utils/fs';
 import { createNamedEnv, getEnvs } from '../../common';
 
 // Set this to true to run on linux.
-const RUN_ANY_OS = false;
+const RUN_ANY_OS = true;
 
 const EMPTY_EXECUTABLE: PythonExecutableInfo = {
     filename: '',

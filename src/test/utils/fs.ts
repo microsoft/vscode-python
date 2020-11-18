@@ -6,7 +6,7 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as tmp from 'tmp';
-import { parseTree } from './text';
+import { parseTree } from '../../client/common/utils/text';
 
 export function createTemporaryFile(
     extension: string,
