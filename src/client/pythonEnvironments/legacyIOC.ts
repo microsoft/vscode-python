@@ -26,7 +26,9 @@ import {
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
-import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
+import {
+    getGlobalEnvKinds, PythonEnvInfo, PythonEnvKind, PythonReleaseLevel,
+} from './base/info';
 import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
 import { getEnvs } from './base/locatorUtils';
@@ -267,9 +269,15 @@ class ComponentAdapter implements IComponentAdapter {
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
             if (wsFolder !== undefined) {
-                query.searchLocations = { roots: [wsFolder.uri] };
+                query.searchLocations = {
+                    roots: [wsFolder.uri],
+                    includeNonRooted: true,
+                };
             }
         }
+
+        // Ensure that global environments are always included.
+        query.kinds = getGlobalEnvKinds();
 
         const iterator = this.api.iterEnvs(query);
         const envs = await getEnvs(iterator);
