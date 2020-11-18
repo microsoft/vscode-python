@@ -59,11 +59,17 @@ export function getGlobalPersistentStore<T>(key: string): IPersistentStore<T> {
 }
 
 export async function getFileInfo(filePath: string): Promise<{ctime:number, mtime:number}> {
-    const data = await fsapi.lstat(filePath);
-    return {
-        ctime: data.ctime.valueOf(),
-        mtime: data.mtime.valueOf(),
-    };
+    try {
+        const data = await fsapi.lstat(filePath);
+        return {
+            ctime: data.ctime.valueOf(),
+            mtime: data.mtime.valueOf(),
+        };
+    } catch (ex) {
+        // This can fail on some cases, such as, `reparse points` on windows. So, return the
+        // time as -1. Which we treat as not set in the extension.
+        return { ctime: -1, mtime: -1 };
+    }
 }
 
 export async function resolveSymbolicLink(filepath:string): Promise<string> {
