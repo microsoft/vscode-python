@@ -88,10 +88,6 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
         sendTelemetryEvent(EventName.LANGUAGE_SERVER_TRY_PYLANCE, undefined, { userAction });
     }
 
-    public async shouldShowBanner(): Promise<boolean> {
-        return !!(await this.getPromptMessage());
-    }
-
     public async disable(): Promise<void> {
         await this.persistentState
             .createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, false)

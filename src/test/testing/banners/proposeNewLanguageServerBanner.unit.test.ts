@@ -102,16 +102,21 @@ suite('Propose Pylance Banner', () => {
         } banner`, async () => {
             settings.setup((x) => x.languageServer).returns(() => t.lsType);
             const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, t.experiment, false);
-            const actual = await testBanner.shouldShowBanner();
-            expect(actual).to.be.equal(t.shouldShowBanner, `shouldShowBanner() returned ${actual}`);
+            const message = await testBanner.getPromptMessage();
+            if (t.experiment) {
+                expect(!!message).to.be.equal(t.shouldShowBanner, `shouldShowBanner() returned ${message}`);
+                expect(message).to.be.equal(expectedMessages[t.experiment]);
+            } else {
+                expect(message).to.be.equal(undefined, `message should be undefined`);
+            }
         });
     });
     testData.forEach((t) => {
         test(`When Pylance is installed, banner should not be shown when "python.languageServer": "${t.lsType}"`, async () => {
             settings.setup((x) => x.languageServer).returns(() => t.lsType);
             const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, t.experiment, true);
-            const actual = await testBanner.shouldShowBanner();
-            expect(actual).to.be.equal(false, `shouldShowBanner() returned ${actual}`);
+            const message = await testBanner.getPromptMessage();
+            expect(message).to.be.equal(undefined, `shouldShowBanner() returned ${message}`);
         });
     });
     test('Do not show banner when it is disabled', async () => {
