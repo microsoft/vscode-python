@@ -11,7 +11,6 @@ import {
     IDisposableLocator, IPythonEnvsIterator, PythonLocatorQuery
 } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
-import { WorkspaceVirtualEnvironmentLocator } from './base/locators/lowLevel/workspaceVirtualEnvLocator';
 import { PythonEnvsChangedEvent } from './base/watcher';
 import { getGlobalPersistentStore, initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
 import { ExtensionLocators, WorkspaceLocators } from './discovery/locators';
@@ -101,7 +100,6 @@ async function initLocators(): Promise<ExtensionLocators> {
 
     const workspaceLocators = new WorkspaceLocators([
         // Add an ILocator factory func here for each kind of workspace-rooted locator.
-        (root: vscode.Uri) => [new WorkspaceVirtualEnvironmentLocator(root.fsPath)],
     ]);
 
     // Any non-workspace locator activation goes here.
