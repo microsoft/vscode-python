@@ -145,7 +145,7 @@ class WindowsStoreLocator extends FSWatchingLocator {
         super(
             getWindowsStoreAppsRoot,
             async () => this.kind,
-            { executableBaseGlob: pythonExeGlob, fetchEnvKindOnDeletion: true },
+            { executableBaseGlob: pythonExeGlob },
         );
     }
 
