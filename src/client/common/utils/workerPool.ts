@@ -122,7 +122,7 @@ class WorkQueue<T, R> {
     }
 }
 
-class WorkerPool<T, R> implements IWorkerPool<T, R> {
+export class WorkerPool<T, R> implements IWorkerPool<T, R> {
     // This collection tracks the full set of workers.
     private readonly workers: IWorker[] = [];
 
@@ -237,12 +237,4 @@ class WorkerPool<T, R> implements IWorkerPool<T, R> {
             });
         });
     }
-}
-
-export function createWorkerPool<T, R>(
-    workerFunc: WorkFunc<T, R>,
-    numWorkers: number = 2,
-    name: string = 'Worker'
-): WorkerPool<T, R> {
-    return new WorkerPool<T, R>(workerFunc, numWorkers, name);
 }
