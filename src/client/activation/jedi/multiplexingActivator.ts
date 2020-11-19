@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import {
     CancellationToken,
     CompletionContext,
@@ -13,9 +13,16 @@ import {
 } from 'vscode';
 // tslint:disable-next-line: import-name
 import { IWorkspaceService } from '../../common/application/types';
+import { isTestExecution } from '../../common/constants';
 import { JediLSP } from '../../common/experiments/groups';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IExperimentService, Resource } from '../../common/types';
+import {
+    BANNER_NAME_PROPOSE_LS,
+    IConfigurationService,
+    IExperimentService,
+    IPythonExtensionBanner,
+    Resource
+} from '../../common/types';
 import { IServiceManager } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { JediExtensionActivator } from '../jedi';
@@ -38,7 +45,10 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
 
     constructor(
         @inject(IServiceManager) private readonly manager: IServiceManager,
-        @inject(IExperimentService) experimentService: IExperimentService
+        @inject(IExperimentService) experimentService: IExperimentService,
+        @inject(IPythonExtensionBanner)
+        @named(BANNER_NAME_PROPOSE_LS)
+        private proposePylancePopup: IPythonExtensionBanner
     ) {
         // Check experiment service to see if using new Jedi LSP protocol
         this.realLanguageServerPromise = experimentService.inExperiment(JediLSP.experiment).then((inExperiment) => {
@@ -56,6 +66,9 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
     }
     public async start(resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void> {
         const realServer = await this.realLanguageServerPromise;
+        if (!isTestExecution()) {
+            this.proposePylancePopup.showBanner().ignoreErrors();
+        }
         return realServer.start(resource, interpreter);
     }
     public activate(): void {
