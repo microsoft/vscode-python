@@ -19,7 +19,7 @@ import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { run } from '../../../discovery/locators/envTestUtils';
 
 class WorkspaceVenvs {
-    constructor(private readonly root: string, private readonly prefix = '.virtualenv-') { }
+    constructor(private readonly root: string, private readonly prefix = '.v') { }
 
     public async create(name: string): Promise<string> {
         const envName = this.resolve(name);

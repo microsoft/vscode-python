@@ -19,7 +19,7 @@ const testVirtualHomeDir = path.join(TEST_LAYOUT_ROOT, 'virtualhome');
 const testWorkOnHomePath = path.join(testVirtualHomeDir, 'workonhome');
 
 class GlobalVenvs {
-    constructor(private readonly prefix = '.virtualenv-') { }
+    constructor(private readonly prefix = '.v') { }
 
     public async create(name: string): Promise<string> {
         const envName = this.resolve(name);
