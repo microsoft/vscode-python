@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { createDeferred, Deferred } from '../../common/utils/async';
-import { IWorkerPool, QueuePosition, WorkerPool } from '../../common/utils/workerPool';
+import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../common/utils/workerPool';
 import { getInterpreterInfo, InterpreterInformation } from '../base/info/interpreter';
 import { shellExecute } from '../common/externalDependencies';
 import { buildPythonExecInfo } from '../exec';
@@ -60,8 +60,9 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
         }
 
         if (this.workerPool === undefined) {
-            this.workerPool = new WorkerPool<string, InterpreterInformation | undefined>(buildEnvironmentInfo);
-            this.workerPool.start();
+            this.workerPool = createRunningWorkerPool<string, InterpreterInformation | undefined>(
+                buildEnvironmentInfo,
+            );
         }
 
         const deferred = createDeferred<InterpreterInformation>();
