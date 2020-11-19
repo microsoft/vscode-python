@@ -34,12 +34,6 @@ export abstract class FSWatchingLocator extends Locator {
              * Time to wait before handling an environment-created event.
              */
             delayOnCreated?: number; // milliseconds
-            /**
-             * Fetching kind after deletion normally fails because the file structure around the
-             * executable is no longer available, so it is skipped by default. But in some cases
-             * the file structure is not needed, so this option becomes helpful.
-             */
-            fetchEnvKindOnDeletion?: boolean;
         } = {},
     ) {
         super();
@@ -78,9 +72,9 @@ export abstract class FSWatchingLocator extends Locator {
                             await sleep(this.opts.delayOnCreated);
                         }
                     }
-                    const kind = type === FileChangeType.Deleted && !this.opts.fetchEnvKindOnDeletion
-                        ? undefined
-                        : await this.getKind(executable);
+                    // Fetching kind after deletion normally fails because the file structure around the
+                    // executable is no longer available, so ignore the errors.
+                    const kind = await this.getKind(executable).catch(() => undefined);
                     this.emitter.fire({ type, kind });
                 },
                 this.opts.executableBaseGlob,
