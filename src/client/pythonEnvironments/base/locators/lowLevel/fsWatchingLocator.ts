@@ -72,7 +72,7 @@ export abstract class FSWatchingLocator extends Locator {
                             await sleep(this.opts.delayOnCreated);
                         }
                     }
-                    const kind = await this.getKind(executable);
+                    const kind = type === FileChangeType.Deleted ? undefined : await this.getKind(executable);
                     this.emitter.fire({ type, kind });
                 },
                 this.opts.executableBaseGlob,
