@@ -55,7 +55,9 @@ export enum DeprecatePythonPath {
 
 // Experiment to offer switch to Pylance language server
 export enum TryPylance {
-    experiment = 'tryPylance'
+    experiment = 'tryPylance',
+    jediPrompt1 = 'tryPylancePromptText1',
+    jediPrompt2 = 'tryPylancePromptText2'
 }
 
 // Experiment for the content of the tip being displayed on first extension launch:
