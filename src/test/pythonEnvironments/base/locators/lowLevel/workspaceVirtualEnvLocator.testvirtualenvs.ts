@@ -14,40 +14,12 @@ import { createWorkspaceVirtualEnvLocator } from '../../../../../client/pythonEn
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import { getInterpreterPathFromDir } from '../../../../../client/pythonEnvironments/common/commonUtils';
-import { arePathsSame, readFile } from '../../../../../client/pythonEnvironments/common/externalDependencies';
-import { createGlobalVirtualEnvironmentLocator } from '../../../../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvronmentLocator';
+import { arePathsSame } from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import { deleteFiles, PYTHON_PATH } from '../../../../common';
 import { TEST_TIMEOUT } from '../../../../constants';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { run } from '../../../discovery/locators/envTestUtils';
 
-const testVirtualHomeDir = path.join(TEST_LAYOUT_ROOT, 'virtualhome');
-const testWorkOnHomePath = path.join(testVirtualHomeDir, 'workonhome');
-class GlobalVenvs {
-    constructor(private readonly prefix = '.v') { }
-
-    public async create(name: string): Promise<string> {
-        const envName = this.resolve(name);
-        const argv = [PYTHON_PATH.fileToCommandArgument(), '-m', 'virtualenv', envName];
-        try {
-            await run(argv, { cwd: testWorkOnHomePath });
-        } catch (err) {
-            throw new Error(`Failed to create Env ${path.basename(envName)} Error: ${err}`);
-        }
-        return envName;
-    }
-
-    public async cleanUp() {
-        const globPattern = path.join(testWorkOnHomePath, `${this.prefix}*`);
-        await deleteFiles(globPattern);
-    }
-
-    public resolve(name: string): string {
-        // Ensure env is random to avoid conflicts in tests (corrupting test data)
-        const now = new Date().getTime().toString().substr(-8);
-        return `${this.prefix}${name}${now}`;
-    }
-}
 class WorkspaceVenvs {
     constructor(private readonly root: string, private readonly prefix = '.virtual') { }
 
@@ -67,12 +39,17 @@ class WorkspaceVenvs {
         return filename;
     }
 
-    public async createFile(filename: string): Promise<string> {
-        const filepath = path.join(this.root, filename);
+    /**
+     * Creates a dummy environment by creating a fake executable.
+     * @param name environment suffix name to create
+     */
+    public async createDummyEnv(name: string): Promise<string> {
+        const envName = this.resolve(name);
+        const filepath = path.join(this.root, envName, getOSType() === OSType.Windows ? 'python.exe' : 'python');
         try {
             await fs.createFile(filepath);
         } catch (err) {
-            throw new Error(`Failed to create python executable ${filename}, Error: ${err}`);
+            throw new Error(`Failed to create python executable ${filepath}, Error: ${err}`);
         }
         return filepath;
     }
@@ -80,13 +57,7 @@ class WorkspaceVenvs {
     // eslint-disable-next-line class-methods-use-this
     public async update(filename: string): Promise<void> {
         try {
-            // tslint:disable:no-console
-            console.log('File name is', filename);
-            const y = await fs.pathExists(filename);
-            console.log('Does file exist', y);
             await fs.writeFile(filename, 'Environment has been updated');
-            const x = readFile(filename);
-            console.log('File content is', x);
         } catch (err) {
             throw new Error(`Failed to update Workspace virtualenv executable ${filename}, Error: ${err}`);
         }
@@ -117,27 +88,6 @@ suite('WorkspaceVirtualEnvironment Locator', async () => {
     const testWorkspaceFolder = path.join(TEST_LAYOUT_ROOT, 'workspace', 'folder1');
     const workspaceVenvs = new WorkspaceVenvs(testWorkspaceFolder);
     let locator: IDisposableLocator;
-    const globalVenvs = new GlobalVenvs();
-
-    async function waitForEnvironmentToBeDetected(deferred: Deferred<void>, envName: string) {
-        const timeout = setTimeout(() => {
-            clearTimeout(timeout);
-            deferred.reject(new Error('Environment not detected'));
-        }, TEST_TIMEOUT);
-        await deferred.promise;
-        const items = await getEnvs(locator.iterEnvs());
-        const result = items.some((item) => item.executable.filename.includes(envName));
-        assert.ok(result);
-    }
-
-    setup(async () => {
-        process.env.WORKON_HOME = testWorkOnHomePath;
-
-        locator = await createGlobalVirtualEnvironmentLocator();
-
-        // Wait for watchers to get ready
-        await sleep(1000);
-    });
 
     async function waitForChangeToBeDetected(deferred: Deferred<void>) {
         const timeout = setTimeout(
@@ -155,10 +105,7 @@ suite('WorkspaceVirtualEnvironment Locator', async () => {
         return items.some((item) => arePathsSame(item.executable.filename, executable));
     }
 
-    suiteSetup(async () => {
-        await workspaceVenvs.cleanUp();
-        await globalVenvs.cleanUp();
-    });
+    suiteSetup(async () => workspaceVenvs.cleanUp());
 
     async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
         locator = await createWorkspaceVirtualEnvLocator(testWorkspaceFolder);
@@ -169,22 +116,7 @@ suite('WorkspaceVirtualEnvironment Locator', async () => {
 
     teardown(async () => {
         await workspaceVenvs.cleanUp();
-        await globalVenvs.cleanUp();
         locator.dispose();
-    });
-
-    test('Detect a new Virtual Environment', async () => {
-        let actualEvent: PythonEnvsChangedEvent;
-        const deferred = createDeferred<void>();
-        locator.onChanged(async (e) => {
-            actualEvent = e;
-            deferred.resolve();
-        });
-        const envName = await globalVenvs.create('one');
-        await waitForEnvironmentToBeDetected(deferred, envName);
-        // Detecting kind of virtual env depends on the file structure around the executable, so we need to wait before
-        // attempting to verify it. Omitting that check as we can never deterministically say when it's ready to check.
-        assert.deepEqual(actualEvent!.type, FileChangeType.Created, 'Wrong event emitted');
     });
 
     test('Detect a new environment', async () => {
@@ -200,20 +132,6 @@ suite('WorkspaceVirtualEnvironment Locator', async () => {
         const isFound = await isLocated(executable);
 
         assert.ok(isFound);
-        // Detecting kind of virtual env depends on the file structure around the executable, so we need to wait before
-        // attempting to verify it. Omitting that check as we can never deterministically say when it's ready to check.
-        assert.deepEqual(actualEvent!.type, FileChangeType.Created, 'Wrong event emitted');
-    });
-
-    test('Detect a new Virtual Environment', async () => {
-        let actualEvent: PythonEnvsChangedEvent;
-        const deferred = createDeferred<void>();
-        locator.onChanged(async (e) => {
-            actualEvent = e;
-            deferred.resolve();
-        });
-        const envName = await globalVenvs.create('one');
-        await waitForEnvironmentToBeDetected(deferred, envName);
         // Detecting kind of virtual env depends on the file structure around the executable, so we need to wait before
         // attempting to verify it. Omitting that check as we can never deterministically say when it's ready to check.
         assert.deepEqual(actualEvent!.type, FileChangeType.Created, 'Wrong event emitted');
@@ -243,24 +161,13 @@ suite('WorkspaceVirtualEnvironment Locator', async () => {
         assert.deepEqual(actualEvent!.type, FileChangeType.Deleted, 'Wrong event emitted');
     });
 
-    test('Detect a new Virtual Environment', async () => {
-        let actualEvent: PythonEnvsChangedEvent;
-        const deferred = createDeferred<void>();
-        locator.onChanged(async (e) => {
-            actualEvent = e;
-            deferred.resolve();
-        });
-        const envName = await globalVenvs.create('one');
-        await waitForEnvironmentToBeDetected(deferred, envName);
-        // Detecting kind of virtual env depends on the file structure around the executable, so we need to wait before
-        // attempting to verify it. Omitting that check as we can never deterministically say when it's ready to check.
-        assert.deepEqual(actualEvent!.type, FileChangeType.Created, 'Wrong event emitted');
-    });
-
     test('Detect when an environment has been updated', async () => {
         let actualEvent: PythonEnvsChangedEvent;
         const deferred = createDeferred<void>();
-        const executable = await workspaceVenvs.createFile(getOSType() === OSType.Windows ? 'python.exe' : 'python');
+        // Create a dummy environment so we can update its executable later. We can't choose a real environment here.
+        // Executables inside real environments can be symlinks, so writing on them can result in the real executable
+        // being updated instead of the symlink.
+        const executable = await workspaceVenvs.createDummyEnv('one');
         // Wait before the change event has been sent. If both operations occur almost simultaneously no event is sent.
         await sleep(100);
         await setupLocator(async (e) => {
@@ -273,25 +180,8 @@ suite('WorkspaceVirtualEnvironment Locator', async () => {
         const isFound = await isLocated(executable);
 
         assert.ok(isFound);
-        console.log(JSON.stringify(actualEvent!));
         // Detecting kind of virtual env depends on the file structure around the executable, so we need to wait before
         // attempting to verify it. Omitting that check as we can never deterministically say when it's ready to check.
         assert.deepEqual(actualEvent!.type, FileChangeType.Changed, 'Wrong event emitted');
-        locator.dispose();
-        await sleep(5000);
-    });
-
-    test('Detect a new Virtual Environment', async () => {
-        let actualEvent: PythonEnvsChangedEvent;
-        const deferred = createDeferred<void>();
-        locator.onChanged(async (e) => {
-            actualEvent = e;
-            deferred.resolve();
-        });
-        const envName = await globalVenvs.create('one');
-        await waitForEnvironmentToBeDetected(deferred, envName);
-        // Detecting kind of virtual env depends on the file structure around the executable, so we need to wait before
-        // attempting to verify it. Omitting that check as we can never deterministically say when it's ready to check.
-        assert.deepEqual(actualEvent!.type, FileChangeType.Created, 'Wrong event emitted');
     });
 });
