@@ -24,7 +24,12 @@ export class TensorBoardSessionProvider implements ITensorBoardSessionProvider {
     public async createNewSession(): Promise<void> {
         traceInfo('Starting new TensorBoard session...');
         try {
-            const newSession = new TensorBoardSession(this.installer, this.interpreterService, this.workspaceService, this.fileSystem);
+            const newSession = new TensorBoardSession(
+                this.installer,
+                this.interpreterService,
+                this.workspaceService,
+                this.fileSystem
+            );
             await newSession.initialize();
         } catch (e) {
             traceError(`Encountered error while starting new TensorBoard session: ${e}`);

@@ -211,5 +211,11 @@
     "StartPage.openFolder": "Open a Folder or Workspace",
     "StartPage.folderDesc": "- Open a <div class=\"link\" role=\"button\" onclick={0}>Folder</div><br /> - Open a <div class=\"link\" role=\"button\" onclick={1}>Workspace</div>",
     "StartPage.badWebPanelFormatString": "<html><body><h1>{0} is not a valid file name</h1></body></html>",
-    "Jupyter.extensionRequired": "The Jupyter extension is required to perform that task. Click Yes to open the Jupyter extension installation page."
+    "Jupyter.extensionRequired": "The Jupyter extension is required to perform that task. Click Yes to open the Jupyter extension installation page.",
+    "TensorBoard.logDirectoryPrompt" : "Specify the TensorBoard log directory",
+	"TensorBoard.installPrompt" : "The package TensorBoard is required in order to launch a TensorBoard session. Would you like to install it?",
+	"TensorBoard.invalidLogDirectory" : "Please provide a valid log directory. We cannot start a TensorBoard session without it.",
+	"TensorBoard.logDirectoryPlaceholder" : "e.g. /runs/experiment",
+	"TensorBoard.failedToStartSessionError" : "We failed to start a TensorBoard session due to the following error: {0}",
+	"TensorBoard.tensorBoardInstallRequired" : "We cannot start a TensorBoard session without the TensorBoard package."
 }
