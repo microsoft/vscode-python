@@ -47,7 +47,7 @@ export class FastAPILaunchDebugConfigurationProvider implements IDebugConfigurat
             });
             if (selectedPath) {
                 manuallyEnteredAValue = true;
-                config.args = [`${selectedPath.replace('.py', '').replace('/', '.')}:app`];
+                config.args = [`${path.basename(selectedPath, '.py').replace('/', '.')}:app`];
             }
         }
 
