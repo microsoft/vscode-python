@@ -7,9 +7,7 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
-import {
-    anything, instance, mock, when,
-} from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { FileSystem } from '../../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../../client/common/platform/types';
@@ -66,7 +64,7 @@ suite('Debugging - Configuration Provider FastAPI', () => {
             request: 'launch',
             module: 'uvicorn',
             args: ['main:app'],
-            jinja: true,
+            jinja: true
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -86,7 +84,7 @@ suite('Debugging - Configuration Provider FastAPI', () => {
             request: 'launch',
             module: 'uvicorn',
             args: ['main:app'],
-            jinja: true,
+            jinja: true
         };
 
         expect(state.config).to.be.deep.equal(config);
