@@ -59,11 +59,7 @@ suite('GlobalVirtualEnvironment Locator', async () => {
         assert.ok(result);
     }
 
-    suiteSetup(async function () {
-        // tslint:disable-next-line:no-invalid-this
-        this.skip();
-        await globalVenvs.cleanUp();
-    });
+    suiteSetup(() => globalVenvs.cleanUp());
     setup(async () => {
         process.env.WORKON_HOME = testWorkOnHomePath;
 
