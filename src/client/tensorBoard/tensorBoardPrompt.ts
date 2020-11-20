@@ -22,7 +22,7 @@ export class TensorBoardPrompt {
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory
     ) {
-        this.state = this.persistentStateFactory.createGlobalPersistentState<boolean>(
+        this.state = this.persistentStateFactory.createWorkspacePersistentState<boolean>(
             TensorBoardPromptStateKeys.ShowNativeTensorBoardPrompt,
             true
         );
