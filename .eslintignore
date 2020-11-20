@@ -371,7 +371,6 @@ src/test/format/formatter.unit.test.ts
 src/test/debugger/extension/configuration/debugConfigurationService.unit.test.ts
 src/test/debugger/extension/configuration/providers/moduleLaunch.unit.test.ts
 src/test/debugger/extension/configuration/providers/pyramidLaunch.unit.test.ts
-src/test/debugger/extension/configuration/providers/fastapiLaunch.unit.test.ts
 src/test/debugger/extension/configuration/providers/flaskLaunch.unit.test.ts
 src/test/debugger/extension/configuration/providers/fileLaunch.unit.test.ts
 src/test/debugger/extension/configuration/providers/djangoLaunch.unit.test.ts
