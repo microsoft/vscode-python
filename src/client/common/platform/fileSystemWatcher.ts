@@ -24,7 +24,7 @@ const POLLING_INTERVAL = 5000;
 export function watchLocationForPattern(
     baseDir: string,
     pattern: string,
-    callback: (type: FileChangeType, absPath: string) => void,
+    callback: (type: FileChangeType, absPath: string) => void
 ): IDisposable {
     // Use VSCode API iff base directory to exists within the current workspace folders
     const found = workspace.workspaceFolders?.find((e) => normCasePath(baseDir).startsWith(normCasePath(e.uri.fsPath)));
@@ -38,7 +38,7 @@ export function watchLocationForPattern(
 function watchLocationUsingVSCodeAPI(
     baseDir: string,
     pattern: string,
-    callback: (type: FileChangeType, absPath: string) => void,
+    callback: (type: FileChangeType, absPath: string) => void
 ): IDisposable {
     const globPattern = new RelativePattern(baseDir, pattern);
     const disposables = new DisposableRegistry();
@@ -53,7 +53,7 @@ function watchLocationUsingVSCodeAPI(
 function watchLocationUsingChokidar(
     baseDir: string,
     pattern: string,
-    callback: (type: FileChangeType, absPath: string) => void,
+    callback: (type: FileChangeType, absPath: string) => void
 ): IDisposable {
     const watcherOpts: chokidar.WatchOptions = {
         cwd: baseDir,
@@ -74,9 +74,9 @@ function watchLocationUsingChokidar(
             '/proc/**',
             '/sys/**',
             '**/lib/**',
-            '**/includes/**',
+            '**/includes/**'
         ], // https://github.com/microsoft/vscode/issues/23954
-        followSymlinks: true,
+        followSymlinks: true
     };
     traceVerbose(`Start watching: ${baseDir} with pattern ${pattern} using chokidar`);
     let watcher: chokidar.FSWatcher | null = chokidar.watch(pattern, watcherOpts);
