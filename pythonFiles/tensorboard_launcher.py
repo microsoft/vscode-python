@@ -3,6 +3,7 @@ import time
 import sys
 import tensorboard
 
+
 def main(logdir):
     tb = tensorboard.program.TensorBoard()
     tb.configure(bind_all=False, logdir=logdir)
