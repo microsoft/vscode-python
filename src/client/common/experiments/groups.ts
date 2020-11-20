@@ -55,7 +55,9 @@ export enum DeprecatePythonPath {
 
 // Experiment to offer switch to Pylance language server
 export enum TryPylance {
-    experiment = 'tryPylance'
+    experiment = 'tryPylance',
+    jediPrompt1 = 'tryPylancePromptText1',
+    jediPrompt2 = 'tryPylancePromptText2'
 }
 
 // Experiment for the content of the tip being displayed on first extension launch:
@@ -79,4 +81,11 @@ export enum JoinMailingListPromptVariants {
 // Experiment to use a different method for normalizing code to be sent to the REPL.
 export enum SendSelectionToREPL {
     experiment = 'pythonSendEntireLineToREPL'
+}
+
+// Experiment to show a prompt asking users to install or select linter
+export enum LinterInstallationPromptVariants {
+    pylintFirst = 'pythonInstallPylintButtonFirst',
+    flake8First = 'pythonInstallFlake8ButtonFirst',
+    noPrompt = 'pythonNotDisplayLinterPrompt'
 }

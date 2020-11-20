@@ -4,7 +4,7 @@ import { spawnSync } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from 'vscode-test';
-import { EXTENSION_ROOT_DIR, PYLANCE_EXTENSION_ID } from '../client/common/constants';
+import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../client/common/constants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 
 // If running smoke tests, we don't have access to this.
@@ -35,16 +35,15 @@ const channel = process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL || 'stable';
  * Smoke tests & tests running in VSCode require Jupyter extension to be installed.
  */
 async function installJupyterExtension(vscodeExecutablePath: string) {
-    const jupyterVSIX = process.env.VSIX_NAME_JUPYTER
-        ? path.join(EXTENSION_ROOT_DIR, process.env.VSIX_NAME_JUPYTER)
-        : undefined;
-    if (!requiresJupyterExtensionToBeInstalled() || !jupyterVSIX) {
+    if (!requiresJupyterExtensionToBeInstalled()) {
         console.info('Jupyter Extension not required');
         return;
     }
     console.info('Installing Jupyter Extension');
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
-    spawnSync(cliPath, ['--install-extension', jupyterVSIX], {
+
+    // For now install Jupyter from the marketplace
+    spawnSync(cliPath, ['--install-extension', JUPYTER_EXTENSION_ID], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });

@@ -10,9 +10,9 @@ import { EXTENSION_ROOT_DIR } from '../../constants';
 const darkIconsPath = path.join(EXTENSION_ROOT_DIR, 'resources', 'dark');
 const lightIconsPath = path.join(EXTENSION_ROOT_DIR, 'resources', 'light');
 
-export function getIcon(fileName: string): { light: string | Uri; dark: string | Uri } {
+export function getIcon(fileName: string): { light: Uri; dark: Uri } {
     return {
-        dark: path.join(darkIconsPath, fileName),
-        light: path.join(lightIconsPath, fileName)
+        dark: Uri.file(path.join(darkIconsPath, fileName)),
+        light: Uri.file(path.join(lightIconsPath, fileName))
     };
 }

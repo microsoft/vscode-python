@@ -3,19 +3,23 @@
 
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as platformApis from '../../../../client/common/utils/platform';
+import * as executablesAPI from '../../../../client/common/utils/exec';
+import { Architecture } from '../../../../client/common/utils/platform';
 import {
     PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion,
 } from '../../../../client/pythonEnvironments/base/info';
 import { InterpreterInformation } from '../../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
+import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
-import { PosixKnownPathsLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/posixKnownPathsLocator';
+import { createPosixKnownPathsLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/posixKnownPathsLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
 suite('Posix Known Path Locator', () => {
     let getPathEnvVar: sinon.SinonStub;
+    let locator: IDisposableLocator;
+
     const testPosixKnownPathsRoot = path.join(TEST_LAYOUT_ROOT, 'posixroot');
 
     const testLocation1 = path.join(testPosixKnownPathsRoot, 'location1');
@@ -51,7 +55,7 @@ suite('Posix Known Path Locator', () => {
         }
         return {
             version,
-            arch: platformApis.Architecture.Unknown,
+            arch: Architecture.Unknown,
             executable: {
                 filename: executable,
                 sysPrefix: sysPrefix ?? '',
@@ -61,15 +65,18 @@ suite('Posix Known Path Locator', () => {
         };
     }
 
-    setup(() => {
-        getPathEnvVar = sinon.stub(platformApis, 'getPathEnvironmentVariable');
+    setup(async () => {
+        getPathEnvVar = sinon.stub(executablesAPI, 'getSearchPathEntries');
+        locator = await createPosixKnownPathsLocator();
     });
     teardown(() => {
         getPathEnvVar.restore();
+        locator.dispose();
     });
+
     test('iterEnvs(): get python bin from known test roots', async () => {
         const testLocations = [testLocation1, testLocation2, testLocation3];
-        getPathEnvVar.returns(testLocations.join(path.delimiter));
+        getPathEnvVar.returns(testLocations);
 
         const envs:PythonEnvInfo[] = [];
         testLocations.forEach((location) => {
@@ -88,12 +95,12 @@ suite('Posix Known Path Locator', () => {
         });
         const expectedEnvs = envs.sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        const locator = new PosixKnownPathsLocator();
         const actualEnvs = (await getEnvs(locator.iterEnvs()))
             .filter((e) => e.executable.filename.indexOf('posixroot') > 0)
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
+
     test('resolveEnv(string)', async () => {
         const pythonPath = path.join(testLocation1, 'python');
         const expected = {
@@ -104,10 +111,10 @@ suite('Posix Known Path Locator', () => {
             ...createExpectedInterpreterInfo(pythonPath),
         };
 
-        const locator = new PosixKnownPathsLocator();
         const actual = await locator.resolveEnv(pythonPath);
         assertEnvEqual(actual, expected);
     });
+
     test('resolveEnv(PythonEnvInfo)', async () => {
         const pythonPath = path.join(testLocation1, 'python');
         const expected = {
@@ -125,7 +132,7 @@ suite('Posix Known Path Locator', () => {
             location: '',
             kind: PythonEnvKind.Unknown,
             distro: { org: '' },
-            arch: platformApis.Architecture.Unknown,
+            arch: Architecture.Unknown,
             executable: {
                 filename: pythonPath,
                 sysPrefix: '',
@@ -140,7 +147,6 @@ suite('Posix Known Path Locator', () => {
             },
         };
 
-        const locator = new PosixKnownPathsLocator();
         const actual = await locator.resolveEnv(input);
 
         assertEnvEqual(actual, expected);

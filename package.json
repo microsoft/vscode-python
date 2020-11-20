@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2020.11.0-dev",
+    "version": "2020.12.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -623,9 +623,9 @@
                                 "description": "Absolute path to the program.",
                                 "default": "${file}"
                             },
-                            "pythonPath": {
+                            "python": {
                                 "type": "string",
-                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings",
+                                "description": "Absolute path to the Python interpreter executable; overrides workspace configuration if set.",
                                 "default": "${command:python.interpreterPath}"
                             },
                             "pythonArgs": {
@@ -2012,10 +2012,10 @@
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.1.4",
-        "vscode-jsonrpc": "6.0.0-next.5",
-        "vscode-languageclient": "7.0.0-next.9",
-        "vscode-languageserver": "7.0.0-next.7",
-        "vscode-languageserver-protocol": "3.16.0-next.7",
+        "vscode-jsonrpc": "6.0.0-next.7",
+        "vscode-languageclient": "7.0.0-next.12",
+        "vscode-languageserver": "7.0.0-next.10",
+        "vscode-languageserver-protocol": "3.16.0-next.10",
         "vscode-tas-client": "^0.1.4",
         "winreg": "^1.2.4",
         "winston": "^3.2.1",
@@ -2146,6 +2146,7 @@
         "nock": "^10.0.6",
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
+        "node-loader": "^1.0.2",
         "nyc": "^15.0.0",
         "postcss": "^7.0.27",
         "postcss-cssnext": "^3.1.0",

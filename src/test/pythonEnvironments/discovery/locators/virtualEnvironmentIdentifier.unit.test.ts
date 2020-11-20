@@ -7,9 +7,12 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { ImportMock } from 'ts-mock-imports';
 import * as platformUtils from '../../../../client/common/utils/platform';
+import { PythonReleaseLevel, PythonVersion } from '../../../../client/pythonEnvironments/base/info';
 import * as fileUtils from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { isVenvEnvironment, isVirtualenvEnvironment, isVirtualenvwrapperEnvironment } from '../../../../client/pythonEnvironments/discovery/locators/services/virtualEnvironmentIdentifier';
-import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
+import {
+    getPythonVersionFromVenv, isVenvEnvironment, isVirtualenvEnvironment, isVirtualenvwrapperEnvironment,
+} from '../../../../client/pythonEnvironments/discovery/locators/services/virtualEnvironmentIdentifier';
+import { TEST_DATA_ROOT, TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 
 suite('isVenvEnvironment Tests', () => {
     const pyvenvCfg = 'pyvenv.cfg';
@@ -139,5 +142,78 @@ suite('isVirtualenvwrapperEnvironment Tests', () => {
         getEnvVariableStub.withArgs('WORKON_HOME').returns(workonHomeDirectory);
 
         assert.deepStrictEqual(await isVirtualenvwrapperEnvironment(interpreter), false);
+    });
+});
+
+suite('Virtual Env Version Parser Tests', () => {
+    let readFileStub: sinon.SinonStub;
+    let pathExistsStub: sinon.SinonStub;
+    const testDataRoot = path.join(TEST_DATA_ROOT, 'versiondata', 'venv');
+
+    setup(() => {
+        readFileStub = sinon.stub(fileUtils, 'readFile');
+
+        pathExistsStub = sinon.stub(fileUtils, 'pathExists');
+        pathExistsStub.resolves(true);
+    });
+
+    teardown(() => {
+        readFileStub.restore();
+        pathExistsStub.restore();
+    });
+
+    interface ICondaPythonVersionTestData {
+        name: string;
+        historyFileContents: string;
+        expected: PythonVersion | undefined;
+    }
+
+    function getTestData(): ICondaPythonVersionTestData[] {
+        const data:ICondaPythonVersionTestData[] = [];
+
+        const cases = (fsapi.readdirSync(testDataRoot)).map((c) => path.join(testDataRoot, c));
+        const casesToVersion = new Map<string, PythonVersion>();
+        casesToVersion.set('case1', { major: 3, minor: 9, micro: 0 });
+
+        casesToVersion.set('case2', {
+            major: 3,
+            minor: 8,
+            micro: 2,
+            release: { level: PythonReleaseLevel.Final, serial: 0 },
+            sysVersion: undefined,
+        });
+        casesToVersion.set('case3', {
+            major: 3, minor: 9, micro: 0, release: { level: PythonReleaseLevel.Candidate, serial: 1 },
+        });
+        casesToVersion.set('case4', {
+            major: 3,
+            minor: 9,
+            micro: 0,
+            release: { level: PythonReleaseLevel.Alpha, serial: 1 },
+            sysVersion: undefined,
+        });
+
+        for (const c of cases) {
+            const name = path.basename(c);
+            const expected = casesToVersion.get(name);
+            if (expected) {
+                data.push({
+                    name,
+                    historyFileContents: fsapi.readFileSync(c, 'utf-8'),
+                    expected,
+                });
+            }
+        }
+
+        return data;
+    }
+
+    const testData = getTestData();
+    testData.forEach((data) => {
+        test(`Parsing ${data.name}`, async () => {
+            readFileStub.resolves(data.historyFileContents);
+            const actual = await getPythonVersionFromVenv('/path/here/does/not/matter');
+            assert.deepStrictEqual(actual, data.expected);
+        });
     });
 });

@@ -28,9 +28,7 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../client/interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
-import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
-import { PythonEnvironments } from '../../client/pythonEnvironments';
 import { PythonInterpreterLocatorService } from '../../client/pythonEnvironments/discovery/locators';
 import { InterpreterLocatorHelper } from '../../client/pythonEnvironments/discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from '../../client/pythonEnvironments/discovery/locators/progressService';
@@ -62,14 +60,12 @@ import {
 } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvWatcherService';
 import { IEnvironmentInfoService } from '../../client/pythonEnvironments/info/environmentInfoService';
-import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
+import { registerLegacyDiscoveryForIOC } from '../../client/pythonEnvironments/legacyIOC';
 
 suite('Interpreters - Service Registry', () => {
     test('Registrations', () => {
         const serviceManager = mock(ServiceManager);
-        const serviceContainer = mock(ServiceContainer);
-        const api = mock(PythonEnvironments);
-        registerForIOC(instance(serviceManager), instance(serviceContainer), instance(api));
+        registerLegacyDiscoveryForIOC(instance(serviceManager));
         verify(serviceManager.addSingleton(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters)).once();
         verify(serviceManager.addSingleton(IVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvironmentsSearchPathProvider, 'global')).once();
         verify(serviceManager.addSingleton(IVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvironmentsSearchPathProvider, 'workspace')).once();

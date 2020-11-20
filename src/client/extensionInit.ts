@@ -47,10 +47,10 @@ export function initializeCommon(
     // We will be pulling other code over from activateLegacy().
 }
 
-export function initializeComponents(
+export async function initializeComponents(
     _context: IExtensionContext,
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer
 ) {
-    activatePythonEnvironments(serviceManager, serviceContainer);
+    await activatePythonEnvironments(serviceManager, serviceContainer);
 }

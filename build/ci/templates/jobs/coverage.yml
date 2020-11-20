@@ -1,8 +1,0 @@
-jobs:
-  - job: Coverage
-    pool:
-      vmImage: 'ubuntu-20.04'
-    variables:
-      TestsToRun: 'testUnitTests'
-    steps:
-      - template: ../steps/merge_upload_coverage.yml

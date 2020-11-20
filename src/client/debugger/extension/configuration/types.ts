@@ -13,6 +13,12 @@ export interface IDebugConfigurationResolver<T extends DebugConfiguration> {
         debugConfiguration: T,
         token?: CancellationToken
     ): Promise<T | undefined>;
+
+    resolveDebugConfigurationWithSubstitutedVariables(
+        folder: WorkspaceFolder | undefined,
+        debugConfiguration: T,
+        token?: CancellationToken
+    ): Promise<T | undefined>;
 }
 
 export const IDebugConfigurationProviderFactory = Symbol('IDebugConfigurationProviderFactory');

@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { uniqBy } from 'lodash';
 import * as path from 'path';
-import {
-    Options, REG_SZ, Registry, RegistryItem,
-} from 'winreg';
-import { traceVerbose } from '../../common/logger';
-import { createDeferred } from '../../common/utils/async';
+import { traceError, traceVerbose } from '../../common/logger';
+import { HKCU, HKLM, IRegistryKey, IRegistryValue, readRegistryKeys, readRegistryValues, REG_SZ } from './windowsRegistry';
 
 // tslint:disable-next-line: no-single-line-block-comment
 /* eslint-disable global-require */
@@ -16,7 +14,7 @@ import { createDeferred } from '../../common/utils/async';
  * @param {string} interpreterPath : Path to python interpreter.
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
-export function isWindowsPythonExe(interpreterPath:string): boolean {
+export function isWindowsPythonExe(interpreterPath: string): boolean {
     /**
      * This Reg-ex matches following file names:
      * python.exe
@@ -29,69 +27,25 @@ export function isWindowsPythonExe(interpreterPath:string): boolean {
     return windowsPythonExes.test(path.basename(interpreterPath));
 }
 
-export interface IRegistryKey{
-    hive:string;
-    arch:string;
-    key:string;
-    parentKey?:IRegistryKey;
-}
-
-export interface IRegistryValue{
-    hive:string;
-    arch:string;
-    key:string;
-    name:string;
-    type:string;
-    value:string;
-}
-
-export async function readRegistryValues(options: Options): Promise<IRegistryValue[]> {
-    // tslint:disable-next-line:no-require-imports
-    const WinReg = require('winreg');
-    const regKey = new WinReg(options);
-    const deferred = createDeferred<RegistryItem[]>();
-    regKey.values((err:Error, res:RegistryItem[]) => {
-        if (err) {
-            deferred.reject(err);
-        }
-        deferred.resolve(res);
-    });
-    return deferred.promise;
-}
-
-export async function readRegistryKeys(options: Options): Promise<IRegistryKey[]> {
-    // tslint:disable-next-line:no-require-imports
-    const WinReg = require('winreg');
-    const regKey = new WinReg(options);
-    const deferred = createDeferred<Registry[]>();
-    regKey.keys((err:Error, res:Registry[]) => {
-        if (err) {
-            deferred.reject(err);
-        }
-        deferred.resolve(res);
-    });
-    return deferred.promise;
-}
-
-export interface IRegistryInterpreterData{
+export interface IRegistryInterpreterData {
     interpreterPath: string;
     versionStr?: string;
-    sysVersionStr?:string;
+    sysVersionStr?: string;
     bitnessStr?: string;
     displayName?: string;
     distroOrgName?: string;
 }
 
 async function getInterpreterDataFromKey(
-    { arch, hive, key }:IRegistryKey,
-    distroOrgName:string,
+    { arch, hive, key }: IRegistryKey,
+    distroOrgName: string,
 ): Promise<IRegistryInterpreterData | undefined> {
-    const result:IRegistryInterpreterData = {
+    const result: IRegistryInterpreterData = {
         interpreterPath: '',
         distroOrgName,
     };
 
-    const values:IRegistryValue[] = await readRegistryValues({ arch, hive, key });
+    const values: IRegistryValue[] = await readRegistryValues({ arch, hive, key });
     for (const value of values) {
         switch (value.name) {
             case 'SysArchitecture':
@@ -111,10 +65,10 @@ async function getInterpreterDataFromKey(
         }
     }
 
-    const subKeys:IRegistryKey[] = await readRegistryKeys({ arch, hive, key });
+    const subKeys: IRegistryKey[] = await readRegistryKeys({ arch, hive, key });
     const subKey = subKeys.map((s) => s.key).find((s) => s.endsWith('InstallPath'));
     if (subKey) {
-        const subKeyValues:IRegistryValue[] = await readRegistryValues({ arch, hive, key: subKey });
+        const subKeyValues: IRegistryValue[] = await readRegistryValues({ arch, hive, key: subKey });
         const value = subKeyValues.find((v) => v.name === 'ExecutablePath');
         if (value) {
             result.interpreterPath = value.value;
@@ -131,12 +85,34 @@ async function getInterpreterDataFromKey(
 }
 
 export async function getInterpreterDataFromRegistry(
-    arch:string,
-    hive:string,
-    key:string,
+    arch: string,
+    hive: string,
+    key: string,
 ): Promise<IRegistryInterpreterData[]> {
     const subKeys = await readRegistryKeys({ arch, hive, key });
     const distroOrgName = key.substr(key.lastIndexOf('\\') + 1);
     const allData = await Promise.all(subKeys.map((subKey) => getInterpreterDataFromKey(subKey, distroOrgName)));
     return (allData.filter((data) => data !== undefined) || []) as IRegistryInterpreterData[];
+}
+
+export async function getRegistryInterpreters(): Promise<IRegistryInterpreterData[]> {
+    let registryData: IRegistryInterpreterData[] = [];
+
+    for (const arch of ['x64', 'x86']) {
+        for (const hive of [HKLM, HKCU]) {
+            const root = '\\SOFTWARE\\Python';
+            let keys: string[] = [];
+            try {
+                keys = (await readRegistryKeys({ arch, hive, key: root })).map((k) => k.key);
+            } catch (ex) {
+                traceError(`Failed to access Registry: ${arch}\\${hive}\\${root}`, ex);
+            }
+
+            for (const key of keys) {
+                registryData = registryData.concat(await getInterpreterDataFromRegistry(arch, hive, key));
+            }
+        }
+    }
+
+    return uniqBy(registryData, (r: IRegistryInterpreterData) => r.interpreterPath);
 }

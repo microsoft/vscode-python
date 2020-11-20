@@ -496,9 +496,8 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
     });
 
     test('File launch.json is fixed correctly when code equals ConfigPythonPathDiagnostic ', async () => {
-        const launchJson = 'This string contains {config:python.pythonPath} & {config:python.interpreterPath}';
-        const correctedlaunchJson =
-            'This string contains {command:python.interpreterPath} & {command:python.interpreterPath}';
+        const launchJson = '"pythonPath": "{config:python.pythonPath}{config:python.interpreterPath}"';
+        const correctedlaunchJson = '"python": "{command:python.interpreterPath}{command:python.interpreterPath}"';
         workspaceService
             .setup((w) => w.hasWorkspaceFolders)
             .returns(() => true)

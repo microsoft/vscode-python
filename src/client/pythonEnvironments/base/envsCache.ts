@@ -1,9 +1,81 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// tslint:disable-next-line:no-single-line-block-comment
+/* eslint-disable max-classes-per-file */
+
 import { cloneDeep } from 'lodash';
 import { PythonEnvInfo } from './info';
-import { areSameEnv } from './info/env';
+import {
+    areSameEnv,
+    getEnvExecutable,
+    haveSameExecutables,
+} from './info/env';
+
+/**
+ * A simple in-memory store of Python envs.
+ */
+export class PythonEnvsCache {
+    private envs: PythonEnvInfo[] = [];
+
+    private byExecutable: Record<string, PythonEnvInfo> | undefined;
+
+    constructor(envs?: PythonEnvInfo[]) {
+        if (envs !== undefined) {
+            this.setEnvs(envs);
+        }
+    }
+
+    /**
+     * Provide a copy of the cached envs.
+     */
+    public getEnvs(): PythonEnvInfo[] {
+        return cloneDeep(this.envs);
+    }
+
+    /**
+     * Replace the set of cached envs with the given set.
+     *
+     * If the given envs are the same as the cached ones
+     * then the existing are left in place.
+     *
+     * @returns - `true` if the cached envs were actually replaced
+     */
+    public setEnvs(envs: PythonEnvInfo[]): boolean {
+        // We *could* compare additional properties, but checking
+        // the executables is good enough for now.
+        if (haveSameExecutables(this.envs, envs)) {
+            return false;
+        }
+        this.envs = cloneDeep(envs);
+        this.byExecutable = undefined;
+        return true;
+    }
+
+    /**
+     * Find the matching env in the cache, if any.
+     */
+    public lookUp(
+        query: string | Partial<PythonEnvInfo>,
+    ): PythonEnvInfo | undefined {
+        const executable = getEnvExecutable(query);
+        if (executable === '') {
+            return undefined;
+        }
+        if (this.byExecutable === undefined) {
+            this.byExecutable = {};
+            for (const env of this.envs) {
+                this.byExecutable[env.executable.filename] = env;
+            }
+        }
+        return this.byExecutable[executable];
+    }
+
+    public filter(match: (env: PythonEnvInfo) => boolean | undefined): PythonEnvInfo[] {
+        const matched = this.envs.filter(match);
+        return cloneDeep(matched);
+    }
+}
 
 /**
  * Represents the environment info cache to be used by the cache locator.
@@ -60,7 +132,7 @@ type CompleteEnvInfoFunction = (envInfo: PythonEnvInfo) => boolean;
 export class PythonEnvInfoCache implements IEnvsCache {
     private initialized = false;
 
-    private envsList: PythonEnvInfo[] | undefined;
+    private inMemory: PythonEnvsCache | undefined;
 
     private persistentStorage: IPersistentStorage | undefined;
 
@@ -77,28 +149,27 @@ export class PythonEnvInfoCache implements IEnvsCache {
         this.initialized = true;
         if (this.getPersistentStorage !== undefined) {
             this.persistentStorage = this.getPersistentStorage();
-            this.envsList = await this.persistentStorage.load();
+            const envs = await this.persistentStorage.load();
+            if (envs !== undefined) {
+                this.setAllEnvs(envs);
+            }
         }
     }
 
     public getAllEnvs(): PythonEnvInfo[] | undefined {
-        return cloneDeep(this.envsList);
+        return this.inMemory?.getEnvs();
     }
 
     public setAllEnvs(envs: PythonEnvInfo[]): void {
-        this.envsList = cloneDeep(envs);
+        this.inMemory = new PythonEnvsCache(envs);
     }
 
     public filterEnvs(query: Partial<PythonEnvInfo>): PythonEnvInfo[] | undefined {
-        if (this.envsList === undefined) {
-            return undefined;
-        }
-        const result = this.envsList.filter((info) => areSameEnv(info, query));
-        return cloneDeep(result);
+        return this.inMemory?.filter((info) => areSameEnv(info, query));
     }
 
     public async flush(): Promise<void> {
-        const completeEnvs = this.envsList?.filter(this.isComplete);
+        const completeEnvs = this.inMemory?.filter(this.isComplete);
 
         if (completeEnvs?.length) {
             await this.persistentStorage?.store(completeEnvs);

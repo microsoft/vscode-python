@@ -9,6 +9,7 @@ on:
 
 env:
   PYTHON_VERSION: 3.8
+  NODE_VERSION: 12.15.0
   MOCHA_REPORTER_JUNIT: false # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it hasn't already.
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
@@ -16,7 +17,6 @@ env:
   VSIX_NAME: ms-python-release.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
-  VSIX_NAME_JUPYTER: ms-toolsai-jupyter-release.vsix
 
 jobs:
   build-vsix:
@@ -26,6 +26,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: ${{env.NODE_VERSION}}
 
       - name: Use Python ${{env.PYTHON_VERSION}}
         uses: actions/setup-python@v2
@@ -58,6 +63,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: ${{env.NODE_VERSION}}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -105,6 +115,11 @@ jobs:
         with:
           path: ${{env.special-working-directory-relative}}
 
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
       - name: Install dependencies (npm ci)
         run: npm ci
 
@@ -117,7 +132,7 @@ jobs:
           python-version: ${{matrix.python}}
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.1
+        uses: actions/setup-node@v1
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -215,8 +230,8 @@ jobs:
 
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
-          echo "::set-env name=CI_PYTHON_PATH::python"
-          echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
+          echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
+          echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV
         shell: bash
         if: matrix.test-suite != 'ts-unit'
 
@@ -296,6 +311,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v2
         with:
@@ -327,20 +347,10 @@ jobs:
         run: npx tsc -p ./
         shell: bash
 
-      # Download the jupyter extension
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-      
-      - name: Download JUPYTER VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_JUPYTER}} --account-name pvsc --container-name extension-builds-jupyter --name ${{env.VSIX_NAME_JUPYTER}} --auth-mode login
-
-
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
-          echo "::set-env name=CI_PYTHON_PATH::python"
-          echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
+          echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
+          echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV
         shell: bash
 
       - name: Run smoke tests
@@ -368,6 +378,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v2
         with:
@@ -393,20 +408,10 @@ jobs:
         run: npm run prePublish
         shell: bash
 
-      # Download the jupyter extension
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-      
-      - name: Download JUPYTER VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_JUPYTER}} --account-name pvsc --container-name extension-builds-jupyter --name ${{env.VSIX_NAME_JUPYTER}} --auth-mode login
-
-
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
-          echo "::set-env name=CI_PYTHON_PATH::python"
-          echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
+          echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
+          echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV
         shell: bash
 
       - name: Run insider tests
@@ -419,4 +424,4 @@ jobs:
           CODE_TESTS_WORKSPACE: ./src/testMultiRootWkspc/smokeTests
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: node --no-force-async-hooks-checks ./out/test/standardTest.js          
+          run: node --no-force-async-hooks-checks ./out/test/standardTest.js

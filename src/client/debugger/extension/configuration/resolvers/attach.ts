@@ -21,7 +21,8 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
     ) {
         super(workspaceService, documentManager, platformService, configurationService);
     }
-    public async resolveDebugConfiguration(
+
+    public async resolveDebugConfigurationWithSubstitutedVariables(
         folder: WorkspaceFolder | undefined,
         debugConfiguration: AttachRequestArguments,
         _token?: CancellationToken
@@ -38,6 +39,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         }
         return debugConfiguration;
     }
+
     // tslint:disable-next-line:cyclomatic-complexity
     protected async provideAttachDefaults(
         workspaceFolder: Uri | undefined,

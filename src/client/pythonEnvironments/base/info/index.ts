@@ -151,6 +151,12 @@ export type PythonEnvInfo = _PythonEnvInfo & {
     searchLocation?: Uri;
 };
 
+/**
+ * A dummy python version object containing default fields.
+ *
+ * Note this object is immutable. So if it is assigned to another object, the properties of the other object
+ * also cannot be modified by reference. For eg. `otherVersionObject.major = 3` won't work.
+ */
 export const UNKNOWN_PYTHON_VERSION:PythonVersion = {
     major: -1,
     minor: -1,
@@ -158,3 +164,4 @@ export const UNKNOWN_PYTHON_VERSION:PythonVersion = {
     release: { level: PythonReleaseLevel.Final, serial: -1 },
     sysVersion: undefined,
 };
+Object.freeze(UNKNOWN_PYTHON_VERSION);

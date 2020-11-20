@@ -16,10 +16,10 @@ import { EnvironmentType } from '../info';
  * configure the environment, and the fall back for identification.
  * Top level we have the following environment types, since they leave a unique signature
  * in the environment or * use a unique path for the environments they create.
- *  1. Conda
- *  2. Windows Store
- *  3. PipEnv
- *  4. Pyenv
+ *  1. Pyenv (pyenv can also be a conda env or venv, but should be activated as a venv)
+ *  2. Conda
+ *  3. Windows Store
+ *  4. PipEnv
  *  5. Poetry
  *
  * Next level we have the following virtual environment tools. The are here because they
@@ -32,10 +32,10 @@ import { EnvironmentType } from '../info';
  */
 export function getPrioritizedEnvironmentType(): EnvironmentType[] {
     return [
+        EnvironmentType.Pyenv,
         EnvironmentType.Conda,
         EnvironmentType.WindowsStore,
         EnvironmentType.Pipenv,
-        EnvironmentType.Pyenv,
         EnvironmentType.Poetry,
         EnvironmentType.VirtualEnvWrapper,
         EnvironmentType.Venv,

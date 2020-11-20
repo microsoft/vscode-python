@@ -29,6 +29,7 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         private readonly providerFactory: IDebugConfigurationProviderFactory,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory
     ) {}
+
     public async provideDebugConfigurations(
         folder: WorkspaceFolder | undefined,
         token?: CancellationToken
@@ -46,6 +47,7 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
             return [state.config as DebugConfiguration];
         }
     }
+
     public async resolveDebugConfiguration(
         folder: WorkspaceFolder | undefined,
         debugConfiguration: DebugConfiguration,
@@ -76,6 +78,18 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
             );
         }
     }
+
+    public async resolveDebugConfigurationWithSubstitutedVariables(
+        folder: WorkspaceFolder | undefined,
+        debugConfiguration: DebugConfiguration,
+        token?: CancellationToken
+    ): Promise<DebugConfiguration | undefined> {
+        function resolve<T extends DebugConfiguration>(resolver: IDebugConfigurationResolver<T>) {
+            return resolver.resolveDebugConfigurationWithSubstitutedVariables(folder, debugConfiguration as T, token);
+        }
+        return debugConfiguration.request === 'attach' ? resolve(this.attachResolver) : resolve(this.launchResolver);
+    }
+
     protected async pickDebugConfiguration(
         input: IMultiStepInput<DebugConfigurationState>,
         state: DebugConfigurationState

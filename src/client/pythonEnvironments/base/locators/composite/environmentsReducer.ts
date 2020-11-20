@@ -34,7 +34,7 @@ export class PythonEnvsReducer implements ILocator {
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
         const incomingIterator = this.parentLocator.iterEnvs(query);
-        const iterator: IPythonEnvsIterator = iterEnvsIterator(incomingIterator, didUpdate);
+        const iterator = iterEnvsIterator(incomingIterator, didUpdate);
         iterator.onUpdated = didUpdate.event;
         return iterator;
     }
@@ -43,7 +43,7 @@ export class PythonEnvsReducer implements ILocator {
 async function* iterEnvsIterator(
     iterator: IPythonEnvsIterator,
     didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
-): AsyncIterator<PythonEnvInfo, void> {
+): IPythonEnvsIterator {
     const state = {
         done: false,
         pending: 0,
@@ -144,10 +144,10 @@ function sortEnvInfoByPriority(...envs: PythonEnvInfo[]): PythonEnvInfo[] {
  * configure the environment, and the fall back for identification.
  * Top level we have the following environment types, since they leave a unique signature
  * in the environment or * use a unique path for the environments they create.
- *  1. Conda
- *  2. Windows Store
- *  3. PipEnv
- *  4. Pyenv
+ *  1. Pyenv (pyenv can also be a conda env or venv, but should be activated as a venv)
+ *  2. Conda
+ *  3. Windows Store
+ *  4. PipEnv
  *  5. Poetry
  *
  * Next level we have the following virtual environment tools. The are here because they
@@ -160,11 +160,11 @@ function sortEnvInfoByPriority(...envs: PythonEnvInfo[]): PythonEnvInfo[] {
  */
 function getPrioritizedEnvironmentKind(): PythonEnvKind[] {
     return [
+        PythonEnvKind.Pyenv,
         PythonEnvKind.CondaBase,
         PythonEnvKind.Conda,
         PythonEnvKind.WindowsStore,
         PythonEnvKind.Pipenv,
-        PythonEnvKind.Pyenv,
         PythonEnvKind.Poetry,
         PythonEnvKind.Venv,
         PythonEnvKind.VirtualEnvWrapper,
