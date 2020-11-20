@@ -1839,12 +1839,6 @@
                     "default": true,
                     "description": "Show the Python Start Page when a new update is released.",
                     "scope": "application"
-                },
-                "python.tensorboardPath": {
-                    "type": "string",
-                    "default": "tensorboard",
-                    "description": "Path to the tensorboard executable.",
-                    "scope": "application"
                 }
             }
         },

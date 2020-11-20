@@ -4,8 +4,10 @@
 import { ChildProcess, spawn } from 'child_process';
 import * as path from 'path';
 import { CancellationTokenSource, ViewColumn, WebviewPanel, window } from 'vscode';
+import { IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';
-import { traceError, traceInfo } from '../common/logger';
+import { traceInfo } from '../common/logger';
+import { IFileSystem } from '../common/platform/types';
 import { _SCRIPTS_DIR } from '../common/process/internal/scripts';
 import { IInstaller, InstallerResponse, Product } from '../common/types';
 import { sleep } from '../common/utils/async';
@@ -14,12 +16,27 @@ import { IInterpreterService } from '../interpreter/contracts';
 
 const LAUNCH_TENSORBOARD = path.join(_SCRIPTS_DIR, 'tensorboard_launcher.py');
 
+/**
+ * Manages the lifecycle of a TensorBoard session.
+ * Specifically, it:
+ * - ensures the TensorBoard Python package is installed,
+ * - asks the user for a log directory to start TensorBoard with
+ * - spawns TensorBoard in a background process which must stay running
+ *   to serve the TensorBoard website
+ * - frames the TensorBoard website in a VSCode webview
+ * - shuts down the TensorBoard process when the webview is closed
+ */
 export class TensorBoardSession {
     private webviewPanel: WebviewPanel | undefined;
     private url: string | undefined;
     private process: ChildProcess | undefined;
 
-    constructor(private readonly installer: IInstaller, private readonly interpreterService: IInterpreterService) {}
+    constructor(
+        private readonly installer: IInstaller,
+        private readonly interpreterService: IInterpreterService,
+        private readonly workspaceService: IWorkspaceService,
+        private readonly fileSystem: IFileSystem
+    ) {}
 
     public async initialize() {
         await this.ensureTensorboardIsInstalled();
@@ -28,6 +45,8 @@ export class TensorBoardSession {
         this.showPanel();
     }
 
+    // Ensure that the TensorBoard package is installed before we attempt
+    // to start a TensorBoard session.
     private async ensureTensorboardIsInstalled() {
         traceInfo('Ensuring TensorBoard package is installed');
         if (await this.installer.isInstalled(Product.tensorboard)) {
@@ -42,7 +61,7 @@ export class TensorBoardSession {
             token: installerToken
         });
         const response = await Promise.race([
-            await this.installer.promptToInstall(Product.tensorboard, interpreter, installerToken),
+            this.installer.promptToInstall(Product.tensorboard, interpreter, installerToken),
             cancellationPromise
         ]);
         if (response !== InstallerResponse.Installed) {
@@ -50,59 +69,72 @@ export class TensorBoardSession {
         }
     }
 
+    // Display an input box asking the user for an absolute or relative log directory
+    // to tfevent files. Default this to the directory that the active text editor is in,
+    // if any, then the folder that is open in the editor, if any.
     private async askUserForLogDir(): Promise<string> {
         const options = {
             prompt: TensorBoard.logDirectoryPrompt(),
+            value: this.autopopulateLogDirectoryPath(),
             placeHolder: TensorBoard.logDirectoryPlaceholder(),
             validateInput: (value: string) => {
                 return value.trim().length > 0 ? undefined : TensorBoard.invalidLogDirectory();
             }
         };
         const logDir = await window.showInputBox(options);
-        if (!logDir) {
+
+        // Even though we validateInput above, the result of showInputBox may still be
+        // null if the user hit `esc`. The user may also have provided a log directory
+        // that does not exist. Validate it and fail fast here.
+        if (!logDir || !(await this.isValidLogDirectory(logDir))) {
             throw new Error(TensorBoard.invalidLogDirectory());
         }
         return logDir;
     }
 
+    // Spawn a process which uses TensorBoard's Python API to start a TensorBoard session.
+    // Times out if it hasn't started up after 1 minute.
+    // Hold on to the process so we can kill it when the webview is closed.
     private async startTensorboardSession(logDir: string) {
-        traceInfo('Starting TensorBoard');
+        const cwd = this.getFullyQualifiedLogDirectory(logDir);
+        const spawnOptions = { cwd };
         const pythonExecutable = await this.interpreterService.getActiveInterpreter();
-        // TODO If a workspace folder is open, ensure we pass it as cwd to the spawned process
-        // This is so that TensorBoard can resolve the filepath
+
+        traceInfo(`Starting TensorBoard with log directory ${cwd}...`);
         const tensorBoardProcess = new Promise((resolve, reject) => {
-            const proc = spawn(pythonExecutable?.path || 'python', [LAUNCH_TENSORBOARD, logDir]);
+            const proc = spawn(pythonExecutable?.path || 'python', [LAUNCH_TENSORBOARD, logDir], spawnOptions);
             proc.stdout.on('data', (data: Buffer) => {
+                // We need the spawned process to tell us which URL TensorBoard was started at
                 const output = data.toString('utf8');
                 const match = output.match(/TensorBoard started at (.*)/);
+                traceInfo(output);
                 if (match && match[1]) {
                     this.url = match[1];
                     resolve(proc);
                 }
-                traceInfo(output);
             });
             proc.stderr.on('error', (err) => {
-                traceError(err);
-                reject();
+                reject(err);
             });
             proc.on('close', (code) => {
-                traceInfo(`TensorBoard child process exited with code ${code}.`);
                 this.process = undefined;
-                reject();
+                reject(`TensorBoard child process exited with code ${code}.`);
             });
             proc.on('disconnect', () => {
-                traceInfo(`TensorBoard child process disconnected.`);
                 this.process = undefined;
-                reject();
+                reject(`TensorBoard child process disconnected.`);
             });
         });
 
+        // Timeout waiting for TensorBoard to start after 60 seconds.
+        // This is the same time limit that TensorBoard itself uses when waiting for
+        // its webserver to start up.
         const timeout = 60_000;
         const result = await Promise.race([sleep(timeout), tensorBoardProcess]);
         if (result !== timeout) {
             this.process = result as ChildProcess;
         } else {
-            throw new Error('Failed to start TensorBoard.');
+            throw new Error(`Timed out after ${timeout / 1000} seconds waiting for TensorBoard to launch.`);
         }
     }
 
@@ -119,7 +151,7 @@ export class TensorBoardSession {
         this.webviewPanel = webviewPanel;
         webviewPanel.onDidDispose(() => {
             this.webviewPanel = undefined;
-            // Kill the running tensorboard session
+            // Kill the running TensorBoard session
             this.process?.kill();
             this.process = undefined;
         });
@@ -151,5 +183,35 @@ export class TensorBoardSession {
             </head>
             </html>`;
         }
+    }
+    
+    // TensorBoard accepts absolute or relative log directory paths to tfevent files.
+    // It uses these files to populate its visualizations. If given a relative path,
+    // TensorBoard resolves them against the current working directory. Make the
+    // chosen filepath explicit in our logs. If a workspace folder is open, ensure
+    // we pass it as cwd to the spawned process. If there is no rootPath available,
+    // explicitly pass process.cwd, which is what `spawn` would use by default anyway.
+    private getFullyQualifiedLogDirectory(logDir: string) {
+        if (path.isAbsolute(logDir)) {
+            return logDir;
+        }
+        const rootPath = this.workspaceService.rootPath;
+        if (rootPath) {
+            return path.resolve(rootPath, logDir);
+        } else {
+            return path.resolve(process.cwd(), logDir);
+        }
+    }
+
+    private autopopulateLogDirectoryPath(): string | undefined {
+        const activeTextEditor = window.activeTextEditor;
+        if (activeTextEditor) {
+            return path.dirname(activeTextEditor.document.uri.fsPath);
+        }
+        return this.workspaceService.rootPath;
+    }
+
+    private isValidLogDirectory(logDir: string) {
+        return this.fileSystem.directoryExists(logDir);
     }
 }

@@ -218,7 +218,7 @@ async function activateLegacy(
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
 
     const tensorBoardSessionProvider = serviceManager.get<TensorBoardSessionProvider>(ITensorBoardSessionProvider);
-    cmdManager.registerCommand(Commands.LaunchTensorBoard, () => tensorBoardSessionProvider.getOrCreate());
+    cmdManager.registerCommand(Commands.LaunchTensorBoard, () => tensorBoardSessionProvider.createNewSession());
 
     return { activationPromise };
 }

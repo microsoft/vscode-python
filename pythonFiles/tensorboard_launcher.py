@@ -3,11 +3,12 @@ import time
 import sys
 import tensorboard
 
+
 def main(logdir):
     tb = tensorboard.program.TensorBoard()
     tb.configure(bind_all=False, logdir=logdir)
     url = tb.launch()
-    sys.stdout.write("TensorBoard started at %s" % (url))
+    sys.stdout.write("TensorBoard started at %s\n" % (url))
     sys.stdout.flush()
     while True:
         try:
