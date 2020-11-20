@@ -184,7 +184,7 @@ export class TensorBoardSession {
             </html>`;
         }
     }
-    
+
     // TensorBoard accepts absolute or relative log directory paths to tfevent files.
     // It uses these files to populate its visualizations. If given a relative path,
     // TensorBoard resolves them against the current working directory. Make the
