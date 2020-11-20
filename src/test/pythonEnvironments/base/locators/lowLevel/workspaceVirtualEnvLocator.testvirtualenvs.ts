@@ -8,6 +8,7 @@ import * as path from 'path';
 import { traceWarning } from '../../../../../client/common/logger';
 import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, Deferred, sleep } from '../../../../../client/common/utils/async';
+import { getOSType, OSType } from '../../../../../client/common/utils/platform';
 import { IDisposableLocator } from '../../../../../client/pythonEnvironments/base/locator';
 import { createWorkspaceVirtualEnvLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/workspaceVirtualEnvLocator';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
@@ -64,6 +65,16 @@ class WorkspaceVenvs {
             throw new Error(`No environment to update exists in ${dirToLookInto}`);
         }
         return filename;
+    }
+
+    public async createFile(filename: string): Promise<string> {
+        const filepath = path.join(this.root, filename);
+        try {
+            await fs.createFile(filepath);
+        } catch (err) {
+            throw new Error(`Failed to create python executable ${filename}, Error: ${err}`);
+        }
+        return filepath;
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -249,7 +260,7 @@ suite('WorkspaceVirtualEnvironment Locator', async () => {
     test('Detect when an environment has been updated', async () => {
         let actualEvent: PythonEnvsChangedEvent;
         const deferred = createDeferred<void>();
-        const executable = await workspaceVenvs.create('one');
+        const executable = await workspaceVenvs.createFile(getOSType() === OSType.Windows ? 'python.exe' : 'python');
         // Wait before the change event has been sent. If both operations occur almost simultaneously no event is sent.
         await sleep(100);
         await setupLocator(async (e) => {
