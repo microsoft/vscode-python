@@ -240,6 +240,21 @@ suite('Debugging - Config Resolver', () => {
             expect(isLocalHost).to.equal(localHostTestMatrix[key]);
         });
     });
+    test('Is debugging fastapi=true', () => {
+        const config = { module: 'fastapi' };
+        const isFastAPI = resolver.isDebuggingFastAPI(config as any);
+        expect(isFastAPI).to.equal(true, 'not fastapi');
+    });
+    test('Is debugging fastapi=false', () => {
+        const config = { module: 'fastapi2' };
+        const isFastAPI = resolver.isDebuggingFastAPI(config as any);
+        expect(isFastAPI).to.equal(false, 'fastapi');
+    });
+    test('Is debugging fastapi=false when not defined', () => {
+        const config = {};
+        const isFastAPI = resolver.isDebuggingFastAPI(config as any);
+        expect(isFastAPI).to.equal(false, 'fastapi');
+    });
     test('Is debugging flask=true', () => {
         const config = { module: 'flask' };
         const isFlask = resolver.isDebuggingFlask(config as any);
