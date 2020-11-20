@@ -156,6 +156,20 @@ suite('WorkspaceVirtualEnvironment Locator', async () => {
         locator.dispose();
     });
 
+    test('Detect a new Virtual Environment', async () => {
+        let actualEvent: PythonEnvsChangedEvent;
+        const deferred = createDeferred<void>();
+        locator.onChanged(async (e) => {
+            actualEvent = e;
+            deferred.resolve();
+        });
+        const envName = await globalVenvs.create('one');
+        await waitForEnvironmentToBeDetected(deferred, envName);
+        // Detecting kind of virtual env depends on the file structure around the executable, so we need to wait before
+        // attempting to verify it. Omitting that check as we can never deterministically say when it's ready to check.
+        assert.deepEqual(actualEvent!.type, FileChangeType.Created, 'Wrong event emitted');
+    });
+
     test('Detect a new environment', async () => {
         let actualEvent: PythonEnvsChangedEvent;
         const deferred = createDeferred<void>();
@@ -169,6 +183,20 @@ suite('WorkspaceVirtualEnvironment Locator', async () => {
         const isFound = await isLocated(executable);
 
         assert.ok(isFound);
+        // Detecting kind of virtual env depends on the file structure around the executable, so we need to wait before
+        // attempting to verify it. Omitting that check as we can never deterministically say when it's ready to check.
+        assert.deepEqual(actualEvent!.type, FileChangeType.Created, 'Wrong event emitted');
+    });
+
+    test('Detect a new Virtual Environment', async () => {
+        let actualEvent: PythonEnvsChangedEvent;
+        const deferred = createDeferred<void>();
+        locator.onChanged(async (e) => {
+            actualEvent = e;
+            deferred.resolve();
+        });
+        const envName = await globalVenvs.create('one');
+        await waitForEnvironmentToBeDetected(deferred, envName);
         // Detecting kind of virtual env depends on the file structure around the executable, so we need to wait before
         // attempting to verify it. Omitting that check as we can never deterministically say when it's ready to check.
         assert.deepEqual(actualEvent!.type, FileChangeType.Created, 'Wrong event emitted');
@@ -196,6 +224,20 @@ suite('WorkspaceVirtualEnvironment Locator', async () => {
 
         assert.notOk(isFound);
         assert.deepEqual(actualEvent!.type, FileChangeType.Deleted, 'Wrong event emitted');
+    });
+
+    test('Detect a new Virtual Environment', async () => {
+        let actualEvent: PythonEnvsChangedEvent;
+        const deferred = createDeferred<void>();
+        locator.onChanged(async (e) => {
+            actualEvent = e;
+            deferred.resolve();
+        });
+        const envName = await globalVenvs.create('one');
+        await waitForEnvironmentToBeDetected(deferred, envName);
+        // Detecting kind of virtual env depends on the file structure around the executable, so we need to wait before
+        // attempting to verify it. Omitting that check as we can never deterministically say when it's ready to check.
+        assert.deepEqual(actualEvent!.type, FileChangeType.Created, 'Wrong event emitted');
     });
 
     test('Detect when an environment has been updated', async () => {
