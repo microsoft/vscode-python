@@ -13,7 +13,7 @@ import { createWorkspaceVirtualEnvLocator } from '../../../../../client/pythonEn
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import { getInterpreterPathFromDir } from '../../../../../client/pythonEnvironments/common/commonUtils';
-import { arePathsSame } from '../../../../../client/pythonEnvironments/common/externalDependencies';
+import { arePathsSame, readFile } from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import { createGlobalVirtualEnvironmentLocator } from '../../../../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvronmentLocator';
 import { deleteFiles, PYTHON_PATH } from '../../../../common';
 import { TEST_TIMEOUT } from '../../../../constants';
@@ -69,7 +69,13 @@ class WorkspaceVenvs {
     // eslint-disable-next-line class-methods-use-this
     public async update(filename: string): Promise<void> {
         try {
+            // tslint:disable:no-console
+            console.log('File name is', filename);
+            const y = await fs.pathExists(filename);
+            console.log('Does file exist', y);
             await fs.writeFile(filename, 'Environment has been updated');
+            const x = readFile(filename);
+            console.log('File content is', x);
         } catch (err) {
             throw new Error(`Failed to update Workspace virtualenv executable ${filename}, Error: ${err}`);
         }
@@ -256,9 +262,12 @@ suite('WorkspaceVirtualEnvironment Locator', async () => {
         const isFound = await isLocated(executable);
 
         assert.ok(isFound);
+        console.log(JSON.stringify(actualEvent!));
         // Detecting kind of virtual env depends on the file structure around the executable, so we need to wait before
         // attempting to verify it. Omitting that check as we can never deterministically say when it's ready to check.
         assert.deepEqual(actualEvent!.type, FileChangeType.Changed, 'Wrong event emitted');
+        locator.dispose();
+        await sleep(5000);
     });
 
     test('Detect a new Virtual Environment', async () => {
