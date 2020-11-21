@@ -80,13 +80,6 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
  * Finds and resolves virtual environments created in known global locations.
  */
 class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
-    private virtualEnvKinds = [
-        PythonEnvKind.Venv,
-        PythonEnvKind.VirtualEnv,
-        PythonEnvKind.VirtualEnvWrapper,
-        PythonEnvKind.Pipenv,
-    ];
-
     constructor(private readonly searchDepth?: number) {
         super(getGlobalVirtualEnvDirs, getVirtualEnvKind, {
             // Note detecting kind of virtual env depends on the file structure around the
@@ -102,7 +95,7 @@ class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
         // interpreters
         const searchDepth = this.searchDepth ?? DEFAULT_SEARCH_DEPTH;
 
-        async function* iterator(virtualEnvKinds: PythonEnvKind[]) {
+        async function* iterator() {
             const envRootDirs = await getGlobalVirtualEnvDirs();
             const envGenerators = envRootDirs.map((envRootDir) => {
                 async function* generator() {
@@ -122,19 +115,15 @@ class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
                             const kind = await getVirtualEnvKind(env);
 
                             const timeData = await getFileInfo(env);
-                            if (virtualEnvKinds.includes(kind)) {
-                                traceVerbose(`Global Virtual Environment: [added] ${env}`);
-                                const envInfo = buildEnvInfo({
-                                    kind,
-                                    executable: env,
-                                    version: UNKNOWN_PYTHON_VERSION,
-                                });
-                                envInfo.executable.ctime = timeData.ctime;
-                                envInfo.executable.mtime = timeData.mtime;
-                                yield envInfo;
-                            } else {
-                                traceVerbose(`Global Virtual Environment: [skipped] ${env}`);
-                            }
+                            traceVerbose(`Global Virtual Environment: [added] ${env}`);
+                            const envInfo = buildEnvInfo({
+                                kind,
+                                executable: env,
+                                version: UNKNOWN_PYTHON_VERSION,
+                            });
+                            envInfo.executable.ctime = timeData.ctime;
+                            envInfo.executable.mtime = timeData.mtime;
+                            yield envInfo;
                         } else {
                             traceVerbose(`Global Virtual Environment: [skipped] ${env}`);
                         }
@@ -146,9 +135,10 @@ class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
             yield* iterable(chain(envGenerators));
         }
 
-        return iterator(this.virtualEnvKinds);
+        return iterator();
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
         if (await pathExists(executablePath)) {
@@ -156,17 +146,15 @@ class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
             // check multiple times. Those checks are file system heavy and
             // we can use the kind to determine this anyway.
             const kind = await getVirtualEnvKind(executablePath);
-            if (this.virtualEnvKinds.includes(kind)) {
-                const timeData = await getFileInfo(executablePath);
-                const envInfo = buildEnvInfo({
-                    kind,
-                    version: UNKNOWN_PYTHON_VERSION,
-                    executable: executablePath,
-                });
-                envInfo.executable.ctime = timeData.ctime;
-                envInfo.executable.mtime = timeData.mtime;
-                return envInfo;
-            }
+            const timeData = await getFileInfo(executablePath);
+            const envInfo = buildEnvInfo({
+                kind,
+                version: UNKNOWN_PYTHON_VERSION,
+                executable: executablePath,
+            });
+            envInfo.executable.ctime = timeData.ctime;
+            envInfo.executable.mtime = timeData.mtime;
+            return envInfo;
         }
         return undefined;
     }

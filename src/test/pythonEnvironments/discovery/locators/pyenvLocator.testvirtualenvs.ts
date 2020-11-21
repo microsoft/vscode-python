@@ -3,92 +3,23 @@
 
 // eslint-disable-next-line max-classes-per-file
 import { assert } from 'chai';
-import * as fs from 'fs-extra';
 import * as path from 'path';
-import { traceWarning } from '../../../../client/common/logger';
 import { FileChangeType } from '../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, Deferred, sleep } from '../../../../client/common/utils/async';
-import { getOSType, OSType } from '../../../../client/common/utils/platform';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
-import { getInterpreterPathFromDir } from '../../../../client/pythonEnvironments/common/commonUtils';
 import { arePathsSame } from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { createPyenvLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/pyenvLocator';
-import { deleteFiles, PYTHON_PATH } from '../../../common';
 import { TEST_TIMEOUT } from '../../../constants';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { run } from './envTestUtils';
-
-class PyenvVenvs {
-    constructor(private readonly root: string, private readonly prefix = '.pyenv-') { }
-
-    public async create(name: string): Promise<string> {
-        const envName = this.resolve(name);
-        const argv = [PYTHON_PATH.fileToCommandArgument(), '-m', 'virtualenv', envName];
-        try {
-            await run(argv, { cwd: this.root });
-        } catch (err) {
-            throw new Error(`Failed to create Env ${path.basename(envName)} Error: ${err}`);
-        }
-        const dirToLookInto = path.join(this.root, envName);
-        const filename = await getInterpreterPathFromDir(dirToLookInto);
-        if (!filename) {
-            throw new Error(`No environment to update exists in ${dirToLookInto}`);
-        }
-        return filename;
-    }
-
-    /**
-     * Creates a dummy environment by creating a fake executable.
-     * @param name environment suffix name to create
-     */
-    public async createDummyEnv(name: string): Promise<string> {
-        const envName = this.resolve(name);
-        const filepath = path.join(this.root, envName, getOSType() === OSType.Windows ? 'python.exe' : 'python');
-        try {
-            await fs.createFile(filepath);
-        } catch (err) {
-            throw new Error(`Failed to create python executable ${filepath}, Error: ${err}`);
-        }
-        return filepath;
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    public async update(filename: string): Promise<void> {
-        try {
-            await fs.writeFile(filename, 'Environment has been updated');
-        } catch (err) {
-            throw new Error(`Failed to update pyenv executable ${filename}, Error: ${err}`);
-        }
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    public async delete(filename: string): Promise<void> {
-        try {
-            await fs.remove(filename);
-        } catch (err) {
-            traceWarning(`Failed to clean up ${filename}`);
-        }
-    }
-
-    public async cleanUp() {
-        const globPattern = path.join(this.root, `${this.prefix}*`);
-        await deleteFiles(globPattern);
-    }
-
-    private resolve(name: string): string {
-        // Ensure env is random to avoid conflicts in tests (corrupting test data)
-        const now = new Date().getTime().toString().substr(-8);
-        return `${this.prefix}${name}${now}`;
-    }
-}
+import { Venvs } from './envTestUtils';
 
 suite('Pyenv Locator', async () => {
     const testPyenvRoot = path.join(TEST_LAYOUT_ROOT, 'pyenvhome', '.pyenv');
     const testPyenvVersionsDir = path.join(testPyenvRoot, 'versions');
-    const pyenvVenvs = new PyenvVenvs(testPyenvVersionsDir);
+    const pyenvVenvs = new Venvs(testPyenvVersionsDir);
     let pyenvRootOldValue: string | undefined;
     let locator: IDisposableLocator;
 
