@@ -7,7 +7,7 @@ import * as chokidar from 'chokidar';
 import * as path from 'path';
 import { RelativePattern, workspace } from 'vscode';
 import { traceError, traceVerbose } from '../logger';
-import { IDisposable } from '../utils/resourceLifecycle';
+import { Disposables, IDisposable } from '../utils/resourceLifecycle';
 import { normCasePath } from './fs-paths';
 
 /**
@@ -24,7 +24,7 @@ export function watchLocationForPattern(
     baseDir: string,
     pattern: string,
     callback: (type: FileChangeType, absPath: string) => void
-): IDisposable[] {
+): IDisposable {
     // Use VSCode API iff base directory to exists within the current workspace folders
     const found = workspace.workspaceFolders?.find((e) => normCasePath(baseDir).startsWith(normCasePath(e.uri.fsPath)));
     if (found) {
@@ -38,9 +38,9 @@ function watchLocationUsingVSCodeAPI(
     baseDir: string,
     pattern: string,
     callback: (type: FileChangeType, absPath: string) => void
-): IDisposable[] {
+): IDisposable {
     const globPattern = new RelativePattern(baseDir, pattern);
-    const disposables: IDisposable[] = [];
+    const disposables = new Disposables();
     traceVerbose(`Start watching: ${baseDir} with pattern ${pattern} using VSCode API`);
     const watcher = workspace.createFileSystemWatcher(globPattern);
     disposables.push(watcher.onDidCreate((e) => callback(FileChangeType.Created, e.fsPath)));
@@ -53,7 +53,7 @@ function watchLocationUsingChokidar(
     baseDir: string,
     pattern: string,
     callback: (type: FileChangeType, absPath: string) => void
-): IDisposable[] {
+): IDisposable {
     const watcherOpts: chokidar.WatchOptions = {
         cwd: baseDir,
         ignoreInitial: true,
@@ -128,5 +128,5 @@ function watchLocationUsingChokidar(
         }
     });
 
-    return [{ dispose: () => stopWatcher().ignoreErrors() }];
+    return { dispose: () => stopWatcher().ignoreErrors() };
 }
