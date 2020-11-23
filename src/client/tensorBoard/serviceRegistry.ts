@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { NativeTensorBoard } from '../common/experiments/groups';
 import { IExperimentService } from '../common/types';
 import { IServiceManager } from '../ioc/types';
@@ -16,7 +16,10 @@ export async function registerTypes(serviceManager: IServiceManager) {
             IExtensionSingleActivationService,
             TensorBoardSessionProvider
         );
-        serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, TensorBoardFileWatcher);
+        serviceManager.addSingleton<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService,
+            TensorBoardFileWatcher
+        );
         serviceManager.addSingleton<TensorBoardPrompt>(TensorBoardPrompt, TensorBoardPrompt);
     }
 }
