@@ -10,7 +10,7 @@ import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { PythonEnvironments } from '../../../client/pythonEnvironments';
+import { PythonEnvironments } from '../../../client/pythonEnvironments/api';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { registerForIOC } from '../../../client/pythonEnvironments/legacyIOC';
 import { CommandSource } from '../../../client/testing/common/constants';

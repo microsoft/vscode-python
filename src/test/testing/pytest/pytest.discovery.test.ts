@@ -23,7 +23,7 @@ import { IEnvironmentActivationService } from '../../../client/interpreter/activ
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { PythonEnvironments } from '../../../client/pythonEnvironments';
+import { PythonEnvironments } from '../../../client/pythonEnvironments/api';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { registerForIOC } from '../../../client/pythonEnvironments/legacyIOC';

@@ -10,7 +10,7 @@ import { IProcessServiceFactory } from '../../client/common/process/types';
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { BlackFormatter } from '../../client/formatters/blackFormatter';
 import { YapfFormatter } from '../../client/formatters/yapfFormatter';
-import { PythonEnvironments } from '../../client/pythonEnvironments';
+import { PythonEnvironments } from '../../client/pythonEnvironments/api';
 import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 import { isPythonVersionInProcess } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';

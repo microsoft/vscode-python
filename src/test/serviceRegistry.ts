@@ -53,7 +53,7 @@ import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { registerTypes as lintersRegisterTypes } from '../client/linters/serviceRegistry';
-import { PythonEnvironments } from '../client/pythonEnvironments';
+import { PythonEnvironments } from '../client/pythonEnvironments/api';
 import { registerForIOC } from '../client/pythonEnvironments/legacyIOC';
 import { TEST_OUTPUT_CHANNEL } from '../client/testing/common/constants';
 import { registerTypes as unittestsRegisterTypes } from '../client/testing/serviceRegistry';

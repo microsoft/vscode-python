@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable-next-line:no-single-line-block-comment
-/* eslint-disable max-classes-per-file */
-
 import * as vscode from 'vscode';
 import { getGlobalStorage } from '../common/persistentState';
 import { getOSType, OSType } from '../common/utils/platform';
@@ -12,16 +9,12 @@ import {
     ActivationResult,
     ExtensionState,
 } from '../components';
+import { PythonEnvironments } from './api';
 import { getPersistentCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
-import {
-    ILocator,
-    IPythonEnvsIterator,
-    PythonLocatorQuery,
-} from './base/locator';
+import { ILocator } from './base/locator';
 import { getActivatedCachingLocator } from './base/locators/composite/cachingLocator';
 import { getEnvs } from './base/locatorUtils';
-import { PythonEnvsChangedEvent, PythonEnvsWatcher } from './base/watcher';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
 import { ExtensionLocators, WorkspaceLocators } from './discovery/locators';
 import { GlobalVirtualEnvironmentLocator } from './discovery/locators/services/globalVirtualEnvronmentLocator';
@@ -31,45 +24,6 @@ import { WindowsRegistryLocator } from './discovery/locators/services/windowsReg
 import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreLocator';
 import { EnvironmentInfoService } from './info/environmentInfoService';
 import { registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
-
-/**
- * The public API for the Python environments component.
- *
- * Note that this is composed of sub-components.
- */
-export class PythonEnvironments implements ILocator {
-    public readonly onChanged: vscode.Event<PythonEnvsChangedEvent>;
-
-    private readonly watcher = new PythonEnvsWatcher();
-
-    private readonly getLocators: () => Promise<ILocator>;
-
-    constructor(
-        // These are factories for the sub-components the full component is composed of:
-        getLocators: () => Promise<ILocator>,
-    ) {
-        this.onChanged = this.watcher.onChanged;
-
-        let locators: ILocator;
-        this.getLocators = async () => {
-            if (locators === undefined) {
-                locators = await getLocators();
-                locators.onChanged((event) => this.watcher.fire(event));
-            }
-            return locators;
-        };
-    }
-
-    public async* iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        const locators = await this.getLocators();
-        yield* locators.iterEnvs(query);
-    }
-
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const locators = await this.getLocators();
-        return locators.resolveEnv(env);
-    }
-}
 
 /**
  * Set up the Python environments component (during extension activation).'

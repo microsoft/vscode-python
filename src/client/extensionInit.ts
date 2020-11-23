@@ -15,6 +15,7 @@ import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import * as pythonEnvironments from './pythonEnvironments';
+import { PythonEnvironments } from './pythonEnvironments/api';
 
 // The code in this module should do nothing more complex than register
 // objects to DI and simple init (e.g. no side effects).  That implies
@@ -56,7 +57,7 @@ export function initializeCommon(ext: ExtensionState): void {
  * The set of public APIs from initialized components.
  */
 export type Components = {
-    pythonEnvs: pythonEnvironments.PythonEnvironments;
+    pythonEnvs: PythonEnvironments;
 };
 
 /**
