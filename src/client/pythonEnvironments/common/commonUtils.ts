@@ -37,11 +37,7 @@ export async function* findInterpretersInDir(
 
             if (stat.isDirectory()) {
                 if (recurseLevels && recurseLevels > 0) {
-                    const subItems = findInterpretersInDir(fullPath, recurseLevels - 1);
-
-                    for await (const subItem of subItems) {
-                        yield subItem;
-                    }
+                    yield* findInterpretersInDir(fullPath, recurseLevels - 1);
                 }
             } else if (checkBin(fullPath)) {
                 yield fullPath;
@@ -82,7 +78,7 @@ export async function getPythonVersionFromNearByFiles(interpreterPath:string): P
  */
 export async function getPythonVersionFromPath(
     interpreterPath: string | undefined,
-    hint: string | undefined,
+    hint?: string,
 ): Promise<PythonVersion> {
     let versionA;
     try {
@@ -102,6 +98,17 @@ export async function getPythonVersionFromPath(
 }
 
 /**
+ * Returns true if binary basename is 'python' or 'python.exe', false otherwise.
+ * Often we only care about python.exe (on windows) and python (on linux/mac) as other version like
+ * python3.exe or python3.8 are often symlinks to python.exe or python.
+ * @param executable Absolute path to executable
+ */
+export function isStandardPythonBinary(executable: string): boolean {
+    const base = path.basename(executable).toLowerCase();
+    return base === 'python.exe' || base === 'python';
+}
+
+/**
  * This function looks specifically for 'python' or 'python.exe' binary in the sub folders of a given
  * environment directory.
  * @param envDir Absolute path to the environment directory
@@ -115,8 +122,7 @@ export async function getInterpreterPathFromDir(envDir: string): Promise<string|
 
     // Search in the sub-directories for python binary
     for await (const bin of findInterpretersInDir(envDir, 2, filter)) {
-        const base = path.basename(bin).toLowerCase();
-        if (base === 'python.exe' || base === 'python') {
+        if (isStandardPythonBinary(bin)) {
             return bin;
         }
     }

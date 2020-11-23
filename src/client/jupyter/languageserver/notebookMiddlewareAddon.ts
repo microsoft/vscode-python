@@ -294,7 +294,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
     ): ProviderResult<SymbolInformation[]> {
         const result = next(query, token);
         if (isThenable(result)) {
-            return result.then(this.converter.toIncomingWorkspaceSymbols.bind(this));
+            return result.then(this.converter.toIncomingWorkspaceSymbols.bind(this.converter));
         }
         return this.converter.toIncomingWorkspaceSymbols(result);
     }
