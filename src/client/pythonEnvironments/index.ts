@@ -75,7 +75,7 @@ async function createLocators(ext: ExtensionState): Promise<ILocator> {
     // Create the low-level locators.
     let locators: ILocator = new ExtensionLocators(
         createNonWorkspaceLocators(ext),
-        createWorkspaceLocators(ext),
+        createWorkspaceLocator(ext),
     );
 
     // Create the env info service used by ResolvingLocator and CachingLocator.
@@ -133,7 +133,7 @@ function watchRoots(args: WatchRootsArgs): IDisposable {
     });
 }
 
-function createWorkspaceLocators(
+function createWorkspaceLocator(
     ext: ExtensionState,
 ): WorkspaceLocators {
     const locators = new WorkspaceLocators(
