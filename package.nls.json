@@ -222,5 +222,6 @@
 	"TensorBoard.logDirectoryPlaceholder" : "e.g. /runs/experiment",
 	"TensorBoard.failedToStartSessionError" : "We failed to start a TensorBoard session due to the following error: {0}",
     "TensorBoard.tensorBoardInstallRequired" : "We cannot start a TensorBoard session without the TensorBoard package.",
-    "TensorBoard.nativeTensorBoardPrompt" : "VS Code now has native TensorBoard support. Would you like to launch TensorBoard?"
+    "TensorBoard.nativeTensorBoardPrompt" : "VS Code now has native TensorBoard support. Would you like to launch TensorBoard?",
+    "TensorBoard.progressMessage" : "Starting TensorBoard session..."
 }
