@@ -1,5 +1,6 @@
 // tslint:disable-next-line: no-single-line-block-comment
 /* eslint-disable max-classes-per-file */
+
 import { inject, injectable } from 'inversify';
 import { flatten } from 'lodash';
 import {
@@ -26,7 +27,6 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { DisableableLocator } from '../../base/disableableLocator';
 import { PythonEnvInfo } from '../../base/info';
 import {
     ILocator,
@@ -86,6 +86,8 @@ export type WatchRootsArgs = {
 };
 type WatchRootsFunc = (args: WatchRootsArgs) => IDisposable;
 
+// XXX Factor out RootedLocators and MultiRootedLocators.
+
 /**
  * The collection of all workspace-specific locators used by the extension.
  *
@@ -96,7 +98,7 @@ export class WorkspaceLocators extends Locator {
 
     private isWatching = false;
 
-    private readonly locators: Record<RootURI, [DisableableLocator, IDisposable]> = {};
+    private readonly locators: Record<RootURI, [ILocator, IDisposable]> = {};
 
     private readonly roots: Record<RootURI, Uri> = {};
 
@@ -175,18 +177,19 @@ export class WorkspaceLocators extends Locator {
                 }
             });
         });
-        const locator = new DisableableLocator(new Locators(locators));
+        const locator = new Locators(locators);
         // Cache it.
         const key = root.toString();
         this.locators[key] = [locator, disposables];
         this.roots[key] = root;
         // Hook up the watchers.
-        locator.onChanged((e) => {
+        const listener = locator.onChanged((e) => {
             if (e.searchLocation === undefined) {
                 e.searchLocation = root;
             }
             this.emitter.fire(e);
         });
+        disposables.push(listener);
     }
 
     private removeRoot(root: Uri): void {
@@ -195,10 +198,9 @@ export class WorkspaceLocators extends Locator {
         if (found === undefined) {
             return;
         }
-        const [locator, disposables] = found;
+        const [, disposables] = found;
         delete this.locators[key];
         delete this.roots[key];
-        locator.disable();
         disposables.dispose();
     }
 
