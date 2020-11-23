@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import { Uri } from 'vscode';
 import { PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../../client/pythonEnvironments/base/watcher';
-import { DisableableEnvsWatcher, PythonEnvsWatchers } from '../../../client/pythonEnvironments/base/watchers';
+import { PythonEnvsWatchers } from '../../../client/pythonEnvironments/base/watchers';
 
 suite('Python envs watchers - PythonEnvsWatchers', () => {
     suite('onChanged consolidates', () => {
@@ -48,75 +48,6 @@ suite('Python envs watchers - PythonEnvsWatchers', () => {
             sub1.fire(event3);
             sub2.fire(event4);
             sub1.fire(event5);
-
-            assert.deepEqual(events, expected);
-        });
-    });
-});
-
-suite('Python envs watchers - DisableableEnvsWatcher', () => {
-    test('enabled by default', () => {
-        const event1: PythonEnvsChangedEvent = {};
-        const expected = [event1];
-        const sub = new PythonEnvsWatcher();
-        const watcher = new DisableableEnvsWatcher(sub);
-        const events: PythonEnvsChangedEvent[] = [];
-        watcher.onChanged((e) => events.push(e));
-
-        sub.fire(event1);
-
-        assert.deepEqual(events, expected);
-    });
-
-    suite('onChanged', () => {
-        test('fires if enabled', () => {
-            const event1: PythonEnvsChangedEvent = {};
-            const event2: PythonEnvsChangedEvent = {};
-            const expected = [event1, event2];
-            const sub = new PythonEnvsWatcher();
-            const watcher = new DisableableEnvsWatcher(sub);
-            const events: PythonEnvsChangedEvent[] = [];
-            watcher.onChanged((e) => events.push(e));
-
-            watcher.enable();
-            sub.fire(event1);
-            sub.fire(event2);
-
-            assert.deepEqual(events, expected);
-        });
-
-        test('does not fire if disabled', () => {
-            const event1: PythonEnvsChangedEvent = {};
-            const event2: PythonEnvsChangedEvent = {};
-            const expected: PythonEnvsChangedEvent[] = [];
-            const sub = new PythonEnvsWatcher();
-            const watcher = new DisableableEnvsWatcher(sub);
-            const events: PythonEnvsChangedEvent[] = [];
-            watcher.onChanged((e) => events.push(e));
-
-            watcher.disable();
-            sub.fire(event1);
-            sub.fire(event2);
-
-            assert.deepEqual(events, expected);
-        });
-
-        test('follows enabled state', () => {
-            const event1: PythonEnvsChangedEvent = {};
-            const event2: PythonEnvsChangedEvent = { kind: PythonEnvKind.Unknown };
-            const event3: PythonEnvsChangedEvent = { kind: PythonEnvKind.Venv };
-            const expected = [event1, event3];
-            const sub = new PythonEnvsWatcher();
-            const watcher = new DisableableEnvsWatcher(sub);
-            const events: PythonEnvsChangedEvent[] = [];
-            watcher.onChanged((e) => events.push(e));
-
-            watcher.enable();
-            sub.fire(event1);
-            watcher.disable();
-            sub.fire(event2);
-            watcher.enable();
-            sub.fire(event3);
 
             assert.deepEqual(events, expected);
         });

@@ -4,7 +4,6 @@
 import * as assert from 'assert';
 import { Uri } from 'vscode';
 import { createDeferred } from '../../../client/common/utils/async';
-import { DisableableLocator } from '../../../client/pythonEnvironments/base/disableableLocator';
 import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
 import { PythonLocatorQuery } from '../../../client/pythonEnvironments/base/locator';
 import { Locators } from '../../../client/pythonEnvironments/base/locators';
@@ -278,111 +277,6 @@ suite('Python envs locators - Locators', () => {
 
             assert.equal(resolved, undefined);
             assert.deepEqual(calls, [1, 2]);
-        });
-    });
-});
-
-suite('Python envs locators - DisableableLocator', () => {
-    suite('onChanged', () => {
-        test('fires if enabled', () => {
-            const event1: PythonEnvsChangedEvent = {};
-            const event2: PythonEnvsChangedEvent = { kind: PythonEnvKind.Unknown };
-            const expected = [event1, event2];
-            const sub = new SimpleLocator([]);
-            const locator = new DisableableLocator(sub);
-            const events: PythonEnvsChangedEvent[] = [];
-            locator.onChanged((e) => events.push(e));
-
-            sub.fire(event1);
-            sub.fire(event2);
-
-            assert.deepEqual(events, expected);
-        });
-
-        test('does not fire if disabled', () => {
-            const event1: PythonEnvsChangedEvent = {};
-            const event2: PythonEnvsChangedEvent = {};
-            const expected: PythonEnvsChangedEvent[] = [];
-            const sub = new SimpleLocator([]);
-            const locator = new DisableableLocator(sub);
-            const events: PythonEnvsChangedEvent[] = [];
-            locator.onChanged((e) => events.push(e));
-
-            locator.disable();
-            sub.fire(event1);
-            sub.fire(event2);
-
-            assert.deepEqual(events, expected);
-        });
-
-        test('follows enabled state', () => {
-            const event1: PythonEnvsChangedEvent = {};
-            const event2: PythonEnvsChangedEvent = { kind: PythonEnvKind.Unknown };
-            const event3: PythonEnvsChangedEvent = { kind: PythonEnvKind.Venv };
-            const expected = [event1, event3];
-            const sub = new SimpleLocator([]);
-            const locator = new DisableableLocator(sub);
-            const events: PythonEnvsChangedEvent[] = [];
-            locator.onChanged((e) => events.push(e));
-
-            sub.fire(event1);
-            locator.disable();
-            sub.fire(event2);
-            locator.enable();
-            sub.fire(event3);
-
-            assert.deepEqual(events, expected);
-        });
-    });
-
-    suite('iterEnvs()', () => {
-        test('pass-through if enabled', async () => {
-            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
-            const expected = [env1];
-            const sub = new SimpleLocator([env1]);
-            const locator = new DisableableLocator(sub);
-
-            const iterator = locator.iterEnvs();
-            const envs = await getEnvs(iterator);
-
-            assert.deepEqual(envs, expected);
-        });
-
-        test('empty if disabled', async () => {
-            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
-            const expected: PythonEnvInfo[] = [];
-            const sub = new SimpleLocator([env1]);
-            const locator = new DisableableLocator(sub);
-
-            locator.disable();
-            const iterator = locator.iterEnvs();
-            const envs = await getEnvs(iterator);
-
-            assert.deepEqual(envs, expected);
-        });
-    });
-
-    suite('resolveEnv()', () => {
-        test('pass-through if enabled', async () => {
-            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
-            const expected = env1;
-            const sub = new SimpleLocator([env1]);
-            const locator = new DisableableLocator(sub);
-
-            const resolved = await locator.resolveEnv(env1);
-
-            assert.deepEqual(resolved, expected);
-        });
-
-        test('empty if disabled', async () => {
-            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
-            const sub = new SimpleLocator([env1]);
-            const locator = new DisableableLocator(sub);
-
-            locator.disable();
-            const resolved = await locator.resolveEnv(env1);
-
-            assert.equal(resolved, undefined);
         });
     });
 });

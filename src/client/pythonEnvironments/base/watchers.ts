@@ -4,7 +4,7 @@
 // tslint:disable-next-line:no-single-line-block-comment
 /* eslint-disable max-classes-per-file */
 
-import { Disposable, Event } from 'vscode';
+import { Event } from 'vscode';
 import { Disposables, IDisposable } from '../../common/utils/resourceLifecycle';
 import { IPythonEnvsWatcher, PythonEnvsChangedEvent, PythonEnvsWatcher } from './watcher';
 
@@ -31,53 +31,5 @@ export class PythonEnvsWatchers implements IPythonEnvsWatcher, IDisposable {
 
     public dispose(): void {
         this.disposables.dispose().ignoreErrors();
-    }
-}
-
-// This matches the `vscode.Event` arg.
-type EnvsEventListener = (e: PythonEnvsChangedEvent) => unknown;
-
-/**
- * A watcher wrapper that can be disabled.
- *
- * If disabled, events emitted by the wrapped watcher are discarded.
- */
-export class DisableableEnvsWatcher implements IPythonEnvsWatcher {
-    protected enabled = true;
-
-    constructor(
-        // To wrap more than one use `PythonEnvWatchers`.
-        private readonly wrapped: IPythonEnvsWatcher,
-    ) {}
-
-    /**
-     * Ensure that the watcher is enabled.
-     */
-    public enable(): void {
-        this.enabled = true;
-    }
-
-    /**
-     * Ensure that the watcher is disabled.
-     */
-    public disable(): void {
-        this.enabled = false;
-    }
-
-    // This matches the signature of `vscode.Event`.
-    public onChanged(
-        listener: EnvsEventListener,
-        thisArgs?: unknown,
-        disposables?: Disposable[],
-    ): Disposable {
-        return this.wrapped.onChanged(
-            (e: PythonEnvsChangedEvent) => {
-                if (this.enabled) {
-                    listener(e);
-                }
-            },
-            thisArgs,
-            disposables,
-        );
     }
 }
