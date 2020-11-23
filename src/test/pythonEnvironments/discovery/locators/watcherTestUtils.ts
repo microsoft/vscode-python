@@ -89,6 +89,7 @@ type locatorFactoryFuncType1 = () => Promise<IDisposableLocator>;
 // tslint:disable:no-any
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type locatorFactoryFuncType2 = (_: any) => Promise<IDisposableLocator>;
+// tslint:enable:no-any
 export type locatorFactoryFuncType = locatorFactoryFuncType1 & locatorFactoryFuncType2;
 
 /**
@@ -98,7 +99,7 @@ export type locatorFactoryFuncType = locatorFactoryFuncType1 & locatorFactoryFun
  * * Detect when an environment has been updated
  * @param root The root folder where we create, delete, or modify environments.
  * @param createLocatorFactoryFunc The factory function used to create the locator.
- * @param arg Arguments to locator factory function if any.
+ * @param arg Argument to locator factory function if any.
  */
 export function testLocatorWatcher(root: string, createLocatorFactoryFunc: locatorFactoryFuncType, arg?: string): void {
     let locator: IDisposableLocator;
