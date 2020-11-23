@@ -29,11 +29,11 @@ export abstract class FSWatchingLocator extends Locator {
             /**
              * Glob which represents basename of the executable to watch.
              */
-            executableBaseGlob?: string,
+            executableBaseGlob?: string;
             /**
              * Time to wait before handling an environment-created event.
              */
-            delayOnCreated?: number, // milliseconds
+            delayOnCreated?: number; // milliseconds
         } = {},
     ) {
         super();
@@ -44,7 +44,7 @@ export abstract class FSWatchingLocator extends Locator {
             return;
         }
         this.initialized = true;
-        await this.startWatchers();
+        this.startWatchers().ignoreErrors();
     }
 
     public dispose(): void {
@@ -72,7 +72,9 @@ export abstract class FSWatchingLocator extends Locator {
                             await sleep(this.opts.delayOnCreated);
                         }
                     }
-                    const kind = await this.getKind(executable);
+                    // Fetching kind after deletion normally fails because the file structure around the
+                    // executable is no longer available, so ignore the errors.
+                    const kind = await this.getKind(executable).catch(() => undefined);
                     this.emitter.fire({ type, kind });
                 },
                 this.opts.executableBaseGlob,

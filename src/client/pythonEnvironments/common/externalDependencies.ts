@@ -3,7 +3,7 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
+import { ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../../common/process/types';
 import { IPersistentStateFactory } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
@@ -23,12 +23,26 @@ export async function shellExecute(command: string, timeout: number): Promise<Ex
     return proc.shellExec(command, { timeout });
 }
 
+export async function exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
+    const proc = await getProcessFactory().create();
+    return proc.exec(file, args, options);
+}
+
 export function pathExists(absPath: string): Promise<boolean> {
     return fsapi.pathExists(absPath);
 }
 
 export function readFile(filePath: string): Promise<string> {
     return fsapi.readFile(filePath, 'utf-8');
+}
+
+/**
+ * Returns true if given file path exists within the given parent directory, false otherwise.
+ * @param filePath File path to check for
+ * @param parentPath The potential parent path to check for
+ */
+export function isParentPath(filePath: string, parentPath: string): boolean {
+    return normCasePath(filePath).startsWith(normCasePath(parentPath));
 }
 
 export function normCasePath(filePath: string): string {
@@ -58,15 +72,21 @@ export function getGlobalPersistentStore<T>(key: string): IPersistentStore<T> {
     };
 }
 
-export async function getFileInfo(filePath: string): Promise<{ctime:number, mtime:number}> {
-    const data = await fsapi.lstat(filePath);
-    return {
-        ctime: data.ctime.valueOf(),
-        mtime: data.mtime.valueOf(),
-    };
+export async function getFileInfo(filePath: string): Promise<{ ctime: number, mtime: number }> {
+    try {
+        const data = await fsapi.lstat(filePath);
+        return {
+            ctime: data.ctime.valueOf(),
+            mtime: data.mtime.valueOf(),
+        };
+    } catch (ex) {
+        // This can fail on some cases, such as, `reparse points` on windows. So, return the
+        // time as -1. Which we treat as not set in the extension.
+        return { ctime: -1, mtime: -1 };
+    }
 }
 
-export async function resolveSymbolicLink(filepath:string): Promise<string> {
+export async function resolveSymbolicLink(filepath: string): Promise<string> {
     const stats = await fsapi.lstat(filepath);
     if (stats.isSymbolicLink()) {
         const link = await fsapi.readlink(filepath);

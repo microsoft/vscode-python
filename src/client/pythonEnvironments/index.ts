@@ -8,7 +8,7 @@ import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonEnvInfoCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
 import {
-    IDisposableLocator, IPythonEnvsIterator, PythonLocatorQuery,
+    IDisposableLocator, IPythonEnvsIterator, PythonLocatorQuery
 } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsChangedEvent } from './base/watcher';

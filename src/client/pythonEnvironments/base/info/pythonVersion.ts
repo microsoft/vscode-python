@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION } from '.';
 import { traceError } from '../../../common/logger';
@@ -77,7 +78,7 @@ export function parseVersion(versionStr: string): PythonVersion {
  */
 export function parseVersionInfo(versionInfoStr: string): PythonVersion {
     const parts = versionInfoStr.split('.');
-    const version = UNKNOWN_PYTHON_VERSION;
+    const version = cloneDeep(UNKNOWN_PYTHON_VERSION);
     if (parts.length >= 2) {
         version.major = parseInt(parts[0], 10);
         version.minor = parseInt(parts[1], 10);

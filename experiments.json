@@ -21,13 +21,13 @@
         "name": "ShowExtensionSurveyPrompt - enabled",
         "salt": "ShowExtensionSurveyPrompt",
         "max": 100,
-        "min": 80
+        "min": 60
     },
     {
         "name": "ShowExtensionSurveyPrompt - control",
         "salt": "ShowExtensionSurveyPrompt",
         "min": 0,
-        "max": 20
+        "max": 40
     },
     {
         "name": "DebugAdapterFactory - control",

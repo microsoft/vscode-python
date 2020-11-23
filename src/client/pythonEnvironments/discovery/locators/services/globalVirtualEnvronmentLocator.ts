@@ -6,19 +6,19 @@ import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import {
-    getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
+    getEnvironmentVariable, getOSType, getUserHomeDir, OSType
 } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { IDisposableLocator, IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
-import { findInterpretersInDir } from '../../../common/commonUtils';
+import { findInterpretersInDir, isStandardPythonBinary } from '../../../common/commonUtils';
 import { getFileInfo, pathExists } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from './pipEnvHelper';
 import {
     isVenvEnvironment,
     isVirtualenvEnvironment,
-    isVirtualenvwrapperEnvironment,
+    isVirtualenvwrapperEnvironment
 } from './virtualEnvironmentIdentifier';
 
 const DEFAULT_SEARCH_DEPTH = 2;
@@ -115,8 +115,7 @@ class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
                         // Other version like python3.exe or python3.8 are often symlinks to
                         // python.exe or python in the same directory in the case of virtual
                         // environments.
-                        const name = path.basename(env).toLowerCase();
-                        if (name === 'python.exe' || name === 'python') {
+                        if (isStandardPythonBinary(env)) {
                             // We should extract the kind here to avoid doing is*Environment()
                             // check multiple times. Those checks are file system heavy and
                             // we can use the kind to determine this anyway.
