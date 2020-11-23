@@ -7,7 +7,7 @@ import { TensorBoardFileWatcher } from './tensorBoardFileWatcher';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 import { TensorBoardSessionProvider } from './tensorBoardSessionProvider';
 
-export async function registerTypes(serviceManager: IServiceManager) {
+export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         TensorBoardSessionProvider
