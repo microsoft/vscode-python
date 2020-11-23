@@ -84,6 +84,7 @@ export type WatchRootsArgs = {
     addRoot(root:Uri): void;
     removeRoot(root:Uri): void;
 };
+type WatchRootsFunc = (args: WatchRootsArgs) => IDisposable;
 
 /**
  * The collection of all workspace-specific locators used by the extension.
@@ -100,7 +101,7 @@ export class WorkspaceLocators extends Locator {
     private readonly roots: Record<RootURI, Uri> = {};
 
     constructor(
-        private readonly watchRoots: (args: WatchRootsArgs) => IDisposable,
+        private readonly watchRoots: WatchRootsFunc,
         private readonly factories: WorkspaceLocatorFactory[],
     ) {
         super();
