@@ -16,7 +16,7 @@ import { ILocator } from './base/locator';
 import { getActivatedCachingLocator } from './base/locators/composite/cachingLocator';
 import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
-import { ExtensionLocators, WorkspaceLocators } from './discovery/locators';
+import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './discovery/locators';
 import { GlobalVirtualEnvironmentLocator } from './discovery/locators/services/globalVirtualEnvronmentLocator';
 import { PosixKnownPathsLocator } from './discovery/locators/services/posixKnownPathsLocator';
 import { PyenvLocator } from './discovery/locators/services/pyenvLocator';
@@ -31,7 +31,7 @@ import { registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './leg
 export function initialize(ext: ExtensionState): PythonEnvironments {
     const api = new PythonEnvironments(
         () => createLocators(ext),
-        // Other sub-commonents (e.g. config, "current" env will go here.
+        // Other sub-commonents (e.g. config, "current" env) will go here.
     );
 
     // Any other initialization goes here.
@@ -114,30 +114,29 @@ function createNonWorkspaceLocators(
     return locators;
 }
 
-function getWorkspaceFolders() {
-    const rootAdded = new vscode.EventEmitter<vscode.Uri>();
-    const rootRemoved = new vscode.EventEmitter<vscode.Uri>();
-    vscode.workspace.onDidChangeWorkspaceFolders((event) => {
+function watchRoots(args: WatchRootsArgs): IDisposable {
+    const { initRoot, addRoot, removeRoot } = args;
+
+    const folders = vscode.workspace.workspaceFolders;
+    if (folders) {
+        folders.map((f) => f.uri).forEach(initRoot);
+    }
+
+    return vscode.workspace.onDidChangeWorkspaceFolders((event) => {
         for (const root of event.removed) {
-            rootRemoved.fire(root.uri);
+            removeRoot(root.uri);
         }
         for (const root of event.added) {
-            rootAdded.fire(root.uri);
+            addRoot(root.uri);
         }
     });
-    const folders = vscode.workspace.workspaceFolders;
-    return {
-        roots: folders ? folders.map((f) => f.uri) : [],
-        onAdded: rootAdded.event,
-        onRemoved: rootRemoved.event,
-    };
 }
 
 function createWorkspaceLocators(
     ext: ExtensionState,
 ): WorkspaceLocators {
     const locators = new WorkspaceLocators(
-        getWorkspaceFolders,
+        watchRoots,
         [
             // Add an ILocator factory func here for each kind of workspace-rooted locator.
         ],

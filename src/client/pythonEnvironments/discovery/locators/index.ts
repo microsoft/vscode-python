@@ -11,6 +11,7 @@ import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { getURIFilter } from '../../../common/utils/misc';
 import { OSType } from '../../../common/utils/platform';
+import { Disposables, IDisposable } from '../../../common/utils/resourceLifecycle';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -82,13 +83,13 @@ function getLocator(info: IMaybeActiveLocator | WorkspaceLocatorInfo): ILocator 
     return maybeInfo.locator;
 }
 
-interface IWorkspaceFolders {
-    readonly roots: ReadonlyArray<Uri>;
-    readonly onAdded: Event<Uri>;
-    readonly onRemoved: Event<Uri>;
-}
-
 type RootURI = string;
+
+export type WatchRootsArgs = {
+    initRoot(root:Uri): void;
+    addRoot(root:Uri): void;
+    removeRoot(root:Uri): void;
+};
 
 /**
  * The collection of all workspace-specific locators used by the extension.
@@ -96,57 +97,23 @@ type RootURI = string;
  * The factories are used to produce the locators for each workspace folder.
  */
 export class WorkspaceLocators extends Locator {
-    private active = false;
+    private disposables = new Disposables();
+
+    private activated = false;
 
     private readonly locators: Record<RootURI, [DisableableLocator, DisposeFunc[]]> = {};
 
     private readonly roots: Record<RootURI, Uri> = {};
 
     constructor(
-        private readonly getFolders: () => IWorkspaceFolders,
-        // used to produce the per-root locators:
+        private readonly watchRoots: (args: WatchRootsArgs) => IDisposable,
         private readonly factories: WorkspaceLocatorFactory[],
     ) {
         super();
     }
 
-    /**
-     * Activate the locator.
-     *
-     * @param folders - the info used to keep track of the workspace folders
-     */
-    public activate(): void {
-        if (this.active) {
-            return;
-        }
-        this.active = true;
-
-        const folders = this.getFolders();
-        folders.roots.forEach((root) => {
-            if (!this.active) {
-                return;
-            }
-            this.addRoot(root);
-        });
-        folders.onAdded((root: Uri) => {
-            if (!this.active) {
-                return;
-            }
-            this.addRoot(root);
-        });
-        folders.onRemoved((root: Uri) => {
-            if (!this.active) {
-                return;
-            }
-            this.removeRoot(root);
-        });
-    }
-
     public dispose(): void {
-        if (this.active) {
-            return;
-        }
-        this.active = false;
+        this.disposables.dispose().ignoreErrors();
 
         // Clear all the roots.
         const roots = Object.keys(this.roots).map((key) => this.roots[key]);
@@ -158,6 +125,8 @@ export class WorkspaceLocators extends Locator {
             // Workspace envs all have searchLocation, so there's nothing to do.
             return NOOP_ITERATOR;
         }
+        this.ensureActivated();
+
         const iterators = Object.keys(this.locators).map((key) => {
             if (query?.searchLocations !== undefined) {
                 const root = this.roots[key];
@@ -177,6 +146,8 @@ export class WorkspaceLocators extends Locator {
     }
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        this.ensureActivated();
+
         if (typeof env !== 'string' && env.searchLocation) {
             const found = this.locators[env.searchLocation.toString()];
             if (found !== undefined) {
@@ -198,9 +169,7 @@ export class WorkspaceLocators extends Locator {
         return undefined;
     }
 
-    private addRoot(root: Uri) {
-        // Drop the old one, if necessary.
-        this.removeRoot(root);
+    private addRoot(root: Uri): void {
         // Create the root's locator, wrapping each factory-generated locator.
         const locators: ILocator[] = [];
         const disposeFuncs: DisposeFunc[] = [];
@@ -225,7 +194,6 @@ export class WorkspaceLocators extends Locator {
         const key = root.toString();
         this.locators[key] = [locator, disposeFuncs];
         this.roots[key] = root;
-        this.emitter.fire({ searchLocation: root });
         // Hook up the watchers.
         locator.onChanged((e) => {
             if (e.searchLocation === undefined) {
@@ -235,7 +203,7 @@ export class WorkspaceLocators extends Locator {
         });
     }
 
-    private removeRoot(root: Uri) {
+    private removeRoot(root: Uri): void {
         const key = root.toString();
         const found = this.locators[key];
         if (found === undefined) {
@@ -254,9 +222,28 @@ export class WorkspaceLocators extends Locator {
                 }
             });
         }
-        if (this.active) {
-            this.emitter.fire({ searchLocation: root });
+    }
+
+    private ensureActivated(): void {
+        if (this.activated) {
+            return;
         }
+        this.activated = true;
+
+        const disposable = this.watchRoots({
+            initRoot: (root: Uri) => this.addRoot(root),
+            addRoot: (root: Uri) => {
+                // Drop the old one, if necessary.
+                this.removeRoot(root);
+                this.addRoot(root);
+                this.emitter.fire({ searchLocation: root });
+            },
+            removeRoot: (root: Uri) => {
+                this.removeRoot(root);
+                this.emitter.fire({ searchLocation: root });
+            },
+        });
+        this.disposables.push(disposable);
     }
 }
 
