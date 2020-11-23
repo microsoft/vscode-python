@@ -118,7 +118,7 @@ async function activateLegacy(
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
-    await tensorBoardRegisterTypes(serviceManager);
+    tensorBoardRegisterTypes(serviceManager);
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.

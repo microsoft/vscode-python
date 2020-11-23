@@ -5,7 +5,7 @@ import { IExtensionSingleActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
 import { TensorBoardSessionProvider } from './tensorBoardSessionProvider';
 
-export async function registerTypes(serviceManager: IServiceManager) {
+export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         TensorBoardSessionProvider
