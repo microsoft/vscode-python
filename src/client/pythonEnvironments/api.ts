@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Event } from 'vscode';
+import { IDisposable } from '../common/utils/resourceLifecycle';
 import { PythonEnvInfo } from './base/info';
 import {
     ILocator, IPythonEnvsIterator, PythonLocatorQuery,
@@ -13,10 +14,12 @@ import { PythonEnvsChangedEvent, PythonEnvsWatcher } from './base/watcher';
  *
  * Note that this is composed of sub-components.
  */
-export class PythonEnvironments implements ILocator {
+export class PythonEnvironments implements ILocator, IDisposable {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     private readonly watcher = new PythonEnvsWatcher();
+
+    private listener?: IDisposable;
 
     private readonly getLocators: () => Promise<ILocator>;
 
@@ -31,10 +34,16 @@ export class PythonEnvironments implements ILocator {
         this.getLocators = async () => {
             if (locators === undefined) {
                 locators = await getLocators();
-                locators.onChanged((event) => this.watcher.fire(event));
+                this.listener = locators.onChanged((event) => this.watcher.fire(event));
             }
             return locators;
         };
+    }
+
+    public dispose(): void {
+        if (this.listener !== undefined) {
+            this.listener.dispose();
+        }
     }
 
     public async* iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {

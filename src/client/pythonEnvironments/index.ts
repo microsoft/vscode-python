@@ -33,6 +33,7 @@ export function initialize(ext: ExtensionState): PythonEnvironments {
         () => createLocators(ext),
         // Other sub-commonents (e.g. config, "current" env) will go here.
     );
+    ext.disposables.push(api);
 
     // Any other initialization goes here.
 
