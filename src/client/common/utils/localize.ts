@@ -138,6 +138,10 @@ export namespace TensorBoard {
         'TensorBoard.logDirectoryPrompt',
         'Specify the TensorBoard log directory'
     );
+    export const progressMessage = localize(
+        'TensorBoard.progressMessage',
+        'Starting TensorBoard session...'
+    );
     export const installTensorBoardPrompt = localize(
         'TensorBoard.installPrompt',
         'The package TensorBoard is required in order to launch a TensorBoard session. Would you like to install it?'

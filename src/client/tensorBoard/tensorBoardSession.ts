@@ -3,7 +3,16 @@
 
 import { ChildProcess, spawn } from 'child_process';
 import * as path from 'path';
-import { CancellationTokenSource, ViewColumn, WebviewPanel, window } from 'vscode';
+import {
+    CancellationToken,
+    CancellationTokenSource,
+    Progress,
+    ProgressLocation,
+    ProgressOptions,
+    ViewColumn,
+    WebviewPanel,
+    window
+} from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';
 import { traceInfo } from '../common/logger';
@@ -41,8 +50,10 @@ export class TensorBoardSession {
     public async initialize() {
         await this.ensureTensorboardIsInstalled();
         const logDir = await this.askUserForLogDir();
-        await this.startTensorboardSession(logDir);
-        this.showPanel();
+        const startedSuccessfully = await this.startTensorboardSession(logDir);
+        if (startedSuccessfully) {
+            this.showPanel();
+        }
     }
 
     // Ensure that the TensorBoard package is installed before we attempt
@@ -77,6 +88,7 @@ export class TensorBoardSession {
             prompt: TensorBoard.logDirectoryPrompt(),
             value: this.autopopulateLogDirectoryPath(),
             placeHolder: TensorBoard.logDirectoryPlaceholder(),
+            ignoreFocusOut: true,
             validateInput: (value: string) => {
                 return value.trim().length > 0 ? undefined : TensorBoard.invalidLogDirectory();
             }
@@ -95,14 +107,54 @@ export class TensorBoardSession {
     // Spawn a process which uses TensorBoard's Python API to start a TensorBoard session.
     // Times out if it hasn't started up after 1 minute.
     // Hold on to the process so we can kill it when the webview is closed.
-    private async startTensorboardSession(logDir: string) {
+    private async startTensorboardSession(logDir: string): Promise<boolean> {
         const cwd = this.getFullyQualifiedLogDirectory(logDir);
         const spawnOptions = { cwd };
         const pythonExecutable = await this.interpreterService.getActiveInterpreter();
 
-        traceInfo(`Starting TensorBoard with log directory ${cwd}...`);
-        const tensorBoardProcess = new Promise((resolve, reject) => {
-            const proc = spawn(pythonExecutable?.path || 'python', [LAUNCH_TENSORBOARD, logDir], spawnOptions);
+        // Timeout waiting for TensorBoard to start after 60 seconds.
+        // This is the same time limit that TensorBoard itself uses when waiting for
+        // its webserver to start up.
+        const timeout = 60_000;
+
+        // Display a progress indicator as TensorBoard takes at least a couple seconds to launch
+        const progressOptions: ProgressOptions = {
+            title: TensorBoard.progressMessage(),
+            location: ProgressLocation.Notification,
+            cancellable: true
+        };
+
+        const proc = spawn(pythonExecutable?.path || 'python', [LAUNCH_TENSORBOARD, logDir], spawnOptions);
+
+        const result = await window.withProgress(
+            progressOptions,
+            (_progress: Progress<{}>, token: CancellationToken) => {
+                traceInfo(`Starting TensorBoard with log directory ${cwd}...`);
+
+                const spawnTensorBoard = this.waitForTensorBoardToStart(proc);
+                const userCancellation = createPromiseFromCancellation({
+                    token,
+                    cancelAction: 'resolve',
+                    defaultValue: 'canceled'
+                });
+
+                return Promise.race([sleep(timeout), spawnTensorBoard, userCancellation]);
+            }
+        );
+
+        if (result === timeout) {
+            throw new Error(`Timed out after ${timeout / 1000} seconds waiting for TensorBoard to launch.`);
+        } else if (result === 'canceled') {
+            traceInfo('Canceled starting TensorBoard session.');
+            return false;
+        } else {
+            this.process = proc;
+            return true;
+        }
+    }
+
+    private waitForTensorBoardToStart(proc: ChildProcess) {
+        return new Promise((resolve, reject) => {
             proc.stdout.on('data', (data: Buffer) => {
                 // We need the spawned process to tell us which URL TensorBoard was started at
                 const output = data.toString('utf8');
@@ -110,7 +162,7 @@ export class TensorBoardSession {
                 traceInfo(output);
                 if (match && match[1]) {
                     this.url = match[1];
-                    resolve(proc);
+                    resolve('success');
                 }
             });
             proc.stderr.on('error', (err) => {
@@ -125,17 +177,6 @@ export class TensorBoardSession {
                 reject(`TensorBoard child process disconnected.`);
             });
         });
-
-        // Timeout waiting for TensorBoard to start after 60 seconds.
-        // This is the same time limit that TensorBoard itself uses when waiting for
-        // its webserver to start up.
-        const timeout = 60_000;
-        const result = await Promise.race([sleep(timeout), tensorBoardProcess]);
-        if (result !== timeout) {
-            this.process = result as ChildProcess;
-        } else {
-            throw new Error(`Timed out after ${timeout / 1000} seconds waiting for TensorBoard to launch.`);
-        }
     }
 
     private showPanel() {
