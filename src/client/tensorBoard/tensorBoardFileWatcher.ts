@@ -12,8 +12,9 @@ import { TensorBoardPrompt } from './tensorBoardPrompt';
 
 @injectable()
 export class TensorBoardFileWatcher implements IExtensionSingleActivationService {
-    private fileSystemWatchers = new Map<WorkspaceFolder, FileSystemWatcher>();
-    private globPattern = '**/*tfevents*';
+    private fileSystemWatchers = new Map<WorkspaceFolder, FileSystemWatcher[]>();
+    private globPattern1 = '*tfevents*';
+    private globPattern2 = '*/*tfevents*';
 
     constructor(
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
@@ -49,9 +50,12 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
 
     private async promptIfWorkspaceHasPreexistingFiles() {
         try {
-            const matches = await this.workspaceService.findFiles(this.globPattern, undefined, 1);
-            if (matches.length) {
-                await this.tensorBoardPrompt.showNativeTensorBoardPrompt();
+            for (const pattern of [this.globPattern1, this.globPattern2]) {
+                const matches = await this.workspaceService.findFiles(pattern, undefined, 1);
+                if (matches.length > 0) {
+                    await this.tensorBoardPrompt.showNativeTensorBoardPrompt();
+                    return;
+                }
             }
         } catch (e) {
             traceError(
@@ -65,25 +69,30 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
             this.createFileSystemWatcher(added);
         }
         for (const removed of event.removed) {
-            const fileSystemWatcher = this.fileSystemWatchers.get(removed);
-            if (fileSystemWatcher) {
-                fileSystemWatcher.dispose();
+            const fileSystemWatchers = this.fileSystemWatchers.get(removed);
+            if (fileSystemWatchers) {
+                fileSystemWatchers.forEach((fileWatcher) => fileWatcher.dispose());
                 this.fileSystemWatchers.delete(removed);
             }
         }
     }
 
     private createFileSystemWatcher(folder: WorkspaceFolder) {
-        const relativePattern = new RelativePattern(folder, this.globPattern);
-        const fileSystemWatcher = this.workspaceService.createFileSystemWatcher(relativePattern);
+        const fileWatchers = [];
+        for (const pattern of [this.globPattern1, this.globPattern2]) {
+            const relativePattern = new RelativePattern(folder, pattern);
+            const fileSystemWatcher = this.workspaceService.createFileSystemWatcher(relativePattern);
 
-        // When a file is created or changed that matches `this.globPattern`, try to show our prompt
-        this.disposables.push(
-            fileSystemWatcher.onDidCreate((_uri) => this.tensorBoardPrompt.showNativeTensorBoardPrompt())
-        );
-        this.disposables.push(
-            fileSystemWatcher.onDidChange((_uri) => this.tensorBoardPrompt.showNativeTensorBoardPrompt())
-        );
-        this.disposables.push(fileSystemWatcher);
+            // When a file is created or changed that matches `this.globPattern`, try to show our prompt
+            this.disposables.push(
+                fileSystemWatcher.onDidCreate((_uri) => this.tensorBoardPrompt.showNativeTensorBoardPrompt())
+            );
+            this.disposables.push(
+                fileSystemWatcher.onDidChange((_uri) => this.tensorBoardPrompt.showNativeTensorBoardPrompt())
+            );
+            this.disposables.push(fileSystemWatcher);
+            fileWatchers.push(fileSystemWatcher);
+        }
+        this.fileSystemWatchers.set(folder, fileWatchers);
     }
 }
