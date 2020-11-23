@@ -14,6 +14,7 @@ import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
 import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './common/application/types';
 import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
+import { NativeTensorBoard } from './common/experiments/groups';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { traceError } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
@@ -24,6 +25,7 @@ import { IStartPage } from './common/startPage/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IExperimentsManager,
     IExtensionContext,
     IFeatureDeprecationManager,
@@ -217,8 +219,11 @@ async function activateLegacy(
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
 
-    const tensorBoardSessionProvider = serviceManager.get<TensorBoardSessionProvider>(ITensorBoardSessionProvider);
-    cmdManager.registerCommand(Commands.LaunchTensorBoard, () => tensorBoardSessionProvider.createNewSession());
+    const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
+    if (await experimentService.inExperiment(NativeTensorBoard.experiment)) {
+        const tensorBoardSessionProvider = serviceManager.get<TensorBoardSessionProvider>(ITensorBoardSessionProvider);
+        cmdManager.registerCommand(Commands.LaunchTensorBoard, () => tensorBoardSessionProvider.createNewSession());
+    }
 
     return { activationPromise };
 }

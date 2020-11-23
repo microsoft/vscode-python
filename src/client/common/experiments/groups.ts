@@ -80,3 +80,8 @@ export enum JoinMailingListPromptVariants {
 export enum SendSelectionToREPL {
     experiment = 'pythonSendEntireLineToREPL'
 }
+
+// Feature flag for 'Python: Launch TensorBoard' feature
+export enum NativeTensorBoard {
+    experiment = 'nativeTensorBoard'
+}
