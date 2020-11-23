@@ -5,7 +5,7 @@ import { flatten } from 'lodash';
 import {
     Disposable, Event, EventEmitter, Uri,
 } from 'vscode';
-import { traceDecorators, traceError } from '../../../common/logger';
+import { traceDecorators } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
 import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -57,21 +57,15 @@ export class ExtensionLocators extends Locators {
         super([...nonWorkspace, workspace]);
     }
 }
+type LocatorInfo = { locator: ILocator };
+type WorkspaceLocatorFactoryResult = (ILocator | LocatorInfo) & Partial<IDisposable>;
+type WorkspaceLocatorFactory = (root: Uri) => WorkspaceLocatorFactoryResult[];
 
-type ActivationFunc = () => (Promise<void> | void);
-type DisposeFunc = () => void;
-interface IMaybeActive {
-    activate?: ActivationFunc;
-    dispose?: DisposeFunc;
-}
-interface IMaybeActiveLocator extends IMaybeActive, ILocator {}
-type WorkspaceLocatorInfo = IMaybeActive & {
-    locator: ILocator;
-};
-type WorkspaceLocatorFactory = (root: Uri) => (IMaybeActiveLocator | WorkspaceLocatorInfo)[];
-
-function getLocator(info: IMaybeActiveLocator | WorkspaceLocatorInfo): ILocator {
-    const maybeInfo = info as Partial<WorkspaceLocatorInfo>;
+/**
+ * A helper to deal with the possible return types of WorkspaceLocatorFactory.
+ */
+function getLocator(info: ILocator | LocatorInfo): ILocator {
+    const maybeInfo = info as Partial<LocatorInfo>;
     const maybeLocator = info as Partial<ILocator>;
     if (maybeInfo.locator === undefined) {
         return info as ILocator;
@@ -101,7 +95,7 @@ export class WorkspaceLocators extends Locator {
 
     private activated = false;
 
-    private readonly locators: Record<RootURI, [DisableableLocator, DisposeFunc[]]> = {};
+    private readonly locators: Record<RootURI, [DisableableLocator, IDisposable]> = {};
 
     private readonly roots: Record<RootURI, Uri> = {};
 
@@ -168,27 +162,20 @@ export class WorkspaceLocators extends Locator {
     private addRoot(root: Uri): void {
         // Create the root's locator, wrapping each factory-generated locator.
         const locators: ILocator[] = [];
-        const disposeFuncs: DisposeFunc[] = [];
+        const disposables = new Disposables();
         this.factories.forEach((create) => {
-            create(root).forEach((maybeInfo) => {
-                const loc = getLocator(maybeInfo);
-                if (maybeInfo.activate !== undefined) {
-                    const maybePromise = maybeInfo.activate();
-                    if (maybePromise !== undefined) {
-                        // Is there a way we can wait here for `activate()` to finish?
-                        maybePromise.ignoreErrors();
-                    }
-                }
+            create(root).forEach((maybeDisposable) => {
+                const loc = getLocator(maybeDisposable);
                 locators.push(loc);
-                if (maybeInfo.dispose !== undefined) {
-                    disposeFuncs.push(() => maybeInfo.dispose!());
+                if (maybeDisposable.dispose !== undefined) {
+                    disposables.push(maybeDisposable as IDisposable);
                 }
             });
         });
         const locator = new DisableableLocator(new Locators(locators));
         // Cache it.
         const key = root.toString();
-        this.locators[key] = [locator, disposeFuncs];
+        this.locators[key] = [locator, disposables];
         this.roots[key] = root;
         // Hook up the watchers.
         locator.onChanged((e) => {
@@ -205,19 +192,11 @@ export class WorkspaceLocators extends Locator {
         if (found === undefined) {
             return;
         }
-        const [locator, disposeFuncs] = found;
+        const [locator, disposables] = found;
         delete this.locators[key];
         delete this.roots[key];
         locator.disable();
-        if (disposeFuncs !== undefined) {
-            disposeFuncs.forEach((dispose, i) => {
-                try {
-                    dispose();
-                } catch (err) {
-                    traceError(`dispose #${i + 1} failed: {err}`);
-                }
-            });
-        }
+        disposables.dispose();
     }
 
     private ensureActivated(): void {
