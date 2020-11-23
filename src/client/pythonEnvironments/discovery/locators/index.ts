@@ -121,10 +121,6 @@ export class WorkspaceLocators extends Locator {
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        if (query?.searchLocations === null) {
-            // Workspace envs all have searchLocation, so there's nothing to do.
-            return NOOP_ITERATOR;
-        }
         this.ensureActivated();
 
         const iterators = Object.keys(this.locators).map((key) => {
