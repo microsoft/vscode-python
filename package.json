@@ -1053,6 +1053,7 @@
                             "jediLSP",
                             "debuggerDataViewer",
                             "pythonSendEntireLineToREPL",
+                            "nativeTensorBoard",
                             "All"
                         ]
                     },
@@ -1080,6 +1081,7 @@
                             "jediLSP",
                             "debuggerDataViewer",
                             "pythonSendEntireLineToREPL",
+                            "nativeTensorBoard",
                             "All"
                         ]
                     },
