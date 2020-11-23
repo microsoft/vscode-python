@@ -4,7 +4,7 @@
 import { Event } from 'vscode';
 import '../../../../common/extensions';
 import { BackgroundRequestLooper } from '../../../../common/utils/backgroundLoop';
-import { IDisposable } from '../../../../common/utils/resourceLifecycle';
+import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { logWarning } from '../../../../logging';
 import { IEnvsCache } from '../../envsCache';
 import { PythonEnvInfo } from '../../info';
@@ -21,10 +21,12 @@ import { pickBestEnv } from './reducingLocator';
 /**
  * A locator that stores the known environments in the given cache.
  */
-export class CachingLocator implements ILocator {
+export class CachingLocator implements ILocator, IDisposable {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     private readonly watcher = new PythonEnvsWatcher();
+
+    private listener?: IDisposable;
 
     constructor(
         private readonly cache: IEnvsCache,
@@ -32,11 +34,18 @@ export class CachingLocator implements ILocator {
         private readonly looper: BackgroundRequestLooper,
     ) {
         this.onChanged = this.watcher.onChanged;
+    }
 
-        locator.onChanged((event) => this.ensureCurrentRefresh(event));
+    public dispose(): void {
+        if (this.listener !== undefined) {
+            this.listener.dispose();
+        }
     }
 
     public async* iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+        // Do not watch for changes until necessary.
+        this.ensureWatching();
+
         // We assume that `getAllEnvs()` is cheap enough that calling
         // it again in `iterFromCache()` is not a problem.
         if (this.cache.getAllEnvs() === undefined) {
@@ -46,6 +55,9 @@ export class CachingLocator implements ILocator {
     }
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        // Do not watch for changes until necessary.
+        this.ensureWatching();
+
         // If necessary we could be more aggressive about invalidating
         // the cached value.
         const query = getMinimalPartialInfo(env);
@@ -69,6 +81,12 @@ export class CachingLocator implements ILocator {
             }
         }
         return resolved;
+    }
+
+    private ensureWatching(): void {
+        if (this.listener === undefined) {
+            this.listener = this.locator.onChanged((event) => this.ensureCurrentRefresh(event));
+        }
     }
 
     /**
@@ -174,15 +192,16 @@ export function getActivatedCachingLocator(
     cache: IEnvsCache,
     wrapped: ILocator,
 ): [CachingLocator, IDisposable] {
+    const disposables = new Disposables();
+
     const looper = new BackgroundRequestLooper({
         runDefault: null,
     });
     looper.start();
+    disposables.push({ dispose: () => looper.stop() });
 
     const locator = new CachingLocator(cache, wrapped, looper);
+    disposables.push(locator);
 
-    return [
-        locator,
-        { dispose: () => looper.stop().ignoreErrors() },
-    ];
+    return [locator, disposables];
 }

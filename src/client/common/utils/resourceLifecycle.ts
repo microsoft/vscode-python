@@ -44,6 +44,10 @@ export class Disposables implements IDisposables {
         this.disposables.push(...disposables);
     }
 
+    public addFunc(dispose: () => void | Promise<void>): void {
+        this.disposables.push({ dispose });
+    }
+
     public async dispose(): Promise<void> {
         const disposables = this.disposables;
         this.disposables = [];
