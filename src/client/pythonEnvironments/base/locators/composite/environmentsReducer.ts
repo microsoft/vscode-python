@@ -4,6 +4,7 @@
 import { isEqual } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
+import { IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { areSameEnv, mergeEnvironments } from '../../info/env';
 import {
@@ -50,8 +51,9 @@ async function* iterEnvsIterator(
     };
     const seen: PythonEnvInfo[] = [];
 
+    let listener: IDisposable | undefined;
     if (iterator.onUpdated !== undefined) {
-        iterator.onUpdated((event) => {
+        listener = iterator.onUpdated((event) => {
             if (event === null) {
                 state.done = true;
                 checkIfFinishedAndNotify(state, didUpdate);
@@ -82,6 +84,8 @@ async function* iterEnvsIterator(
     if (iterator.onUpdated === undefined) {
         state.done = true;
         checkIfFinishedAndNotify(state, didUpdate);
+    } else {
+        listener!.dispose();
     }
 }
 
