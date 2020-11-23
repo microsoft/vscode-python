@@ -14,7 +14,6 @@ import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
 import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './common/application/types';
 import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
-import { NativeTensorBoard } from './common/experiments/groups';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { traceError } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
@@ -25,7 +24,6 @@ import { IStartPage } from './common/startPage/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExperimentsManager,
     IExtensionContext,
     IFeatureDeprecationManager,
@@ -59,9 +57,7 @@ import { activateSimplePythonRefactorProvider } from './providers/simpleRefactor
 import { TerminalProvider } from './providers/terminalProvider';
 import { ISortImportsEditingProvider } from './providers/types';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
-import { registerTypes as dataScienceRegisterTypes } from './tensorBoard/serviceRegistry';
-import { TensorBoardSessionProvider } from './tensorBoard/tensorBoardSessionProvider';
-import { ITensorBoardSessionProvider } from './tensorBoard/types';
+import { registerTypes as tensorBoardRegisterTypes } from './tensorBoard/serviceRegistry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
 import { TEST_OUTPUT_CHANNEL } from './testing/common/constants';
@@ -122,7 +118,7 @@ async function activateLegacy(
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
-    dataScienceRegisterTypes(serviceManager);
+    await tensorBoardRegisterTypes(serviceManager);
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
@@ -218,12 +214,6 @@ async function activateLegacy(
     });
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
-
-    const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
-    if (await experimentService.inExperiment(NativeTensorBoard.experiment)) {
-        const tensorBoardSessionProvider = serviceManager.get<TensorBoardSessionProvider>(ITensorBoardSessionProvider);
-        cmdManager.registerCommand(Commands.LaunchTensorBoard, () => tensorBoardSessionProvider.createNewSession());
-    }
 
     return { activationPromise };
 }

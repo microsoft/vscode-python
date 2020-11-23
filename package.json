@@ -495,7 +495,8 @@
                 },
                 {
                     "command": "python.launchTensorBoard",
-                    "category": "Python"
+                    "category": "Python",
+                    "when": "python.isInNativeTensorBoardExperiment"
                 }
             ],
             "view/title": [
