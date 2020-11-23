@@ -221,5 +221,6 @@
 	"TensorBoard.invalidLogDirectory" : "Please provide a valid log directory. We cannot start a TensorBoard session without it.",
 	"TensorBoard.logDirectoryPlaceholder" : "e.g. /runs/experiment",
 	"TensorBoard.failedToStartSessionError" : "We failed to start a TensorBoard session due to the following error: {0}",
-	"TensorBoard.tensorBoardInstallRequired" : "We cannot start a TensorBoard session without the TensorBoard package."
+    "TensorBoard.tensorBoardInstallRequired" : "We cannot start a TensorBoard session without the TensorBoard package.",
+    "TensorBoard.progressMessage" : "Starting TensorBoard session..."
 }
