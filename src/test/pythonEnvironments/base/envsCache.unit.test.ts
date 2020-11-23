@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-import { PythonEnvInfoCache } from '../../../client/pythonEnvironments/base/envsCache';
+import { getPersistentCache, PythonEnvInfoCache } from '../../../client/pythonEnvironments/base/envsCache';
 import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
 
 const allEnvsComplete = () => true;
@@ -42,28 +42,26 @@ suite('Environment Info cache', () => {
         updatedValues = undefined;
     });
 
-    test('`activate` reads from persistent storage', async () => {
-        const envsCache = new PythonEnvInfoCache(allEnvsComplete, getGlobalPersistentStore);
+    test('`reset` reads from persistent storage', async () => {
+        const envsCache = new PythonEnvInfoCache(getGlobalPersistentStore(), allEnvsComplete);
 
-        await envsCache.activate();
+        await envsCache.reset();
 
         assert.equal(loadedValues, undefined);
     });
 
     test('The in-memory env info array is undefined if there is no value in persistent storage when initializing the cache', async () => {
-        const envsCache = new PythonEnvInfoCache(allEnvsComplete, getGlobalPersistentStore);
+        const envsCache = await getPersistentCache(getGlobalPersistentStore(), allEnvsComplete);
 
         loadedValues = undefined;
-        await envsCache.activate();
         const result = envsCache.getAllEnvs();
 
         assert.strictEqual(result, undefined);
     });
 
     test('`getAllEnvs` should return a deep copy of the environments currently in memory', async () => {
-        const envsCache = new PythonEnvInfoCache(allEnvsComplete, getGlobalPersistentStore);
+        const envsCache = await getPersistentCache(getGlobalPersistentStore(), allEnvsComplete);
 
-        await envsCache.activate();
         const envs = envsCache.getAllEnvs()!;
 
         envs[0].name = 'some-other-name';
@@ -72,7 +70,7 @@ suite('Environment Info cache', () => {
     });
 
     test('`getAllEnvs` should return undefined if nothing has been set', () => {
-        const envsCache = new PythonEnvInfoCache(allEnvsComplete, getGlobalPersistentStore);
+        const envsCache = new PythonEnvInfoCache(getGlobalPersistentStore(), allEnvsComplete);
 
         const envs = envsCache.getAllEnvs();
 
@@ -80,7 +78,7 @@ suite('Environment Info cache', () => {
     });
 
     test('`setAllEnvs` should clone the environment info array passed as a parameter', () => {
-        const envsCache = new PythonEnvInfoCache(allEnvsComplete, getGlobalPersistentStore);
+        const envsCache = new PythonEnvInfoCache(getGlobalPersistentStore(), allEnvsComplete);
 
         envsCache.setAllEnvs(envInfoArray);
         const envs = envsCache.getAllEnvs();
@@ -91,9 +89,7 @@ suite('Environment Info cache', () => {
 
     test('`filterEnvs` should return environments that match its argument using areSameEnvironmnet', async () => {
         const env:PythonEnvInfo = { executable: { filename: 'my-venv-env' } } as unknown as PythonEnvInfo;
-        const envsCache = new PythonEnvInfoCache(allEnvsComplete, getGlobalPersistentStore);
-
-        await envsCache.activate();
+        const envsCache = await getPersistentCache(getGlobalPersistentStore(), allEnvsComplete);
 
         const result = envsCache.filterEnvs(env);
 
@@ -107,7 +103,7 @@ suite('Environment Info cache', () => {
             kind: PythonEnvKind.System, executable: { filename: 'my-system-env' },
         } as unknown as PythonEnvInfo;
         const env:PythonEnvInfo = { executable: { filename: 'my-system-env' } } as unknown as PythonEnvInfo;
-        const envsCache = new PythonEnvInfoCache(allEnvsComplete, getGlobalPersistentStore);
+        const envsCache = new PythonEnvInfoCache(getGlobalPersistentStore(), allEnvsComplete);
 
         envsCache.setAllEnvs([...envInfoArray, envToFind]);
 
@@ -119,9 +115,7 @@ suite('Environment Info cache', () => {
 
     test('`filterEnvs` should return an empty array if no environment matches the properties of its argument', async () => {
         const env:PythonEnvInfo = { executable: { filename: 'my-nonexistent-env' } } as unknown as PythonEnvInfo;
-        const envsCache = new PythonEnvInfoCache(allEnvsComplete, getGlobalPersistentStore);
-
-        await envsCache.activate();
+        const envsCache = await getPersistentCache(getGlobalPersistentStore(), allEnvsComplete);
 
         const result = envsCache.filterEnvs(env);
 
@@ -130,7 +124,7 @@ suite('Environment Info cache', () => {
 
     test('`filterEnvs` should return undefined if the cache hasn\'t been activated', () => {
         const env:PythonEnvInfo = { executable: { filename: 'my-nonexistent-env' } } as unknown as PythonEnvInfo;
-        const envsCache = new PythonEnvInfoCache(allEnvsComplete, getGlobalPersistentStore);
+        const envsCache = new PythonEnvInfoCache(getGlobalPersistentStore(), allEnvsComplete);
 
         const result = envsCache.filterEnvs(env);
 
@@ -149,12 +143,11 @@ suite('Environment Info cache', () => {
         const expected = [
             otherEnv,
         ];
-        const envsCache = new PythonEnvInfoCache(
+        const envsCache = await getPersistentCache(
+            getGlobalPersistentStore(),
             (env) => env.defaultDisplayName !== undefined,
-            getGlobalPersistentStore,
         );
 
-        await envsCache.activate();
         envsCache.setAllEnvs(updatedEnvInfoArray);
         await envsCache.flush();
 
@@ -162,9 +155,9 @@ suite('Environment Info cache', () => {
     });
 
     test('`flush` should not write to persistent storage if there are no environment info objects in-memory', async () => {
-        const envsCache = new PythonEnvInfoCache(
+        const envsCache = await getPersistentCache(
+            getGlobalPersistentStore(),
             (env) => env.kind === PythonEnvKind.MacDefault,
-            getGlobalPersistentStore,
         );
 
         await envsCache.flush();
@@ -173,12 +166,11 @@ suite('Environment Info cache', () => {
     });
 
     test('`flush` should not write to persistent storage if there are no complete environment info objects', async () => {
-        const envsCache = new PythonEnvInfoCache(
+        const envsCache = await getPersistentCache(
+            getGlobalPersistentStore(),
             (env) => env.kind === PythonEnvKind.MacDefault,
-            getGlobalPersistentStore,
         );
 
-        await envsCache.activate();
         await envsCache.flush();
 
         assert.strictEqual(updatedValues, undefined);

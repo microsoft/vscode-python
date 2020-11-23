@@ -10,7 +10,7 @@ import { Disposable, Memento } from 'vscode';
 
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from './common/types';
-import { ExtensionState, IComponent } from './components';
+import { ExtensionState } from './components';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from './ioc/types';
@@ -53,16 +53,22 @@ export function initializeCommon(ext: ExtensionState): void {
 }
 
 /**
+ * The set of public APIs from initialized components.
+ */
+export type Components = {
+    pythonEnvs: pythonEnvironments.PythonEnvironments;
+};
+
+/**
  * Initialize all components in the extension.
  */
-export function initializeComponents(ext: ExtensionState): IComponent[] {
-    const components: IComponent[] = [];
-
-    const envs = pythonEnvironments.initialize(ext);
-    components.push(envs);
+export function initializeComponents(ext: ExtensionState): Components {
+    const pythonEnvs = pythonEnvironments.initialize(ext);
 
     // Other component initializers go here.
     // We will be factoring them out of activateLegacy().
 
-    return components;
+    return {
+        pythonEnvs
+    };
 }

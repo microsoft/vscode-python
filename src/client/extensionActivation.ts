@@ -31,7 +31,6 @@ import {
 import { OutputChannelNames } from './common/utils/localize';
 import { noop } from './common/utils/misc';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
-import { ActivationResult, ExtensionState, IComponent } from './components';
 import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
@@ -64,13 +63,19 @@ import { ITestContextService } from './testing/common/types';
 import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from './testing/navigation/types';
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
 
+// components
+import * as pythonEnvironments from './pythonEnvironments';
+
+import { ActivationResult, ExtensionState } from './components';
+import { Components } from './extensionInit';
+
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
     ext: ExtensionState,
-    components: IComponent[]
+    components: Components
 ): Promise<ActivationResult[]> {
     const promises: Promise<ActivationResult>[] = [
-        ...components.map((c) => c.activate()),
+        pythonEnvironments.activate(components.pythonEnvs),
         // These will go away eventually.
         activateLegacy(ext)
     ];

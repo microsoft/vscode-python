@@ -9,20 +9,19 @@ import { getGlobalStorage } from '../common/persistentState';
 import { getOSType, OSType } from '../common/utils/platform';
 import { IDisposable } from '../common/utils/resourceLifecycle';
 import {
-    ActivationFunc,
-    BaseExtensionState as ExtensionState,
-    Component,
-    ExtensionState as LegacyExtensionState,
+    ActivationResult,
+    ExtensionState,
 } from '../components';
-import { PythonEnvInfoCache } from './base/envsCache';
+import { getPersistentCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
 import {
     ILocator,
     IPythonEnvsIterator,
     PythonLocatorQuery,
 } from './base/locator';
-import { CachingLocator } from './base/locators/composite/cachingLocator';
-import { PythonEnvsChangedEvent } from './base/watcher';
+import { getActivatedCachingLocator } from './base/locators/composite/cachingLocator';
+import { getEnvs } from './base/locatorUtils';
+import { PythonEnvsChangedEvent, PythonEnvsWatcher } from './base/watcher';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
 import { ExtensionLocators, WorkspaceLocators } from './discovery/locators';
 import { GlobalVirtualEnvironmentLocator } from './discovery/locators/services/globalVirtualEnvronmentLocator';
@@ -34,99 +33,109 @@ import { EnvironmentInfoService } from './info/environmentInfoService';
 import { registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
 
 /**
- * The component for info and functionality related to Python environments.
+ * The public API for the Python environments component.
+ *
+ * Note that this is composed of sub-components.
  */
-class PythonEnvironmentsComponent extends Component {
-    public readonly api: PythonEnvironments;
+export class PythonEnvironments implements ILocator {
+    public readonly onChanged: vscode.Event<PythonEnvsChangedEvent>;
+
+    private readonly watcher = new PythonEnvsWatcher();
+
+    private readonly getLocators: () => Promise<ILocator>;
 
     constructor(
-        ext: ExtensionState,
-        activations: ActivationFunc[] = [],
+        // These are factories for the sub-components the full component is composed of:
+        getLocators: () => Promise<ILocator>,
     ) {
-        const api = createAPI(ext, activations);
-        super('Python environments', activations);
-        this.api = api;
+        this.onChanged = this.watcher.onChanged;
+
+        let locators: ILocator;
+        this.getLocators = async () => {
+            if (locators === undefined) {
+                locators = await getLocators();
+                locators.onChanged((event) => this.watcher.fire(event));
+            }
+            return locators;
+        };
+    }
+
+    public async* iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+        const locators = await this.getLocators();
+        yield* locators.iterEnvs(query);
+    }
+
+    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        const locators = await this.getLocators();
+        return locators.resolveEnv(env);
     }
 }
 
 /**
  * Set up the Python environments component (during extension activation).'
  */
-export function initialize(ext: LegacyExtensionState): PythonEnvironmentsComponent {
-    // Initialize the component.
-    const activations: ActivationFunc[] = [];
-    const component = new PythonEnvironmentsComponent(ext, activations);
+export function initialize(ext: ExtensionState): PythonEnvironments {
+    const api = new PythonEnvironments(
+        () => createLocators(ext),
+        // Other sub-commonents (e.g. config, "current" env will go here.
+    );
 
-    activations.push(async () => {
-        // Deal with legacy IOC.
-        registerLegacyDiscoveryForIOC(
-            ext.legacyIOC.serviceManager,
-        );
-        initializeLegacyExternalDependencies(
-            ext.legacyIOC.serviceContainer,
-        );
-        registerNewDiscoveryForIOC(
-            ext.legacyIOC.serviceManager,
-            component.api,
-        );
-    });
+    // Any other initialization goes here.
 
-    return component;
-}
+    // Deal with legacy IOC.
+    registerLegacyDiscoveryForIOC(
+        ext.legacyIOC.serviceManager,
+    );
+    initializeLegacyExternalDependencies(
+        ext.legacyIOC.serviceContainer,
+    );
+    registerNewDiscoveryForIOC(
+        ext.legacyIOC.serviceManager,
+        api,
+    );
 
-// The activation func we return from `initialize()` is sufficient
-// so we do not have an `activate()` func for this component.
-
-/**
- * The public API for the Python environments component.
- *
- * Note that this is composed of sub-components.
- */
-export class PythonEnvironments implements ILocator {
-    constructor(
-        // These are the sub-components the full component is composed of:
-        private readonly locators: ILocator,
-    ) {}
-
-    public get onChanged(): vscode.Event<PythonEnvsChangedEvent> {
-        return this.locators.onChanged;
-    }
-
-    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        return this.locators.iterEnvs(query);
-    }
-
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        return this.locators.resolveEnv(env);
-    }
+    return api;
 }
 
 /**
- * Initialize everything needed for the API and provide the API object.
- *
- * An activation function is also returned, which should be called soon.
+ * Make use of the component (e.g. register with VS Code).
  */
-export function createAPI(
-    ext: ExtensionState,
-    activations: ActivationFunc[],
-): PythonEnvironments {
-    const locators = new ExtensionLocators(
-        initNonWorkspaceLocators(ext),
-        initWorkspaceLocators(ext),
-    );
+export async function activate(
+    api: PythonEnvironments,
+): Promise<ActivationResult> {
+    // Force an initial background refresh of the environments.
+    getEnvs(api.iterEnvs()).ignoreErrors();
 
-    const locatorStack = initLocatorStack(
-        locators,
-        ext,
-        activations,
-    );
+    // Registration with VS Code will go here.
 
-    // Any other init/activation needed for the API will go here later.
-
-    return new PythonEnvironments(locatorStack);
+    return {
+        finished: Promise.resolve(),
+    };
 }
 
-function initNonWorkspaceLocators(
+/**
+ * Get the set of locators to use in the component.
+ */
+async function createLocators(ext: ExtensionState): Promise<ILocator> {
+    // Create the low-level locators.
+    let locators: ILocator = new ExtensionLocators(
+        createNonWorkspaceLocators(ext),
+        createWorkspaceLocators(ext),
+    );
+
+    // Create the env info service used by ResolvingLocator and CachingLocator.
+    const envInfoService = new EnvironmentInfoService();
+    ext.disposables.push(envInfoService);
+
+    // Build the stack of composite locators.
+    const [caching, disposable] = await createCachingLocator(ext, envInfoService, locators);
+    ext.disposables.push(disposable);
+    locators = caching;
+
+    return locators;
+}
+
+function createNonWorkspaceLocators(
     ext: ExtensionState,
 ): ILocator[] {
     let locators: (ILocator & Partial<IDisposable>)[];
@@ -170,7 +179,7 @@ function getWorkspaceFolders() {
     };
 }
 
-function initWorkspaceLocators(
+function createWorkspaceLocators(
     ext: ExtensionState,
 ): WorkspaceLocators {
     const locators = new WorkspaceLocators(
@@ -183,40 +192,21 @@ function initWorkspaceLocators(
     return locators;
 }
 
-function initLocatorStack(
-    locators: ILocator,
+async function createCachingLocator(
     ext: ExtensionState,
-    activations: ActivationFunc[],
-): ILocator {
-    // Create the env info service used by ResolvingLocator and CachingLocator.
-    const envInfoService = new EnvironmentInfoService();
-    ext.disposables.push(envInfoService);
-
-    // Create the cache used by CachingLocator.
-    const envsCache = new PythonEnvInfoCache(
-        (env: PythonEnvInfo) => envInfoService.isInfoProvided(env.executable.filename), // "isComplete"
-        () => {
-            const storage = getGlobalStorage<PythonEnvInfo[]>(
-                ext.context,
-                'PYTHON_ENV_INFO_CACHE',
-            );
-            return {
-                load: async () => storage.get(),
-                store: async (e) => storage.set(e),
-            };
-        },
+    envInfoService: EnvironmentInfoService,
+    locators: ILocator,
+): Promise<[ILocator, IDisposable]> {
+    const storage = getGlobalStorage<PythonEnvInfo[]>(
+        ext.context,
+        'PYTHON_ENV_INFO_CACHE',
     );
-    activations.push(() => {
-        // We don't need to block extension activation for this.
-        envsCache.activate().ignoreErrors();
-    });
-
-    // Create the locator stack.
-    const cachingLocator = new CachingLocator(envsCache, locators);
-    activations.push(() => {
-        // We don't need to block extension activation for this.
-        cachingLocator.activate().ignoreErrors();
-    });
-
-    return cachingLocator;
+    const cache = await getPersistentCache(
+        {
+            load: async () => storage.get(),
+            store: async (e) => storage.set(e),
+        },
+        (env: PythonEnvInfo) => envInfoService.isInfoProvided(env.executable.filename), // "isComplete"
+    );
+    return getActivatedCachingLocator(cache, locators);
 }

@@ -5,9 +5,10 @@ import * as assert from 'assert';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { createDeferred } from '../../../../../client/common/utils/async';
+import { disposeAll, IDisposable } from '../../../../../client/common/utils/resourceLifecycle';
 import { PythonEnvInfoCache } from '../../../../../client/pythonEnvironments/base/envsCache';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
-import { CachingLocator } from '../../../../../client/pythonEnvironments/base/locators/composite/cachingLocator';
+import { CachingLocator, getActivatedCachingLocator } from '../../../../../client/pythonEnvironments/base/locators/composite/cachingLocator';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import {
@@ -32,81 +33,36 @@ class FakeCache extends PythonEnvInfoCache {
         store: (e: PythonEnvInfo[]) => Promise<void>,
         isComplete: (e: PythonEnvInfo) => boolean = () => true,
     ) {
-        super(isComplete, () => ({ load, store }));
+        super({ load, store }, isComplete);
     }
 }
 
-async function getInitializedLocator(initialEnvs: PythonEnvInfo[]): Promise<[SimpleLocator, CachingLocator]> {
-    const cache = new FakeCache(
-        () => Promise.resolve(undefined),
-        () => Promise.resolve(undefined),
-    );
-    const subLocator = new SimpleLocator(initialEnvs, {
-        resolve: null,
-    });
-    const locator = new CachingLocator(cache, subLocator);
-    await locator.activate();
-    return [subLocator, locator];
-}
-
 suite('Python envs locator - CachingLocator', () => {
-    suite('activate', () => {
-        test('cache activated', async () => {
-            const loadDeferred = createDeferred<void>();
-            const storeDeferred = createDeferred<void>();
-            let storedEnvs: PythonEnvInfo[] | undefined;
-            const cache = new FakeCache(
-                () => {
-                    const promise = Promise.resolve([env1]);
-                    promise.then(() => loadDeferred.resolve()).ignoreErrors();
-                    return promise;
-                },
-                async (e) => {
-                    storedEnvs = e;
-                    storeDeferred.resolve();
-                },
-            );
-            const subDeferred = createDeferred<void>();
-            const subLocator = new SimpleLocator([env2], {
-                before: (async () => {
-                    if (subDeferred.completed) {
-                        throw Error('called more than once!');
-                    }
-                    await subDeferred.promise;
-                })(),
-            });
-            const locator = new CachingLocator(cache, subLocator);
+    let disposables: IDisposable[];
 
-            locator.activate().ignoreErrors(); // in the background
-            await loadDeferred.promise; // This lets the load finish.
-            const resultBefore = await getEnvs(locator.iterEnvs());
-            subDeferred.resolve(); // This lets the refresh continue.
-            await storeDeferred.promise; // This lets the refresh finish.
-            const resultAfter = await getEnvs(locator.iterEnvs());
-
-            assert.deepEqual(storedEnvs, [env2]);
-            assert.deepEqual(resultBefore, [env1]);
-            assert.deepEqual(resultAfter, [env2]);
-        });
+    setup(() => {
+        disposables = [];
     });
+    teardown(async () => {
+        const temp = disposables;
+        disposables = [];
+        await disposeAll(temp);
+    });
+
+    async function getInitializedLocator(initialEnvs: PythonEnvInfo[]): Promise<[SimpleLocator, CachingLocator]> {
+        const cache = new FakeCache(
+            () => Promise.resolve(undefined),
+            () => Promise.resolve(undefined),
+        );
+        const subLocator = new SimpleLocator(initialEnvs, {
+            resolve: null,
+        });
+        const [locator, disposable] = getActivatedCachingLocator(cache, subLocator);
+        disposables.push(disposable);
+        return [subLocator, locator];
+    }
 
     suite('onChanged', () => {
-        test('emitted after initial refresh', async () => {
-            const expected: PythonEnvsChangedEvent = {};
-            const cache = new FakeCache(
-                () => Promise.resolve(undefined),
-                () => Promise.resolve(undefined),
-            );
-            const subLocator = new SimpleLocator([env2]);
-            const locator = new CachingLocator(cache, subLocator);
-
-            let changeEvent: PythonEnvsChangedEvent | undefined;
-            locator.onChanged((e) => { changeEvent = e; });
-            await locator.activate();
-
-            assert.deepEqual(changeEvent, expected);
-        });
-
         test('propagated', async () => {
             const expected: PythonEnvsChangedEvent = {};
             const [subLocator, locator] = await getInitializedLocator([env2]);

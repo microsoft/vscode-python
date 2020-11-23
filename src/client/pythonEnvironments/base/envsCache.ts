@@ -82,11 +82,6 @@ export class PythonEnvsCache {
  */
 export interface IEnvsCache {
     /**
-     * Initialization logic to be done outside of the constructor, for example reading from persistent storage.
-     */
-    activate(): Promise<void>;
-
-    /**
      * Return all environment info currently in memory for this session.
      *
      * @return An array of cached environment info, or `undefined` if there are none.
@@ -130,31 +125,12 @@ type CompleteEnvInfoFunction = (envInfo: PythonEnvInfo) => boolean;
  * Environment info cache using persistent storage to save and retrieve pre-cached env info.
  */
 export class PythonEnvInfoCache implements IEnvsCache {
-    private active = false;
-
     private inMemory: PythonEnvsCache | undefined;
 
-    private persistentStorage: IPersistentStorage | undefined;
-
     constructor(
+        private readonly persistentStorage: IPersistentStorage,
         private readonly isComplete: CompleteEnvInfoFunction,
-        private readonly getPersistentStorage?: () => IPersistentStorage,
     ) {}
-
-    public async activate(): Promise<void> {
-        if (this.active) {
-            return;
-        }
-        this.active = true;
-
-        if (this.getPersistentStorage !== undefined) {
-            this.persistentStorage = this.getPersistentStorage();
-            const envs = await this.persistentStorage.load();
-            if (envs !== undefined) {
-                this.setAllEnvs(envs);
-            }
-        }
-    }
 
     public getAllEnvs(): PythonEnvInfo[] | undefined {
         return this.inMemory?.getEnvs();
@@ -168,6 +144,15 @@ export class PythonEnvInfoCache implements IEnvsCache {
         return this.inMemory?.filter((info) => areSameEnv(info, query));
     }
 
+    public async reset(): Promise<void> {
+        const envs = await this.persistentStorage.load();
+        if (envs === undefined) {
+            this.inMemory = undefined;
+        } else {
+            this.setAllEnvs(envs);
+        }
+    }
+
     public async flush(): Promise<void> {
         const completeEnvs = this.inMemory?.filter(this.isComplete);
 
@@ -175,4 +160,16 @@ export class PythonEnvInfoCache implements IEnvsCache {
             await this.persistentStorage?.store(completeEnvs);
         }
     }
+}
+
+/**
+ * Build a cache of PythonEnvInfo that is ready to use.
+ */
+export async function getPersistentCache(
+    storage: IPersistentStorage,
+    isComplete: CompleteEnvInfoFunction,
+): Promise<PythonEnvInfoCache> {
+    const cache = new PythonEnvInfoCache(storage, isComplete);
+    await cache.reset();
+    return cache;
 }

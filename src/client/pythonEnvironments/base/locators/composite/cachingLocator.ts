@@ -3,8 +3,8 @@
 
 import { Event } from 'vscode';
 import '../../../../common/extensions';
-import { createDeferred } from '../../../../common/utils/async';
 import { BackgroundRequestLooper } from '../../../../common/utils/backgroundLoop';
+import { IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { logWarning } from '../../../../logging';
 import { IEnvsCache } from '../../envsCache';
 import { PythonEnvInfo } from '../../info';
@@ -26,71 +26,23 @@ export class CachingLocator implements ILocator {
 
     private readonly watcher = new PythonEnvsWatcher();
 
-    private readonly initializing = createDeferred<void>();
-
-    private active = false;
-
-    private looper: BackgroundRequestLooper;
-
     constructor(
         private readonly cache: IEnvsCache,
         private readonly locator: ILocator,
+        private readonly looper: BackgroundRequestLooper,
     ) {
         this.onChanged = this.watcher.onChanged;
-        this.looper = new BackgroundRequestLooper({
-            runDefault: null,
-        });
+
+        locator.onChanged((event) => this.ensureCurrentRefresh(event));
     }
 
-    /**
-     * Finish Preparing the locator for use.
-     *
-     * This must be called before using the locator.  It is distinct
-     * from the constructor to avoid the problems that come from doing
-     * any serious work in constructors.  It also allows initialization
-     * to be asynchronous.
-     */
-    public async activate(): Promise<void> {
-        if (this.active) {
-            return;
-        }
-        this.active = true;
-
-        await this.cache.activate();
-        this.looper.start();
-
-        this.locator.onChanged((event) => this.ensureCurrentRefresh(event));
-
-        // Do the initial refresh.
-        const envs = this.cache.getAllEnvs();
-        if (envs !== undefined) {
-            this.initializing.resolve();
-            await this.ensureRecentRefresh();
-        } else {
-            // There is nothing in the cache, so we must wait for the
-            // initial refresh to finish before allowing iteration.
-            await this.ensureRecentRefresh();
-            this.initializing.resolve();
-        }
-    }
-
-    public dispose(): void {
-        if (!this.active) {
-            return;
-        }
-        this.active = false;
-
-        const waitUntilStopped = this.looper.stop();
-        waitUntilStopped.ignoreErrors();
-    }
-
-    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+    public async* iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         // We assume that `getAllEnvs()` is cheap enough that calling
         // it again in `iterFromCache()` is not a problem.
         if (this.cache.getAllEnvs() === undefined) {
-            return this.iterFromWrappedLocator(query);
+            await this.ensureRecentRefresh();
         }
-        return this.iterFromCache(query);
+        yield* this.iterFromCache(query);
     }
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
@@ -117,24 +69,6 @@ export class CachingLocator implements ILocator {
             }
         }
         return resolved;
-    }
-
-    /**
-     * A generator that yields the envs provided by the wrapped locator.
-     *
-     * Contrast this with `iterFromCache()` that yields only from the cache.
-     */
-    private async* iterFromWrappedLocator(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        // For now we wait for the initial refresh to finish.  If that
-        // turns out to be a problem then we can do something more
-        // clever here.
-        await this.initializing.promise;
-        const iterator = this.iterFromCache(query);
-        let res = await iterator.next();
-        while (!res.done) {
-            yield res.value;
-            res = await iterator.next();
-        }
     }
 
     /**
@@ -231,4 +165,24 @@ export class CachingLocator implements ILocator {
         await this.cache.flush();
         this.watcher.fire(event || {}); // Emit an "onChanged" event.
     }
+}
+
+/**
+ * Get a new caching locator and activate its resources.
+ */
+export function getActivatedCachingLocator(
+    cache: IEnvsCache,
+    wrapped: ILocator,
+): [CachingLocator, IDisposable] {
+    const looper = new BackgroundRequestLooper({
+        runDefault: null,
+    });
+    looper.start();
+
+    const locator = new CachingLocator(cache, wrapped, looper);
+
+    return [
+        locator,
+        { dispose: () => looper.stop().ignoreErrors() },
+    ];
 }
