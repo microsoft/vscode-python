@@ -3,6 +3,7 @@
 
 import { Event } from 'vscode';
 import { createDeferred } from '../../../../common/utils/async';
+import { IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { PythonEnvsCache } from '../../envsCache';
 import { PythonEnvInfo } from '../../info';
 import {
@@ -20,10 +21,12 @@ import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
  * (and only then).  So the way to force a refresh is to force
  * such an event to be emitted.
  */
-export class CachingLocatorWrapper implements ILocator {
+export class CachingLocatorWrapper implements ILocator, IDisposable {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     private readonly watcher = new PythonEnvsWatcher();
+
+    private listener?: IDisposable;
 
     private active = false;
 
@@ -35,60 +38,24 @@ export class CachingLocatorWrapper implements ILocator {
         private readonly wrapped: ILocator,
     ) {
         this.onChanged = this.watcher.onChanged;
-
-        wrapped.onChanged((event) => {
-            if (this.active) {
-                // Refresh the cache in the background.
-                if (this.refreshing) {
-                    // The wrapped locator noticed changes while we're
-                    // already refreshing, so trigger another refresh
-                    // when that finishes.
-                    this.refreshing
-                        .then(() => this.refresh(event))
-                        .ignoreErrors();
-                } else {
-                    this.refresh(event)
-                        .ignoreErrors();
-                }
-            }
-        });
     }
 
-    /**
-     * Prepare the locator for use.
-     *
-     * This should be called as soon as possible before using the locator.
-     */
-    public async activate(): Promise<void> {
-        if (this.active) {
-            return;
+    public dispose(): void {
+        if (this.listener !== undefined) {
+            this.listener.dispose();
         }
-        this.active = true;
-
-        // Populate the cache with initial data.
-        await this.refresh();
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public iterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator {
-        // Get the envs early in case a refresh is triggered.
-        let envs = this.cache.getEnvs();
-        async function* generator(self: CachingLocatorWrapper) {
-            if (!self.active) {
-                await self.activate();
-                envs = self.cache.getEnvs();
-            }
-            yield* envs;
-        }
-        return generator(this);
+    public async* iterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator {
+        await this.ensureInitialized();
+        yield* this.cache.getEnvs();
     }
 
     public async resolveEnv(env: string | Partial<PythonEnvInfo>): Promise<PythonEnvInfo | undefined> {
+        await this.ensureInitialized();
         if (this.refreshing !== undefined) {
             await this.refreshing;
-        }
-        if (!this.active) {
-            await this.activate();
         }
         return this.cache.lookUp(env);
     }
@@ -117,5 +84,31 @@ export class CachingLocatorWrapper implements ILocator {
 
         deferred.resolve();
         this.refreshing = undefined;
+    }
+
+    private async ensureInitialized(): Promise<void> {
+        if (this.listener !== undefined) {
+            return;
+        }
+
+        this.listener = this.wrapped.onChanged((event) => {
+            if (this.active) {
+                // Refresh the cache in the background.
+                if (this.refreshing) {
+                    // The wrapped locator noticed changes while we're
+                    // already refreshing, so trigger another refresh
+                    // when that finishes.
+                    this.refreshing
+                        .then(() => this.refresh(event))
+                        .ignoreErrors();
+                } else {
+                    this.refresh(event)
+                        .ignoreErrors();
+                }
+            }
+        });
+
+        // Populate the cache with initial data.
+        await this.refresh();
     }
 }
