@@ -11,6 +11,6 @@ suite('WorkspaceVirtualEnvironment Locator', async () => {
     testLocatorWatcher(
         testWorkspaceFolder,
         <locatorFactoryFuncType>createWorkspaceVirtualEnvLocator,
-        testWorkspaceFolder,
+        { arg: testWorkspaceFolder },
     );
 });

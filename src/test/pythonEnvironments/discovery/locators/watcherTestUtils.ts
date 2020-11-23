@@ -8,6 +8,7 @@ import { traceWarning } from '../../../../client/common/logger';
 import { FileChangeType } from '../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, Deferred, sleep } from '../../../../client/common/utils/async';
 import { getOSType, OSType } from '../../../../client/common/utils/platform';
+import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
@@ -22,7 +23,7 @@ import { run } from './envTestUtils';
  * tests, where we need to create environments.
  */
 class Venvs {
-    constructor(private readonly root: string, private readonly prefix = '.virtualenv-') { }
+    constructor(private readonly root: string, private readonly prefix = '.virtualenv-') {}
 
     public async create(name: string): Promise<string> {
         const envName = this.resolve(name);
@@ -99,20 +100,33 @@ export type locatorFactoryFuncType = locatorFactoryFuncType1 & locatorFactoryFun
  * * Detect when an environment has been updated
  * @param root The root folder where we create, delete, or modify environments.
  * @param createLocatorFactoryFunc The factory function used to create the locator.
- * @param arg Argument to locator factory function if any.
  */
-export function testLocatorWatcher(root: string, createLocatorFactoryFunc: locatorFactoryFuncType, arg?: string): void {
+export function testLocatorWatcher(
+    root: string,
+    createLocatorFactoryFunc: locatorFactoryFuncType,
+    options?: {
+        /**
+         * Argument to the locator factory function if any.
+         */
+        arg?: string;
+        /**
+         * Environment kind to check for in watcher events.
+         * If not specified the check is skipped is default. This is because detecting kind of virtual env
+         * often depends on the file structure around the executable, so we need to wait before attempting
+         * to verify it. Omitting that check in those cases as we can never deterministically say when it's
+         * ready to check.
+         */
+        kind?: PythonEnvKind
+    },
+): void {
     let locator: IDisposableLocator;
     const venvs = new Venvs(root);
 
     async function waitForChangeToBeDetected(deferred: Deferred<void>) {
-        const timeout = setTimeout(
-            () => {
-                clearTimeout(timeout);
-                deferred.reject(new Error('Environment not detected'));
-            },
-            TEST_TIMEOUT,
-        );
+        const timeout = setTimeout(() => {
+            clearTimeout(timeout);
+            deferred.reject(new Error('Environment not detected'));
+        }, TEST_TIMEOUT);
         await deferred.promise;
     }
 
@@ -126,7 +140,7 @@ export function testLocatorWatcher(root: string, createLocatorFactoryFunc: locat
     });
 
     async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
-        locator = arg ? (await createLocatorFactoryFunc(arg)) : await createLocatorFactoryFunc();
+        locator = options?.arg ? await createLocatorFactoryFunc(options.arg) : await createLocatorFactoryFunc();
         // Wait for watchers to get ready
         await sleep(1000);
         locator.onChanged(onChanged);
@@ -150,9 +164,10 @@ export function testLocatorWatcher(root: string, createLocatorFactoryFunc: locat
         const isFound = await isLocated(executable);
 
         assert.ok(isFound);
-        // Detecting kind of virtual env depends on the file structure around the executable, so we need to wait before
-        // attempting to verify it. Omitting that check as we can never deterministically say when it's ready to check.
-        assert.deepEqual(actualEvent!.type, FileChangeType.Created, 'Wrong event emitted');
+        assert.equal(actualEvent!.type, FileChangeType.Created, 'Wrong event emitted');
+        if (options?.kind) {
+            assert.equal(actualEvent!.kind, options.kind, 'Wrong event emitted');
+        }
     });
 
     test('Detect when an environment has been deleted', async () => {
@@ -177,6 +192,9 @@ export function testLocatorWatcher(root: string, createLocatorFactoryFunc: locat
 
         assert.notOk(isFound);
         assert.deepEqual(actualEvent!.type, FileChangeType.Deleted, 'Wrong event emitted');
+        if (options?.kind) {
+            assert.equal(actualEvent!.kind, options.kind, 'Wrong event emitted');
+        }
     });
 
     test('Detect when an environment has been updated', async () => {
@@ -198,8 +216,9 @@ export function testLocatorWatcher(root: string, createLocatorFactoryFunc: locat
         const isFound = await isLocated(executable);
 
         assert.ok(isFound);
-        // Detecting kind of virtual env depends on the file structure around the executable, so we need to wait before
-        // attempting to verify it. Omitting that check as we can never deterministically say when it's ready to check.
         assert.deepEqual(actualEvent!.type, FileChangeType.Changed, 'Wrong event emitted');
+        if (options?.kind) {
+            assert.equal(actualEvent!.kind, options.kind, 'Wrong event emitted');
+        }
     });
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { createPyenvLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/pyenvLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { testLocatorWatcher } from './watcherTestUtils';
@@ -14,7 +15,7 @@ suite('Pyenv Locator', async () => {
         pyenvRootOldValue = process.env.PYENV_ROOT;
         process.env.PYENV_ROOT = testPyenvRoot;
     });
-    testLocatorWatcher(testPyenvVersionsDir, createPyenvLocator);
+    testLocatorWatcher(testPyenvVersionsDir, createPyenvLocator, { kind: PythonEnvKind.Pyenv });
     suiteTeardown(() => {
         process.env.PYENV_ROOT = pyenvRootOldValue;
     });
