@@ -94,7 +94,7 @@ type WatchRootsFunc = (args: WatchRootsArgs) => IDisposable;
 export class WorkspaceLocators extends Locator {
     private disposables = new Disposables();
 
-    private activated = false;
+    private isWatching = false;
 
     private readonly locators: Record<RootURI, [DisableableLocator, IDisposable]> = {};
 
@@ -116,7 +116,8 @@ export class WorkspaceLocators extends Locator {
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        this.ensureActivated();
+        // We don't start watching workspace roots until necessary.
+        this.ensureWatching();
 
         const iterators = Object.keys(this.locators).map((key) => {
             if (query?.searchLocations !== undefined) {
@@ -137,7 +138,8 @@ export class WorkspaceLocators extends Locator {
     }
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        this.ensureActivated();
+        // We don't start watching workspace roots until necessary.
+        this.ensureWatching();
 
         if (typeof env !== 'string' && env.searchLocation) {
             const found = this.locators[env.searchLocation.toString()];
@@ -200,11 +202,11 @@ export class WorkspaceLocators extends Locator {
         disposables.dispose();
     }
 
-    private ensureActivated(): void {
-        if (this.activated) {
+    private ensureWatching(): void {
+        if (this.isWatching) {
             return;
         }
-        this.activated = true;
+        this.isWatching = true;
 
         const disposable = this.watchRoots({
             initRoot: (root: Uri) => this.addRoot(root),
