@@ -66,6 +66,7 @@ suite('Python envs locator - CachingLocator', () => {
         test('propagated', async () => {
             const expected: PythonEnvsChangedEvent = {};
             const [subLocator, locator] = await getInitializedLocator([env2]);
+            await getEnvs(locator.iterEnvs()); // Force an initial refresh.
             let changeEvent: PythonEnvsChangedEvent | undefined;
             const eventDeferred = createDeferred<void>();
 
