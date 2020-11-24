@@ -135,9 +135,7 @@ export function testLocatorWatcher(
         return items.some((item) => arePathsSame(item.executable.filename, executable));
     }
 
-    suiteSetup(async () => {
-        await venvs.cleanUp();
-    });
+    suiteSetup(() => venvs.cleanUp());
 
     async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
         locator = options?.arg ? await createLocatorFactoryFunc(options.arg) : await createLocatorFactoryFunc();
@@ -216,7 +214,7 @@ export function testLocatorWatcher(
         const isFound = await isLocated(executable);
 
         assert.ok(isFound);
-        assert.deepEqual(actualEvent!.type, FileChangeType.Changed, 'Wrong event emitted');
+        assert.notEqual(actualEvent!, undefined, 'Wrong event emitted');
         if (options?.kind) {
             assert.equal(actualEvent!.kind, options.kind, 'Wrong event emitted');
         }
