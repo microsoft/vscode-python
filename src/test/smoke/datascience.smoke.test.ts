@@ -3,8 +3,9 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-invalid-this no-any
+// tslint:disable:no-invalid-this
 
+import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -54,8 +55,7 @@ suite('Smoke Test: Interactive Window', () => {
         await sleep(1_000);
 
         await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri).then(undefined, (err) => {
-            // tslint:disable-next-line: no-console
-            console.log(`I am error: ${err}`);
+            assert.fail(`Something went wrong: ${err}`);
         });
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
