@@ -81,14 +81,14 @@ function getSearchLocationFilters(query: PythonLocatorQuery): ((u: Uri) => boole
 export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvInfo[]> {
     const envs: PythonEnvInfo[] = [];
 
-    let listener: IDisposable | undefined;
     const updatesDone = createDeferred<void>();
     if (iterator.onUpdated === undefined) {
         updatesDone.resolve();
     } else {
-        listener = iterator.onUpdated((event: PythonEnvUpdatedEvent | null) => {
+        const listener = iterator.onUpdated((event: PythonEnvUpdatedEvent | null) => {
             if (event === null) {
                 updatesDone.resolve();
+                listener.dispose();
             } else {
                 const { index, update } = event;
                 // We don't worry about if envs[index] is set already.
@@ -106,10 +106,6 @@ export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvI
         itemIndex += 1;
     }
     await updatesDone.promise;
-
-    if (listener !== undefined) {
-        listener.dispose();
-    }
 
     return envs;
 }

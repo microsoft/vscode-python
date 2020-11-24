@@ -4,7 +4,6 @@
 import { cloneDeep } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
-import { IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
 import { InterpreterInformation } from '../../info/interpreter';
@@ -57,12 +56,12 @@ export class PythonEnvsResolver implements ILocator {
         };
         const seen: PythonEnvInfo[] = [];
 
-        let listener: IDisposable | undefined;
         if (iterator.onUpdated !== undefined) {
-            listener = iterator.onUpdated((event) => {
+            const listener = iterator.onUpdated((event) => {
                 if (event === null) {
                     state.done = true;
                     checkIfFinishedAndNotify(state, didUpdate);
+                    listener.dispose();
                 } else if (seen[event.index] !== undefined) {
                     seen[event.index] = event.update;
                     state.pending += 1;
@@ -87,8 +86,6 @@ export class PythonEnvsResolver implements ILocator {
         if (iterator.onUpdated === undefined) {
             state.done = true;
             checkIfFinishedAndNotify(state, didUpdate);
-        } else {
-            listener!.dispose();
         }
     }
 
