@@ -51,7 +51,7 @@ suite('Environment Info cache', () => {
     });
 
     test('The in-memory env info array is undefined if there is no value in persistent storage when initializing the cache', async () => {
-        const envsCache = await getPersistentCache(getGlobalPersistentStore(), allEnvsComplete);
+        const envsCache = new PythonEnvInfoCache(getGlobalPersistentStore(), allEnvsComplete);
 
         loadedValues = undefined;
         const result = envsCache.getAllEnvs();
