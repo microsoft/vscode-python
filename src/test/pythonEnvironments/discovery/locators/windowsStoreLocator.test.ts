@@ -84,6 +84,7 @@ suite('Windows Store Locator', async () => {
 
     async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
         locator = new WindowsStoreLocator();
+        await getEnvs(locator.iterEnvs()); // Force the watchers to start.
         // Wait for watchers to get ready
         await sleep(1000);
         locator.onChanged(onChanged);
