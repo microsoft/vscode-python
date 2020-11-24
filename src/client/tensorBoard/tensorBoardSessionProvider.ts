@@ -33,7 +33,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                 this.commandManager.registerCommand(Commands.LaunchTensorBoard, () => this.createNewSession())
             );
             const contextKey = new ContextKey('python.isInNativeTensorBoardExperiment', this.commandManager);
-            await contextKey.set(true);
+            contextKey.set(true).ignoreErrors();
         }
     }
 

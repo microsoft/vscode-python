@@ -48,7 +48,10 @@ export class TensorBoardSession {
     ) {}
 
     public async initialize() {
-        await this.ensureTensorboardIsInstalled();
+        const tensorBoardWasInstalled = await this.ensureTensorboardIsInstalled();
+        if (!tensorBoardWasInstalled) {
+            return;
+        }
         const logDir = await this.askUserForLogDir();
         const startedSuccessfully = await this.startTensorboardSession(logDir);
         if (startedSuccessfully) {
@@ -61,7 +64,7 @@ export class TensorBoardSession {
     private async ensureTensorboardIsInstalled() {
         traceInfo('Ensuring TensorBoard package is installed');
         if (await this.installer.isInstalled(Product.tensorboard)) {
-            return;
+            return true;
         }
         const interpreter = await this.interpreterService.getActiveInterpreter();
         const tokenSource = new CancellationTokenSource();
@@ -75,9 +78,7 @@ export class TensorBoardSession {
             this.installer.promptToInstall(Product.tensorboard, interpreter, installerToken),
             cancellationPromise
         ]);
-        if (response !== InstallerResponse.Installed) {
-            throw new Error(TensorBoard.tensorBoardInstallRequired());
-        }
+        return response === InstallerResponse.Installed;
     }
 
     // Display an input box asking the user for an absolute or relative log directory
