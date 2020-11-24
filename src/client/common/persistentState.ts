@@ -11,7 +11,7 @@ import {
     IMemento,
     IPersistentState,
     IPersistentStateFactory,
-    WORKSPACE_MEMENTO,
+    WORKSPACE_MEMENTO
 } from './types';
 
 export class PersistentState<T> implements IPersistentState<T> {
