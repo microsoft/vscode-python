@@ -10,7 +10,7 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { updateSetting } from '../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { openFileAndWaitForLS } from './common';
