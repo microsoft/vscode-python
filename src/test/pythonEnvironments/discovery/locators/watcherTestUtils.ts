@@ -140,6 +140,7 @@ export function testLocatorWatcher(
 
     async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
         locator = options?.arg ? await createLocatorFactoryFunc(options.arg) : await createLocatorFactoryFunc();
+        await getEnvs(locator.iterEnvs()); // Force the FS watcher to start.
         // Wait for watchers to get ready
         await sleep(1000);
         locator.onChanged(onChanged);
