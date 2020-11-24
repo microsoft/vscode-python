@@ -568,7 +568,7 @@ export interface IEventNamePropertyMapping {
          *
          * @type {boolean}
          */
-        autoDetectedFastAPIAppPyPath?: boolean;
+        autoDetectedFastAPIMainPyPath?: boolean;
         /**
          * Carries `true` if we are able to auto-detect app.py path for Flask, `false` otherwise
          *

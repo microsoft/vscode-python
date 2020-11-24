@@ -53,7 +53,7 @@ export class FastAPILaunchDebugConfigurationProvider implements IDebugConfigurat
 
         sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
             configurationType: DebugConfigurationType.launchFastAPI,
-            autoDetectedFastAPIAppPyPath: !!application,
+            autoDetectedFastAPIMainPyPath: !!application,
             manuallyEnteredAValue
         });
         Object.assign(state.config, config);
