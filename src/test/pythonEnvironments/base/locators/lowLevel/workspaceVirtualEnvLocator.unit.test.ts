@@ -4,6 +4,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import * as fsWatcher from '../../../../../client/common/platform/fileSystemWatcher';
 import * as platformUtils from '../../../../../client/common/utils/platform';
 import {
     PythonEnvInfo,
@@ -20,6 +21,7 @@ import { assertEnvEqual, assertEnvsEqual } from '../../../discovery/locators/env
 suite('WorkspaceVirtualEnvironment Locator', () => {
     const testWorkspaceFolder = path.join(TEST_LAYOUT_ROOT, 'workspace', 'folder1');
     let getOSTypeStub: sinon.SinonStub;
+    let watchLocationForPatternStub: sinon.SinonStub;
     let locator: WorkspaceVirtualEnvironmentLocator;
 
     function createExpectedEnvInfo(
@@ -56,10 +58,14 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
     setup(() => {
         getOSTypeStub = sinon.stub(platformUtils, 'getOSType');
         getOSTypeStub.returns(platformUtils.OSType.Linux);
+        watchLocationForPatternStub = sinon.stub(fsWatcher, 'watchLocationForPattern');
+        watchLocationForPatternStub.returns({ dispose: () => { /* do nothing */ } });
         locator = new WorkspaceVirtualEnvironmentLocator(testWorkspaceFolder);
     });
-    teardown(() => {
+    teardown(async () => {
+        await locator.dispose();
         getOSTypeStub.restore();
+        watchLocationForPatternStub.restore();
     });
 
     test('iterEnvs(): Windows', async () => {
