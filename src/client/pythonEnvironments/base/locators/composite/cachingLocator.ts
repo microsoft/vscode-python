@@ -44,19 +44,14 @@ export class CachingLocator implements ILocator, IDisposable {
 
     public async* iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         // Do not watch for changes until necessary.
-        this.ensureWatching();
+        await this.ensureReady();
 
-        // We assume that `getAllEnvs()` is cheap enough that calling
-        // it again in `iterFromCache()` is not a problem.
-        if (this.cache.getAllEnvs() === undefined) {
-            await this.ensureRecentRefresh();
-        }
         yield* this.iterFromCache(query);
     }
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         // Do not watch for changes until necessary.
-        this.ensureWatching();
+        await this.ensureReady();
 
         // If necessary we could be more aggressive about invalidating
         // the cached value.
@@ -83,9 +78,14 @@ export class CachingLocator implements ILocator, IDisposable {
         return resolved;
     }
 
-    private ensureWatching(): void {
+    private async ensureReady(): Promise<void> {
         if (this.listener === undefined) {
             this.listener = this.locator.onChanged((event) => this.ensureCurrentRefresh(event));
+        }
+        // We assume that `getAllEnvs()` is cheap enough that calling
+        // it again in here is not a problem.
+        if (this.cache.getAllEnvs() === undefined) {
+            await this.ensureRecentRefresh();
         }
     }
 
