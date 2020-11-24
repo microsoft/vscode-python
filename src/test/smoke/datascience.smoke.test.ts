@@ -25,9 +25,12 @@ suite('Smoke Test: Interactive Window', () => {
         await verifyExtensionIsAvailable(JUPYTER_EXTENSION_ID);
         await initialize();
         await setAutoSaveDelayInWorkspaceRoot(1);
-        const jupyterConfig = vscode.workspace.getConfiguration('jupyter', (null as any) as vscode.Uri);
+        const jupyterConfig = vscode.workspace.getConfiguration('jupyter', (null as unknown) as vscode.Uri);
         await jupyterConfig.update('alwaysTrustNotebooks', true, true);
+
+        return undefined;
     });
+
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
@@ -39,7 +42,7 @@ suite('Smoke Test: Interactive Window', () => {
             'test',
             'pythonFiles',
             'datascience',
-            'simple_note_book.py'
+            'simple_note_book.py',
         );
         const outputFile = path.join(path.dirname(file), 'ds.log');
         if (await fs.pathExists(outputFile)) {
@@ -50,7 +53,9 @@ suite('Smoke Test: Interactive Window', () => {
         // Wait for code lenses to get detected.
         await sleep(1_000);
 
-        await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri);
+        await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri).then(undefined, (err) => {
+            console.warn(`I am error: ${err}`);
+        });
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
     }).timeout(timeoutForCellToRun);
@@ -62,12 +67,12 @@ suite('Smoke Test: Interactive Window', () => {
             'test',
             'pythonFiles',
             'datascience',
-            'simple_nb.ipynb'
+            'simple_nb.ipynb',
         );
         const fileContents = await fs.readFile(file, { encoding: 'utf-8' });
         const outputFile = path.join(path.dirname(file), 'ds_n.log');
         await fs.writeFile(file, fileContents.replace("'ds_n.log'", `'${outputFile.replace(/\\/g, '/')}'`), {
-            encoding: 'utf-8'
+            encoding: 'utf-8',
         });
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);

@@ -14,9 +14,9 @@ import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 suite('Smoke Test: Run Python File In Terminal', () => {
     suiteSetup(async function () {
-        if (!IS_SMOKE_TEST) {
-            return this.skip();
-        }
+        // if (!IS_SMOKE_TEST) {
+        return this.skip();
+        // }
         await initialize();
     });
     setup(initializeTest);
