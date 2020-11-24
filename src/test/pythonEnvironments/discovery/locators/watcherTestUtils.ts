@@ -87,7 +87,10 @@ class Venvs {
 }
 
 type locatorFactoryFuncType1 = () => Promise<IDisposableLocator>;
-type locatorFactoryFuncType2 = (_: unknown) => Promise<IDisposableLocator>;
+// tslint:disable:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type locatorFactoryFuncType2 = (_: any) => Promise<IDisposableLocator>;
+// tslint:enable:no-any
 export type locatorFactoryFuncType = locatorFactoryFuncType1 & locatorFactoryFuncType2;
 
 /**
