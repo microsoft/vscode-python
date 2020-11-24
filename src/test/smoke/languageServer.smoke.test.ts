@@ -10,7 +10,7 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { updateSetting } from '../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { openFileAndWaitForLS } from './common';
@@ -25,9 +25,9 @@ const fileDefinitions = path.join(
 
 suite('Smoke Test: Language Server', () => {
     suiteSetup(async function () {
-        // if (!IS_SMOKE_TEST) {
-        return this.skip();
-        // }
+        if (!IS_SMOKE_TEST) {
+            return this.skip();
+        }
         await updateSetting(
             'linting.ignorePatterns',
             ['**/dir1/**'],
