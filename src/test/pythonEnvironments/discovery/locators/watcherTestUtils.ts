@@ -174,11 +174,11 @@ export function testLocatorWatcher(
         let actualEvent: PythonEnvsChangedEvent;
         const deferred = createDeferred<void>();
         const executable = await venvs.create('one');
-        // Wait before the change event has been sent. If both operations occur almost simultaneously no event is sent.
-        await sleep(100);
         await setupLocator(async (e) => {
-            actualEvent = e;
-            deferred.resolve();
+            if (e.type === FileChangeType.Deleted) {
+                actualEvent = e;
+                deferred.resolve();
+            }
         });
 
         // VSCode API has a limitation where it fails to fire event when environment folder is deleted directly:
@@ -191,7 +191,7 @@ export function testLocatorWatcher(
         const isFound = await isLocated(executable);
 
         assert.notOk(isFound);
-        assert.deepEqual(actualEvent!.type, FileChangeType.Deleted, 'Wrong event emitted');
+        assert.notEqual(actualEvent!, undefined, 'Wrong event emitted');
         if (options?.kind) {
             assert.equal(actualEvent!.kind, options.kind, 'Wrong event emitted');
         }
@@ -204,11 +204,11 @@ export function testLocatorWatcher(
         // Executables inside real environments can be symlinks, so writing on them can result in the real executable
         // being updated instead of the symlink.
         const executable = await venvs.createDummyEnv('one');
-        // Wait before the change event has been sent. If both operations occur almost simultaneously no event is sent.
-        await sleep(100);
         await setupLocator(async (e) => {
-            actualEvent = e;
-            deferred.resolve();
+            if (e.type === FileChangeType.Changed) {
+                actualEvent = e;
+                deferred.resolve();
+            }
         });
 
         await venvs.update(executable);
