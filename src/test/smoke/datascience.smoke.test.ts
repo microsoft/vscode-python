@@ -54,7 +54,8 @@ suite('Smoke Test: Interactive Window', () => {
         await sleep(1_000);
 
         await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri).then(undefined, (err) => {
-            console.warn(`I am error: ${err}`);
+            // tslint:disable-next-line: no-console
+            console.log(`I am error: ${err}`);
         });
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
