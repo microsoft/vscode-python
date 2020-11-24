@@ -257,12 +257,20 @@ jobs:
         run: npm run test:unittests:cover
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
+      # # Move test coverage reports outside of special-working-directory.
+      # - name: Move unit test coverage reports
+      #   run: |
+      #     mkdir .nyc_output
+      #     mv ${{ env.special-working-directory }}/.nyc_output .nyc_output
+      #   if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
+
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: ${{ env.special-working-directory }}/.nyc_output
+          # path: .nyc_output
           retention-days: 1
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
@@ -481,6 +489,7 @@ jobs:
       - name: Extract Ubuntu coverage artifacts to ./nyc_output
         run: |
           mkdir .nyc_output
+          ls -la Linux-${{ env.COVERAGE_REPORTS }}
           mv Linux-${{ env.COVERAGE_REPORTS }}/* .nyc_output
           rm -r Linux-${{ env.COVERAGE_REPORTS }}
 
