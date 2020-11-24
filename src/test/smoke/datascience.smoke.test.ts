@@ -59,6 +59,7 @@ suite('Smoke Test: Interactive Window', () => {
         });
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
+        assert.fail('Force failure');
     }).timeout(timeoutForCellToRun);
 
     test('Run Cell in native editor', async () => {
