@@ -64,7 +64,7 @@ export class TensorBoardSession {
     private async ensureTensorboardIsInstalled() {
         traceInfo('Ensuring TensorBoard package is installed');
         if (await this.installer.isInstalled(Product.tensorboard)) {
-            return;
+            return true;
         }
         const interpreter = await this.interpreterService.getActiveInterpreter();
         const tokenSource = new CancellationTokenSource();
