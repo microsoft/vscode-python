@@ -5,10 +5,10 @@ import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import {
-    findInterpretersInDir, getEnvironmentDirFromPath, getPythonVersionFromPath, isStandardPythonBinary
+    findInterpretersInDir, getEnvironmentDirFromPath, getPythonVersionFromPath, isStandardPythonBinary,
 } from '../../../common/commonUtils';
 import {
-    getFileInfo, isParentPath, pathExists
+    getFileInfo, isParentPath, pathExists,
 } from '../../../common/externalDependencies';
 import { isCondaEnvironment } from '../../../discovery/locators/services/condaLocator';
 import { isPipenvEnvironment } from '../../../discovery/locators/services/pipEnvHelper';

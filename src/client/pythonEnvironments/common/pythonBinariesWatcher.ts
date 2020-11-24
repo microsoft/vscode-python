@@ -29,14 +29,18 @@ export function watchLocationForPythonBinaries(
     for (const pattern of patterns) {
         disposables.push(
             watchLocationForPattern(baseDir, pattern, (type: FileChangeType, e: string) => {
-                const isMatch = minimatch(path.basename(e), executableBaseGlob, { nocase: getOSType() === OSType.Windows });
+                const isMatch = minimatch(
+                    path.basename(e),
+                    executableBaseGlob,
+                    { nocase: getOSType() === OSType.Windows },
+                );
                 if (!isMatch) {
                     // When deleting the file for some reason path to all directories leading up to python are reported
                     // Skip those events
                     return;
                 }
                 callback(type, e);
-            })
+            }),
         );
     }
     return disposables;

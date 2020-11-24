@@ -11,7 +11,6 @@ import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getFileInfo } from '../../../common/externalDependencies';
 import { getRegistryInterpreters, IRegistryInterpreterData } from '../../../common/windowsUtils';
 
-
 function getArchitecture(data: IRegistryInterpreterData) {
     let arch = Architecture.Unknown;
     if (data.bitnessStr) {

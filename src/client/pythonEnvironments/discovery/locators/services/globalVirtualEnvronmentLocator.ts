@@ -6,7 +6,7 @@ import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import {
-    getEnvironmentVariable, getOSType, getUserHomeDir, OSType
+    getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
@@ -20,7 +20,7 @@ import { isPipenvEnvironment } from './pipEnvHelper';
 import {
     isVenvEnvironment,
     isVirtualenvEnvironment,
-    isVirtualenvwrapperEnvironment
+    isVirtualenvwrapperEnvironment,
 } from './virtualEnvironmentIdentifier';
 
 const DEFAULT_SEARCH_DEPTH = 2;
