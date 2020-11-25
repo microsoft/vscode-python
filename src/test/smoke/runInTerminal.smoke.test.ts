@@ -11,10 +11,9 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { openFile, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
-import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
-const testTimeout = 3 * 60 * 1_000;
+const testTimeout = 30 * 1_000;
 
 suite('Smoke Test: Run Python File In Terminal', () => {
     suiteSetup(async function () {
@@ -47,12 +46,14 @@ suite('Smoke Test: Run Python File In Terminal', () => {
         }
         const textDocument = await openFile(file);
 
-        await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri).then(undefined, (err) => {
-            assert.fail(`Unhandled failure:  ${err}`);
-        });
-        const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
-        await waitForCondition(checkIfFileHasBeenCreated, testTimeout, `"${outputFile}" file not created`);
-        // Give time for the file to be saved before we shutdown
-        await sleep(300);
+        await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri).then(
+            async () => {
+                const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
+                await waitForCondition(checkIfFileHasBeenCreated, testTimeout, `"${outputFile}" file not created`);
+            },
+            (err) => {
+                assert.fail(`Unhandled failure:  ${err}`);
+            }
+        );
     }).timeout(testTimeout);
 });
