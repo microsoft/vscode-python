@@ -17,6 +17,10 @@ env:
   VSIX_NAME: ms-python-insiders.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
+  # Force a path with spaces and to test extension works in these scenarios
+  # Unicode characters are causing 2.7 failures so skip that for now.
+  special-working-directory: './path with spaces'
+  special-working-directory-relative: 'path with spaces'
 
 jobs:
   build-vsix:
@@ -106,10 +110,6 @@ jobs:
       # See https://github.com/microsoft/ptvsd/issues/2068
       # At this point pinning is only needed for consistency. We no longer have TS debug adapter.
       NODE_VERSION: 12.15.0
-      # Force a path with spaces and to test extension works in these scenarios
-      # Unicode characters are causing 2.7 failures so skip that for now.
-      special-working-directory: './path with spaces'
-      special-working-directory-relative: 'path with spaces'
     defaults:
       run:
         working-directory: ${{env.special-working-directory}}
@@ -464,10 +464,15 @@ jobs:
     name: Coverage reports upload
     # Don't assume external contributors want to upload the coverage report.
     runs-on: ubuntu-latest
-    needs: [tests, smoke-tests]
+    needs: [tests]
+    defaults:
+      run:
+        working-directory: ${{env.special-working-directory}}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          path: ${{env.special-working-directory-relative}}
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v2.1.2
