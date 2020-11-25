@@ -11,7 +11,10 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { openFile, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
+import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
+
+const testTimeout = 3 * 60 * 1_000;
 
 suite('Smoke Test: Run Python File In Terminal', () => {
     suiteSetup(async function () {
@@ -48,6 +51,8 @@ suite('Smoke Test: Run Python File In Terminal', () => {
             assert.fail(`Unhandled failure:  ${err}`);
         });
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
-        await waitForCondition(checkIfFileHasBeenCreated, 30_000, `"${outputFile}" file not created`);
-    });
+        await waitForCondition(checkIfFileHasBeenCreated, testTimeout, `"${outputFile}" file not created`);
+        // Give time for the file to be saved before we shutdown
+        await sleep(300);
+    }).timeout(testTimeout);
 });
