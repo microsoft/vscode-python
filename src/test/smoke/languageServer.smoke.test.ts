@@ -56,11 +56,15 @@ suite('Smoke Test: Language Server', () => {
         const textDocument = await openFileAndWaitForLS(fileDefinitions);
         let tested = false;
         for (let i = 0; i < 5; i += 1) {
-            const locations = await vscode.commands.executeCommand<vscode.Location[]>(
-                'vscode.executeDefinitionProvider',
-                textDocument.uri,
-                startPosition
-            );
+            const locations = await vscode.commands
+                .executeCommand<vscode.Location[]>('vscode.executeDefinitionProvider', textDocument.uri, startPosition)
+                .then(
+                    // Return the result as-is
+                    (result: vscode.Location[] | undefined) => result,
+                    (err) => {
+                        assert.fail(`Unhandled failure:  ${err}`);
+                    }
+                );
             if (locations && locations.length > 0) {
                 expect(locations![0].uri.fsPath).to.contain(path.basename(fileDefinitions));
                 tested = true;
