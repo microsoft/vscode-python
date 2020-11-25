@@ -5,7 +5,7 @@
 
 // tslint:disable:no-invalid-this
 
-import * as assert from 'assert';
+// import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 // import * as vscode from 'vscode';
@@ -50,9 +50,10 @@ suite('Smoke Test: Run Python File In Terminal', () => {
         }
         const textDocument = await openFile(file);
 
-        await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri).then(undefined, (err) => {
-            assert.fail(`Unhandled failure:  ${err}`);
-        });
+        await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri);
+        // .then(undefined, (err) => {
+        //     assert.fail(`Unhandled failure:  ${err}`);
+        // });
 
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, testTimeout, `"${outputFile}" file not created`);
