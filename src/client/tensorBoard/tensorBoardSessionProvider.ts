@@ -8,7 +8,6 @@ import { Commands } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { NativeTensorBoard } from '../common/experiments/groups';
 import { traceError, traceInfo } from '../common/logger';
-import { IFileSystem } from '../common/platform/types';
 import { IProcessServiceFactory } from '../common/process/types';
 import { IDisposableRegistry, IExperimentService, IInstaller } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
@@ -22,7 +21,6 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
@@ -46,8 +44,8 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                 this.installer,
                 this.interpreterService,
                 this.workspaceService,
-                this.fileSystem,
-                this.processServiceFactory
+                this.processServiceFactory,
+                this.commandManager
             );
             await newSession.initialize();
         } catch (e) {

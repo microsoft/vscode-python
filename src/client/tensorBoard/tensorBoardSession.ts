@@ -13,15 +13,14 @@ import {
     WebviewPanel,
     window
 } from 'vscode';
-import { IWorkspaceService } from '../common/application/types';
+import { ICommandManager, IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';
 import { traceError, traceInfo } from '../common/logger';
-import { IFileSystem } from '../common/platform/types';
 import { _SCRIPTS_DIR, tensorboardLauncher } from '../common/process/internal/scripts';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../common/process/types';
 import { IInstaller, InstallerResponse, Product } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
-import { TensorBoard } from '../common/utils/localize';
+import { Common, TensorBoard } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 
 /**
@@ -43,8 +42,8 @@ export class TensorBoardSession {
         private readonly installer: IInstaller,
         private readonly interpreterService: IInterpreterService,
         private readonly workspaceService: IWorkspaceService,
-        private readonly fileSystem: IFileSystem,
-        private readonly processServiceFactory: IProcessServiceFactory
+        private readonly processServiceFactory: IProcessServiceFactory,
+        private readonly commandManager: ICommandManager
     ) {}
 
     public async initialize() {
@@ -53,6 +52,9 @@ export class TensorBoardSession {
             return;
         }
         const logDir = await this.askUserForLogDir();
+        if (!logDir) {
+            return;
+        }
         const startedSuccessfully = await this.startTensorboardSession(logDir);
         if (startedSuccessfully) {
             this.showPanel();
@@ -66,7 +68,12 @@ export class TensorBoardSession {
         if (await this.installer.isInstalled(Product.tensorboard)) {
             return true;
         }
-        const interpreter = await this.interpreterService.getActiveInterpreter();
+        const interpreter =
+            (await this.interpreterService.getActiveInterpreter()) ||
+            (await this.commandManager.executeCommand('python.setInterpreter'));
+        if (!interpreter) {
+            return;
+        }
         const tokenSource = new CancellationTokenSource();
         const installerToken = tokenSource.token;
         const cancellationPromise = createPromiseFromCancellation({
@@ -81,28 +88,37 @@ export class TensorBoardSession {
         return response === InstallerResponse.Installed;
     }
 
-    // Display an input box asking the user for an absolute or relative log directory
-    // to tfevent files. Default this to the directory that the active text editor is in,
-    // if any, then the folder that is open in the editor, if any.
-    private async askUserForLogDir(): Promise<string> {
-        const options = {
-            prompt: TensorBoard.logDirectoryPrompt(),
-            value: this.autopopulateLogDirectoryPath(),
-            placeHolder: TensorBoard.logDirectoryPlaceholder(),
-            ignoreFocusOut: true,
-            validateInput: (value: string) => {
-                return value.trim().length > 0 ? undefined : TensorBoard.invalidLogDirectory();
-            }
-        };
-        const logDir = await window.showInputBox(options);
-
-        // Even though we validateInput above, the result of showInputBox may still be
-        // null if the user hit `esc`. The user may also have provided a log directory
-        // that does not exist. Validate it and fail fast here.
-        if (!logDir || !(await this.isValidLogDirectory(logDir))) {
-            throw new Error(TensorBoard.invalidLogDirectory());
+    private async showFilePicker() {
+        const selection = await window.showOpenDialog({
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false
+        });
+        // If the user selected a folder, return the uri.fsPath
+        // There will only be one selection since canSelectMany: false
+        if (selection) {
+            return selection[0].fsPath;
         }
-        return logDir;
+    }
+
+    // Display a prompt asking the user to acknowledge our autopopulated log directory or
+    // select a new one using the file picker. Default this to the folder that is open in
+    // the editor, if any, then the directory that the active text editor is in, if any.
+    private async askUserForLogDir(): Promise<string | undefined> {
+        const logDir = this.autopopulateLogDirectoryPath();
+        const gotIt = Common.gotIt();
+        const selectAFolder = TensorBoard.selectAFolder();
+        const message = logDir ? TensorBoard.usingCurrentWorkspaceFolder() : TensorBoard.logDirectoryPrompt();
+        const prompts = logDir ? [gotIt, selectAFolder] : [selectAFolder];
+        const selection = await window.showInformationMessage(message, ...prompts);
+        switch (selection) {
+            case gotIt:
+                return logDir;
+            case selectAFolder:
+                return this.showFilePicker();
+            default:
+                return undefined;
+        }
     }
 
     // Spawn a process which uses TensorBoard's Python API to start a TensorBoard session.
@@ -250,14 +266,12 @@ export class TensorBoardSession {
     }
 
     private autopopulateLogDirectoryPath(): string | undefined {
+        if (this.workspaceService.rootPath) {
+            return this.workspaceService.rootPath;
+        }
         const activeTextEditor = window.activeTextEditor;
         if (activeTextEditor) {
             return path.dirname(activeTextEditor.document.uri.fsPath);
         }
-        return this.workspaceService.rootPath;
-    }
-
-    private isValidLogDirectory(logDir: string) {
-        return this.fileSystem.directoryExists(logDir);
     }
 }
