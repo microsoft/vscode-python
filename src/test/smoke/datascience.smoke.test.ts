@@ -54,12 +54,16 @@ suite('Smoke Test: Interactive Window', () => {
         // Wait for code lenses to get detected.
         await sleep(1_000);
 
-        await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri).then(undefined, (err) => {
-            assert.fail(`Something went wrong: ${err}`);
-        });
+        await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri).then(
+            () => {
+                assert.fail('force failure');
+            },
+            (err) => {
+                assert.fail(`Something went wrong: ${err}`);
+            },
+        );
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
-        assert.fail('Force failure');
     }).timeout(timeoutForCellToRun);
 
     test('Run Cell in native editor', async () => {
