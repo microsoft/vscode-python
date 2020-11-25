@@ -15,8 +15,6 @@ import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscode = require('vscode') as typeof import('vscode');
 
-const testTimeout = 30 * 1_000;
-
 suite('Smoke Test: Run Python File In Terminal', () => {
     suiteSetup(async function () {
         if (!IS_SMOKE_TEST) {
@@ -49,8 +47,7 @@ suite('Smoke Test: Run Python File In Terminal', () => {
         const textDocument = await openFile(file);
 
         await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri);
-
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
-        await waitForCondition(checkIfFileHasBeenCreated, testTimeout, `"${outputFile}" file not created`);
-    }).timeout(testTimeout);
+        await waitForCondition(checkIfFileHasBeenCreated, 30_000, `"${outputFile}" file not created`);
+    });
 });
