@@ -143,7 +143,7 @@ export class TestsHelper implements ITestsHelper {
         folders.sort();
         const resource = Uri.file(workspaceFolder);
         folders.forEach((dir) => {
-            let parentPath = "";  // Accumulator
+            let parentPath = ''; // Accumulator
             dir.split(path.sep).forEach((currentName) => {
                 let newPath = currentName;
                 let parentFolder: TestFolder | undefined;
