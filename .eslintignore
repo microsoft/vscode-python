@@ -847,6 +847,7 @@ src/client/common/insidersBuild/downloadChannelService.ts
 src/client/common/insidersBuild/downloadChannelRules.ts
 
 src/client/debugger/extension/configuration/providers/moduleLaunch.ts
+src/client/debugger/extension/configuration/providers/fastapiLaunch.ts
 src/client/debugger/extension/configuration/providers/flaskLaunch.ts
 src/client/debugger/extension/configuration/providers/fileLaunch.ts
 src/client/debugger/extension/configuration/providers/remoteAttach.ts

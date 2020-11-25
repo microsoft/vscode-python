@@ -9,7 +9,8 @@ import {
     PythonEnvInfo, PythonEnvKind,
 } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
-import { IDisposableLocator, IPythonEnvsIterator, Locator } from '../../../base/locator';
+import { IDisposableLocator, IPythonEnvsIterator } from '../../../base/locator';
+import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import {
     getEnvironmentDirFromPath, getInterpreterPathFromDir, getPythonVersionFromPath,
 } from '../../../common/commonUtils';
@@ -30,6 +31,10 @@ function getPyenvDir(): string {
     }
 
     return pyenvDir;
+}
+
+function getPyenvVersionsDir(): string {
+    return path.join(getPyenvDir(), 'versions');
 }
 
 /**
@@ -238,7 +243,7 @@ export function parsePyenvVersion(str:string): Promise<IPyenvVersionStrings|unde
  * best effort at identifying the versions and distribution information.
  */
 async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
-    const pyenvVersionDir = path.join(getPyenvDir(), 'versions');
+    const pyenvVersionDir = getPyenvVersionsDir();
 
     const subDirs = getSubDirs(pyenvVersionDir);
     for await (const subDir of subDirs) {
@@ -293,7 +298,14 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
     }
 }
 
-class PyenvLocator extends Locator {
+class PyenvLocator extends FSWatchingLocator {
+    constructor() {
+        super(
+            getPyenvVersionsDir,
+            async () => PythonEnvKind.Pyenv,
+        );
+    }
+
     // eslint-disable-next-line class-methods-use-this
     public iterEnvs(): IPythonEnvsIterator {
         return getPyenvEnvironments();
@@ -329,7 +341,8 @@ class PyenvLocator extends Locator {
     }
 }
 
-export function createPyenvLocator(): Promise<IDisposableLocator> {
+export async function createPyenvLocator(): Promise<IDisposableLocator> {
     const locator = new PyenvLocator();
+    await locator.initialize();
     return Promise.resolve(locator);
 }

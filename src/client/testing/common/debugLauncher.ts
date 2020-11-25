@@ -52,18 +52,24 @@ export class DebugLauncher implements ITestDebugLauncher {
         if (!(await this.fs.fileExists(filename))) {
             return [];
         }
+
         try {
             const text = await this.fs.readFile(filename);
             const parsed = parse(text, [], { allowTrailingComma: true, disallowComments: false });
-            if (!parsed.version || !parsed.configurations || !Array.isArray(parsed.configurations)) {
-                throw Error('malformed launch.json');
+            if (!parsed.configurations || !Array.isArray(parsed.configurations)) {
+                throw Error('Missing field in launch.json: configurations');
+            }
+            if (!parsed.version) {
+                throw Error('Missing field in launch.json: version');
             }
             // We do not bother ensuring each item is a DebugConfiguration...
             return parsed.configurations;
         } catch (exc) {
             traceError('could not get debug config', exc);
             const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            await appShell.showErrorMessage('Could not load unit test config from launch.json');
+            await appShell.showErrorMessage(
+                'Could not load unit test config from launch.json as it is missing a field'
+            );
             return [];
         }
     }

@@ -136,30 +136,22 @@ export namespace Jupyter {
 export namespace TensorBoard {
     export const logDirectoryPrompt = localize(
         'TensorBoard.logDirectoryPrompt',
-        'Specify the TensorBoard log directory'
+        'Please select a log directory to start TensorBoard with.'
     );
     export const progressMessage = localize('TensorBoard.progressMessage', 'Starting TensorBoard session...');
-    export const installTensorBoardPrompt = localize(
-        'TensorBoard.installPrompt',
-        'The package TensorBoard is required in order to launch a TensorBoard session. Would you like to install it?'
-    );
-    export const invalidLogDirectory = localize(
-        'TensorBoard.invalidLogDirectory',
-        'Please provide a valid log directory. We cannot start a TensorBoard session without it.'
-    );
-    export const logDirectoryPlaceholder = localize('TensorBoard.logDirectoryPlaceholder', 'e.g. /runs/experiment');
     export const failedToStartSessionError = localize(
         'TensorBoard.failedToStartSessionError',
         'We failed to start a TensorBoard session due to the following error: {0}'
-    );
-    export const tensorBoardInstallRequired = localize(
-        'TensorBoard.tensorBoardInstallRequired',
-        'We cannot start a TensorBoard session without the TensorBoard package.'
     );
     export const nativeTensorBoardPrompt = localize(
         'TensorBoard.nativeTensorBoardPrompt',
         'VS Code now has native TensorBoard support. Would you like to launch TensorBoard?'
     );
+    export const usingCurrentWorkspaceFolder = localize(
+        'TensorBoard.usingCurrentWorkspaceFolder',
+        'We are using the current workspace folder as the log directory for your TensorBoard session.'
+    );
+    export const selectAFolder = localize('TensorBoard.selectAFolder', 'Select a folder');
 }
 
 export namespace LanguageService {
@@ -480,6 +472,21 @@ export namespace DebugConfigStrings {
             title: localize('debug.djangoEnterManagePyPathTitle'),
             prompt: localize('debug.djangoEnterManagePyPathPrompt'),
             invalid: localize('debug.djangoEnterManagePyPathInvalidFilePathError')
+        };
+    }
+    export namespace fastapi {
+        export const snippet = {
+            name: localize('python.snippet.launch.fastapi.label')
+        };
+        // tslint:disable-next-line:no-shadowed-variable
+        export const selectConfiguration = {
+            label: localize('debug.debugFastAPIConfigurationLabel'),
+            description: localize('debug.debugFastAPIConfigurationDescription')
+        };
+        export const enterAppPathOrNamePath = {
+            title: localize('debug.fastapiEnterAppPathOrNamePathTitle'),
+            prompt: localize('debug.fastapiEnterAppPathOrNamePathPrompt'),
+            invalid: localize('debug.fastapiEnterAppPathOrNamePathInvalidNameError')
         };
     }
     export namespace flask {

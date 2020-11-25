@@ -154,9 +154,10 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         if (this.platformService.isWindows) {
             this.debugOption(debugOptions, DebugOptions.FixFilePathCase);
         }
+        const isFastAPI = this.isDebuggingFastAPI(debugConfiguration);
         const isFlask = this.isDebuggingFlask(debugConfiguration);
         if (
-            (debugConfiguration.pyramid || isFlask) &&
+            (debugConfiguration.pyramid || isFlask || isFastAPI) &&
             debugOptions.indexOf(DebugOptions.Jinja) === -1 &&
             debugConfiguration.jinja !== false
         ) {

@@ -18,6 +18,7 @@ import { LaunchJsonCompletionProvider } from './configuration/launch.json/comple
 import { InterpreterPathCommand } from './configuration/launch.json/interpreterPathCommand';
 import { LaunchJsonUpdaterService } from './configuration/launch.json/updaterService';
 import { DjangoLaunchDebugConfigurationProvider } from './configuration/providers/djangoLaunch';
+import { FastAPILaunchDebugConfigurationProvider } from './configuration/providers/fastapiLaunch';
 import { FileLaunchDebugConfigurationProvider } from './configuration/providers/fileLaunch';
 import { FlaskLaunchDebugConfigurationProvider } from './configuration/providers/flaskLaunch';
 import { ModuleLaunchDebugConfigurationProvider } from './configuration/providers/moduleLaunch';
@@ -85,6 +86,11 @@ export function registerTypes(serviceManager: IServiceManager) {
         IDebugConfigurationProvider,
         DjangoLaunchDebugConfigurationProvider,
         DebugConfigurationType.launchDjango
+    );
+    serviceManager.addSingleton<IDebugConfigurationProvider>(
+        IDebugConfigurationProvider,
+        FastAPILaunchDebugConfigurationProvider,
+        DebugConfigurationType.launchFastAPI
     );
     serviceManager.addSingleton<IDebugConfigurationProvider>(
         IDebugConfigurationProvider,

@@ -122,6 +122,11 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
                 description: DebugConfigStrings.django.selectConfiguration.description()
             },
             {
+                label: DebugConfigStrings.fastapi.selectConfiguration.label(),
+                type: DebugConfigurationType.launchFastAPI,
+                description: DebugConfigStrings.fastapi.selectConfiguration.description()
+            },
+            {
                 label: DebugConfigStrings.flask.selectConfiguration.label(),
                 type: DebugConfigurationType.launchFlask,
                 description: DebugConfigStrings.flask.selectConfiguration.description()

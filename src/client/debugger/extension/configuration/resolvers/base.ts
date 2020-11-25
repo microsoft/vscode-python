@@ -180,6 +180,10 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         return pathMappings;
     }
 
+    protected isDebuggingFastAPI(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
+        return debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FASTAPI' ? true : false;
+    }
+
     protected isDebuggingFlask(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
         return debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK' ? true : false;
     }
@@ -195,6 +199,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
             console: debugConfiguration.console,
             hasEnvVars: typeof debugConfiguration.env === 'object' && Object.keys(debugConfiguration.env).length > 0,
             django: !!debugConfiguration.django,
+            fastapi: this.isDebuggingFastAPI(debugConfiguration),
             flask: this.isDebuggingFlask(debugConfiguration),
             hasArgs: Array.isArray(debugConfiguration.args) && debugConfiguration.args.length > 0,
             isLocalhost: this.isLocalHost(debugConfiguration.host),
