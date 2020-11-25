@@ -11,7 +11,7 @@
 // import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as vscodeImport from 'vscode';
+// import * as vscodeImport from 'vscode';
 import { JUPYTER_EXTENSION_ID } from '../../client/common/constants';
 import { openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
@@ -33,7 +33,7 @@ suite('Smoke Test: Interactive Window', () => {
         await verifyExtensionIsAvailable(JUPYTER_EXTENSION_ID);
         await initialize();
         await setAutoSaveDelayInWorkspaceRoot(1);
-        const jupyterConfig = vscode.workspace.getConfiguration('jupyter', (null as unknown) as vscodeImport.Uri);
+        const jupyterConfig = vscode.workspace.getConfiguration('jupyter', null);
         await jupyterConfig.update('alwaysTrustNotebooks', true, true);
 
         return undefined;
