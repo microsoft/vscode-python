@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { createDeferred } from './async';
+import { IDisposable } from './resourceLifecycle';
 
 type RequestID = number;
 type RunFunc = () => Promise<void>;
@@ -13,7 +14,7 @@ type NotifyFunc = () => void;
  * The key aspect is that already running or queue requests can be
  * re-used instead of creating a duplicate request.
  */
-export class BackgroundRequestLooper {
+export class BackgroundRequestLooper implements IDisposable {
     private readonly opts: {
         runDefault: RunFunc;
     };
@@ -49,6 +50,12 @@ export class BackgroundRequestLooper {
                     throw Error('no default operation provided');
                 })
         };
+    }
+
+    public async dispose(): Promise<void> {
+        if (this.started) {
+            await this.stop();
+        }
     }
 
     /**
