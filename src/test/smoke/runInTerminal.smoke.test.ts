@@ -49,7 +49,7 @@ suite('Smoke Test: Run Python File In Terminal', () => {
         }
         const textDocument = await openFile(file);
 
-        await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri)
+        await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri);
         // .then(undefined, (err) => {
         //     assert.fail(`Something went wrong: ${err}`);
         // });
