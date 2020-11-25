@@ -7,7 +7,7 @@ import * as minimatch from 'minimatch';
 import * as path from 'path';
 import { FileChangeType, watchLocationForPattern } from '../../common/platform/fileSystemWatcher';
 import { getOSType, OSType } from '../../common/utils/platform';
-import { IDisposable } from '../../common/utils/resourceLifecycle';
+import { Disposables, IDisposable } from '../../common/utils/resourceLifecycle';
 
 const [executable, binName] = getOSType() === OSType.Windows ? ['python.exe', 'Scripts'] : ['python', 'bin'];
 
@@ -20,28 +20,35 @@ export function watchLocationForPythonBinaries(
     baseDir: string,
     callback: (type: FileChangeType, absPath: string) => void,
     executableBaseGlob: string = executable,
-): IDisposable[] {
+): IDisposable {
     if (executableBaseGlob.includes(path.sep)) {
         throw new Error('Glob basename contains invalid characters');
     }
-    const patterns = [executableBaseGlob, `*/${executableBaseGlob}`, `*/${binName}/${executableBaseGlob}`];
-    const disposables: IDisposable[] = [];
-    for (const pattern of patterns) {
-        disposables.push(
-            watchLocationForPattern(baseDir, pattern, (type: FileChangeType, e: string) => {
-                const isMatch = minimatch(
-                    path.basename(e),
-                    executableBaseGlob,
-                    { nocase: getOSType() === OSType.Windows },
-                );
-                if (!isMatch) {
-                    // When deleting the file for some reason path to all directories leading up to python are reported
-                    // Skip those events
-                    return;
-                }
-                callback(type, e);
-            }),
+    function callbackClosure(type: FileChangeType, e: string) {
+        const isMatch = minimatch(
+            path.basename(e),
+            executableBaseGlob,
+            { nocase: getOSType() === OSType.Windows },
         );
-    }
-    return disposables;
+        if (!isMatch) {
+            // When deleting the file for some reason path to all directories leading up to python are reported
+            // Skip those events
+            return;
+        }
+        callback(type, e);
+    };
+
+    return new Disposables(
+        ...[
+            executableBaseGlob,
+            `*/${executableBaseGlob}`,
+            `*/${binName}/${executableBaseGlob}`,
+        ].map(
+            (pattern) => watchLocationForPattern(
+                baseDir,
+                pattern,
+                callbackClosure,
+            ),
+        ),
+    );
 }

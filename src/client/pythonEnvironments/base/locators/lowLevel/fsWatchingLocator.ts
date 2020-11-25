@@ -47,23 +47,25 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
     }
 
     private startWatcher(root: string): void {
-        const disposables = watchLocationForPythonBinaries(
-            root,
-            async (type: FileChangeType, executable: string) => {
-                if (type === FileChangeType.Created) {
-                    if (this.opts.delayOnCreated !== undefined) {
-                        // Note detecting kind of env depends on the file structure around the
-                        // executable, so we need to wait before attempting to detect it.
-                        await sleep(this.opts.delayOnCreated);
-                    }
+        const callback = async (type: FileChangeType, executable: string) => {
+            if (type === FileChangeType.Created) {
+                if (this.opts.delayOnCreated !== undefined) {
+                    // Note detecting kind of env depends on the file structure around the
+                    // executable, so we need to wait before attempting to detect it.
+                    await sleep(this.opts.delayOnCreated);
                 }
-                // Fetching kind after deletion normally fails because the file structure around the
-                // executable is no longer available, so ignore the errors.
-                const kind = await this.getKind(executable).catch(() => undefined);
-                this.emitter.fire({ type, kind });
-            },
-            this.opts.executableBaseGlob,
+            }
+            // Fetching kind after deletion normally fails because the file structure around the
+            // executable is no longer available, so ignore the errors.
+            const kind = await this.getKind(executable).catch(() => undefined);
+            this.emitter.fire({ type, kind });
+        };
+        this.addResources(
+            watchLocationForPythonBinaries(
+                root,
+                callback,
+                this.opts.executableBaseGlob,
+            ),
         );
-        this.addResources(...disposables);
     }
 }
