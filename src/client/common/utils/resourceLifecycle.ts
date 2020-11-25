@@ -40,6 +40,10 @@ export async function disposeAll(disposables: IDisposable[]): Promise<void> {
 export class Disposables implements IDisposables {
     private disposables: IDisposable[] = [];
 
+    constructor(...disposables: IDisposable[]) {
+        this.disposables.push(...disposables);
+    }
+
     public push(...disposables: IDisposable[]) {
         this.disposables.push(...disposables);
     }
