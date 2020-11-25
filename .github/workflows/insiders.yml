@@ -3,7 +3,7 @@ name: Insiders Build
 on:
   push:
     branches:
-      - 14815-*
+      - main
 
 env:
   NODE_VERSION: 12.15.0
@@ -24,7 +24,7 @@ jobs:
   build-vsix:
     name: Build VSIX
     runs-on: ubuntu-latest
-    # if: github.repository == 'microsoft/vscode-python'
+    if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -112,18 +112,16 @@ jobs:
     defaults:
       run:
         working-directory: ${{env.special-working-directory}}
-    # if: github.repository == 'microsoft/vscode-python'
+    if: github.repository == 'microsoft/vscode-python'
     strategy:
       fail-fast: false
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        # os: [ubuntu-latest, windows-latest]
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
         python: [2.7, 3.9]
-        test-suite: [ts-unit]
-        # test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
+        test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -454,8 +452,8 @@ jobs:
   coverage:
     name: Coverage reports upload
     runs-on: ubuntu-latest
-    # if: github.repository == 'microsoft/vscode-python'
-    needs: [tests]
+    if: github.repository == 'microsoft/vscode-python'
+    needs: [tests, smoke-tests]
     defaults:
       run:
         working-directory: ${{env.special-working-directory}}
