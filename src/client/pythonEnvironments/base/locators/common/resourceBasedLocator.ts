@@ -28,8 +28,9 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
 
     public async* iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         await this.ensureResourcesReady();
-        await this.ensureWatchersReady();
         yield* this.doIterEnvs(query);
+        // There is not need to wait for the watchers to get started.
+        this.ensureWatchersReady().ignoreErrors();
     }
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
