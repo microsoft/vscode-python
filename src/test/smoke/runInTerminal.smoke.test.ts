@@ -8,11 +8,13 @@
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as vscode from 'vscode';
+// import * as vscode from 'vscode';
 import { openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
-// import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
+
+// tslint:disable-next-line: no-var-requires no-require-imports
+const vscode = require('vscode') as typeof import('vscode');
 
 const testTimeout = 30 * 1_000;
 
@@ -22,7 +24,7 @@ suite('Smoke Test: Run Python File In Terminal', () => {
             return this.skip();
         }
         await initialize();
-        await setAutoSaveDelayInWorkspaceRoot(1);
+        // await setAutoSaveDelayInWorkspaceRoot(1);
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -47,9 +49,6 @@ suite('Smoke Test: Run Python File In Terminal', () => {
             await fs.unlink(outputFile);
         }
         const textDocument = await openFile(file);
-
-        // Wait here
-        // await sleep(1_000);
 
         await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri).then(undefined, (err) => {
             assert.fail(`Unhandled failure:  ${err}`);
