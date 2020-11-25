@@ -45,7 +45,7 @@ suite('Environment Info cache', () => {
     test('`reset` reads from persistent storage', async () => {
         const envsCache = new PythonEnvInfoCache(getGlobalPersistentStore(), allEnvsComplete);
 
-        await envsCache.reset();
+        await envsCache.clearAndReloadFromStorage();
 
         assert.equal(loadedValues, undefined);
     });

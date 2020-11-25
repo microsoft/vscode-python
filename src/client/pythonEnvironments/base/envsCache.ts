@@ -144,7 +144,7 @@ export class PythonEnvInfoCache implements IEnvsCache {
         return this.inMemory?.filter((info) => areSameEnv(info, query));
     }
 
-    public async reset(): Promise<void> {
+    public async clearAndReloadFromStorage(): Promise<void> {
         const envs = await this.persistentStorage.load();
         if (envs === undefined) {
             this.inMemory = undefined;
@@ -170,6 +170,6 @@ export async function getPersistentCache(
     isComplete: CompleteEnvInfoFunction,
 ): Promise<PythonEnvInfoCache> {
     const cache = new PythonEnvInfoCache(storage, isComplete);
-    await cache.reset();
+    await cache.clearAndReloadFromStorage();
     return cache;
 }
