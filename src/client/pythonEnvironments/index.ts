@@ -67,7 +67,7 @@ export async function activate(
     // Registration with VS Code will go here.
 
     return {
-        finished: Promise.resolve(),
+        fullyReady: Promise.resolve(),
     };
 }
 

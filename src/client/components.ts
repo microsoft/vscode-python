@@ -26,12 +26,12 @@ export type ExtensionState = {
  * may be used by the rest of the extension.
  *
  * If the component started any non-critical activation-related
- * operations during activation then the "finished" property will only
+ * operations during activation then the "fullyReady" property will only
  * resolve once all those operations complete.
  *
  * The component may have also started long-running background helpers.
  * Those are not exposed here.
  */
 export type ActivationResult = {
-    finished: Promise<void>;
+    fullyReady: Promise<void>;
 };

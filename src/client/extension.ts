@@ -107,7 +107,7 @@ async function activateUnsafe(
 
     // Then we finish activating.
     const componentsActivated = await activateComponents(ext, components);
-    const nonBlocking = componentsActivated.map((r) => r.finished);
+    const nonBlocking = componentsActivated.map((r) => r.fullyReady);
     const activationPromise = (async () => {
         await Promise.all(nonBlocking);
     })();

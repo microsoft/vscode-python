@@ -74,6 +74,15 @@ export async function activateComponents(
     ext: ExtensionState,
     components: Components
 ): Promise<ActivationResult[]> {
+    // Note that each activation returns a promise that resolves
+    // when that activation completes.  However, it might have started
+    // some non-critical background operations that do not block
+    // extension activation but do block use of the extension "API".
+    // Each component activation can't just resolve an "inner" promise
+    // for those non-critical operations because `await` (and
+    // `Promise.all()`, etc.) will flatten nested promises.  Thus
+    // activation resolves `ActivationResult`, which can safely wrap
+    // the "inner" promise.
     const promises: Promise<ActivationResult>[] = [
         pythonEnvironments.activate(components.pythonEnvs),
         // These will go away eventually.
@@ -221,5 +230,5 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
 
-    return { finished: activationPromise };
+    return { fullyReady: activationPromise };
 }
