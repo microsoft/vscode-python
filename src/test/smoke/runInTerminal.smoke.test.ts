@@ -3,12 +3,11 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-this
+// tslint:disable:no-invalid-this no-single-line-block-comment
+/* eslint-disable global-require */
 
-// import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-// import * as vscode from 'vscode';
 import { openFile, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
@@ -24,7 +23,6 @@ suite('Smoke Test: Run Python File In Terminal', () => {
             return this.skip();
         }
         await initialize();
-        // await setAutoSaveDelayInWorkspaceRoot(1);
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -51,9 +49,6 @@ suite('Smoke Test: Run Python File In Terminal', () => {
         const textDocument = await openFile(file);
 
         await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri);
-        // .then(undefined, (err) => {
-        //     assert.fail(`Unhandled failure:  ${err}`);
-        // });
 
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, testTimeout, `"${outputFile}" file not created`);

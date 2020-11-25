@@ -3,17 +3,21 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-invalid-this no-any
+// tslint:disable:no-invalid-this no-single-line-block-comment
+/* eslint-disable global-require */
 
 import * as assert from 'assert';
 import { expect } from 'chai';
 import * as path from 'path';
-import * as vscode from 'vscode';
+import { Location } from 'vscode'; // Just for the type
 import { updateSetting } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { openFileAndWaitForLS } from './common';
+
+// tslint:disable-next-line: no-var-requires no-require-imports
+const vscode = require('vscode') as typeof import('vscode');
 
 const fileDefinitions = path.join(
     EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -25,7 +29,6 @@ const fileDefinitions = path.join(
 
 suite('Smoke Test: Language Server', () => {
     suiteSetup(async function () {
-        this.skip();
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
@@ -57,15 +60,11 @@ suite('Smoke Test: Language Server', () => {
         const textDocument = await openFileAndWaitForLS(fileDefinitions);
         let tested = false;
         for (let i = 0; i < 5; i += 1) {
-            const locations = await vscode.commands
-                .executeCommand<vscode.Location[]>('vscode.executeDefinitionProvider', textDocument.uri, startPosition)
-                .then(
-                    // Return the result as-is
-                    (result: vscode.Location[] | undefined) => result,
-                    (err) => {
-                        assert.fail(`Unhandled failure:  ${err}`);
-                    }
-                );
+            const locations = await vscode.commands.executeCommand<Location[]>(
+                'vscode.executeDefinitionProvider',
+                textDocument.uri,
+                startPosition
+            );
             if (locations && locations.length > 0) {
                 expect(locations![0].uri.fsPath).to.contain(path.basename(fileDefinitions));
                 tested = true;

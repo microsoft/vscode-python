@@ -3,15 +3,11 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-this
-
-// tslint:disable-next-line: no-single-line-block-comment
+// tslint:disable:no-invalid-this no-single-line-block-comment
 /* eslint-disable global-require */
 
-// import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-// import * as vscodeImport from 'vscode';
 import { JUPYTER_EXTENSION_ID } from '../../client/common/constants';
 import { openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
@@ -62,9 +58,7 @@ suite('Smoke Test: Interactive Window', () => {
         await sleep(1_000);
 
         await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri);
-        // .then(undefined, (err) => {
-        //     assert.fail(`Unhandled failure:  ${err}`);
-        // });
+
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
     }).timeout(timeoutForCellToRun);
@@ -94,9 +88,7 @@ suite('Smoke Test: Interactive Window', () => {
         await sleep(15_000);
 
         await vscode.commands.executeCommand<void>('jupyter.notebookeditor.runallcells');
-        // .then(undefined, (err) => {
-        //     assert.fail(`Unhandled failure:  ${err}`);
-        // });
+
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
 
