@@ -400,7 +400,7 @@
                     "command": "python.execInTerminal-icon",
                     "title": "%python.command.python.execInTerminal.title%",
                     "group": "navigation",
-                    "when": "resourceLangId == python && python.showPlayIcon"
+                    "when": "resourceLangId == python && python.showPlayIcon && !isInDiffEditor"
                 }
             ],
             "explorer/context": [
