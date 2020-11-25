@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
-import { sleep } from '../../../../common/utils/async';
-import { disposeAll, IDisposable } from '../../../../common/utils/resourceLifecycle';
+import { createDeferred, Deferred, sleep } from '../../../../common/utils/async';
+import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator';
@@ -15,7 +15,11 @@ import { IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator'
  * Subclasses can call `this.emitter.fire()` * to emit events.
  */
 export abstract class FSWatchingLocator extends Locator {
-    private disposables: IDisposable[] | undefined;
+    private readonly disposables = new Disposables();
+
+    // This will be set only once we have to create necessary resources
+    // and resolves once those resources are ready.
+    private ready?: Deferred<void>;
 
     constructor(
         /**
@@ -41,31 +45,39 @@ export abstract class FSWatchingLocator extends Locator {
     }
 
     public async dispose(): Promise<void> {
-        if (this.disposables !== undefined) {
-            // tslint:disable-next-line:no-this-assignment
-            const { disposables } = this;
-            this.disposables = undefined;
-            await disposeAll(disposables);
-        }
+        await this.disposables.dispose();
     }
 
     public async* iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        if (this.disposables === undefined) {
-            this.disposables = await this.startWatchers();
-        }
+        await this.ensureResourcesReady();
         yield* this.doIterEnvs(query);
     }
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        if (this.disposables === undefined) {
-            this.disposables = await this.startWatchers();
-        }
+        await this.ensureResourcesReady();
         return this.doResolveEnv(env);
     }
 
+    /**
+     * The subclass implementation of iterEnvs().
+     */
     protected abstract doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator;
 
+    /**
+     * The subclass implementation of resolveEnv().
+     */
     protected abstract async doResolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
+
+    private async ensureResourcesReady(): Promise<void> {
+        if (this.ready !== undefined) {
+            await this.ready.promise;
+            return;
+        }
+        this.ready = createDeferred<void>();
+        const disposables = await this.startWatchers();
+        this.disposables.push(...disposables);
+        this.ready.resolve();
+    }
 
     private async startWatchers(): Promise<IDisposable[]> {
         let roots = await this.getRoots();
