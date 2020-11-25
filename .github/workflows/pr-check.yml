@@ -503,8 +503,8 @@ jobs:
 
       - name: Move codecov.yml to root
         run: |
-          mkdir ${{GITHUB_WORKSPACE}}/.github
-          mv .github/codecov.yml ${{GITHUB_WORKSPACE}}/.github
+          mkdir $GITHUB_WORKSPACE/.github
+          mv .github/codecov.yml $GITHUB_WORKSPACE/.github
 
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1
