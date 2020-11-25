@@ -39,7 +39,6 @@ import {
     Locators,
 } from '../../base/locators';
 import { LazyResourceBasedLocator } from '../../base/locators/common/resourceBasedLocator';
-import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../base/watcher';
 import { PythonEnvironment } from '../../info';
 import { isHiddenInterpreter } from './services/interpreterFilter';
 import { GetInterpreterLocatorOptions } from './types';
@@ -95,10 +94,6 @@ type WatchRootsFunc = (args: WatchRootsArgs) => IDisposable;
  * The factories are used to produce the locators for each workspace folder.
  */
 export class WorkspaceLocators extends LazyResourceBasedLocator {
-    public readonly onChanged: Event<PythonEnvsChangedEvent>;
-
-    private readonly watcher = new PythonEnvsWatcher();
-
     private readonly locators: Record<RootURI, [ILocator, IDisposable]> = {};
 
     private readonly roots: Record<RootURI, Uri> = {};
@@ -108,7 +103,6 @@ export class WorkspaceLocators extends LazyResourceBasedLocator {
         private readonly factories: WorkspaceLocatorFactory[],
     ) {
         super();
-        this.onChanged = this.watcher.onChanged;
     }
 
     public async dispose(): Promise<void> {
@@ -196,13 +190,14 @@ export class WorkspaceLocators extends LazyResourceBasedLocator {
         this.locators[key] = [locator, disposables];
         this.roots[key] = root;
         // Hook up the watchers.
-        const listener = locator.onChanged((e) => {
-            if (e.searchLocation === undefined) {
-                e.searchLocation = root;
-            }
-            this.emitter.fire(e);
-        });
-        disposables.push(listener);
+        disposables.push(
+            locator.onChanged((e) => {
+                if (e.searchLocation === undefined) {
+                    e.searchLocation = root;
+                }
+                this.emitter.fire(e);
+            }),
+        );
     }
 
     private removeRoot(root: Uri): void {

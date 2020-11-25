@@ -38,6 +38,7 @@ import {
 } from '../../../../client/pythonEnvironments/discovery/locators';
 import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import {
+    assertSameEnvs,
     createLocatedEnv,
     createNamedEnv,
     getEnvs,
@@ -80,13 +81,13 @@ class WorkspaceFolders {
     }
 }
 
-function ensureActivated(locators: WorkspaceLocators): void {
-    getEnvs(locators.iterEnvs()).ignoreErrors();
+async function ensureActivated(locators: WorkspaceLocators): Promise<void> {
+    await getEnvs(locators.iterEnvs());
 }
 
 suite('WorkspaceLocators', () => {
     suite('onChanged', () => {
-        test('no roots', () => {
+        test('no roots', async () => {
             const expected: PythonEnvsChangedEvent[] = [];
             const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const loc1 = new SimpleLocator([env1]);
@@ -97,7 +98,7 @@ suite('WorkspaceLocators', () => {
                     () => [loc1],
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
             const events: PythonEnvsChangedEvent[] = [];
             locators.onChanged((e) => events.push(e));
             const event1: PythonEnvsChangedEvent = { kind: PythonEnvKind.Unknown };
@@ -107,13 +108,13 @@ suite('WorkspaceLocators', () => {
             expect(events).to.deep.equal(expected);
         });
 
-        test('no factories', () => {
+        test('no factories', async () => {
             const expected: PythonEnvsChangedEvent[] = [];
             const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const loc1 = new SimpleLocator([env1]);
             const folders = new WorkspaceFolders(['foo', 'bar']);
             const locators = new WorkspaceLocators(folders.getRootsWatcher(), []);
-            ensureActivated(locators);
+            await ensureActivated(locators);
             const events: PythonEnvsChangedEvent[] = [];
             locators.onChanged((e) => events.push(e));
             const event1: PythonEnvsChangedEvent = { kind: PythonEnvKind.Unknown };
@@ -123,7 +124,7 @@ suite('WorkspaceLocators', () => {
             expect(events).to.deep.equal(expected);
         });
 
-        test('consolidates events across roots', () => {
+        test('consolidates events across roots', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
             const expected: PythonEnvsChangedEvent[] = [
@@ -156,7 +157,7 @@ suite('WorkspaceLocators', () => {
                     (r) => (r === root1 ? [loc6] : []),
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
             const events: PythonEnvsChangedEvent[] = [];
             locators.onChanged((e) => events.push(e));
 
@@ -170,7 +171,7 @@ suite('WorkspaceLocators', () => {
             expect(events).to.deep.equal(expected);
         });
 
-        test('does not identify roots during init', () => {
+        test('does not identify roots during init', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
             // Force r._formatted to be set.
@@ -180,19 +181,19 @@ suite('WorkspaceLocators', () => {
             const events: PythonEnvsChangedEvent[] = [];
             locators.onChanged((e) => events.push(e));
 
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             expect(events).to.deep.equal([]);
         });
 
-        test('identifies added roots', () => {
+        test('identifies added roots', async () => {
             const added = Uri.file('baz');
             const expected: PythonEnvsChangedEvent[] = [
                 { searchLocation: added },
             ];
             const folders = new WorkspaceFolders(['foo', 'bar']);
             const locators = new WorkspaceLocators(folders.getRootsWatcher(), []);
-            ensureActivated(locators);
+            await ensureActivated(locators);
             const events: PythonEnvsChangedEvent[] = [];
             locators.onChanged((e) => events.push(e));
 
@@ -201,7 +202,7 @@ suite('WorkspaceLocators', () => {
             expect(events).to.deep.equal(expected);
         });
 
-        test('identifies removed roots', () => {
+        test('identifies removed roots', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
             // Force r._formatted to be set.
@@ -211,7 +212,7 @@ suite('WorkspaceLocators', () => {
             ];
             const folders = new WorkspaceFolders([root1, root2]);
             const locators = new WorkspaceLocators(folders.getRootsWatcher(), []);
-            ensureActivated(locators);
+            await ensureActivated(locators);
             const events: PythonEnvsChangedEvent[] = [];
             locators.onChanged((e) => events.push(e));
 
@@ -220,7 +221,7 @@ suite('WorkspaceLocators', () => {
             expect(events).to.deep.equal(expected);
         });
 
-        test('does not emit events from removed roots', () => {
+        test('does not emit events from removed roots', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
             const expected: PythonEnvsChangedEvent[] = [
@@ -242,7 +243,7 @@ suite('WorkspaceLocators', () => {
                     (r) => (r === root1 ? [loc1] : [loc2]),
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
             const events: PythonEnvsChangedEvent[] = [];
             locators.onChanged((e) => events.push(e));
 
@@ -250,7 +251,7 @@ suite('WorkspaceLocators', () => {
             loc2.fire(event2);
             folders.removed.fire(root2);
             loc1.fire(event3);
-            loc2.fire(event4);
+            loc2.fire(event4); // This one is ignored.
 
             expect(events).to.deep.equal(expected);
         });
@@ -268,7 +269,7 @@ suite('WorkspaceLocators', () => {
                     () => [loc1],
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const iterators = locators.iterEnvs();
             const envs = await getEnvs(iterators);
@@ -280,7 +281,7 @@ suite('WorkspaceLocators', () => {
             const expected: PythonEnvInfo[] = [];
             const folders = new WorkspaceFolders(['foo', 'bar']);
             const locators = new WorkspaceLocators(folders.getRootsWatcher(), []);
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const iterators = locators.iterEnvs();
             const envs = await getEnvs(iterators);
@@ -299,7 +300,7 @@ suite('WorkspaceLocators', () => {
                     () => [loc1],
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const iterators = locators.iterEnvs();
             const envs = await getEnvs(iterators);
@@ -319,12 +320,12 @@ suite('WorkspaceLocators', () => {
                     () => [loc1],
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const iterators = locators.iterEnvs();
             const envs = await getEnvs(iterators);
 
-            expect(envs).to.deep.equal(expected);
+            assertSameEnvs(envs, expected);
         });
 
         test('empty locator ignored', async () => {
@@ -342,12 +343,12 @@ suite('WorkspaceLocators', () => {
                     () => [loc1, loc2, loc3],
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const iterators = locators.iterEnvs();
             const envs = await getEnvs(iterators);
 
-            expect(envs).to.deep.equal(expected);
+            assertSameEnvs(envs, expected);
         });
 
         test('consolidates envs across roots', async () => {
@@ -374,12 +375,12 @@ suite('WorkspaceLocators', () => {
                     (r) => (r === root1 ? [loc2] : [loc4]),
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const iterators = locators.iterEnvs();
             const envs = await getEnvs(iterators);
 
-            expect(envs).to.deep.equal(expected);
+            assertSameEnvs(envs, expected);
         });
 
         test('query matches a root', async () => {
@@ -402,13 +403,13 @@ suite('WorkspaceLocators', () => {
                     (r) => (r === root1 ? [loc2] : [loc4]),
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
             const query = { searchLocations: { roots: [root1] } };
 
             const iterators = locators.iterEnvs(query);
             const envs = await getEnvs(iterators);
 
-            expect(envs).to.deep.equal(expected);
+            assertSameEnvs(envs, expected);
         });
 
         test('query matches all roots', async () => {
@@ -431,13 +432,13 @@ suite('WorkspaceLocators', () => {
                     (r) => (r === root1 ? [loc2] : [loc4]),
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
             const query = { searchLocations: { roots: [root1, root2] } };
 
             const iterators = locators.iterEnvs(query);
             const envs = await getEnvs(iterators);
 
-            expect(envs).to.deep.equal(expected);
+            assertSameEnvs(envs, expected);
         });
 
         test('query does not match a root', async () => {
@@ -459,7 +460,7 @@ suite('WorkspaceLocators', () => {
                     (r) => (r === root1 ? [loc2] : [loc4]),
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
             const query = { searchLocations: { roots: [Uri.file('baz')] } };
 
             const iterators = locators.iterEnvs(query);
@@ -488,12 +489,12 @@ suite('WorkspaceLocators', () => {
                     (r) => (r === root1 ? [loc2] : [loc4]),
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const iterators = locators.iterEnvs({ kinds: [PythonEnvKind.Unknown] });
             const envs = await getEnvs(iterators);
 
-            expect(envs).to.deep.equal(expected);
+            assertSameEnvs(envs, expected);
         });
 
         test('iterate out of order', async () => {
@@ -520,12 +521,12 @@ suite('WorkspaceLocators', () => {
                     (r) => (r === root1 ? [loc2] : [loc4]),
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const iterators = locators.iterEnvs();
             const envs = await getEnvs(iterators);
 
-            expect(envs).to.deep.equal(expected);
+            assertSameEnvs(envs, expected);
         });
 
         test('iterate intermingled', async () => {
@@ -575,12 +576,12 @@ suite('WorkspaceLocators', () => {
                     (r) => (r === root1 ? [loc2] : [loc4]),
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const iterator = locators.iterEnvs();
             const envs = await getEnvs(iterator);
 
-            expect(envs).to.deep.equal(expected);
+            assertSameEnvs(envs, expected);
         });
 
         test('respects roots set during init', async () => {
@@ -611,7 +612,7 @@ suite('WorkspaceLocators', () => {
             const iterator = locators.iterEnvs();
             const envs = await getEnvs(iterator);
 
-            expect(envs).to.deep.equal(expected);
+            assertSameEnvs(envs, expected);
         });
 
         test('respects added roots', async () => {
@@ -638,7 +639,7 @@ suite('WorkspaceLocators', () => {
                     (r) => (r === root1 ? [loc2] : [loc4]),
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const iteratorBefore = locators.iterEnvs();
             const envsBefore = await getEnvs(iteratorBefore);
@@ -676,7 +677,7 @@ suite('WorkspaceLocators', () => {
                     (r) => (r === root1 ? [loc2] : [loc4]),
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const iteratorBefore = locators.iterEnvs();
             const envsBefore = await getEnvs(iteratorBefore);
@@ -684,8 +685,8 @@ suite('WorkspaceLocators', () => {
             const iteratorAfter = locators.iterEnvs();
             const envsAfter = await getEnvs(iteratorAfter);
 
-            expect(envsBefore).to.deep.equal(expectedBefore);
-            expect(envsAfter).to.deep.equal(expectedAfter);
+            assertSameEnvs(envsBefore, expectedBefore);
+            assertSameEnvs(envsAfter, expectedAfter);
         });
     });
 
@@ -707,7 +708,7 @@ suite('WorkspaceLocators', () => {
                     () => [loc1],
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const resolved = await locators.resolveEnv(env1);
 
@@ -718,7 +719,7 @@ suite('WorkspaceLocators', () => {
             const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const folders = new WorkspaceFolders(['foo', 'bar']);
             const locators = new WorkspaceLocators(folders.getRootsWatcher(), []);
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const resolved = await locators.resolveEnv(env1);
 
@@ -736,7 +737,7 @@ suite('WorkspaceLocators', () => {
                     () => [loc1],
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const resolved = await locators.resolveEnv(env1);
 
@@ -755,7 +756,7 @@ suite('WorkspaceLocators', () => {
                     () => [loc1],
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const resolved = await locators.resolveEnv(env1);
 
@@ -776,7 +777,7 @@ suite('WorkspaceLocators', () => {
                     () => [loc1, loc2],
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const resolved = await locators.resolveEnv(env1);
 
@@ -798,7 +799,7 @@ suite('WorkspaceLocators', () => {
                     () => [loc1, loc2],
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const resolved = await locators.resolveEnv(env1);
 
@@ -819,7 +820,7 @@ suite('WorkspaceLocators', () => {
                     () => [loc1, loc2],
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const resolved = await locators.resolveEnv(env1);
 
@@ -842,7 +843,7 @@ suite('WorkspaceLocators', () => {
                     (r) => (r === root1 ? [loc1] : [loc2]),
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const resolved = await locators.resolveEnv(env1);
 
@@ -866,7 +867,7 @@ suite('WorkspaceLocators', () => {
                     (r) => (r === root1 ? [loc1] : [loc2]),
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const resolved = await locators.resolveEnv(env1);
 
@@ -890,7 +891,7 @@ suite('WorkspaceLocators', () => {
                     (r) => (r === root1 ? [loc1] : [loc2]),
                 ],
             );
-            ensureActivated(locators);
+            await ensureActivated(locators);
 
             const resolved = await locators.resolveEnv(env1);
 
