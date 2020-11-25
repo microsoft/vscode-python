@@ -71,12 +71,12 @@ export class CachingLocator extends LazyResourceBasedLocator {
             runDefault: null,
         });
         looper.start();
-        this.addResources(looper);
+        this.addResource(looper);
 
         // We add the listener only after its clear that we are about
         // to ask for envs from the wrapped locator.
         const listener = this.locator.onChanged((event) => this.ensureCurrentRefresh(looper, event));
-        this.addResources(listener);
+        this.addResource(listener);
 
         // We assume that `getAllEnvs()` is cheap enough that calling
         // it again in here is not a problem.

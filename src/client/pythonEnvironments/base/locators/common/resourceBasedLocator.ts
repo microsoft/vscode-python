@@ -58,8 +58,8 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
      * As a convenience, any resources returned from that method are
      * automatically tracked.
      */
-    protected addResources(...resources: Resource[]): void {
-        this.disposables.push(...resources);
+    protected addResource(res: Resource): void {
+        this.disposables.push(res);
     }
 
     /**
@@ -78,7 +78,7 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
         this.ready = createDeferred<void>();
         const resources = await this.initResources();
         if (Array.isArray(resources)) {
-            this.addResources(...resources);
+            resources.forEach((res) => this.addResource(res));
         }
         this.ready.resolve();
     }

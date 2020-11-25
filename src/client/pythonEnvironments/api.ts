@@ -40,6 +40,6 @@ export class PythonEnvironments extends LazyResourceBasedLocator {
     protected async initResources(): Promise<void> {
         this.locators = await this.getLocators();
         const listener = this.locators.onChanged((event) => this.watcher.fire(event));
-        this.addResources(listener);
+        this.addResource(listener);
     }
 }

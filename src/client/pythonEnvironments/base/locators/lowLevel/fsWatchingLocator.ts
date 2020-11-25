@@ -60,7 +60,7 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
             const kind = await this.getKind(executable).catch(() => undefined);
             this.emitter.fire({ type, kind });
         };
-        this.addResources(
+        this.addResource(
             watchLocationForPythonBinaries(
                 root,
                 callback,

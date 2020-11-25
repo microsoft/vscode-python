@@ -64,7 +64,7 @@ export class CachingLocatorWrapper extends LazyResourceBasedLocator {
                     .ignoreErrors();
             }
         });
-        this.addResources(listener);
+        this.addResource(listener);
 
         // Populate the cache with initial data.
         await this.refresh();

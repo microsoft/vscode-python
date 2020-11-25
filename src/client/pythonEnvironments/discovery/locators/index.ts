@@ -174,7 +174,7 @@ export class WorkspaceLocators extends LazyResourceBasedLocator {
                 this.emitter.fire({ searchLocation: root });
             },
         });
-        this.addResources(disposable);
+        this.addResource(disposable);
     }
 
     private addRoot(root: Uri): void {
