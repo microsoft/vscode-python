@@ -36,7 +36,7 @@ export function watchLocationForPythonBinaries(
             return;
         }
         callback(type, e);
-    };
+    }
 
     return new Disposables(
         ...[
