@@ -26,6 +26,8 @@ export class CachingLocator extends LazyResourceBasedLocator {
 
     private readonly watcher = new PythonEnvsWatcher();
 
+    private handleOnChanged?: (event: PythonEnvsChangedEvent) => void;
+
     constructor(
         private readonly cache: IEnvsCache,
         private readonly locator: ILocator,
@@ -73,16 +75,18 @@ export class CachingLocator extends LazyResourceBasedLocator {
         looper.start();
         this.addResource(looper);
 
-        // We add the listener only after its clear that we are about
-        // to ask for envs from the wrapped locator.
-        const listener = this.locator.onChanged((event) => this.ensureCurrentRefresh(looper, event));
-        this.addResource(listener);
+        this.handleOnChanged = (event) => this.ensureCurrentRefresh(looper, event);
 
         // We assume that `getAllEnvs()` is cheap enough that calling
         // it again in here is not a problem.
         if (this.cache.getAllEnvs() === undefined) {
             await this.ensureRecentRefresh(looper);
         }
+    }
+
+    protected async initWatchers(): Promise<void> {
+        const listener = this.locator.onChanged((event) => this.handleOnChanged!(event));
+        this.addResource(listener);
     }
 
     /**

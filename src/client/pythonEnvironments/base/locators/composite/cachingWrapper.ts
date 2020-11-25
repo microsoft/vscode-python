@@ -50,6 +50,11 @@ export class CachingLocatorWrapper extends LazyResourceBasedLocator {
     }
 
     protected async initResources(): Promise<void> {
+        // Populate the cache with initial data.
+        await this.refresh();
+    }
+
+    protected async initWatchers(): Promise<void> {
         const listener = this.wrapped.onChanged((event) => {
             // Refresh the cache in the background.
             if (this.refreshing) {
@@ -65,16 +70,13 @@ export class CachingLocatorWrapper extends LazyResourceBasedLocator {
             }
         });
         this.addResource(listener);
-
-        // Populate the cache with initial data.
-        await this.refresh();
     }
 
     /**
      * Update the cache using the values iterated from the wrapped locator.
      */
     private async refresh(
-        event: PythonEnvsChangedEvent = {},
+        event?: PythonEnvsChangedEvent,
     ): Promise<void> {
         if (this.refreshing !== undefined) {
             await this.refreshing;
@@ -88,7 +90,7 @@ export class CachingLocatorWrapper extends LazyResourceBasedLocator {
         const refreshed = await getFinalEnvs(iterator);
         // Handle changed data.
         const updated = this.cache.setEnvs(refreshed);
-        if (updated) {
+        if (updated && event !== undefined) {
             this.watcher.fire(event);
         }
 

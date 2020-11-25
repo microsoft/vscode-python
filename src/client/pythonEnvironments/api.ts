@@ -6,7 +6,7 @@ import { PythonEnvInfo } from './base/info';
 import {
     ILocator, IPythonEnvsIterator, PythonLocatorQuery,
 } from './base/locator';
-import { LazyResourceBasedLocator } from './base/locators/common/resourceBasedLocator';
+import { LazyResourceBasedLocator, Resource } from './base/locators/common/resourceBasedLocator';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from './base/watcher';
 
 /**
@@ -23,23 +23,30 @@ export class PythonEnvironments extends LazyResourceBasedLocator {
 
     constructor(
         // These are factories for the sub-components the full component is composed of:
-        private readonly getLocators: () => Promise<ILocator>,
+        private readonly getLocators: () => Promise<ILocator & Partial<Resource>>,
     ) {
         super();
         this.onChanged = this.watcher.onChanged;
     }
 
-    public async* doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+    protected async* doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         yield* this.locators!.iterEnvs(query);
     }
 
-    public async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+    protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         return this.locators!.resolveEnv(env);
     }
 
     protected async initResources(): Promise<void> {
-        this.locators = await this.getLocators();
-        const listener = this.locators.onChanged((event) => this.watcher.fire(event));
+        const locators = await this.getLocators();
+        this.locators = locators;
+        if (locators.dispose !== undefined) {
+            this.addResource(locators as Resource);
+        }
+    }
+
+    protected async initWatchers(): Promise<void> {
+        const listener = this.locators!.onChanged((event) => this.watcher.fire(event));
         this.addResource(listener);
     }
 }

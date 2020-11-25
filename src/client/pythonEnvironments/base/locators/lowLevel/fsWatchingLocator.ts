@@ -37,8 +37,8 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
         super();
     }
 
-    protected async initResources(): Promise<void> {
-        // Start the watchers.
+    protected async initWatchers(): Promise<void> {
+        // Start the FS watchers.
         let roots = await this.getRoots();
         if (typeof roots === 'string') {
             roots = [roots];

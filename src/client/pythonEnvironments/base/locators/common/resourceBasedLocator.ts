@@ -18,7 +18,9 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
 
     // This will be set only once we have to create necessary resources
     // and resolves once those resources are ready.
-    private ready?: Deferred<void>;
+    private resourcesReady?: Deferred<void>;
+
+    private watchersReady?: Deferred<void>;
 
     public async dispose(): Promise<void> {
         await this.disposables.dispose();
@@ -26,6 +28,7 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
 
     public async* iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         await this.ensureResourcesReady();
+        await this.ensureWatchersReady();
         yield* this.doIterEnvs(query);
     }
 
@@ -48,8 +51,28 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
      * This is where subclasses get their resources ready.
      *
      * It is only called once resources are needed.
+     *
+     * Note all locators have resources other than watchers so a default
+     * implementation is provided.
      */
-    protected abstract initResources(): Promise<Resource[] | void>;
+    // eslint-disable-next-line class-methods-use-this
+    protected async initResources(): Promise<Resource[] | void> {
+        // No resources!
+    }
+
+    /**
+     * This is where subclasses get their watchers ready.
+     *
+     * It is only called with the first `iterEnvs()` call,
+     * after `initResources()` has been called.
+     *
+     * Note all locators have watchers to init so a default
+     * implementation is provided.
+     */
+    // eslint-disable-next-line class-methods-use-this
+    protected async initWatchers(): Promise<Resource[] | void> {
+        // No watchers!
+    }
 
     /**
      * Subclasses may call this if they have extra disposables to track.
@@ -62,24 +85,29 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
         this.disposables.push(res);
     }
 
-    /**
-     * A subclass may call this at any point before using its resources.
-     *
-     * This is an idempotent operation.
-     *
-     * Normally this doesn't need to be called by subclasses.  It is
-     * automatically called in `iterEnvs()` and `resolveEnv()`.
-     */
-    protected async ensureResourcesReady(): Promise<void> {
-        if (this.ready !== undefined) {
-            await this.ready.promise;
+    private async ensureResourcesReady(): Promise<void> {
+        if (this.resourcesReady !== undefined) {
+            await this.resourcesReady.promise;
             return;
         }
-        this.ready = createDeferred<void>();
+        this.resourcesReady = createDeferred<void>();
         const resources = await this.initResources();
         if (Array.isArray(resources)) {
             resources.forEach((res) => this.addResource(res));
         }
-        this.ready.resolve();
+        this.resourcesReady.resolve();
+    }
+
+    private async ensureWatchersReady(): Promise<void> {
+        if (this.watchersReady !== undefined) {
+            await this.watchersReady.promise;
+            return;
+        }
+        this.watchersReady = createDeferred<void>();
+        const resources = await this.initWatchers();
+        if (Array.isArray(resources)) {
+            resources.forEach((res) => this.addResource(res));
+        }
+        this.watchersReady.resolve();
     }
 }
