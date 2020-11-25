@@ -4,6 +4,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import * as fsWatcher from '../../../../client/common/platform/fileSystemWatcher';
 import * as platformUtils from '../../../../client/common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { buildEnvInfo } from '../../../../client/pythonEnvironments/base/info/env';
@@ -204,6 +205,7 @@ suite('Pyenv Locator Tests', () => {
     let getEnvVariableStub: sinon.SinonStub;
     let getOsTypeStub: sinon.SinonStub;
     let locator: PyenvLocator;
+    let watchLocationForPatternStub: sinon.SinonStub;
 
     const testPyenvRoot = path.join(TEST_LAYOUT_ROOT, 'pyenvhome', '.pyenv');
     const testPyenvVersionsDir = path.join(testPyenvRoot, 'versions');
@@ -215,12 +217,16 @@ suite('Pyenv Locator Tests', () => {
         getOsTypeStub = sinon.stub(platformUtils, 'getOSType');
         getOsTypeStub.returns(platformUtils.OSType.Linux);
 
+        watchLocationForPatternStub = sinon.stub(fsWatcher, 'watchLocationForPattern');
+        watchLocationForPatternStub.returns({ dispose: () => { /* do nothing */ } });
+
         locator = new PyenvLocator();
     });
 
     teardown(() => {
         getEnvVariableStub.restore();
         getOsTypeStub.restore();
+        watchLocationForPatternStub.restore();
     });
 
     function getExpectedPyenvInfo(name:string) : PythonEnvInfo | undefined {
