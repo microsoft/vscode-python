@@ -489,7 +489,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: Linux-${{ env.COVERAGE_REPORTS }}
-          path: Linux-${{ env.COVERAGE_REPORTS }}
+          path: ${{env.special-working-directory}}/Linux-${{ env.COVERAGE_REPORTS }}
 
       - name: Extract Ubuntu coverage artifacts to ./nyc_output
         run: |
