@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ChildProcess, spawn } from 'child_process';
+import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import {
     CancellationToken,
@@ -15,15 +15,14 @@ import {
 } from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';
-import { traceInfo } from '../common/logger';
+import { traceError, traceInfo } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
-import { _SCRIPTS_DIR } from '../common/process/internal/scripts';
+import { tensorboardLauncher, _SCRIPTS_DIR } from '../common/process/internal/scripts';
+import { IProcessServiceFactory, ObservableExecutionResult } from '../common/process/types';
 import { IInstaller, InstallerResponse, Product } from '../common/types';
 import { sleep } from '../common/utils/async';
 import { TensorBoard } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
-
-const LAUNCH_TENSORBOARD = path.join(_SCRIPTS_DIR, 'tensorboard_launcher.py');
 
 /**
  * Manages the lifecycle of a TensorBoard session.
@@ -44,7 +43,8 @@ export class TensorBoardSession {
         private readonly installer: IInstaller,
         private readonly interpreterService: IInterpreterService,
         private readonly workspaceService: IWorkspaceService,
-        private readonly fileSystem: IFileSystem
+        private readonly fileSystem: IFileSystem,
+        private readonly processServiceFactory: IProcessServiceFactory
     ) {}
 
     public async initialize() {
@@ -110,8 +110,10 @@ export class TensorBoardSession {
     // Hold on to the process so we can kill it when the webview is closed.
     private async startTensorboardSession(logDir: string): Promise<boolean> {
         const cwd = this.getFullyQualifiedLogDirectory(logDir);
-        const spawnOptions = { cwd };
         const pythonExecutable = await this.interpreterService.getActiveInterpreter();
+        if (!pythonExecutable) {
+            return false;
+        }
 
         // Timeout waiting for TensorBoard to start after 60 seconds.
         // This is the same time limit that TensorBoard itself uses when waiting for
@@ -125,14 +127,16 @@ export class TensorBoardSession {
             cancellable: true
         };
 
-        const proc = spawn(pythonExecutable?.path || 'python', [LAUNCH_TENSORBOARD, logDir], spawnOptions);
+        const processService = await this.processServiceFactory.create();
+        const args = tensorboardLauncher([logDir]);
+        const observable = processService.execObservable(pythonExecutable.path, args, { cwd });
 
         const result = await window.withProgress(
             progressOptions,
             (_progress: Progress<{}>, token: CancellationToken) => {
                 traceInfo(`Starting TensorBoard with log directory ${cwd}...`);
 
-                const spawnTensorBoard = this.waitForTensorBoardToStart(proc);
+                const spawnTensorBoard = this.waitForTensorBoardStart(observable);
                 const userCancellation = createPromiseFromCancellation({
                     token,
                     cancelAction: 'resolve',
@@ -149,33 +153,28 @@ export class TensorBoardSession {
             traceInfo('Canceled starting TensorBoard session.');
             return false;
         } else {
-            this.process = proc;
+            this.process = observable.proc;
             return true;
         }
     }
 
-    private waitForTensorBoardToStart(proc: ChildProcess) {
-        return new Promise((resolve, reject) => {
-            proc.stdout.on('data', (data: Buffer) => {
-                // We need the spawned process to tell us which URL TensorBoard was started at
-                const output = data.toString('utf8');
-                const match = output.match(/TensorBoard started at (.*)/);
-                traceInfo(output);
-                if (match && match[1]) {
-                    this.url = match[1];
-                    resolve('success');
+    private async waitForTensorBoardStart(observable: ObservableExecutionResult<string>) {
+        return new Promise((resolve, _reject) => {
+            observable.out.subscribe({
+                next: (output) => {
+                    if (output.source === 'stdout') {
+                        const match = output.out.match(/TensorBoard started at (.*)/);
+                        if (match && match[1]) {
+                            this.url = match[1];
+                            resolve('success');
+                        }
+                    } else if (output.source === 'stderr') {
+                        traceError(output.out);
+                    }
+                },
+                error: (err) => {
+                    traceError(err);
                 }
-            });
-            proc.stderr.on('error', (err) => {
-                reject(err);
-            });
-            proc.on('close', (code) => {
-                this.process = undefined;
-                reject(`TensorBoard child process exited with code ${code}.`);
-            });
-            proc.on('disconnect', () => {
-                this.process = undefined;
-                reject(`TensorBoard child process disconnected.`);
             });
         });
     }
