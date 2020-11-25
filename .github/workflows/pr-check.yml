@@ -494,7 +494,6 @@ jobs:
       - name: Extract Ubuntu coverage artifacts to ./nyc_output
         run: |
           mkdir .nyc_output
-          ls -la Linux-${{ env.COVERAGE_REPORTS }}
           mv Linux-${{ env.COVERAGE_REPORTS }}/* .nyc_output
           rm -r Linux-${{ env.COVERAGE_REPORTS }}
 
@@ -502,9 +501,14 @@ jobs:
         run: npm run test:cover:report
         continue-on-error: true
 
+      - name: Move codecov.yml to root
+        run: |
+          mkdir ${{GITHUB_WORKSPACE}}/.github
+          mv .github/codecov.yml ${{GITHUB_WORKSPACE}}/.github
+
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1
         with:
           # Can't use the token to disambiguate since secrets aren't available from PR-triggered runs.
           #token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage/cobertura-coverage.xml
+          file: ${{env.special-working-directory}}/coverage/cobertura-coverage.xml
