@@ -15,6 +15,10 @@ env:
   VSIX_NAME: ms-python-insiders.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
+  # Force a path with spaces and to test extension works in these scenarios
+  # Unicode characters are causing 2.7 failures so skip that for now.
+  special-working-directory: './path with spaces'
+  special-working-directory-relative: 'path with spaces'
 
 jobs:
   build-vsix:
@@ -454,9 +458,14 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'microsoft/vscode-python'
     needs: [tests, smoke-tests]
+    defaults:
+      run:
+        working-directory: ${{env.special-working-directory}}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          path: ${{env.special-working-directory-relative}}
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v2.1.2
@@ -472,24 +481,31 @@ jobs:
       - name: Download Ubuntu test coverage artifacts
         uses: actions/download-artifact@v2
         with:
-          name: Linux-${{env.COVERAGE_REPORTS}}
-          path: Linux-${{env.COVERAGE_REPORTS}}
+          name: Linux-${{ env.COVERAGE_REPORTS }}
+          path: ${{env.special-working-directory}}/Linux-${{ env.COVERAGE_REPORTS }}
 
       - name: Extract Ubuntu coverage artifacts to ./nyc_output
         run: |
           mkdir .nyc_output
-          mv Linux-${{env.COVERAGE_REPORTS}}/* .nyc_output
-          rm -r Linux-${{env.COVERAGE_REPORTS}}
+          mv Linux-${{ env.COVERAGE_REPORTS }}/* .nyc_output
+          rm -r Linux-${{ env.COVERAGE_REPORTS }}
 
       - name: Generate coverage reports
         run: npm run test:cover:report
         continue-on-error: true
 
+      # The only location supported by the codecov action is the workspace root.
+      # See https://github.com/codecov/codecov-action#arguments
+      - name: Move codecov.yml to root
+        run: |
+          mkdir $GITHUB_WORKSPACE/.github
+          mv .github/codecov.yml $GITHUB_WORKSPACE
+
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage/cobertura-coverage.xml
+          file: ${{env.special-working-directory}}/coverage/cobertura-coverage.xml
 
   upload:
     name: Upload VSIX to Azure Blob Storage
