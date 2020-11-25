@@ -453,7 +453,7 @@ jobs:
   coverage:
     name: Coverage reports upload
     # Don't assume external contributors want to upload the coverage report.
-    if: github.repository == 'microsoft/vscode-python'
+    # if: github.repository == 'microsoft/vscode-python'
     runs-on: ubuntu-latest
     needs: [tests, smoke-tests]
     defaults:
@@ -499,7 +499,7 @@ jobs:
       - name: Move codecov.yml to root
         run: |
           mkdir $GITHUB_WORKSPACE/.github
-          mv .github/codecov.yml $GITHUB_WORKSPACE
+          mv codecov.yml $GITHUB_WORKSPACE
 
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1
