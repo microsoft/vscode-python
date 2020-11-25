@@ -31,7 +31,6 @@ import { PythonEnvInfo } from '../../base/info';
 import {
     ILocator,
     IPythonEnvsIterator,
-    Locator,
     NOOP_ITERATOR,
     PythonLocatorQuery,
 } from '../../base/locator';
@@ -39,6 +38,8 @@ import {
     combineIterators,
     Locators,
 } from '../../base/locators';
+import { LazyResourceBasedLocator } from '../../base/locators/common/resourceBasedLocator';
+import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../base/watcher';
 import { PythonEnvironment } from '../../info';
 import { isHiddenInterpreter } from './services/interpreterFilter';
 import { GetInterpreterLocatorOptions } from './types';
@@ -93,10 +94,10 @@ type WatchRootsFunc = (args: WatchRootsArgs) => IDisposable;
  *
  * The factories are used to produce the locators for each workspace folder.
  */
-export class WorkspaceLocators extends Locator {
-    private disposables = new Disposables();
+export class WorkspaceLocators extends LazyResourceBasedLocator {
+    public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
-    private isWatching = false;
+    private readonly watcher = new PythonEnvsWatcher();
 
     private readonly locators: Record<RootURI, [ILocator, IDisposable]> = {};
 
@@ -107,20 +108,18 @@ export class WorkspaceLocators extends Locator {
         private readonly factories: WorkspaceLocatorFactory[],
     ) {
         super();
+        this.onChanged = this.watcher.onChanged;
     }
 
-    public dispose(): void {
-        this.disposables.dispose().ignoreErrors();
+    public async dispose(): Promise<void> {
+        await super.dispose();
 
         // Clear all the roots.
         const roots = Object.keys(this.roots).map((key) => this.roots[key]);
         roots.forEach((root) => this.removeRoot(root));
     }
 
-    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        // We don't start watching workspace roots until necessary.
-        this.ensureWatching();
-
+    protected doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const iterators = Object.keys(this.locators).map((key) => {
             if (query?.searchLocations !== undefined) {
                 const root = this.roots[key];
@@ -139,10 +138,7 @@ export class WorkspaceLocators extends Locator {
         return combineIterators(iterators);
     }
 
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        // We don't start watching workspace roots until necessary.
-        this.ensureWatching();
-
+    protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         if (typeof env !== 'string' && env.searchLocation) {
             const found = this.locators[env.searchLocation.toString()];
             if (found !== undefined) {
@@ -162,6 +158,23 @@ export class WorkspaceLocators extends Locator {
             }
         }
         return undefined;
+    }
+
+    protected async initResources(): Promise<void> {
+        const disposable = this.watchRoots({
+            initRoot: (root: Uri) => this.addRoot(root),
+            addRoot: (root: Uri) => {
+                // Drop the old one, if necessary.
+                this.removeRoot(root);
+                this.addRoot(root);
+                this.emitter.fire({ searchLocation: root });
+            },
+            removeRoot: (root: Uri) => {
+                this.removeRoot(root);
+                this.emitter.fire({ searchLocation: root });
+            },
+        });
+        this.addResources(disposable);
     }
 
     private addRoot(root: Uri): void {
@@ -202,28 +215,6 @@ export class WorkspaceLocators extends Locator {
         delete this.locators[key];
         delete this.roots[key];
         disposables.dispose();
-    }
-
-    private ensureWatching(): void {
-        if (this.isWatching) {
-            return;
-        }
-        this.isWatching = true;
-
-        const disposable = this.watchRoots({
-            initRoot: (root: Uri) => this.addRoot(root),
-            addRoot: (root: Uri) => {
-                // Drop the old one, if necessary.
-                this.removeRoot(root);
-                this.addRoot(root);
-                this.emitter.fire({ searchLocation: root });
-            },
-            removeRoot: (root: Uri) => {
-                this.removeRoot(root);
-                this.emitter.fire({ searchLocation: root });
-            },
-        });
-        this.disposables.push(disposable);
     }
 }
 

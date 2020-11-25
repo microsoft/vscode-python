@@ -4,7 +4,6 @@
 import { Event } from 'vscode';
 import '../../../../common/extensions';
 import { BackgroundRequestLooper } from '../../../../common/utils/backgroundLoop';
-import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { logWarning } from '../../../../logging';
 import { IEnvsCache } from '../../envsCache';
 import { PythonEnvInfo } from '../../info';
@@ -16,44 +15,30 @@ import {
 } from '../../locator';
 import { getEnvs, getQueryFilter } from '../../locatorUtils';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
+import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
 import { pickBestEnv } from './reducingLocator';
 
 /**
  * A locator that stores the known environments in the given cache.
  */
-export class CachingLocator implements ILocator, IDisposable {
+export class CachingLocator extends LazyResourceBasedLocator {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     private readonly watcher = new PythonEnvsWatcher();
-
-    private readonly disposables = new Disposables();
-
-    private looper?: BackgroundRequestLooper;
-
-    private isReady = false;
 
     constructor(
         private readonly cache: IEnvsCache,
         private readonly locator: ILocator,
     ) {
+        super();
         this.onChanged = this.watcher.onChanged;
     }
 
-    public async dispose(): Promise<void> {
-        await this.disposables.dispose();
-    }
-
-    public async* iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        // Do not watch for changes until necessary.
-        await this.ensureReady();
-
+    protected async* doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         yield* this.iterFromCache(query);
     }
 
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        // Do not watch for changes until necessary.
-        await this.ensureReady();
-
+    protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         // If necessary we could be more aggressive about invalidating
         // the cached value.
         const query = getMinimalPartialInfo(env);
@@ -79,19 +64,24 @@ export class CachingLocator implements ILocator, IDisposable {
         return resolved;
     }
 
-    private async ensureReady(): Promise<void> {
-        if (this.isReady) {
-            return;
-        }
+    protected async initResources(): Promise<void> {
+        // We use a looper in the refresh methods, so we create one here
+        // and start it.
+        const looper = new BackgroundRequestLooper({
+            runDefault: null,
+        });
+        looper.start();
+        this.addResources(looper);
 
-        // We add the listener to the wrapped locator as late as possible.
-        const listener = this.locator.onChanged((event) => this.ensureCurrentRefresh(event));
-        this.disposables.push(listener);
+        // We add the listener only after its clear that we are about
+        // to ask for envs from the wrapped locator.
+        const listener = this.locator.onChanged((event) => this.ensureCurrentRefresh(looper, event));
+        this.addResources(listener);
 
         // We assume that `getAllEnvs()` is cheap enough that calling
         // it again in here is not a problem.
         if (this.cache.getAllEnvs() === undefined) {
-            await this.ensureRecentRefresh();
+            await this.ensureRecentRefresh(looper);
         }
     }
 
@@ -117,19 +107,6 @@ export class CachingLocator implements ILocator, IDisposable {
         }
     }
 
-    private getLooper(): BackgroundRequestLooper {
-        if (this.looper === undefined) {
-            const looper = new BackgroundRequestLooper({
-                runDefault: null,
-            });
-            this.looper = looper;
-
-            looper.start();
-            this.disposables.addFunc(() => looper.stop());
-        }
-        return this.looper;
-    }
-
     /**
      * Maybe trigger a refresh of the cache from the wrapped locator.
      *
@@ -137,15 +114,17 @@ export class CachingLocator implements ILocator, IDisposable {
      * wait for it to finish.  Otherwise we do not make a new request,
      * but instead only wait for the last requested refresh to complete.
      */
-    private ensureRecentRefresh(): Promise<void> {
+    private ensureRecentRefresh(
+        looper: BackgroundRequestLooper,
+    ): Promise<void> {
         // Re-use the last req in the queue if possible.
-        const last = this.getLooper().getLastRequest();
+        const last = looper.getLastRequest();
         if (last !== undefined) {
             const [, promise] = last;
             return promise;
         }
         // The queue is empty so add a new request.
-        return this.addRefreshRequest();
+        return this.addRefreshRequest(looper);
     }
 
     /**
@@ -159,12 +138,15 @@ export class CachingLocator implements ILocator, IDisposable {
      * waiting in the queue then we wait for that one instead of making
      * a new request.
      */
-    private ensureCurrentRefresh(event?: PythonEnvsChangedEvent): void {
-        const req = this.getLooper().getNextRequest();
+    private ensureCurrentRefresh(
+        looper: BackgroundRequestLooper,
+        event?: PythonEnvsChangedEvent,
+    ): void {
+        const req = looper.getNextRequest();
         if (req === undefined) {
             // There isn't already a pending request (due to an
             // onChanged event), so we add one.
-            this.addRefreshRequest(event)
+            this.addRefreshRequest(looper, event)
                 .ignoreErrors();
         }
         // Otherwise let the pending request take care of it.
@@ -180,9 +162,10 @@ export class CachingLocator implements ILocator, IDisposable {
      * to avoid unnecessary refreshes.
      */
     private addRefreshRequest(
+        looper: BackgroundRequestLooper,
         event?: PythonEnvsChangedEvent,
     ): Promise<void> {
-        const [, waitUntilDone] = this.getLooper().addRequest(async () => {
+        const [, waitUntilDone] = looper.addRequest(async () => {
             const iterator = this.locator.iterEnvs();
             const envs = await getEnvs(iterator);
             await this.updateCache(envs, event);

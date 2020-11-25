@@ -3,7 +3,6 @@
 
 import { Event } from 'vscode';
 import { createDeferred } from '../../../../common/utils/async';
-import { IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { PythonEnvsCache } from '../../envsCache';
 import { PythonEnvInfo } from '../../info';
 import {
@@ -13,6 +12,7 @@ import {
 } from '../../locator';
 import { getEnvs as getFinalEnvs } from '../../locatorUtils';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
+import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
 
 /**
  * A locator that wraps another, caching its iterated envs.
@@ -21,14 +21,10 @@ import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
  * (and only then).  So the way to force a refresh is to force
  * such an event to be emitted.
  */
-export class CachingLocatorWrapper implements ILocator, IDisposable {
+export class CachingLocatorWrapper extends LazyResourceBasedLocator {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     private readonly watcher = new PythonEnvsWatcher();
-
-    private listener?: IDisposable;
-
-    private active = false;
 
     private refreshing: Promise<void> | undefined;
 
@@ -37,27 +33,41 @@ export class CachingLocatorWrapper implements ILocator, IDisposable {
     constructor(
         private readonly wrapped: ILocator,
     ) {
+        super();
         this.onChanged = this.watcher.onChanged;
     }
 
-    public dispose(): void {
-        if (this.listener !== undefined) {
-            this.listener.dispose();
-        }
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public async* iterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator {
-        await this.ensureInitialized();
+    protected async* doIterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator {
         yield* this.cache.getEnvs();
     }
 
-    public async resolveEnv(env: string | Partial<PythonEnvInfo>): Promise<PythonEnvInfo | undefined> {
-        await this.ensureInitialized();
+    protected async doResolveEnv(env: string | Partial<PythonEnvInfo>): Promise<PythonEnvInfo | undefined> {
         if (this.refreshing !== undefined) {
             await this.refreshing;
         }
         return this.cache.lookUp(env);
+    }
+
+    protected async initResources(): Promise<void> {
+        const listener = this.wrapped.onChanged((event) => {
+            // Refresh the cache in the background.
+            if (this.refreshing) {
+                // The wrapped locator noticed changes while we're
+                // already refreshing, so trigger another refresh
+                // when that finishes.
+                this.refreshing
+                    .then(() => this.refresh(event))
+                    .ignoreErrors();
+            } else {
+                this.refresh(event)
+                    .ignoreErrors();
+            }
+        });
+        this.addResources(listener);
+
+        // Populate the cache with initial data.
+        await this.refresh();
     }
 
     /**
@@ -84,31 +94,5 @@ export class CachingLocatorWrapper implements ILocator, IDisposable {
 
         deferred.resolve();
         this.refreshing = undefined;
-    }
-
-    private async ensureInitialized(): Promise<void> {
-        if (this.listener !== undefined) {
-            return;
-        }
-
-        this.listener = this.wrapped.onChanged((event) => {
-            if (this.active) {
-                // Refresh the cache in the background.
-                if (this.refreshing) {
-                    // The wrapped locator noticed changes while we're
-                    // already refreshing, so trigger another refresh
-                    // when that finishes.
-                    this.refreshing
-                        .then(() => this.refresh(event))
-                        .ignoreErrors();
-                } else {
-                    this.refresh(event)
-                        .ignoreErrors();
-                }
-            }
-        });
-
-        // Populate the cache with initial data.
-        await this.refresh();
     }
 }

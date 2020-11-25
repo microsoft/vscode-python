@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { Event } from 'vscode';
-import { IDisposable } from '../common/utils/resourceLifecycle';
 import { PythonEnvInfo } from './base/info';
 import {
     ILocator, IPythonEnvsIterator, PythonLocatorQuery,
 } from './base/locator';
+import { LazyResourceBasedLocator } from './base/locators/common/resourceBasedLocator';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from './base/watcher';
 
 /**
@@ -14,45 +14,32 @@ import { PythonEnvsChangedEvent, PythonEnvsWatcher } from './base/watcher';
  *
  * Note that this is composed of sub-components.
  */
-export class PythonEnvironments implements ILocator, IDisposable {
+export class PythonEnvironments extends LazyResourceBasedLocator {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     private readonly watcher = new PythonEnvsWatcher();
 
-    private listener?: IDisposable;
-
-    private readonly getLocators: () => Promise<ILocator>;
+    private locators?: ILocator;
 
     constructor(
         // These are factories for the sub-components the full component is composed of:
-        getLocators: () => Promise<ILocator>,
+        private readonly getLocators: () => Promise<ILocator>,
     ) {
+        super();
         this.onChanged = this.watcher.onChanged;
-
-        // Make it a singleton factory.
-        let locators: ILocator;
-        this.getLocators = async () => {
-            if (locators === undefined) {
-                locators = await getLocators();
-                this.listener = locators.onChanged((event) => this.watcher.fire(event));
-            }
-            return locators;
-        };
     }
 
-    public dispose(): void {
-        if (this.listener !== undefined) {
-            this.listener.dispose();
-        }
+    public async* doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+        yield* this.locators!.iterEnvs(query);
     }
 
-    public async* iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        const locators = await this.getLocators();
-        yield* locators.iterEnvs(query);
+    public async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        return this.locators!.resolveEnv(env);
     }
 
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const locators = await this.getLocators();
-        return locators.resolveEnv(env);
+    protected async initResources(): Promise<void> {
+        this.locators = await this.getLocators();
+        const listener = this.locators.onChanged((event) => this.watcher.fire(event));
+        this.addResources(listener);
     }
 }
