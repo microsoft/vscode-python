@@ -26,20 +26,21 @@ export class CachingLocator implements ILocator, IDisposable {
 
     private readonly watcher = new PythonEnvsWatcher();
 
-    private listener?: IDisposable;
+    private readonly disposables = new Disposables();
+
+    private looper?: BackgroundRequestLooper;
+
+    private isReady = false;
 
     constructor(
         private readonly cache: IEnvsCache,
         private readonly locator: ILocator,
-        private readonly looper: BackgroundRequestLooper,
     ) {
         this.onChanged = this.watcher.onChanged;
     }
 
-    public dispose(): void {
-        if (this.listener !== undefined) {
-            this.listener.dispose();
-        }
+    public async dispose(): Promise<void> {
+        await this.disposables.dispose();
     }
 
     public async* iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
@@ -79,9 +80,14 @@ export class CachingLocator implements ILocator, IDisposable {
     }
 
     private async ensureReady(): Promise<void> {
-        if (this.listener === undefined) {
-            this.listener = this.locator.onChanged((event) => this.ensureCurrentRefresh(event));
+        if (this.isReady) {
+            return;
         }
+
+        // We add the listener to the wrapped locator as late as possible.
+        const listener = this.locator.onChanged((event) => this.ensureCurrentRefresh(event));
+        this.disposables.push(listener);
+
         // We assume that `getAllEnvs()` is cheap enough that calling
         // it again in here is not a problem.
         if (this.cache.getAllEnvs() === undefined) {
@@ -111,6 +117,19 @@ export class CachingLocator implements ILocator, IDisposable {
         }
     }
 
+    private getLooper(): BackgroundRequestLooper {
+        if (this.looper === undefined) {
+            const looper = new BackgroundRequestLooper({
+                runDefault: null,
+            });
+            this.looper = looper;
+
+            looper.start();
+            this.disposables.addFunc(() => looper.stop());
+        }
+        return this.looper;
+    }
+
     /**
      * Maybe trigger a refresh of the cache from the wrapped locator.
      *
@@ -120,7 +139,7 @@ export class CachingLocator implements ILocator, IDisposable {
      */
     private ensureRecentRefresh(): Promise<void> {
         // Re-use the last req in the queue if possible.
-        const last = this.looper.getLastRequest();
+        const last = this.getLooper().getLastRequest();
         if (last !== undefined) {
             const [, promise] = last;
             return promise;
@@ -141,7 +160,7 @@ export class CachingLocator implements ILocator, IDisposable {
      * a new request.
      */
     private ensureCurrentRefresh(event?: PythonEnvsChangedEvent): void {
-        const req = this.looper.getNextRequest();
+        const req = this.getLooper().getNextRequest();
         if (req === undefined) {
             // There isn't already a pending request (due to an
             // onChanged event), so we add one.
@@ -163,7 +182,7 @@ export class CachingLocator implements ILocator, IDisposable {
     private addRefreshRequest(
         event?: PythonEnvsChangedEvent,
     ): Promise<void> {
-        const [, waitUntilDone] = this.looper.addRequest(async () => {
+        const [, waitUntilDone] = this.getLooper().addRequest(async () => {
             const iterator = this.locator.iterEnvs();
             const envs = await getEnvs(iterator);
             await this.updateCache(envs, event);
@@ -183,25 +202,4 @@ export class CachingLocator implements ILocator, IDisposable {
         await this.cache.flush();
         this.watcher.fire(event || {}); // Emit an "onChanged" event.
     }
-}
-
-/**
- * Get a new caching locator and activate its resources.
- */
-export function getActivatedCachingLocator(
-    cache: IEnvsCache,
-    wrapped: ILocator,
-): [CachingLocator, IDisposable] {
-    const disposables = new Disposables();
-
-    const looper = new BackgroundRequestLooper({
-        runDefault: null,
-    });
-    looper.start();
-    disposables.push({ dispose: () => looper.stop() });
-
-    const locator = new CachingLocator(cache, wrapped, looper);
-    disposables.push(locator);
-
-    return [locator, disposables];
 }

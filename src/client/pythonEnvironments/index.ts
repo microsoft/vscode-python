@@ -13,7 +13,7 @@ import { PythonEnvironments } from './api';
 import { getPersistentCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
 import { ILocator } from './base/locator';
-import { getActivatedCachingLocator } from './base/locators/composite/cachingLocator';
+import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
 import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './discovery/locators';
@@ -83,8 +83,8 @@ async function createLocators(ext: ExtensionState): Promise<ILocator> {
     ext.disposables.push(envInfoService);
 
     // Build the stack of composite locators.
-    const [caching, disposable] = await createCachingLocator(ext, envInfoService, locators);
-    ext.disposables.push(disposable);
+    const caching = await createCachingLocator(ext, envInfoService, locators);
+    ext.disposables.push(caching);
     locators = caching;
 
     return locators;
@@ -150,7 +150,7 @@ async function createCachingLocator(
     ext: ExtensionState,
     envInfoService: EnvironmentInfoService,
     locators: ILocator,
-): Promise<[ILocator, IDisposable]> {
+): Promise<CachingLocator> {
     const storage = getGlobalStorage<PythonEnvInfo[]>(
         ext.context,
         'PYTHON_ENV_INFO_CACHE',
@@ -162,5 +162,5 @@ async function createCachingLocator(
         },
         (env: PythonEnvInfo) => envInfoService.isInfoProvided(env.executable.filename), // "isComplete"
     );
-    return getActivatedCachingLocator(cache, locators);
+    return new CachingLocator(cache, locators);
 }

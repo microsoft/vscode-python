@@ -5,10 +5,10 @@ import * as assert from 'assert';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { createDeferred } from '../../../../../client/common/utils/async';
-import { disposeAll, IDisposable } from '../../../../../client/common/utils/resourceLifecycle';
+import { Disposables } from '../../../../../client/common/utils/resourceLifecycle';
 import { PythonEnvInfoCache } from '../../../../../client/pythonEnvironments/base/envsCache';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
-import { CachingLocator, getActivatedCachingLocator } from '../../../../../client/pythonEnvironments/base/locators/composite/cachingLocator';
+import { CachingLocator } from '../../../../../client/pythonEnvironments/base/locators/composite/cachingLocator';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import {
@@ -38,15 +38,10 @@ class FakeCache extends PythonEnvInfoCache {
 }
 
 suite('Python envs locator - CachingLocator', () => {
-    let disposables: IDisposable[];
+    const disposables = new Disposables();
 
-    setup(() => {
-        disposables = [];
-    });
     teardown(async () => {
-        const temp = disposables;
-        disposables = [];
-        await disposeAll(temp);
+        await disposables.dispose();
     });
 
     async function getInitializedLocator(initialEnvs: PythonEnvInfo[]): Promise<[SimpleLocator, CachingLocator]> {
@@ -57,8 +52,8 @@ suite('Python envs locator - CachingLocator', () => {
         const subLocator = new SimpleLocator(initialEnvs, {
             resolve: null,
         });
-        const [locator, disposable] = getActivatedCachingLocator(cache, subLocator);
-        disposables.push(disposable);
+        const locator = new CachingLocator(cache, subLocator);
+        disposables.push(locator);
         return [subLocator, locator];
     }
 
