@@ -452,8 +452,6 @@ jobs:
 
   coverage:
     name: Coverage reports upload
-    # Don't assume external contributors want to upload the coverage report.
-    if: github.repository == 'microsoft/vscode-python'
     runs-on: ubuntu-latest
     needs: [tests, smoke-tests]
     defaults:
