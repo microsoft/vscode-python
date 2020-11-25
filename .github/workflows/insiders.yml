@@ -109,10 +109,6 @@ jobs:
       # See https://github.com/microsoft/ptvsd/issues/2068
       # At this point pinning is only needed for consistency. We no longer have TS debug adapter.
       NODE_VERSION: 12.15.0
-      # Force a path with spaces and to test extension works in these scenarios
-      # Unicode characters are causing 2.7 failures so skip that for now.
-      special-working-directory: './path with spaces'
-      special-working-directory-relative: 'path with spaces'
     defaults:
       run:
         working-directory: ${{env.special-working-directory}}
