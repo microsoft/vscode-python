@@ -14,6 +14,9 @@ import { getPersistentCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
 import { ILocator } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
+import { PythonEnvsReducer } from './base/locators/composite/environmentsReducer';
+import { PythonEnvsResolver } from './base/locators/composite/environmentsResolver';
+import { WorkspaceVirtualEnvironmentLocator } from './base/locators/lowLevel/workspaceVirtualEnvLocator';
 import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
 import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './discovery/locators';
@@ -83,6 +86,8 @@ async function createLocators(ext: ExtensionState): Promise<ILocator> {
     ext.disposables.push(envInfoService);
 
     // Build the stack of composite locators.
+    locators = new PythonEnvsReducer(locators);
+    locators = new PythonEnvsResolver(locators, envInfoService);
     const caching = await createCachingLocator(ext, envInfoService, locators);
     ext.disposables.push(caching);
     locators = caching;
@@ -139,6 +144,7 @@ function createWorkspaceLocator(
     const locators = new WorkspaceLocators(
         watchRoots,
         [
+            (root: vscode.Uri) => [new WorkspaceVirtualEnvironmentLocator(root.fsPath)],
             // Add an ILocator factory func here for each kind of workspace-rooted locator.
         ],
     );
