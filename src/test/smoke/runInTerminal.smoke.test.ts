@@ -11,7 +11,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { openFile, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
-import { noop } from '../core';
+import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 const testTimeout = 30 * 1_000;
@@ -45,7 +45,10 @@ suite('Smoke Test: Run Python File In Terminal', () => {
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
         }
-        const textDocument = await openFile(file).catch(noop);
+        const textDocument = await openFile(file);
+
+        // Wait here
+        await sleep(1_000);
 
         await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri).then(undefined, (err) => {
             assert.fail(`Unhandled failure:  ${err}`);
