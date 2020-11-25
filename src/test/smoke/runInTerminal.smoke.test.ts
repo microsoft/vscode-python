@@ -45,14 +45,14 @@ suite('Smoke Test: Run Python File In Terminal', () => {
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
         }
-        const textDocument = await openFile(file);
+        // const textDocument = await openFile(file);
 
         // Wait here
-        await sleep(1_000);
+        // await sleep(1_000);
 
-        await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri).then(undefined, (err) => {
-            assert.fail(`Unhandled failure:  ${err}`);
-        });
+        // await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri).then(undefined, (err) => {
+        //     assert.fail(`Unhandled failure:  ${err}`);
+        // });
 
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, testTimeout, `"${outputFile}" file not created`);
