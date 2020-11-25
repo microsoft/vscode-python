@@ -22,6 +22,7 @@ const timeoutForCellToRun = 3 * 60 * 1_000;
 
 suite('Smoke Test: Interactive Window', () => {
     suiteSetup(async function () {
+        this.skip();
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
