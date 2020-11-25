@@ -2,51 +2,48 @@
 // Licensed under the MIT License.
 
 import { Event } from 'vscode';
+import { Disposables, IDisposable } from '../common/utils/resourceLifecycle';
 import { PythonEnvInfo } from './base/info';
 import {
     ILocator, IPythonEnvsIterator, PythonLocatorQuery,
 } from './base/locator';
-import { LazyResourceBasedLocator, Resource } from './base/locators/common/resourceBasedLocator';
-import { PythonEnvsChangedEvent, PythonEnvsWatcher } from './base/watcher';
+import { GetLocatorFunc, LazyWrappingLocator } from './base/locators/common/wrappingLocator';
+import { PythonEnvsChangedEvent } from './base/watcher';
 
 /**
  * The public API for the Python environments component.
  *
  * Note that this is composed of sub-components.
  */
-export class PythonEnvironments extends LazyResourceBasedLocator {
-    public readonly onChanged: Event<PythonEnvsChangedEvent>;
+export class PythonEnvironments implements ILocator, IDisposable {
+    private readonly disposables = new Disposables();
 
-    private readonly watcher = new PythonEnvsWatcher();
-
-    private locators?: ILocator;
+    private readonly locators: ILocator;
 
     constructor(
         // These are factories for the sub-components the full component is composed of:
-        private readonly getLocators: () => Promise<ILocator & Partial<Resource>>,
+        getLocators: GetLocatorFunc,
     ) {
-        super();
-        this.onChanged = this.watcher.onChanged;
-    }
-
-    protected async* doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        yield* this.locators!.iterEnvs(query);
-    }
-
-    protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        return this.locators!.resolveEnv(env);
-    }
-
-    protected async initResources(): Promise<void> {
-        const locators = await this.getLocators();
+        const locators = new LazyWrappingLocator(getLocators);
         this.locators = locators;
-        if (locators.dispose !== undefined) {
-            this.addResource(locators as Resource);
-        }
+        this.disposables.push(locators);
     }
 
-    protected async initWatchers(): Promise<void> {
-        const listener = this.locators!.onChanged((event) => this.watcher.fire(event));
-        this.addResource(listener);
+    public async dispose(): Promise<void> {
+        await this.disposables.dispose();
+    }
+
+    // For ILocator:
+
+    public get onChanged(): Event<PythonEnvsChangedEvent> {
+        return this.locators.onChanged;
+    }
+
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+        return this.locators.iterEnvs(query);
+    }
+
+    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        return this.locators.resolveEnv(env);
     }
 }
