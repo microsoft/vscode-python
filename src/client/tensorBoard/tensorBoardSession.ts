@@ -17,10 +17,10 @@ import { IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';
 import { traceError, traceInfo } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
-import { tensorboardLauncher, _SCRIPTS_DIR } from '../common/process/internal/scripts';
+import { _SCRIPTS_DIR, tensorboardLauncher } from '../common/process/internal/scripts';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../common/process/types';
 import { IInstaller, InstallerResponse, Product } from '../common/types';
-import { sleep } from '../common/utils/async';
+import { createDeferred, sleep } from '../common/utils/async';
 import { TensorBoard } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 
@@ -147,36 +147,41 @@ export class TensorBoardSession {
             }
         );
 
-        if (result === timeout) {
-            throw new Error(`Timed out after ${timeout / 1000} seconds waiting for TensorBoard to launch.`);
-        } else if (result === 'canceled') {
-            traceInfo('Canceled starting TensorBoard session.');
-            return false;
-        } else {
-            this.process = observable.proc;
-            return true;
+        switch (result) {
+            case timeout:
+                throw new Error(`Timed out after ${timeout / 1000} seconds waiting for TensorBoard to launch.`);
+            case 'canceled':
+                traceInfo('Canceled starting TensorBoard session.');
+                return false;
+            case 'success':
+                this.process = observable.proc;
+                return true;
+            default:
+                throw new Error(`Failed to start TensorBoard, received unknown promise result: ${result}`);
         }
     }
 
     private async waitForTensorBoardStart(observable: ObservableExecutionResult<string>) {
-        return new Promise((resolve, _reject) => {
-            observable.out.subscribe({
-                next: (output) => {
-                    if (output.source === 'stdout') {
-                        const match = output.out.match(/TensorBoard started at (.*)/);
-                        if (match && match[1]) {
-                            this.url = match[1];
-                            resolve('success');
-                        }
-                    } else if (output.source === 'stderr') {
-                        traceError(output.out);
+        const urlThatTensorBoardIsRunningAt = createDeferred<string>();
+
+        observable.out.subscribe({
+            next: (output) => {
+                if (output.source === 'stdout') {
+                    const match = output.out.match(/TensorBoard started at (.*)/);
+                    if (match && match[1]) {
+                        this.url = match[1];
+                        urlThatTensorBoardIsRunningAt.resolve('success');
                     }
-                },
-                error: (err) => {
-                    traceError(err);
+                } else if (output.source === 'stderr') {
+                    traceError(output.out);
                 }
-            });
+            },
+            error: (err) => {
+                traceError(err);
+            }
         });
+
+        return urlThatTensorBoardIsRunningAt.promise;
     }
 
     private showPanel() {
