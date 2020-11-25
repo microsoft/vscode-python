@@ -49,9 +49,10 @@ suite('Smoke Test: Run Python File In Terminal', () => {
         }
         const textDocument = await openFile(file);
 
-        await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri).then(undefined, (err) => {
-            assert.fail(`Something went wrong: ${err}`);
-        });
+        await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri)
+        // .then(undefined, (err) => {
+        //     assert.fail(`Something went wrong: ${err}`);
+        // });
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, testTimeout, `"${outputFile}" file not created`);
     }).timeout(testTimeout);
