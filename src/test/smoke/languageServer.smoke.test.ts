@@ -8,27 +8,26 @@
 
 // import * as assert from 'assert';
 // import { expect } from 'chai';
-// import * as path from 'path';
+import * as path from 'path';
 // import { Location } from 'vscode'; // Just for the type
 import { updateSetting } from '../common';
-// import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
-import { IS_SMOKE_TEST } from '../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 // import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
-// import { openFileAndWaitForLS } from './common';
+import { openFileAndWaitForLS } from './common';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscode = require('vscode') as typeof import('vscode');
 
 const testTimeout = 30_000;
 
-// const fileDefinitions = path.join(
-//     EXTENSION_ROOT_DIR_FOR_TESTS,
-//     'src',
-//     'testMultiRootWkspc',
-//     'smokeTests',
-//     'definitions.py'
-// );
+const fileDefinitions = path.join(
+    EXTENSION_ROOT_DIR_FOR_TESTS,
+    'src',
+    'testMultiRootWkspc',
+    'smokeTests',
+    'definitions.py'
+);
 
 suite('Smoke Test: Language Server', () => {
     suiteSetup(async function () {
@@ -61,7 +60,7 @@ suite('Smoke Test: Language Server', () => {
     test('Definitions', async () => {
         // const startPosition = new vscode.Position(13, 6);
         // const textDocument =
-        // await openFileAndWaitForLS(fileDefinitions);
+        await openFileAndWaitForLS(fileDefinitions);
         // let tested = false;
         // for (let i = 0; i < 5; i += 1) {
         //     const locations = await vscode.commands
