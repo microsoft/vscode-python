@@ -6,7 +6,7 @@
 // tslint:disable:no-invalid-this no-single-line-block-comment
 /* eslint-disable global-require */
 
-import * as assert from 'assert';
+// import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { openFile, waitForCondition } from '../common';
