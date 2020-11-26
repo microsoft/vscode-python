@@ -69,11 +69,11 @@ export async function openFileAndWaitForLS(file: string): Promise<vscode.TextDoc
     // Make sure LS completes file loading and analysis.
     // In test mode it awaits for the completion before trying
     // to fetch data for completion, hover.etc.
-    await vscode.commands.executeCommand(
-        'vscode.executeCompletionItemProvider',
-        textDocument.uri,
-        new vscode.Position(0, 0)
-    );
+    await vscode.commands
+        .executeCommand('vscode.executeCompletionItemProvider', textDocument.uri, new vscode.Position(0, 0))
+        .then(undefined, (err) => {
+            assert.fail(`Something went wrong opening the file: ${err}`);
+        });
     // For for LS to get extracted.
     await sleep(10_000);
     return textDocument;
