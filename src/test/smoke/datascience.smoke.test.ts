@@ -22,7 +22,6 @@ const timeoutForCellToRun = 3 * 60 * 1_000;
 
 suite('Smoke Test: Interactive Window', () => {
     suiteSetup(async function () {
-        this.skip();
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
@@ -45,7 +44,7 @@ suite('Smoke Test: Interactive Window', () => {
             'test',
             'pythonFiles',
             'datascience',
-            'simple_note_book.py'
+            'simple_note_book.py',
         );
         const outputFile = path.join(path.dirname(file), 'ds.log');
         if (await fs.pathExists(outputFile)) {
@@ -68,12 +67,12 @@ suite('Smoke Test: Interactive Window', () => {
             'test',
             'pythonFiles',
             'datascience',
-            'simple_nb.ipynb'
+            'simple_nb.ipynb',
         );
         const fileContents = await fs.readFile(file, { encoding: 'utf-8' });
         const outputFile = path.join(path.dirname(file), 'ds_n.log');
         await fs.writeFile(file, fileContents.replace("'ds_n.log'", `'${outputFile.replace(/\\/g, '/')}'`), {
-            encoding: 'utf-8'
+            encoding: 'utf-8',
         });
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
