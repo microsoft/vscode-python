@@ -20,6 +20,7 @@ const testTimeout = 30_000;
 
 suite('Smoke Test: Run Python File In Terminal', () => {
     suiteSetup(async function () {
+        this.skip();
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
