@@ -9,15 +9,13 @@
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { JUPYTER_EXTENSION_ID } from '../../client/common/constants';
 import { openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { noop, sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { verifyExtensionIsAvailable } from './common';
-
-// tslint:disable-next-line: no-var-requires no-require-imports
-const vscode = require('vscode') as typeof import('vscode');
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
 
