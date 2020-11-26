@@ -34,7 +34,6 @@ const ISOLATED = _ISOLATED;
 //  * install_debugpy.py  (used only for extension development)
 
 export * as testing_tools from './testing_tools';
-export * as vscode_datascience_helpers from './vscode_datascience_helpers';
 
 //============================
 // interpreterInfo.py
@@ -216,9 +215,24 @@ export function refactor(root: string): [string[], (out: string) => object[]] {
 //============================
 // normalizeForInterpreter.py
 
-export function normalizeForInterpreter(code: string): [string[], (out: string) => string] {
+export function normalizeForInterpreter(): [string[], (out: string) => string] {
     const script = path.join(SCRIPTS_DIR, 'normalizeForInterpreter.py');
-    const args = [ISOLATED, script, code];
+    const args = [ISOLATED, script];
+
+    function parse(out: string) {
+        // The text will be used as-is.
+        return out;
+    }
+
+    return [args, parse];
+}
+
+//============================
+// normalizeSelection.py
+
+export function normalizeSelection(): [string[], (out: string) => string] {
+    const script = path.join(SCRIPTS_DIR, 'normalizeSelection.py');
+    const args = [ISOLATED, script];
 
     function parse(out: string) {
         // The text will be used as-is.
@@ -332,4 +346,12 @@ export function visualstudio_py_testlauncher(testArgs: string[]): string[] {
     const script = path.join(SCRIPTS_DIR, 'visualstudio_py_testlauncher.py');
     // There is no output to parse, so we do not return a function.
     return [script, ...testArgs];
+}
+
+//============================
+// tensorboard_launcher.py
+
+export function tensorboardLauncher(args: string[]) {
+    const script = path.join(SCRIPTS_DIR, 'tensorboard_launcher.py');
+    return [ISOLATED, script, ...args];
 }

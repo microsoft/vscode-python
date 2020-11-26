@@ -19,7 +19,7 @@
         -   [ ] Touch up news entries (e.g. add missing periods)
         -   [ ] Check the Markdown rendering to make sure everything looks good
         -   [ ] Add any relevant news entries for `debugpy` and the language server if they were updated
-    -   [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/main/ThirdPartyNotices-Distribution.txt) by using https://tools.opensource.microsoft.com/notice (Notes for this process are in the Team OneNote under Python VS Code -> Dev Process -> Third-Party Notices / TPN file)
+    -   [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/main/ThirdPartyNotices-Distribution.txt) by using https://tools.opensource.microsoft.com/notice (Notes for this process are in the Team OneNote under Python VS Code → Dev Process → Third-Party Notices / TPN file)
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/main/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
     -   [ ] Create a pull request against `main` (🤖)
     -   [ ] Merge pull request into `main`
@@ -33,10 +33,10 @@
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
 -   [ ] Announce the code freeze is over on the same channels
--   [ ] Update [Component Governance](https://dev.azure.com/ms/vscode-python/_componentGovernance) (Click on "microsoft/vscode-python" on that page). Notes are in the OneNote under Python VS Code -> Dev Process -> Component Governance.
-    -   [ ] Provide details for any automatically detected npm dependencies
-    -   [ ] Manually add any repository dependencies
--   [ ] GDPR bookkeeping (@brettcannon) (🤖; Notes in OneNote under Python VS Code -> Dev Process -> GDPR)
+-   [ ] Update Component Governance (Notes are in the team OneNote under Python VS Code → Dev Process → Component Governance).
+    -   [ ] Make sure there are no active alerts
+    -   [ ] Manually add any repository/embedded/CG-incompatible dependencies
+-   [ ] GDPR bookkeeping (@brettcannon) (🤖; Notes in OneNote under Python VS Code → Dev Process → GDPR)
 -   [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
     -   new features
     -   settings changes

@@ -7,10 +7,8 @@ import * as path from 'path';
 import { ConfigurationTarget, EventEmitter, Uri, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { Commands, Telemetry } from '../../datascience/constants';
-import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../../datascience/types';
-import { WebviewPanelHost } from '../../datascience/webviews/webviewPanelHost';
 import { sendTelemetryEvent } from '../../telemetry';
+import { CommandSource } from '../../testing/common/constants';
 import {
     IApplicationEnvironment,
     IApplicationShell,
@@ -23,10 +21,12 @@ import { IFileSystem } from '../platform/types';
 import { IConfigurationService, IExtensionContext, Resource } from '../types';
 import * as localize from '../utils/localize';
 import { StopWatch } from '../utils/stopWatch';
+import { Telemetry } from './constants';
 import { StartPageMessageListener } from './startPageMessageListener';
-import { IStartPage, IStartPageMapping, StartPageMessages } from './types';
+import { ICodeCssGenerator, IStartPage, IStartPageMapping, IThemeFinder, StartPageMessages } from './types';
+import { WebviewPanelHost } from './webviewPanelHost';
 
-const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
+const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'startPage-ui', 'viewers');
 
 // Class that opens, disposes and handles messages and actions for the Python Extension Start Page.
 // It also runs when the extension activates.
@@ -46,7 +46,6 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
         @inject(IConfigurationService) protected configuration: IConfigurationService,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IFileSystem) private file: IFileSystem,
-        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IApplicationShell) private appShell: IApplicationShell,
@@ -64,7 +63,6 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
             [path.join(startPageDir, 'commons.initial.bundle.js'), path.join(startPageDir, 'startPage.js')],
             localize.StartPage.getStarted(),
             ViewColumn.One,
-            false,
             false
         );
         this.timer = new StopWatch();
@@ -131,7 +129,11 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                 const savedVersion: string | undefined = this.context.globalState.get('extensionVersion');
 
                 if (savedVersion) {
-                    await this.notebookEditorProvider.createNew();
+                    await this.commandManager.executeCommand(
+                        'jupyter.opennotebook',
+                        undefined,
+                        CommandSource.commandPalette
+                    );
                 } else {
                     this.openSampleNotebook().ignoreErrors();
                 }
@@ -155,7 +157,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                     content: `#%%\nprint("${localize.StartPage.helloWorld()}")`
                 });
                 await this.documentManager.showTextDocument(doc2, 1, true);
-                await this.commandManager.executeCommand(Commands.RunAllCells, Uri.parse(''));
+                await this.commandManager.executeCommand('jupyter.runallcells', Uri.parse(''));
                 break;
             case StartPageMessages.OpenCommandPalette:
                 sendTelemetryEvent(Telemetry.StartPageOpenCommandPalette);
@@ -293,8 +295,11 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
             sampleNotebookPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'Notebooks intro.ipynb');
         }
 
-        const content = await this.file.readFile(sampleNotebookPath);
-        await this.notebookEditorProvider.createNew(content, localize.StartPage.sampleNotebook());
+        await this.commandManager.executeCommand(
+            'jupyter.opennotebook',
+            Uri.file(sampleNotebookPath),
+            CommandSource.commandPalette
+        );
     }
 
     private setTelemetryFlags() {

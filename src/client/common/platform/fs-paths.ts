@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as nodepath from 'path';
+import { getSearchPathEnvVarNames } from '../utils/exec';
 import { getOSType, OSType } from '../utils/platform';
 import { IExecutables, IFileSystemPaths, IFileSystemPathUtils } from './types';
 // tslint:disable-next-line:no-var-requires no-require-imports
@@ -86,7 +87,7 @@ export class Executables {
     }
 
     public get envVar(): string {
-        return this.osType === OSType.Windows ? 'Path' : 'PATH';
+        return getSearchPathEnvVarNames(this.osType)[0];
     }
 }
 
@@ -141,4 +142,8 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
             return filename;
         }
     }
+}
+
+export function normCasePath(filePath: string): string {
+    return getOSType() === OSType.Windows ? nodepath.normalize(filePath).toUpperCase() : nodepath.normalize(filePath);
 }

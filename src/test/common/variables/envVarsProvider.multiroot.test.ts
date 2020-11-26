@@ -8,15 +8,11 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { ConfigurationTarget, Disposable, Uri, workspace } from 'vscode';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import {
-    IS_WINDOWS,
-    NON_WINDOWS_PATH_VARIABLE_NAME,
-    WINDOWS_PATH_VARIABLE_NAME
-} from '../../../client/common/platform/constants';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposableRegistry, IPathUtils } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
+import { getSearchPathEnvVarNames } from '../../../client/common/utils/exec';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { EnvironmentVariables } from '../../../client/common/variables/types';
@@ -38,7 +34,7 @@ const workspace4PyFile = Uri.file(path.join(workspace4Path.fsPath, 'one.py'));
 // tslint:disable-next-line:max-func-body-length
 suite('Multiroot Environment Variables Provider', () => {
     let ioc: UnitTestIocContainer;
-    const pathVariableName = IS_WINDOWS ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
+    const pathVariableName = getSearchPathEnvVarNames()[0];
     suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this

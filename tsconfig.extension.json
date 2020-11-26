@@ -21,7 +21,7 @@
         "node_modules",
         ".vscode-test",
         ".vscode test",
-        "src/datascience-ui",
+        "src/startPage-ui",
         "build"
     ]
 }

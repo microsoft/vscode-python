@@ -3,6 +3,7 @@
 
 import ast
 import io
+import json
 import operator
 import os
 import sys
@@ -137,18 +138,21 @@ def normalize_lines(source):
     for line_number in filter(lambda x: x > 1, start_positions):
         lines.insert(line_number - 1, "")
 
-    sys.stdout.write("\n".join(lines) + trailing_newline)
-    sys.stdout.flush()
+    return "\n".join(lines) + trailing_newline
 
 
 if __name__ == "__main__":
-    contents = sys.argv[1]
-    try:
-        default_encoding = sys.getdefaultencoding()
-        encoded_contents = contents.encode(default_encoding, "surrogateescape")
-        contents = encoded_contents.decode(default_encoding, "replace")
-    except (UnicodeError, LookupError):
-        pass
-    if isinstance(contents, bytes):
-        contents = contents.decode("utf8")
-    normalize_lines(contents)
+    # Content is being sent from the extension as a JSON object.
+    # Decode the data from the raw bytes.
+    stdin = sys.stdin if sys.version_info < (3,) else sys.stdin.buffer
+    raw = stdin.read()
+    contents = json.loads(raw.decode("utf-8"))
+
+    normalized = normalize_lines(contents["code"])
+
+    # Send the normalized code back in a JSON object.
+    data = json.dumps({"normalized": normalized})
+
+    stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
+    stdout.write(data.encode("utf-8"))
+    stdout.close()

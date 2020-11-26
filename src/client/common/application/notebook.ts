@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter } from 'vscode';
+import { Disposable, DocumentSelector, Event, EventEmitter } from 'vscode';
 import type {
     notebook,
     NotebookCellMetadata,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
+    NotebookConcatTextDocument,
     NotebookContentProvider,
     NotebookDocument,
     NotebookDocumentFilter,
@@ -16,13 +17,7 @@ import type {
 } from 'vscode-proposed';
 import { UseProposedApi } from '../constants';
 import { IDisposableRegistry } from '../types';
-import {
-    IApplicationEnvironment,
-    IVSCodeNotebook,
-    NotebookCellLanguageChangeEvent,
-    NotebookCellOutputsChangeEvent,
-    NotebookCellsChangeEvent
-} from './types';
+import { IApplicationEnvironment, IVSCodeNotebook, NotebookCellChangedEvent } from './types';
 
 @injectable()
 export class VSCodeNotebook implements IVSCodeNotebook {
@@ -52,20 +47,21 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             ? this.notebook.onDidCloseNotebookDocument
             : new EventEmitter<NotebookDocument>().event;
     }
+    public get onDidSaveNotebookDocument(): Event<NotebookDocument> {
+        return this.canUseNotebookApi
+            ? this.notebook.onDidSaveNotebookDocument
+            : new EventEmitter<NotebookDocument>().event;
+    }
     public get notebookDocuments(): ReadonlyArray<NotebookDocument> {
         return this.canUseNotebookApi ? this.notebook.notebookDocuments : [];
     }
     public get notebookEditors() {
         return this.canUseNotebookApi ? this.notebook.visibleNotebookEditors : [];
     }
-    public get onDidChangeNotebookDocument(): Event<
-        NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
-    > {
+    public get onDidChangeNotebookDocument(): Event<NotebookCellChangedEvent> {
         return this.canUseNotebookApi
             ? this._onDidChangeNotebookDocument.event
-            : new EventEmitter<
-                  NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
-              >().event;
+            : new EventEmitter<NotebookCellChangedEvent>().event;
     }
     public get activeNotebookEditor(): NotebookEditor | undefined {
         if (!this.useProposedApi) {
@@ -80,9 +76,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         }
         return this._notebook!;
     }
-    private readonly _onDidChangeNotebookDocument = new EventEmitter<
-        NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
-    >();
+    private readonly _onDidChangeNotebookDocument = new EventEmitter<NotebookCellChangedEvent>();
     private addedEventHandlers?: boolean;
     private _notebook?: typeof notebook;
     private readonly canUseNotebookApi?: boolean;
@@ -96,6 +90,13 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             this.addEventHandlers();
             this.canUseNotebookApi = true;
         }
+    }
+    public createConcatTextDocument(doc: NotebookDocument, selector?: DocumentSelector): NotebookConcatTextDocument {
+        if (this.useProposedApi) {
+            // tslint:disable-next-line: no-any
+            return this.notebook.createConcatTextDocument(doc, selector) as any; // Types of Position are different for some reason. Fix this later.
+        }
+        throw new Error('createConcatDocument not supported');
     }
     public registerNotebookContentProvider(
         notebookType: string,
@@ -122,6 +123,12 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             ...[
                 this.notebook.onDidChangeCellLanguage((e) =>
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellLanguage' })
+                ),
+                this.notebook.onDidChangeCellMetadata((e) =>
+                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellMetadata' })
+                ),
+                this.notebook.onDidChangeNotebookDocumentMetadata((e) =>
+                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeNotebookMetadata' })
                 ),
                 this.notebook.onDidChangeCellOutputs((e) =>
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellOutputs' })

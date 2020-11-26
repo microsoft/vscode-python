@@ -71,6 +71,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
             true
         );
     }
+
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (!this.workspaceService.hasWorkspaceFolders) {
             return [];
@@ -80,9 +81,11 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
             : this.workspaceService.workspaceFolders![0];
         return this.diagnoseWorkspace(workspaceFolder, resource);
     }
+
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         diagnostics.forEach((diagnostic) => this.handleDiagnostic(diagnostic));
     }
+
     protected async fixLaunchJson(code: DiagnosticCodes) {
         if (!this.workspaceService.hasWorkspaceFolders) {
             return;
@@ -94,6 +97,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
             )
         );
     }
+
     private async diagnoseWorkspace(workspaceFolder: WorkspaceFolder, resource: Resource) {
         const launchJson = this.getLaunchJsonFile(workspaceFolder);
         if (!(await this.fs.fileExists(launchJson))) {
@@ -114,6 +118,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
             diagnostics.push(new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.ConsoleTypeDiagnostic, resource));
         }
         if (
+            fileContents.indexOf('"pythonPath":') > 0 ||
             fileContents.indexOf('{config:python.pythonPath}') > 0 ||
             fileContents.indexOf('{config:python.interpreterPath}') > 0
         ) {
@@ -123,6 +128,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         }
         return diagnostics;
     }
+
     private async handleDiagnostic(diagnostic: IDiagnostic): Promise<void> {
         if (!this.canHandle(diagnostic)) {
             return;
@@ -147,6 +153,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
 
         await this.messageService.handle(diagnostic, { commandPrompts });
     }
+
     private async fixLaunchJsonInWorkspace(code: DiagnosticCodes, workspaceFolder: WorkspaceFolder) {
         if ((await this.diagnoseWorkspace(workspaceFolder, undefined)).length === 0) {
             return;
@@ -169,6 +176,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
                 break;
             }
             case DiagnosticCodes.ConfigPythonPathDiagnostic: {
+                fileContents = this.findAndReplace(fileContents, '"pythonPath":', '"python":');
                 fileContents = this.findAndReplace(
                     fileContents,
                     '{config:python.pythonPath}',
@@ -188,10 +196,12 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
 
         await this.fs.writeFile(launchJson, fileContents);
     }
+
     private findAndReplace(fileContents: string, search: string, replace: string) {
         const searchRegex = new RegExp(search, 'g');
         return fileContents.replace(searchRegex, replace);
     }
+
     private getLaunchJsonFile(workspaceFolder: WorkspaceFolder) {
         return path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
     }

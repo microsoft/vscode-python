@@ -4,9 +4,6 @@
 import { EnvironmentType } from '../info';
 import { getPyenvTypeFinder } from './globalenv';
 
-// tslint:disable-next-line: no-single-line-block-comment
-/* eslint-disable no-await-in-loop, no-restricted-syntax */
-
 type ExecFunc = (cmd: string, args: string[]) => Promise<{ stdout: string }>;
 
 type NameFinderFunc = (python: string) => Promise<string | undefined>;

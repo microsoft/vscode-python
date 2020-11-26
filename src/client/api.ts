@@ -3,17 +3,16 @@
 
 'use strict';
 
+import { noop } from 'lodash';
 import { Event, Uri } from 'vscode';
-import { NotebookCell } from 'vscode-proposed';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IConfigurationService, Resource } from './common/types';
-import { JupyterExtensionIntegration } from './datascience/api/jupyterIntegration';
-import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
-import { IJupyterUriProvider, IJupyterUriProviderRegistration, INotebookExtensibility } from './datascience/types';
 import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
+import { JupyterExtensionIntegration } from './jupyter/jupyterIntegration';
+import { IDataViewerDataProvider, IJupyterUriProvider } from './jupyter/types';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -81,9 +80,8 @@ export interface IExtensionApi {
             execCommand: string[] | undefined;
         };
     };
+
     datascience: {
-        readonly onKernelPostExecute: Event<NotebookCell>;
-        readonly onKernelRestart: Event<void>;
         /**
          * Launches Data Viewer component.
          * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
@@ -106,7 +104,6 @@ export function buildApi(
 ): IExtensionApi {
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    const notebookExtensibility = serviceContainer.get<INotebookExtensibility>(INotebookExtensibility);
     serviceManager.addSingleton<JupyterExtensionIntegration>(JupyterExtensionIntegration, JupyterExtensionIntegration);
     const jupyterIntegration = serviceContainer.get<JupyterExtensionIntegration>(JupyterExtensionIntegration);
     const api: IExtensionApi = {
@@ -142,19 +139,16 @@ export function buildApi(
                 return { execCommand: pythonPath === '' ? undefined : [pythonPath] };
             }
         },
+        // These are for backwards compatibility. Other extensions are using these APIs and we don't want
+        // to force them to move to the jupyter extension ... yet.
         datascience: {
-            async showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
-                const dataViewerProviderService = serviceContainer.get<IDataViewerFactory>(IDataViewerFactory);
-                await dataViewerProviderService.create(dataProvider, title);
-            },
-            registerRemoteServerProvider(picker: IJupyterUriProvider): void {
-                const container = serviceContainer.get<IJupyterUriProviderRegistration>(
-                    IJupyterUriProviderRegistration
-                );
-                container.registerProvider(picker);
-            },
-            onKernelPostExecute: notebookExtensibility.onKernelPostExecute,
-            onKernelRestart: notebookExtensibility.onKernelRestart
+            // tslint:disable:no-any
+            registerRemoteServerProvider: jupyterIntegration
+                ? jupyterIntegration.registerRemoteServerProvider.bind(jupyterIntegration)
+                : (noop as any),
+            showDataViewer: jupyterIntegration
+                ? jupyterIntegration.showDataViewer.bind(jupyterIntegration)
+                : (noop as any)
         }
     };
 

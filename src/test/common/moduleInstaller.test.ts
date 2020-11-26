@@ -28,7 +28,7 @@ import {
     ICustomEditorService,
     IDebugService,
     IDocumentManager,
-    ILiveShareApi,
+    IJupyterExtensionDependencyManager,
     IWorkspaceService
 } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -118,8 +118,6 @@ import {
 import { IMultiStepInputFactory, MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { Architecture } from '../../client/common/utils/platform';
 import { Random } from '../../client/common/utils/random';
-import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
-import { INotebookExecutionLogger } from '../../client/datascience/types';
 import {
     ICondaService,
     IInterpreterLocatorService,
@@ -128,6 +126,7 @@ import {
     PIPENV_SERVICE
 } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
+import { JupyterExtensionDependencyManager } from '../../client/jupyter/jupyterExtensionDependencyManager';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
@@ -237,6 +236,10 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
             ioc.serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
             ioc.serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
+            ioc.serviceManager.addSingleton<IJupyterExtensionDependencyManager>(
+                IJupyterExtensionDependencyManager,
+                JupyterExtensionDependencyManager
+            );
             ioc.serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
             ioc.serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
             ioc.serviceManager.addSingleton<IFileDownloader>(IFileDownloader, FileDownloader);
@@ -247,7 +250,6 @@ suite('Module Installer', () => {
                 ITerminalActivationHandler,
                 PowershellTerminalActivationFailedHandler
             );
-            ioc.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, LiveShareApi);
             ioc.serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
             ioc.serviceManager.addSingleton<IExperimentsManager>(IExperimentsManager, ExperimentsManager);
             ioc.serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
@@ -289,7 +291,6 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
             ioc.serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
             ioc.serviceManager.addBinding(IImportTracker, IExtensionSingleActivationService);
-            ioc.serviceManager.addBinding(IImportTracker, INotebookExecutionLogger);
             ioc.serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
             ioc.serviceManager.addSingleton<IShellDetector>(IShellDetector, SettingsShellDetector);
             ioc.serviceManager.addSingleton<IShellDetector>(IShellDetector, UserEnvironmentShellDetector);

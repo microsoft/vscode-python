@@ -28,7 +28,7 @@ suite('Language Server: Autocomplete Base Tests', function () {
     // tslint:disable-next-line:no-invalid-this
     this.timeout(60000);
     let ioc: UnitTestIocContainer;
-    let isPy38: boolean;
+    let skipTest: boolean;
 
     suiteSetup(async function () {
         // Attempt to fix #1301
@@ -36,7 +36,7 @@ suite('Language Server: Autocomplete Base Tests', function () {
         this.timeout(60000);
         await initialize();
         initializeDI();
-        isPy38 = await isPythonVersion('3.8');
+        skipTest = isOs(OSType.Windows) && (await isPythonVersion('3.8', '3.9'));
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -255,7 +255,7 @@ suite('Language Server: Autocomplete Base Tests', function () {
         // tslint:disable-next-line:no-suspicious-comment
         // TODO: Fix this test.
         // See https://github.com/microsoft/vscode-python/issues/10399.
-        if (isOs(OSType.Windows) && isPy38) {
+        if (skipTest) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }

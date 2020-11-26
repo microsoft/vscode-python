@@ -1,14 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// tslint:disable-next-line:no-single-line-block-comment
+/* eslint-disable max-classes-per-file */
+
 import { Event, Uri } from 'vscode';
-import { iterEmpty } from '../../common/utils/async';
+import { DisposableRegistry } from '../../common/syncDisposableRegistry';
+import { IDisposable } from '../../common/types';
+import { IAsyncIterableIterator, iterEmpty } from '../../common/utils/async';
 import { PythonEnvInfo, PythonEnvKind } from './info';
 import {
     BasicPythonEnvsChangedEvent,
     IPythonEnvsWatcher,
     PythonEnvsChangedEvent,
-    PythonEnvsWatcher
+    PythonEnvsWatcher,
 } from './watcher';
 
 /**
@@ -51,7 +56,7 @@ export type PythonEnvUpdatedEvent = {
  * Callers can usually ignore the update event entirely and rely on
  * the locator to provide sufficiently complete information.
  */
-export interface IPythonEnvsIterator extends AsyncIterator<PythonEnvInfo, void> {
+export interface IPythonEnvsIterator extends IAsyncIterableIterator<PythonEnvInfo> {
     /**
      * Provides possible updates for already-iterated envs.
      *
@@ -162,6 +167,9 @@ export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChan
     resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
 }
 
+export interface IDisposableLocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
+    extends ILocator<E>, IDisposable{}
+
 interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
     fire(e: E): void;
 }
@@ -178,18 +186,29 @@ interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
  * should be used.  Only in low-level cases should you consider using
  * `BasicPythonEnvsChangedEvent`.
  */
-export abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent> implements ILocator<E> {
+abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
+implements IDisposableLocator<E> {
     public readonly onChanged: Event<E>;
+
     protected readonly emitter: IEmitter<E>;
+
+    protected readonly disposables = new DisposableRegistry();
+
     constructor(watcher: IPythonEnvsWatcher<E> & IEmitter<E>) {
         this.emitter = watcher;
         this.onChanged = watcher.onChanged;
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public abstract iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator;
 
+    // eslint-disable-next-line class-methods-use-this,@typescript-eslint/no-unused-vars
     public async resolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         return undefined;
+    }
+
+    public dispose(): void {
+        this.disposables.dispose();
     }
 }
 

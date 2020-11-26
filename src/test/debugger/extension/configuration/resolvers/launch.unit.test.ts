@@ -33,17 +33,20 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         let platformService: TypeMoq.IMock<IPlatformService>;
         let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
         let helper: TypeMoq.IMock<IInterpreterHelper>;
+        let configService: TypeMoq.IMock<IConfigurationService>;
         let workspaceService: TypeMoq.IMock<IWorkspaceService>;
         let documentManager: TypeMoq.IMock<IDocumentManager>;
         let diagnosticsService: TypeMoq.IMock<IInvalidPythonPathInDebuggerService>;
         let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
+
         function createMoqWorkspaceFolder(folderPath: string) {
             const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
             folder.setup((f) => f.uri).returns(() => Uri.file(folderPath));
             return folder.object;
         }
+
         function setupIoc(pythonPath: string, workspaceFolder?: WorkspaceFolder) {
-            const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+            configService = TypeMoq.Mock.ofType<IConfigurationService>();
             workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
             documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
@@ -83,6 +86,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 debugEnvHelper.object
             );
         }
+
         function setupActiveEditor(fileName: string | undefined, languageId: string) {
             if (fileName) {
                 const textEditor = TypeMoq.Mock.ofType<TextEditor>();
@@ -95,27 +99,63 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 documentManager.setup((d) => d.activeTextEditor).returns(() => undefined);
             }
         }
+
         function setupWorkspaces(folders: string[]) {
             const workspaceFolders = folders.map(createMoqWorkspaceFolder);
             workspaceService.setup((w) => w.workspaceFolders).returns(() => workspaceFolders);
         }
+
+        const launch: LaunchRequestArguments = {
+            name: 'Python launch',
+            type: 'python',
+            request: 'launch'
+        };
+
+        async function resolveDebugConfiguration(
+            workspaceFolder: WorkspaceFolder | undefined,
+            launchConfig: Partial<LaunchRequestArguments>
+        ) {
+            let config = await debugProvider.resolveDebugConfiguration!(
+                workspaceFolder,
+                launchConfig as DebugConfiguration
+            );
+            if (config === undefined || config === null) {
+                return config;
+            }
+
+            const interpreterPath = configService.object.getSettings(workspaceFolder ? workspaceFolder.uri : undefined)
+                .pythonPath;
+            for (const key of Object.keys(config)) {
+                const value = config[key];
+                if (typeof value === 'string') {
+                    config[key] = value.replace('${command:python.interpreterPath}', interpreterPath);
+                }
+            }
+
+            config = await debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(workspaceFolder, config);
+            if (config === undefined || config === null) {
+                return config;
+            }
+
+            return config as LaunchRequestArguments;
+        }
+
         test('Defaults should be returned when an empty object is passed with a Workspace Folder and active file', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             const pythonFile = 'xyz.py';
             setupIoc(pythonPath, workspaceFolder);
-
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(
-                workspaceFolder,
-                {} as DebugConfiguration
-            );
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {});
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
-            expect(debugConfig).to.have.property('pythonPath', pythonPath);
             expect(debugConfig).to.have.property('type', 'python');
             expect(debugConfig).to.have.property('request', 'launch');
+            expect(debugConfig).to.not.have.property('pythonPath');
+            expect(debugConfig).to.have.property('python', pythonPath);
+            expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
+            expect(debugConfig).to.have.property('debugLauncherPython', pythonPath);
             expect(debugConfig).to.have.property('program', pythonFile);
             expect(debugConfig).to.have.property('cwd');
             expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(__dirname.toLowerCase());
@@ -125,6 +165,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             // tslint:disable-next-line:no-any
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
+
         test("Defaults should be returned when an object with 'noDebug' property is passed with a Workspace Folder and active file", async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
@@ -132,14 +173,17 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath, workspaceFolder);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 noDebug: true
-            } as any) as DebugConfiguration);
+            });
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
-            expect(debugConfig).to.have.property('pythonPath', pythonPath);
             expect(debugConfig).to.have.property('type', 'python');
             expect(debugConfig).to.have.property('request', 'launch');
+            expect(debugConfig).to.not.have.property('pythonPath');
+            expect(debugConfig).to.have.property('python', pythonPath);
+            expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
+            expect(debugConfig).to.have.property('debugLauncherPython', pythonPath);
             expect(debugConfig).to.have.property('program', pythonFile);
             expect(debugConfig).to.have.property('cwd');
             expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(__dirname.toLowerCase());
@@ -149,6 +193,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             // tslint:disable-next-line:no-any
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
+
         test('Defaults should be returned when an empty object is passed without Workspace Folder, no workspaces and active file', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const pythonFile = 'xyz.py';
@@ -156,13 +201,16 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
             setupWorkspaces([]);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(undefined, {} as DebugConfiguration);
+            const debugConfig = await resolveDebugConfiguration(undefined, {});
             const filePath = Uri.file(path.dirname('')).fsPath;
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
-            expect(debugConfig).to.have.property('pythonPath', pythonPath);
             expect(debugConfig).to.have.property('type', 'python');
             expect(debugConfig).to.have.property('request', 'launch');
+            expect(debugConfig).to.not.have.property('pythonPath');
+            expect(debugConfig).to.have.property('python', pythonPath);
+            expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
+            expect(debugConfig).to.have.property('debugLauncherPython', pythonPath);
             expect(debugConfig).to.have.property('program', pythonFile);
             expect(debugConfig).to.have.property('cwd');
             expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(filePath.toLowerCase());
@@ -172,17 +220,21 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             // tslint:disable-next-line:no-any
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
+
         test('Defaults should be returned when an empty object is passed without Workspace Folder, no workspaces and no active file', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             setupIoc(pythonPath);
             setupActiveEditor(undefined, PYTHON_LANGUAGE);
             setupWorkspaces([]);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(undefined, {} as DebugConfiguration);
+            const debugConfig = await resolveDebugConfiguration(undefined, {});
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
-            expect(debugConfig).to.have.property('pythonPath', pythonPath);
             expect(debugConfig).to.have.property('type', 'python');
+            expect(debugConfig).to.not.have.property('pythonPath');
+            expect(debugConfig).to.have.property('python', pythonPath);
+            expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
+            expect(debugConfig).to.have.property('debugLauncherPython', pythonPath);
             expect(debugConfig).to.have.property('request', 'launch');
             expect(debugConfig).to.have.property('program', '');
             expect(debugConfig).not.to.have.property('cwd');
@@ -191,6 +243,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             // tslint:disable-next-line:no-any
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
+
         test('Defaults should be returned when an empty object is passed without Workspace Folder, no workspaces and non python file', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const activeFile = 'xyz.js';
@@ -198,12 +251,15 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupActiveEditor(activeFile, 'javascript');
             setupWorkspaces([]);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(undefined, {} as DebugConfiguration);
+            const debugConfig = await resolveDebugConfiguration(undefined, {});
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
-            expect(debugConfig).to.have.property('pythonPath', pythonPath);
             expect(debugConfig).to.have.property('type', 'python');
             expect(debugConfig).to.have.property('request', 'launch');
+            expect(debugConfig).to.not.have.property('pythonPath');
+            expect(debugConfig).to.have.property('python', pythonPath);
+            expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
+            expect(debugConfig).to.have.property('debugLauncherPython', pythonPath);
             expect(debugConfig).to.have.property('program', '');
             expect(debugConfig).not.to.have.property('cwd');
             expect(debugConfig).not.to.have.property('envFile');
@@ -211,6 +267,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             // tslint:disable-next-line:no-any
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
+
         test('Defaults should be returned when an empty object is passed without Workspace Folder, with a workspace and an active python file', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const activeFile = 'xyz.py';
@@ -219,13 +276,16 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupActiveEditor(activeFile, PYTHON_LANGUAGE);
             setupWorkspaces([defaultWorkspace]);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(undefined, {} as DebugConfiguration);
+            const debugConfig = await resolveDebugConfiguration(undefined, {});
             const filePath = Uri.file(defaultWorkspace).fsPath;
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
-            expect(debugConfig).to.have.property('pythonPath', pythonPath);
             expect(debugConfig).to.have.property('type', 'python');
             expect(debugConfig).to.have.property('request', 'launch');
+            expect(debugConfig).to.not.have.property('pythonPath');
+            expect(debugConfig).to.have.property('python', pythonPath);
+            expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
+            expect(debugConfig).to.have.property('debugLauncherPython', pythonPath);
             expect(debugConfig).to.have.property('program', activeFile);
             expect(debugConfig).to.have.property('cwd');
             expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(filePath.toLowerCase());
@@ -235,6 +295,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             // tslint:disable-next-line:no-any
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
+
         test("Ensure 'port' is left unaltered", async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
@@ -242,13 +303,13 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
 
             const port = 12341234;
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
-                port,
-                request: 'launch'
-            } as any) as DebugConfiguration);
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                port
+            });
 
             expect(debugConfig).to.have.property('port', port);
         });
+
         test("Ensure 'localRoot' is left unaltered", async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
@@ -256,13 +317,14 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
 
             const localRoot = `Debug_PythonPath_${new Date().toString()}`;
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
-                localRoot,
-                request: 'launch'
-            } as any) as DebugConfiguration);
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
+                localRoot
+            });
 
             expect(debugConfig).to.have.property('localRoot', localRoot);
         });
+
         test("Ensure 'remoteRoot' is left unaltered", async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
@@ -270,13 +332,14 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
 
             const remoteRoot = `Debug_PythonPath_${new Date().toString()}`;
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
-                remoteRoot,
-                request: 'launch'
-            } as any) as DebugConfiguration);
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
+                remoteRoot
+            });
 
             expect(debugConfig).to.have.property('remoteRoot', remoteRoot);
         });
+
         test("Ensure 'localRoot' and 'remoteRoot' are not used", async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
@@ -285,14 +348,15 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             const localRoot = `Debug_PythonPath_Local_Root_${new Date().toString()}`;
             const remoteRoot = `Debug_PythonPath_Remote_Root_${new Date().toString()}`;
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 localRoot,
-                remoteRoot,
-                request: 'launch'
-            } as any) as DebugConfiguration);
+                remoteRoot
+            });
 
             expect(debugConfig!.pathMappings).to.be.equal(undefined, 'unexpected pathMappings');
         });
+
         test('Ensure non-empty path mappings are used', async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
@@ -303,29 +367,30 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 localRoot: `Debug_PythonPath_Local_Root_${new Date().toString()}`,
                 remoteRoot: `Debug_PythonPath_Remote_Root_${new Date().toString()}`
             };
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
-                request: 'launch',
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 pathMappings: [expected]
-            } as any) as DebugConfiguration);
+            });
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
             expect(pathMappings).to.be.deep.equal([expected]);
         });
+
         test('Ensure replacement in path mappings happens', async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
             const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
-                request: 'launch',
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 pathMappings: [
                     {
                         localRoot: '${workspaceFolder}/spam',
                         remoteRoot: '${workspaceFolder}/spam'
                     }
                 ]
-            } as any) as DebugConfiguration);
+            });
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
             expect(pathMappings).to.be.deep.equal([
@@ -335,6 +400,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 }
             ]);
         });
+
         test('Ensure path mappings are not automatically added if missing', async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
@@ -342,14 +408,15 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
             const localRoot = `Debug_PythonPath_${new Date().toString()}`;
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
-                request: 'launch',
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 localRoot: localRoot
-            } as any) as DebugConfiguration);
+            });
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
             expect(pathMappings).to.be.equal(undefined, 'unexpected pathMappings');
         });
+
         test('Ensure path mappings are not automatically added if empty', async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
@@ -357,15 +424,16 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
             const localRoot = `Debug_PythonPath_${new Date().toString()}`;
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
-                request: 'launch',
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 localRoot: localRoot,
                 pathMappings: []
-            } as any) as DebugConfiguration);
+            });
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
             expect(pathMappings).to.be.equal(undefined, 'unexpected pathMappings');
         });
+
         test('Ensure path mappings are not automatically added to existing', async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
@@ -373,8 +441,8 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
             const localRoot = `Debug_PythonPath_${new Date().toString()}`;
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
-                request: 'launch',
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 localRoot: localRoot,
                 pathMappings: [
                     {
@@ -382,7 +450,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                         remoteRoot: '.'
                     }
                 ]
-            } as any) as DebugConfiguration);
+            });
 
             expect(debugConfig).to.have.property('localRoot', localRoot);
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
@@ -393,6 +461,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 }
             ]);
         });
+
         test('Ensure drive letter is lower cased for local path mappings on Windows when with existing path mappings', async function () {
             if (getOSType() !== OSType.Windows || osType !== OSType.Windows) {
                 // tslint:disable-next-line: no-invalid-this
@@ -404,15 +473,15 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
             const localRoot = Uri.file(path.join(workspaceFolder.uri.fsPath, 'app')).fsPath;
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
-                request: 'launch',
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 pathMappings: [
                     {
                         localRoot,
                         remoteRoot: '/app/'
                     }
                 ]
-            } as any) as DebugConfiguration);
+            });
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
             const expected = Uri.file(`c${localRoot.substring(1)}`).fsPath;
@@ -423,6 +492,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 }
             ]);
         });
+
         test('Ensure drive letter is not lower cased for local path mappings on non-Windows when with existing path mappings', async function () {
             if (getOSType() === OSType.Windows || osType === OSType.Windows) {
                 // tslint:disable-next-line: no-invalid-this
@@ -434,15 +504,15 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
             const localRoot = Uri.file(path.join(workspaceFolder.uri.fsPath, 'app')).fsPath;
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
-                request: 'launch',
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 pathMappings: [
                     {
                         localRoot,
                         remoteRoot: '/app/'
                     }
                 ]
-            } as any) as DebugConfiguration);
+            });
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
             expect(pathMappings).to.deep.equal([
@@ -452,21 +522,22 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 }
             ]);
         });
+
         test('Ensure local path mappings are not modified when not pointing to a local drive', async () => {
             const workspaceFolder = createMoqWorkspaceFolder(path.join('Server', 'Debug', 'Python_Path'));
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
             const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
-                request: 'launch',
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 pathMappings: [
                     {
                         localRoot: '/spam',
                         remoteRoot: '.'
                     }
                 ]
-            } as any) as DebugConfiguration);
+            });
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
             expect(pathMappings).to.deep.equal([
@@ -476,6 +547,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 }
             ]);
         });
+
         test('Ensure `${command:python.interpreterPath}` is replaced with actual pythonPath', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const activeFile = 'xyz.py';
@@ -485,12 +557,37 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 pythonPath: '${command:python.interpreterPath}'
-            } as any) as DebugConfiguration);
+            });
 
-            expect(debugConfig).to.have.property('pythonPath', pythonPath);
+            expect(debugConfig).to.not.have.property('pythonPath');
+            expect(debugConfig).to.have.property('python', pythonPath);
+            expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
+            expect(debugConfig).to.have.property('debugLauncherPython', pythonPath);
         });
+
+        test('Ensure `${command:python.interpreterPath}` substitution is properly handled', async () => {
+            const pythonPath = `PythonPath_${new Date().toString()}`;
+            const activeFile = 'xyz.py';
+            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+            setupIoc(pythonPath);
+            setupActiveEditor(activeFile, PYTHON_LANGUAGE);
+            const defaultWorkspace = path.join('usr', 'desktop');
+            setupWorkspaces([defaultWorkspace]);
+
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
+                python: '${command:python.interpreterPath}'
+            });
+
+            expect(debugConfig).to.not.have.property('pythonPath');
+            expect(debugConfig).to.have.property('python', pythonPath);
+            expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
+            expect(debugConfig).to.have.property('debugLauncherPython', pythonPath);
+        });
+
         test('Ensure hardcoded pythonPath is left unaltered', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const activeFile = 'xyz.py';
@@ -501,12 +598,80 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
 
             const debugPythonPath = `Debug_PythonPath_${new Date().toString()}`;
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 pythonPath: debugPythonPath
-            } as any) as DebugConfiguration);
+            });
 
-            expect(debugConfig).to.have.property('pythonPath', debugPythonPath);
+            expect(debugConfig).to.not.have.property('pythonPath');
+            expect(debugConfig).to.have.property('python', debugPythonPath);
+            expect(debugConfig).to.have.property('debugAdapterPython', debugPythonPath);
+            expect(debugConfig).to.have.property('debugLauncherPython', debugPythonPath);
         });
+
+        test('Ensure hardcoded "python" is left unaltered', async () => {
+            const pythonPath = `PythonPath_${new Date().toString()}`;
+            const activeFile = 'xyz.py';
+            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+            setupIoc(pythonPath);
+            setupActiveEditor(activeFile, PYTHON_LANGUAGE);
+            const defaultWorkspace = path.join('usr', 'desktop');
+            setupWorkspaces([defaultWorkspace]);
+
+            const debugPythonPath = `Debug_PythonPath_${new Date().toString()}`;
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
+                python: debugPythonPath
+            });
+
+            expect(debugConfig).to.not.have.property('pythonPath');
+            expect(debugConfig).to.have.property('python', debugPythonPath);
+            expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
+            expect(debugConfig).to.have.property('debugLauncherPython', pythonPath);
+        });
+
+        test('Ensure hardcoded "debugAdapterPython" is left unaltered', async () => {
+            const pythonPath = `PythonPath_${new Date().toString()}`;
+            const activeFile = 'xyz.py';
+            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+            setupIoc(pythonPath);
+            setupActiveEditor(activeFile, PYTHON_LANGUAGE);
+            const defaultWorkspace = path.join('usr', 'desktop');
+            setupWorkspaces([defaultWorkspace]);
+
+            const debugPythonPath = `Debug_PythonPath_${new Date().toString()}`;
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
+                debugAdapterPython: debugPythonPath
+            });
+
+            expect(debugConfig).to.not.have.property('pythonPath');
+            expect(debugConfig).to.have.property('python', pythonPath);
+            expect(debugConfig).to.have.property('debugAdapterPython', debugPythonPath);
+            expect(debugConfig).to.have.property('debugLauncherPython', pythonPath);
+        });
+
+        test('Ensure hardcoded "debugLauncherPython" is left unaltered', async () => {
+            const pythonPath = `PythonPath_${new Date().toString()}`;
+            const activeFile = 'xyz.py';
+            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+            setupIoc(pythonPath);
+            setupActiveEditor(activeFile, PYTHON_LANGUAGE);
+            const defaultWorkspace = path.join('usr', 'desktop');
+            setupWorkspaces([defaultWorkspace]);
+
+            const debugPythonPath = `Debug_PythonPath_${new Date().toString()}`;
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
+                debugLauncherPython: debugPythonPath
+            });
+
+            expect(debugConfig).to.not.have.property('pythonPath');
+            expect(debugConfig).to.have.property('python', pythonPath);
+            expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
+            expect(debugConfig).to.have.property('debugLauncherPython', debugPythonPath);
+        });
+
         test('Test defaults of debugger', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
@@ -514,10 +679,9 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(
-                workspaceFolder,
-                {} as DebugConfiguration
-            );
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch
+            });
 
             expect(debugConfig).to.have.property('console', 'integratedTerminal');
             expect(debugConfig).to.have.property('stopOnEntry', false);
@@ -529,6 +693,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             }
             expect((debugConfig as any).debugOptions).to.be.deep.equal(expectedOptions);
         });
+
         test('Test defaults of python debugger', async () => {
             if ('python' === DebuggerTypeName) {
                 return;
@@ -539,16 +704,16 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(
-                workspaceFolder,
-                {} as DebugConfiguration
-            );
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch
+            });
 
             expect(debugConfig).to.have.property('stopOnEntry', false);
             expect(debugConfig).to.have.property('showReturnValue', true);
             expect(debugConfig).to.have.property('debugOptions');
             expect((debugConfig as any).debugOptions).to.be.deep.equal([]);
         });
+
         test('Test overriding defaults of debugger', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
@@ -556,10 +721,11 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 redirectOutput: true,
                 justMyCode: false
-            } as LaunchRequestArguments);
+            });
 
             expect(debugConfig).to.have.property('console', 'integratedTerminal');
             expect(debugConfig).to.have.property('stopOnEntry', false);
@@ -577,6 +743,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             }
             expect((debugConfig as any).debugOptions).to.be.deep.equal(expectedOptions);
         });
+
         const testsForJustMyCode = [
             {
                 justMyCode: false,
@@ -631,13 +798,15 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
             testsForJustMyCode.forEach(async (testParams) => {
-                const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {
+                const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                    ...launch,
                     debugStdLib: testParams.debugStdLib,
                     justMyCode: testParams.justMyCode
-                } as LaunchRequestArguments);
+                });
                 expect(debugConfig).to.have.property('justMyCode', testParams.expectedResult);
             });
         });
+
         const testsForRedirectOutput = [
             {
                 console: 'internalConsole',
@@ -692,10 +861,11 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
             testsForRedirectOutput.forEach(async (testParams) => {
-                const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {
-                    console: testParams.console,
+                const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                    ...launch,
+                    console: testParams.console as any,
                     redirectOutput: testParams.redirectOutput
-                } as LaunchRequestArguments);
+                });
                 expect(debugConfig).to.have.property('redirectOutput', testParams.expectedRedirectOutput);
                 if (testParams.expectedRedirectOutput) {
                     expect(debugConfig).to.have.property('debugOptions');
@@ -703,6 +873,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 }
             });
         });
+
         test('Test fixFilePathCase', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
@@ -710,16 +881,16 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(
-                workspaceFolder,
-                {} as DebugConfiguration
-            );
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch
+            });
             if (osType === OSType.Windows) {
                 expect(debugConfig).to.have.property('debugOptions').contains(DebugOptions.FixFilePathCase);
             } else {
                 expect(debugConfig).to.have.property('debugOptions').not.contains(DebugOptions.FixFilePathCase);
             }
         });
+
         test('Jinja added for Pyramid', async () => {
             const workspacePath = path.join('usr', 'development', 'wksp1');
             const pythonPath = path.join(workspacePath, 'env', 'bin', 'python');
@@ -729,15 +900,16 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const options = { debugOptions: [DebugOptions.Pyramid], pyramid: true };
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
+                debugOptions: [DebugOptions.Pyramid],
+                pyramid: true
+            });
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(
-                workspaceFolder,
-                (options as any) as DebugConfiguration
-            );
             expect(debugConfig).to.have.property('debugOptions');
             expect((debugConfig as any).debugOptions).contains(DebugOptions.Jinja);
         });
+
         test('Auto detect flask debugging', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
@@ -745,14 +917,16 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 module: 'flask'
-            } as any) as DebugConfiguration);
+            });
 
             expect(debugConfig).to.have.property('debugOptions');
             expect((debugConfig as any).debugOptions).contains(DebugOptions.Jinja);
         });
-        test('Test validation of Python Path when launching debugger (with invalid python path)', async () => {
+
+        test('Test validation of Python Path when launching debugger (with invalid "python")', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             const pythonFile = 'xyz.py';
@@ -765,17 +939,19 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny())
                 )
                 .returns(() => Promise.resolve(false))
-                .verifiable(TypeMoq.Times.once());
+                .verifiable(TypeMoq.Times.atLeastOnce());
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 redirectOutput: false,
-                pythonPath
-            } as LaunchRequestArguments);
+                python: pythonPath
+            });
 
             diagnosticsService.verifyAll();
             expect(debugConfig).to.be.equal(undefined, 'Not undefined');
         });
-        test('Test validation of Python Path when launching debugger (with valid python path)', async () => {
+
+        test('Test validation of Python Path when launching debugger (with valid "python")', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             const pythonFile = 'xyz.py';
@@ -788,23 +964,24 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny())
                 )
                 .returns(() => Promise.resolve(true))
-                .verifiable(TypeMoq.Times.once());
+                .verifiable(TypeMoq.Times.atLeastOnce());
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 redirectOutput: false,
-                pythonPath
-            } as LaunchRequestArguments);
+                python: pythonPath
+            });
 
             diagnosticsService.verifyAll();
             expect(debugConfig).to.not.be.equal(undefined, 'is undefined');
         });
+
         test('Resolve path to envFile', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             const pythonFile = 'xyz.py';
-            const expectedEnvFilePath = `${workspaceFolder.uri.fsPath}${
-                osType === OSType.Windows ? '\\' : '/'
-            }${'wow.envFile'}`;
+            const sep = osType === OSType.Windows ? '\\' : '/';
+            const expectedEnvFilePath = `${workspaceFolder.uri.fsPath}${sep}${'wow.envFile'}`;
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
@@ -815,14 +992,16 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 )
                 .returns(() => Promise.resolve(true));
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
                 redirectOutput: false,
                 pythonPath,
                 envFile: path.join('${workspaceFolder}', 'wow.envFile')
-            } as LaunchRequestArguments);
+            });
 
             expect(debugConfig!.envFile).to.be.equal(expectedEnvFilePath);
         });
+
         async function testSetting(
             requestType: 'launch' | 'attach',
             settings: Record<string, boolean>,
@@ -830,7 +1009,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             mustHaveDebugOption: boolean
         ) {
             setupIoc('pythonPath');
-            const debugConfiguration: DebugConfiguration = {
+            let debugConfig: DebugConfiguration = {
                 request: requestType,
                 type: 'python',
                 name: '',
@@ -838,23 +1017,28 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             };
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, debugConfiguration);
+            debugConfig = (await debugProvider.resolveDebugConfiguration!(workspaceFolder, debugConfig))!;
+            debugConfig = (await debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(
+                workspaceFolder,
+                debugConfig
+            ))!;
+
             if (mustHaveDebugOption) {
-                expect((debugConfig as any).debugOptions).contains(debugOptionName);
+                expect(debugConfig.debugOptions).contains(debugOptionName);
             } else {
-                expect((debugConfig as any).debugOptions).not.contains(debugOptionName);
+                expect(debugConfig.debugOptions).not.contains(debugOptionName);
             }
         }
         type LaunchOrAttach = 'launch' | 'attach';
         const items: LaunchOrAttach[] = ['launch', 'attach'];
         items.forEach((requestType) => {
-            test(`Must not contain Sub Process when not specified (${requestType})`, async () => {
+            test(`Must not contain Sub Process when not specified(${requestType})`, async () => {
                 await testSetting(requestType, {}, DebugOptions.SubProcess, false);
             });
-            test(`Must not contain Sub Process setting=false (${requestType})`, async () => {
+            test(`Must not contain Sub Process setting = false(${requestType})`, async () => {
                 await testSetting(requestType, { subProcess: false }, DebugOptions.SubProcess, false);
             });
-            test(`Must not contain Sub Process setting=true (${requestType})`, async () => {
+            test(`Must not contain Sub Process setting = true(${requestType})`, async () => {
                 await testSetting(requestType, { subProcess: true }, DebugOptions.SubProcess, true);
             });
         });

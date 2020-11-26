@@ -1,12 +1,6 @@
 **/*.map
 **/*.analyzer.html
-!out/datascience-ui/common/node_modules/**/*
-!out/datascience-ui/notebook/commons.initial.bundle.js.map
-!out/datascience-ui/notebook/interactiveWindow.js.map
-!out/datascience-ui/notebook/nativeEditor.js.map
-!out/datascience-ui/viewers/commons.initial.bundle.js.map
-!out/datascience-ui/viewers/dataExplorer.js.map
-!out/datascience-ui/viewers/plotViewer.js.map
+!out/startPage-ui/viewers/
 *.vsix
 .appveyor.yml
 .editorconfig
@@ -27,7 +21,6 @@ CONTRIBUTING - LANGUAGE SERVER.md
 coverconfig.json
 cucumber-report.json
 gulpfile.js
-package.datascience-ui.dependencies.json
 package-lock.json
 packageExtension.cmd
 pvsc-dev-ext.py
@@ -44,7 +37,7 @@ typings.json
 vsc-extension-quickstart.md
 vscode-python-signing.*
 webpack.config.js
-webpack.datascience-*.config.js
+webpack.startPage-*.config.js
 
 .devcontainer/**
 .github/**
@@ -76,23 +69,6 @@ obj/**
 out/**/*.stats.json
 out/client/**/*.analyzer.html
 out/coverconfig.json
-out/datascience-ui/**/*.analyzer.html
-out/datascience-ui/common/**
-out/datascience-ui/**/*.js.LICENSE
-out/datascience-ui/data-explorer/**
-out/datascience-ui/datascience-ui/**
-out/datascience-ui/history-react/**
-out/datascience-ui/interactive-common/**
-out/datascience-ui/ipywidgets/**
-out/datascience-ui/native-editor/**
-out/datascience-ui/notebook/datascience-ui/**
-out/datascience-ui/notebook/ipywidgets/**
-out/datascience-ui/notebook/index.*.html
-out/datascience-ui/plot/**
-out/datascience-ui/react-common/**
-out/datascience-ui/viewers/datascience-ui/**
-out/datascience-ui/viewers/ipywidgets/**
-out/datascience-ui/viewers/index.*.html
 out/pythonFiles/**
 out/src/**
 out/test/**

@@ -4,9 +4,7 @@
 import { isCondaEnvironment } from '../discovery/locators/services/condaLocator';
 import { isPipenvEnvironment } from '../discovery/locators/services/pipEnvHelper';
 import { isPyenvEnvironment } from '../discovery/locators/services/pyenvLocator';
-import { isVenvEnvironment } from '../discovery/locators/services/venvLocator';
-import { isVirtualenvEnvironment } from '../discovery/locators/services/virtualenvLocator';
-import { isVirtualenvwrapperEnvironment } from '../discovery/locators/services/virtualenvwrapperLocator';
+import { isVenvEnvironment, isVirtualenvEnvironment, isVirtualenvwrapperEnvironment } from '../discovery/locators/services/virtualEnvironmentIdentifier';
 import { isWindowsStoreEnvironment } from '../discovery/locators/services/windowsStoreLocator';
 import { EnvironmentType } from '../info';
 
@@ -18,29 +16,29 @@ import { EnvironmentType } from '../info';
  * configure the environment, and the fall back for identification.
  * Top level we have the following environment types, since they leave a unique signature
  * in the environment or * use a unique path for the environments they create.
- *  1. Conda
- *  2. Windows Store
- *  3. PipEnv
- *  4. Pyenv
+ *  1. Pyenv (pyenv can also be a conda env or venv, but should be activated as a venv)
+ *  2. Conda
+ *  3. Windows Store
+ *  4. PipEnv
  *  5. Poetry
  *
  * Next level we have the following virtual environment tools. The are here because they
  * are consumed by the tools above, and can also be used independently.
- *  1. venv
- *  2. virtualenvwrapper
+ *  1. virtualenvwrapper
+ *  2. venv
  *  3. virtualenv
  *
  * Last category is globally installed python, or system python.
  */
-export function getPrioritizedEnvironmentType():EnvironmentType[] {
+export function getPrioritizedEnvironmentType(): EnvironmentType[] {
     return [
+        EnvironmentType.Pyenv,
         EnvironmentType.Conda,
         EnvironmentType.WindowsStore,
         EnvironmentType.Pipenv,
-        EnvironmentType.Pyenv,
         EnvironmentType.Poetry,
-        EnvironmentType.Venv,
         EnvironmentType.VirtualEnvWrapper,
+        EnvironmentType.Venv,
         EnvironmentType.VirtualEnv,
         EnvironmentType.Global,
         EnvironmentType.System,
@@ -48,11 +46,11 @@ export function getPrioritizedEnvironmentType():EnvironmentType[] {
     ];
 }
 
-function getIdentifiers(): Map<EnvironmentType, (path:string) => Promise<boolean>> {
+function getIdentifiers(): Map<EnvironmentType, (path: string) => Promise<boolean>> {
     const notImplemented = () => Promise.resolve(false);
     const defaultTrue = () => Promise.resolve(true);
-    const identifier: Map<EnvironmentType, (path:string) => Promise<boolean>> = new Map();
-    Object.keys(EnvironmentType).forEach((k:string) => {
+    const identifier: Map<EnvironmentType, (path: string) => Promise<boolean>> = new Map();
+    Object.keys(EnvironmentType).forEach((k: string) => {
         identifier.set(k as EnvironmentType, notImplemented);
     });
 
@@ -75,10 +73,8 @@ function getIdentifiers(): Map<EnvironmentType, (path:string) => Promise<boolean
 export async function identifyEnvironment(interpreterPath: string): Promise<EnvironmentType> {
     const identifiers = getIdentifiers();
     const prioritizedEnvTypes = getPrioritizedEnvironmentType();
-    // eslint-disable-next-line no-restricted-syntax
     for (const e of prioritizedEnvTypes) {
         const identifier = identifiers.get(e);
-        // eslint-disable-next-line no-await-in-loop
         if (identifier && await identifier(interpreterPath)) {
             return e;
         }

@@ -6,13 +6,11 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '.';
-import { splitMultilineString } from '../../datascience-ui/common';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { noop } from '../common/utils/misc';
-import { ICell, INotebookEditor, INotebookEditorProvider, INotebookExecutionLogger } from '../datascience/types';
 import { EventName } from './constants';
 
 /*
@@ -44,43 +42,24 @@ const MAX_DOCUMENT_LINES = 1000;
 const testExecution = isTestExecution();
 
 @injectable()
-export class ImportTracker implements IExtensionSingleActivationService, INotebookExecutionLogger {
+export class ImportTracker implements IExtensionSingleActivationService {
     private pendingChecks = new Map<string, NodeJS.Timer | number>();
     private sentMatches: Set<string> = new Set<string>();
     // tslint:disable-next-line:no-require-imports
     private hashFn = require('hash.js').sha256;
 
-    constructor(
-        @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider
-    ) {
+    constructor(@inject(IDocumentManager) private documentManager: IDocumentManager) {
         this.documentManager.onDidOpenTextDocument((t) => this.onOpenedOrSavedDocument(t));
         this.documentManager.onDidSaveTextDocument((t) => this.onOpenedOrSavedDocument(t));
-        this.notebookEditorProvider.onDidOpenNotebookEditor((t) => this.onOpenedOrClosedNotebook(t));
-        this.notebookEditorProvider.onDidCloseNotebookEditor((t) => this.onOpenedOrClosedNotebook(t));
     }
 
     public dispose() {
         this.pendingChecks.clear();
     }
 
-    public onKernelRestarted() {
-        // Do nothing on restarted
-    }
-    public async preExecute(_cell: ICell, _silent: boolean): Promise<void> {
-        // Do nothing on pre execute
-    }
-    public async postExecute(cell: ICell, silent: boolean): Promise<void> {
-        // Check for imports in the cell itself.
-        if (!silent && cell.data.cell_type === 'code') {
-            this.scheduleCheck(this.createCellKey(cell), this.checkCell.bind(this, cell));
-        }
-    }
-
     public async activate(): Promise<void> {
         // Act like all of our open documents just opened; our timeout will make sure this is delayed.
         this.documentManager.textDocuments.forEach((d) => this.onOpenedOrSavedDocument(d));
-        this.notebookEditorProvider.editors.forEach((e) => this.onOpenedOrClosedNotebook(e));
     }
 
     private getDocumentLines(document: TextDocument): (string | undefined)[] {
@@ -96,36 +75,10 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
             .filter((f: string | undefined) => f);
     }
 
-    private getNotebookLines(e: INotebookEditor): (string | undefined)[] {
-        let result: (string | undefined)[] = [];
-        if (e.model) {
-            e.model.cells
-                .filter((c) => c.data.cell_type === 'code')
-                .forEach((c) => {
-                    const cellArray = this.getCellLines(c);
-                    if (result.length < MAX_DOCUMENT_LINES) {
-                        result = [...result, ...cellArray];
-                    }
-                });
-        }
-        return result;
-    }
-
-    private getCellLines(cell: ICell): (string | undefined)[] {
-        // Split into multiple lines removing line feeds on the end.
-        return splitMultilineString(cell.data.source).map((s) => s.replace(/\n/g, ''));
-    }
-
     private onOpenedOrSavedDocument(document: TextDocument) {
         // Make sure this is a Python file.
         if (path.extname(document.fileName) === '.py') {
             this.scheduleDocument(document);
-        }
-    }
-
-    private onOpenedOrClosedNotebook(e: INotebookEditor) {
-        if (e.file) {
-            this.scheduleCheck(e.file.fsPath, this.checkNotebook.bind(this, e));
         }
     }
 
@@ -150,24 +103,6 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
             // Wait five seconds to make sure we don't already have this document pending.
             this.pendingChecks.set(file, setTimeout(check, 5000));
         }
-    }
-
-    private createCellKey(cell: ICell): string {
-        return `${cell.file}${cell.id}`;
-    }
-
-    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
-    private checkCell(cell: ICell) {
-        this.pendingChecks.delete(this.createCellKey(cell));
-        const lines = this.getCellLines(cell);
-        this.lookForImports(lines);
-    }
-
-    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
-    private checkNotebook(e: INotebookEditor) {
-        this.pendingChecks.delete(e.file.fsPath);
-        const lines = this.getNotebookLines(e);
-        this.lookForImports(lines);
     }
 
     @captureTelemetry(EventName.HASHED_PACKAGE_PERF)

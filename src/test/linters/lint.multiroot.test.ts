@@ -5,7 +5,6 @@ import { LanguageServerType } from '../../client/activation/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import {
     CTagsProductPathService,
-    DataScienceProductPathService,
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
@@ -80,11 +79,6 @@ suite('Multiroot Linting', () => {
             IProductPathService,
             RefactoringLibraryProductPathService,
             ProductType.RefactoringLibrary
-        );
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
-            DataScienceProductPathService,
-            ProductType.DataScience
         );
     }
 

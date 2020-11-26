@@ -19,6 +19,7 @@ import { LaunchJsonCompletionProvider } from '../../../client/debugger/extension
 import { InterpreterPathCommand } from '../../../client/debugger/extension/configuration/launch.json/interpreterPathCommand';
 import { LaunchJsonUpdaterService } from '../../../client/debugger/extension/configuration/launch.json/updaterService';
 import { DjangoLaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/djangoLaunch';
+import { FastAPILaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/fastapiLaunch';
 import { FileLaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/fileLaunch';
 import { FlaskLaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/flaskLaunch';
 import { ModuleLaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/moduleLaunch';
@@ -139,6 +140,13 @@ suite('Debugging - Service Registry', () => {
                 IDebugConfigurationProvider,
                 DjangoLaunchDebugConfigurationProvider,
                 DebugConfigurationType.launchDjango
+            )
+        ).once();
+        verify(
+            serviceManager.addSingleton<IDebugConfigurationProvider>(
+                IDebugConfigurationProvider,
+                FastAPILaunchDebugConfigurationProvider,
+                DebugConfigurationType.launchFastAPI
             )
         ).once();
         verify(

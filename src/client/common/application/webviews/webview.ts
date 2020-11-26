@@ -1,34 +1,36 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
+
 import '../../extensions';
 
 import * as path from 'path';
 import { Uri, Webview as vscodeWebview } from 'vscode';
-import { Identifiers } from '../../../datascience/constants';
 import { IFileSystem } from '../../platform/types';
 import { IWebview, IWebviewOptions, WebviewMessage } from '../types';
 
 // Wrapper over a vscode webview. To be used with either WebviewPanel or WebviewView
 export class Webview implements IWebview {
     protected webview?: vscodeWebview;
+
     constructor(protected fs: IFileSystem, protected options: IWebviewOptions) {}
 
-    public asWebviewUri(localResource: Uri) {
+    public asWebviewUri(localResource: Uri): Uri {
         if (!this.webview) {
             throw new Error('WebView not initialized, too early to get a Uri');
         }
         return this.webview.asWebviewUri(localResource);
     }
 
-    public postMessage(message: WebviewMessage) {
+    public postMessage(message: WebviewMessage): void {
         if (this.webview) {
             this.webview.postMessage(message);
         }
     }
 
     // tslint:disable-next-line:no-any
-    protected async generateLocalReactHtml() {
+    protected async generateLocalReactHtml(): Promise<string> {
         if (!this.webview) {
             throw new Error('WebView not initialized, too early to get a Uri');
         }
@@ -60,7 +62,6 @@ export class Webview implements IWebview {
                     this.webview.cspSource
                 }; default-src 'unsafe-inline' 'unsafe-eval' data: https: http: blob: ${this.webview.cspSource};">
                 <meta name="theme-color" content="#000000">
-                <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>VS Code Python React UI</title>
                 <base href="${uriBase}${uriBase.endsWith('/') ? '' : '/'}"/>
                 <link rel="stylesheet" href="${fontAwesomePath}">

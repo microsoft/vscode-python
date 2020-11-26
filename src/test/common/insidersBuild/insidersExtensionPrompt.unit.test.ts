@@ -18,7 +18,7 @@ import {
 import { ExtensionChannel, IExtensionChannelService } from '../../../client/common/insidersBuild/types';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
-import { Common, DataScienceSurveyBanner, ExtensionChannels } from '../../../client/common/utils/localize';
+import { Common, ExtensionChannels, ExtensionSurveyBanner } from '../../../client/common/utils/localize';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Insiders Extension prompt', () => {
@@ -49,7 +49,7 @@ suite('Insiders Extension prompt', () => {
         const prompts = [
             ExtensionChannels.yesWeekly(),
             ExtensionChannels.yesDaily(),
-            DataScienceSurveyBanner.bannerLabelNo()
+            ExtensionSurveyBanner.bannerLabelNo()
         ];
         when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
             ExtensionChannels.yesDaily() as any
@@ -71,7 +71,7 @@ suite('Insiders Extension prompt', () => {
         const prompts = [
             ExtensionChannels.yesWeekly(),
             ExtensionChannels.yesDaily(),
-            DataScienceSurveyBanner.bannerLabelNo()
+            ExtensionSurveyBanner.bannerLabelNo()
         ];
         when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
             ExtensionChannels.yesWeekly() as any
@@ -93,10 +93,10 @@ suite('Insiders Extension prompt', () => {
         const prompts = [
             ExtensionChannels.yesWeekly(),
             ExtensionChannels.yesDaily(),
-            DataScienceSurveyBanner.bannerLabelNo()
+            ExtensionSurveyBanner.bannerLabelNo()
         ];
         when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
-            DataScienceSurveyBanner.bannerLabelNo() as any
+            ExtensionSurveyBanner.bannerLabelNo() as any
         );
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(anything())).thenResolve();
@@ -115,7 +115,7 @@ suite('Insiders Extension prompt', () => {
         const prompts = [
             ExtensionChannels.yesWeekly(),
             ExtensionChannels.yesDaily(),
-            DataScienceSurveyBanner.bannerLabelNo()
+            ExtensionSurveyBanner.bannerLabelNo()
         ];
         when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
             undefined as any

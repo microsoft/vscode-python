@@ -19,7 +19,6 @@ import {
 } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import '../../client/common/extensions';
-import { IPlatformService } from '../../client/common/platform/types';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
@@ -93,7 +92,6 @@ suite('Refactor Rename', () => {
             .setup((s) => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
             .returns(() => envActivationService.object);
         const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
-        const platformService = mock<IPlatformService>();
 
         serviceContainer
             .setup((s) => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
@@ -106,8 +104,7 @@ suite('Refactor Rename', () => {
                         configService.object,
                         condaService.object,
                         undefined as any,
-                        instance(windowsStoreInterpreter),
-                        instance(platformService)
+                        instance(windowsStoreInterpreter)
                     )
             );
         const processLogger = typeMoq.Mock.ofType<IProcessLogger>();

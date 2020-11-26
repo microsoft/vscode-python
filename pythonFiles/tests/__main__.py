@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from . import DEBUG_ADAPTER_ROOT, IPYTHON_ROOT, SRC_ROOT, TEST_ROOT, TESTING_TOOLS_ROOT
+from . import DEBUG_ADAPTER_ROOT, SRC_ROOT, TEST_ROOT, TESTING_TOOLS_ROOT
 
 
 def parse_args():
@@ -26,7 +26,6 @@ def parse_args():
 
 
 def main(pytestargs, markers=None):
-    sys.path.insert(1, IPYTHON_ROOT)
     sys.path.insert(1, TESTING_TOOLS_ROOT)
     sys.path.insert(1, DEBUG_ADAPTER_ROOT)
 

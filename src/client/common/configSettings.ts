@@ -29,7 +29,6 @@ import * as internalPython from './process/internal/python';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
-    IDataScienceSettings,
     IExperiments,
     IExperimentsManager,
     IFormattingSettings,
@@ -110,7 +109,6 @@ export class PythonSettings implements IPythonSettings {
     public globalModuleInstallation = false;
     public analysis!: IAnalysisSettings;
     public autoUpdateLanguageServer: boolean = true;
-    public datascience!: IDataScienceSettings;
     public insidersChannel!: ExtensionChannels;
     public experiments!: IExperiments;
     public languageServer: LanguageServerType = LanguageServerType.Microsoft;
@@ -198,6 +196,21 @@ export class PythonSettings implements IPythonSettings {
         PythonSettings.pythonSettings.forEach((item) => item && item.dispose());
         PythonSettings.pythonSettings.clear();
     }
+
+    public static toSerializable(settings: IPythonSettings): IPythonSettings {
+        // tslint:disable-next-line: no-any
+        const clone: any = {};
+        const keys = Object.entries(settings);
+        keys.forEach((e) => {
+            const [k, v] = e;
+            if (!k.includes('Manager') && !k.includes('Service') && !k.includes('onDid')) {
+                clone[k] = v;
+            }
+        });
+
+        return clone as IPythonSettings;
+    }
+
     public dispose() {
         // tslint:disable-next-line:no-unsafe-any
         this.disposables.forEach((disposable) => disposable && disposable.dispose());
@@ -535,15 +548,6 @@ export class PythonSettings implements IPythonSettings {
                   optOutFrom: []
               };
 
-        const dataScienceSettings = systemVariables.resolveAny(
-            pythonSettings.get<IDataScienceSettings>('dataScience')
-        )!;
-        if (this.datascience) {
-            Object.assign<IDataScienceSettings, IDataScienceSettings>(this.datascience, dataScienceSettings);
-        } else {
-            this.datascience = dataScienceSettings;
-        }
-
         const showStartPage = pythonSettings.get<boolean>('showStartPage');
         if (showStartPage !== undefined) {
             this.showStartPage = showStartPage;
@@ -622,7 +626,11 @@ export class PythonSettings implements IPythonSettings {
                 ? this.interpreterPathService.get(this.workspaceRoot)
                 : pythonSettings.get<string>('pythonPath')
         )!;
-        if (!process.env.CI_DISABLE_AUTO_SELECTION && (this.pythonPath.length === 0 || this.pythonPath === 'python')) {
+        if (
+            !process.env.CI_DISABLE_AUTO_SELECTION &&
+            (this.pythonPath.length === 0 || this.pythonPath === 'python') &&
+            this.interpreterAutoSelectionService
+        ) {
             const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(
                 this.workspaceRoot
             );
@@ -688,7 +696,18 @@ function getPythonExecutable(pythonPath: string): string {
     }
     // Keep python right on top, for backwards compatibility.
     // tslint:disable-next-line:variable-name
-    const KnownPythonExecutables = ['python', 'python4', 'python3.6', 'python3.5', 'python3', 'python2.7', 'python2'];
+    const KnownPythonExecutables = [
+        'python',
+        'python4',
+        'python3.6',
+        'python3.5',
+        'python3',
+        'python2.7',
+        'python2',
+        'python3.7',
+        'python3.8',
+        'python3.9'
+    ];
 
     for (let executableName of KnownPythonExecutables) {
         // Suffix with 'python' for linux and 'osx', and 'python.exe' for 'windows'.

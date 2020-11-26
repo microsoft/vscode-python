@@ -113,7 +113,9 @@ suite('Interpreters - Interpreter Selection Tip', () => {
 
         await joinMailingList.activate();
 
-        verify(browserService.launch('https://aka.ms/python-vscode-mailinglist?m=test.sessionId')).once();
+        verify(
+            browserService.launch('https://aka.ms/python-vscode-mailinglist?m=test.sessionId&utm_source=vscode')
+        ).once();
         verify(storage.updateValue(true)).once();
         assert.ok(
             sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT, undefined, { selection: 'Yes' })

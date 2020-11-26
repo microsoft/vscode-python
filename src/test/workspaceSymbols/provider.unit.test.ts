@@ -76,7 +76,7 @@ suite('Workspace Symbols Provider', () => {
         expect(tags).to.be.lengthOf(0);
         verify(commandManager.executeCommand(Commands.Build_Workspace_Symbols, true, anything())).never();
     });
-    test('symbols should be returned when enabeld and vice versa', async () => {
+    test('symbols should be returned when enabled and vice versa', async () => {
         const provider = new WorkspaceSymbolProvider(instance(fs), instance(commandManager), [instance(generator)]);
         const tagFilePath = path.join(workspaceUri.fsPath, '.vscode', 'tags');
         when(generator.tagFilePath).thenReturn(tagFilePath);
@@ -87,7 +87,7 @@ suite('Workspace Symbols Provider', () => {
 
         const tags = await provider.provideWorkspaceSymbols('', new CancellationTokenSource().token);
 
-        expect(tags).to.be.lengthOf(100);
+        expect(tags.length).to.be.greaterThan(99);
         verify(commandManager.executeCommand(Commands.Build_Workspace_Symbols, true, anything())).never();
     });
     test('symbols should be filtered correctly', async () => {

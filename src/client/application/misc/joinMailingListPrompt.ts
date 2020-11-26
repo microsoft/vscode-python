@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as querystring from 'querystring';
+import { env, UIKind } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationEnvironment, IApplicationShell } from '../../common/application/types';
 import { JoinMailingListPromptVariants } from '../../common/experiments/groups';
@@ -28,9 +29,9 @@ export class JoinMailingListPrompt implements IExtensionSingleActivationService 
 
     public async activate(): Promise<void> {
         // Only show the prompt if we have never shown it before. True here, means we have
-        // shown the prompt before.
-        if (this.storage.value) {
-            return Promise.resolve();
+        // shown the prompt before. Also do not show the prompt if running in Codespaces.
+        if (this.storage.value || env.uiKind === UIKind?.Web) {
+            return;
         }
 
         let promptContent: string | undefined;
@@ -66,7 +67,8 @@ export class JoinMailingListPrompt implements IExtensionSingleActivationService 
         if (selection === Common.bannerLabelYes()) {
             sendTelemetryEvent(EventName.JOIN_MAILING_LIST_PROMPT, undefined, { selection: 'Yes' });
             const query = querystring.stringify({
-                m: encodeURIComponent(this.appEnvironment.sessionId)
+                m: encodeURIComponent(this.appEnvironment.sessionId),
+                utm_source: 'vscode'
             });
             const url = `https://aka.ms/python-vscode-mailinglist?${query}`;
             this.browserService.launch(url);

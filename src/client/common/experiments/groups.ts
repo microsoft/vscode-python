@@ -16,18 +16,6 @@ export enum WebAppReload {
     experiment = 'Reload - experiment'
 }
 
-// Experiment to use a local ZMQ kernel connection as opposed to starting a Jupyter server locally
-export enum LocalZMQKernel {
-    control = 'LocalZMQKernel - control',
-    experiment = 'LocalZMQKernel - experiment'
-}
-
-// Experiment for supporting run by line in data science notebooks
-export enum RunByLine {
-    control = 'RunByLine - control',
-    experiment = 'RunByLine - experiment'
-}
-
 /**
  * Experiment to check whether to to use a terminal to generate the environment variables of activated environments.
  *
@@ -57,12 +45,6 @@ export enum CollectNodeLSRequestTiming {
     experiment = 'CollectNodeLSRequestTiming - experiment'
 }
 
-// Determine if ipywidgets is enabled or not
-export enum EnableIPyWidgets {
-    control = 'EnableIPyWidgets - control',
-    experiment = 'EnableIPyWidgets - experiment'
-}
-
 /*
  * Experiment to check whether the extension should deprecate `python.pythonPath` setting
  */
@@ -71,18 +53,11 @@ export enum DeprecatePythonPath {
     experiment = 'DeprecatePythonPath - experiment'
 }
 
-/*
- * Experiment to turn on custom editor or VS Code Native Notebook API support.
- */
-export enum NotebookEditorSupport {
-    control = 'CustomEditorSupport - control',
-    customEditorExperiment = 'CustomEditorSupport - experiment',
-    nativeNotebookExperiment = 'NativeNotebook - experiment'
-}
-
 // Experiment to offer switch to Pylance language server
 export enum TryPylance {
-    experiment = 'tryPylance'
+    experiment = 'tryPylance',
+    jediPrompt1 = 'tryPylancePromptText1',
+    jediPrompt2 = 'tryPylancePromptText2'
 }
 
 // Experiment for the content of the tip being displayed on first extension launch:
@@ -101,4 +76,21 @@ export enum JoinMailingListPromptVariants {
     variant1 = 'pythonJoinMailingListVar1',
     variant2 = 'pythonJoinMailingListVar2',
     variant3 = 'pythonJoinMailingListVar3'
+}
+
+// Experiment to use a different method for normalizing code to be sent to the REPL.
+export enum SendSelectionToREPL {
+    experiment = 'pythonSendEntireLineToREPL'
+}
+
+// Feature flag for 'Python: Launch TensorBoard' feature
+export enum NativeTensorBoard {
+    experiment = 'nativeTensorBoard'
+}
+
+// Experiment to show a prompt asking users to install or select linter
+export enum LinterInstallationPromptVariants {
+    pylintFirst = 'pythonInstallPylintButtonFirst',
+    flake8First = 'pythonInstallFlake8ButtonFirst',
+    noPrompt = 'pythonNotDisplayLinterPrompt'
 }

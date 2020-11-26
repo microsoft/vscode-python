@@ -52,13 +52,13 @@ export class WorkspaceService implements IWorkspaceService {
     }
     public createFileSystemWatcher(
         globPattern: GlobPattern,
-        _ignoreCreateEvents?: boolean,
+        ignoreCreateEvents?: boolean,
         ignoreChangeEvents?: boolean,
         ignoreDeleteEvents?: boolean
     ): FileSystemWatcher {
         return workspace.createFileSystemWatcher(
             globPattern,
-            ignoreChangeEvents,
+            ignoreCreateEvents,
             ignoreChangeEvents,
             ignoreDeleteEvents
         );
@@ -69,7 +69,8 @@ export class WorkspaceService implements IWorkspaceService {
         maxResults?: number,
         token?: CancellationToken
     ): Thenable<Uri[]> {
-        return workspace.findFiles(include, exclude, maxResults, token);
+        const excludePattern = exclude === undefined ? this.searchExcludes : exclude;
+        return workspace.findFiles(include, excludePattern, maxResults, token);
     }
     public getWorkspaceFolderIdentifier(resource: Resource, defaultValue: string = ''): string {
         const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
@@ -78,5 +79,11 @@ export class WorkspaceService implements IWorkspaceService {
                   getOSType() === OSType.Windows ? workspaceFolder.uri.fsPath.toUpperCase() : workspaceFolder.uri.fsPath
               )
             : defaultValue;
+    }
+
+    private get searchExcludes() {
+        const searchExcludes = this.getConfiguration('search.exclude');
+        const enabledSearchExcludes = Object.keys(searchExcludes).filter((key) => searchExcludes.get(key) === true);
+        return `{${enabledSearchExcludes.join(',')}}`;
     }
 }

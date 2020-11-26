@@ -196,7 +196,6 @@
     "src/client/ioc/index.ts",
     "src/client/ioc/serviceManager.ts",
     "src/client/ioc/types.ts",
-    "src/client/jupyter/provider.ts",
     "src/client/language/braceCounter.ts",
     "src/client/language/characters.ts",
     "src/client/language/characterStream.ts",

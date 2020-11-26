@@ -4,10 +4,19 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as platformUtils from '../../../../client/common/utils/platform';
+import { PythonEnvInfo, PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
+import { buildEnvInfo } from '../../../../client/pythonEnvironments/base/info/env';
+import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
+import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as fileUtils from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { isPyenvEnvironment } from '../../../../client/pythonEnvironments/discovery/locators/services/pyenvLocator';
+import {
+    createPyenvLocator,
+    IPyenvVersionStrings, isPyenvEnvironment, parsePyenvVersion,
+} from '../../../../client/pythonEnvironments/discovery/locators/services/pyenvLocator';
+import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
+import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
-suite('Pyenv Locator Tests', () => {
+suite('Pyenv Identifier Tests', () => {
     const home = platformUtils.getUserHomeDir() || '';
     let getEnvVariableStub: sinon.SinonStub;
     let pathExistsStub:sinon.SinonStub;
@@ -102,5 +111,236 @@ suite('Pyenv Locator Tests', () => {
         const result = await isPyenvEnvironment(interpreterPath);
 
         assert.strictEqual(result, false);
+    });
+});
+
+suite('Pyenv Versions Parser Test', () => {
+    interface IPyenvVersionTestData {
+        input: string;
+        expectedOutput?: IPyenvVersionStrings;
+    }
+    const testData: IPyenvVersionTestData[] = [
+        { input: '2.7.0', expectedOutput: { pythonVer: '2.7.0', distro: undefined, distroVer: undefined } },
+        { input: '2.7-dev', expectedOutput: { pythonVer: '2.7-dev', distro: undefined, distroVer: undefined } },
+        { input: '2.7.18', expectedOutput: { pythonVer: '2.7.18', distro: undefined, distroVer: undefined } },
+        { input: '3.9.0', expectedOutput: { pythonVer: '3.9.0', distro: undefined, distroVer: undefined } },
+        { input: '3.9-dev', expectedOutput: { pythonVer: '3.9-dev', distro: undefined, distroVer: undefined } },
+        { input: '3.10-dev', expectedOutput: { pythonVer: '3.10-dev', distro: undefined, distroVer: undefined } },
+        { input: 'activepython-2.7.14', expectedOutput: { pythonVer: undefined, distro: 'activepython', distroVer: '2.7.14' } },
+        { input: 'activepython-3.6.0', expectedOutput: { pythonVer: undefined, distro: 'activepython', distroVer: '3.6.0' } },
+        { input: 'anaconda-4.0.0', expectedOutput: { pythonVer: undefined, distro: 'anaconda', distroVer: '4.0.0' } },
+        { input: 'anaconda2-5.3.1', expectedOutput: { pythonVer: undefined, distro: 'anaconda2', distroVer: '5.3.1' } },
+        { input: 'anaconda2-2019.07', expectedOutput: { pythonVer: undefined, distro: 'anaconda2', distroVer: '2019.07' } },
+        { input: 'anaconda3-5.3.1', expectedOutput: { pythonVer: undefined, distro: 'anaconda3', distroVer: '5.3.1' } },
+        { input: 'anaconda3-2020.07', expectedOutput: { pythonVer: undefined, distro: 'anaconda3', distroVer: '2020.07' } },
+        { input: 'graalpython-20.2.0', expectedOutput: { pythonVer: undefined, distro: 'graalpython', distroVer: '20.2.0' } },
+        { input: 'ironpython-dev', expectedOutput: { pythonVer: undefined, distro: 'ironpython', distroVer: 'dev' } },
+        { input: 'ironpython-2.7.6.3', expectedOutput: { pythonVer: undefined, distro: 'ironpython', distroVer: '2.7.6.3' } },
+        { input: 'ironpython-2.7.7', expectedOutput: { pythonVer: undefined, distro: 'ironpython', distroVer: '2.7.7' } },
+        { input: 'jython-dev', expectedOutput: { pythonVer: undefined, distro: 'jython', distroVer: 'dev' } },
+        { input: 'jython-2.5.0', expectedOutput: { pythonVer: undefined, distro: 'jython', distroVer: '2.5.0' } },
+        { input: 'jython-2.5-dev', expectedOutput: { pythonVer: undefined, distro: 'jython', distroVer: '2.5-dev' } },
+        { input: 'jython-2.5.4-rc1', expectedOutput: { pythonVer: undefined, distro: 'jython', distroVer: '2.5.4-rc1' } },
+        { input: 'jython-2.7.2', expectedOutput: { pythonVer: undefined, distro: 'jython', distroVer: '2.7.2' } },
+        { input: 'micropython-dev', expectedOutput: { pythonVer: undefined, distro: 'micropython', distroVer: 'dev' } },
+        { input: 'micropython-1.9.3', expectedOutput: { pythonVer: undefined, distro: 'micropython', distroVer: '1.9.3' } },
+        { input: 'micropython-1.13', expectedOutput: { pythonVer: undefined, distro: 'micropython', distroVer: '1.13' } },
+        { input: 'miniconda-latest', expectedOutput: { pythonVer: undefined, distro: 'miniconda', distroVer: 'latest' } },
+        { input: 'miniconda-2.2.2', expectedOutput: { pythonVer: undefined, distro: 'miniconda', distroVer: '2.2.2' } },
+        { input: 'miniconda-3.18.3', expectedOutput: { pythonVer: undefined, distro: 'miniconda', distroVer: '3.18.3' } },
+        { input: 'miniconda2-latest', expectedOutput: { pythonVer: undefined, distro: 'miniconda2', distroVer: 'latest' } },
+        { input: 'miniconda2-4.7.12', expectedOutput: { pythonVer: undefined, distro: 'miniconda2', distroVer: '4.7.12' } },
+        { input: 'miniconda3-latest', expectedOutput: { pythonVer: undefined, distro: 'miniconda3', distroVer: 'latest' } },
+        { input: 'miniconda3-4.7.12', expectedOutput: { pythonVer: undefined, distro: 'miniconda3', distroVer: '4.7.12' } },
+        { input: 'pypy-c-jit-latest', expectedOutput: { pythonVer: undefined, distro: 'pypy-c-jit', distroVer: 'latest' } },
+        { input: 'pypy-c-nojit-latest', expectedOutput: { pythonVer: undefined, distro: 'pypy-c-nojit', distroVer: 'latest' } },
+        { input: 'pypy-dev', expectedOutput: { pythonVer: undefined, distro: 'pypy', distroVer: 'dev' } },
+        { input: 'pypy-stm-2.3', expectedOutput: { pythonVer: undefined, distro: 'pypy-stm', distroVer: '2.3' } },
+        { input: 'pypy-stm-2.5.1', expectedOutput: { pythonVer: undefined, distro: 'pypy-stm', distroVer: '2.5.1' } },
+        { input: 'pypy-5.4-src', expectedOutput: { pythonVer: undefined, distro: 'pypy', distroVer: '5.4-src' } },
+        { input: 'pypy-5.4', expectedOutput: { pythonVer: undefined, distro: 'pypy', distroVer: '5.4' } },
+        { input: 'pypy-5.7.1-src', expectedOutput: { pythonVer: undefined, distro: 'pypy', distroVer: '5.7.1-src' } },
+        { input: 'pypy-5.7.1', expectedOutput: { pythonVer: undefined, distro: 'pypy', distroVer: '5.7.1' } },
+        { input: 'pypy2-5.4-src', expectedOutput: { pythonVer: '2', distro: 'pypy', distroVer: '5.4-src' } },
+        { input: 'pypy2-5.4', expectedOutput: { pythonVer: '2', distro: 'pypy', distroVer: '5.4' } },
+        { input: 'pypy2-5.4.1-src', expectedOutput: { pythonVer: '2', distro: 'pypy', distroVer: '5.4.1-src' } },
+        { input: 'pypy2-5.4.1', expectedOutput: { pythonVer: '2', distro: 'pypy', distroVer: '5.4.1' } },
+        { input: 'pypy2.7-7.3.1-src', expectedOutput: { pythonVer: '2.7', distro: 'pypy', distroVer: '7.3.1-src' } },
+        { input: 'pypy2.7-7.3.1', expectedOutput: { pythonVer: '2.7', distro: 'pypy', distroVer: '7.3.1' } },
+        { input: 'pypy3-2.4.0-src', expectedOutput: { pythonVer: '3', distro: 'pypy', distroVer: '2.4.0-src' } },
+        { input: 'pypy3-2.4.0', expectedOutput: { pythonVer: '3', distro: 'pypy', distroVer: '2.4.0' } },
+        { input: 'pypy3.3-5.2-alpha1-src', expectedOutput: { pythonVer: '3.3', distro: 'pypy', distroVer: '5.2-alpha1-src' } },
+        { input: 'pypy3.3-5.2-alpha1', expectedOutput: { pythonVer: '3.3', distro: 'pypy', distroVer: '5.2-alpha1' } },
+        { input: 'pypy3.3-5.5-alpha-src', expectedOutput: { pythonVer: '3.3', distro: 'pypy', distroVer: '5.5-alpha-src' } },
+        { input: 'pypy3.3-5.5-alpha', expectedOutput: { pythonVer: '3.3', distro: 'pypy', distroVer: '5.5-alpha' } },
+        { input: 'pypy3.5-c-jit-latest', expectedOutput: { pythonVer: '3.5', distro: 'pypy-c-jit', distroVer: 'latest' } },
+        { input: 'pypy3.5-5.7-beta-src', expectedOutput: { pythonVer: '3.5', distro: 'pypy', distroVer: '5.7-beta-src' } },
+        { input: 'pypy3.5-5.7-beta', expectedOutput: { pythonVer: '3.5', distro: 'pypy', distroVer: '5.7-beta' } },
+        { input: 'pypy3.5-5.7.1-beta-src', expectedOutput: { pythonVer: '3.5', distro: 'pypy', distroVer: '5.7.1-beta-src' } },
+        { input: 'pypy3.5-5.7.1-beta', expectedOutput: { pythonVer: '3.5', distro: 'pypy', distroVer: '5.7.1-beta' } },
+        { input: 'pypy3.6-7.3.1-src', expectedOutput: { pythonVer: '3.6', distro: 'pypy', distroVer: '7.3.1-src' } },
+        { input: 'pypy3.6-7.3.1', expectedOutput: { pythonVer: '3.6', distro: 'pypy', distroVer: '7.3.1' } },
+        { input: 'pypy-5.7.1-beta-src', expectedOutput: { pythonVer: undefined, distro: 'pypy', distroVer: '5.7.1-beta-src' } },
+        { input: 'pypy', expectedOutput: { pythonVer: undefined, distro: 'pypy', distroVer: undefined } },
+        { input: 'pyston-0.6.1', expectedOutput: { pythonVer: undefined, distro: 'pyston', distroVer: '0.6.1' } },
+        { input: 'stackless-dev', expectedOutput: { pythonVer: undefined, distro: 'stackless', distroVer: 'dev' } },
+        { input: 'stackless-2.7-dev', expectedOutput: { pythonVer: undefined, distro: 'stackless', distroVer: '2.7-dev' } },
+        { input: 'stackless-3.4-dev', expectedOutput: { pythonVer: undefined, distro: 'stackless', distroVer: '3.4-dev' } },
+        { input: 'stackless-3.7.5', expectedOutput: { pythonVer: undefined, distro: 'stackless', distroVer: '3.7.5' } },
+        { input: 'stackless', expectedOutput: { pythonVer: undefined, distro: 'stackless', distroVer: undefined } },
+        { input: 'unknown', expectedOutput: undefined },
+    ];
+
+    testData.forEach((data) => {
+        test(`Parse pyenv version [${data.input}]`, async () => {
+            assert.deepStrictEqual(await parsePyenvVersion(data.input), data.expectedOutput);
+        });
+    });
+});
+
+suite('Pyenv Locator Tests', () => {
+    let getEnvVariableStub: sinon.SinonStub;
+    let getOsTypeStub: sinon.SinonStub;
+    let locator: IDisposableLocator;
+
+    const testPyenvRoot = path.join(TEST_LAYOUT_ROOT, 'pyenvhome', '.pyenv');
+    const testPyenvVersionsDir = path.join(testPyenvRoot, 'versions');
+
+    setup(async () => {
+        getEnvVariableStub = sinon.stub(platformUtils, 'getEnvironmentVariable');
+        getEnvVariableStub.withArgs('PYENV_ROOT').returns(testPyenvRoot);
+
+        getOsTypeStub = sinon.stub(platformUtils, 'getOSType');
+        getOsTypeStub.returns(platformUtils.OSType.Linux);
+
+        locator = await createPyenvLocator();
+    });
+
+    teardown(() => {
+        getEnvVariableStub.restore();
+        getOsTypeStub.restore();
+        locator.dispose();
+    });
+
+    function getExpectedPyenvInfo(name:string) : PythonEnvInfo | undefined {
+        if (name === '3.9.0') {
+            const envInfo = buildEnvInfo({
+                kind: PythonEnvKind.Pyenv,
+                executable: path.join(testPyenvVersionsDir, '3.9.0', 'bin', 'python'),
+                version: {
+                    major: 3,
+                    minor: 9,
+                    micro: 0,
+                },
+            });
+            envInfo.defaultDisplayName = '3.9.0:pyenv';
+            envInfo.location = path.join(testPyenvVersionsDir, '3.9.0');
+            envInfo.name = '3.9.0';
+            return envInfo;
+        }
+
+        if (name === 'conda1') {
+            const envInfo = buildEnvInfo({
+                kind: PythonEnvKind.Pyenv,
+                executable: path.join(testPyenvVersionsDir, 'conda1', 'bin', 'python'),
+                version: {
+                    major: 3,
+                    minor: 8,
+                    micro: 5,
+                },
+            });
+            envInfo.defaultDisplayName = 'conda1:pyenv';
+            envInfo.location = path.join(testPyenvVersionsDir, 'conda1');
+            envInfo.name = 'conda1';
+            return envInfo;
+        }
+
+        if (name === 'miniconda') {
+            const envInfo = buildEnvInfo({
+                kind: PythonEnvKind.Pyenv,
+                executable: path.join(testPyenvVersionsDir, 'miniconda3-4.7.12', 'bin', 'python'),
+                version: {
+                    major: 3,
+                    minor: 7,
+                    micro: -1,
+                },
+            });
+            envInfo.defaultDisplayName = 'miniconda3-4.7.12:pyenv';
+            envInfo.location = path.join(testPyenvVersionsDir, 'miniconda3-4.7.12');
+            envInfo.name = 'miniconda3-4.7.12';
+            envInfo.distro.org = 'miniconda3';
+            return envInfo;
+        }
+
+        if (name === 'venv1') {
+            const envInfo = buildEnvInfo({
+                kind: PythonEnvKind.Pyenv,
+                executable: path.join(testPyenvVersionsDir, 'venv1', 'bin', 'python'),
+                version: {
+                    major: 3,
+                    minor: 9,
+                    micro: 0,
+                },
+            });
+            envInfo.defaultDisplayName = 'venv1:pyenv';
+            envInfo.location = path.join(testPyenvVersionsDir, 'venv1');
+            envInfo.name = 'venv1';
+            return envInfo;
+        }
+        return undefined;
+    }
+
+    test('iterEnvs()', async () => {
+        const expectedEnvs = [
+            getExpectedPyenvInfo('3.9.0'),
+            getExpectedPyenvInfo('conda1'),
+            getExpectedPyenvInfo('miniconda'),
+            getExpectedPyenvInfo('venv1'),
+        ].filter((e) => e !== undefined).sort((a, b) => {
+            if (a && b) {
+                return a.executable.filename.localeCompare(b.executable.filename);
+            }
+            return 0;
+        });
+
+        const actualEnvs = (await getEnvs(locator.iterEnvs()))
+            .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        assertEnvsEqual(actualEnvs, expectedEnvs);
+    });
+
+    test('resolveEnv(string)', async () => {
+        const pythonPath = path.join(testPyenvVersionsDir, '3.9.0', 'bin', 'python');
+        const expected = getExpectedPyenvInfo('3.9.0');
+
+        const actual = await locator.resolveEnv(pythonPath);
+        assertEnvEqual(actual, expected);
+    });
+    test('resolveEnv(PythonEnvInfo)', async () => {
+        const pythonPath = path.join(testPyenvVersionsDir, '3.9.0', 'bin', 'python');
+        const expected = getExpectedPyenvInfo('3.9.0');
+
+        // Partially filled in env info object
+        const input:PythonEnvInfo = {
+            name: '',
+            location: '',
+            kind: PythonEnvKind.Unknown,
+            distro: { org: '' },
+            arch: platformUtils.Architecture.Unknown,
+            executable: {
+                filename: pythonPath,
+                sysPrefix: '',
+                ctime: -1,
+                mtime: -1,
+            },
+            version: {
+                major: -1,
+                minor: -1,
+                micro: -1,
+            },
+        };
+
+        const actual = await locator.resolveEnv(input);
+
+        assertEnvEqual(actual, expected);
     });
 });

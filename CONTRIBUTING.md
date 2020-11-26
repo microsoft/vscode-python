@@ -2,15 +2,17 @@
 
 ---
 
-| `release` branch                                                                                                                                                                            | `main` branch                                                                                                                                                                         | Nightly CI                                                                                                                                                                                         | coverage (`main` branch)                                                                                                               |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=release)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=release) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=main)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=main) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/Nightly%20Build?branchName=main)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=85&branchName=main) | [![codecov](https://codecov.io/gh/microsoft/vscode-python/branch/main/graph/badge.svg)](https://codecov.io/gh/microsoft/vscode-python) |
-
-[[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)]
+-   [![codecov](https://codecov.io/gh/microsoft/vscode-python/branch/main/graph/badge.svg)](https://codecov.io/gh/microsoft/vscode-python)
+-   [Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)
 
 ---
 
-[For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [Pylance](https://github.com/microsoft/pylance-release) see its own repo; for [debugpy](https://github.com/microsoft/debugpy) see its own repo]
+The following projects have their own repositories:
+
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [debugpy](https://github.com/microsoft/debugpy)
+-   [Jupyter](https://github.com/microsoft/vscode-jupyter)
+-   [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server)
 
 ## Contributing a pull request
 
@@ -59,7 +61,6 @@ For incremental builds you can use the following commands depending on your need
 
 ```shell
 npm run compile
-npm run compile-webviews-watch # For data science (React Code)
 ```
 
 Sometimes you will need to run `npm run clean` and even `rm -r out`.

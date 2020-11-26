@@ -2,10 +2,16 @@
 // Licensed under the MIT License.
 
 import * as fsapi from 'fs-extra';
+import * as minimatch from 'minimatch';
 import * as path from 'path';
 import { traceWarning } from '../../../../common/logger';
-import { getEnvironmentVariable } from '../../../../common/utils/platform';
-import { isWindowsPythonExe } from '../../../common/windowsUtils';
+import { Architecture, getEnvironmentVariable } from '../../../../common/utils/platform';
+import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
+import { buildEnvInfo } from '../../../base/info/env';
+import { getPythonVersionFromPath } from '../../../base/info/pythonVersion';
+import { IDisposableLocator, IPythonEnvsIterator } from '../../../base/locator';
+import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
+import { getFileInfo } from '../../../common/externalDependencies';
 
 /**
  * Gets path to the Windows Apps directory.
@@ -23,7 +29,7 @@ export function getWindowsStoreAppsRoot(): string {
  * @returns {boolean} : Returns true if `interpreterPath` is under
  * `%ProgramFiles%/WindowsApps`.
  */
-export function isForbiddenStorePath(interpreterPath:string):boolean {
+export function isForbiddenStorePath(interpreterPath: string): boolean {
     const programFilesStorePath = path
         .join(getEnvironmentVariable('ProgramFiles') || 'Program Files', 'WindowsApps')
         .normalize()
@@ -82,6 +88,31 @@ export async function isWindowsStoreEnvironment(interpreterPath: string): Promis
 }
 
 /**
+ * This is a glob pattern which matches following file names:
+ * python3.8.exe
+ * python3.9.exe
+ * python3.10.exe
+ * This pattern does not match:
+ * python.exe
+ * python2.7.exe
+ * python3.exe
+ * python38.exe
+ * Note chokidar fails to match multiple digits using +([0-9]), even though the underlying glob pattern matcher
+ * they use (picomatch), or any other glob matcher does. Hence why we had to use {[0-9],[0-9][0-9]} instead.
+ */
+const pythonExeGlob = 'python3\.{[0-9],[0-9][0-9]}\.exe';
+
+/**
+ * Checks if a given path ends with python3.*.exe. Not all python executables are matched as
+ * we do not want to return duplicate executables.
+ * @param {string} interpreterPath : Path to python interpreter.
+ * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
+ */
+export function isWindowsStorePythonExe(interpreterPath: string): boolean {
+    return minimatch(path.basename(interpreterPath), pythonExeGlob, { nocase: true });
+}
+
+/**
  * Gets paths to the Python executable under Windows Store apps.
  * @returns: Returns python*.exe for the windows store app root directory.
  *
@@ -103,9 +134,54 @@ export async function getWindowsStorePythonExes(): Promise<string[]> {
     // Collect python*.exe directly under %LOCALAPPDATA%/Microsoft/WindowsApps
     const files = await fsapi.readdir(windowsAppsRoot);
     return files
-        .map((filename:string) => path.join(windowsAppsRoot, filename))
-        .filter(isWindowsPythonExe);
+        .map((filename: string) => path.join(windowsAppsRoot, filename))
+        .filter(isWindowsStorePythonExe);
 }
 
-// tslint:disable-next-line: no-suspicious-comment
-// TODO: The above APIs will be consumed by the Windows Store locator class when we have it.
+class WindowsStoreLocator extends FSWatchingLocator {
+    private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
+
+    constructor() {
+        super(
+            getWindowsStoreAppsRoot,
+            async () => this.kind,
+            { executableBaseGlob: pythonExeGlob },
+        );
+    }
+
+    public iterEnvs(): IPythonEnvsIterator {
+        const iterator = async function* (kind: PythonEnvKind) {
+            const exes = await getWindowsStorePythonExes();
+            yield* exes.map(async (executable: string) => buildEnvInfo({
+                kind,
+                executable,
+                version: getPythonVersionFromPath(executable),
+                org: 'Microsoft',
+                arch: Architecture.x64,
+                fileInfo: await getFileInfo(executable),
+            }));
+        };
+        return iterator(this.kind);
+    }
+
+    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        const executablePath = typeof env === 'string' ? env : env.executable.filename;
+        if (await isWindowsStoreEnvironment(executablePath)) {
+            return buildEnvInfo({
+                kind: this.kind,
+                executable: executablePath,
+                version: getPythonVersionFromPath(executablePath),
+                org: 'Microsoft',
+                arch: Architecture.x64,
+                fileInfo: await getFileInfo(executablePath),
+            });
+        }
+        return undefined;
+    }
+}
+
+export async function createWindowsStoreLocator(): Promise<IDisposableLocator> {
+    const locator = new WindowsStoreLocator();
+    await locator.initialize();
+    return locator;
+}

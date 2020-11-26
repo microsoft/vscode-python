@@ -27,6 +27,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {}
+
     public async createDebugAdapterDescriptor(
         session: DebugSession,
         _executable: DebugAdapterExecutable | undefined
@@ -54,7 +55,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
             }
         }
 
-        const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
+        const pythonPath = await this.getDebugAdapterPython(configuration, session.workspaceFolder);
         if (pythonPath.length !== 0) {
             if (configuration.request === 'attach' && configuration.processId !== undefined) {
                 sendTelemetryEvent(EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS);
@@ -96,13 +97,16 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
      * @returns {Promise<string>} Path to the python interpreter for this workspace.
      * @memberof DebugAdapterDescriptorFactory
      */
-    private async getPythonPath(
+    private async getDebugAdapterPython(
         configuration: LaunchRequestArguments | AttachRequestArguments,
         workspaceFolder?: WorkspaceFolder
     ): Promise<string> {
-        if (configuration.pythonPath) {
+        if (configuration.debugAdapterPython !== undefined) {
+            return configuration.debugAdapterPython;
+        } else if (configuration.pythonPath) {
             return configuration.pythonPath;
         }
+
         const resourceUri = workspaceFolder ? workspaceFolder.uri : undefined;
         const interpreter = await this.interpreterService.getActiveInterpreter(resourceUri);
         if (interpreter) {

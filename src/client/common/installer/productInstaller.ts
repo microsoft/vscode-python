@@ -4,22 +4,22 @@ import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import '../../common/extensions';
-import * as localize from '../../common/utils/localize';
-import { Telemetry } from '../../datascience/constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { LinterId } from '../../linters/types';
+import { ILinterManager, LinterId } from '../../linters/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { traceError } from '../logger';
+import { LinterInstallationPromptVariants } from '../experiments/groups';
+import { traceError, traceInfo } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import { ITerminalServiceFactory } from '../terminal/types';
 import {
     IConfigurationService,
+    IExperimentsManager,
     IInstaller,
     InstallerResponse,
     IOutputChannel,
@@ -28,8 +28,8 @@ import {
     Product,
     ProductType
 } from '../types';
+import { Common, Installer, Linters } from '../utils/localize';
 import { isResource, noop } from '../utils/misc';
-import { StopWatch } from '../utils/stopWatch';
 import { ProductNames } from './productNames';
 import {
     IInstallationChannelManager,
@@ -41,14 +41,14 @@ import {
 
 export { Product } from '../types';
 
-export const CTagsInsllationScript =
+export const CTagsInstallationScript =
     os.platform() === 'darwin' ? 'brew install ctags' : 'sudo apt-get install exuberant-ctags';
 
 export abstract class BaseInstaller {
     private static readonly PromptPromises = new Map<string, Promise<InstallerResponse>>();
     protected readonly appShell: IApplicationShell;
     protected readonly configService: IConfigurationService;
-    private readonly workspaceService: IWorkspaceService;
+    protected readonly workspaceService: IWorkspaceService;
     private readonly productService: IProductService;
 
     constructor(protected serviceContainer: IServiceContainer, protected outputChannel: OutputChannel) {
@@ -170,8 +170,8 @@ export class CTagsInstaller extends BaseInstaller {
                 .get<ITerminalServiceFactory>(ITerminalServiceFactory)
                 .getTerminalService(resource);
             terminalService
-                .sendCommand(CTagsInsllationScript, [])
-                .catch((ex) => traceError(`Failed to install ctags. Script sent '${CTagsInsllationScript}', ${ex}`));
+                .sendCommand(CTagsInstallationScript, [])
+                .catch((ex) => traceError(`Failed to install ctags. Script sent '${CTagsInstallationScript}', ${ex}`));
         }
         return InstallerResponse.Ignore;
     }
@@ -232,24 +232,162 @@ export class FormatterInstaller extends BaseInstaller {
 }
 
 export class LinterInstaller extends BaseInstaller {
+    // This is a hack, really we should be handling this in a service that
+    // controls the prompts we show. The issue here was that if we show
+    // a prompt to install pylint and flake8, and user selects flake8
+    // we immediately show this prompt again saying install flake8, while the
+    // installation is on going.
+    private static promptSeen: boolean = false;
+    private readonly experimentsManager: IExperimentsManager;
+    private readonly linterManager: ILinterManager;
+
+    constructor(protected serviceContainer: IServiceContainer, protected outputChannel: OutputChannel) {
+        super(serviceContainer, outputChannel);
+        this.experimentsManager = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        this.linterManager = serviceContainer.get<ILinterManager>(ILinterManager);
+    }
+
+    public static reset() {
+        // Read notes where this is defined.
+        LinterInstaller.promptSeen = false;
+    }
+
     protected async promptToInstallImplementation(
         product: Product,
         resource?: Uri,
         cancel?: CancellationToken
     ): Promise<InstallerResponse> {
+        // This is a hack, really we should be handling this in a service that
+        // controls the prompts we show. The issue here was that if we show
+        // a prompt to install pylint and flake8, and user selects flake8
+        // we immediately show this prompt again saying install flake8, while the
+        // installation is on going.
+        if (LinterInstaller.promptSeen) {
+            return InstallerResponse.Ignore;
+        }
+
+        LinterInstaller.promptSeen = true;
+
+        // Conditions to use experiment prompt:
+        // 1. There should be no linter set in any scope
+        // 2. The default linter should be pylint
+
+        if (!this.isLinterSetInAnyScope() && product === Product.pylint) {
+            if (this.experimentsManager.inExperiment(LinterInstallationPromptVariants.noPrompt)) {
+                // We won't show a prompt, so tell the extension to treat as though user
+                // ignored the prompt.
+                sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT, undefined, {
+                    prompt: 'noPrompt'
+                });
+
+                const productName = ProductNames.get(product)!;
+                traceInfo(`Linter ${productName} is not installed.`);
+
+                return InstallerResponse.Ignore;
+            } else if (this.experimentsManager.inExperiment(LinterInstallationPromptVariants.pylintFirst)) {
+                return this.newPromptForInstallation(true, resource, cancel);
+            } else if (this.experimentsManager.inExperiment(LinterInstallationPromptVariants.flake8First)) {
+                return this.newPromptForInstallation(false, resource, cancel);
+            }
+        }
+
+        sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT, undefined, {
+            prompt: 'old'
+        });
+        return this.oldPromptForInstallation(product, resource, cancel);
+    }
+
+    /**
+     * For installers that want to avoid prompting the user over and over, they can make use of a
+     * persisted true/false value representing user responses to 'stop showing this prompt'. This method
+     * gets the persisted value given the installer-defined key.
+     *
+     * @param key Key to use to get a persisted response value, each installer must define this for themselves.
+     * @returns Boolean: The current state of the stored response key given.
+     */
+    protected getStoredResponse(key: string): boolean {
+        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        const state = factory.createGlobalPersistentState<boolean | undefined>(key, undefined);
+        return state.value === true;
+    }
+
+    private async newPromptForInstallation(pylintFirst: boolean, resource?: Uri, cancel?: CancellationToken) {
+        const productName = ProductNames.get(Product.pylint)!;
+
+        // User has already set to ignore this prompt
+        const disableLinterInstallPromptKey = `${productName}_DisableLinterInstallPrompt`;
+        if (this.getStoredResponse(disableLinterInstallPromptKey) === true) {
+            return InstallerResponse.Ignore;
+        }
+
+        // Check if the linter settings has Pylint or flake8 pointing to executables.
+        // If the settings point to executables then we can't install. Defer to old Prompt.
+        if (
+            !this.isExecutableAModule(Product.pylint, resource) ||
+            !this.isExecutableAModule(Product.flake8, resource)
+        ) {
+            return this.oldPromptForInstallation(Product.pylint, resource, cancel);
+        }
+
+        const installPylint = Linters.installPylint();
+        const installFlake8 = Linters.installFlake8();
+        const doNotShowAgain = Common.doNotShowAgain();
+
+        const options = pylintFirst
+            ? [installPylint, installFlake8, doNotShowAgain]
+            : [installFlake8, installPylint, doNotShowAgain];
+        const message = Linters.installMessage();
+        const prompt = pylintFirst ? 'pylintFirst' : 'flake8first';
+
+        sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT, undefined, {
+            prompt
+        });
+
+        const response = await this.appShell.showInformationMessage(message, ...options);
+
+        if (response === installPylint) {
+            sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT_ACTION, undefined, {
+                prompt,
+                action: 'installPylint'
+            });
+            return this.install(Product.pylint, resource, cancel);
+        } else if (response === installFlake8) {
+            sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT_ACTION, undefined, {
+                prompt,
+                action: 'installFlake8'
+            });
+            await this.linterManager.setActiveLintersAsync([Product.flake8], resource);
+            return this.install(Product.flake8, resource, cancel);
+        } else if (response === doNotShowAgain) {
+            sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT_ACTION, undefined, {
+                prompt,
+                action: 'disablePrompt'
+            });
+            await this.setStoredResponse(disableLinterInstallPromptKey, true);
+            return InstallerResponse.Ignore;
+        }
+
+        sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT_ACTION, undefined, {
+            prompt,
+            action: 'close'
+        });
+        return InstallerResponse.Ignore;
+    }
+
+    private async oldPromptForInstallation(product: Product, resource?: Uri, cancel?: CancellationToken) {
         const isPylint = product === Product.pylint;
 
         const productName = ProductNames.get(product)!;
-        const install = 'Install';
-        const disableInstallPrompt = 'Do not show again';
+        const install = Common.install();
+        const doNotShowAgain = Common.doNotShowAgain();
         const disableLinterInstallPromptKey = `${productName}_DisableLinterInstallPrompt`;
-        const selectLinter = 'Select Linter';
+        const selectLinter = Linters.selectLinter();
 
         if (isPylint && this.getStoredResponse(disableLinterInstallPromptKey) === true) {
             return InstallerResponse.Ignore;
         }
 
-        const options = isPylint ? [selectLinter, disableInstallPrompt] : [selectLinter];
+        const options = isPylint ? [selectLinter, doNotShowAgain] : [selectLinter];
 
         let message = `Linter ${productName} is not installed.`;
         if (this.isExecutableAModule(product, resource)) {
@@ -265,7 +403,7 @@ export class LinterInstaller extends BaseInstaller {
                 action: 'install'
             });
             return this.install(product, resource, cancel);
-        } else if (response === disableInstallPrompt) {
+        } else if (response === doNotShowAgain) {
             await this.setStoredResponse(disableLinterInstallPromptKey, true);
             sendTelemetryEvent(EventName.LINTER_NOT_INSTALLED_PROMPT, undefined, {
                 tool: productName as LinterId,
@@ -282,18 +420,34 @@ export class LinterInstaller extends BaseInstaller {
         return InstallerResponse.Ignore;
     }
 
-    /**
-     * For installers that want to avoid prompting the user over and over, they can make use of a
-     * persisted true/false value representing user responses to 'stop showing this prompt'. This method
-     * gets the persisted value given the installer-defined key.
-     *
-     * @param key Key to use to get a persisted response value, each installer must define this for themselves.
-     * @returns Boolean: The current state of the stored response key given.
-     */
-    protected getStoredResponse(key: string): boolean {
-        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const state = factory.createGlobalPersistentState<boolean | undefined>(key, undefined);
-        return state.value === true;
+    private isLinterSetInAnyScope() {
+        const config = this.workspaceService.getConfiguration('python');
+        if (config) {
+            const keys = [
+                'linting.pylintEnabled',
+                'linting.flake8Enabled',
+                'linting.banditEnabled',
+                'linting.mypyEnabled',
+                'linting.pycodestyleEnabled',
+                'linting.prospectorEnabled',
+                'linting.pydocstyleEnabled',
+                'linting.pylamaEnabled'
+            ];
+
+            const values = keys.map((key) => {
+                const value = config.inspect<boolean>(key);
+                if (value) {
+                    if (value.globalValue || value.workspaceValue || value.workspaceFolderValue) {
+                        return 'linter set';
+                    }
+                }
+                return 'no info';
+            });
+
+            return values.includes('linter set');
+        }
+
+        return false;
     }
 
     /**
@@ -382,9 +536,7 @@ export class DataScienceInstaller extends BaseInstaller {
 
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
         if (!installerModule) {
-            this.appShell
-                .showErrorMessage(localize.DataScience.couldNotInstallLibrary().format(moduleName))
-                .then(noop, noop);
+            this.appShell.showErrorMessage(Installer.couldNotInstallLibrary().format(moduleName)).then(noop, noop);
             return InstallerResponse.Ignore;
         }
 
@@ -396,6 +548,10 @@ export class DataScienceInstaller extends BaseInstaller {
             isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore
         );
     }
+    /**
+     * This method will not get invoked for Jupyter extension.
+     * Implemented as a backup.
+     */
     protected async promptToInstallImplementation(
         product: Product,
         resource?: InterpreterUri,
@@ -403,24 +559,12 @@ export class DataScienceInstaller extends BaseInstaller {
     ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const item = await this.appShell.showErrorMessage(
-            localize.DataScience.libraryNotInstalled().format(productName),
+            Installer.dataScienceInstallPrompt().format(productName),
             'Yes',
             'No'
         );
         if (item === 'Yes') {
-            const stopWatch = new StopWatch();
-            try {
-                const response = await this.install(product, resource, cancel);
-                const event =
-                    product === Product.jupyter ? Telemetry.UserInstalledJupyter : Telemetry.UserInstalledModule;
-                sendTelemetryEvent(event, stopWatch.elapsedTime, { product: productName });
-                return response;
-            } catch (e) {
-                if (product === Product.jupyter) {
-                    sendTelemetryEvent(Telemetry.JupyterInstallFailed);
-                }
-                throw e;
-            }
+            return this.install(product, resource, cancel);
         }
         return InstallerResponse.Ignore;
     }
@@ -535,6 +679,8 @@ function translateProductToModule(product: Product, purpose: ModuleNamePurpose):
             return 'nbconvert';
         case Product.kernelspec:
             return 'kernelspec';
+        case Product.tensorboard:
+            return 'tensorboard';
         default: {
             throw new Error(`Product ${product} cannot be installed as a Python Module.`);
         }

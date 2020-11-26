@@ -3,13 +3,13 @@
 
 'use strict';
 
-import { IDisposable } from '@phosphor/disposable';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { ICommandManager } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
+import { IDisposable } from '../../../client/common/types';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { TestFile, TestFunction, TestsToRun, TestSuite } from '../../../client/testing/common/types';
 import { TestExplorerCommandHandler } from '../../../client/testing/explorer/commandHandlers';

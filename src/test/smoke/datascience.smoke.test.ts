@@ -8,10 +8,12 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { JUPYTER_EXTENSION_ID } from '../../client/common/constants';
 import { openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { noop, sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
+import { verifyExtensionIsAvailable } from './common';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
 
@@ -20,8 +22,11 @@ suite('Smoke Test: Interactive Window', () => {
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
+        await verifyExtensionIsAvailable(JUPYTER_EXTENSION_ID);
         await initialize();
         await setAutoSaveDelayInWorkspaceRoot(1);
+        const jupyterConfig = vscode.workspace.getConfiguration('jupyter', (null as any) as vscode.Uri);
+        await jupyterConfig.update('alwaysTrustNotebooks', true, true);
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -45,7 +50,7 @@ suite('Smoke Test: Interactive Window', () => {
         // Wait for code lenses to get detected.
         await sleep(1_000);
 
-        await vscode.commands.executeCommand<void>('python.datascience.runallcells', textDocument.uri);
+        await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri);
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
     }).timeout(timeoutForCellToRun);
@@ -74,7 +79,7 @@ suite('Smoke Test: Interactive Window', () => {
         // Unfortunately there's no way to know for sure it has completely loaded.
         await sleep(15_000);
 
-        await vscode.commands.executeCommand<void>('python.datascience.notebookeditor.runallcells');
+        await vscode.commands.executeCommand<void>('jupyter.notebookeditor.runallcells');
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
 

@@ -6,17 +6,19 @@ on:
       - main
 
 env:
-  PYTHON_VERSION: 3.8
+  NODE_VERSION: 12.15.0
+  PYTHON_VERSION: 3.9
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
-  CACHE_NPM_DEPS: cache-npm
-  CACHE_OUT_DIRECTORY: cache-out-directory
-  CACHE_PIP_DEPS: cache-pip
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
   ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
   VSIX_NAME: ms-python-insiders.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
+  # Force a path with spaces and to test extension works in these scenarios
+  # Unicode characters are causing 2.7 failures so skip that for now.
+  special-working-directory: './path with spaces'
+  special-working-directory-relative: 'path with spaces'
 
 jobs:
   build-vsix:
@@ -27,17 +29,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Cache pip files
-        uses: actions/cache@v2
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.2
         with:
-          path: ~/.cache/pip
-          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}
-
-      - name: Cache npm files
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+          node-version: ${{env.NODE_VERSION}}
 
       - name: Use Python ${{env.PYTHON_VERSION}}
         uses: actions/setup-python@v2
@@ -59,6 +54,7 @@ jobs:
         with:
           name: ${{env.ARTIFACT_NAME_VSIX}}
           path: ${{env.VSIX_NAME}}
+          retention-days: 7
 
   lint:
     name: Lint
@@ -68,29 +64,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Cache pip files
-        uses: actions/cache@v2
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.2
         with:
-          path: ~/.cache/pip
-          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}
-
-      - name: Cache npm files
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+          node-version: ${{env.NODE_VERSION}}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
       - name: Run gulp prePublishNonBundle
         run: npx gulp prePublishNonBundle
-
-      - name: Cache the out/ directory
-        uses: actions/cache@v2
-        with:
-          path: ./out
-          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Check dependencies
         run: npm run checkDependencies
@@ -120,6 +103,15 @@ jobs:
     name: Tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
+    env:
+      # Something in Node 12.16.0 breaks the TS debug adapter, and ubuntu-latest bundles Node 12.16.1.
+      # We can remove this when we switch over to the python-based DA in https://github.com/microsoft/vscode-python/issues/7136.
+      # See https://github.com/microsoft/ptvsd/issues/2068
+      # At this point pinning is only needed for consistency. We no longer have TS debug adapter.
+      NODE_VERSION: 12.15.0
+    defaults:
+      run:
+        working-directory: ${{env.special-working-directory}}
     if: github.repository == 'microsoft/vscode-python'
     strategy:
       fail-fast: false
@@ -128,44 +120,24 @@ jobs:
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
-        python: [2.7, 3.8]
+        python: [2.7, 3.9]
         test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
-    env:
-      # Something in Node 12.16.0 breaks the TS debug adapter, and ubuntu-latest bundles Node 12.16.1.
-      # We can remove this when we switch over to the python-based DA in https://github.com/microsoft/vscode-python/issues/7136.
-      # See https://github.com/microsoft/ptvsd/issues/2068
-      # At this point pinning is only needed for consistency. We no longer have TS debug adapter.
-      NODE_VERSION: 12.15.0
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Cache pip files
-        uses: actions/cache@v2
         with:
-          path: ~/.cache/pip
-          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}
+          path: ${{env.special-working-directory-relative}}
 
-      - name: Cache npm files
-        uses: actions/cache@v2
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.2
         with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
-
-      - name: Cache compiled TS files
-        # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
-        id: out-cache
-        uses: actions/cache@v2
-        with:
-          path: ./out
-          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+          node-version: ${{env.NODE_VERSION}}
 
       - name: Install dependencies (npm ci)
         run: npm ci
 
-      - name: Compile if not cached
+      - name: Compile
         run: npx gulp prePublishNonBundle
-        if: steps.out-cache.outputs.cache-hit == false
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v2
@@ -173,7 +145,7 @@ jobs:
           python-version: ${{matrix.python}}
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.1
+        uses: actions/setup-node@v1
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -185,12 +157,6 @@ jobs:
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
-
-      - name: pip install ipython requirements
-        run: |
-          python -m pip install numpy
-          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-        if: matrix.test-suite == 'python-unit'
 
       - name: Install debugpy wheels (python 3.8)
         run: |
@@ -277,8 +243,8 @@ jobs:
 
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
-          echo "::set-env name=CI_PYTHON_PATH::python"
-          echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
+          echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
+          echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV
         shell: bash
         if: matrix.test-suite != 'ts-unit'
 
@@ -289,17 +255,17 @@ jobs:
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
-          path: .nyc_output
+          path: ${{ env.special-working-directory }}/.nyc_output
+          retention-days: 1
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
-      # Run the Python and IPython tests in our codebase.
-      - name: Run Python and IPython unit tests
+      # Run the Python tests in our codebase.
+      - name: Run Python unit tests
         run: |
           python pythonFiles/tests/run_all.py
-          python -m IPython pythonFiles/tests/run_all.py
         if: matrix.test-suite == 'python-unit'
 
       # The virtual environment based tests use the `testSingleWorkspace` set of tests
@@ -315,6 +281,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSingleWorkspace
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'venv'
 
       - name: Run single-workspace tests
@@ -323,6 +290,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSingleWorkspace
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'single-workspace'
 
       - name: Run multi-workspace tests
@@ -331,6 +299,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testMultiWorkspace
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'multi-workspace'
 
       - name: Run debugger tests
@@ -339,6 +308,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testDebugger
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'debugger'
 
       - name: Run functional tests
@@ -357,23 +327,17 @@ jobs:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest, windows-latest]
+        # 3.8 is still required here so that jupyter can install.
         python: [3.8]
     steps:
       # Need the source to have the tests available.
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Cache pip files
-        uses: actions/cache@v2
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.2
         with:
-          path: ~/.cache/pip
-          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}
-
-      - name: Cache npm files
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+          node-version: ${{env.NODE_VERSION}}
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v2
@@ -390,14 +354,10 @@ jobs:
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
         shell: bash
 
-      - name: pip install ipython requirements
+      - name: pip install smoke test requirements
         run: |
-          python -m pip install numpy
-          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-
-      - name: pip install jupyter
-        run: |
-          python -m pip install --upgrade jupyter
+          python -m pip install --upgrade -r build/smoke-test-requirements.txt
+        shell: bash
 
       # Save time by reusing bits from the VSIX.
       - name: Download VSIX
@@ -412,31 +372,103 @@ jobs:
 
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
-          echo "::set-env name=CI_PYTHON_PATH::python"
-          echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
+          echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
+          echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV
         shell: bash
 
       - name: Run smoke tests
         env:
           DISPLAY: 10
+          INSTALL_JUPYTER_EXTENSION: true
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
+
+  insider-tests:
+    name: Insider tests
+    # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
+    runs-on: ${{ matrix.os }}
+    if: github.repository == 'microsoft/vscode-python'
+    strategy:
+      fail-fast: false
+      matrix:
+        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
+        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
+        os: [ubuntu-latest]
+        python: [3.8]
+    steps:
+      # Need the source to have the tests available.
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
+      - name: Use Python ${{matrix.python}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{matrix.python}}
+
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+
+      - name: pip install system test requirements
+        run: |
+          python -m pip install --upgrade -r build/test-requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+        shell: bash
+
+      - name: pip install smoke test requirements
+        run: |
+          python -m pip install --upgrade -r build/smoke-test-requirements.txt
+        shell: bash
+
+      # Compile the test files.
+      - name: Prepare for insiders tests
+        run: npm run prePublish
+        shell: bash
+
+      - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
+        run: |
+          echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
+          echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Run insider tests
+        env:
+          DISPLAY: 10
+          INSTALL_JUPYTER_EXTENSION: true
+          INSTALL_PYLANCE_EXTENSION: true
+          VSC_PYTHON_CI_TEST_VSC_CHANNEL: insiders
+          TEST_FILES_SUFFIX: insiders.test
+          CODE_TESTS_WORKSPACE: ./src/testMultiRootWkspc/smokeTests
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: node --no-force-async-hooks-checks ./out/test/standardTest.js
 
   coverage:
     name: Coverage reports upload
     runs-on: ubuntu-latest
     if: github.repository == 'microsoft/vscode-python'
     needs: [tests, smoke-tests]
+    defaults:
+      run:
+        working-directory: ${{env.special-working-directory}}
     steps:
+      # Checkout the repo in the same way as how the tests are run, 
+      # or nyc won't know how to reconcile the reports generated by the tests.
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Cache npm files
-        uses: actions/cache@v2
         with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+          path: ${{env.special-working-directory-relative}}
+
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: ${{env.NODE_VERSION}}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -445,48 +477,52 @@ jobs:
       # The name pattern is ${{runner.os}}-${{env.COVERAGE_REPORTS}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
       # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
       - name: Download Ubuntu test coverage artifacts
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2
         with:
-          name: Linux-${{env.COVERAGE_REPORTS}}
+          name: Linux-${{ env.COVERAGE_REPORTS }}
+          path: ${{env.special-working-directory}}/Linux-${{ env.COVERAGE_REPORTS }}
 
       - name: Extract Ubuntu coverage artifacts to ./nyc_output
         run: |
           mkdir .nyc_output
-          mv Linux-${{env.COVERAGE_REPORTS}}/* .nyc_output
-          rm -r Linux-${{env.COVERAGE_REPORTS}}
+          mv Linux-${{ env.COVERAGE_REPORTS }}/* .nyc_output
+          rm -r Linux-${{ env.COVERAGE_REPORTS }}
 
       - name: Generate coverage reports
         run: npm run test:cover:report
         continue-on-error: true
 
+      # The only location supported by the codecov action is the workspace root.
+      # See https://github.com/codecov/codecov-action#arguments
+      - name: Move codecov.yml to root
+        run: |
+          mkdir $GITHUB_WORKSPACE/.github
+          mv .github/codecov.yml $GITHUB_WORKSPACE
+
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage/cobertura-coverage.xml
+          file: ${{env.special-working-directory}}/coverage/cobertura-coverage.xml
 
   upload:
     name: Upload VSIX to Azure Blob Storage
-    runs-on: ubuntu-latest
     if: github.repository == 'microsoft/vscode-python'
+    runs-on: ubuntu-latest
     needs: [tests, smoke-tests, build-vsix]
     env:
       BLOB_CONTAINER_NAME: extension-builds
-      BLOB_NAME: ms-python-gha-insiders.vsix # So named to avoid clobbering Azure Pipelines upload.
-
+      BLOB_NAME: ms-python-insiders.vsix
     steps:
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
           name: ${{ env.ARTIFACT_NAME_VSIX }}
-
       - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
       - name: Upload to Blob Storage
         run: az storage blob upload --file ${{ env.VSIX_NAME }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
-
       - name: Get URL to uploaded VSIX
         run: az storage blob url --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
