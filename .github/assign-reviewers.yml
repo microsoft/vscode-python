@@ -1,0 +1,19 @@
+numberOfReviewers: 2
+
+# This group should NEVER be changed based on availability; it's to help
+# determine if a PR author is an external contributor.
+team:
+  - ericsnowcurrently
+  - int19h
+  - karthiknadig
+  - karrtikr
+  - kimadeline
+
+# Comment yourself out when you will be unavailable for reviews for more than a
+# couple of days.
+reviewers:
+  - ericsnowcurrently
+  #- int19h
+  - karthiknadig
+  - karrtikr
+  - kimadeline

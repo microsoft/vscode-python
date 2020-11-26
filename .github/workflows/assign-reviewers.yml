@@ -1,0 +1,40 @@
+name: 'Assign reviewers'
+
+on:
+  # XXX pull_request_target:
+  pull_request:
+    types:
+      # XXX
+      - 'synchronize'
+      - 'opened'
+      - 'reopened'
+      - 'unassigned'
+      - 'review_request_removed'
+      - 'ready_for_review'
+
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Load pip cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('.github/assign-reviewers/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: python -m pip install .github/assign-reviewers/requirements.txt
+
+      - name: Run script
+        # XXX run: python .github/assign-reviewers/ ${{ secrets.GITHUB_TOKEN }}
+        run: python .github/assign-reviewers/
