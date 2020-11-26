@@ -3,8 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-this no-single-line-block-comment
-/* eslint-disable global-require */
+// tslint:disable:no-invalid-this
 
 import * as assert from 'assert';
 import * as fs from 'fs-extra';

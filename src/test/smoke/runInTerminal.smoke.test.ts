@@ -3,8 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-this no-single-line-block-comment
-/* eslint-disable global-require */
+// tslint:disable:no-invalid-this
 
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
@@ -13,9 +12,6 @@ import * as vscode from 'vscode';
 import { openFile, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
-
-// tslint:disable-next-line: no-var-requires no-require-imports
-// const vscode = require('vscode') as typeof import('vscode');
 
 suite('Smoke Test: Run Python File In Terminal', () => {
     suiteSetup(async function () {
