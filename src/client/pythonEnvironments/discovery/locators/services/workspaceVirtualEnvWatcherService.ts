@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { clearTimeout, setTimeout } from 'timers';
 import {
     Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri,
 } from 'vscode';
@@ -23,7 +24,7 @@ const timeToPollForEnvCreation = 2_000;
 export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, Disposable {
     private readonly didCreate: EventEmitter<Resource>;
 
-    private timers = new Map<string, { timer: NodeJS.Timer; counter: number }>();
+    private timers = new Map<string, { timer: NodeJS.Timeout; counter: number }>();
 
     private fsWatchers: FileSystemWatcher[] = [];
 
