@@ -6,7 +6,9 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as fsWatcher from '../../../../client/common/platform/fileSystemWatcher';
 import * as platformUtils from '../../../../client/common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind, UNKNOWN_PYTHON_VERSION } from '../../../../client/pythonEnvironments/base/info';
+import {
+    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION
+} from '../../../../client/pythonEnvironments/base/info';
 import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
@@ -24,10 +26,16 @@ suite('GlobalVirtualEnvironment Locator', () => {
     let locator: IDisposableLocator;
     let watchLocationForPatternStub: sinon.SinonStub;
 
-    function createExpectedEnvInfo(interpreterPath: string, kind: PythonEnvKind): PythonEnvInfo {
+    function createExpectedEnvInfo(
+        interpreterPath: string,
+        kind: PythonEnvKind,
+        version: PythonVersion = UNKNOWN_PYTHON_VERSION,
+        name = '',
+        location = '',
+    ): PythonEnvInfo {
         return {
-            name: '',
-            location: '',
+            name,
+            location,
             kind,
             executable: {
                 filename: interpreterPath,
@@ -36,7 +44,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
                 mtime: -1,
             },
             defaultDisplayName: undefined,
-            version: UNKNOWN_PYTHON_VERSION,
+            version,
             arch: platformUtils.Architecture.Unknown,
             distro: { org: '' },
             searchLocation: undefined,
@@ -58,10 +66,14 @@ suite('GlobalVirtualEnvironment Locator', () => {
 
         getOSTypeStub = sinon.stub(platformUtils, 'getOSType');
         getOSTypeStub.returns(platformUtils.OSType.Linux);
-        readFileStub = sinon.stub(externalDependencies, 'readFile');
 
         watchLocationForPatternStub = sinon.stub(fsWatcher, 'watchLocationForPattern');
         watchLocationForPatternStub.returns({ dispose: () => { /* do nothing */ } });
+
+        const expectedDotProjectFile = path.join(testVirtualHomeDir, '.local', 'share', 'virtualenvs', 'project2-vnNIWe9P', '.project');
+        readFileStub = sinon.stub(externalDependencies, 'readFile');
+        readFileStub.withArgs(expectedDotProjectFile).returns(path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project2'));
+        readFileStub.callThrough();
     });
     teardown(() => {
         readFileStub.restore();
@@ -76,34 +88,67 @@ suite('GlobalVirtualEnvironment Locator', () => {
     test('iterEnvs(): Windows', async () => {
         getOSTypeStub.returns(platformUtils.OSType.Windows);
         const expectedEnvs = [
-            createExpectedEnvInfo(path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'), PythonEnvKind.Venv),
+            createExpectedEnvInfo(
+                path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
+                PythonEnvKind.Venv,
+                undefined,
+                'win1',
+                path.join(testVirtualHomeDir, '.venvs', 'win1'),
+            ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.venvs', 'win2', 'bin', 'python.exe'),
                 PythonEnvKind.Venv,
+                {
+                    major: 3,
+                    minor: 9,
+                    micro: 0,
+                    release: { level: PythonReleaseLevel.Alpha, serial: 1 },
+                    sysVersion: undefined,
+                },
+                'win2',
+                path.join(testVirtualHomeDir, '.venvs', 'win2'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.virtualenvs', 'win1', 'python.exe'),
                 PythonEnvKind.VirtualEnv,
+                undefined,
+                'win1',
+                path.join(testVirtualHomeDir, '.virtualenvs', 'win1'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.virtualenvs', 'win2', 'bin', 'python.exe'),
                 PythonEnvKind.VirtualEnv,
+                undefined,
+                'win2',
+                path.join(testVirtualHomeDir, '.virtualenvs', 'win2'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, 'Envs', 'wrapper_win1', 'python.exe'),
                 PythonEnvKind.VirtualEnv,
+                undefined,
+                'wrapper_win1',
+                path.join(testVirtualHomeDir, 'Envs', 'wrapper_win1'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, 'Envs', 'wrapper_win2', 'bin', 'python.exe'),
                 PythonEnvKind.VirtualEnv,
+                undefined,
+                'wrapper_win2',
+                path.join(testVirtualHomeDir, 'Envs', 'wrapper_win2'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, 'workonhome', 'win1', 'python.exe'),
                 PythonEnvKind.VirtualEnvWrapper,
+                undefined,
+                'win1',
+                path.join(testVirtualHomeDir, 'workonhome', 'win1'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, 'workonhome', 'win2', 'bin', 'python.exe'),
                 PythonEnvKind.VirtualEnvWrapper,
+                undefined,
+                'win2',
+                path.join(testVirtualHomeDir, 'workonhome', 'win2'),
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
@@ -120,26 +165,53 @@ suite('GlobalVirtualEnvironment Locator', () => {
         getOSTypeStub.returns(platformUtils.OSType.Windows);
         getEnvVariableStub.withArgs('WORKON_HOME').returns(undefined);
         const expectedEnvs = [
-            createExpectedEnvInfo(path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'), PythonEnvKind.Venv),
+            createExpectedEnvInfo(
+                path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
+                PythonEnvKind.Venv,
+                undefined,
+                'win1',
+                path.join(testVirtualHomeDir, '.venvs', 'win1'),
+            ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.venvs', 'win2', 'bin', 'python.exe'),
                 PythonEnvKind.Venv,
+                {
+                    major: 3,
+                    minor: 9,
+                    micro: 0,
+                    release: { level: PythonReleaseLevel.Alpha, serial: 1 },
+                    sysVersion: undefined,
+                },
+                'win2',
+                path.join(testVirtualHomeDir, '.venvs', 'win2'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.virtualenvs', 'win1', 'python.exe'),
                 PythonEnvKind.VirtualEnv,
+                undefined,
+                'win1',
+                path.join(testVirtualHomeDir, '.virtualenvs', 'win1'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.virtualenvs', 'win2', 'bin', 'python.exe'),
                 PythonEnvKind.VirtualEnv,
+                undefined,
+                'win2',
+                path.join(testVirtualHomeDir, '.virtualenvs', 'win2'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, 'Envs', 'wrapper_win1', 'python.exe'),
                 PythonEnvKind.VirtualEnvWrapper,
+                undefined,
+                'wrapper_win1',
+                path.join(testVirtualHomeDir, 'Envs', 'wrapper_win1'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, 'Envs', 'wrapper_win2', 'bin', 'python.exe'),
                 PythonEnvKind.VirtualEnvWrapper,
+                undefined,
+                'wrapper_win2',
+                path.join(testVirtualHomeDir, 'Envs', 'wrapper_win2'),
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
@@ -153,32 +225,61 @@ suite('GlobalVirtualEnvironment Locator', () => {
     });
 
     test('iterEnvs(): Non-Windows', async () => {
-        readFileStub.resolves(path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project2'));
         const expectedEnvs = [
-            createExpectedEnvInfo(path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python'), PythonEnvKind.Venv),
+            createExpectedEnvInfo(
+                path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python'),
+                PythonEnvKind.Venv,
+                undefined,
+                'posix1',
+                path.join(testVirtualHomeDir, '.venvs', 'posix1'),
+            ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.venvs', 'posix2', 'bin', 'python'),
                 PythonEnvKind.Venv,
+                undefined,
+                'posix2',
+                path.join(testVirtualHomeDir, '.venvs', 'posix2'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.virtualenvs', 'posix1', 'python'),
                 PythonEnvKind.VirtualEnv,
+                { major: 3, minor: 8, micro: -1 },
+                'posix1',
+                path.join(testVirtualHomeDir, '.virtualenvs', 'posix1'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.virtualenvs', 'posix2', 'bin', 'python'),
                 PythonEnvKind.VirtualEnv,
+                undefined,
+                'posix2',
+                path.join(testVirtualHomeDir, '.virtualenvs', 'posix2'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, 'workonhome', 'posix1', 'python'),
                 PythonEnvKind.VirtualEnvWrapper,
+                { major: 3, minor: 5, micro: -1 },
+                'posix1',
+                path.join(testVirtualHomeDir, 'workonhome', 'posix1'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, 'workonhome', 'posix2', 'bin', 'python'),
                 PythonEnvKind.VirtualEnvWrapper,
+                undefined,
+                'posix2',
+                path.join(testVirtualHomeDir, 'workonhome', 'posix2'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.local', 'share', 'virtualenvs', 'project2-vnNIWe9P', 'bin', 'python'),
                 PythonEnvKind.Pipenv,
+                {
+                    major: 3,
+                    minor: 8,
+                    micro: 2,
+                    release: { level: PythonReleaseLevel.Final, serial: 0 },
+                    sysVersion: undefined,
+                },
+                'project2-vnNIWe9P',
+                path.join(testVirtualHomeDir, '.local', 'share', 'virtualenvs', 'project2-vnNIWe9P'),
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
@@ -193,14 +294,26 @@ suite('GlobalVirtualEnvironment Locator', () => {
 
     test('iterEnvs(): with depth set', async () => {
         const expectedEnvs = [
-            createExpectedEnvInfo(path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python'), PythonEnvKind.Venv),
+            createExpectedEnvInfo(
+                path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python'),
+                PythonEnvKind.Venv,
+                undefined,
+                'posix1',
+                path.join(testVirtualHomeDir, '.venvs', 'posix1'),
+            ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.virtualenvs', 'posix1', 'python'),
                 PythonEnvKind.VirtualEnv,
+                { major: 3, minor: 8, micro: -1 },
+                'posix1',
+                path.join(testVirtualHomeDir, '.virtualenvs', 'posix1'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, 'workonhome', 'posix1', 'python'),
                 PythonEnvKind.VirtualEnvWrapper,
+                { major: 3, minor: 5, micro: -1 },
+                'posix1',
+                path.join(testVirtualHomeDir, 'workonhome', 'posix1'),
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
@@ -214,25 +327,48 @@ suite('GlobalVirtualEnvironment Locator', () => {
     });
 
     test('iterEnvs(): Non-Windows (WORKON_HOME not set)', async () => {
-        readFileStub.resolves(path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project2'));
         getEnvVariableStub.withArgs('WORKON_HOME').returns(undefined);
         const expectedEnvs = [
-            createExpectedEnvInfo(path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python'), PythonEnvKind.Venv),
+            createExpectedEnvInfo(
+                path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python'),
+                PythonEnvKind.Venv,
+                undefined,
+                'posix1',
+                path.join(testVirtualHomeDir, '.venvs', 'posix1'),
+            ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.venvs', 'posix2', 'bin', 'python'),
                 PythonEnvKind.Venv,
+                undefined,
+                'posix2',
+                path.join(testVirtualHomeDir, '.venvs', 'posix2'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.virtualenvs', 'posix1', 'python'),
                 PythonEnvKind.VirtualEnvWrapper,
+                { major: 3, minor: 8, micro: -1 },
+                'posix1',
+                path.join(testVirtualHomeDir, '.virtualenvs', 'posix1'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.virtualenvs', 'posix2', 'bin', 'python'),
                 PythonEnvKind.VirtualEnvWrapper,
+                undefined,
+                'posix2',
+                path.join(testVirtualHomeDir, '.virtualenvs', 'posix2'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.local', 'share', 'virtualenvs', 'project2-vnNIWe9P', 'bin', 'python'),
                 PythonEnvKind.Pipenv,
+                {
+                    major: 3,
+                    minor: 8,
+                    micro: 2,
+                    release: { level: PythonReleaseLevel.Final, serial: 0 },
+                    sysVersion: undefined,
+                },
+                'project2-vnNIWe9P',
+                path.join(testVirtualHomeDir, '.local', 'share', 'virtualenvs', 'project2-vnNIWe9P'),
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
@@ -251,10 +387,16 @@ suite('GlobalVirtualEnvironment Locator', () => {
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, 'workonhome', 'posix1', 'python'),
                 PythonEnvKind.VirtualEnvWrapper,
+                { major: 3, minor: 5, micro: -1 },
+                'posix1',
+                path.join(testVirtualHomeDir, 'workonhome', 'posix1'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, 'workonhome', 'posix2', 'bin', 'python'),
                 PythonEnvKind.VirtualEnvWrapper,
+                undefined,
+                'posix2',
+                path.join(testVirtualHomeDir, 'workonhome', 'posix2'),
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
@@ -274,10 +416,16 @@ suite('GlobalVirtualEnvironment Locator', () => {
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, 'workonhome', 'posix1', 'python'),
                 PythonEnvKind.VirtualEnvWrapper,
+                { major: 3, minor: 5, micro: -1 },
+                'posix1',
+                path.join(testVirtualHomeDir, 'workonhome', 'posix1'),
             ),
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, 'workonhome', 'posix2', 'bin', 'python'),
                 PythonEnvKind.VirtualEnvWrapper,
+                undefined,
+                'posix2',
+                path.join(testVirtualHomeDir, 'workonhome', 'posix2'),
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
@@ -292,7 +440,13 @@ suite('GlobalVirtualEnvironment Locator', () => {
 
     test('resolveEnv(string)', async () => {
         const interpreterPath = path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python');
-        const expected = createExpectedEnvInfo(interpreterPath, PythonEnvKind.Venv);
+        const expected = createExpectedEnvInfo(
+            path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python'),
+            PythonEnvKind.Venv,
+            undefined,
+            'posix1',
+            path.join(testVirtualHomeDir, '.venvs', 'posix1'),
+        );
 
         locator = await createGlobalVirtualEnvironmentLocator();
         const actual = await locator.resolveEnv(interpreterPath);
@@ -302,7 +456,13 @@ suite('GlobalVirtualEnvironment Locator', () => {
 
     test('resolveEnv(PythonEnvInfo)', async () => {
         const interpreterPath = path.join(testVirtualHomeDir, 'workonhome', 'posix1', 'python');
-        const expected = createExpectedEnvInfo(interpreterPath, PythonEnvKind.VirtualEnvWrapper);
+        const expected = createExpectedEnvInfo(
+            path.join(testVirtualHomeDir, 'workonhome', 'posix1', 'python'),
+            PythonEnvKind.VirtualEnvWrapper,
+            { major: 3, minor: 5, micro: -1 },
+            'posix1',
+            path.join(testVirtualHomeDir, 'workonhome', 'posix1'),
+        );
 
         // Partially filled in env info object
         const input: PythonEnvInfo = {

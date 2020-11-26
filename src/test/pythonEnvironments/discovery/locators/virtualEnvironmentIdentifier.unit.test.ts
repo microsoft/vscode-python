@@ -10,7 +10,7 @@ import * as platformUtils from '../../../../client/common/utils/platform';
 import { PythonReleaseLevel, PythonVersion } from '../../../../client/pythonEnvironments/base/info';
 import * as fileUtils from '../../../../client/pythonEnvironments/common/externalDependencies';
 import {
-    getPythonVersionFromVenv, isVenvEnvironment, isVirtualenvEnvironment, isVirtualenvwrapperEnvironment,
+    getPythonVersionFromPyvenvCfg, isVenvEnvironment, isVirtualenvEnvironment, isVirtualenvwrapperEnvironment,
 } from '../../../../client/pythonEnvironments/discovery/locators/services/virtualEnvironmentIdentifier';
 import { TEST_DATA_ROOT, TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 
@@ -212,7 +212,7 @@ suite('Virtual Env Version Parser Tests', () => {
     testData.forEach((data) => {
         test(`Parsing ${data.name}`, async () => {
             readFileStub.resolves(data.historyFileContents);
-            const actual = await getPythonVersionFromVenv('/path/here/does/not/matter');
+            const actual = await getPythonVersionFromPyvenvCfg('/path/here/does/not/matter');
             assert.deepStrictEqual(actual, data.expected);
         });
     });

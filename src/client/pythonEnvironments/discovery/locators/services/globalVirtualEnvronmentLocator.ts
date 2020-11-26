@@ -8,11 +8,13 @@ import { chain, iterable } from '../../../../common/utils/async';
 import {
     getEnvironmentVariable, getOSType, getUserHomeDir, OSType
 } from '../../../../common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
+import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { IDisposableLocator, IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
-import { findInterpretersInDir, isStandardPythonBinary } from '../../../common/commonUtils';
+import {
+    findInterpretersInDir, getEnvironmentDirFromPath, getPythonVersionFromPath, isStandardPythonBinary
+} from '../../../common/commonUtils';
 import { getFileInfo, pathExists } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from './pipEnvHelper';
 import {
@@ -76,6 +78,23 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
     return PythonEnvKind.Unknown;
 }
 
+async function buildSimpleVirtualEnvInfo(executablePath: string, kind: PythonEnvKind): Promise<PythonEnvInfo> {
+    const envInfo = buildEnvInfo({
+        kind,
+        version: await getPythonVersionFromPath(executablePath),
+        executable: executablePath,
+    });
+    const location = getEnvironmentDirFromPath(executablePath);
+    envInfo.location = location;
+    envInfo.name = path.basename(location);
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO: Call a general display name provider here to build display name.
+    const fileData = await getFileInfo(executablePath);
+    envInfo.executable.ctime = fileData.ctime;
+    envInfo.executable.mtime = fileData.mtime;
+    return envInfo;
+}
+
 /**
  * Finds and resolves virtual environments created in known global locations.
  */
@@ -113,17 +132,8 @@ class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
                             // check multiple times. Those checks are file system heavy and
                             // we can use the kind to determine this anyway.
                             const kind = await getVirtualEnvKind(env);
-
-                            const timeData = await getFileInfo(env);
+                            yield buildSimpleVirtualEnvInfo(env, kind);
                             traceVerbose(`Global Virtual Environment: [added] ${env}`);
-                            const envInfo = buildEnvInfo({
-                                kind,
-                                executable: env,
-                                version: UNKNOWN_PYTHON_VERSION,
-                            });
-                            envInfo.executable.ctime = timeData.ctime;
-                            envInfo.executable.mtime = timeData.mtime;
-                            yield envInfo;
                         } else {
                             traceVerbose(`Global Virtual Environment: [skipped] ${env}`);
                         }
@@ -146,15 +156,7 @@ class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
             // check multiple times. Those checks are file system heavy and
             // we can use the kind to determine this anyway.
             const kind = await getVirtualEnvKind(executablePath);
-            const timeData = await getFileInfo(executablePath);
-            const envInfo = buildEnvInfo({
-                kind,
-                version: UNKNOWN_PYTHON_VERSION,
-                executable: executablePath,
-            });
-            envInfo.executable.ctime = timeData.ctime;
-            envInfo.executable.mtime = timeData.mtime;
-            return envInfo;
+            return buildSimpleVirtualEnvInfo(executablePath, kind);
         }
         return undefined;
     }

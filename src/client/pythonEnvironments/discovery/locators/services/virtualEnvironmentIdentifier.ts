@@ -125,7 +125,7 @@ export async function isVirtualenvwrapperEnvironment(interpreterPath:string): Pr
  * Reads the pyvenv.cfg and finds the line that looks like 'version = 3.9.0`. Gets the
  * version string from that lines and parses it.
  */
-export async function getPythonVersionFromVenv(interpreterPath:string): Promise<PythonVersion> {
+export async function getPythonVersionFromPyvenvCfg(interpreterPath:string): Promise<PythonVersion> {
     const configPaths = getPyvenvConfigPathsFrom(interpreterPath);
     let version = UNKNOWN_PYTHON_VERSION;
 

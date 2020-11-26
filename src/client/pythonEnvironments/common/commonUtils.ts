@@ -9,7 +9,7 @@ import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
 import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from '../discovery/locators/services/condaLocator';
-import { getPythonVersionFromVenv } from '../discovery/locators/services/virtualEnvironmentIdentifier';
+import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/virtualEnvironmentIdentifier';
 import { isPosixPythonBin } from './posixUtils';
 import { isWindowsPythonExe } from './windowsUtils';
 
@@ -87,7 +87,7 @@ export async function getPythonVersionFromPath(
         versionA = UNKNOWN_PYTHON_VERSION;
     }
     const versionB = interpreterPath ? await getPythonVersionFromNearByFiles(interpreterPath) : UNKNOWN_PYTHON_VERSION;
-    const versionC = interpreterPath ? await getPythonVersionFromVenv(interpreterPath) : UNKNOWN_PYTHON_VERSION;
+    const versionC = interpreterPath ? await getPythonVersionFromPyvenvCfg(interpreterPath) : UNKNOWN_PYTHON_VERSION;
     const versionD = interpreterPath ? await getPythonVersionFromConda(interpreterPath) : UNKNOWN_PYTHON_VERSION;
 
     let version = UNKNOWN_PYTHON_VERSION;
