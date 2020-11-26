@@ -60,7 +60,7 @@ suite('Smoke Test: Language Server', () => {
     test('Definitions', async () => {
         // const startPosition = new vscode.Position(13, 6);
         // const textDocument =
-        await openFileAndWaitForLS(fileDefinitions);
+        // await openFileAndWaitForLS(fileDefinitions);
         // let tested = false;
         // for (let i = 0; i < 5; i += 1) {
         //     const locations = await vscode.commands
