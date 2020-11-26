@@ -19,6 +19,8 @@ import { openFileAndWaitForLS } from './common';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscode = require('vscode') as typeof import('vscode');
 
+const testTimeout = 30_000;
+
 const fileDefinitions = path.join(
     EXTENSION_ROOT_DIR_FOR_TESTS,
     'src',
@@ -75,7 +77,7 @@ suite('Smoke Test: Language Server', () => {
             }
         }
         if (!tested) {
-            assert.fail('Failled to test definitions');
+            assert.fail('Failed to test definitions');
         }
-    });
+    }).timeout(testTimeout);
 });
