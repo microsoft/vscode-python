@@ -6,7 +6,7 @@
 // tslint:disable:no-invalid-this no-single-line-block-comment
 /* eslint-disable global-require */
 
-// import * as assert from 'assert';
+import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { openFile, waitForCondition } from '../common';
@@ -16,7 +16,7 @@ import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscode = require('vscode') as typeof import('vscode');
 
-const testTimeout = 30_000;
+// const testTimeout = 30_000;
 
 suite('Smoke Test: Run Python File In Terminal', () => {
     suiteSetup(async function () {
@@ -50,11 +50,10 @@ suite('Smoke Test: Run Python File In Terminal', () => {
         }
         const textDocument = await openFile(file);
 
-        await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri);
-        // .then(undefined, (err) => {
-        //     assert.fail(`Something went wrong: ${err}`);
-        // });
+        await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri).then(undefined, (err) => {
+            assert.fail(`Something went wrong running the Python file in the terminal: ${err}`);
+        });
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
-        await waitForCondition(checkIfFileHasBeenCreated, testTimeout, `"${outputFile}" file not created`);
-    }).timeout(testTimeout);
+        await waitForCondition(checkIfFileHasBeenCreated, 30_000, `"${outputFile}" file not created`);
+    });
 });

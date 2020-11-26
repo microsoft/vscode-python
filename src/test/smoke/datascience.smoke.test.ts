@@ -6,6 +6,7 @@
 // tslint:disable:no-invalid-this no-single-line-block-comment
 /* eslint-disable global-require */
 
+import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { JUPYTER_EXTENSION_ID } from '../../client/common/constants';
@@ -44,7 +45,7 @@ suite('Smoke Test: Interactive Window', () => {
             'test',
             'pythonFiles',
             'datascience',
-            'simple_note_book.py',
+            'simple_note_book.py'
         );
         const outputFile = path.join(path.dirname(file), 'ds.log');
         if (await fs.pathExists(outputFile)) {
@@ -55,7 +56,9 @@ suite('Smoke Test: Interactive Window', () => {
         // Wait for code lenses to get detected.
         await sleep(1_000);
 
-        await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri);
+        await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri).then(undefined, (err) => {
+            assert.fail(`Something went wrong running all cells in the interactive window: ${err}`);
+        });
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
     }).timeout(timeoutForCellToRun);
@@ -67,12 +70,12 @@ suite('Smoke Test: Interactive Window', () => {
             'test',
             'pythonFiles',
             'datascience',
-            'simple_nb.ipynb',
+            'simple_nb.ipynb'
         );
         const fileContents = await fs.readFile(file, { encoding: 'utf-8' });
         const outputFile = path.join(path.dirname(file), 'ds_n.log');
         await fs.writeFile(file, fileContents.replace("'ds_n.log'", `'${outputFile.replace(/\\/g, '/')}'`), {
-            encoding: 'utf-8',
+            encoding: 'utf-8'
         });
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
@@ -84,7 +87,9 @@ suite('Smoke Test: Interactive Window', () => {
         // Unfortunately there's no way to know for sure it has completely loaded.
         await sleep(15_000);
 
-        await vscode.commands.executeCommand<void>('jupyter.notebookeditor.runallcells');
+        await vscode.commands.executeCommand<void>('jupyter.notebookeditor.runallcells').then(undefined, (err) => {
+            assert.fail(`Something went wrong running all cells in the native editor: ${err}`);
+        });
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
 
