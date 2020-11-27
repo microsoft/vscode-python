@@ -26,6 +26,8 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 
 ## Jupyter Notebook quick start
 
+The Python extension and the Jupyter extension work together to give you a great Notebook experience in VS Code.
+
 -   Open or create a Jupyter Notebook file (.ipynb) and start coding in our Notebook Editor!
 
       <img src=https://raw.githubusercontent.com/microsoft/vscode-python/main/images/OpenOrCreateNotebook.gif width=1029 height=602>
