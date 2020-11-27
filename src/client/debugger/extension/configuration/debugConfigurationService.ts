@@ -58,7 +58,7 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
                 token
             );
         } else if (debugConfiguration.request === 'test') {
-            throw Error("Please use the command 'Python: Debug Unit Tests'");
+            throw Error("Please use the command 'Python: Debug All Tests'");
         } else {
             if (Object.keys(debugConfiguration).length === 0) {
                 const configs = await this.provideDebugConfigurations(folder, token);
