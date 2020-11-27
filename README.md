@@ -26,11 +26,12 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 
 ## Jupyter Notebook quick start
 
-The Python extension and the Jupyter extension work together to give you a great Notebook experience in VS Code.
+The Python extension and the [Jupyter extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) work together to give you a great Notebook experience in VS Code.
 
 -   Open or create a Jupyter Notebook file (.ipynb) and start coding in our Notebook Editor!
 
       <img src=https://raw.githubusercontent.com/microsoft/vscode-python/main/images/OpenOrCreateNotebook.gif width=1029 height=602>
+
 
 For more information you can:
 
@@ -51,7 +52,7 @@ Open the Command Palette (Command+Shift+P on macOS and Ctrl+Shift+P on Windows/L
 | `Format Document`                     | Formats code using the provided [formatter](https://code.visualstudio.com/docs/python/editing#_formatting) in the `settings.json` file.                        |
 | `Python: Configure Tests`             | Select a test framework and configure it to display the Test Explorer.                                                                                         |
 
-To see all available Python commands, open the Command Palette and type `Python`.
+To see all available Python commands, open the Command Palette and type `Python`. For Jupyter extension commands, just type `Jupyter`.
 
 ## Feature details
 
