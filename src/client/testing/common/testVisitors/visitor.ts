@@ -28,7 +28,7 @@ export function visitRecursive(tests: Tests, visitor: Visitor): void;
  */
 export function visitRecursive(tests: Tests, start: TestDataItem, visitor: Visitor): void;
 export function visitRecursive(tests: Tests, arg1: TestDataItem | Visitor, arg2?: Visitor): void {
-    const startItem = typeof arg1 === 'function' ? undefined : (arg1 as TestDataItem);
+    const startItem = typeof arg1 === 'function' ? undefined : arg1;
     const visitor = startItem ? arg2! : (arg1 as Visitor);
     let children: TestDataItem[] = [];
     if (startItem) {

@@ -165,7 +165,7 @@ export class TestsHelper implements ITestsHelper {
                     };
                     folderMap.set(newPath, testFolder);
                     if (parentFolder) {
-                        parentFolder!.folders.push(testFolder);
+                        parentFolder.folders.push(testFolder);
                     } else {
                         tests.rootTestFolders.push(testFolder);
                     }
