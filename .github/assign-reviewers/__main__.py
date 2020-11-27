@@ -55,9 +55,6 @@ async def add_assignee(
     event = gidgethub.actions.event()
     if (assignee := event["pull_request"]["user"]["login"]) not in team:
         assignee = random.choice(list(reviewers))
-    print("add assignee:", assignee)
-    return
-    # XXX
     await gh.post(
         "/repos/{owner}/{repo}/issues/{issue_number}/assignees",
         url_vars={
@@ -74,9 +71,6 @@ async def add_reviewers(
 ) -> None:
     """Add reviewers to a PR."""
     event = gidgethub.actions.event()
-    print("add reviewers:", reviewers_to_add)
-    return
-    # XXX
     await gh.post(
         "/repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers",
         url_vars={
@@ -116,4 +110,4 @@ async def main(token: str):
 
 
 if __name__ == "__main__":
-    trio.run(main, "XXX")  # sys.argv[1])
+    trio.run(main, sys.argv[1])
