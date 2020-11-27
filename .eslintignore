@@ -611,7 +611,6 @@ src/client/formatters/baseFormatter.ts
 
 src/client/language/languageConfiguration.ts
 src/client/language/characters.ts
-src/client/language/textRangeCollection.ts
 src/client/language/tokenizer.ts
 src/client/language/characterStream.ts
 src/client/language/textIterator.ts
@@ -670,7 +669,6 @@ src/client/testing/common/constants.ts
 src/client/testing/common/testUtils.ts
 src/client/testing/common/xUnitParser.ts
 src/client/testing/common/updateTestSettings.ts
-src/client/testing/common/testVisitors/visitor.ts
 src/client/testing/common/testVisitors/flatteningVisitor.ts
 src/client/testing/common/testVisitors/resultResetVisitor.ts
 src/client/testing/common/runner.ts
@@ -744,7 +742,6 @@ src/client/common/terminal/environmentActivationProviders/pyenvActivationProvide
 src/client/common/utils/decorators.ts
 src/client/common/utils/enum.ts
 src/client/common/utils/async.ts
-src/client/common/utils/text.ts
 src/client/common/utils/localize.ts
 src/client/common/utils/regexp.ts
 src/client/common/utils/platform.ts
@@ -937,7 +934,6 @@ src/client/application/diagnostics/checks/macPythonInterpreter.ts
 src/client/application/diagnostics/checks/invalidPythonPathInDebugger.ts
 src/client/application/diagnostics/checks/pythonInterpreter.ts
 src/client/application/diagnostics/promptHandler.ts
-src/client/application/diagnostics/types.ts
 src/client/application/diagnostics/constants.ts
 src/client/application/diagnostics/commands/base.ts
 src/client/application/diagnostics/commands/ignore.ts
