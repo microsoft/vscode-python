@@ -24,7 +24,7 @@ export abstract class BaseProductPathsService implements IProductPathService {
         this.productInstaller = serviceContainer.get<IInstaller>(IInstaller);
     }
     public abstract getExecutableNameFromSettings(product: Product, resource?: Uri): string;
-    public isExecutableAModule(product: Product, resource?: Uri): Boolean {
+    public isExecutableAModule(product: Product, resource?: Uri): boolean {
         let moduleName: string | undefined;
         try {
             moduleName = this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);

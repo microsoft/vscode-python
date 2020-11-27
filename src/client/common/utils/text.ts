@@ -6,8 +6,8 @@
 import { Position, Range, TextDocument } from 'vscode';
 import { isNumber } from './sysTypes';
 
-export function getWindowsLineEndingCount(document: TextDocument, offset: Number) {
-    //const eolPattern = new RegExp('\r\n', 'g');
+export function getWindowsLineEndingCount(document: TextDocument, offset: number): number {
+    // const eolPattern = new RegExp('\r\n', 'g');
     const eolPattern = /\r\n/g;
     const readBlock = 1024;
     let count = 0;
