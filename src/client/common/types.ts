@@ -189,6 +189,7 @@ export interface IPythonSettings {
     readonly languageServer: LanguageServerType;
     readonly defaultInterpreterPath: string;
     readonly logging: ILoggingSettings;
+    readonly useIsolation: boolean;
 }
 export interface ISortImportSettings {
     readonly path: string;

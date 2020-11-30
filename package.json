@@ -1770,6 +1770,12 @@
                     "description": "Enable auto run test discovery when saving a test file.",
                     "scope": "resource"
                 },
+                "python.useIsolation": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Use isolate script when running tools. <PLACEHOLDER SETTING FIELD>",
+                    "scope": "machine"
+                },
                 "python.venvFolders": {
                     "type": "array",
                     "default": [],

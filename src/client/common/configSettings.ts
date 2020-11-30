@@ -113,6 +113,7 @@ export class PythonSettings implements IPythonSettings {
     public experiments!: IExperiments;
     public languageServer: LanguageServerType = LanguageServerType.Microsoft;
     public logging: ILoggingSettings = { level: LogLevel.Error };
+    public useIsolation: boolean = true;
 
     protected readonly changed = new EventEmitter<void>();
     private workspaceRoot: Resource;
