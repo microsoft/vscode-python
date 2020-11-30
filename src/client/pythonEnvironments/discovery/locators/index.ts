@@ -57,25 +57,9 @@ export class ExtensionLocators extends Locators {
         super([...nonWorkspace, workspace]);
     }
 }
-type LocatorInfo = { locator: ILocator };
-type WorkspaceLocatorFactoryResult = (ILocator | LocatorInfo) & Partial<IDisposable>;
-type WorkspaceLocatorFactory = (root: Uri) => WorkspaceLocatorFactoryResult[];
 
-/**
- * A helper to deal with the possible return types of WorkspaceLocatorFactory.
- */
-function getLocator(info: ILocator | LocatorInfo): ILocator {
-    const maybeInfo = info as Partial<LocatorInfo>;
-    const maybeLocator = info as Partial<ILocator>;
-    if (maybeInfo.locator === undefined) {
-        return info as ILocator;
-    }
-    if (maybeLocator.iterEnvs !== undefined) {
-        // (unusual) It's a locator with a "locator" property.
-        return info as ILocator;
-    }
-    return maybeInfo.locator;
-}
+type WorkspaceLocatorFactoryResult = ILocator & Partial<IDisposable>;
+type WorkspaceLocatorFactory = (root: Uri) => WorkspaceLocatorFactoryResult[];
 
 type RootURI = string;
 
@@ -176,11 +160,10 @@ export class WorkspaceLocators extends LazyResourceBasedLocator {
         const locators: ILocator[] = [];
         const disposables = new Disposables();
         this.factories.forEach((create) => {
-            create(root).forEach((maybeDisposable) => {
-                const loc = getLocator(maybeDisposable);
+            create(root).forEach((loc) => {
                 locators.push(loc);
-                if (maybeDisposable.dispose !== undefined) {
-                    disposables.push(maybeDisposable as IDisposable);
+                if (loc.dispose !== undefined) {
+                    disposables.push(loc as IDisposable);
                 }
             });
         });
