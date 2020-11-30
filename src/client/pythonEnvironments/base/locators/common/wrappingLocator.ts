@@ -2,14 +2,15 @@
 // Licensed under the MIT License.
 
 import { Event } from 'vscode';
+import { IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { PythonEnvInfo } from '../../info';
 import {
     ILocator, IPythonEnvsIterator, PythonLocatorQuery,
 } from '../../locator';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
-import { LazyResourceBasedLocator, Resource } from './resourceBasedLocator';
+import { LazyResourceBasedLocator } from './resourceBasedLocator';
 
-export type GetLocatorFunc = () => Promise<ILocator & Partial<Resource>>;
+export type GetLocatorFunc = () => Promise<ILocator & Partial<IDisposable>>;
 
 /**
  * A locator that wraps another.
@@ -38,16 +39,17 @@ export class LazyWrappingLocator extends LazyResourceBasedLocator {
         return this.wrapped!.resolveEnv(env);
     }
 
-    protected async initResources(): Promise<void> {
+    protected async initResources(): Promise<IDisposable[]> {
         const locator = await this.getLocator();
         this.wrapped = locator;
         if (locator.dispose !== undefined) {
-            this.addResource(locator as Resource);
+            return [locator as IDisposable];
         }
+        return [];
     }
 
-    protected async initWatchers(): Promise<void> {
+    protected async initWatchers(): Promise<IDisposable[]> {
         const listener = this.wrapped!.onChanged((event) => this.watcher.fire(event));
-        this.addResource(listener);
+        return [listener];
     }
 }

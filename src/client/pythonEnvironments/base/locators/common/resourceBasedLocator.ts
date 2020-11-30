@@ -6,15 +6,13 @@ import { Disposables, IDisposable } from '../../../../common/utils/resourceLifec
 import { PythonEnvInfo } from '../../info';
 import { IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator';
 
-export type Resource = IDisposable;
-
 /**
  * A base locator class that manages the lifecycle of resources.
  *
  * The resources are not initialized until needed.
  */
 export abstract class LazyResourceBasedLocator extends Locator implements IDisposable {
-    private readonly disposables = new Disposables();
+    protected readonly disposables = new Disposables();
 
     // This will be set only once we have to create necessary resources
     // and resolves once those resources are ready.
@@ -57,7 +55,7 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
      * implementation is provided.
      */
     // eslint-disable-next-line class-methods-use-this
-    protected async initResources(): Promise<Resource[] | void> {
+    protected async initResources(): Promise<IDisposable[] | void> {
         // No resources!
     }
 
@@ -71,19 +69,8 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
      * implementation is provided.
      */
     // eslint-disable-next-line class-methods-use-this
-    protected async initWatchers(): Promise<Resource[] | void> {
+    protected async initWatchers(): Promise<IDisposable[] | void> {
         // No watchers!
-    }
-
-    /**
-     * Subclasses may call this if they have extra disposables to track.
-     *
-     * This is especially important for resources in `initResources()`.
-     * As a convenience, any resources returned from that method are
-     * automatically tracked.
-     */
-    protected addResource(res: Resource): void {
-        this.disposables.push(res);
     }
 
     private async ensureResourcesReady(): Promise<void> {
@@ -94,7 +81,7 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
         this.resourcesReady = createDeferred<void>();
         const resources = await this.initResources();
         if (Array.isArray(resources)) {
-            resources.forEach((res) => this.addResource(res));
+            resources.forEach((res) => this.disposables.push(res));
         }
         this.resourcesReady.resolve();
     }
@@ -107,7 +94,7 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
         this.watchersReady = createDeferred<void>();
         const resources = await this.initWatchers();
         if (Array.isArray(resources)) {
-            resources.forEach((res) => this.addResource(res));
+            resources.forEach((res) => this.disposables.push(res));
         }
         this.watchersReady.resolve();
     }

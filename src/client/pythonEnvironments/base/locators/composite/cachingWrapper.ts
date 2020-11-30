@@ -3,6 +3,7 @@
 
 import { Event } from 'vscode';
 import { createDeferred } from '../../../../common/utils/async';
+import { IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { PythonEnvsCache } from '../../envsCache';
 import { PythonEnvInfo } from '../../info';
 import {
@@ -54,7 +55,7 @@ export class CachingLocatorWrapper extends LazyResourceBasedLocator {
         await this.refresh();
     }
 
-    protected async initWatchers(): Promise<void> {
+    protected async initWatchers(): Promise<IDisposable[]> {
         const listener = this.wrapped.onChanged((event) => {
             // Refresh the cache in the background.
             if (this.refreshing) {
@@ -69,7 +70,7 @@ export class CachingLocatorWrapper extends LazyResourceBasedLocator {
                     .ignoreErrors();
             }
         });
-        this.addResource(listener);
+        return [listener];
     }
 
     /**

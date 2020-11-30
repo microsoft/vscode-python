@@ -4,6 +4,7 @@
 import { Event } from 'vscode';
 import '../../../../common/extensions';
 import { BackgroundRequestLooper } from '../../../../common/utils/backgroundLoop';
+import { IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { logWarning } from '../../../../logging';
 import { IEnvsCache } from '../../envsCache';
 import { PythonEnvInfo } from '../../info';
@@ -66,14 +67,13 @@ export class CachingLocator extends LazyResourceBasedLocator {
         return resolved;
     }
 
-    protected async initResources(): Promise<void> {
+    protected async initResources(): Promise<IDisposable[]> {
         // We use a looper in the refresh methods, so we create one here
         // and start it.
         const looper = new BackgroundRequestLooper({
             runDefault: null,
         });
         looper.start();
-        this.addResource(looper);
 
         this.handleOnChanged = (event) => this.ensureCurrentRefresh(looper, event);
 
@@ -82,11 +82,13 @@ export class CachingLocator extends LazyResourceBasedLocator {
         if (this.cache.getAllEnvs() === undefined) {
             await this.ensureRecentRefresh(looper);
         }
+
+        return [looper];
     }
 
-    protected async initWatchers(): Promise<void> {
+    protected async initWatchers(): Promise<IDisposable[]> {
         const listener = this.locator.onChanged((event) => this.handleOnChanged!(event));
-        this.addResource(listener);
+        return [listener];
     }
 
     /**

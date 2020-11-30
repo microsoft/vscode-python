@@ -3,6 +3,7 @@
 
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
+import { IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
 import { PythonEnvKind } from '../../info';
 import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
@@ -37,16 +38,16 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
         super();
     }
 
-    protected async initWatchers(): Promise<void> {
+    protected async initWatchers(): Promise<IDisposable[]> {
         // Start the FS watchers.
         let roots = await this.getRoots();
         if (typeof roots === 'string') {
             roots = [roots];
         }
-        roots.forEach((root) => this.startWatcher(root));
+        return roots.map((root) => this.startWatcher(root));
     }
 
-    private startWatcher(root: string): void {
+    private startWatcher(root: string): IDisposable {
         const callback = async (type: FileChangeType, executable: string) => {
             if (type === FileChangeType.Created) {
                 if (this.opts.delayOnCreated !== undefined) {
@@ -60,12 +61,10 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
             const kind = await this.getKind(executable).catch(() => undefined);
             this.emitter.fire({ type, kind });
         };
-        this.addResource(
-            watchLocationForPythonBinaries(
-                root,
-                callback,
-                this.opts.executableBaseGlob,
-            ),
+        return watchLocationForPythonBinaries(
+            root,
+            callback,
+            this.opts.executableBaseGlob,
         );
     }
 }
