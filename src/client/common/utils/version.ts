@@ -232,6 +232,47 @@ export function isVersionInfoEmpty<T extends BasicVersionInfo>(info: T): boolean
     return info.major < 0 && info.minor < 0 && info.micro < 0;
 }
 
+/**
+ * Decide if two versions are the same or if one is "less".
+ *
+ * Note that a less-complete object that otherwise matches
+ * is considered "less".
+ *
+ * @returns - the customary comparison indicator (e.g. -1 means left is "more")
+ * @returns - a string that indicates the property where they differ (if any)
+ */
+export function compareVersions<T extends BasicVersionInfo, V extends BasicVersionInfo>(
+    // the versions to compare:
+    left: T,
+    right: V
+): [number, string] {
+    if (left.major < right.major) {
+        return [1, 'major'];
+    } else if (left.major > right.major) {
+        return [-1, 'major'];
+    } else if (left.major === -1) {
+        // Don't bother checking the minor or micro.
+        return [0, ''];
+    }
+
+    if (left.minor < right.minor) {
+        return [1, 'minor'];
+    } else if (left.minor > right.minor) {
+        return [-1, 'minor'];
+    } else if (left.minor === -1) {
+        // Don't bother checking the micro.
+        return [0, ''];
+    }
+
+    if (left.micro < right.micro) {
+        return [1, 'micro'];
+    } else if (left.micro > right.micro) {
+        return [-1, 'micro'];
+    }
+
+    return [0, ''];
+}
+
 //===========================
 // base version info
 
@@ -285,6 +326,43 @@ export function parseVersionInfo<T extends VersionInfo>(verStr: string): ParseRe
     }
     result.version.raw = verStr;
     return result;
+}
+
+/**
+ * Build a new version based on the given objects.
+ *
+ * "version" is used if the two are equivalent and "other" does not
+ * have more info.  Otherwise "other" is used.
+ */
+export function mergeVersions<T extends BasicVersionInfo, V extends BasicVersionInfo>(
+    // the versions to merge:
+    version: T,
+    other: V
+): VersionInfo {
+    let winner: BasicVersionInfo = version;
+    const [result] = compareVersions(version, other);
+    if (result > 0) {
+        winner = other;
+    }
+    const merged: VersionInfo = {
+        // Copy the winner's info.
+        major: winner.major,
+        minor: winner.minor,
+        micro: winner.micro
+    };
+
+    let raw = ((version as unknown) as VersionInfo).raw;
+    let otherRaw = ((other as unknown) as VersionInfo).raw;
+    if (winner === other) {
+        [otherRaw, raw] = [raw, otherRaw];
+    }
+    if (raw !== undefined && raw !== '') {
+        merged.raw = raw;
+    } else if (otherRaw !== undefined) {
+        merged.raw = otherRaw;
+    }
+
+    return merged;
 }
 
 //===========================

@@ -5,11 +5,11 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import '../../../../common/extensions';
 import {
-    getEnvironmentVariable, getOSType, getUserHomeDir, OSType
+    getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
 import { comparePythonVersionSpecificity } from '../../../base/info/env';
-import { parseVersion, parseVersionInfo } from '../../../base/info/pythonVersion';
+import { parseBasicVersion, parseVersion } from '../../../base/info/pythonVersion';
 import { pathExists, readFile } from '../../../common/externalDependencies';
 
 function getPyvenvConfigPathsFrom(interpreterPath:string): string[] {
@@ -150,7 +150,8 @@ export async function getPythonVersionFromPyvenvCfg(interpreterPath:string): Pro
                                 }
                             } else if (name === 'version_info') {
                                 try {
-                                    return parseVersionInfo(value);
+                                    const [ver] = parseBasicVersion(value);
+                                    return ver;
                                 } catch (ex) {
                                     return undefined;
                                 }

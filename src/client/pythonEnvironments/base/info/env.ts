@@ -8,8 +8,8 @@ import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
 import { parseVersionFromExecutable } from './executable';
 import {
-    areEqualVersions,
-    areEquivalentVersions,
+    areIdenticalVersion,
+    areSimilarVersions,
     isVersionEmpty,
 } from './pythonVersion';
 
@@ -291,8 +291,8 @@ export function areSameEnv(
         const rightVersion = typeof right === 'string' ? undefined : right.version;
         if (leftVersion && rightVersion) {
             if (
-                areEqualVersions(leftVersion, rightVersion)
-                || (allowPartialMatch && areEquivalentVersions(leftVersion, rightVersion))
+                areIdenticalVersion(leftVersion, rightVersion)
+                || (allowPartialMatch && areSimilarVersions(leftVersion, rightVersion))
             ) {
                 return true;
             }
