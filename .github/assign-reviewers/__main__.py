@@ -25,7 +25,7 @@ def select_reviewers(
 
     If the author is a potential reviewer, remove them from contention. Also
     deduct the number of reviewers necessary based on any that have already
-    been asked to review.
+    been asked to review who are also eligible to review.
 
     """
     already_reviewing = available_reviewers & assigned_reviewers
@@ -37,7 +37,7 @@ def select_reviewers(
     while count > 0 and potential_reviewers:
         selected = random.choice(list(potential_reviewers))
         potential_reviewers.discard(selected)
-        select_reviewers.append(selected)
+        selected_reviewers.append(selected)
         count -= 1
     selected_reviewers = frozenset(selected_reviewers)
     return already_reviewing | selected_reviewers, selected_reviewers
