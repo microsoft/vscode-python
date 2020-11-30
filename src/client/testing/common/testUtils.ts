@@ -143,7 +143,8 @@ export class TestsHelper implements ITestsHelper {
         folders.sort();
         const resource = Uri.file(workspaceFolder);
         folders.forEach((dir) => {
-            dir.split(path.sep).reduce((parentPath, currentName, _index, _values) => {
+            let parentPath = ''; // Accumulator
+            dir.split(path.sep).forEach((currentName) => {
                 let newPath = currentName;
                 let parentFolder: TestFolder | undefined;
                 if (parentPath.length > 0) {
@@ -164,7 +165,7 @@ export class TestsHelper implements ITestsHelper {
                     };
                     folderMap.set(newPath, testFolder);
                     if (parentFolder) {
-                        parentFolder!.folders.push(testFolder);
+                        parentFolder.folders.push(testFolder);
                     } else {
                         tests.rootTestFolders.push(testFolder);
                     }
@@ -175,8 +176,8 @@ export class TestsHelper implements ITestsHelper {
                         });
                     tests.testFolders.push(testFolder);
                 }
-                return newPath;
-            }, '');
+                parentPath = newPath;
+            });
         });
     }
     public parseTestName(name: string, rootDirectory: string, tests: Tests): TestsToRun | undefined {

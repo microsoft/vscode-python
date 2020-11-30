@@ -449,6 +449,12 @@ export interface IEventNamePropertyMapping {
          */
         django: boolean;
         /**
+         * Whether the user is debugging `fastapi`.
+         *
+         * @type {boolean}
+         */
+        fastapi: boolean;
+        /**
          * Whether the user is debugging `flask`.
          *
          * @type {boolean}
@@ -557,6 +563,12 @@ export interface IEventNamePropertyMapping {
          * @type {boolean}
          */
         autoDetectedPyramidIniPath?: boolean;
+        /**
+         * Carries `true` if we are able to auto-detect main.py path for FastAPI, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        autoDetectedFastAPIMainPyPath?: boolean;
         /**
          * Carries `true` if we are able to auto-detect app.py path for Flask, `false` otherwise
          *

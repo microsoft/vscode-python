@@ -347,3 +347,11 @@ export function visualstudio_py_testlauncher(testArgs: string[]): string[] {
     // There is no output to parse, so we do not return a function.
     return [script, ...testArgs];
 }
+
+//============================
+// tensorboard_launcher.py
+
+export function tensorboardLauncher(args: string[]) {
+    const script = path.join(SCRIPTS_DIR, 'tensorboard_launcher.py');
+    return [ISOLATED, script, ...args];
+}

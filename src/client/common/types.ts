@@ -104,7 +104,8 @@ export enum Product {
     notebook = 20,
     kernelspec = 21,
     nbconvert = 22,
-    pandas = 23
+    pandas = 23,
+    tensorboard = 24
 }
 
 export enum ModuleNamePurpose {

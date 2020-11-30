@@ -57,6 +57,7 @@ import { activateSimplePythonRefactorProvider } from './providers/simpleRefactor
 import { TerminalProvider } from './providers/terminalProvider';
 import { ISortImportsEditingProvider } from './providers/types';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
+import { registerTypes as tensorBoardRegisterTypes } from './tensorBoard/serviceRegistry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
 import { TEST_OUTPUT_CHANNEL } from './testing/common/constants';
@@ -117,6 +118,7 @@ async function activateLegacy(
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
+    tensorBoardRegisterTypes(serviceManager);
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.

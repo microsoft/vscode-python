@@ -34,7 +34,7 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
         @unmanaged() private readonly supportedDiagnosticCodes: string[],
         @unmanaged() protected serviceContainer: IServiceContainer,
         @unmanaged() disposableRegistry: IDisposableRegistry,
-        @unmanaged() public readonly runInBackground: Boolean = false
+        @unmanaged() public readonly runInBackground: boolean = false
     ) {
         this.filterService = serviceContainer.get<IDiagnosticFilterService>(IDiagnosticFilterService);
         disposableRegistry.push(this);

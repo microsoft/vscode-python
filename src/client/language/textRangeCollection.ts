@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import { ITextRange, ITextRangeCollection } from './types';
@@ -27,7 +28,7 @@ export class TextRangeCollection<T extends ITextRange> implements ITextRangeColl
         return this.items.length;
     }
 
-    public contains(position: number) {
+    public contains(position: number): boolean {
         return position >= this.start && position < this.end;
     }
 
@@ -35,7 +36,7 @@ export class TextRangeCollection<T extends ITextRange> implements ITextRangeColl
         if (index < 0 || index >= this.items.length) {
             throw new Error('index is out of range');
         }
-        return this.items[index] as T;
+        return this.items[index];
     }
 
     public getItemAtPosition(position: number): number {

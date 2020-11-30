@@ -13,6 +13,8 @@ nose
 pytest<6 ; python_version > '2.7'  # Tests currently fail against pytest 6.
 rope
 flask
+fastapi ; python_version > '2.7'
+uvicorn ; python_version > '2.7'
 django
 isort
 

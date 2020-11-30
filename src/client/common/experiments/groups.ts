@@ -83,6 +83,11 @@ export enum SendSelectionToREPL {
     experiment = 'pythonSendEntireLineToREPL'
 }
 
+// Feature flag for 'Python: Launch TensorBoard' feature
+export enum NativeTensorBoard {
+    experiment = 'nativeTensorBoard'
+}
+
 // Experiment to show a prompt asking users to install or select linter
 export enum LinterInstallationPromptVariants {
     pylintFirst = 'pythonInstallPylintButtonFirst',

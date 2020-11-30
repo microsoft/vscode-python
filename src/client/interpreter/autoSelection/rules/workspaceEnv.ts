@@ -63,7 +63,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
 
         if (bestInterpreter && manager) {
             await super.cacheSelectedInterpreter(workspacePath.folderUri, bestInterpreter);
-            await manager.setWorkspaceInterpreter(workspacePath.folderUri!, bestInterpreter);
+            await manager.setWorkspaceInterpreter(workspacePath.folderUri, bestInterpreter);
         }
 
         traceVerbose(

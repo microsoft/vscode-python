@@ -20,6 +20,7 @@ suite('Debugging - Configuration Provider Factory', () => {
             mappedProviders.set(item.value, (item.value as any) as IDebugConfigurationProvider);
         });
         factory = new DebugConfigurationProviderFactory(
+            mappedProviders.get(DebugConfigurationType.launchFastAPI)!,
             mappedProviders.get(DebugConfigurationType.launchFlask)!,
             mappedProviders.get(DebugConfigurationType.launchDjango)!,
             mappedProviders.get(DebugConfigurationType.launchModule)!,

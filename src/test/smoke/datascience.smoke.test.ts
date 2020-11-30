@@ -3,8 +3,9 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-invalid-this no-any
+// tslint:disable:no-invalid-this
 
+import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -25,8 +26,10 @@ suite('Smoke Test: Interactive Window', () => {
         await verifyExtensionIsAvailable(JUPYTER_EXTENSION_ID);
         await initialize();
         await setAutoSaveDelayInWorkspaceRoot(1);
-        const jupyterConfig = vscode.workspace.getConfiguration('jupyter', (null as any) as vscode.Uri);
+        const jupyterConfig = vscode.workspace.getConfiguration('jupyter', null);
         await jupyterConfig.update('alwaysTrustNotebooks', true, true);
+
+        return undefined;
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -50,7 +53,9 @@ suite('Smoke Test: Interactive Window', () => {
         // Wait for code lenses to get detected.
         await sleep(1_000);
 
-        await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri);
+        await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri).then(undefined, (err) => {
+            assert.fail(`Something went wrong running all cells in the interactive window: ${err}`);
+        });
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
     }).timeout(timeoutForCellToRun);
@@ -79,7 +84,9 @@ suite('Smoke Test: Interactive Window', () => {
         // Unfortunately there's no way to know for sure it has completely loaded.
         await sleep(15_000);
 
-        await vscode.commands.executeCommand<void>('jupyter.notebookeditor.runallcells');
+        await vscode.commands.executeCommand<void>('jupyter.notebookeditor.runallcells').then(undefined, (err) => {
+            assert.fail(`Something went wrong running all cells in the native editor: ${err}`);
+        });
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
 

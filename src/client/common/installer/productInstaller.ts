@@ -679,6 +679,8 @@ function translateProductToModule(product: Product, purpose: ModuleNamePurpose):
             return 'nbconvert';
         case Product.kernelspec:
             return 'kernelspec';
+        case Product.tensorboard:
+            return 'tensorboard';
         default: {
             throw new Error(`Product ${product} cannot be installed as a Python Module.`);
         }

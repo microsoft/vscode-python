@@ -214,6 +214,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
     });
 
     test('iterEnvs(): Non-Windows (WORKON_HOME not set)', async () => {
+        readFileStub.resolves(path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project2'));
         getEnvVariableStub.withArgs('WORKON_HOME').returns(undefined);
         const expectedEnvs = [
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python'), PythonEnvKind.Venv),
@@ -228,6 +229,10 @@ suite('GlobalVirtualEnvironment Locator', () => {
             createExpectedEnvInfo(
                 path.join(testVirtualHomeDir, '.virtualenvs', 'posix2', 'bin', 'python'),
                 PythonEnvKind.VirtualEnvWrapper,
+            ),
+            createExpectedEnvInfo(
+                path.join(testVirtualHomeDir, '.local', 'share', 'virtualenvs', 'project2-vnNIWe9P', 'bin', 'python'),
+                PythonEnvKind.Pipenv,
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
@@ -319,15 +324,6 @@ suite('GlobalVirtualEnvironment Locator', () => {
         const actual = await locator.resolveEnv(input);
 
         assertEnvEqual(actual, expected);
-    });
-
-    test('resolveEnv(string): not venv based environment', async () => {
-        const interpreterPath = path.join(testVirtualHomeDir, '.virtualenvs', 'nonvenv', 'python');
-
-        locator = await createGlobalVirtualEnvironmentLocator();
-        const actual = await locator.resolveEnv(interpreterPath);
-
-        assert.deepStrictEqual(actual, undefined);
     });
 
     test('resolveEnv(string): non existent path', async () => {

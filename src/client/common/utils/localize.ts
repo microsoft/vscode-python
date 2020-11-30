@@ -133,6 +133,27 @@ export namespace Jupyter {
     );
 }
 
+export namespace TensorBoard {
+    export const logDirectoryPrompt = localize(
+        'TensorBoard.logDirectoryPrompt',
+        'Please select a log directory to start TensorBoard with.'
+    );
+    export const progressMessage = localize('TensorBoard.progressMessage', 'Starting TensorBoard session...');
+    export const failedToStartSessionError = localize(
+        'TensorBoard.failedToStartSessionError',
+        'We failed to start a TensorBoard session due to the following error: {0}'
+    );
+    export const nativeTensorBoardPrompt = localize(
+        'TensorBoard.nativeTensorBoardPrompt',
+        'VS Code now has native TensorBoard support. Would you like to launch TensorBoard?'
+    );
+    export const usingCurrentWorkspaceFolder = localize(
+        'TensorBoard.usingCurrentWorkspaceFolder',
+        'We are using the current workspace folder as the log directory for your TensorBoard session.'
+    );
+    export const selectAFolder = localize('TensorBoard.selectAFolder', 'Select a folder');
+}
+
 export namespace LanguageService {
     export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi Python language engine.');
     export const startingMicrosoft = localize(
@@ -451,6 +472,21 @@ export namespace DebugConfigStrings {
             title: localize('debug.djangoEnterManagePyPathTitle'),
             prompt: localize('debug.djangoEnterManagePyPathPrompt'),
             invalid: localize('debug.djangoEnterManagePyPathInvalidFilePathError')
+        };
+    }
+    export namespace fastapi {
+        export const snippet = {
+            name: localize('python.snippet.launch.fastapi.label')
+        };
+        // tslint:disable-next-line:no-shadowed-variable
+        export const selectConfiguration = {
+            label: localize('debug.debugFastAPIConfigurationLabel'),
+            description: localize('debug.debugFastAPIConfigurationDescription')
+        };
+        export const enterAppPathOrNamePath = {
+            title: localize('debug.fastapiEnterAppPathOrNamePathTitle'),
+            prompt: localize('debug.fastapiEnterAppPathOrNamePathPrompt'),
+            invalid: localize('debug.fastapiEnterAppPathOrNamePathInvalidNameError')
         };
     }
     export namespace flask {

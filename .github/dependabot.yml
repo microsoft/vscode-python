@@ -15,13 +15,8 @@ updates:
     ignore:
       - dependency-name: pytest # Due to Python 2.7 and #13776.
       - dependency-name: py # Due to Python 2.7.
+    labels: []
 
-  - package-ecosystem: 'pip'
-    directory: /news
-    schedule:
-      interval: monthly
-    labels:
-      - 'skip news'
   # Activate when we feel ready to keep up with frequency.
   # - package-ecosystem: 'npm'
   #   directory: /

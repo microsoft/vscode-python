@@ -63,17 +63,28 @@ export async function openNotebookAndWaitForLS(file: string): Promise<vscode.Not
 }
 
 export async function openFileAndWaitForLS(file: string): Promise<vscode.TextDocument> {
-    const textDocument = await vscode.workspace.openTextDocument(file);
-    await vscode.window.showTextDocument(textDocument);
+    const textDocument = await vscode.workspace.openTextDocument(file).then(
+        (result) => result,
+        (err) => {
+            assert.fail(`Something went wrong opening the text document: ${err}`);
+        }
+    );
+    await vscode.window.showTextDocument(textDocument).then(undefined, (err) => {
+        assert.fail(`Something went wrong showing the text document: ${err}`);
+    });
     assert(vscode.window.activeTextEditor, 'No active editor');
     // Make sure LS completes file loading and analysis.
     // In test mode it awaits for the completion before trying
     // to fetch data for completion, hover.etc.
-    await vscode.commands.executeCommand(
-        'vscode.executeCompletionItemProvider',
-        textDocument.uri,
-        new vscode.Position(0, 0)
-    );
+    await vscode.commands
+        .executeCommand<vscode.CompletionList>(
+            'vscode.executeCompletionItemProvider',
+            textDocument.uri,
+            new vscode.Position(0, 0)
+        )
+        .then(undefined, (err) => {
+            assert.fail(`Something went wrong opening the file: ${err}`);
+        });
     // For for LS to get extracted.
     await sleep(10_000);
     return textDocument;

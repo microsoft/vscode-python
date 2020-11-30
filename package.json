@@ -83,6 +83,7 @@
         "onCommand:python.resetInterpreterSecurityStorage",
         "onCommand:python.startPage.open",
         "onCommand:python.enableSourceMapSupport",
+        "onCommand:python.launchTensorBoard",
         "workspaceContains:mspythonconfig.json",
         "workspaceContains:pyproject.toml"
     ],
@@ -352,6 +353,11 @@
                 "command": "python.analysis.restartLanguageServer",
                 "title": "%python.command.python.analysis.restartLanguageServer.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.launchTensorBoard",
+                "title": "%python.command.python.launchTensorBoard.title%",
+                "category": "Python"
             }
         ],
         "menus": {
@@ -486,6 +492,11 @@
                     "command": "python.startPage.open",
                     "title": "%python.command.python.startPage.open.title%",
                     "category": "Python"
+                },
+                {
+                    "command": "python.launchTensorBoard",
+                    "category": "Python",
+                    "when": "python.isInNativeTensorBoardExperiment"
                 }
             ],
             "view/title": [
@@ -1043,6 +1054,7 @@
                             "jediLSP",
                             "debuggerDataViewer",
                             "pythonSendEntireLineToREPL",
+                            "nativeTensorBoard",
                             "All"
                         ]
                     },
@@ -1070,6 +1082,7 @@
                             "jediLSP",
                             "debuggerDataViewer",
                             "pythonSendEntireLineToREPL",
+                            "nativeTensorBoard",
                             "All"
                         ]
                     },
@@ -2016,7 +2029,7 @@
         "vscode-languageclient": "7.0.0-next.14",
         "vscode-languageserver": "7.0.0-next.11",
         "vscode-languageserver-protocol": "3.16.0-next.11",
-        "vscode-tas-client": "^0.1.4",
+        "vscode-tas-client": "^0.1.15",
         "winreg": "^1.2.4",
         "winston": "^3.2.1",
         "xml2js": "^0.4.19"

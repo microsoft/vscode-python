@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { clearTimeout, setTimeout } from 'timers';
 import {
     Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri,
 } from 'vscode';
@@ -23,7 +24,7 @@ const timeToPollForEnvCreation = 2_000;
 export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, Disposable {
     private readonly didCreate: EventEmitter<Resource>;
 
-    private timers = new Map<string, { timer: NodeJS.Timer | number; counter: number }>();
+    private timers = new Map<string, { timer: NodeJS.Timeout; counter: number }>();
 
     private fsWatchers: FileSystemWatcher[] = [];
 
@@ -43,7 +44,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
         return this.didCreate.event;
     }
 
-    public dispose() {
+    public dispose(): void {
         this.clearTimers();
     }
 
@@ -70,21 +71,22 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
     }
 
     @traceDecorators.verbose('Interpreter Watcher change handler')
-    public async createHandler(e: Uri) {
+    public async createHandler(e: Uri): Promise<void> {
         this.didCreate.fire(this.resource);
         // On Windows, creation of environments are very slow, hence lets notify again after
         // the python executable is accessible (i.e. when we can launch the process).
         this.notifyCreationWhenReady(e.fsPath).ignoreErrors();
     }
 
-    protected async notifyCreationWhenReady(pythonPath: string) {
-        const counter = this.timers.has(pythonPath) ? this.timers.get(pythonPath)!.counter + 1 : 0;
+    protected async notifyCreationWhenReady(pythonPath: string): Promise<void> {
+        const counter = (this.timers.get(pythonPath)?.counter ?? -1) + 1;
         const isValid = await this.isValidExecutable(pythonPath);
         if (isValid) {
             if (counter > 0) {
                 this.didCreate.fire(this.resource);
             }
-            return this.timers.delete(pythonPath);
+            this.timers.delete(pythonPath);
+            return;
         }
         if (counter > maxTimeToWaitForEnvCreation / timeToPollForEnvCreation) {
             // Send notification before we give up trying.
@@ -101,8 +103,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
     }
 
     private clearTimers() {
-        // tslint:disable-next-line: no-any
-        this.timers.forEach((item) => clearTimeout(item.timer as any));
+        this.timers.forEach((item) => clearTimeout(item.timer));
         this.timers.clear();
     }
 

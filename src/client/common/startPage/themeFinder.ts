@@ -59,7 +59,7 @@ export class ThemeFinder implements IThemeFinder {
     public async findLanguageConfiguration(language: string): Promise<LanguageConfiguration> {
         if (language === PYTHON_LANGUAGE) {
             // Custom for python. Some of these are required by monaco.
-            return {
+            const config: unknown = {
                 comments: {
                     lineComment: '#',
                     blockComment: ['"""', '"""']
@@ -91,7 +91,9 @@ export class ThemeFinder implements IThemeFinder {
                     }
                 },
                 ...getLanguageConfiguration()
-            } as any; // NOSONAR
+            };
+
+            return config as LanguageConfiguration;
         }
         return this.findMatchingLanguageConfiguration(language);
     }

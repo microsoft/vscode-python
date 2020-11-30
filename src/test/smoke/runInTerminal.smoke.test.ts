@@ -3,8 +3,9 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-invalid-this no-any
+// tslint:disable:no-invalid-this
 
+import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -43,7 +44,9 @@ suite('Smoke Test: Run Python File In Terminal', () => {
         }
         const textDocument = await openFile(file);
 
-        await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri);
+        await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri).then(undefined, (err) => {
+            assert.fail(`Something went wrong running the Python file in the terminal: ${err}`);
+        });
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, 30_000, `"${outputFile}" file not created`);
     });
