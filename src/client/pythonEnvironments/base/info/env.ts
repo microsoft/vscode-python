@@ -6,7 +6,7 @@ import * as path from 'path';
 import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
-import { parseVersionFromExecutable } from './executable';
+import { parseExeVersion } from './executable';
 import {
     areIdenticalVersion,
     areSimilarVersions,
@@ -162,7 +162,7 @@ export function getFastEnvInfo(kind: PythonEnvKind, executable: string): PythonE
     const env = buildEnvInfo({ kind, executable });
 
     try {
-        env.version = parseVersionFromExecutable(env.executable.filename);
+        env.version = parseExeVersion(env.executable.filename);
     } catch {
         // It didn't have version info in it.
         // We could probably walk up the directory tree trying dirnames
@@ -198,7 +198,7 @@ export async function getMaxDerivedEnvInfo(minimal: PythonEnvInfo): Promise<Pyth
 
     if (isVersionEmpty(env.version)) {
         try {
-            env.version = parseVersionFromExecutable(env.executable.filename);
+            env.version = parseExeVersion(env.executable.filename);
         } catch {
             // It didn't have version info in it.
             // We could probably walk up the directory tree trying dirnames
