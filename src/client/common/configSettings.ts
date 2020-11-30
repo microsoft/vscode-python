@@ -245,6 +245,8 @@ export class PythonSettings implements IPythonSettings {
             pythonSettings.get<boolean>('autoUpdateLanguageServer', true)
         )!;
 
+        this.useIsolation = systemVariables.resolveAny(pythonSettings.get<boolean>('useIsolation', true))!;
+
         let ls = pythonSettings.get<LanguageServerType>('languageServer') ?? LanguageServerType.Jedi;
         ls = systemVariables.resolveAny(ls);
         if (!Object.values(LanguageServerType).includes(ls)) {
