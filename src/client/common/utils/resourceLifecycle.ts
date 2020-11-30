@@ -54,16 +54,3 @@ export class Disposables implements IDisposables {
         await disposeAll(disposables);
     }
 }
-
-/**
- * Something that has things to dispose.
- */
-export class HasDisposables implements IDisposable {
-    protected disposables: IDisposable[] = [];
-
-    public async dispose(): Promise<void> {
-        const disposables = this.disposables;
-        this.disposables = [];
-        await disposeAll(disposables);
-    }
-}
