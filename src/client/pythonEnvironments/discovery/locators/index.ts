@@ -138,7 +138,7 @@ export class WorkspaceLocators extends LazyResourceBasedLocator {
         return undefined;
     }
 
-    protected async initResources(): Promise<IDisposable[]> {
+    protected async initResources(): Promise<void> {
         const disposable = this.watchRoots({
             initRoot: (root: Uri) => this.addRoot(root),
             addRoot: (root: Uri) => {
@@ -152,7 +152,7 @@ export class WorkspaceLocators extends LazyResourceBasedLocator {
                 this.emitter.fire({ searchLocation: root });
             },
         });
-        return [disposable];
+        this.disposables.push(disposable);
     }
 
     private addRoot(root: Uri): void {

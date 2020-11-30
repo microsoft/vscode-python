@@ -10,6 +10,13 @@ import { IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator'
  * A base locator class that manages the lifecycle of resources.
  *
  * The resources are not initialized until needed.
+ *
+ * It is critical that each subclass properly add its resources
+ * to the list:
+ *
+ *   this.disposables.push(someResource);
+ *
+ * Otherwise it will leak (and we have no leak detection).
  */
 export abstract class LazyResourceBasedLocator extends Locator implements IDisposable {
     protected readonly disposables = new Disposables();
@@ -51,11 +58,16 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
      *
      * It is only called once resources are needed.
      *
-     * Note all locators have resources other than watchers so a default
+     * Each subclass is responsible to add its resources to the list
+     * (otherwise it leaks):
+     *
+     *   this.disposables.push(someResource);
+     *
+     * Not all locators have resources other than watchers so a default
      * implementation is provided.
      */
     // eslint-disable-next-line class-methods-use-this
-    protected async initResources(): Promise<IDisposable[] | void> {
+    protected async initResources(): Promise<void> {
         // No resources!
     }
 
@@ -65,11 +77,16 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
      * It is only called with the first `iterEnvs()` call,
      * after `initResources()` has been called.
      *
-     * Note all locators have watchers to init so a default
+     * Each subclass is responsible to add its resources to the list
+     * (otherwise it leaks):
+     *
+     *   this.disposables.push(someResource);
+     *
+     * Not all locators have watchers to init so a default
      * implementation is provided.
      */
     // eslint-disable-next-line class-methods-use-this
-    protected async initWatchers(): Promise<IDisposable[] | void> {
+    protected async initWatchers(): Promise<void> {
         // No watchers!
     }
 
@@ -79,10 +96,7 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
             return;
         }
         this.resourcesReady = createDeferred<void>();
-        const resources = await this.initResources();
-        if (Array.isArray(resources)) {
-            resources.forEach((res) => this.disposables.push(res));
-        }
+        await this.initResources();
         this.resourcesReady.resolve();
     }
 
@@ -92,10 +106,7 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
             return;
         }
         this.watchersReady = createDeferred<void>();
-        const resources = await this.initWatchers();
-        if (Array.isArray(resources)) {
-            resources.forEach((res) => this.disposables.push(res));
-        }
+        await this.initWatchers();
         this.watchersReady.resolve();
     }
 }

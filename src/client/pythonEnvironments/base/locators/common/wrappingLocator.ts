@@ -39,17 +39,16 @@ export class LazyWrappingLocator extends LazyResourceBasedLocator {
         return this.wrapped!.resolveEnv(env);
     }
 
-    protected async initResources(): Promise<IDisposable[]> {
+    protected async initResources(): Promise<void> {
         const locator = await this.getLocator();
         this.wrapped = locator;
         if (locator.dispose !== undefined) {
-            return [locator as IDisposable];
+            this.disposables.push(locator as IDisposable);
         }
-        return [];
     }
 
-    protected async initWatchers(): Promise<IDisposable[]> {
+    protected async initWatchers(): Promise<void> {
         const listener = this.wrapped!.onChanged((event) => this.watcher.fire(event));
-        return [listener];
+        this.disposables.push(listener);
     }
 }
