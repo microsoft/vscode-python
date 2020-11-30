@@ -8,7 +8,7 @@ import { traceWarning } from '../../../../common/logger';
 import { Architecture, getEnvironmentVariable } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
-import { getPythonVersionFromPath } from '../../../base/info/pythonVersion';
+import { parseExeVersion } from '../../../base/info/executable';
 import { IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { getFileInfo } from '../../../common/externalDependencies';
@@ -148,7 +148,7 @@ export class WindowsStoreLocator extends FSWatchingLocator {
                 buildEnvInfo({
                     kind,
                     executable,
-                    version: getPythonVersionFromPath(executable),
+                    version: parseExeVersion(executable),
                     org: 'Microsoft',
                     arch: Architecture.x64,
                     fileInfo: await getFileInfo(executable),
@@ -164,7 +164,7 @@ export class WindowsStoreLocator extends FSWatchingLocator {
             return buildEnvInfo({
                 kind: this.kind,
                 executable: executablePath,
-                version: getPythonVersionFromPath(executablePath),
+                version: parseExeVersion(executablePath),
                 org: 'Microsoft',
                 arch: Architecture.x64,
                 fileInfo: await getFileInfo(executablePath),
