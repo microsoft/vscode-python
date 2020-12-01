@@ -543,6 +543,9 @@ export type ABExperiments = {
  * Interface used to implement AB testing
  */
 export const IExperimentsManager = Symbol('IExperimentsManager');
+/**
+ * @deprecated Use IExperimentService instead
+ */
 export interface IExperimentsManager {
     /**
      * Checks if experiments are enabled, sets required environment to be used for the experiments, logs experiment groups
