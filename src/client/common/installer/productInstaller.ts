@@ -19,7 +19,7 @@ import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/type
 import { ITerminalServiceFactory } from '../terminal/types';
 import {
     IConfigurationService,
-    IExperimentsManager,
+    IExperimentService,
     IInstaller,
     InstallerResponse,
     IOutputChannel,
@@ -238,12 +238,12 @@ export class LinterInstaller extends BaseInstaller {
     // we immediately show this prompt again saying install flake8, while the
     // installation is on going.
     private static promptSeen: boolean = false;
-    private readonly experimentsManager: IExperimentsManager;
+    private readonly experimentsManager: IExperimentService;
     private readonly linterManager: ILinterManager;
 
     constructor(protected serviceContainer: IServiceContainer, protected outputChannel: OutputChannel) {
         super(serviceContainer, outputChannel);
-        this.experimentsManager = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        this.experimentsManager = serviceContainer.get<IExperimentService>(IExperimentService);
         this.linterManager = serviceContainer.get<ILinterManager>(ILinterManager);
     }
 
@@ -273,7 +273,7 @@ export class LinterInstaller extends BaseInstaller {
         // 2. The default linter should be pylint
 
         if (!this.isLinterSetInAnyScope() && product === Product.pylint) {
-            if (this.experimentsManager.inExperiment(LinterInstallationPromptVariants.noPrompt)) {
+            if (await this.experimentsManager.inExperiment(LinterInstallationPromptVariants.noPrompt)) {
                 // We won't show a prompt, so tell the extension to treat as though user
                 // ignored the prompt.
                 sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT, undefined, {
@@ -284,9 +284,9 @@ export class LinterInstaller extends BaseInstaller {
                 traceInfo(`Linter ${productName} is not installed.`);
 
                 return InstallerResponse.Ignore;
-            } else if (this.experimentsManager.inExperiment(LinterInstallationPromptVariants.pylintFirst)) {
+            } else if (await this.experimentsManager.inExperiment(LinterInstallationPromptVariants.pylintFirst)) {
                 return this.newPromptForInstallation(true, resource, cancel);
-            } else if (this.experimentsManager.inExperiment(LinterInstallationPromptVariants.flake8First)) {
+            } else if (await this.experimentsManager.inExperiment(LinterInstallationPromptVariants.flake8First)) {
                 return this.newPromptForInstallation(false, resource, cancel);
             }
         }
