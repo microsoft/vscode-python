@@ -9,7 +9,7 @@ import * as childProcess from 'child_process';
 export function open(opts: any): Promise<childProcess.ChildProcess> {
     // opts = objectAssign({wait: true}, opts);
     if (!opts.hasOwnProperty('wait')) {
-        (<any>opts).wait = true;
+        opts.wait = true;
     }
 
     let cmd;

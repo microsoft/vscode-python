@@ -116,7 +116,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     protected async startLanguageServer(): Promise<void> {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
 
-        const options = await this.analysisOptions!.getAnalysisOptions();
+        const options = await this.analysisOptions.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(
             this.serviceContainer,
             LanguageServerType.Node,

@@ -113,7 +113,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
                 }
                 return this.getRootNodes(tests);
             }
-            return getChildren(element!);
+            return getChildren(element);
         }
 
         if (!Array.isArray(this.workspace.workspaceFolders) || this.workspace.workspaceFolders.length === 0) {

@@ -49,7 +49,7 @@ export class PythonToolExecutionService implements IPythonToolExecutionService {
             const pythonExecutionService = await this.serviceContainer
                 .get<IPythonExecutionFactory>(IPythonExecutionFactory)
                 .create({ resource });
-            return pythonExecutionService.execModule(executionInfo.moduleName!, executionInfo.args, options);
+            return pythonExecutionService.execModule(executionInfo.moduleName, executionInfo.args, options);
         } else {
             const processService = await this.serviceContainer
                 .get<IProcessServiceFactory>(IProcessServiceFactory)

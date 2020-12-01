@@ -1,5 +1,6 @@
 'use strict';
 import { inject, injectable } from 'inversify';
+import { clearInterval, setInterval } from 'timers';
 import { Event, EventEmitter, StatusBarAlignment, StatusBarItem } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
@@ -20,7 +21,7 @@ export class TestResultDisplay implements ITestResultDisplay {
     private statusBar: StatusBarItem;
     private discoverCounter = 0;
     private ticker = ['|', '/', '-', '|', '/', '-', '\\'];
-    private progressTimeout: NodeJS.Timer | number | null = null;
+    private progressTimeout: NodeJS.Timer | null = null;
     private _enabled: boolean = false;
     private progressPrefix!: string;
     private readonly didChange = new EventEmitter<void>();
@@ -146,7 +147,7 @@ export class TestResultDisplay implements ITestResultDisplay {
     private clearProgressTicker() {
         if (this.progressTimeout) {
             // tslint:disable-next-line: no-any
-            clearInterval(this.progressTimeout as any);
+            clearInterval(this.progressTimeout);
         }
         this.progressTimeout = null;
         this.discoverCounter = 0;

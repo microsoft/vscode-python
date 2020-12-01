@@ -31,7 +31,7 @@ export class ProgressReporting implements Disposable {
             if (!this.progress) {
                 this.beginProgress();
             }
-            this.progress!.report({ message: m });
+            this.progress!.report({ message: m }); // NOSONAR
         });
 
         this.languageClient.onNotification('python/endProgress', (_) => {

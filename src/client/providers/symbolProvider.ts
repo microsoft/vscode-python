@@ -1,5 +1,6 @@
 'use strict';
 
+import { clearTimeout, setTimeout } from 'timers';
 import {
     CancellationToken,
     DocumentSymbol,
@@ -89,7 +90,7 @@ export class LanguageServerSymbolProvider implements DocumentSymbolProvider {
  *   https://code.visualstudio.com/docs/extensionAPI/vscode-api#DocumentSymbolProvider
  */
 export class JediSymbolProvider implements DocumentSymbolProvider {
-    private debounceRequest: Map<string, { timer: NodeJS.Timer | number; deferred: Deferred<SymbolInformation[]> }>;
+    private debounceRequest: Map<string, { timer: NodeJS.Timer; deferred: Deferred<SymbolInformation[]> }>;
     private readonly fs: IFileSystem;
 
     public constructor(
@@ -97,10 +98,7 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
         private jediFactory: JediFactory,
         private readonly debounceTimeoutMs = 500
     ) {
-        this.debounceRequest = new Map<
-            string,
-            { timer: NodeJS.Timer | number; deferred: Deferred<SymbolInformation[]> }
-        >();
+        this.debounceRequest = new Map<string, { timer: NodeJS.Timer; deferred: Deferred<SymbolInformation[]> }>();
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
@@ -117,7 +115,7 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
         if (this.debounceRequest.has(key)) {
             const item = this.debounceRequest.get(key)!;
             // tslint:disable-next-line: no-any
-            clearTimeout(item.timer as any);
+            clearTimeout(item.timer);
             item.deferred.resolve([]);
         }
 
@@ -160,26 +158,6 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
 
         return deferred.promise;
     }
-
-    // This does not appear to be used anywhere currently...
-    // tslint:disable-next-line:no-unused-variable
-    // private provideDocumentSymbolsUnthrottled(document: TextDocument, token: CancellationToken): Thenable<SymbolInformation[]> {
-    //     const filename = document.fileName;
-
-    //     const cmd: proxy.ICommand<proxy.ISymbolResult> = {
-    //         command: proxy.CommandType.Symbols,
-    //         fileName: filename,
-    //         columnIndex: 0,
-    //         lineIndex: 0
-    //     };
-
-    //     if (document.isDirty) {
-    //         cmd.source = document.getText();
-    //     }
-
-    //     return this.jediFactory.getJediProxyHandler<proxy.ISymbolResult>(document.uri).sendCommandNonCancellableCommand(cmd, token)
-    //         .then(data => this.parseData(document, data));
-    // }
 
     private parseData(document: TextDocument, data?: proxy.ISymbolResult): SymbolInformation[] {
         if (data) {

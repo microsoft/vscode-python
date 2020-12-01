@@ -139,7 +139,7 @@ export abstract class BaseInstaller {
         const productPathService = this.serviceContainer.get<IProductPathService>(IProductPathService, productType);
         return productPathService.getExecutableNameFromSettings(product, resource);
     }
-    protected isExecutableAModule(product: Product, resource?: Uri): Boolean {
+    protected isExecutableAModule(product: Product, resource?: Uri): boolean {
         const productType = this.productService.getProductType(product);
         const productPathService = this.serviceContainer.get<IProductPathService>(IProductPathService, productType);
         return productPathService.isExecutableAModule(product, resource);

@@ -94,7 +94,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             }
         ];
 
-        const selection = <QuickPickItem | string>await input.showQuickPick({
+        const selection = await input.showQuickPick({
             placeholder: InterpreterQuickPickList.enterPath.placeholder(),
             items,
             acceptFilterBoxTextAsSelection: true

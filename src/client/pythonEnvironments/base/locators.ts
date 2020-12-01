@@ -37,7 +37,7 @@ export function combineIterators(iterators: IPythonEnvsIterator[]): IPythonEnvsI
             } else {
                 emitter.fire(e);
             }
-        });
+        }); // NOSONAR
     });
     result.onUpdated = emitter.event;
     return result;
