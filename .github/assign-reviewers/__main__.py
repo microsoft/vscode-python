@@ -4,7 +4,14 @@ import pathlib
 import random
 import sys
 
-from typing import FrozenSet, Tuple
+import typing
+from typing import (
+    AbstractSet,
+    Container,
+    FrozenSet,
+    Iterable,
+    Tuple,
+)
 
 import gidgethub.abc
 import gidgethub.httpx
@@ -14,11 +21,20 @@ import trio
 import yaml
 
 
+class ConfigData(typing.TypedDict):
+
+    """Dict representation of assign-reviers.yml."""
+
+    numberOfReviewers: int
+    team: list[str]
+    reviewers: list[str]
+
+
 def select_reviewers(
     *,
     author: str,
-    available_reviewers: FrozenSet[str],
-    assigned_reviewers: FrozenSet[str],
+    available_reviewers: AbstractSet[str],
+    assigned_reviewers: AbstractSet[str],
     count: int,
 ) -> Tuple[FrozenSet[str], FrozenSet[str]]:
     """Select people to review the PR.
@@ -28,7 +44,7 @@ def select_reviewers(
     been asked to review who are also eligible to review.
 
     """
-    already_reviewing = available_reviewers & assigned_reviewers
+    already_reviewing = frozenset(available_reviewers & assigned_reviewers)
     potential_reviewers = set(available_reviewers)  # Mutable copy.
     potential_reviewers -= assigned_reviewers
     potential_reviewers.discard(author)
@@ -44,7 +60,7 @@ def select_reviewers(
 
 
 async def add_assignee(
-    gh: gidgethub.abc.GitHubAPI, team: FrozenSet, reviewers: list[str]
+    gh: gidgethub.abc.GitHubAPI, team: Container[str], reviewers: Iterable[str]
 ) -> None:
     """Assign the PR.
 
@@ -67,7 +83,7 @@ async def add_assignee(
 
 
 async def add_reviewers(
-    gh: gidgethub.abc.GitHubAPI, reviewers_to_add: list[str]
+    gh: gidgethub.abc.GitHubAPI, reviewers_to_add: Iterable[str]
 ) -> None:
     """Add reviewers to a PR."""
     event = gidgethub.actions.event()
@@ -78,14 +94,14 @@ async def add_reviewers(
             "repo": event["repository"]["name"],
             "issue_number": event["pull_request"]["number"],
         },
-        data={"reviewers": reviewers_to_add},
+        data={"reviewers": list(reviewers_to_add)},
     )
 
 
 async def main(token: str):
     config_file = pathlib.Path(__file__).parent.parent / "assign-reviewers.yml"
     with config_file.open(encoding="utf-8") as file:
-        config = yaml.load(file, Loader=yaml.FullLoader)
+        config: ConfigData = yaml.safe_load(file)
     event = gidgethub.actions.event()
     team_reviewers, reviewers_to_add = select_reviewers(
         author=event["pull_request"]["user"]["login"],
