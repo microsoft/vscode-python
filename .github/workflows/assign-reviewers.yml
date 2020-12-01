@@ -13,6 +13,7 @@ jobs:
   assign:
     name: 'Assignee & Code Reviewers'
     runs-on: ubuntu-latest
+    if: github.repository == 'microsoft/vscode-python'
 
     steps:
       - uses: actions/checkout@v2
