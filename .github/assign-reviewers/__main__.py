@@ -101,9 +101,7 @@ async def add_reviewers(
 async def main(token: str):
     config_file = pathlib.Path(__file__).parent.parent / "assign-reviewers.yml"
     with config_file.open(encoding="utf-8") as file:
-        config = typing.cast(
-            ConfigData, yaml.load(file, Loader=yaml.FullLoader)  # type: ignore
-        )
+        config: ConfigData = yaml.safe_load(file)
     event = gidgethub.actions.event()
     team_reviewers, reviewers_to_add = select_reviewers(
         author=event["pull_request"]["user"]["login"],
