@@ -36,6 +36,7 @@ trio==0.17.0              # via -r requirements.txt, trio-typing
 typed-ast==1.4.1          # via black, mypy
 typing-extensions==3.7.4.3  # via black, mypy, trio-typing
 uritemplate==3.0.1        # via -r requirements.txt, gidgethub
+wheel==0.35.1             # via -r requirements.txt
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
