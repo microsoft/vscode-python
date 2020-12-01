@@ -92,7 +92,7 @@ async def add_reviewers(
         url_vars={
             "owner": event["repository"]["owner"]["login"],
             "repo": event["repository"]["name"],
-            "issue_number": event["pull_request"]["number"],
+            "pull_number": event["pull_request"]["number"],
         },
         data={"reviewers": list(reviewers_to_add)},
     )
