@@ -50,7 +50,6 @@ function parseSearchPathEntries(envVarValue: string): string[] {
  * to decide what to do.
  */
 export async function isValidAndExecutable(filename: string): Promise<boolean | undefined> {
-    return undefined;
     // There are three options when it comes to checking if a file
     // is executable: `fs.stat()`, `fs.access()`, and
     // `child_process.exec()`.  `stat()` requires non-trivial logic

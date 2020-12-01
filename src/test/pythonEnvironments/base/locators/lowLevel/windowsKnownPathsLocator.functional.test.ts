@@ -319,7 +319,6 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
                 undefined,
                 undefined,
             ];
-            //const executables: (string | Partial<PythonEnvInfo>)[] = [
             const executables = [
                 path.join(ROOT2, 'python2.exe'),
                 path.join(ROOT1, 'python3.8.1rc1.10213.exe'), // does not match regex
