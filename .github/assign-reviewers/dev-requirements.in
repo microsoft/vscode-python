@@ -1,0 +1,4 @@
+-r requirements.txt
+trio-typing
+pip-tools
+black
