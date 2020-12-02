@@ -11,10 +11,10 @@ import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { BlackFormatter } from '../../client/formatters/blackFormatter';
 import { YapfFormatter } from '../../client/formatters/yapfFormatter';
 import { PythonEnvironments } from '../../client/pythonEnvironments/api';
-import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 import { isPythonVersionInProcess } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { MockProcessService } from '../mocks/proc';
+import { registerForIOC } from '../pythonEnvironments/legacyIOC';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { compareFiles } from '../textUtils';
 
