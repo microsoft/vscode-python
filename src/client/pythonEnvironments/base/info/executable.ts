@@ -9,6 +9,8 @@ import {
     areSimilarVersions,
     compareVersions,
     getEmptyVersion,
+    parseBasicVersion,
+    parseRelease,
     parseVersion,
 } from './pythonVersion';
 
@@ -130,20 +132,30 @@ function walkExecutablePath(filename: string): PythonVersion {
     }
 
     let prev = '';
-    let dirname = path.dirname(filename);
+    let dirname = path.dirname(filename).toLowerCase();
     while (dirname !== '' && dirname !== prev) {
         prev = dirname;
         const basename = path.basename(dirname);
         dirname = path.dirname(dirname);
-        // We don't worry about checking for a "python" prefix.
 
         let current: PythonVersion | undefined;
+        let after = '';
         try {
-            current = parseVersion(basename);
+            [current, after] = parseBasicVersion(basename);
         } catch {
             // The path segment did not look like a version.
         }
         if (current !== undefined) {
+            // We could move the prefix checks to parseBasicVersion().
+            if (/^\d/.test(basename)) {
+                if (after !== '') {
+                    continue;
+                }
+            } else if (!basename.startsWith('python')) {
+                continue
+            }
+            [current.release] = parseRelease(after);
+
             if (!areSimilarVersions(current, best)) {
                 // We treat the right-most version in the filename
                 // as authoritative in this case.
