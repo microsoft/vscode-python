@@ -28,6 +28,18 @@ import { PythonReleaseLevel, PythonVersion, PythonVersionRelease } from '.';
  */
 export function parseVersion(versionStr: string): PythonVersion {
     const [version, after] = parseBasicVersion(versionStr);
+    version.release = undefined;
+    if (version.minor === -1) {
+        // We trust that the major version is always single-digit.
+        if (version.major > 9) {
+            version.minor = version.major % 10;
+            version.major = Math.floor(version.major / 10);
+            return version;
+        }
+    }
+    if (version.micro === -1) {
+        return version;
+    }
     const [release] = parseRelease(after);
     version.release = release;
     return version;

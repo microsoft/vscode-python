@@ -95,9 +95,6 @@ export function parseExeVersion( // AKA "inferFromExecutable"
     if (version.minor === -1) {
         if (version.major === 2) {
             version.minor = 7;
-        } else if (version.major > 9) {
-            version.minor = version.major % 10;
-            version.major = Math.floor(version.major / 10);
         }
     }
 
