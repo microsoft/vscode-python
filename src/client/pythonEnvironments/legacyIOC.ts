@@ -263,7 +263,8 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
-        // User has interacted with the extension, mark all interpreters as safe to run.
+        // For now, until we have the concept of trusted workspaces, we assume all interpreters as safe
+        // to run once user has triggered discovery, i.e interacted with the extension.
         this.environmentsSecurity.markAllEnvsAsSafe();
         const query: PythonLocatorQuery = {};
         if (resource !== undefined) {
