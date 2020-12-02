@@ -82,7 +82,7 @@ suite('Python Settings', async () => {
         }
 
         // boolean settings
-        for (const name of ['downloadLanguageServer', 'autoUpdateLanguageServer']) {
+        for (const name of ['downloadLanguageServer', 'autoUpdateLanguageServer', 'useIsolation']) {
             config
                 .setup((c) => c.get<boolean>(name, true))
                 // tslint:disable-next-line:no-any
@@ -148,7 +148,7 @@ suite('Python Settings', async () => {
     });
 
     suite('Boolean settings', async () => {
-        ['downloadLanguageServer', 'autoUpdateLanguageServer', 'globalModuleInstallation'].forEach(
+        ['downloadLanguageServer', 'autoUpdateLanguageServer', 'globalModuleInstallation', 'useIsolation'].forEach(
             async (settingName) => {
                 testIfValueIsUpdated(settingName, true);
             }
