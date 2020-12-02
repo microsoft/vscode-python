@@ -36,7 +36,7 @@ export function parseVersion(versionStr: string): PythonVersion {
     return version;
 }
 
-function parseRelease(text: string): [PythonVersionRelease | undefined, string] {
+export function parseRelease(text: string): [PythonVersionRelease | undefined, string] {
     const match1 = text.match(/^(a|b|rc)(\d+)(.*)$/);
     if (match1) {
         const [, levelStr, serialStr, after1] = match1;

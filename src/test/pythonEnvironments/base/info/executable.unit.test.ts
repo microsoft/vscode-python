@@ -95,6 +95,8 @@ suite('pyenvs info - parseExeVersion', () => {
     suite('infer version from "python" basename', () => {
         [
             'python',
+            // random numbers in directory are ignored
+            '/x/y/z/Miniconda3/python',
         ].forEach((text) => {
             const textExe = `${text}.exe`;
 
