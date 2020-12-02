@@ -265,7 +265,7 @@ class ComponentAdapter implements IComponentAdapter {
             return undefined;
         }
         // User has interacted with the extension, mark all interpreters as safe to run.
-        this.environmentsSecurity?.markAsSecure();
+        this.environmentsSecurity?.markAllEnvsAsSafe();
         const query: PythonLocatorQuery = {};
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
@@ -283,7 +283,9 @@ class ComponentAdapter implements IComponentAdapter {
     }
 }
 
-export function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): void {
+export function registerLegacyDiscoveryForIOC(
+    serviceManager: IServiceManager,
+): void {
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,

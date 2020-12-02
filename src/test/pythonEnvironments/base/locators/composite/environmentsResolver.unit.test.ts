@@ -23,12 +23,12 @@ import { createNamedEnv, getEnvs, SimpleLocator } from '../../common';
 suite('Python envs locator - Environments Resolver', () => {
     let envInfoService: EnvironmentInfoService;
     let environmentsSecurity: EnvironmentsSecurity;
-    let isEnvironmentSafe: sinon.SinonStub<[env: PythonEnvInfo], boolean>;
+    let isEnvSafe: sinon.SinonStub<[env: PythonEnvInfo], boolean>;
 
     setup(() => {
         envInfoService = new EnvironmentInfoService();
-        isEnvironmentSafe = sinon.stub(EnvironmentsSecurity.prototype, 'isEnvironmentSafe');
-        isEnvironmentSafe.returns(true);
+        isEnvSafe = sinon.stub(EnvironmentsSecurity.prototype, 'isEnvSafe');
+        isEnvSafe.returns(true);
         environmentsSecurity = new EnvironmentsSecurity();
     });
     teardown(() => {
@@ -162,7 +162,7 @@ suite('Python envs locator - Environments Resolver', () => {
 
     test('No updates except the null event is sent if environment is not safe to execute', async () => {
         // Arrange
-        isEnvironmentSafe.returns(false);
+        isEnvSafe.returns(false);
         const env1 = createNamedEnv('env1', '3.5.12b1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec1'));
         const env2 = createNamedEnv('env2', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
         const environmentsToBeIterated = [env1, env2];

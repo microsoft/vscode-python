@@ -7,7 +7,7 @@ import { getOSType, OSType } from '../common/utils/platform';
 import { IDisposable } from '../common/utils/resourceLifecycle';
 import {
     ActivationResult,
-    ExtensionState
+    ExtensionState,
 } from '../components';
 import { PythonEnvironments } from './api';
 import { getPersistentCache } from './base/envsCache';

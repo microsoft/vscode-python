@@ -95,7 +95,7 @@ export class PythonEnvsResolver implements ILocator {
         didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
         seen: PythonEnvInfo[],
     ) {
-        if (!this.environmentsSecurity.isEnvironmentSafe(seen[envIndex])) {
+        if (!this.environmentsSecurity.isEnvSafe(seen[envIndex])) {
             return;
         }
         state.pending += 1;
