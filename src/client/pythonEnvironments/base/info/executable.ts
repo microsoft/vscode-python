@@ -108,6 +108,9 @@ function parseBasename(basename: string): PythonVersion {
             // On Windows we can't assume it is 2.7.
             return getEmptyVersion();
         }
+        if (!basename.endsWith('.exe')) {
+            throw Error(`expected .exe suffix, got "${basename}")`);
+        }
     } else if (basename === 'python') {
         // We can assume 2.7 if a version doesn't show up elsewhere
         // in the full executable filename.
