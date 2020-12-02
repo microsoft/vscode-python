@@ -125,6 +125,17 @@ function parseBasename(basename: string): PythonVersion {
     return parseVersion(basename);
 }
 
+function isPythonDirectory(basename: string, after: string): boolean {
+    if (/^\d/.test(basename)) {
+        if (after !== '') {
+            return false;
+        }
+    } else if (!basename.startsWith('python')) {
+        return false;
+    }
+    return true;
+}
+
 function walkExecutablePath(filename: string): PythonVersion {
     let best = parseBasename(path.basename(filename));
     if (best.release !== undefined) {
@@ -145,15 +156,8 @@ function walkExecutablePath(filename: string): PythonVersion {
         } catch {
             // The path segment did not look like a version.
         }
-        if (current !== undefined) {
-            // We could move the prefix checks to parseBasicVersion().
-            if (/^\d/.test(basename)) {
-                if (after !== '') {
-                    continue;
-                }
-            } else if (!basename.startsWith('python')) {
-                continue
-            }
+        // We could move the prefix checks to parseBasicVersion().
+        if (current !== undefined && isPythonDirectory(basename, after)) {
             [current.release] = parseRelease(after);
 
             if (!areSimilarVersions(current, best)) {
