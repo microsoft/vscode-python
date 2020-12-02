@@ -25,12 +25,11 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
-import { IServiceContainer, IServiceManager } from '../ioc/types';
+import { IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
 import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
 import { getEnvs } from './base/locatorUtils';
-import { initializeExternalDependencies } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
@@ -130,14 +129,14 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     return env;
 }
 
-interface IPythonEnvironments extends ILocator {}
+export interface IPythonEnvironments extends ILocator {}
 
 @injectable()
 class ComponentAdapter implements IComponentAdapter {
     constructor(
         // The adapter only wraps one thing: the component API.
         private readonly api: IPythonEnvironments,
-        private readonly environmentsSecurity?: IEnvironmentsSecurity,
+        private readonly environmentsSecurity: IEnvironmentsSecurity,
         // For now we effectively disable the component.
         private readonly enabled = false,
     ) {}
@@ -265,7 +264,7 @@ class ComponentAdapter implements IComponentAdapter {
             return undefined;
         }
         // User has interacted with the extension, mark all interpreters as safe to run.
-        this.environmentsSecurity?.markAllEnvsAsSafe();
+        this.environmentsSecurity.markAllEnvsAsSafe();
         const query: PythonLocatorQuery = {};
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
@@ -371,24 +370,10 @@ export function registerLegacyDiscoveryForIOC(
 export function registerNewDiscoveryForIOC(
     serviceManager: IServiceManager,
     api: IPythonEnvironments,
-    environmentsSecurity?: EnvironmentsSecurity,
+    environmentsSecurity: EnvironmentsSecurity,
 ): void {
     serviceManager.addSingletonInstance<IComponentAdapter>(
         IComponentAdapter,
         new ComponentAdapter(api, environmentsSecurity),
     );
-}
-
-/**
- * This is here to support old tests.
- * @deprecated
- */
-export function registerForIOC(
-    serviceManager: IServiceManager,
-    serviceContainer: IServiceContainer,
-    api: IPythonEnvironments,
-): void {
-    registerLegacyDiscoveryForIOC(serviceManager);
-    initializeExternalDependencies(serviceContainer);
-    registerNewDiscoveryForIOC(serviceManager, api);
 }

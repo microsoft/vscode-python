@@ -54,7 +54,6 @@ import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { registerTypes as lintersRegisterTypes } from '../client/linters/serviceRegistry';
 import { PythonEnvironments } from '../client/pythonEnvironments/api';
-import { registerForIOC } from '../client/pythonEnvironments/legacyIOC';
 import { TEST_OUTPUT_CHANNEL } from '../client/testing/common/constants';
 import { registerTypes as unittestsRegisterTypes } from '../client/testing/serviceRegistry';
 import { MockOutputChannel } from './mockClasses';
@@ -62,6 +61,7 @@ import { MockAutoSelectionService } from './mocks/autoSelector';
 import { MockMemento } from './mocks/mementos';
 import { MockProcessService } from './mocks/proc';
 import { MockProcess } from './mocks/process';
+import { registerForIOC } from './pythonEnvironments/legacyIOC';
 
 // This is necessary for unit tests and functional tests, since they
 // do not run under VS Code so they do not have access to the actual
