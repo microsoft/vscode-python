@@ -4,6 +4,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { clearTimeout, setTimeout } from 'timers';
 import { TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '.';
 import { IExtensionSingleActivationService } from '../activation/types';
@@ -43,7 +44,7 @@ const testExecution = isTestExecution();
 
 @injectable()
 export class ImportTracker implements IExtensionSingleActivationService {
-    private pendingChecks = new Map<string, NodeJS.Timer | number>();
+    private pendingChecks = new Map<string, NodeJS.Timer>();
     private sentMatches: Set<string> = new Set<string>();
     // tslint:disable-next-line:no-require-imports
     private hashFn = require('hash.js').sha256;
@@ -90,8 +91,7 @@ export class ImportTracker implements IExtensionSingleActivationService {
         // If already scheduled, cancel.
         const currentTimeout = this.pendingChecks.get(file);
         if (currentTimeout) {
-            // tslint:disable-next-line: no-any
-            clearTimeout(currentTimeout as any);
+            clearTimeout(currentTimeout);
             this.pendingChecks.delete(file);
         }
 

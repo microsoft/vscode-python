@@ -26,7 +26,7 @@ export function combineIterators(iterators: IPythonEnvsIterator[]): IPythonEnvsI
     const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
     let numActive = events.length;
     events.forEach((event) => {
-        event!((e: PythonEnvUpdatedEvent | null) => {
+        event!((e: PythonEnvUpdatedEvent | null) => { // NOSONAR
             if (e === null) {
                 numActive -= 1;
                 if (numActive === 0) {
@@ -36,7 +36,7 @@ export function combineIterators(iterators: IPythonEnvsIterator[]): IPythonEnvsI
             } else {
                 emitter.fire(e);
             }
-        }); // NOSONAR
+        });
     });
     result.onUpdated = emitter.event;
     return result;

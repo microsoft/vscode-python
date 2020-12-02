@@ -85,7 +85,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
     }
 
     public async getFileToExecute(): Promise<Uri | undefined> {
-        const activeEditor = this.documentManager.activeTextEditor!;
+        const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor) {
             this.applicationShell.showErrorMessage('No open file to run in terminal');
             return;

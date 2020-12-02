@@ -321,8 +321,7 @@ function createFlattenedParameterizedFunction(
 function createFlattenedFunction(tests: testing.Tests, func: testing.TestFunction): testing.FlattenedTestFunction {
     const parent = getParentFile(tests, func);
     const type = parent ? getTestDataItemType(parent) : undefined;
-    const parentFile =
-        type && type === TestDataItemType.suite ? getParentFile(tests, func) : (parent as testing.TestFile);
+    const parentFile = type && type === TestDataItemType.suite ? getParentFile(tests, func) : parent;
     const parentSuite = getParentSuite(tests, func);
     return {
         parentTestFile: parentFile,
