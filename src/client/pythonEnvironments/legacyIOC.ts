@@ -139,7 +139,7 @@ class ComponentAdapter implements IComponentAdapter {
         private readonly api: IPythonEnvironments,
         private readonly environmentsSecurity: IEnvironmentsSecurity,
         // For now we effectively disable the component.
-        private readonly enabled = false,
+        private readonly enabled = true,
     ) {}
 
     // IInterpreterHelper

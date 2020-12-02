@@ -4,14 +4,15 @@ import * as path from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import '../../client/common/extensions';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { DeprecatePythonPath } from '../common/experiments/groups';
-import { traceError } from '../common/logger';
+import { DeprecatePythonPath, DiscoveryVariants } from '../common/experiments/groups';
+import { traceError, traceWarning } from '../common/logger';
 import { getArchitectureDisplayName } from '../common/platform/registry';
 import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IExperimentsManager,
     IInterpreterPathService,
     IPersistentState,
@@ -44,6 +45,7 @@ export type GetInterpreterOptions = {
 // The parts of IComponentAdapter used here.
 interface IComponent {
     getInterpreterDetails(pythonPath: string): Promise<undefined | PythonEnvironment>;
+    getInterpreters(resource?: Uri): Promise<PythonEnvironment[] | undefined>;
 }
 
 @injectable()
@@ -68,7 +70,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
     private readonly persistentStateFactory: IPersistentStateFactory;
     private readonly configService: IConfigurationService;
     private readonly interpreterPathService: IInterpreterPathService;
-    private readonly experiments: IExperimentsManager;
+    private readonly experimentsManager: IExperimentsManager;
+    private readonly experimentService: IExperimentService;
     private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
     private readonly didChangeInterpreterInformation = new EventEmitter<PythonEnvironment>();
     private readonly inMemoryCacheOfDisplayNames = new Map<string, string>();
@@ -86,7 +89,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.persistentStateFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-        this.experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        this.experimentsManager = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        this.experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
     }
 
     public async refresh(resource?: Uri) {
@@ -105,7 +109,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const pySettings = this.configService.getSettings();
         this._pythonPathSetting = pySettings.pythonPath;
-        if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
+        if (this.experimentsManager.inExperiment(DeprecatePythonPath.experiment)) {
             disposables.push(
                 this.interpreterPathService.onDidChange((i) => {
                     this._onConfigChanged(i.uri);
@@ -124,14 +128,29 @@ export class InterpreterService implements Disposable, IInterpreterService {
             });
             disposables.push(disposable);
         }
-        this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+        this.experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
     }
 
     @captureTelemetry(EventName.PYTHON_INTERPRETER_DISCOVERY, { locator: 'all' }, true)
     public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
-        const interpreters = await this.locator.getInterpreters(resource, options);
+        let environments: PythonEnvironment[] = [];
+
+        if (
+            (await this.experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)) ||
+            (await this.experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
+        ) {
+            const envs = await this.pyenvs.getInterpreters(resource);
+            if (envs === undefined) {
+                traceWarning('getInterpreters returned `undefined`.');
+                environments = [];
+            } else {
+                environments = envs;
+            }
+        } else {
+            environments = await this.locator.getInterpreters(resource, options);
+        }
         await Promise.all(
-            interpreters
+            environments
                 .filter((item) => !item.displayName)
                 .map(async (item) => {
                     item.displayName = await this.getDisplayName(item, resource);
@@ -141,7 +160,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
                     }
                 })
         );
-        return interpreters;
+        return environments;
     }
 
     public dispose(): void {
@@ -167,9 +186,14 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.getInterpreterDetails(fullyQualifiedPath, resource);
     }
     public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<PythonEnvironment | undefined> {
-        const info = await this.pyenvs.getInterpreterDetails(pythonPath);
-        if (info !== undefined) {
-            return info;
+        if (
+            (await this.experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)) ||
+            (await this.experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
+        ) {
+            const info = await this.pyenvs.getInterpreterDetails(pythonPath);
+            if (info !== undefined) {
+                return info;
+            }
         }
 
         // If we don't have the fully qualified path, then get it.

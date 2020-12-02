@@ -94,3 +94,9 @@ export enum LinterInstallationPromptVariants {
     flake8First = 'pythonInstallFlake8ButtonFirst',
     noPrompt = 'pythonNotDisplayLinterPrompt'
 }
+
+// Experiment to control which environment discovery mechanism can be used
+export enum DiscoveryVariants {
+    discoverWithFileWatching = 'pythonDiscoveryModule',
+    discoveryWithoutFileWatching = 'pythonDiscoveryModuleWithoutWatcher'
+}
