@@ -208,13 +208,13 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
             const filename = path.join(ROOT1, 'python3.8.exe');
             const env = {
                 executable: { ...EMPTY_EXECUTABLE, filename },
-            } as PythonEnvInfo;
+            };
             const expected = getEnv('', '3.8', filename);
             const locator = new WindowsKnownPathsLocator();
             setSearchPath([ROOT2, ROOT6, ROOT1]);
             await ensureActivated(locator);
 
-            const resolved = await locator.resolveEnv(env);
+            const resolved = await locator.resolveEnv(env as PythonEnvInfo);
 
             assert.deepEqual(resolved, expected);
         });
@@ -290,15 +290,15 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
 
         [
             '',
-            { name: 'env1' } as PythonEnvInfo, // matches an env but resolveEnv() doesn't care
-            {} as PythonEnvInfo,
+            { name: 'env1' }, // matches an env but resolveEnv() doesn't care
+            {},
         ].forEach((env) => {
             test(`missing executable (${env})`, async () => {
                 const locator = new WindowsKnownPathsLocator();
                 setSearchPath([ROOT2, ROOT6, ROOT1]);
                 await ensureActivated(locator);
 
-                const resolved = await locator.resolveEnv(env);
+                const resolved = await locator.resolveEnv(env as string | PythonEnvInfo);
 
                 assert.equal(resolved, undefined);
             });
@@ -336,16 +336,16 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
                         ...EMPTY_EXECUTABLE,
                         filename: path.join(ROOT1, 'python3.8.exe'),
                     },
-                } as PythonEnvInfo,
-                { name: 'env1' } as PythonEnvInfo, // matches an env but resolveEnv() doesn't care
-                {} as PythonEnvInfo,
+                },
+                { name: 'env1' }, // matches an env but resolveEnv() doesn't care
+                {},
             ];
             const locator = new WindowsKnownPathsLocator();
             setSearchPath([ROOT2, ROOT6, ROOT1]);
             await ensureActivated(locator);
 
             const envs = await Promise.all(
-                executables.map((ex) => locator.resolveEnv(ex)),
+                executables.map((exe) => locator.resolveEnv(exe as string | PythonEnvInfo)),
             );
 
             assert.deepEqual(envs, expected);
