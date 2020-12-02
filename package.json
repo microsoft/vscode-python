@@ -1773,7 +1773,7 @@
                 "python.useIsolation": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Use isolate script when running tools. <PLACEHOLDER SETTING FIELD>",
+                    "description": "Execute tools in isolation from the workspace.",
                     "scope": "machine"
                 },
                 "python.venvFolders": {
