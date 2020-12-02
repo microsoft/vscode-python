@@ -10,10 +10,9 @@ import {
     WindowsKnownPathsLocator,
 } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsKnownPathsLocator';
 import { ensureFSTree } from '../../../../utils/fs';
-import { createNamedEnv, getEnvs } from '../../common';
+import { createNamedEnv, getEnvs, sortedEnvs } from '../../common';
 
-// Set this to true to run on linux.
-const RUN_ANY_OS = false;
+const IS_WINDOWS = getOSType() === OSType.Windows;
 
 const EMPTY_EXECUTABLE: PythonExecutableInfo = {
     filename: '',
@@ -87,7 +86,11 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
     `.trimEnd();
 
     suiteSetup(async function () {
-        if (RUN_ANY_OS) {
+        if (!IS_WINDOWS) {
+            if (!process.env.PVSC_TEST_FORCE) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
             // tslint:disable:no-require-imports
             // eslint-disable-next-line global-require
             const sinon = require('sinon');
@@ -96,10 +99,6 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
             // tslint:enable:no-require-imports
             const stub = sinon.stub(platformAPI, 'getOSType');
             stub.returns(OSType.Windows);
-        }
-        if (getOSType() !== OSType.Windows) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
         }
 
         ENV_VAR = getOSType() === OSType.Windows ? 'Path' : 'PATH';
@@ -171,10 +170,13 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
                 getEnv('', '2.7', path.join(ROOT2, 'python2.exe')),
                 getEnv('', '', path.join(ROOT1, 'python.exe')),
                 getEnv('', '2.7', path.join(ROOT1, 'python2.7.exe')),
-                getEnv('', '2.7', path.join(ROOT1, 'python2.exe')),
                 getEnv('', '3.8', path.join(ROOT1, 'python3.8.exe')),
                 getEnv('', '3', path.join(ROOT1, 'python3.exe')),
             ];
+            if (IS_WINDOWS) {
+                // This file isn't executable but on Windows we can't tell that.
+                expected.push(getEnv('', '2.7', path.join(ROOT1, 'python2.exe')));
+            }
             const locator = new WindowsKnownPathsLocator();
             setSearchPath([ROOT2, ROOT6, ROOT1]);
             await ensureActivated(locator);
@@ -184,9 +186,8 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
 
             const iterator = locator.iterEnvs(query);
             const envs = await getEnvs(iterator);
-            envs.sort((v1, v2) => v1.executable.filename.localeCompare(v2.executable.filename));
 
-            assert.deepEqual(envs, expected);
+            assert.deepEqual(sortedEnvs(envs), sortedEnvs(expected));
         });
     });
 
