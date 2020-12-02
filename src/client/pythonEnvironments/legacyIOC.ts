@@ -26,9 +26,7 @@ import {
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
-import {
-    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel,
-} from './base/info';
+import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
 import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
 import { getEnvs } from './base/locatorUtils';
@@ -59,6 +57,7 @@ import {
 } from './discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
 import { EnvironmentType, PythonEnvironment } from './info';
+import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
 
 const convertedKinds = new Map(Object.entries({
     [PythonEnvKind.System]: EnvironmentType.System,
@@ -138,6 +137,7 @@ class ComponentAdapter implements IComponentAdapter {
     constructor(
         // The adapter only wraps one thing: the component API.
         private readonly api: IPythonEnvironments,
+        private readonly environmentsSecurity?: IEnvironmentsSecurity,
         // For now we effectively disable the component.
         private readonly enabled = false,
     ) {}
@@ -264,6 +264,8 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
+        // User has interacted with the extension, mark all interpreters as safe to run.
+        this.environmentsSecurity?.markAsSecure();
         const query: PythonLocatorQuery = {};
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
@@ -281,9 +283,7 @@ class ComponentAdapter implements IComponentAdapter {
     }
 }
 
-export function registerLegacyDiscoveryForIOC(
-    serviceManager: IServiceManager,
-): void {
+export function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
@@ -368,9 +368,13 @@ export function registerLegacyDiscoveryForIOC(
 
 export function registerNewDiscoveryForIOC(
     serviceManager: IServiceManager,
-    api:IPythonEnvironments,
+    api: IPythonEnvironments,
+    environmentsSecurity?: EnvironmentsSecurity,
 ): void {
-    serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, new ComponentAdapter(api));
+    serviceManager.addSingletonInstance<IComponentAdapter>(
+        IComponentAdapter,
+        new ComponentAdapter(api, environmentsSecurity),
+    );
 }
 
 /**
@@ -380,8 +384,8 @@ export function registerNewDiscoveryForIOC(
 export function registerForIOC(
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer,
-    api:IPythonEnvironments,
-): void{
+    api: IPythonEnvironments,
+): void {
     registerLegacyDiscoveryForIOC(serviceManager);
     initializeExternalDependencies(serviceContainer);
     registerNewDiscoveryForIOC(serviceManager, api);

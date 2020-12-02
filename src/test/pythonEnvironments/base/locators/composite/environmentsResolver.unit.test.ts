@@ -4,6 +4,7 @@
 import { assert, expect } from 'chai';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import { ImportMock } from 'ts-mock-imports';
 import { EventEmitter } from 'vscode';
 import { ExecutionResult } from '../../../../../client/common/process/types';
@@ -15,16 +16,23 @@ import { PythonEnvsResolver } from '../../../../../client/pythonEnvironments/bas
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import * as ExternalDep from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import { EnvironmentInfoService } from '../../../../../client/pythonEnvironments/info/environmentInfoService';
+import { EnvironmentsSecurity } from '../../../../../client/pythonEnvironments/security';
 import { sleep } from '../../../../core';
 import { createNamedEnv, getEnvs, SimpleLocator } from '../../common';
 
 suite('Python envs locator - Environments Resolver', () => {
     let envInfoService: EnvironmentInfoService;
+    let environmentsSecurity: EnvironmentsSecurity;
+    let isEnvironmentSafe: sinon.SinonStub<[env: PythonEnvInfo], boolean>;
 
     setup(() => {
         envInfoService = new EnvironmentInfoService();
+        isEnvironmentSafe = sinon.stub(EnvironmentsSecurity.prototype, 'isEnvironmentSafe');
+        isEnvironmentSafe.returns(true);
+        environmentsSecurity = new EnvironmentsSecurity();
     });
     teardown(() => {
+        sinon.restore();
         envInfoService.dispose();
     });
 
@@ -68,7 +76,7 @@ suite('Python envs locator - Environments Resolver', () => {
             const env4 = createNamedEnv('env4', '3.9.0rc2', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
             const environmentsToBeIterated = [env1, env2, env3, env4];
             const parentLocator = new SimpleLocator(environmentsToBeIterated);
-            const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
+            const resolver = new PythonEnvsResolver(parentLocator, envInfoService, environmentsSecurity);
 
             const iterator = resolver.iterEnvs();
             const envs = await getEnvs(iterator);
@@ -83,7 +91,7 @@ suite('Python envs locator - Environments Resolver', () => {
             const environmentsToBeIterated = [env1, env2];
             const parentLocator = new SimpleLocator(environmentsToBeIterated);
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
-            const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
+            const resolver = new PythonEnvsResolver(parentLocator, envInfoService, environmentsSecurity);
 
             const iterator = resolver.iterEnvs(); // Act
 
@@ -118,7 +126,7 @@ suite('Python envs locator - Environments Resolver', () => {
             const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
             const parentLocator = new SimpleLocator(environmentsToBeIterated, { onUpdated: didUpdate.event });
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
-            const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
+            const resolver = new PythonEnvsResolver(parentLocator, envInfoService, environmentsSecurity);
 
             const iterator = resolver.iterEnvs(); // Act
 
@@ -152,12 +160,43 @@ suite('Python envs locator - Environments Resolver', () => {
         });
     });
 
+    test('No updates except the null event is sent if environment is not safe to execute', async () => {
+        // Arrange
+        isEnvironmentSafe.returns(false);
+        const env1 = createNamedEnv('env1', '3.5.12b1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec1'));
+        const env2 = createNamedEnv('env2', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
+        const environmentsToBeIterated = [env1, env2];
+        const parentLocator = new SimpleLocator(environmentsToBeIterated);
+        const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
+        const resolver = new PythonEnvsResolver(parentLocator, envInfoService, environmentsSecurity);
+
+        const iterator = resolver.iterEnvs(); // Act
+
+        // Assert
+        let { onUpdated } = iterator;
+        expect(onUpdated).to.not.equal(undefined, '');
+
+        // Arrange
+        onUpdated = onUpdated!;
+        onUpdated((e) => {
+            onUpdatedEvents.push(e);
+        });
+
+        // Act
+        await getEnvs(iterator);
+        await sleep(1); // Resolve pending calls in the background
+
+        // Assert
+        const expectedUpdates = [null];
+        assert.deepEqual(onUpdatedEvents, expectedUpdates);
+    });
+
     test('onChanged fires iff onChanged from resolver fires', () => {
         const parentLocator = new SimpleLocator([]);
         const event1: PythonEnvsChangedEvent = {};
         const event2: PythonEnvsChangedEvent = { kind: PythonEnvKind.Unknown };
         const expected = [event1, event2];
-        const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
+        const resolver = new PythonEnvsResolver(parentLocator, envInfoService, environmentsSecurity);
 
         const events: PythonEnvsChangedEvent[] = [];
         resolver.onChanged((e) => events.push(e));
@@ -203,7 +242,7 @@ suite('Python envs locator - Environments Resolver', () => {
                     throw new Error('Incorrect environment sent to the resolver');
                 },
             });
-            const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
+            const resolver = new PythonEnvsResolver(parentLocator, envInfoService, environmentsSecurity);
 
             const expected = await resolver.resolveEnv(env);
 
@@ -231,7 +270,7 @@ suite('Python envs locator - Environments Resolver', () => {
                     throw new Error('Incorrect environment sent to the resolver');
                 },
             });
-            const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
+            const resolver = new PythonEnvsResolver(parentLocator, envInfoService, environmentsSecurity);
 
             const expected = await resolver.resolveEnv(env);
 
@@ -243,7 +282,7 @@ suite('Python envs locator - Environments Resolver', () => {
             const parentLocator = new SimpleLocator([], {
                 resolve: async () => undefined,
             });
-            const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
+            const resolver = new PythonEnvsResolver(parentLocator, envInfoService, environmentsSecurity);
 
             const expected = await resolver.resolveEnv(env);
 

@@ -5,6 +5,7 @@ import { cloneDeep } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
 import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
+import { IEnvironmentsSecurity } from '../../../security';
 import { PythonEnvInfo } from '../../info';
 import { InterpreterInformation } from '../../info/interpreter';
 import {
@@ -24,6 +25,7 @@ export class PythonEnvsResolver implements ILocator {
     constructor(
         private readonly parentLocator: ILocator,
         private readonly environmentInfoService: IEnvironmentInfoService,
+        private readonly environmentsSecurity: IEnvironmentsSecurity,
     ) {}
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
@@ -64,7 +66,6 @@ export class PythonEnvsResolver implements ILocator {
                     listener.dispose();
                 } else if (seen[event.index] !== undefined) {
                     seen[event.index] = event.update;
-                    state.pending += 1;
                     this.resolveInBackground(event.index, state, didUpdate, seen)
                         .ignoreErrors();
                 } else {
@@ -79,7 +80,6 @@ export class PythonEnvsResolver implements ILocator {
             const currEnv = result.value;
             seen.push(currEnv);
             yield currEnv;
-            state.pending += 1;
             this.resolveInBackground(seen.indexOf(currEnv), state, didUpdate, seen).ignoreErrors();
             result = await iterator.next();
         }
@@ -95,6 +95,10 @@ export class PythonEnvsResolver implements ILocator {
         didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
         seen: PythonEnvInfo[],
     ) {
+        if (!this.environmentsSecurity.isEnvironmentSafe(seen[envIndex])) {
+            return;
+        }
+        state.pending += 1;
         const interpreterInfo = await this.environmentInfoService.getEnvironmentInfo(
             seen[envIndex].executable.filename,
         );
