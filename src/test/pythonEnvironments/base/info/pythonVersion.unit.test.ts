@@ -75,8 +75,13 @@ suite('pyenvs info - parseVersion', () => {
         [
             ['0.9.2-beta2', ver(0, 9, 2, 'beta', 2)],
             ['3.3.1-final', ver(3, 3, 1, 'final', 0)],
+            ['3.3.1-final0', ver(3, 3, 1, 'final', 0)],
             ['3.9.0-candidate1', ver(3, 9, 0, 'candidate', 1)],
             ['2.7.11-alpha3', ver(2, 7, 11, 'alpha', 3)],
+            ['0.9.2.beta.2', ver(0, 9, 2, 'beta', 2)],
+            ['3.3.1.final.0', ver(3, 3, 1, 'final', 0)],
+            ['3.9.0.candidate.1', ver(3, 9, 0, 'candidate', 1)],
+            ['2.7.11.alpha.3', ver(2, 7, 11, 'alpha', 3)],
         ].forEach((data) => {
             const [text, expected] = data as [string, PythonVersion];
             test(`conversion works for '${text}'`, () => {

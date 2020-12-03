@@ -37,65 +37,48 @@ export function parseVersion(versionStr: string): PythonVersion {
 }
 
 export function parseRelease(text: string): [PythonVersionRelease | undefined, string] {
-    const match1 = text.match(/^(a|b|rc)(\d+)(.*)$/);
-    if (match1) {
-        const [, levelStr, serialStr, after1] = match1;
-        let level: PythonReleaseLevel;
-        if (levelStr === 'a') {
-            level = PythonReleaseLevel.Alpha;
-        } else if (levelStr === 'b') {
-            level = PythonReleaseLevel.Beta;
-        } else if (levelStr === 'rc') {
-            level = PythonReleaseLevel.Candidate;
-        } else {
-            throw Error('not implemented');
+    let after: string;
+
+    let alpha: string | undefined;
+    let beta: string | undefined;
+    let rc: string | undefined;
+    let fin: string | undefined;
+    let serialStr: string;
+
+    let match = text.match(/^(?:-?final|\.final(?:\.0)?)(.*)$/);
+    if (match) {
+        [, after] = match;
+        fin = 'final';
+        serialStr = '0';
+    } else {
+        for (const regex of [
+            /^(?:(a)|(b)|(rc))([1-9]\d*)(.*)$/,
+            /^-(?:(?:(alpha)|(beta)|(candidate))([1-9]\d*))(.*)$/,
+            /^\.(?:(?:(alpha)|(beta)|(candidate))\.([1-9]\d*))(.*)$/,
+        ]) {
+            match = text.match(regex);
+            if (match) {
+                [, alpha, beta, rc, serialStr, after] = match;
+                break;
+            }
         }
-        const release1 = {
-            level,
-            serial: parseInt(serialStr, 10),
-        };
-        return [release1, after1];
     }
 
-    // ^
-    // (?:
-    //   (-final)
-    //   |
-    //   (?:
-    //     (-alpha)
-    //     |
-    //     (-beta)
-    //     |
-    //     (-candidate)
-    //   )
-    //   (0|[1-9]\d*)
-    // )
-    // (.*)
-    // $
-    const match2 = text.match(/^(?:(-final)|(?:(-alpha)|(-beta)|(-candidate))(0|[1-9]\d*))(.*)$/);
-    if (match2) {
-        // Ignore the first element (the full match).
-        const [, fin, alpha, beta, rc, serialStr2, after2] = match2;
-        let level: PythonReleaseLevel;
-        if (fin) {
-            level = PythonReleaseLevel.Final;
-        } else if (rc) {
-            level = PythonReleaseLevel.Candidate;
-        } else if (beta) {
-            level = PythonReleaseLevel.Beta;
-        } else if (alpha) {
-            level = PythonReleaseLevel.Alpha;
-        } else {
-            throw Error('not implemented');
-        }
-        const release2 = {
-            level,
-            serial: serialStr2 ? parseInt(serialStr2, 10) : 0,
-        };
-        return [release2, after2];
+    let level: PythonReleaseLevel;
+    if (fin) {
+        level = PythonReleaseLevel.Final;
+    } else if (rc) {
+        level = PythonReleaseLevel.Candidate;
+    } else if (beta) {
+        level = PythonReleaseLevel.Beta;
+    } else if (alpha) {
+        level = PythonReleaseLevel.Alpha;
+    } else {
+        // We didn't find release info.
+        return [undefined, text];
     }
-
-    return [undefined, text];
+    const serial = parseInt(serialStr!, 10);
+    return [{ level, serial }, after!];
 }
 
 /**
