@@ -32,7 +32,7 @@ export class DebugLauncher implements ITestDebugLauncher {
     }
 
     public async launchDebugger(options: LaunchOptions) {
-        if (options.token && options.token!.isCancellationRequested) {
+        if (options.token && options.token.isCancellationRequested) {
             return;
         }
 

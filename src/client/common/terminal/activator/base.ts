@@ -28,7 +28,7 @@ export class BaseTerminalActivator implements ITerminalActivator {
         );
         let activated = false;
         if (activationCommands) {
-            for (const command of activationCommands!) {
+            for (const command of activationCommands) {
                 terminal.show(options?.preserveFocus);
                 terminal.sendText(command);
                 await this.waitForCommandToProcess(terminalShellType);

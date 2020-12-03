@@ -56,7 +56,7 @@ export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisO
         if (
             workspaceFolder &&
             Array.isArray(this.workspace.workspaceFolders) &&
-            this.workspace.workspaceFolders!.length > 1
+            this.workspace.workspaceFolders.length > 1
         ) {
             filters[0].pattern = `${workspaceFolder.uri.fsPath}/**/*`;
         }

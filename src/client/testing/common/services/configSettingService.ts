@@ -67,7 +67,7 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
                 throw new Error(`Test directory does not belong to any workspace (${testDirectory})`);
             }
             // tslint:disable-next-line:no-non-null-assertion
-            pythonConfig = this.workspaceService.getConfiguration('python', workspaceFolder!.uri);
+            pythonConfig = this.workspaceService.getConfiguration('python', workspaceFolder.uri);
         }
 
         return pythonConfig.update(setting, value);

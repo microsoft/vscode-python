@@ -28,10 +28,9 @@ class TelemetryTracker implements DebugAdapterTracker {
         this.sendTelemetry(EventName.DEBUG_SESSION_START);
     }
 
-    // tslint:disable-next-line:no-any
-    public onDidSendMessage(message: DebugProtocol.ProtocolMessage) {
+    public onDidSendMessage(message: DebugProtocol.Response) {
         if (message.type === 'response') {
-            const response = message as DebugProtocol.Response;
+            const response = message;
             if (response.command === 'configurationDone') {
                 // "configurationDone" response is sent immediately after user code starts running.
                 this.sendTelemetry(EventName.DEBUG_SESSION_USER_CODE_RUNNING);
