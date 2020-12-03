@@ -90,7 +90,7 @@ async function createLocators(ext: ExtensionState, environmentsSecurity: IEnviro
 
     // Build the stack of composite locators.
     locators = new PythonEnvsReducer(locators);
-    locators = new PythonEnvsResolver(locators, envInfoService, environmentsSecurity);
+    locators = new PythonEnvsResolver(locators, envInfoService, environmentsSecurity.isEnvSafe);
     const caching = await createCachingLocator(ext, envInfoService, locators);
     ext.disposables.push(caching);
     locators = caching;

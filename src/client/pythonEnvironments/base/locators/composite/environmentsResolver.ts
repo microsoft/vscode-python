@@ -5,7 +5,6 @@ import { cloneDeep } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
 import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
-import { IEnvironmentsSecurity } from '../../../security';
 import { PythonEnvInfo } from '../../info';
 import { InterpreterInformation } from '../../info/interpreter';
 import {
@@ -25,7 +24,7 @@ export class PythonEnvsResolver implements ILocator {
     constructor(
         private readonly parentLocator: ILocator,
         private readonly environmentInfoService: IEnvironmentInfoService,
-        private readonly environmentsSecurity: IEnvironmentsSecurity,
+        private readonly isEnvSafe: (env: PythonEnvInfo) => boolean,
     ) {}
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
@@ -95,7 +94,7 @@ export class PythonEnvsResolver implements ILocator {
         didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
         seen: PythonEnvInfo[],
     ) {
-        if (!this.environmentsSecurity.isEnvSafe(seen[envIndex])) {
+        if (!this.isEnvSafe(seen[envIndex])) {
             return;
         }
         state.pending += 1;
