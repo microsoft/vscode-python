@@ -8,6 +8,7 @@ import * as sinon from 'sinon';
 import { ImportMock } from 'ts-mock-imports';
 import { EventEmitter } from 'vscode';
 import { ExecutionResult } from '../../../../../client/common/process/types';
+import { createDeferred } from '../../../../../client/common/utils/async';
 import { Architecture } from '../../../../../client/common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
 import { parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
@@ -158,37 +159,46 @@ suite('Python envs locator - Environments Resolver', () => {
             assert.equal(onUpdatedEvents[length - 1], null, 'Last update should be null');
             didUpdate.dispose();
         });
-    });
 
-    test('No updates except the null event is sent if environment is not safe to execute', async () => {
-        // Arrange
-        isEnvSafe.returns(false);
-        const env1 = createNamedEnv('env1', '3.5.12b1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec1'));
-        const env2 = createNamedEnv('env2', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
-        const environmentsToBeIterated = [env1, env2];
-        const parentLocator = new SimpleLocator(environmentsToBeIterated);
-        const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
-        const resolver = new PythonEnvsResolver(parentLocator, envInfoService, environmentsSecurity);
+        test('No updates events are sent for environment which are not safe to execute', async () => {
+            // Arrange
+            const env1 = createNamedEnv('env1', '3.5.12b1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec1'));
+            const env2 = createNamedEnv('env2', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
+            const environmentsToBeIterated = [env1, env2];
+            const parentLocator = new SimpleLocator(environmentsToBeIterated);
+            const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
+            isEnvSafe.callsFake(
+                (env: PythonEnvInfo) => env.executable.filename === env1.executable.filename,
+            );
+            const resolver = new PythonEnvsResolver(parentLocator, envInfoService, environmentsSecurity);
 
-        const iterator = resolver.iterEnvs(); // Act
+            const iterator = resolver.iterEnvs(); // Act
 
-        // Assert
-        let { onUpdated } = iterator;
-        expect(onUpdated).to.not.equal(undefined, '');
+            // Assert
+            let { onUpdated } = iterator;
+            expect(onUpdated).to.not.equal(undefined, '');
 
-        // Arrange
-        onUpdated = onUpdated!;
-        onUpdated((e) => {
-            onUpdatedEvents.push(e);
+            // Arrange
+            onUpdated = onUpdated!;
+            const ready = createDeferred<void>();
+            onUpdated((e) => {
+                onUpdatedEvents.push(e);
+                if (e === null) {
+                    ready.resolve();
+                }
+            });
+            // Act
+            await getEnvs(iterator);
+            await ready.promise; // Resolve pending calls in the background
+
+            // Assert
+            const expectedUpdates = [
+                // Only update event for env1 is sent as env2 is unsafe.
+                { index: 0, old: env1, update: createExpectedEnvInfo(env1) },
+                null,
+            ];
+            assert.deepEqual(onUpdatedEvents, expectedUpdates);
         });
-
-        // Act
-        await getEnvs(iterator);
-        await sleep(1); // Resolve pending calls in the background
-
-        // Assert
-        const expectedUpdates = [null];
-        assert.deepEqual(onUpdatedEvents, expectedUpdates);
     });
 
     test('onChanged fires iff onChanged from resolver fires', () => {
