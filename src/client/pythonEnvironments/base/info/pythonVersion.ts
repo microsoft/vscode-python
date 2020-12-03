@@ -2,23 +2,9 @@
 // Licensed under the MIT License.
 
 import { cloneDeep } from 'lodash';
-import * as path from 'path';
-import { traceError } from '../../../common/logger';
 import * as basic from '../../../common/utils/version';
 
-import { PythonReleaseLevel, PythonVersion, PythonVersionRelease, UNKNOWN_PYTHON_VERSION } from '.';
-
-// XXX getPythonVersionFromPath() should go away in favor of parseVersionFromExecutable().
-
-export function getPythonVersionFromPath(exe: string): PythonVersion {
-    let version = UNKNOWN_PYTHON_VERSION;
-    try {
-        version = parseVersion(path.basename(exe));
-    } catch (ex) {
-        traceError(`Failed to parse version from path: ${exe}`, ex);
-    }
-    return version;
-}
+import { PythonReleaseLevel, PythonVersion, PythonVersionRelease } from '.';
 
 /**
  * Convert the given string into the corresponding Python version object.
