@@ -53,7 +53,6 @@ import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { registerTypes as lintersRegisterTypes } from '../client/linters/serviceRegistry';
-import { PythonEnvironments } from '../client/pythonEnvironments/api';
 import { TEST_OUTPUT_CHANNEL } from '../client/testing/common/constants';
 import { registerTypes as unittestsRegisterTypes } from '../client/testing/serviceRegistry';
 import { MockOutputChannel } from './mockClasses';
@@ -172,7 +171,6 @@ export class IocContainer {
 
     public readonly serviceManager: IServiceManager;
     public readonly serviceContainer: IServiceContainer;
-    public readonly pythonEnvs: PythonEnvironments;
 
     private disposables: Disposable[] = [];
 
@@ -180,7 +178,6 @@ export class IocContainer {
         const cont = new Container();
         this.serviceManager = new ServiceManager(cont);
         this.serviceContainer = new ServiceContainer(cont);
-        this.pythonEnvs = mock(PythonEnvironments);
 
         this.serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, this.serviceContainer);
         this.serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, this.disposables);
@@ -302,7 +299,7 @@ export class IocContainer {
     public registerMockInterpreterTypes() {
         this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
         this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
-        registerForIOC(this.serviceManager, this.serviceContainer, instance(this.pythonEnvs));
+        registerForIOC(this.serviceManager, this.serviceContainer);
     }
 
     public registerMockProcess() {

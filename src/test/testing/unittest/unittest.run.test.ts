@@ -11,7 +11,6 @@ import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { PythonEnvironments } from '../../../client/pythonEnvironments/api';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { ArgumentsHelper } from '../../../client/testing/common/argumentsHelper';
 import { CommandSource, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
@@ -47,7 +46,6 @@ const defaultUnitTestArgs = ['-v', '-s', '.', '-p', '*test*.py'];
 
 suite('Unit Tests - unittest - run with mocked process output', () => {
     let ioc: UnitTestIocContainer;
-    let pythonEnvs: PythonEnvironments;
     const rootDirectory = UNITTEST_TEST_FILES_PATH;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
 
@@ -61,7 +59,6 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             await fs.remove(cachePath);
         }
         await initializeTest();
-        pythonEnvs = mock(PythonEnvironments);
         initializeDI();
         await ignoreTestLauncher();
     });
@@ -118,7 +115,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             IInterpreterService,
             instance(mock(InterpreterService))
         );
-        registerForIOC(ioc.serviceManager, ioc.serviceContainer, instance(pythonEnvs));
+        registerForIOC(ioc.serviceManager, ioc.serviceContainer);
         ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 
