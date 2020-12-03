@@ -118,8 +118,10 @@ export function parseBasicVersion(versionStr: string): [PythonVersion, string] {
     if (version.minor === -1) {
         // We trust that the major version is always single-digit.
         if (version.major > 9) {
-            version.minor = version.major % 10;
-            version.major = Math.floor(version.major / 10);
+            const numdigits = version.major.toString().length - 1;
+            const factor = 10 ** numdigits;
+            version.minor = version.major % factor;
+            version.major = Math.floor(version.major / factor);
         }
     }
 
