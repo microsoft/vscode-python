@@ -17,8 +17,6 @@ interface IPythonSettings {
 }
 
 class PythonSettings extends Disposables implements IPythonSettings {
-    public static pythonSettings: PythonSettings | undefined;
-
     protected readonly changed = new vscode.EventEmitter<void>();
 
     constructor() {
@@ -32,13 +30,6 @@ class PythonSettings extends Disposables implements IPythonSettings {
         );
     }
 
-    public static getInstance(): PythonSettings {
-        if (!PythonSettings.pythonSettings) {
-            PythonSettings.pythonSettings = new PythonSettings();
-        }
-        return PythonSettings.pythonSettings;
-    }
-
     // eslint-disable-next-line class-methods-use-this
     public get<T>(name: string): T | undefined {
         return vscode.workspace.getConfiguration('python').get(name);
@@ -49,6 +40,10 @@ class PythonSettings extends Disposables implements IPythonSettings {
     }
 }
 
+let pythonSettings: (IPythonSettings & IDisposable) | undefined;
 export function getPythonSettingsInstance() : IPythonSettings & IDisposable {
-    return PythonSettings.getInstance();
+    if (pythonSettings === undefined) {
+        pythonSettings = new PythonSettings();
+    }
+    return pythonSettings;
 }
