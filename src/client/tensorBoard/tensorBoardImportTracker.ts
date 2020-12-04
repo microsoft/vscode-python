@@ -4,7 +4,7 @@ import * as path from 'path';
 import { Event, EventEmitter, TextDocument, TextEditor, window } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
-import { isTestExecution } from '../common/constants';
+import { IDisposableRegistry } from '../common/types';
 import { ITensorBoardImportTracker } from './types';
 
 // While it is uncommon for users to `import tensorboard`, TensorBoard is frequently
@@ -15,17 +15,20 @@ import { ITensorBoardImportTracker } from './types';
 const ImportRegEx = /^\s*from (?<fromImport>\w+(?:\.\w+)*) import (?<fromImportTarget>\w+(?:, \w+)*)(?: as \w+)?|import (?<importImport>\w+(?:, \w+)*)(?: as \w+)?$/;
 const MAX_DOCUMENT_LINES = 1000;
 
-// Capture isTestExecution on module load so that a test can turn it off and still
-// have this value set.
-const testExecution = isTestExecution();
-
 @injectable()
 export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExtensionSingleActivationService {
     private pendingChecks = new Map<string, NodeJS.Timer | number>();
     private _onDidImportTensorBoard = new EventEmitter<void>();
 
-    constructor(@inject(IDocumentManager) private documentManager: IDocumentManager) {
-        this.documentManager.onDidChangeActiveTextEditor((e) => this.onChangedActiveTextEditor(e));
+    constructor(
+        @inject(IDocumentManager) private documentManager: IDocumentManager,
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
+    ) {
+        this.documentManager.onDidChangeActiveTextEditor(
+            (e) => this.onChangedActiveTextEditor(e),
+            this,
+            this.disposables
+        );
     }
 
     // Fires when the active text editor contains a tensorboard import.
@@ -64,37 +67,9 @@ export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExt
             (path.extname(document.fileName) === '.ipynb' && document.languageId === 'python') ||
             path.extname(document.fileName) === '.py'
         ) {
-            this.scheduleDocument(document);
+            const lines = this.getDocumentLines(document);
+            this.lookForImports(lines);
         }
-    }
-
-    private scheduleDocument(document: TextDocument) {
-        this.scheduleCheck(document.fileName, this.checkDocument.bind(this, document));
-    }
-
-    private scheduleCheck(file: string, check: () => void) {
-        // If already scheduled, cancel.
-        const currentTimeout = this.pendingChecks.get(file);
-        if (currentTimeout) {
-            // tslint:disable-next-line: no-any
-            clearTimeout(currentTimeout as any);
-            this.pendingChecks.delete(file);
-        }
-
-        // Now schedule a new one.
-        if (testExecution) {
-            // During a test, check right away. It needs to be synchronous.
-            check();
-        } else {
-            // Wait five seconds to make sure we don't already have this document pending.
-            this.pendingChecks.set(file, setTimeout(check, 5000));
-        }
-    }
-
-    private checkDocument(document: TextDocument) {
-        this.pendingChecks.delete(document.fileName);
-        const lines = this.getDocumentLines(document);
-        this.lookForImports(lines);
     }
 
     private lookForImports(lines: (string | undefined)[]) {

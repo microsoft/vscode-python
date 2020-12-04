@@ -9,7 +9,7 @@ suite('TensorBoard import tracker', () => {
 
     setup(() => {
         documentManager = new MockDocumentManager();
-        tensorBoardImportTracker = new TensorBoardImportTracker(documentManager);
+        tensorBoardImportTracker = new TensorBoardImportTracker(documentManager, []);
         onDidImportTensorBoardListener = sinon.expectation.create('onDidImportTensorBoardListener');
         tensorBoardImportTracker.onDidImportTensorBoard(onDidImportTensorBoardListener);
     });
