@@ -51,13 +51,20 @@ export class MockDocument implements TextDocument {
     private _contents: string = '';
     private _isUntitled = false;
     private _isDirty = false;
+    private _language = 'python';
     private _onSave: (doc: TextDocument) => Promise<boolean>;
 
-    constructor(contents: string, fileName: string, onSave: (doc: TextDocument) => Promise<boolean>) {
+    constructor(
+        contents: string,
+        fileName: string,
+        onSave: (doc: TextDocument) => Promise<boolean>,
+        language?: string
+    ) {
         this._uri = Uri.file(fileName);
         this._contents = contents;
         this._lines = this.createLines();
         this._onSave = onSave;
+        this._language = language ? language : this._language;
     }
 
     public setContent(contents: string) {
@@ -85,7 +92,7 @@ export class MockDocument implements TextDocument {
         return this._isUntitled;
     }
     public get languageId(): string {
-        return 'python';
+        return this._language;
     }
     public get version(): number {
         return this._version;

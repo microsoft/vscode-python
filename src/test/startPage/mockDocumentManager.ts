@@ -94,12 +94,12 @@ export class MockDocumentManager implements IDocumentManager {
         throw new Error('Method not implemented.');
     }
 
-    public addDocument(code: string, file: string) {
+    public addDocument(code: string, file: string, language?: string) {
         let existing = this.textDocuments.find((d) => d.uri.fsPath === file) as MockDocument;
         if (existing) {
             existing.setContent(code);
         } else {
-            existing = new MockDocument(code, file, this.saveDocument);
+            existing = new MockDocument(code, file, this.saveDocument, language);
             this.textDocuments.push(existing);
         }
         return existing;

@@ -4,8 +4,9 @@
 import { inject, injectable } from 'inversify';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
-import { IPersistentState, IPersistentStateFactory } from '../common/types';
+import { IDisposableRegistry, IPersistentState, IPersistentStateFactory } from '../common/types';
 import { Common, TensorBoard } from '../common/utils/localize';
+import { ITensorBoardImportTracker } from './types';
 
 enum TensorBoardPromptStateKeys {
     ShowNativeTensorBoardPrompt = 'showNativeTensorBoardPrompt'
@@ -15,11 +16,14 @@ enum TensorBoardPromptStateKeys {
 export class TensorBoardPrompt {
     private state: IPersistentState<boolean>;
     private enabled: Promise<boolean> | undefined;
+    private enabledInCurrentSession: boolean = true;
     private waitingForUserSelection: boolean = false;
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(ICommandManager) private commandManager: ICommandManager,
+        @inject(ITensorBoardImportTracker) private importTracker: ITensorBoardImportTracker,
+        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory
     ) {
         this.state = this.persistentStateFactory.createWorkspacePersistentState<boolean>(
@@ -27,10 +31,11 @@ export class TensorBoardPrompt {
             true
         );
         this.enabled = this.isPromptEnabled();
+        this.importTracker.onDidImportTensorBoard(this.showNativeTensorBoardPrompt, this, this.disposableRegistry);
     }
 
     public async showNativeTensorBoardPrompt() {
-        if ((await this.enabled) && !this.waitingForUserSelection) {
+        if ((await this.enabled) && this.enabledInCurrentSession && !this.waitingForUserSelection) {
             const yes = Common.bannerLabelYes();
             const no = Common.bannerLabelNo();
             const doNotAskAgain = Common.doNotShowAgain();
@@ -41,10 +46,10 @@ export class TensorBoardPrompt {
                 ...options
             );
             this.waitingForUserSelection = false;
+            this.enabledInCurrentSession = false;
             switch (selection) {
                 case yes:
                     await this.commandManager.executeCommand(Commands.LaunchTensorBoard);
-                    await this.disablePrompt();
                     break;
                 case doNotAskAgain:
                     await this.disablePrompt();
