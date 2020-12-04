@@ -136,7 +136,7 @@ export namespace Jupyter {
 export namespace TensorBoard {
     export const useCurrentWorkingDirectoryDetail = localize(
         'TensorBoard.useCurrentWorkingDirectoryDetail',
-        'TensorBoard will pick up tfevent files in subdirectories'
+        'TensorBoard will search for tfevent files in all subdirectories of the current working directory'
     );
     export const useCurrentWorkingDirectory = localize(
         'TensorBoard.useCurrentWorkingDirectory',
@@ -164,7 +164,7 @@ export namespace TensorBoard {
     export const selectAnotherFolder = localize('TensorBoard.selectAnotherFolder', 'Select another folder');
     export const selectAnotherFolderDetail = localize(
         'TensorBoard.selectAnotherFolderDetail',
-        'Use the file picker dialog to select another folder'
+        'Use the file explorer to select another folder'
     );
 }
 
