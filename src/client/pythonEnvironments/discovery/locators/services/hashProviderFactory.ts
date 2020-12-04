@@ -15,7 +15,7 @@ import { InterpreterHashProvider } from './hashProvider';
 import { WindowsStoreInterpreter } from './windowsStoreInterpreter';
 
 @injectable()
-export class InterpeterHashProviderFactory implements IInterpreterHashProviderFactory {
+export class InterpreterHashProviderFactory implements IInterpreterHashProviderFactory {
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,

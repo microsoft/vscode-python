@@ -6,9 +6,10 @@ import { flatten } from 'lodash';
 import {
     Disposable, Event, EventEmitter, Uri,
 } from 'vscode';
+import { DiscoveryVariants } from '../../../common/experiments/groups';
 import { traceDecorators } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
-import { IDisposableRegistry } from '../../../common/types';
+import { IDisposableRegistry, IExperimentService } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { getURIFilter } from '../../../common/utils/misc';
 import { OSType } from '../../../common/utils/platform';
@@ -223,6 +224,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IComponentAdapter) private readonly pyenvs: IComponent,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         this._hasInterpreters = createDeferred<boolean>();
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
@@ -269,9 +271,14 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      */
     @traceDecorators.verbose('Get Interpreters')
     public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]> {
-        const envs = await this.pyenvs.getInterpreters(resource, options);
-        if (envs !== undefined) {
-            return envs;
+        if (
+            (await this.experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching))
+            || (await this.experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
+        ) {
+            const envs = await this.pyenvs.getInterpreters(resource, options);
+            if (envs !== undefined) {
+                return envs;
+            }
         }
         const locators = this.getLocators(options);
         const promises = locators.map(async (provider) => provider.getInterpreters(resource));

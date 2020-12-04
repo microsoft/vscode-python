@@ -9,18 +9,20 @@ import { expect } from 'chai';
 import {
     anything, deepEqual, instance, mock, verify, when,
 } from 'ts-mockito';
+import { ExperimentService } from '../../../../client/common/experiments/service';
 import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../client/common/process/types';
-import { IPersistentStateFactory } from '../../../../client/common/types';
+import { IExperimentService, IPersistentStateFactory } from '../../../../client/common/types';
 import { ServiceContainer } from '../../../../client/ioc/container';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { WindowsStoreInterpreter } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 
 // We use this for mocking.
 class ComponentAdapter {
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
     public async isWindowsStoreInterpreter(_pythonPath: string): Promise<boolean | undefined> {
         return undefined;
     }
@@ -33,8 +35,10 @@ suite('Interpreters - Windows Store Interpreter', () => {
     let persistanceStateFactory: IPersistentStateFactory;
     let executionFactory: IPythonExecutionFactory;
     let serviceContainer: IServiceContainer;
+    let expService: IExperimentService;
     setup(() => {
         pyenvs = mock(ComponentAdapter);
+        expService = mock(ExperimentService);
         fs = mock(FileSystem);
         persistanceStateFactory = mock(PersistentStateFactory);
         executionFactory = mock(PythonExecutionFactory);
@@ -47,7 +51,8 @@ suite('Interpreters - Windows Store Interpreter', () => {
             instance(serviceContainer),
             instance(persistanceStateFactory),
             instance(fs),
-            instance(pyenvs)
+            instance(pyenvs),
+            instance(expService),
         );
     });
     const windowsStoreInterpreters = [
