@@ -24,6 +24,7 @@ import {
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../interpreter/contracts';
+import { GetInterpreterOptions } from '../interpreter/interpreterService';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
 import { IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
@@ -254,6 +255,7 @@ class ComponentAdapter implements IComponentAdapter {
     // A result of `undefined` means "Fall back to the old code!"
     public async getInterpreters(
         resource?: vscode.Uri,
+        options?: GetInterpreterOptions,
         // Currently we have no plans to support GetInterpreterLocatorOptions:
         // {
         //     ignoreCache?: boolean
@@ -263,9 +265,11 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
-        // For now, until we have the concept of trusted workspaces, we assume all interpreters as safe
-        // to run once user has triggered discovery, i.e interacted with the extension.
-        this.environmentsSecurity.markAllEnvsAsSafe();
+        if (options?.onSuggestion) {
+            // For now, until we have the concept of trusted workspaces, we assume all interpreters as safe
+            // to run once user has triggered discovery, i.e interacted with the extension.
+            this.environmentsSecurity.markAllEnvsAsSafe();
+        }
         const query: PythonLocatorQuery = {};
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
