@@ -9,6 +9,7 @@ import {
     Progress,
     ProgressLocation,
     ProgressOptions,
+    QuickPickItem,
     ViewColumn,
     WebviewPanel,
     window
@@ -20,7 +21,7 @@ import { _SCRIPTS_DIR, tensorboardLauncher } from '../common/process/internal/sc
 import { IProcessServiceFactory, ObservableExecutionResult } from '../common/process/types';
 import { IInstaller, InstallerResponse, Product } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
-import { Common, TensorBoard } from '../common/utils/localize';
+import { TensorBoard } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 
 /**
@@ -101,20 +102,56 @@ export class TensorBoardSession {
         }
     }
 
-    // Display a prompt asking the user to acknowledge our autopopulated log directory or
+    private getQuickPickItems(logDir: string | undefined) {
+        if (logDir) {
+            const useCwd = {
+                label: TensorBoard.useCurrentWorkingDirectory(),
+                detail: TensorBoard.useCurrentWorkingDirectoryDetail()
+            };
+            const selectAnotherFolder = {
+                label: TensorBoard.selectAnotherFolder(),
+                detail: TensorBoard.selectAnotherFolderDetail()
+            };
+            return [useCwd, selectAnotherFolder];
+        } else {
+            const selectAFolder = {
+                label: TensorBoard.selectAFolder(),
+                detail: TensorBoard.selectAFolderDetail()
+            };
+            return [selectAFolder];
+        }
+    }
+
+    // Display a quickpick asking the user to acknowledge our autopopulated log directory or
     // select a new one using the file picker. Default this to the folder that is open in
     // the editor, if any, then the directory that the active text editor is in, if any.
     private async askUserForLogDir(): Promise<string | undefined> {
         const logDir = this.autopopulateLogDirectoryPath();
-        const gotIt = Common.gotIt();
+        const useCurrentWorkingDirectory = TensorBoard.useCurrentWorkingDirectory();
         const selectAFolder = TensorBoard.selectAFolder();
-        const message = logDir ? TensorBoard.usingCurrentWorkspaceFolder() : TensorBoard.logDirectoryPrompt();
-        const prompts = logDir ? [gotIt, selectAFolder] : [selectAFolder];
-        const selection = await window.showInformationMessage(message, ...prompts);
-        switch (selection) {
-            case gotIt:
+        const selectAnotherFolder = TensorBoard.selectAnotherFolder();
+        const items: QuickPickItem[] = this.getQuickPickItems(logDir);
+        const quickPick = window.createQuickPick();
+        quickPick.title = TensorBoard.logDirectoryPrompt();
+        quickPick.canSelectMany = false;
+        quickPick.enabled = false;
+        quickPick.items = items;
+        if (logDir) {
+            quickPick.placeholder = TensorBoard.currentDirectory().format(logDir);
+        }
+        const selection = createDeferred<QuickPickItem>();
+        quickPick.onDidAccept(() => {
+            quickPick.hide();
+            selection.resolve(quickPick.selectedItems[0]);
+        });
+        quickPick.show();
+        const item = await selection.promise;
+        quickPick.dispose();
+        switch (item.label) {
+            case useCurrentWorkingDirectory:
                 return logDir;
             case selectAFolder:
+            case selectAnotherFolder:
                 return this.showFilePicker();
             default:
                 return undefined;
@@ -125,7 +162,6 @@ export class TensorBoardSession {
     // Times out if it hasn't started up after 1 minute.
     // Hold on to the process so we can kill it when the webview is closed.
     private async startTensorboardSession(logDir: string): Promise<boolean> {
-        const cwd = this.getFullyQualifiedLogDirectory(logDir);
         const pythonExecutable = await this.interpreterService.getActiveInterpreter();
         if (!pythonExecutable) {
             return false;
@@ -145,12 +181,12 @@ export class TensorBoardSession {
 
         const processService = await this.processServiceFactory.create();
         const args = tensorboardLauncher([logDir]);
-        const observable = processService.execObservable(pythonExecutable.path, args, { cwd });
+        const observable = processService.execObservable(pythonExecutable.path, args);
 
         const result = await window.withProgress(
             progressOptions,
             (_progress: Progress<{}>, token: CancellationToken) => {
-                traceInfo(`Starting TensorBoard with log directory ${cwd}...`);
+                traceInfo(`Starting TensorBoard with log directory ${logDir}...`);
 
                 const spawnTensorBoard = this.waitForTensorBoardStart(observable);
                 const userCancellation = createPromiseFromCancellation({
@@ -244,24 +280,6 @@ export class TensorBoardSession {
                 <title>TensorBoard</title>
             </head>
             </html>`;
-        }
-    }
-
-    // TensorBoard accepts absolute or relative log directory paths to tfevent files.
-    // It uses these files to populate its visualizations. If given a relative path,
-    // TensorBoard resolves them against the current working directory. Make the
-    // chosen filepath explicit in our logs. If a workspace folder is open, ensure
-    // we pass it as cwd to the spawned process. If there is no rootPath available,
-    // explicitly pass process.cwd, which is what `spawn` would use by default anyway.
-    private getFullyQualifiedLogDirectory(logDir: string) {
-        if (path.isAbsolute(logDir)) {
-            return logDir;
-        }
-        const rootPath = this.workspaceService.rootPath;
-        if (rootPath) {
-            return path.resolve(rootPath, logDir);
-        } else {
-            return path.resolve(process.cwd(), logDir);
         }
     }
 
