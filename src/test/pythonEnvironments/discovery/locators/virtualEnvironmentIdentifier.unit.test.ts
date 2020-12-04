@@ -13,6 +13,7 @@ import {
     getPythonVersionFromPyvenvCfg, isVenvEnvironment, isVirtualenvEnvironment, isVirtualenvwrapperEnvironment,
 } from '../../../../client/pythonEnvironments/discovery/locators/services/virtualEnvironmentIdentifier';
 import { TEST_DATA_ROOT, TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
+import { assertVersionsEqual } from './envTestUtils';
 
 suite('isVenvEnvironment Tests', () => {
     const pyvenvCfg = 'pyvenv.cfg';
@@ -212,8 +213,10 @@ suite('Virtual Env Version Parser Tests', () => {
     testData.forEach((data) => {
         test(`Parsing ${data.name}`, async () => {
             readFileStub.resolves(data.historyFileContents);
+
             const actual = await getPythonVersionFromPyvenvCfg('/path/here/does/not/matter');
-            assert.deepStrictEqual(actual, data.expected);
+
+            assertVersionsEqual(actual, data.expected);
         });
     });
 });

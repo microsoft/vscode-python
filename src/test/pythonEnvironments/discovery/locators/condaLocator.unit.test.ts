@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import * as assert from 'assert';
+
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
@@ -8,6 +8,7 @@ import { PythonReleaseLevel, PythonVersion } from '../../../../client/pythonEnvi
 import * as externalDeps from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { getPythonVersionFromConda } from '../../../../client/pythonEnvironments/discovery/locators/services/condaLocator';
 import { TEST_DATA_ROOT } from '../../common/commonTestConstants';
+import { assertVersionsEqual } from './envTestUtils';
 
 suite('Conda Python Version Parser Tests', () => {
     let readFileStub: sinon.SinonStub;
@@ -74,8 +75,10 @@ suite('Conda Python Version Parser Tests', () => {
     testData.forEach((data) => {
         test(`Parsing ${data.name}`, async () => {
             readFileStub.resolves(data.historyFileContents);
+
             const actual = await getPythonVersionFromConda('/path/here/does/not/matter');
-            assert.deepStrictEqual(actual, data.expected);
+
+            assertVersionsEqual(actual, data.expected);
         });
     });
 });
