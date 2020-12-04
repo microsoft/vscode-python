@@ -68,7 +68,6 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
         @inject(IPersistentStateFactory) private readonly persistentFactory: IPersistentStateFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IComponentAdapter) private readonly pyenvs: IComponent,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {}
 
     /**
@@ -79,9 +78,10 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
      * @memberof WindowsStoreInterpreter
      */
     public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean> {
+        const expService = this.serviceContainer.get<IExperimentService>(IExperimentService);
         if (
-            (await this.experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching))
-            || (await this.experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
+            (await expService.inExperiment(DiscoveryVariants.discoverWithFileWatching))
+            || (await expService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
         ) {
             const result = await this.pyenvs.isWindowsStoreInterpreter(pythonPath);
             if (result !== undefined) {

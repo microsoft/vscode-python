@@ -46,13 +46,15 @@ suite('Interpreters - Windows Store Interpreter', () => {
         when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(
             instance(executionFactory),
         );
+        when(serviceContainer.get<IExperimentService>(IExperimentService)).thenReturn(
+            instance(expService),
+        );
         when(pyenvs.isWindowsStoreInterpreter(anything())).thenReturn(Promise.resolve(undefined));
         windowsStoreInterpreter = new WindowsStoreInterpreter(
             instance(serviceContainer),
             instance(persistanceStateFactory),
             instance(fs),
             instance(pyenvs),
-            instance(expService),
         );
     });
     const windowsStoreInterpreters = [
