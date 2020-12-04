@@ -12,9 +12,7 @@ import { FileSystemPaths, FileSystemPathUtils } from '../../../../client/common/
 import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../../../client/common/process/types';
 import { ITerminalActivationCommandProvider } from '../../../../client/common/terminal/types';
-import {
-    IConfigurationService, IExperimentService, IPersistentStateFactory, IPythonSettings,
-} from '../../../../client/common/types';
+import { IConfigurationService, IPersistentStateFactory, IPythonSettings } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { IComponentAdapter, IInterpreterLocatorService, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
@@ -42,7 +40,6 @@ suite('Interpreters Conda Service', () => {
     let platformService: TypeMoq.IMock<IPlatformService>;
     let condaService: CondaService;
     let pyenvs: TypeMoq.IMock<IComponentAdapter>;
-    let expService: TypeMoq.IMock<IExperimentService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let config: TypeMoq.IMock<IConfigurationService>;
     let settings: TypeMoq.IMock<IPythonSettings>;
@@ -64,7 +61,6 @@ suite('Interpreters Conda Service', () => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         registryInterpreterLocatorService = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         pyenvs = TypeMoq.Mock.ofType<IComponentAdapter>();
-        expService = TypeMoq.Mock.ofType<IExperimentService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         config = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -130,7 +126,6 @@ suite('Interpreters Conda Service', () => {
             disposableRegistry,
             workspaceService.object,
             pyenvs.object,
-            expService.object,
             registryInterpreterLocatorService.object,
         );
     });
@@ -589,7 +584,6 @@ suite('Interpreters Conda Service', () => {
             .setup((r) => r.getInterpreters(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(registryInterpreters));
         fileSystem.setup((fs) => fs.search(TypeMoq.It.isAnyString())).returns(async () => []);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         fileSystem.setup((fs) => fs.fileExists(TypeMoq.It.isAny())).returns((_file: string) => Promise.resolve(false));
 
         const condaExe = await condaService.getCondaFile();
@@ -603,7 +597,6 @@ suite('Interpreters Conda Service', () => {
 
         fileSystem.setup((f) => f.search(TypeMoq.It.isAnyString())).returns(() => Promise.resolve([expected]));
         const CondaServiceForTesting = class extends CondaService {
-            // eslint-disable-next-line class-methods-use-this
             public async isCondaInCurrentPath() {
                 return false;
             }
@@ -617,7 +610,6 @@ suite('Interpreters Conda Service', () => {
             disposableRegistry,
             workspaceService.object,
             pyenvs.object,
-            expService.object,
         );
 
         const result = await condaSrv.getCondaFile();
@@ -706,7 +698,6 @@ suite('Interpreters Conda Service', () => {
             .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
             .returns(() => Promise.reject(new Error('Not Found')));
         fileSystem.setup((fs) => fs.search(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         fileSystem.setup((fs) => fs.fileExists(TypeMoq.It.isAny())).returns((_file: string) => Promise.resolve(false));
 
         const condaExe = await condaService.getCondaFile();
@@ -911,14 +902,12 @@ suite('Interpreters Conda Service', () => {
         fileSystem.setup((fs) => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
         fileSystem.setup((fs) => fs.search(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
         platformService.setup((p) => p.isWindows).returns(() => false);
-        // eslint-disable-next-line prefer-promise-reject-errors
         condaService.getCondaInfo = () => Promise.reject('Not Found');
         const isAvailable = await condaService.isCondaAvailable();
         assert.equal(isAvailable, false);
     });
 
     test('Version info from conda process will be returned in getCondaVersion', async () => {
-        // eslint-disable-next-line prefer-promise-reject-errors
         condaService.getCondaInfo = () => Promise.reject('Not Found');
         condaService.getCondaFile = () => Promise.resolve('conda');
         const expectedVersion = parse('4.4.4')!.raw;

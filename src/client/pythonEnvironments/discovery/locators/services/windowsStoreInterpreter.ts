@@ -5,11 +5,10 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { DiscoveryVariants } from '../../../../common/experiments/groups';
 import { traceDecorators } from '../../../../common/logger';
 import { IFileSystem } from '../../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../../common/process/types';
-import { IExperimentService, IPersistentStateFactory } from '../../../../common/types';
+import { IPersistentStateFactory } from '../../../../common/types';
 import { IComponentAdapter } from '../../../../interpreter/contracts';
 import { IInterpreterHashProvider, IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
@@ -67,8 +66,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IPersistentStateFactory) private readonly persistentFactory: IPersistentStateFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponent
     ) {}
 
     /**
@@ -79,14 +77,9 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
      * @memberof WindowsStoreInterpreter
      */
     public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean> {
-        if (
-            (await this.experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching))
-            || (await this.experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
-        ) {
-            const result = await this.pyenvs.isWindowsStoreInterpreter(pythonPath);
-            if (result !== undefined) {
-                return result;
-            }
+        const result = await this.pyenvs.isWindowsStoreInterpreter(pythonPath);
+        if (result !== undefined) {
+            return result;
         }
         const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
         return (
@@ -104,7 +97,6 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
      * @returns {Promise<boolean>}
      * @memberof IInterpreterHelper
      */
-    // eslint-disable-next-line class-methods-use-this
     public isHiddenInterpreter(pythonPath: string): boolean {
         return isRestrictedWindowsStoreInterpreterPath(pythonPath);
     }

@@ -6,15 +6,12 @@ import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../../../common/application/types';
-import { DiscoveryVariants } from '../../../../common/experiments/groups';
 import {
     traceDecorators, traceError, traceVerbose, traceWarning,
 } from '../../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../../common/process/types';
-import {
-    IConfigurationService, IDisposableRegistry, IExperimentService, IPersistentStateFactory,
-} from '../../../../common/types';
+import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
 import {
     IComponentAdapter, ICondaService, IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE,
@@ -84,7 +81,6 @@ export class CondaService implements ICondaService {
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IComponentAdapter) private readonly pyenvs: IComponent,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IInterpreterLocatorService)
         @named(WINDOWS_REGISTRY_SERVICE)
         @optional()
@@ -225,14 +221,9 @@ export class CondaService implements ICondaService {
      * @memberof CondaService
      */
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean> {
-        if (
-            (await this.experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching))
-            || (await this.experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
-        ) {
-            const result = await this.pyenvs.isCondaEnvironment(interpreterPath);
-            if (result !== undefined) {
-                return result;
-            }
+        const result = await this.pyenvs.isCondaEnvironment(interpreterPath);
+        if (result !== undefined) {
+            return result;
         }
         const dir = path.dirname(interpreterPath);
         const { isWindows } = this.platform;

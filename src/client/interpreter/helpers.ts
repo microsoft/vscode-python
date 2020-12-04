@@ -1,14 +1,13 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { DiscoveryVariants } from '../common/experiments/groups';
 import { traceError } from '../common/logger';
 import { FileSystemPaths } from '../common/platform/fs-paths';
 import { IPythonExecutionFactory } from '../common/process/types';
-import { IExperimentService, IPersistentStateFactory, Resource } from '../common/types';
+import { IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { isMacDefaultPythonPath } from '../pythonEnvironments/discovery';
-import { InterpreterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
+import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import {
     EnvironmentType,
     getEnvironmentTypeName,
@@ -56,9 +55,8 @@ export class InterpreterHelper implements IInterpreterHelper {
     private readonly persistentFactory: IPersistentStateFactory;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(InterpreterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory,
-        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService
+        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponent
     ) {
         this.persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }
@@ -130,14 +128,9 @@ export class InterpreterHelper implements IInterpreterHelper {
         }
     }
     public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean> {
-        if (
-            (await this.experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)) ||
-            (await this.experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
-        ) {
-            const result = await this.pyenvs.isMacDefaultPythonPath(pythonPath);
-            if (result !== undefined) {
-                return result;
-            }
+        const result = await this.pyenvs.isMacDefaultPythonPath(pythonPath);
+        if (result !== undefined) {
+            return result;
         }
         return isMacDefaultPythonPath(pythonPath);
     }

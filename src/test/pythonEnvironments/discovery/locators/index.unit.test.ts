@@ -10,7 +10,7 @@ import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IPlatformService } from '../../../../client/common/platform/types';
-import { IDisposableRegistry, IExperimentService } from '../../../../client/common/types';
+import { IDisposableRegistry } from '../../../../client/common/types';
 import { createDeferred } from '../../../../client/common/utils/async';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { Architecture, OSType } from '../../../../client/common/utils/platform';
@@ -907,13 +907,11 @@ suite('Interpreters - Locators Index', () => {
     let helper: TypeMoq.IMock<IInterpreterLocatorHelper>;
     let pyenvs: TypeMoq.IMock<IComponentAdapter>;
     let locator: IInterpreterLocatorService;
-    let expService: TypeMoq.IMock<IExperimentService>;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         platformSvc = TypeMoq.Mock.ofType<IPlatformService>();
         helper = TypeMoq.Mock.ofType<IInterpreterLocatorHelper>();
         pyenvs = TypeMoq.Mock.ofType<IComponentAdapter>();
-        expService = TypeMoq.Mock.ofType<IExperimentService>();
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => []);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformSvc.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IComponentAdapter))).returns(() => pyenvs.object);
@@ -921,7 +919,7 @@ suite('Interpreters - Locators Index', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterLocatorHelper)))
             .returns(() => helper.object);
 
-        locator = new PythonInterpreterLocatorService(serviceContainer.object, pyenvs.object, expService.object);
+        locator = new PythonInterpreterLocatorService(serviceContainer.object, pyenvs.object);
     });
     [undefined, Uri.file('Something')].forEach((resource) => {
         getNamesAndValues<OSType>(OSType).forEach((osType) => {
