@@ -917,12 +917,11 @@ suite('Interpreters - Locators Index', () => {
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => []);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformSvc.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IComponentAdapter))).returns(() => pyenvs.object);
-        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IExperimentService))).returns(() => expService.object);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterLocatorHelper)))
             .returns(() => helper.object);
 
-        locator = new PythonInterpreterLocatorService(serviceContainer.object, pyenvs.object);
+        locator = new PythonInterpreterLocatorService(serviceContainer.object, pyenvs.object, expService.object);
     });
     [undefined, Uri.file('Something')].forEach((resource) => {
         getNamesAndValues<OSType>(OSType).forEach((osType) => {

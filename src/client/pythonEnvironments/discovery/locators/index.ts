@@ -224,7 +224,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IComponentAdapter) private readonly pyenvs: IComponent,
-
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         this._hasInterpreters = createDeferred<boolean>();
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
@@ -271,10 +271,9 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      */
     @traceDecorators.verbose('Get Interpreters')
     public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]> {
-        const expService = this.serviceContainer.get<IExperimentService>(IExperimentService);
         if (
-            (await expService.inExperiment(DiscoveryVariants.discoverWithFileWatching))
-            || (await expService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
+            (await this.experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching))
+            || (await this.experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
         ) {
             const envs = await this.pyenvs.getInterpreters(resource, options);
             if (envs !== undefined) {
