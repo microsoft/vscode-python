@@ -38,7 +38,7 @@ export async function disposeAll(disposables: IDisposable[]): Promise<void> {
  * A list of disposables.
  */
 export class Disposables implements IDisposables {
-    protected disposables: IDisposable[] = [];
+    private disposables: IDisposable[] = [];
 
     constructor(...disposables: IDisposable[]) {
         this.disposables.push(...disposables);
