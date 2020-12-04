@@ -12,6 +12,7 @@ import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
 import { DebuggerTypeName } from '../../../constants';
 import { DebugOptions, LaunchRequestArguments } from '../../../types';
+import { PythonPathSource } from '../../types';
 import { BaseConfigurationResolver } from './base';
 import { IDebugEnvironmentVariablesService } from './helper';
 
@@ -184,15 +185,25 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
     ): Promise<boolean> {
         const diagnosticService = this.invalidPythonPathInDebuggerService;
         return (
-            diagnosticService.validatePythonPath(debugConfiguration.python, this.pythonPathSource, folder?.uri) &&
-            diagnosticService.validatePythonPath(
-                debugConfiguration.debugAdapterPython,
-                this.pythonPathSource,
+            (await diagnosticService.validatePythonPath(
+                debugConfiguration.python,
+                debugConfiguration.python === debugConfiguration.pythonPath
+                    ? this.pythonPathSource
+                    : PythonPathSource.launchJson,
                 folder?.uri
-            ) &&
+            )) &&
+            (await diagnosticService.validatePythonPath(
+                debugConfiguration.debugAdapterPython,
+                debugConfiguration.debugAdapterPython === debugConfiguration.pythonPath
+                    ? this.pythonPathSource
+                    : PythonPathSource.launchJson,
+                folder?.uri
+            )) &&
             diagnosticService.validatePythonPath(
                 debugConfiguration.debugLauncherPython,
-                this.pythonPathSource,
+                debugConfiguration.debugAdapterPython === debugConfiguration.pythonPath
+                    ? this.pythonPathSource
+                    : PythonPathSource.launchJson,
                 folder?.uri
             )
         );
