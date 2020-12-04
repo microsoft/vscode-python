@@ -98,6 +98,8 @@ export class PythonEnvsResolver implements ILocator {
             return;
         }
         state.pending += 1;
+        // It's essential we increment the pending call count before any asynchronus calls in this method.
+        // We want this to be run even when `resolveInBackground` is called in background.
         const interpreterInfo = await this.environmentInfoService.getEnvironmentInfo(
             seen[envIndex].executable.filename,
         );
