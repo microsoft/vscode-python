@@ -13,7 +13,13 @@ import {
 
 import { DeprecatePythonPath } from '../../common/experiments/groups';
 import { traceDecorators, traceError } from '../../common/logger';
-import { IConfigurationService, IExperimentsManager, IInterpreterPathService, Resource } from '../../common/types';
+import {
+    IConfigurationService,
+    IExperimentService,
+    IExperimentsManager,
+    IInterpreterPathService,
+    Resource
+} from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
@@ -25,6 +31,30 @@ import { ITestManagementService } from '../../testing/types';
 import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerFolderService, ILanguageServerProxy } from '../types';
+
+namespace InExperiment {
+    export const Method = 'python/inExperiment';
+
+    export interface IRequest {
+        experimentName: string;
+    }
+
+    export interface IResponse {
+        inExperiment: boolean;
+    }
+}
+
+namespace GetExperimentValue {
+    export const Method = 'python/getExperimentValue';
+
+    export interface IRequest {
+        experimentName: string;
+    }
+
+    export interface IResponse<T extends boolean | number | string> {
+        value: T | undefined;
+    }
+}
 
 @injectable()
 export class NodeLanguageServerProxy implements ILanguageServerProxy {
@@ -41,6 +71,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService
     ) {
         this.startupCompleted = createDeferred<void>();
@@ -187,5 +218,23 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
                 );
             });
         }
+
+        this.languageClient!.onRequest(
+            InExperiment.Method,
+            async (params: InExperiment.IRequest): Promise<InExperiment.IResponse> => {
+                const inExperiment = await this.experimentService.inExperiment(params.experimentName);
+                return { inExperiment };
+            }
+        );
+
+        this.languageClient!.onRequest(
+            GetExperimentValue.Method,
+            async <T extends boolean | number | string>(
+                params: GetExperimentValue.IRequest
+            ): Promise<GetExperimentValue.IResponse<T>> => {
+                const value = await this.experimentService.getExperimentValue<T>(params.experimentName);
+                return { value };
+            }
+        );
     }
 }
