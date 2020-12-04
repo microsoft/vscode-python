@@ -1,6 +1,6 @@
+import * as sinon from 'sinon';
 import { TensorBoardImportTracker } from '../../client/tensorBoard/tensorBoardImportTracker';
 import { MockDocumentManager } from '../startPage/mockDocumentManager';
-import * as sinon from 'sinon';
 
 suite('TensorBoard import tracker', () => {
     let documentManager: MockDocumentManager;
