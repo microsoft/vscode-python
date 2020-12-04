@@ -102,7 +102,7 @@ export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExt
             for (const s of lines) {
                 const matches = s ? ImportRegEx.exec(s) : null;
                 if (matches === null || matches.groups === undefined) {
-                    return;
+                    continue;
                 }
                 let componentsToCheck: string[] = [];
                 if (matches.groups.fromImport && matches.groups.fromImportTarget) {
