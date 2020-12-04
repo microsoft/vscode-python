@@ -1,10 +1,11 @@
 import { inject, injectable } from 'inversify';
 import { noop } from 'lodash';
 import * as path from 'path';
-import { Event, EventEmitter, TextDocument, TextEditor, window } from 'vscode';
+import { Event, EventEmitter, TextEditor, window } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
 import { IDisposableRegistry } from '../common/types';
+import { getDocumentLines } from '../telemetry/importTracker';
 import { ITensorBoardImportTracker } from './types';
 
 // While it is uncommon for users to `import tensorboard`, TensorBoard is frequently
@@ -13,7 +14,6 @@ import { ITensorBoardImportTracker } from './types';
 // in order to match on imported submodules as well, since the original regex only
 // matches the 'main' module.
 const ImportRegEx = /^\s*from (?<fromImport>\w+(?:\.\w+)*) import (?<fromImportTarget>\w+(?:, \w+)*)(?: as \w+)?|import (?<importImport>\w+(?:, \w+)*)(?: as \w+)?$/;
-const MAX_DOCUMENT_LINES = 1000;
 
 @injectable()
 export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExtensionSingleActivationService {
@@ -45,19 +45,6 @@ export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExt
         this.onChangedActiveTextEditor(window.activeTextEditor);
     }
 
-    private getDocumentLines(document: TextDocument): (string | undefined)[] {
-        const array = Array<string>(Math.min(document.lineCount, MAX_DOCUMENT_LINES)).fill('');
-        return array
-            .map((_a: string, i: number) => {
-                const line = document.lineAt(i);
-                if (line && !line.isEmptyOrWhitespace) {
-                    return line.text;
-                }
-                return undefined;
-            })
-            .filter((f: string | undefined) => f);
-    }
-
     private onChangedActiveTextEditor(editor: TextEditor | undefined) {
         if (!editor || !editor.document) {
             return;
@@ -67,7 +54,7 @@ export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExt
             (path.extname(document.fileName) === '.ipynb' && document.languageId === 'python') ||
             path.extname(document.fileName) === '.py'
         ) {
-            const lines = this.getDocumentLines(document);
+            const lines = getDocumentLines(document);
             this.lookForImports(lines);
         }
     }

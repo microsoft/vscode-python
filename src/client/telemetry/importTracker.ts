@@ -62,19 +62,6 @@ export class ImportTracker implements IExtensionSingleActivationService {
         this.documentManager.textDocuments.forEach((d) => this.onOpenedOrSavedDocument(d));
     }
 
-    private getDocumentLines(document: TextDocument): (string | undefined)[] {
-        const array = Array<string>(Math.min(document.lineCount, MAX_DOCUMENT_LINES)).fill('');
-        return array
-            .map((_a: string, i: number) => {
-                const line = document.lineAt(i);
-                if (line && !line.isEmptyOrWhitespace) {
-                    return line.text;
-                }
-                return undefined;
-            })
-            .filter((f: string | undefined) => f);
-    }
-
     private onOpenedOrSavedDocument(document: TextDocument) {
         // Make sure this is a Python file.
         if (path.extname(document.fileName) === '.py') {
@@ -108,7 +95,7 @@ export class ImportTracker implements IExtensionSingleActivationService {
     @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
     private checkDocument(document: TextDocument) {
         this.pendingChecks.delete(document.fileName);
-        const lines = this.getDocumentLines(document);
+        const lines = getDocumentLines(document);
         this.lookForImports(lines);
     }
 
@@ -147,4 +134,17 @@ export class ImportTracker implements IExtensionSingleActivationService {
             noop();
         }
     }
+}
+
+export function getDocumentLines(document: TextDocument): (string | undefined)[] {
+    const array = Array<string>(Math.min(document.lineCount, MAX_DOCUMENT_LINES)).fill('');
+    return array
+        .map((_a: string, i: number) => {
+            const line = document.lineAt(i);
+            if (line && !line.isEmptyOrWhitespace) {
+                return line.text;
+            }
+            return undefined;
+        })
+        .filter((f: string | undefined) => f);
 }
