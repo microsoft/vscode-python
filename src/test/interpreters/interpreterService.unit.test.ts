@@ -83,7 +83,7 @@ suite('Interpreters service', () => {
         serviceContainer = new ServiceContainer(cont);
 
         experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
-        experimentService = TypeMoq.Mock.ofType<IExperimentService>();;
+        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
         interpreterPathService = TypeMoq.Mock.ofType<IInterpreterPathService>();
         updater = TypeMoq.Mock.ofType<IPythonPathUpdaterServiceManager>();
         pyenvs = TypeMoq.Mock.ofType<IComponentAdapter>();
