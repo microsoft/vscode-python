@@ -112,11 +112,11 @@ function createNonWorkspaceLocators(
             new PosixKnownPathsLocator(),
         ];
     }
-    locators.push(...[
+    locators.push(
         new GlobalVirtualEnvironmentLocator(),
         new PyenvLocator(),
         new CustomVirtualEnvironmentLocator(),
-    ]);
+    );
     const disposables = (locators.filter((d) => d.dispose !== undefined)) as IDisposable[];
     ext.disposables.push(...disposables);
     return locators;

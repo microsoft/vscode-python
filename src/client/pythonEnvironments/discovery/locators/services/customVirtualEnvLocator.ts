@@ -16,7 +16,6 @@ import {
 import {
     getFileInfo, getPythonSetting, onDidChangePythonSetting, pathExists,
 } from '../../../common/externalDependencies';
-import { isCondaEnvironment } from './condaLocator';
 import { isPipenvEnvironment } from './pipEnvHelper';
 import {
     isVenvEnvironment,
@@ -29,19 +28,19 @@ import {
  */
 const DEFAULT_SEARCH_DEPTH = 2;
 
-const venvPathSettingKey = 'venvPath';
-const venvFoldersSettingKey = 'venvFolders';
+const VENVPATH_SETTING_KEY = 'venvPath';
+const VENVFOLDERS_SETTING_KEY = 'venvFolders';
 
 /**
  * Gets all custom virtual environment locations to look for environments.
  */
 async function getCustomVirtualEnvDirs(): Promise<string[]> {
     const venvDirs: string[] = [];
-    const venvPath = getPythonSetting<string>(venvPathSettingKey);
+    const venvPath = getPythonSetting<string>(VENVPATH_SETTING_KEY);
     if (venvPath) {
         venvDirs.push(venvPath);
     }
-    const venvFolders = getPythonSetting<string[]>(venvFoldersSettingKey) ?? [];
+    const venvFolders = getPythonSetting<string[]>(VENVFOLDERS_SETTING_KEY) ?? [];
     const homeDir = getUserHomeDir();
     if (homeDir && (await pathExists(homeDir))) {
         venvFolders
@@ -58,10 +57,6 @@ async function getCustomVirtualEnvDirs(): Promise<string[]> {
  * @param interpreterPath: Absolute path to the interpreter paths.
  */
 async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind> {
-    if (await isCondaEnvironment(interpreterPath)) {
-        return PythonEnvKind.Conda;
-    }
-
     if (await isPipenvEnvironment(interpreterPath)) {
         return PythonEnvKind.Pipenv;
     }
@@ -113,8 +108,8 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
     }
 
     protected async initResources(): Promise<void> {
-        this.disposables.push(onDidChangePythonSetting(venvPathSettingKey, () => this.emitter.fire({})));
-        this.disposables.push(onDidChangePythonSetting(venvFoldersSettingKey, () => this.emitter.fire({})));
+        this.disposables.push(onDidChangePythonSetting(VENVPATH_SETTING_KEY, () => this.emitter.fire({})));
+        this.disposables.push(onDidChangePythonSetting(VENVFOLDERS_SETTING_KEY, () => this.emitter.fire({})));
     }
 
     // eslint-disable-next-line class-methods-use-this

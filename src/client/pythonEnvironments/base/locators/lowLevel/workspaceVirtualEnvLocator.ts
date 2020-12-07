@@ -10,7 +10,6 @@ import {
 import {
     getFileInfo, isParentPath, pathExists,
 } from '../../../common/externalDependencies';
-import { isCondaEnvironment } from '../../../discovery/locators/services/condaLocator';
 import { isPipenvEnvironment } from '../../../discovery/locators/services/pipEnvHelper';
 import { isVenvEnvironment, isVirtualenvEnvironment } from '../../../discovery/locators/services/virtualEnvironmentIdentifier';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
@@ -37,10 +36,6 @@ function getWorkspaceVirtualEnvDirs(root: string): string[] {
  * @param interpreterPath: Absolute path to the interpreter paths.
  */
 async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind> {
-    if (await isCondaEnvironment(interpreterPath)) {
-        return PythonEnvKind.Conda;
-    }
-
     if (await isPipenvEnvironment(interpreterPath)) {
         return PythonEnvKind.Pipenv;
     }
@@ -53,7 +48,7 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
         return PythonEnvKind.VirtualEnv;
     }
 
-    return PythonEnvKind.Custom;
+    return PythonEnvKind.Unknown;
 }
 
 async function buildSimpleVirtualEnvInfo(executablePath: string, kind: PythonEnvKind): Promise<PythonEnvInfo> {
