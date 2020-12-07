@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { isCondaEnvironment } from '../discovery/locators/services/condaLocator';
+import { isCondaEnvironment } from '../discovery/locators/services/conda';
 import { isPipenvEnvironment } from '../discovery/locators/services/pipEnvHelper';
 import { isPyenvEnvironment } from '../discovery/locators/services/pyenvLocator';
 import {

@@ -156,8 +156,8 @@ export class CondaService implements ICondaService {
         const processService = await this.processServiceFactory.create();
         const info = await this.getCondaInfo().catch<CondaInfo | undefined>(() => undefined);
         let versionString: string | undefined;
-        if (info && info.condaVersion) {
-            versionString = info.condaVersion;
+        if (info && info.conda_version) {
+            versionString = info.conda_version;
         } else {
             const stdOut = await this.getCondaFile()
                 .then((condaFile) => processService.exec(condaFile, ['--version'], {}))

@@ -19,6 +19,7 @@ import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
 import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './discovery/locators';
 import { CustomVirtualEnvironmentLocator } from './discovery/locators/services/customVirtualEnvLocator';
+import { CondaEnvironmentLocator } from './discovery/locators/services/condaLocator';
 import { GlobalVirtualEnvironmentLocator } from './discovery/locators/services/globalVirtualEnvronmentLocator';
 import { PosixKnownPathsLocator } from './discovery/locators/services/posixKnownPathsLocator';
 import { PyenvLocator } from './discovery/locators/services/pyenvLocator';
@@ -130,6 +131,7 @@ function createNonWorkspaceLocators(ext: ExtensionState): ILocator[] {
         new GlobalVirtualEnvironmentLocator(),
         new PyenvLocator(),
         new CustomVirtualEnvironmentLocator(),
+        new CondaEnvironmentLocator(),
     );
     const disposables = locators.filter((d) => d.dispose !== undefined) as IDisposable[];
     ext.disposables.push(...disposables);

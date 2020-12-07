@@ -41,10 +41,9 @@ import { inExperiment, isParentPath } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
-import { CondaEnvironmentInfo } from './discovery/locators/services/conda';
+import { CondaEnvironmentInfo, isCondaEnvironment } from './discovery/locators/services/conda';
 import { CondaEnvFileService } from './discovery/locators/services/condaEnvFileService';
 import { CondaEnvService } from './discovery/locators/services/condaEnvService';
-import { isCondaEnvironment } from './discovery/locators/services/condaLocator';
 import { CondaService } from './discovery/locators/services/condaService';
 import { CurrentPathService, PythonInPathCommandProvider } from './discovery/locators/services/currentPathService';
 import {

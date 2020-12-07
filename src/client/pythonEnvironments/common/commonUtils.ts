@@ -8,7 +8,7 @@ import { logError } from '../../logging';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
 import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
-import { getPythonVersionFromConda } from '../discovery/locators/services/condaLocator';
+import { getPythonVersionFromConda } from '../discovery/locators/services/conda';
 import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/virtualEnvironmentIdentifier';
 import { listDir } from './externalDependencies';
 import { isPosixPythonBin } from './posixUtils';

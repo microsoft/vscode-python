@@ -2,7 +2,11 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
-import { exec } from '../../../common/externalDependencies';
+import { exec, pathExists, readFile } from '../../../common/externalDependencies';
+
+import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
+import { parseVersion } from '../../../base/info/pythonVersion';
+
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 
@@ -19,15 +23,17 @@ export type CondaEnvironmentInfo = {
     path: string;
 };
 
+// This type corresponds to the output of "conda info --json", and property
+// names must be spelled exactly as they are in order to match the schema.
 export type CondaInfo = {
     envs?: string[];
-    envsDirs?: string[];
+    envs_dirs?: string[]; // eslint-disable-line camelcase
     'sys.version'?: string;
     'sys.prefix'?: string;
-    pythonVersion?: string;
-    defaultPrefix?: string;
-    rootPrefix?: string;
-    condaVersion?: string;
+    python_version?: string; // eslint-disable-line camelcase
+    default_prefix?: string; // eslint-disable-line camelcase
+    root_prefix?: string; // eslint-disable-line camelcase
+    conda_version?: string; // eslint-disable-line camelcase
 };
 
 export type CondaEnvInfo = {
@@ -48,8 +54,8 @@ export async function parseCondaInfo(
     // The root of the conda environment is itself a Python interpreter
     // envs reported as e.g.: /Users/bob/miniconda3/envs/someEnv.
     const envs = Array.isArray(info.envs) ? info.envs : [];
-    if (info.defaultPrefix && info.defaultPrefix.length > 0) {
-        envs.push(info.defaultPrefix);
+    if (info.default_prefix && info.default_prefix.length > 0) {
+        envs.push(info.default_prefix);
     }
 
     const promises = envs.map(async (envPath) => {
@@ -76,6 +82,124 @@ export async function parseCondaInfo(
         .then((interpreters) => interpreters.filter((interpreter) => interpreter !== null && interpreter !== undefined))
 
         .then((interpreters) => interpreters.map((interpreter) => interpreter!));
+}
+
+function getCondaMetaPaths(interpreterPath: string): string[] {
+    const condaMetaDir = 'conda-meta';
+
+    // Check if the conda-meta directory is in the same directory as the interpreter.
+    // This layout is common in Windows.
+    // env
+    // |__ conda-meta  <--- check if this directory exists
+    // |__ python.exe  <--- interpreterPath
+    const condaEnvDir1 = path.join(path.dirname(interpreterPath), condaMetaDir);
+
+    // Check if the conda-meta directory is in the parent directory relative to the interpreter.
+    // This layout is common on linux/Mac.
+    // env
+    // |__ conda-meta  <--- check if this directory exists
+    // |__ bin
+    //     |__ python  <--- interpreterPath
+    const condaEnvDir2 = path.join(path.dirname(path.dirname(interpreterPath)), condaMetaDir);
+
+    // The paths are ordered in the most common to least common
+    return [condaEnvDir1, condaEnvDir2];
+}
+
+/**
+ * Checks if the given interpreter path belongs to a conda environment. Using
+ * known folder layout, and presence of 'conda-meta' directory.
+ * @param {string} interpreterPath: Absolute path to any python interpreter.
+ *
+ * Remarks: This is what we will use to begin with. Another approach we can take
+ * here is to parse ~/.conda/environments.txt. This file will have list of conda
+ * environments. We can compare the interpreter path against the paths in that file.
+ * We don't want to rely on this file because it is an implementation detail of
+ * conda. If it turns out that the layout based identification is not sufficient
+ * that is the next alternative that is cheap.
+ *
+ * sample content of the ~/.conda/environments.txt:
+ * C:\envs\myenv
+ * C:\ProgramData\Miniconda3
+ *
+ * Yet another approach is to use `conda env list --json` and compare the returned env
+ * list to see if the given interpreter path belongs to any of the returned environments.
+ * This approach is heavy, and involves running a binary. For now we decided not to
+ * take this approach, since it does not look like we need it.
+ *
+ * sample output from `conda env list --json`:
+ * conda env list --json
+ * {
+ *   "envs": [
+ *     "C:\\envs\\myenv",
+ *     "C:\\ProgramData\\Miniconda3"
+ *   ]
+ * }
+ */
+export async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
+    const condaMetaPaths = getCondaMetaPaths(interpreterPath);
+    // We don't need to test all at once, testing each one here
+    for (const condaMeta of condaMetaPaths) {
+        if (await pathExists(condaMeta)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Extracts version information from `conda-meta/history` near a given interpreter.
+ * @param interpreterPath Absolute path to the interpreter
+ *
+ * Remarks: This function looks for `conda-meta/history` usually in the same or parent directory.
+ * Reads the `conda-meta/history` and finds the line that contains 'python-3.9.0`. Gets the
+ * version string from that lines and parses it.
+ */
+export async function getPythonVersionFromConda(interpreterPath: string): Promise<PythonVersion> {
+    const configPaths = getCondaMetaPaths(interpreterPath).map((p) => path.join(p, 'history'));
+    const pattern = /\:python-(([\d\.a-z]?)+)/;
+
+    // We want to check each of those locations in the order. There is no need to look at
+    // all of them in parallel.
+    for (const configPath of configPaths) {
+        if (await pathExists(configPath)) {
+            try {
+                const lines = (await readFile(configPath)).splitLines();
+
+                // Sample data:
+                // +defaults/linux-64::pip-20.2.4-py38_0
+                // +defaults/linux-64::python-3.8.5-h7579374_1
+                // +defaults/linux-64::readline-8.0-h7b6447c_0
+                const pythonVersionStrings = lines
+                    .map((line) => {
+                        // Here we should have only lines with 'python-' in it.
+                        // +defaults/linux-64::python-3.8.5-h7579374_1
+
+                        const matches = pattern.exec(line);
+                        // Typically there will be 3 matches
+                        // 0: "python-3.8.5"
+                        // 1: "3.8.5"
+                        // 2: "5"
+
+                        // we only need the second one
+                        return matches ? matches[1] : '';
+                    })
+                    .filter((v) => v.length > 0);
+
+                if (pythonVersionStrings.length > 0) {
+                    const last = pythonVersionStrings.length - 1;
+                    return parseVersion(pythonVersionStrings[last].trim());
+                }
+            } catch (ex) {
+                // There is usually only one `conda-meta/history`. If we found, it but
+                // failed to parse it, then just return here. No need to look for versions
+                // any further.
+                return UNKNOWN_PYTHON_VERSION;
+            }
+        }
+    }
+
+    return UNKNOWN_PYTHON_VERSION;
 }
 
 /** Wraps the "conda" utility, and exposes its functionality.
@@ -140,17 +264,18 @@ export class Conda {
             }
 
             for (const prefix of prefixes) {
-                let items;
+                let items: string[] | undefined;
                 try {
                     items = await fsapi.readdir(prefix);
                 } catch (ex) {
                     // Directory doesn't exist or is not readable - not an error.
-                    // eslint-disable-next-line no-continue
-                    continue;
+                    items = undefined;
                 }
-                yield* items
-                    .filter((fileName) => fileName.toLowerCase().includes('conda'))
-                    .map((fileName) => path.join(prefix, fileName, suffix));
+                if (items !== undefined) {
+                    yield* items
+                        .filter((fileName) => fileName.toLowerCase().includes('conda'))
+                        .map((fileName) => path.join(prefix, fileName, suffix));
+                }
             }
         }
 
@@ -188,6 +313,7 @@ export class Conda {
                 // Failed to spawn because the binary doesn't exist or isn't on PATH, or the current
                 // user doesn't have execute permissions for it, or this conda couldn't handle command
                 // line arguments that we passed (indicating an old version that we do not support).
+                traceVerbose(ex);
             }
         }
 
@@ -201,6 +327,7 @@ export class Conda {
      */
     public async getInfo(): Promise<CondaInfo> {
         const result = await exec(this.command, ['info', '--json']);
+        traceVerbose(`conda info --json: ${result.stdout}`);
         return JSON.parse(result.stdout);
     }
 
@@ -216,13 +343,13 @@ export class Conda {
         }
 
         function getName(prefix: string) {
-            if (prefix === info.rootPrefix) {
+            if (prefix === info.root_prefix) {
                 return 'base';
             }
 
             const parentDir = path.dirname(prefix);
-            if (info.envsDirs !== undefined) {
-                for (const envsDir of info.envsDirs) {
+            if (info.envs_dirs !== undefined) {
+                for (const envsDir of info.envs_dirs) {
                     if (parentDir === envsDir) {
                         return path.basename(prefix);
                     }
