@@ -28,8 +28,8 @@ import {
  */
 const DEFAULT_SEARCH_DEPTH = 2;
 
-const VENVPATH_SETTING_KEY = 'venvPath';
-const VENVFOLDERS_SETTING_KEY = 'venvFolders';
+export const VENVPATH_SETTING_KEY = 'venvPath';
+export const VENVFOLDERS_SETTING_KEY = 'venvFolders';
 
 /**
  * Gets all custom virtual environment locations to look for environments.

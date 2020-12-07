@@ -10,8 +10,9 @@ import {
     PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION,
 } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
+import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { CustomVirtualEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/customVirtualEnvLocator';
+import { CustomVirtualEnvironmentLocator, VENVFOLDERS_SETTING_KEY, VENVPATH_SETTING_KEY } from '../../../../client/pythonEnvironments/discovery/locators/services/customVirtualEnvLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
@@ -60,6 +61,7 @@ suite('CustomVirtualEnvironment Locator', () => {
     setup(async () => {
         getUserHomeDirStub = sinon.stub(platformUtils, 'getUserHomeDir');
         getUserHomeDirStub.returns(testVirtualHomeDir);
+        getPythonSettingStub = sinon.stub(externalDependencies, 'getPythonSetting');
 
         getOSTypeStub = sinon.stub(platformUtils, 'getOSType');
         getOSTypeStub.returns(platformUtils.OSType.Linux);
@@ -74,6 +76,8 @@ suite('CustomVirtualEnvironment Locator', () => {
         readFileStub = sinon.stub(externalDependencies, 'readFile');
         readFileStub.withArgs(expectedDotProjectFile).returns(path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project2'));
         readFileStub.callThrough();
+
+        locator = new CustomVirtualEnvironmentLocator();
     });
     teardown(async () => {
         await locator.dispose();
@@ -86,7 +90,6 @@ suite('CustomVirtualEnvironment Locator', () => {
     });
 
     test('iterEnvs(): Windows with both settings set', async () => {
-        getPythonSettingStub = sinon.stub(externalDependencies, 'getPythonSetting');
         getPythonSettingStub.withArgs('venvPath').returns(testVenvPath);
         getPythonSettingStub.withArgs('venvFolders').returns([
             '.venvs',
@@ -159,7 +162,6 @@ suite('CustomVirtualEnvironment Locator', () => {
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        locator = new CustomVirtualEnvironmentLocator();
         const iterator = locator.iterEnvs();
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -170,7 +172,7 @@ suite('CustomVirtualEnvironment Locator', () => {
 
     test('iterEnvs(): Non-Windows with both settings set', async () => {
         const testWorkspaceFolder = path.join(TEST_LAYOUT_ROOT, 'workspace', 'folder1');
-        getPythonSettingStub = sinon.stub(externalDependencies, 'getPythonSetting');
+
         getPythonSettingStub.withArgs('venvPath').returns(path.join(testWorkspaceFolder, 'posix2conda'));
         getPythonSettingStub.withArgs('venvFolders').returns([
             '.venvs',
@@ -229,7 +231,6 @@ suite('CustomVirtualEnvironment Locator', () => {
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        locator = new CustomVirtualEnvironmentLocator();
         const iterator = locator.iterEnvs();
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -240,7 +241,7 @@ suite('CustomVirtualEnvironment Locator', () => {
 
     test('iterEnvs(): No User home dir set', async () => {
         getUserHomeDirStub.returns(undefined);
-        getPythonSettingStub = sinon.stub(externalDependencies, 'getPythonSetting');
+
         getPythonSettingStub.withArgs('venvPath').returns(testVenvPath);
         getPythonSettingStub.withArgs('venvFolders').returns([
             '.venvs',
@@ -265,7 +266,6 @@ suite('CustomVirtualEnvironment Locator', () => {
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        locator = new CustomVirtualEnvironmentLocator();
         const iterator = locator.iterEnvs();
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -275,7 +275,6 @@ suite('CustomVirtualEnvironment Locator', () => {
     });
 
     test('iterEnvs(): with only venvFolders set', async () => {
-        getPythonSettingStub = sinon.stub(externalDependencies, 'getPythonSetting');
         getPythonSettingStub.withArgs('venvFolders').returns([
             '.venvs',
             '.virtualenvs',
@@ -333,7 +332,6 @@ suite('CustomVirtualEnvironment Locator', () => {
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        locator = new CustomVirtualEnvironmentLocator();
         const iterator = locator.iterEnvs();
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -344,7 +342,7 @@ suite('CustomVirtualEnvironment Locator', () => {
 
     test('iterEnvs(): with only venvPath set', async () => {
         const testWorkspaceFolder = path.join(TEST_LAYOUT_ROOT, 'workspace', 'folder1');
-        getPythonSettingStub = sinon.stub(externalDependencies, 'getPythonSetting');
+
         getPythonSettingStub.withArgs('venvPath').returns(path.join(testWorkspaceFolder, 'posix2conda'));
         const expectedEnvs = [
             createExpectedEnvInfo(
@@ -356,7 +354,6 @@ suite('CustomVirtualEnvironment Locator', () => {
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        locator = new CustomVirtualEnvironmentLocator();
         const iterator = locator.iterEnvs();
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -375,7 +372,6 @@ suite('CustomVirtualEnvironment Locator', () => {
             path.join(testVirtualHomeDir, '.venvs', 'posix1'),
         );
 
-        locator = new CustomVirtualEnvironmentLocator();
         const actual = await locator.resolveEnv(interpreterPath);
 
         assertEnvEqual(actual, expected);
@@ -407,7 +403,6 @@ suite('CustomVirtualEnvironment Locator', () => {
             version: UNKNOWN_PYTHON_VERSION,
         };
 
-        locator = new CustomVirtualEnvironmentLocator();
         const actual = await locator.resolveEnv(input);
 
         assertEnvEqual(actual, expected);
@@ -416,9 +411,38 @@ suite('CustomVirtualEnvironment Locator', () => {
     test('resolveEnv(string): non existent path', async () => {
         const interpreterPath = path.join('some', 'random', 'nonvenv', 'python');
 
-        locator = new CustomVirtualEnvironmentLocator();
         const actual = await locator.resolveEnv(interpreterPath);
 
         assert.deepStrictEqual(actual, undefined);
+    });
+
+    test('onChanged fires if venvPath setting changes', async () => {
+        const events: PythonEnvsChangedEvent[] = [];
+        const expected: PythonEnvsChangedEvent[] = [{}];
+        locator.onChanged((e) => events.push(e));
+
+        await getEnvs(locator.iterEnvs());
+        const venvPathCall = onDidChangePythonSettingStub
+            .getCalls()
+            .filter((c) => c.args[0] === VENVPATH_SETTING_KEY)[0];
+        const callback = venvPathCall.args[1];
+        callback(); // Callback is called when venvPath setting changes
+
+        assert.deepEqual(events, expected, 'Unexpected events');
+    });
+
+    test('onChanged fires if venvFolders setting changes', async () => {
+        const events: PythonEnvsChangedEvent[] = [];
+        const expected: PythonEnvsChangedEvent[] = [{}];
+        locator.onChanged((e) => events.push(e));
+
+        await getEnvs(locator.iterEnvs());
+        const venvFoldersCall = onDidChangePythonSettingStub
+            .getCalls()
+            .filter((c) => c.args[0] === VENVFOLDERS_SETTING_KEY)[0];
+        const callback = venvFoldersCall.args[1];
+        callback(); // Callback is called when venvFolders setting changes
+
+        assert.deepEqual(events, expected, 'Unexpected events');
     });
 });
