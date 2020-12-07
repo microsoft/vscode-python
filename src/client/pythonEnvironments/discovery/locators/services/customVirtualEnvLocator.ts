@@ -118,7 +118,7 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
             const envRootDirs = await getCustomVirtualEnvDirs();
             const envGenerators = envRootDirs.map((envRootDir) => {
                 async function* generator() {
-                    traceVerbose(`Searching for global virtual envs in: ${envRootDir}`);
+                    traceVerbose(`Searching for custom virtual envs in: ${envRootDir}`);
 
                     const envGenerator = findInterpretersInDir(envRootDir, DEFAULT_SEARCH_DEPTH);
 
@@ -133,9 +133,9 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
                             // we can use the kind to determine this anyway.
                             const kind = await getVirtualEnvKind(env);
                             yield buildSimpleVirtualEnvInfo(env, kind);
-                            traceVerbose(`Global Virtual Environment: [added] ${env}`);
+                            traceVerbose(`Custom Virtual Environment: [added] ${env}`);
                         } else {
-                            traceVerbose(`Global Virtual Environment: [skipped] ${env}`);
+                            traceVerbose(`Custom Virtual Environment: [skipped] ${env}`);
                         }
                     }
                 }
