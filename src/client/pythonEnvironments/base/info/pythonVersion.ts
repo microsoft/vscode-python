@@ -34,9 +34,10 @@ export function getPythonVersionFromPath(exe:string): PythonVersion {
  *   3.9.0a1
  *   3.9.0b2
  *   3.9.0rc1
- *
- * Does not fully parse:
+ *   3.9.0-beta2
+ *   3.9.0.beta.2
  *   3.9.0.final.0
+ *   39
  */
 export function parseVersion(versionStr: string): PythonVersion {
     const [version, after] = parseBasicVersion(versionStr);
