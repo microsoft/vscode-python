@@ -198,9 +198,9 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined> {
-        if (!this.enabled) {
-            return undefined;
-        }
+        // if (!this.enabled) {
+        //     return undefined;
+        // }
         const env = await this.api.resolveEnv(interpreterPath);
         if (env === undefined) {
             return undefined;
