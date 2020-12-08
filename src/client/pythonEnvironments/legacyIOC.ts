@@ -139,7 +139,7 @@ class ComponentAdapter implements IComponentAdapter {
         private readonly api: IPythonEnvironments,
         private readonly environmentsSecurity: IEnvironmentsSecurity,
         // For now we effectively disable the component.
-        private readonly enabled = true,
+        private readonly enabled = false,
     ) {}
 
     // IInterpreterHelper
@@ -245,9 +245,9 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public get hasInterpreters(): Promise<boolean | undefined> {
-        if (!this.enabled) {
-            return Promise.resolve(undefined);
-        }
+        // if (!this.enabled) {
+        //     return Promise.resolve(undefined);
+        // }
         const iterator = this.api.iterEnvs();
         return iterator.next().then((res) => !res.done);
     }
@@ -262,9 +262,9 @@ class ComponentAdapter implements IComponentAdapter {
         //     onSuggestion?: boolean;
         // }
     ): Promise<PythonEnvironment[] | undefined> {
-        if (!this.enabled) {
-            return undefined;
-        }
+        // if (!this.enabled) {
+        //     return undefined;
+        // }
         if (options?.onSuggestion) {
             // For now, until we have the concept of trusted workspaces, we assume all interpreters as safe
             // to run once user has triggered discovery, i.e interacted with the extension.
