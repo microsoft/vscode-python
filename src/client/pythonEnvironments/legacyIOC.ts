@@ -158,9 +158,9 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined> {
-        if (!this.enabled) {
-            return undefined;
-        }
+        // if (!this.enabled) {
+        //     return undefined;
+        // }
         const env = await this.api.resolveEnv(pythonPath);
         if (env === undefined) {
             return undefined;
@@ -177,9 +177,9 @@ class ComponentAdapter implements IComponentAdapter {
         pythonPath: string,
         resource?: vscode.Uri,
     ): Promise<undefined | PythonEnvironment> {
-        if (!this.enabled) {
-            return undefined;
-        }
+        // if (!this.enabled) {
+        //     return undefined;
+        // }
         const info = buildEnvInfo({ executable: pythonPath });
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
@@ -198,9 +198,9 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined> {
-        if (!this.enabled) {
-            return undefined;
-        }
+        // if (!this.enabled) {
+        //     return undefined;
+        // }
         const env = await this.api.resolveEnv(interpreterPath);
         if (env === undefined) {
             return undefined;
@@ -210,9 +210,9 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public async getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined> {
-        if (!this.enabled) {
-            return undefined;
-        }
+        // if (!this.enabled) {
+        //     return undefined;
+        // }
         const env = await this.api.resolveEnv(interpreterPath);
         if (env === undefined) {
             return undefined;
@@ -231,9 +231,9 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined> {
-        if (!this.enabled) {
-            return undefined;
-        }
+        // if (!this.enabled) {
+        //     return undefined;
+        // }
         const env = await this.api.resolveEnv(pythonPath);
         if (env) {
             return env.kind === PythonEnvKind.WindowsStore;
