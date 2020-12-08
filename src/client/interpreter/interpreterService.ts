@@ -4,15 +4,14 @@ import * as path from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import '../../client/common/extensions';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { DeprecatePythonPath, DiscoveryVariants } from '../common/experiments/groups';
-import { traceError, traceWarning } from '../common/logger';
+import { DeprecatePythonPath } from '../common/experiments/groups';
+import { traceError } from '../common/logger';
 import { getArchitectureDisplayName } from '../common/platform/registry';
 import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExperimentsManager,
     IInterpreterPathService,
     IPersistentState,
@@ -71,7 +70,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
     private readonly configService: IConfigurationService;
     private readonly interpreterPathService: IInterpreterPathService;
     private readonly experimentsManager: IExperimentsManager;
-    private readonly experimentService: IExperimentService;
     private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
     private readonly didChangeInterpreterInformation = new EventEmitter<PythonEnvironment>();
     private readonly inMemoryCacheOfDisplayNames = new Map<string, string>();
@@ -90,7 +88,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         this.experimentsManager = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        this.experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
     }
 
     public async refresh(resource?: Uri) {
@@ -135,20 +132,13 @@ export class InterpreterService implements Disposable, IInterpreterService {
     public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
         let environments: PythonEnvironment[] = [];
 
-        if (
-            (await this.experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)) ||
-            (await this.experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
-        ) {
-            const envs = await this.pyenvs.getInterpreters(resource);
-            if (envs === undefined) {
-                traceWarning('getInterpreters returned `undefined`.');
-                environments = [];
-            } else {
-                environments = envs;
-            }
+        const envs = await this.pyenvs.getInterpreters(resource);
+        if (envs !== undefined) {
+            environments = envs;
         } else {
             environments = await this.locator.getInterpreters(resource, options);
         }
+
         await Promise.all(
             environments
                 .filter((item) => !item.displayName)
@@ -186,14 +176,9 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.getInterpreterDetails(fullyQualifiedPath, resource);
     }
     public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<PythonEnvironment | undefined> {
-        if (
-            (await this.experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)) ||
-            (await this.experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
-        ) {
-            const info = await this.pyenvs.getInterpreterDetails(pythonPath);
-            if (info !== undefined) {
-                return info;
-            }
+        const info = await this.pyenvs.getInterpreterDetails(pythonPath);
+        if (info !== undefined) {
+            return info;
         }
 
         // If we don't have the fully qualified path, then get it.
