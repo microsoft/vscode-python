@@ -139,7 +139,7 @@ class ComponentAdapter implements IComponentAdapter {
         private readonly api: IPythonEnvironments,
         private readonly environmentsSecurity: IEnvironmentsSecurity,
         // For now we effectively disable the component.
-        private readonly enabled = false,
+        private readonly enabled = true,
     ) {}
 
     // IInterpreterHelper
@@ -149,6 +149,8 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
+        // tslint:disable-next-line:no-console
+        console.log('I am in getInterpreterInformation');
         const env = await this.api.resolveEnv(pythonPath);
         if (env === undefined) {
             return undefined;
@@ -161,6 +163,8 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
+        // tslint:disable-next-line:no-console
+        console.log('I am in isMacDefaultPythonPath');
         const env = await this.api.resolveEnv(pythonPath);
         if (env === undefined) {
             return undefined;
@@ -180,6 +184,8 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
+        // tslint:disable-next-line:no-console
+        console.log('I am in getInterpreterDetails');
         const info = buildEnvInfo({ executable: pythonPath });
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
@@ -201,6 +207,8 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
+        // tslint:disable-next-line:no-console
+        console.log('I am in isCondaEnvironment');
         const env = await this.api.resolveEnv(interpreterPath);
         if (env === undefined) {
             return undefined;
@@ -213,6 +221,8 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
+        // tslint:disable-next-line:no-console
+        console.log('I am in getCondaEnvironment');
         const env = await this.api.resolveEnv(interpreterPath);
         if (env === undefined) {
             return undefined;
@@ -234,6 +244,8 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
+        // tslint:disable-next-line:no-console
+        console.log('I am in isWindowsStoreInterpreter');
         const env = await this.api.resolveEnv(pythonPath);
         if (env === undefined) {
             return undefined;
@@ -248,6 +260,8 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return Promise.resolve(undefined);
         }
+        // tslint:disable-next-line:no-console
+        console.log('I am in hasInterpreters');
         const iterator = this.api.iterEnvs();
         return iterator.next().then((res) => !res.done);
     }
@@ -265,6 +279,8 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
+        // tslint:disable-next-line:no-console
+        console.log('I am in getInterpreters');
         if (options?.onSuggestion) {
             // For now, until we have the concept of trusted workspaces, we assume all interpreters as safe
             // to run once user has triggered discovery, i.e interacted with the extension.
