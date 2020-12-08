@@ -168,15 +168,13 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
             const expected: PythonEnvInfo[] = [
                 // On Windows we do not assume 2.7 for "python.exe".
                 getEnv('', '2.7', path.join(ROOT2, 'python2.exe')),
+                // This file isn't executable (but on Windows we can't tell that):
+                getEnv('', '2.7', path.join(ROOT1, 'python2.exe')),
                 getEnv('', '', path.join(ROOT1, 'python.exe')),
                 getEnv('', '2.7', path.join(ROOT1, 'python2.7.exe')),
                 getEnv('', '3.8', path.join(ROOT1, 'python3.8.exe')),
                 getEnv('', '3', path.join(ROOT1, 'python3.exe')),
             ];
-            if (IS_WINDOWS) {
-                // This file isn't executable but on Windows we can't tell that.
-                expected.push(getEnv('', '2.7', path.join(ROOT1, 'python2.exe')));
-            }
             const locator = new WindowsKnownPathsLocator();
             setSearchPath([ROOT2, ROOT6, ROOT1]);
             await ensureActivated(locator);

@@ -5,7 +5,7 @@
 /* eslint-disable max-classes-per-file */
 
 import { chain } from '../../../../common/utils/async';
-import { getSearchPathEntries, isValidAndExecutable } from '../../../../common/utils/exec';
+import { getSearchPathEntries } from '../../../../common/utils/exec';
 import { findInterpretersInDir } from '../../../common/commonUtils';
 import { PythonEnvKind } from '../../info';
 import {
@@ -44,29 +44,11 @@ async function* getExecutables(): AsyncIterableIterator<string> {
     const entries = getSearchPathEntries();
     // The entries can be processed in parallel so we get each started
     // and then chain the async results below.
-    const generators = entries.map((entry) => {
-        async function* generator() {
-            try {
-                for await (const executable of findInterpretersInDir(entry)) {
-                    const okay = await isValidAndExecutable(executable);
-                    if (okay) {
-                        yield executable;
-                    } else if (okay === undefined) {
-                        // We could not determine if the file is executable
-                        // (e.g. on Windows).  So we trust that the ".exe"
-                        // suffix check done elsewhere is sufficient.
-                        yield executable;
-                    }
-                }
-            } catch (err) {
-                if (err.code === 'ENOENT') {
-                    return;
-                }
-                throw err; // re-throw
-            }
-        }
-        return generator();
-    });
+    // Note that we do no filtering here, including to check if file
+    // is a valid executable.  That is left to callers (e.g. composite
+    // locators).
+    // tslint:disable-next-line:no-unnecessary-callback-wrapper
+    const generators = entries.map((entry) => findInterpretersInDir(entry));
     yield* chain(generators);
 }
 
