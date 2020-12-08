@@ -21,6 +21,7 @@ import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/c
 import {
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IExperimentsManager,
     IInterpreterPathService,
     InterpreterConfigurationScope,
@@ -72,6 +73,7 @@ suite('Interpreters service', () => {
     let configService: TypeMoq.IMock<IConfigurationService>;
     let interpreterPathService: TypeMoq.IMock<IInterpreterPathService>;
     let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
+    let experimentService: TypeMoq.IMock<IExperimentService>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let hashProviderFactory: TypeMoq.IMock<IInterpreterHashProviderFactory>;
 
@@ -81,6 +83,7 @@ suite('Interpreters service', () => {
         serviceContainer = new ServiceContainer(cont);
 
         experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
+        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
         interpreterPathService = TypeMoq.Mock.ofType<IInterpreterPathService>();
         updater = TypeMoq.Mock.ofType<IPythonPathUpdaterServiceManager>();
         pyenvs = TypeMoq.Mock.ofType<IComponentAdapter>();
@@ -130,6 +133,7 @@ suite('Interpreters service', () => {
         );
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fileSystem.object);
         serviceManager.addSingletonInstance<IExperimentsManager>(IExperimentsManager, experimentsManager.object);
+        serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, experimentService.object);
         serviceManager.addSingletonInstance<IInterpreterPathService>(
             IInterpreterPathService,
             interpreterPathService.object

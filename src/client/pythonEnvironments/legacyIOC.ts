@@ -235,10 +235,10 @@ class ComponentAdapter implements IComponentAdapter {
             return undefined;
         }
         const env = await this.api.resolveEnv(pythonPath);
-        if (env === undefined) {
-            return undefined;
+        if (env) {
+            return env.kind === PythonEnvKind.WindowsStore;
         }
-        return env.kind === PythonEnvKind.WindowsStore;
+        return undefined;
     }
 
     // IInterpreterLocatorService

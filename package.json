@@ -1055,6 +1055,7 @@
                             "debuggerDataViewer",
                             "pythonSendEntireLineToREPL",
                             "nativeTensorBoard",
+                            "pythonDiscoveryModule",
                             "All"
                         ]
                     },
@@ -1083,6 +1084,7 @@
                             "debuggerDataViewer",
                             "pythonSendEntireLineToREPL",
                             "nativeTensorBoard",
+                            "pythonDiscoveryModule",
                             "All"
                         ]
                     },
