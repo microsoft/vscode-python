@@ -130,9 +130,7 @@ export class CondaService implements ICondaService {
         if (!this.condaFile) {
             this.condaFile = this.getCondaFileImpl();
         }
-        // tslint:disable-next-line:no-unnecessary-local-variable
-        const condaFile = await this.condaFile!;
-        return condaFile!;
+        return (await this.condaFile)!;
     }
 
     /**

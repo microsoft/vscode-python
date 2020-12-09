@@ -129,8 +129,8 @@ export type TestFile = TestingXMLNode & {
 export type TestSuite = TestingXMLNode & {
     functions: TestFunction[];
     suites: TestSuite[];
-    isUnitTest: Boolean;
-    isInstance: Boolean;
+    isUnitTest: boolean;
+    isInstance: boolean;
 };
 
 export type TestFunction = TestingNode & {

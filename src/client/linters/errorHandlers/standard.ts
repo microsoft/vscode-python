@@ -13,7 +13,7 @@ export class StandardErrorHandler extends BaseErrorHandler {
     public async handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean> {
         if (
             typeof error === 'string' &&
-            (error as string).indexOf("OSError: [Errno 2] No such file or directory: '/") > 0
+            (error as string).includes("OSError: [Errno 2] No such file or directory: '/")
         ) {
             return this.nextHandler ? this.nextHandler.handleError(error, resource, execInfo) : Promise.resolve(false);
         }
