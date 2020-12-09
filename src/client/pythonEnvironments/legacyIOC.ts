@@ -408,8 +408,13 @@ export function registerNewDiscoveryForIOC(
     api: IPythonEnvironments,
     environmentsSecurity: EnvironmentsSecurity,
 ): void {
+    const componentAdapter = new ComponentAdapter(api, environmentsSecurity);
     serviceManager.addSingletonInstance<IComponentAdapter>(
         IComponentAdapter,
-        new ComponentAdapter(api, environmentsSecurity),
+        componentAdapter,
+    );
+    serviceManager.addSingletonInstance<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        componentAdapter,
     );
 }
