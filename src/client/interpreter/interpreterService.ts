@@ -170,7 +170,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const info = await this.pyenvs.getInterpreterDetails(pythonPath);
         if (info !== undefined) {
             if (!info.displayName) {
-                // Set display name for the component if it's not set (this should eventually go away)
+                // Set display name for the environment returned by component if it's not set (this should eventually go away)
                 info.displayName = await this.getDisplayName(info, resource);
             }
             return info;
