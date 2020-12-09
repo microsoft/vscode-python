@@ -4,13 +4,15 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as sinon from 'sinon';
+import { DiscoveryVariants } from '../../../../client/common/experiments/groups';
 import { traceWarning } from '../../../../client/common/logger';
 import { FileChangeType } from '../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, Deferred, sleep } from '../../../../client/common/utils/async';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
-import { arePathsSame } from '../../../../client/pythonEnvironments/common/externalDependencies';
+import * as externalDeps from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { WindowsStoreLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
 import { TEST_TIMEOUT } from '../../../constants';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
@@ -54,6 +56,7 @@ class WindowsStoreEnvs {
 }
 
 suite('Windows Store Locator', async () => {
+    let inExperimentStub: sinon.SinonStub;
     const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
     const testStoreAppRoot = path.join(testLocalAppData, 'Microsoft', 'WindowsApps');
     const windowsStoreEnvs = new WindowsStoreEnvs(testStoreAppRoot);
@@ -74,12 +77,17 @@ suite('Windows Store Locator', async () => {
 
     async function isLocated(executable: string): Promise<boolean> {
         const items = await getEnvs(locator.iterEnvs());
-        return items.some((item) => arePathsSame(item.executable.filename, executable));
+        return items.some((item) => externalDeps.arePathsSame(item.executable.filename, executable));
     }
 
     suiteSetup(async () => {
         process.env.LOCALAPPDATA = testLocalAppData;
         await windowsStoreEnvs.cleanUp();
+    });
+
+    setup(() => {
+        inExperimentStub = sinon.stub(externalDeps, 'inExperiment');
+        inExperimentStub.withArgs(DiscoveryVariants.discoverWithFileWatching).resolves(true);
     });
 
     async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
@@ -91,6 +99,7 @@ suite('Windows Store Locator', async () => {
     }
 
     teardown(async () => {
+        inExperimentStub.restore();
         await windowsStoreEnvs.cleanUp();
         await locator.dispose();
     });
