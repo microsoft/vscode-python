@@ -11,7 +11,7 @@ import { CancellationToken, Disposable, Progress, ProgressOptions } from 'vscode
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { Common, Interpreters } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
-import { IInterpreterLocatorProgressService } from '../../../client/interpreter/contracts';
+import { IComponentAdapter, IInterpreterLocatorProgressService } from '../../../client/interpreter/contracts';
 import { InterpreterLocatorProgressStatubarHandler } from '../../../client/interpreter/display/progressDisplay';
 
 type ProgressTask<R> = (
@@ -38,7 +38,12 @@ suite('Interpreters - Display Progress', () => {
 
     test('Display loading message when refreshing interpreters for the first time', async () => {
         const shell = mock(ApplicationShell);
-        const statusBar = new InterpreterLocatorProgressStatubarHandler(instance(shell), progressService, []);
+        const statusBar = new InterpreterLocatorProgressStatubarHandler(
+            instance(shell),
+            progressService,
+            [],
+            instance(mock(IComponentAdapter))
+        );
         when(shell.withProgress(anything(), anything())).thenResolve();
 
         statusBar.register();
@@ -50,7 +55,12 @@ suite('Interpreters - Display Progress', () => {
 
     test('Display refreshing message when refreshing interpreters for the second time', async () => {
         const shell = mock(ApplicationShell);
-        const statusBar = new InterpreterLocatorProgressStatubarHandler(instance(shell), progressService, []);
+        const statusBar = new InterpreterLocatorProgressStatubarHandler(
+            instance(shell),
+            progressService,
+            [],
+            instance(mock(IComponentAdapter))
+        );
         when(shell.withProgress(anything(), anything())).thenResolve();
 
         statusBar.register();
@@ -67,7 +77,12 @@ suite('Interpreters - Display Progress', () => {
 
     test('Progress message is hidden when loading has completed', async () => {
         const shell = mock(ApplicationShell);
-        const statusBar = new InterpreterLocatorProgressStatubarHandler(instance(shell), progressService, []);
+        const statusBar = new InterpreterLocatorProgressStatubarHandler(
+            instance(shell),
+            progressService,
+            [],
+            instance(mock(IComponentAdapter))
+        );
         when(shell.withProgress(anything(), anything())).thenResolve();
 
         statusBar.register();

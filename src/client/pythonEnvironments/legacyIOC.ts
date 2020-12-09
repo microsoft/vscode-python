@@ -3,6 +3,7 @@
 
 import { injectable } from 'inversify';
 import * as vscode from 'vscode';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { DiscoveryVariants } from '../common/experiments/groups';
 import { getVersionString, parseVersion } from '../common/utils/version';
 import {
@@ -135,9 +136,13 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
 export interface IPythonEnvironments extends ILocator {}
 
 @injectable()
-class ComponentAdapter implements IComponentAdapter {
+class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationService {
     // this will be set based on experiment
-    private _enabled?: boolean;
+    private enabled?: boolean;
+
+    private readonly refreshing = new vscode.EventEmitter<void>();
+
+    private readonly refreshed = new vscode.EventEmitter<void>();
 
     constructor(
         // The adapter only wraps one thing: the component API.
@@ -145,11 +150,31 @@ class ComponentAdapter implements IComponentAdapter {
         private readonly environmentsSecurity: IEnvironmentsSecurity,
     ) {}
 
+    public async activate(): Promise<void> {
+        this.enabled = (await Promise.all(
+            [
+                inExperiment(DiscoveryVariants.discoverWithFileWatching),
+                inExperiment(DiscoveryVariants.discoveryWithoutFileWatching),
+            ],
+        )).includes(true);
+    }
+
+    // IInterpreterLocatorProgressHandler
+
+    // A result of `undefined` means "Fall back to the old code!"
+    public get onRefreshing(): vscode.Event<void> | undefined {
+        return this.enabled ? this.refreshing.event : undefined;
+    }
+
+    public get onRefreshed(): vscode.Event<void> | undefined {
+        return this.enabled ? this.refreshing.event : undefined;
+    }
+
     // IInterpreterHelper
 
     // A result of `undefined` means "Fall back to the old code!"
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
-        if (!(await this.isEnabled())) {
+        if (!this.enabled) {
             return undefined;
         }
         const env = await this.api.resolveEnv(pythonPath);
@@ -161,7 +186,7 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined> {
-        if (!(await this.isEnabled())) {
+        if (!this.enabled) {
             return undefined;
         }
         const env = await this.api.resolveEnv(pythonPath);
@@ -180,7 +205,7 @@ class ComponentAdapter implements IComponentAdapter {
         pythonPath: string,
         resource?: vscode.Uri,
     ): Promise<undefined | PythonEnvironment> {
-        if (!(await this.isEnabled())) {
+        if (!this.enabled) {
             return undefined;
         }
         const info = buildEnvInfo({ executable: pythonPath });
@@ -201,7 +226,7 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined> {
-        if (!(await this.isEnabled())) {
+        if (!this.enabled) {
             return undefined;
         }
         const env = await this.api.resolveEnv(interpreterPath);
@@ -213,7 +238,7 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public async getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined> {
-        if (!(await this.isEnabled())) {
+        if (!this.enabled) {
             return undefined;
         }
         const env = await this.api.resolveEnv(interpreterPath);
@@ -234,7 +259,7 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined> {
-        if (!(await this.isEnabled())) {
+        if (!this.enabled) {
             return undefined;
         }
         const env = await this.api.resolveEnv(pythonPath);
@@ -248,13 +273,11 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public get hasInterpreters(): Promise<boolean | undefined> {
-        return this.isEnabled().then((enabled) => {
-            if (enabled) {
-                const iterator = this.api.iterEnvs();
-                return iterator.next().then((res) => !res.done);
-            }
-            return undefined;
-        });
+        if (!this.enabled) {
+            return Promise.resolve(undefined);
+        }
+        const iterator = this.api.iterEnvs();
+        return iterator.next().then((res) => !res.done);
     }
 
     // A result of `undefined` means "Fall back to the old code!"
@@ -267,9 +290,10 @@ class ComponentAdapter implements IComponentAdapter {
         //     onSuggestion?: boolean;
         // }
     ): Promise<PythonEnvironment[] | undefined> {
-        if (!(await this.isEnabled())) {
+        if (!this.enabled) {
             return undefined;
         }
+        this.refreshing.fire(); // Notify locators are locating.
         if (options?.onSuggestion) {
             // For now, until we have the concept of trusted workspaces, we assume all interpreters as safe
             // to run once user has triggered discovery, i.e interacted with the extension.
@@ -288,20 +312,9 @@ class ComponentAdapter implements IComponentAdapter {
 
         const iterator = this.api.iterEnvs(query);
         const envs = await getEnvs(iterator);
-        return envs.map(convertEnvInfo);
-    }
-
-    private async isEnabled(): Promise<boolean> {
-        if (this._enabled === undefined) {
-            this._enabled = (await Promise.all(
-                [
-                    inExperiment(DiscoveryVariants.discoverWithFileWatching),
-                    inExperiment(DiscoveryVariants.discoveryWithoutFileWatching),
-                ],
-            )).includes(true);
-        }
-
-        return this._enabled;
+        const legacyEnvs = envs.map(convertEnvInfo);
+        this.refreshed.fire(); // Notify all locators have completed locating.
+        return legacyEnvs;
     }
 }
 
