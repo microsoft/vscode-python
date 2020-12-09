@@ -48,7 +48,7 @@ suite('TensorBoard code action provider', () => {
     });
     test('Does not provide code action if no matching import', () => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const document = new MockDocument('import tensorboard', 'foo.ipynb', async (_doc) => true);
+        const document = new MockDocument('import foo', 'foo.ipynb', async (_doc) => true);
         const codeActions = codeActionProvider.provideCodeActions(document, range.object, context.object, token.object);
         assert.ok(codeActions.length === 0, 'Provided code action for file without tensorboard import');
     });

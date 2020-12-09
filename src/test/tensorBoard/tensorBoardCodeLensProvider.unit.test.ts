@@ -38,7 +38,7 @@ suite('TensorBoard code lens provider', () => {
     });
     test('Does not provide code lens if no matching import', () => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const document = new MockDocument('import tensorboard', 'foo.ipynb', async (_doc) => true);
+        const document = new MockDocument('import foo', 'foo.ipynb', async (_doc) => true);
         const codeActions = codeLensProvider.provideCodeLenses(document, token.object);
         assert.ok(codeActions.length === 0, 'Provided code lens for file without tensorboard import');
     });
