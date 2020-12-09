@@ -248,17 +248,13 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public get hasInterpreters(): Promise<boolean | undefined> {
-        async function internalHasInterpreters(
-            enabled: ()=> Promise<boolean>,
-            api: IPythonEnvironments,
-        ):Promise<boolean | undefined> {
-            if (!(await enabled())) {
-                return Promise.resolve(undefined);
+        return this.isEnabled().then((enabled) => {
+            if (enabled) {
+                const iterator = this.api.iterEnvs();
+                return iterator.next().then((res) => !res.done);
             }
-            const iterator = api.iterEnvs();
-            return iterator.next().then((res) => !res.done);
-        }
-        return internalHasInterpreters(() => this.isEnabled(), this.api);
+            return undefined;
+        });
     }
 
     // A result of `undefined` means "Fall back to the old code!"
