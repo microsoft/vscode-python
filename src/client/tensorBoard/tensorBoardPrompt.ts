@@ -1,3 +1,6 @@
+/* eslint-disable object-curly-newline */
+/* eslint-disable comma-dangle */
+/* eslint-disable operator-linebreak */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -5,9 +8,7 @@ import { inject, injectable } from 'inversify';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { NativeTensorBoard } from '../common/experiments/groups';
-import {
-    IDisposableRegistry, IExperimentService, IPersistentState, IPersistentStateFactory,
-} from '../common/types';
+import { IDisposableRegistry, IExperimentService, IPersistentState, IPersistentStateFactory } from '../common/types';
 import { Common, TensorBoard } from '../common/utils/localize';
 import { ITensorBoardImportTracker } from './types';
 
@@ -33,11 +34,11 @@ export class TensorBoardPrompt {
         @inject(ITensorBoardImportTracker) private importTracker: ITensorBoardImportTracker,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
-        @inject(IExperimentService) private experimentService: IExperimentService,
+        @inject(IExperimentService) private experimentService: IExperimentService
     ) {
         this.state = this.persistentStateFactory.createWorkspacePersistentState<boolean>(
             TensorBoardPromptStateKeys.ShowNativeTensorBoardPrompt,
-            true,
+            true
         );
         this.enabled = this.isPromptEnabled();
         this.inExperiment = this.isInExperiment();
@@ -45,10 +46,12 @@ export class TensorBoardPrompt {
     }
 
     public async showNativeTensorBoardPrompt(): Promise<void> {
-        if ((await this.inExperiment)
-        && (await this.enabled)
-        && this.enabledInCurrentSession
-        && !this.waitingForUserSelection) {
+        if (
+            (await this.inExperiment) &&
+            (await this.enabled) &&
+            this.enabledInCurrentSession &&
+            !this.waitingForUserSelection
+        ) {
             const yes = Common.bannerLabelYes();
             const no = Common.bannerLabelNo();
             const doNotAskAgain = Common.doNotShowAgain();
@@ -56,7 +59,7 @@ export class TensorBoardPrompt {
             this.waitingForUserSelection = true;
             const selection = await this.applicationShell.showInformationMessage(
                 TensorBoard.nativeTensorBoardPrompt(),
-                ...options,
+                ...options
             );
             this.waitingForUserSelection = false;
             this.enabledInCurrentSession = false;

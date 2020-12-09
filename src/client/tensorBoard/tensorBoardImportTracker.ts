@@ -1,11 +1,12 @@
+/* eslint-disable operator-linebreak */
+/* eslint-disable comma-dangle */
+/* eslint-disable object-curly-newline */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import {
-    Event, EventEmitter, TextEditor, window,
-} from 'vscode';
+import { Event, EventEmitter, TextEditor, window } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
 import { IDisposableRegistry } from '../common/types';
@@ -21,12 +22,12 @@ export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExt
 
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {
         this.documentManager.onDidChangeActiveTextEditor(
             (e) => this.onChangedActiveTextEditor(e),
             this,
-            this.disposables,
+            this.disposables
         );
     }
 
@@ -50,8 +51,8 @@ export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExt
         }
         const { document } = editor;
         if (
-            (path.extname(document.fileName) === '.ipynb' && document.languageId === 'python')
-            || path.extname(document.fileName) === '.py'
+            (path.extname(document.fileName) === '.ipynb' && document.languageId === 'python') ||
+            path.extname(document.fileName) === '.py'
         ) {
             const lines = getDocumentLines(document);
             if (containsTensorBoardImport(lines)) {

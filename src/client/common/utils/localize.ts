@@ -154,7 +154,7 @@ export namespace TensorBoard {
     );
     export const nativeTensorBoardPrompt = localize(
         'TensorBoard.nativeTensorBoardPrompt',
-        'VS Code now has native TensorBoard support. Would you like to launch TensorBoard?  (Tip: Launch TensorBoard anytime by opening the command palette and searching for "Launch TensorBoard".)'
+        'VS Code now has integrated TensorBoard support. Would you like to launch TensorBoard?  (Tip: Launch TensorBoard anytime by opening the command palette and searching for "Launch TensorBoard".)'
     );
     export const selectAFolder = localize('TensorBoard.selectAFolder', 'Select a folder');
     export const selectAFolderDetail = localize(
@@ -168,11 +168,11 @@ export namespace TensorBoard {
     );
     export const launchNativeTensorBoardSessionCodeLens = localize(
         'TensorBoard.launchNativeTensorBoardSessionCodeLens',
-        '▶ Launch Native TensorBoard Session'
+        '▶ Launch TensorBoard Session'
     );
     export const launchNativeTensorBoardSessionCodeAction = localize(
         'TensorBoard.launchNativeTensorBoardSessionCodeAction',
-        'Launch native TensorBoard session'
+        'Launch TensorBoard session'
     );
 }
 

@@ -12,7 +12,7 @@ import {
     QuickPickItem,
     ViewColumn,
     WebviewPanel,
-    window
+    window,
 } from 'vscode';
 import { ICommandManager, IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';
@@ -36,7 +36,9 @@ import { IInterpreterService } from '../interpreter/contracts';
  */
 export class TensorBoardSession {
     private webviewPanel: WebviewPanel | undefined;
+
     private url: string | undefined;
+
     private process: ChildProcess | undefined;
 
     constructor(
@@ -44,7 +46,7 @@ export class TensorBoardSession {
         private readonly interpreterService: IInterpreterService,
         private readonly workspaceService: IWorkspaceService,
         private readonly processServiceFactory: IProcessServiceFactory,
-        private readonly commandManager: ICommandManager
+        private readonly commandManager: ICommandManager,
     ) {}
 
     public async initialize() {
@@ -69,9 +71,8 @@ export class TensorBoardSession {
         if (await this.installer.isInstalled(Product.tensorboard)) {
             return true;
         }
-        const interpreter =
-            (await this.interpreterService.getActiveInterpreter()) ||
-            (await this.commandManager.executeCommand('python.setInterpreter'));
+        const interpreter = (await this.interpreterService.getActiveInterpreter())
+            || (await this.commandManager.executeCommand('python.setInterpreter'));
         if (!interpreter) {
             return;
         }
@@ -80,11 +81,11 @@ export class TensorBoardSession {
         const cancellationPromise = createPromiseFromCancellation({
             cancelAction: 'resolve',
             defaultValue: InstallerResponse.Ignore,
-            token: installerToken
+            token: installerToken,
         });
         const response = await Promise.race([
             this.installer.promptToInstall(Product.tensorboard, interpreter, installerToken),
-            cancellationPromise
+            cancellationPromise,
         ]);
         return response === InstallerResponse.Installed;
     }
@@ -93,7 +94,7 @@ export class TensorBoardSession {
         const selection = await window.showOpenDialog({
             canSelectFiles: false,
             canSelectFolders: true,
-            canSelectMany: false
+            canSelectMany: false,
         });
         // If the user selected a folder, return the uri.fsPath
         // There will only be one selection since canSelectMany: false
@@ -106,20 +107,19 @@ export class TensorBoardSession {
         if (logDir) {
             const useCwd = {
                 label: TensorBoard.useCurrentWorkingDirectory(),
-                detail: TensorBoard.useCurrentWorkingDirectoryDetail()
+                detail: TensorBoard.useCurrentWorkingDirectoryDetail(),
             };
             const selectAnotherFolder = {
                 label: TensorBoard.selectAnotherFolder(),
-                detail: TensorBoard.selectAnotherFolderDetail()
+                detail: TensorBoard.selectAnotherFolderDetail(),
             };
             return [useCwd, selectAnotherFolder];
-        } else {
-            const selectAFolder = {
-                label: TensorBoard.selectAFolder(),
-                detail: TensorBoard.selectAFolderDetail()
-            };
-            return [selectAFolder];
         }
+        const selectAFolder = {
+            label: TensorBoard.selectAFolder(),
+            detail: TensorBoard.selectAFolderDetail(),
+        };
+        return [selectAFolder];
     }
 
     // Display a quickpick asking the user to acknowledge our autopopulated log directory or
@@ -176,7 +176,7 @@ export class TensorBoardSession {
         const progressOptions: ProgressOptions = {
             title: TensorBoard.progressMessage(),
             location: ProgressLocation.Notification,
-            cancellable: true
+            cancellable: true,
         };
 
         const processService = await this.processServiceFactory.create();
@@ -192,11 +192,11 @@ export class TensorBoardSession {
                 const userCancellation = createPromiseFromCancellation({
                     token,
                     cancelAction: 'resolve',
-                    defaultValue: 'canceled'
+                    defaultValue: 'canceled',
                 });
 
                 return Promise.race([sleep(timeout), spawnTensorBoard, userCancellation]);
-            }
+            },
         );
 
         switch (result) {
@@ -230,7 +230,7 @@ export class TensorBoardSession {
             },
             error: (err) => {
                 traceError(err);
-            }
+            },
         });
 
         return urlThatTensorBoardIsRunningAt.promise;
@@ -244,7 +244,7 @@ export class TensorBoardSession {
 
     private createPanel() {
         const webviewPanel = window.createWebviewPanel('tensorBoardSession', 'TensorBoard', ViewColumn.Two, {
-            enableScripts: true
+            enableScripts: true,
         });
         this.webviewPanel = webviewPanel;
         webviewPanel.onDidDispose(() => {
@@ -287,7 +287,7 @@ export class TensorBoardSession {
         if (this.workspaceService.rootPath) {
             return this.workspaceService.rootPath;
         }
-        const activeTextEditor = window.activeTextEditor;
+        const { activeTextEditor } = window;
         if (activeTextEditor) {
             return path.dirname(activeTextEditor.document.uri.fsPath);
         }

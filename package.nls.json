@@ -223,15 +223,15 @@
     "Jupyter.extensionRequired": "The Jupyter extension is required to perform that task. Click Yes to open the Jupyter extension installation page.",
     "TensorBoard.useCurrentWorkingDirectory": "Use current working directory",
     "TensorBoard.currentDirectory": "Current: {0}",
-    "TensorBoard.logDirectoryPrompt" : "Select a log directory to start TensorBoard with",
-    "TensorBoard.progressMessage" : "Starting TensorBoard session...",
-	"TensorBoard.failedToStartSessionError" : "We failed to start a TensorBoard session due to the following error: {0}",
-    "TensorBoard.nativeTensorBoardPrompt" : "VS Code now has native TensorBoard support. Would you like to launch TensorBoard? (Tip: Launch TensorBoard anytime by opening the command palette and searching for \"Launch TensorBoard\".)",
+    "TensorBoard.logDirectoryPrompt": "Select a log directory to start TensorBoard with",
+    "TensorBoard.progressMessage": "Starting TensorBoard session...",
+    "TensorBoard.failedToStartSessionError": "We failed to start a TensorBoard session due to the following error: {0}",
+    "TensorBoard.nativeTensorBoardPrompt": "VS Code now has integrated TensorBoard support. Would you like to launch TensorBoard? (Tip: Launch TensorBoard anytime by opening the command palette and searching for \"Launch TensorBoard\".)",
     "TensorBoard.selectAFolder": "Select a folder",
     "TensorBoard.selectAnotherFolder": "Select another folder",
     "TensorBoard.selectAFolderDetail": "Select a log directory containing tfevent files",
     "TensorBoard.selectAnotherFolderDetail": "Use the file explorer to select another folder",
     "TensorBoard.useCurrentWorkingDirectoryDetail": "TensorBoard will search for tfevent files in all subdirectories of the current working directory",
-    "TensorBoard.launchNativeTensorBoardSessionCodeAction": "Launch native TensorBoard session",
-    "TensorBoard.launchNativeTensorBoardSessionCodeLens": "▶ Launch Native TensorBoard Session"
+    "TensorBoard.launchNativeTensorBoardSessionCodeAction": "Launch TensorBoard session",
+    "TensorBoard.launchNativeTensorBoardSessionCodeLens": "▶ Launch TensorBoard Session"
 }
