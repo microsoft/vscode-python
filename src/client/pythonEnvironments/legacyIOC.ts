@@ -24,15 +24,13 @@ import {
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../interpreter/contracts';
+import { GetInterpreterOptions } from '../interpreter/interpreterService';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
-import { IServiceContainer, IServiceManager } from '../ioc/types';
-import {
-    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel,
-} from './base/info';
+import { IServiceManager } from '../ioc/types';
+import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
 import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
 import { getEnvs } from './base/locatorUtils';
-import { initializeExternalDependencies } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
@@ -59,6 +57,7 @@ import {
 } from './discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
 import { EnvironmentType, PythonEnvironment } from './info';
+import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
 
 const convertedKinds = new Map(Object.entries({
     [PythonEnvKind.System]: EnvironmentType.System,
@@ -131,13 +130,14 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     return env;
 }
 
-interface IPythonEnvironments extends ILocator {}
+export interface IPythonEnvironments extends ILocator {}
 
 @injectable()
 class ComponentAdapter implements IComponentAdapter {
     constructor(
         // The adapter only wraps one thing: the component API.
         private readonly api: IPythonEnvironments,
+        private readonly environmentsSecurity: IEnvironmentsSecurity,
         // For now we effectively disable the component.
         private readonly enabled = false,
     ) {}
@@ -255,6 +255,7 @@ class ComponentAdapter implements IComponentAdapter {
     // A result of `undefined` means "Fall back to the old code!"
     public async getInterpreters(
         resource?: vscode.Uri,
+        options?: GetInterpreterOptions,
         // Currently we have no plans to support GetInterpreterLocatorOptions:
         // {
         //     ignoreCache?: boolean
@@ -263,6 +264,11 @@ class ComponentAdapter implements IComponentAdapter {
     ): Promise<PythonEnvironment[] | undefined> {
         if (!this.enabled) {
             return undefined;
+        }
+        if (options?.onSuggestion) {
+            // For now, until we have the concept of trusted workspaces, we assume all interpreters as safe
+            // to run once user has triggered discovery, i.e interacted with the extension.
+            this.environmentsSecurity.markAllEnvsAsSafe();
         }
         const query: PythonLocatorQuery = {};
         if (resource !== undefined) {
@@ -368,21 +374,11 @@ export function registerLegacyDiscoveryForIOC(
 
 export function registerNewDiscoveryForIOC(
     serviceManager: IServiceManager,
-    api:IPythonEnvironments,
+    api: IPythonEnvironments,
+    environmentsSecurity: EnvironmentsSecurity,
 ): void {
-    serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, new ComponentAdapter(api));
-}
-
-/**
- * This is here to support old tests.
- * @deprecated
- */
-export function registerForIOC(
-    serviceManager: IServiceManager,
-    serviceContainer: IServiceContainer,
-    api:IPythonEnvironments,
-): void{
-    registerLegacyDiscoveryForIOC(serviceManager);
-    initializeExternalDependencies(serviceContainer);
-    registerNewDiscoveryForIOC(serviceManager, api);
+    serviceManager.addSingletonInstance<IComponentAdapter>(
+        IComponentAdapter,
+        new ComponentAdapter(api, environmentsSecurity),
+    );
 }

@@ -2,7 +2,7 @@
 # but flake8 has a tighter pinning.
 flake8
 autopep8
-bandit
+bandit ; python_version >= '3.5'
 black ; python_version > '2.7'
 yapf
 pylint

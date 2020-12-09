@@ -8,7 +8,7 @@ import { IConfigurationService, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { TestConfiguringTelemetry, TestTool } from '../telemetry/types';
+import { TestConfiguringTelemetry } from '../telemetry/types';
 import { BufferedTestConfigSettingsService } from './common/services/configSettingService';
 import { ITestsHelper, UnitTestProduct } from './common/types';
 import {
@@ -124,7 +124,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
                 return Promise.reject(null);
             }
             const helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
-            telemetryProps.tool = helper.parseProviderName(selectedTestRunner) as TestTool;
+            telemetryProps.tool = helper.parseProviderName(selectedTestRunner);
             const delayed = new BufferedTestConfigSettingsService();
             const factory = this.serviceContainer.get<ITestConfigurationManagerFactory>(
                 ITestConfigurationManagerFactory

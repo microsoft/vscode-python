@@ -59,7 +59,7 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
             }
         };
 
-        const vscodeLanguageClient = require('vscode-languageclient/node') as typeof import('vscode-languageclient/node');
+        const vscodeLanguageClient = require('vscode-languageclient/node');
         return new vscodeLanguageClient.LanguageClient(
             PYTHON_LANGUAGE,
             languageClientName,

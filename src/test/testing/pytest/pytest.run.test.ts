@@ -24,10 +24,8 @@ import { IEnvironmentActivationService } from '../../../client/interpreter/activ
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { PythonEnvironments } from '../../../client/pythonEnvironments/api';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
-import { registerForIOC } from '../../../client/pythonEnvironments/legacyIOC';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { UnitTestDiagnosticService } from '../../../client/testing/common/services/unitTestDiagnosticService';
 import {
@@ -41,6 +39,7 @@ import {
 import { rootWorkspaceUri, updateSetting } from '../../common';
 import { TEST_TIMEOUT } from '../../constants';
 import { MockProcessService } from '../../mocks/proc';
+import { registerForIOC } from '../../pythonEnvironments/legacyIOC';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 import { ITestDetails, ITestScenarioDetails, testScenarios } from './pytest_run_tests_data';
@@ -384,7 +383,6 @@ async function testDiagnosticRelatedInformation(
 
 suite('Unit Tests - pytest - run with mocked process output', () => {
     let ioc: UnitTestIocContainer;
-    let pythonEnvs: PythonEnvironments;
     const configTarget = IS_MULTI_ROOT_TEST
         ? vscode.ConfigurationTarget.WorkspaceFolder
         : vscode.ConfigurationTarget.Workspace;
@@ -460,7 +458,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         );
         ioc.serviceManager.rebind<IPythonExecutionFactory>(IPythonExecutionFactory, ExecutionFactory);
 
-        registerForIOC(ioc.serviceManager, ioc.serviceContainer, instance(pythonEnvs));
+        registerForIOC(ioc.serviceManager, ioc.serviceContainer);
         ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 
@@ -518,7 +516,6 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                 // tslint:disable-next-line: no-invalid-this
                 this.timeout(TEST_TIMEOUT * 2);
                 await initializeTest();
-                pythonEnvs = mock(PythonEnvironments);
                 initializeDI();
                 await injectTestDiscoveryOutput(scenario.discoveryOutput);
                 await injectTestRunOutput(scenario.runOutput);

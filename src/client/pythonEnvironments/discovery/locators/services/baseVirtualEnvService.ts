@@ -61,7 +61,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             ))
             .then((interpreters) => interpreters.filter(
                 (interpreter) => !!interpreter,
-            ).map((interpreter) => interpreter!))
+            ).map((interpreter) => interpreter!)) // NOSONAR
             .catch((err) => {
                 traceError('Python Extension (lookForInterpretersInVenvs):', err);
                 // Ignore exceptions.

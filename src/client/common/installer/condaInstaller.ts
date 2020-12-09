@@ -69,7 +69,7 @@ export class CondaInstaller extends ModuleInstaller {
         if (info && info.name) {
             // If we have the name of the conda environment, then use that.
             args.push('--name');
-            args.push(info.name!.toCommandArgument());
+            args.push(info.name.toCommandArgument());
         } else if (info && info.path) {
             // Else provide the full path to the environment path.
             args.push('--prefix');

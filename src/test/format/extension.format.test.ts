@@ -4,17 +4,15 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { instance, mock } from 'ts-mockito';
 import { CancellationTokenSource, Position, Uri, window, workspace } from 'vscode';
 import { IProcessServiceFactory } from '../../client/common/process/types';
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { BlackFormatter } from '../../client/formatters/blackFormatter';
 import { YapfFormatter } from '../../client/formatters/yapfFormatter';
-import { PythonEnvironments } from '../../client/pythonEnvironments/api';
-import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 import { isPythonVersionInProcess } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { MockProcessService } from '../mocks/proc';
+import { registerForIOC } from '../pythonEnvironments/legacyIOC';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { compareFiles } from '../textUtils';
 
@@ -37,7 +35,6 @@ let formattedAutoPep8 = '';
 // tslint:disable-next-line:max-func-body-length
 suite('Formatting - General', () => {
     let ioc: UnitTestIocContainer;
-    let pythonEnvs: PythonEnvironments;
 
     suiteSetup(async function () {
         // https://github.com/microsoft/vscode-python/issues/12564
@@ -63,7 +60,6 @@ suite('Formatting - General', () => {
 
     setup(async () => {
         await initializeTest();
-        pythonEnvs = mock(PythonEnvironments);
         initializeDI();
     });
     suiteTeardown(async () => {
@@ -91,7 +87,7 @@ suite('Formatting - General', () => {
         ioc.registerMockProcessTypes();
         ioc.registerMockInterpreterTypes();
 
-        registerForIOC(ioc.serviceManager, ioc.serviceContainer, instance(pythonEnvs));
+        registerForIOC(ioc.serviceManager, ioc.serviceContainer);
     }
 
     async function injectFormatOutput(outputFileName: string) {

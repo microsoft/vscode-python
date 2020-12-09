@@ -28,7 +28,7 @@ export class DebugEnvironmentVariablesHelper implements IDebugEnvironmentVariabl
             // tslint:disable-next-line:no-any
             args.env && Object.keys(args.env).length > 0 ? ({ ...args.env } as any) : ({} as any);
         const envFileVars = await this.envParser.parseFile(args.envFile, debugLaunchEnvVars);
-        const env = envFileVars ? { ...envFileVars! } : {};
+        const env = envFileVars ? { ...envFileVars } : {};
         this.envParser.mergeVariables(debugLaunchEnvVars, env);
 
         // Append the PYTHONPATH and PATH variables.

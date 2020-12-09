@@ -144,7 +144,7 @@ export abstract class BaseTestManager implements ITestManager {
             return;
         }
 
-        this.testResultsService.resetResults(this.tests!);
+        this.testResultsService.resetResults(this.tests);
     }
     public async discoverTests(
         cmdSource: CommandSource,

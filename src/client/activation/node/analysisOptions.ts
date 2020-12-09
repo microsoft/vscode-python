@@ -14,4 +14,10 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
     ) {
         super(envVarsProvider, lsOutputChannel);
     }
+
+    protected async getInitializationOptions() {
+        return {
+            experimentationSupport: true
+        };
+    }
 }

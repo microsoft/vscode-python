@@ -64,7 +64,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         );
         this.visibilityFilters
             .filter((item) => item.changed)
-            .forEach((item) => item.changed!(this.updateVisibility, this, disposableRegistry));
+            .forEach((item) => item.changed!(this.updateVisibility, this, disposableRegistry)); // NOSONAR
     }
     public async refresh(resource?: Uri) {
         // Use the workspace Uri if available
@@ -102,7 +102,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
             this.currentlySelectedInterpreterPath = interpreter.path;
         } else {
             this.statusBar.tooltip = '';
-            this.statusBar.color = 'yellow';
+            this.statusBar.color = '';
             this.statusBar.text = '$(alert) Select Python Interpreter';
             this.currentlySelectedInterpreterPath = undefined;
         }

@@ -44,7 +44,8 @@ export const EXPERIMENTS_EFFORT_TIMEOUT_MS = 2000;
 export const oldExperimentSalts = ['ShowExtensionSurveyPrompt', 'ShowPlayIcon', 'AlwaysDisplayTestExplorer', 'LS'];
 
 /**
- * Manages and stores experiments, implements the AB testing functionality
+ * <DEPRECATED> Manages and stores experiments, implements the AB testing functionality
+ * @deprecated
  */
 @injectable()
 export class ExperimentsManager implements IExperimentsManager {

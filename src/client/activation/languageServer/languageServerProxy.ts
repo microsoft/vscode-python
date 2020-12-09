@@ -3,7 +3,7 @@
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
-import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
+import { Disposable, LanguageClient, LanguageClientOptions, State } from 'vscode-languageclient/node';
 
 import { traceDecorators, traceError } from '../../common/logger';
 import { IConfigurationService, Resource } from '../../common/types';
@@ -60,27 +60,24 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
     ): Promise<void> {
         if (!this.languageClient) {
             this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
-            this.disposables.push(this.languageClient!.start());
+
+            this.languageClient.onDidChangeState((e) => {
+                // The client's on* methods must be called after the client has started, but if called too
+                // late the server may have already sent a message (which leads to failures). Register
+                // these on the state change to running to ensure they are ready soon enough.
+                if (e.newState === State.Running) {
+                    this.registerHandlers(resource);
+                }
+            });
+
+            this.disposables.push(this.languageClient.start());
             await this.serverReady();
+
             if (this.disposed) {
                 // Check if it got disposed in the interim.
                 return;
             }
-            const progressReporting = new ProgressReporting(this.languageClient!);
-            this.disposables.push(progressReporting);
 
-            const settings = this.configurationService.getSettings(resource);
-            if (settings.downloadLanguageServer) {
-                this.languageClient.onTelemetry((telemetryEvent) => {
-                    const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
-                    const formattedProperties = {
-                        ...telemetryEvent.Properties,
-                        // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
-                        method: telemetryEvent.Properties.method?.replace(/\//g, '.')
-                    };
-                    sendTelemetryEvent(eventName, telemetryEvent.Measurements, formattedProperties);
-                });
-            }
             await this.registerTestServices();
         } else {
             await this.startupCompleted.promise;
@@ -117,5 +114,28 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
             throw new Error('languageClient not initialized');
         }
         await this.testManager.activate(new LanguageServerSymbolProvider(this.languageClient!));
+    }
+
+    private registerHandlers(resource: Resource) {
+        if (this.disposed) {
+            // Check if it got disposed in the interim.
+            return;
+        }
+
+        const progressReporting = new ProgressReporting(this.languageClient!);
+        this.disposables.push(progressReporting);
+
+        const settings = this.configurationService.getSettings(resource);
+        if (settings.downloadLanguageServer) {
+            this.languageClient!.onTelemetry((telemetryEvent) => {
+                const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
+                const formattedProperties = {
+                    ...telemetryEvent.Properties,
+                    // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
+                    method: telemetryEvent.Properties.method?.replace(/\//g, '.')
+                };
+                sendTelemetryEvent(eventName, telemetryEvent.Measurements, formattedProperties);
+            });
+        }
     }
 }

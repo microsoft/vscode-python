@@ -221,10 +221,15 @@
     "StartPage.folderDesc": "- Open a <div class=\"link\" role=\"button\" onclick={0}>Folder</div><br /> - Open a <div class=\"link\" role=\"button\" onclick={1}>Workspace</div>",
     "StartPage.badWebPanelFormatString": "<html><body><h1>{0} is not a valid file name</h1></body></html>",
     "Jupyter.extensionRequired": "The Jupyter extension is required to perform that task. Click Yes to open the Jupyter extension installation page.",
-    "TensorBoard.logDirectoryPrompt" : "Please select a log directory to start TensorBoard with.",
+    "TensorBoard.useCurrentWorkingDirectory": "Use current working directory",
+    "TensorBoard.currentDirectory": "Current: {0}",
+    "TensorBoard.logDirectoryPrompt" : "Select a log directory to start TensorBoard with",
     "TensorBoard.progressMessage" : "Starting TensorBoard session...",
 	"TensorBoard.failedToStartSessionError" : "We failed to start a TensorBoard session due to the following error: {0}",
-    "TensorBoard.nativeTensorBoardPrompt" : "VS Code now has native TensorBoard support. Would you like to launch TensorBoard?",
-    "TensorBoard.usingCurrentWorkspaceFolder": "We are using the current workspace folder as the log directory for your TensorBoard session.",
-    "TensorBoard.selectAFolder": "Select a folder"
+    "TensorBoard.nativeTensorBoardPrompt" : "VS Code now has native TensorBoard support. Would you like to launch TensorBoard? (Tip: Launch TensorBoard anytime by opening the command palette and searching for \"Launch TensorBoard\".)",
+    "TensorBoard.selectAFolder": "Select a folder",
+    "TensorBoard.selectAnotherFolder": "Select another folder",
+    "TensorBoard.selectAFolderDetail": "Select a log directory containing tfevent files",
+    "TensorBoard.selectAnotherFolderDetail": "Use the file explorer to select another folder",
+    "TensorBoard.useCurrentWorkingDirectoryDetail": "TensorBoard will search for tfevent files in all subdirectories of the current working directory"
 }

@@ -13,6 +13,10 @@ import { IDisposableRegistry } from '../types';
 import { StopWatch } from '../utils/stopWatch';
 import { IDebugService } from './types';
 
+// tslint:disable-next-line no-any
+function isResponse(a: any): a is DebugProtocol.Response {
+    return a.type === 'response';
+}
 class TelemetryTracker implements DebugAdapterTracker {
     private timer = new StopWatch();
     private readonly trigger: TriggerType = 'launch';
@@ -28,26 +32,25 @@ class TelemetryTracker implements DebugAdapterTracker {
         this.sendTelemetry(EventName.DEBUG_SESSION_START);
     }
 
-    // tslint:disable-next-line:no-any
-    public onDidSendMessage(message: DebugProtocol.ProtocolMessage) {
-        if (message.type === 'response') {
-            const response = message as DebugProtocol.Response;
-            if (response.command === 'configurationDone') {
+    // tslint:disable-next-line no-any
+    public onDidSendMessage(message: any): void {
+        if (isResponse(message)) {
+            if (message.command === 'configurationDone') {
                 // "configurationDone" response is sent immediately after user code starts running.
                 this.sendTelemetry(EventName.DEBUG_SESSION_USER_CODE_RUNNING);
             }
         }
     }
 
-    public onWillStopSession() {
+    public onWillStopSession(): void {
         this.sendTelemetry(EventName.DEBUG_SESSION_STOP);
     }
 
-    public onError?(_error: Error) {
+    public onError?(_error: Error): void {
         this.sendTelemetry(EventName.DEBUG_SESSION_ERROR);
     }
 
-    private sendTelemetry(eventName: EventName) {
+    private sendTelemetry(eventName: EventName): void {
         if (eventName === EventName.DEBUG_SESSION_START) {
             this.timer.reset();
         }

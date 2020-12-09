@@ -23,15 +23,14 @@ import { IEnvironmentActivationService } from '../../../client/interpreter/activ
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { PythonEnvironments } from '../../../client/pythonEnvironments/api';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
-import { registerForIOC } from '../../../client/pythonEnvironments/legacyIOC';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { ITestManagerFactory } from '../../../client/testing/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
 import { MockProcessService } from '../../mocks/proc';
+import { registerForIOC } from '../../pythonEnvironments/legacyIOC';
 import { UnitTestIocContainer } from '../serviceRegistry';
 
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
@@ -61,7 +60,6 @@ Run the command `python <ExtensionDir>/pythonFiles/testing_tools/run_adapter.py 
 // tslint:disable:max-func-body-length
 suite('Unit Tests - pytest - discovery with mocked process output', () => {
     let ioc: UnitTestIocContainer;
-    let pythonEnvs: PythonEnvironments;
     const configTarget = IS_MULTI_ROOT_TEST
         ? vscode.ConfigurationTarget.WorkspaceFolder
         : vscode.ConfigurationTarget.Workspace;
@@ -116,7 +114,6 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
     });
     setup(async () => {
         await initializeTest();
-        pythonEnvs = mock(PythonEnvironments);
         initializeDI();
     });
     teardown(async () => {
@@ -138,7 +135,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             instance(mock(InterpreterService))
         );
         ioc.serviceManager.rebind<IPythonExecutionFactory>(IPythonExecutionFactory, ExecutionFactory);
-        registerForIOC(ioc.serviceManager, ioc.serviceContainer, instance(pythonEnvs));
+        registerForIOC(ioc.serviceManager, ioc.serviceContainer);
         ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 

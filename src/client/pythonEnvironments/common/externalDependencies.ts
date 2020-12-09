@@ -3,9 +3,11 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../../common/process/types';
 import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
+import { IDisposable } from '../../common/utils/resourceLifecycle';
 import { IServiceContainer } from '../../ioc/types';
 
 let internalServiceContainer: IServiceContainer;
@@ -90,4 +92,25 @@ export async function* getSubDirs(root:string): AsyncIterableIterator<string> {
     });
 
     yield* iterable(chain(generators));
+}
+
+/**
+ * Returns the value for setting `python.<name>`.
+ * @param name The name of the setting.
+ */
+export function getPythonSetting<T>(name: string): T | undefined {
+    return vscode.workspace.getConfiguration('python').get(name);
+}
+
+/**
+ * Registers the listener to be called when a particular setting changes.
+ * @param name The name of the setting.
+ * @param callback The listener function to be called when the setting changes.
+ */
+export function onDidChangePythonSetting(name: string, callback: () => void): IDisposable {
+    return vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
+        if (event.affectsConfiguration(`python.${name}`)) {
+            callback();
+        }
+    });
 }

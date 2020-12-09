@@ -11,13 +11,12 @@ import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { PythonEnvironments } from '../../../client/pythonEnvironments/api';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { registerForIOC } from '../../../client/pythonEnvironments/legacyIOC';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { ITestManagerFactory } from '../../../client/testing/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
 import { MockProcessService } from '../../mocks/proc';
+import { registerForIOC } from '../../pythonEnvironments/legacyIOC';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 
@@ -30,7 +29,6 @@ const defaultUnitTestArgs = ['-v', '-s', '.', '-p', '*test*.py'];
 // tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - unittest - discovery with mocked process output', () => {
     let ioc: UnitTestIocContainer;
-    let pythonEnvs: PythonEnvironments;
     const rootDirectory = UNITTEST_TEST_FILES_PATH;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
 
@@ -44,7 +42,6 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
             await fs.remove(cachePath);
         }
         await initializeTest();
-        pythonEnvs = mock(PythonEnvironments);
         initializeDI();
     });
     teardown(async () => {
@@ -65,7 +62,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
             IInterpreterService,
             instance(mock(InterpreterService))
         );
-        registerForIOC(ioc.serviceManager, ioc.serviceContainer, instance(pythonEnvs));
+        registerForIOC(ioc.serviceManager, ioc.serviceContainer);
         ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 

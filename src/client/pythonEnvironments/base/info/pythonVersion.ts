@@ -1,15 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { cloneDeep } from 'lodash';
 import * as path from 'path';
-import { PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION } from '.';
 import { traceError } from '../../../common/logger';
 import {
     EMPTY_VERSION,
     isVersionInfoEmpty,
     parseBasicVersionInfo,
 } from '../../../common/utils/version';
+
+import {
+    PythonReleaseLevel,
+    PythonVersion,
+    PythonVersionRelease,
+    UNKNOWN_PYTHON_VERSION,
+} from '.';
 
 export function getPythonVersionFromPath(exe:string): PythonVersion {
     let version = UNKNOWN_PYTHON_VERSION;
@@ -23,84 +28,100 @@ export function getPythonVersionFromPath(exe:string): PythonVersion {
 
 /**
  * Convert the given string into the corresponding Python version object.
+ *
  * Example:
  *   3.9.0
  *   3.9.0a1
  *   3.9.0b2
  *   3.9.0rc1
- *
- * Does not parse:
+ *   3.9.0-beta2
+ *   3.9.0.beta.2
  *   3.9.0.final.0
+ *   39
  */
 export function parseVersion(versionStr: string): PythonVersion {
-    const parsed = parseBasicVersionInfo<PythonVersion>(versionStr);
-    if (!parsed) {
-        if (versionStr === '') {
-            return EMPTY_VERSION as PythonVersion;
-        }
-        throw Error(`invalid version ${versionStr}`);
+    const [version, after] = parseBasicVersion(versionStr);
+    if (version.micro === -1) {
+        return version;
     }
-    const { version, after } = parsed;
-    const match = after.match(/^(a|b|rc)(\d+)$/);
-    if (match) {
-        const [, levelStr, serialStr] = match;
-        let level: PythonReleaseLevel;
-        if (levelStr === 'a') {
-            level = PythonReleaseLevel.Alpha;
-        } else if (levelStr === 'b') {
-            level = PythonReleaseLevel.Beta;
-        } else if (levelStr === 'rc') {
-            level = PythonReleaseLevel.Candidate;
-        } else {
-            throw Error('unreachable!');
-        }
-        version.release = {
-            level,
-            serial: parseInt(serialStr, 10),
-        };
-    }
+    const [release] = parseRelease(after);
+    version.release = release;
     return version;
+}
+
+export function parseRelease(text: string): [PythonVersionRelease | undefined, string] {
+    let after: string;
+
+    let alpha: string | undefined;
+    let beta: string | undefined;
+    let rc: string | undefined;
+    let fin: string | undefined;
+    let serialStr: string;
+
+    let match = text.match(/^(?:-?final|\.final(?:\.0)?)(.*)$/);
+    if (match) {
+        [, after] = match;
+        fin = 'final';
+        serialStr = '0';
+    } else {
+        for (const regex of [
+            /^(?:(a)|(b)|(rc))([1-9]\d*)(.*)$/,
+            /^-(?:(?:(alpha)|(beta)|(candidate))([1-9]\d*))(.*)$/,
+            /^\.(?:(?:(alpha)|(beta)|(candidate))\.([1-9]\d*))(.*)$/,
+        ]) {
+            match = text.match(regex);
+            if (match) {
+                [, alpha, beta, rc, serialStr, after] = match;
+                break;
+            }
+        }
+    }
+
+    let level: PythonReleaseLevel;
+    if (fin) {
+        level = PythonReleaseLevel.Final;
+    } else if (rc) {
+        level = PythonReleaseLevel.Candidate;
+    } else if (beta) {
+        level = PythonReleaseLevel.Beta;
+    } else if (alpha) {
+        level = PythonReleaseLevel.Alpha;
+    } else {
+        // We didn't find release info.
+        return [undefined, text];
+    }
+    const serial = parseInt(serialStr!, 10);
+    return [{ level, serial }, after!];
 }
 
 /**
  * Convert the given string into the corresponding Python version object.
- * Example:
- *   3.9.0.final.0
- *   3.9.0.alpha.1
- *   3.9.0.beta.2
- *   3.9.0.candidate.1
- *
- * Does not parse:
- *   3.9.0
- *   3.9.0a1
- *   3.9.0b2
- *   3.9.0rc1
  */
-export function parseVersionInfo(versionInfoStr: string): PythonVersion {
-    const parts = versionInfoStr.split('.');
-    const version = cloneDeep(UNKNOWN_PYTHON_VERSION);
-    if (parts.length >= 2) {
-        version.major = parseInt(parts[0], 10);
-        version.minor = parseInt(parts[1], 10);
+export function parseBasicVersion(versionStr: string): [PythonVersion, string] {
+    // We set a prefix (which will be ignored) to make sure "plain"
+    // versions are fully parsed.
+    const parsed = parseBasicVersionInfo<PythonVersion>(`ignored-${versionStr}`);
+    if (!parsed) {
+        if (versionStr === '') {
+            return [getEmptyVersion(), ''];
+        }
+        throw Error(`invalid version ${versionStr}`);
     }
+    // We ignore any "before" text.
+    const { version, after } = parsed;
+    version.release = undefined;
 
-    if (parts.length >= 3) {
-        version.micro = parseInt(parts[2], 10);
-    }
-
-    if (parts.length >= 4 && version.release) {
-        const levels = ['alpha', 'beta', 'candidate', 'final'];
-        const level = parts[3].toLowerCase();
-        if (levels.includes(level)) {
-            version.release.level = level as PythonReleaseLevel;
+    if (version.minor === -1) {
+        // We trust that the major version is always single-digit.
+        if (version.major > 9) {
+            const numdigits = version.major.toString().length - 1;
+            const factor = 10 ** numdigits;
+            version.minor = version.major % factor;
+            version.major = Math.floor(version.major / factor);
         }
     }
 
-    if (parts.length >= 5 && version.release) {
-        version.release.serial = parseInt(parts[4], 10);
-    }
-
-    return version;
+    return [version, after];
 }
 
 /**

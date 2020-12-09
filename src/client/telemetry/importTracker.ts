@@ -4,12 +4,14 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { clearTimeout, setTimeout } from 'timers';
 import { TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '.';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
+import { IDisposableRegistry } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { EventName } from './constants';
 
@@ -43,14 +45,17 @@ const testExecution = isTestExecution();
 
 @injectable()
 export class ImportTracker implements IExtensionSingleActivationService {
-    private pendingChecks = new Map<string, NodeJS.Timer | number>();
+    private pendingChecks = new Map<string, NodeJS.Timer>();
     private sentMatches: Set<string> = new Set<string>();
     // tslint:disable-next-line:no-require-imports
     private hashFn = require('hash.js').sha256;
 
-    constructor(@inject(IDocumentManager) private documentManager: IDocumentManager) {
-        this.documentManager.onDidOpenTextDocument((t) => this.onOpenedOrSavedDocument(t));
-        this.documentManager.onDidSaveTextDocument((t) => this.onOpenedOrSavedDocument(t));
+    constructor(
+        @inject(IDocumentManager) private documentManager: IDocumentManager,
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
+    ) {
+        this.documentManager.onDidOpenTextDocument((t) => this.onOpenedOrSavedDocument(t), this, this.disposables);
+        this.documentManager.onDidSaveTextDocument((t) => this.onOpenedOrSavedDocument(t), this, this.disposables);
     }
 
     public dispose() {
@@ -77,8 +82,7 @@ export class ImportTracker implements IExtensionSingleActivationService {
         // If already scheduled, cancel.
         const currentTimeout = this.pendingChecks.get(file);
         if (currentTimeout) {
-            // tslint:disable-next-line: no-any
-            clearTimeout(currentTimeout as any);
+            clearTimeout(currentTimeout);
             this.pendingChecks.delete(file);
         }
 

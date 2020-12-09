@@ -5,11 +5,15 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import '../../../../common/extensions';
 import {
-    getEnvironmentVariable, getOSType, getUserHomeDir, OSType
+    getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
 import { comparePythonVersionSpecificity } from '../../../base/info/env';
-import { parseVersion, parseVersionInfo } from '../../../base/info/pythonVersion';
+import {
+    parseBasicVersion,
+    parseRelease,
+    parseVersion,
+} from '../../../base/info/pythonVersion';
 import { pathExists, readFile } from '../../../common/externalDependencies';
 
 function getPyvenvConfigPathsFrom(interpreterPath:string): string[] {
@@ -176,5 +180,34 @@ export async function getPythonVersionFromPyvenvCfg(interpreterPath:string): Pro
         }
     }
 
+    return version;
+}
+
+/**
+ * Convert the given string into the corresponding Python version object.
+ * Example:
+ *   3.9.0.final.0
+ *   3.9.0.alpha.1
+ *   3.9.0.beta.2
+ *   3.9.0.candidate.1
+ *
+ * Does not parse:
+ *   3.9.0
+ *   3.9.0a1
+ *   3.9.0b2
+ *   3.9.0rc1
+ */
+function parseVersionInfo(versionInfoStr: string): PythonVersion {
+    let version: PythonVersion;
+    let after: string;
+    try {
+        [version, after] = parseBasicVersion(versionInfoStr);
+    } catch {
+        // XXX Use getEmptyVersion().
+        return UNKNOWN_PYTHON_VERSION;
+    }
+    if (version.micro !== -1 && after.startsWith('.')) {
+        [version.release] = parseRelease(after);
+    }
     return version;
 }

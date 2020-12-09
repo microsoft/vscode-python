@@ -234,7 +234,7 @@ suite('Interpreters Display', () => {
 
         await interpreterDisplay.refresh(resource);
 
-        statusBar.verify((s) => (s.color = TypeMoq.It.isValue('yellow')), TypeMoq.Times.once());
+        statusBar.verify((s) => (s.color = TypeMoq.It.isValue('')), TypeMoq.Times.once());
         statusBar.verify(
             (s) => (s.text = TypeMoq.It.isValue('$(alert) Select Python Interpreter')),
             TypeMoq.Times.once()

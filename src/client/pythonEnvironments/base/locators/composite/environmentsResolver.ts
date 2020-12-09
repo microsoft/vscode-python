@@ -24,6 +24,7 @@ export class PythonEnvsResolver implements ILocator {
     constructor(
         private readonly parentLocator: ILocator,
         private readonly environmentInfoService: IEnvironmentInfoService,
+        private readonly isEnvSafe: (env: PythonEnvInfo) => boolean,
     ) {}
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
@@ -64,7 +65,6 @@ export class PythonEnvsResolver implements ILocator {
                     listener.dispose();
                 } else if (seen[event.index] !== undefined) {
                     seen[event.index] = event.update;
-                    state.pending += 1;
                     this.resolveInBackground(event.index, state, didUpdate, seen)
                         .ignoreErrors();
                 } else {
@@ -79,7 +79,6 @@ export class PythonEnvsResolver implements ILocator {
             const currEnv = result.value;
             seen.push(currEnv);
             yield currEnv;
-            state.pending += 1;
             this.resolveInBackground(seen.indexOf(currEnv), state, didUpdate, seen).ignoreErrors();
             result = await iterator.next();
         }
@@ -95,6 +94,12 @@ export class PythonEnvsResolver implements ILocator {
         didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
         seen: PythonEnvInfo[],
     ) {
+        if (!this.isEnvSafe(seen[envIndex])) {
+            return;
+        }
+        state.pending += 1;
+        // It's essential we increment the pending call count before any asynchronus calls in this method.
+        // We want this to be run even when `resolveInBackground` is called in background.
         const interpreterInfo = await this.environmentInfoService.getEnvironmentInfo(
             seen[envIndex].executable.filename,
         );

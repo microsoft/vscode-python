@@ -134,9 +134,18 @@ export namespace Jupyter {
 }
 
 export namespace TensorBoard {
+    export const useCurrentWorkingDirectoryDetail = localize(
+        'TensorBoard.useCurrentWorkingDirectoryDetail',
+        'TensorBoard will search for tfevent files in all subdirectories of the current working directory'
+    );
+    export const useCurrentWorkingDirectory = localize(
+        'TensorBoard.useCurrentWorkingDirectory',
+        'Use current working directory'
+    );
+    export const currentDirectory = localize('TensorBoard.currentDirectory', 'Current: {0}');
     export const logDirectoryPrompt = localize(
         'TensorBoard.logDirectoryPrompt',
-        'Please select a log directory to start TensorBoard with.'
+        'Select a log directory to start TensorBoard with'
     );
     export const progressMessage = localize('TensorBoard.progressMessage', 'Starting TensorBoard session...');
     export const failedToStartSessionError = localize(
@@ -145,13 +154,18 @@ export namespace TensorBoard {
     );
     export const nativeTensorBoardPrompt = localize(
         'TensorBoard.nativeTensorBoardPrompt',
-        'VS Code now has native TensorBoard support. Would you like to launch TensorBoard?'
-    );
-    export const usingCurrentWorkspaceFolder = localize(
-        'TensorBoard.usingCurrentWorkspaceFolder',
-        'We are using the current workspace folder as the log directory for your TensorBoard session.'
+        'VS Code now has native TensorBoard support. Would you like to launch TensorBoard?  (Tip: Launch TensorBoard anytime by opening the command palette and searching for "Launch TensorBoard".)'
     );
     export const selectAFolder = localize('TensorBoard.selectAFolder', 'Select a folder');
+    export const selectAFolderDetail = localize(
+        'TensorBoard.selectAFolderDetail',
+        'Select a log directory containing tfevent files'
+    );
+    export const selectAnotherFolder = localize('TensorBoard.selectAnotherFolder', 'Select another folder');
+    export const selectAnotherFolderDetail = localize(
+        'TensorBoard.selectAnotherFolderDetail',
+        'Use the file explorer to select another folder'
+    );
 }
 
 export namespace LanguageService {

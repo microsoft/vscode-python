@@ -117,7 +117,7 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
         const expectedEnvs = [
             createExpectedEnvInfo(
                 path.join(testWorkspaceFolder, 'posix2conda', 'python'),
-                PythonEnvKind.Conda,
+                PythonEnvKind.Unknown,
                 { major: 3, minor: 8, micro: 5 },
                 'posix2conda',
             ),
@@ -130,7 +130,7 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
             ),
             createExpectedEnvInfo(
                 path.join(testWorkspaceFolder, 'posix3custom', 'bin', 'python'),
-                PythonEnvKind.Custom,
+                PythonEnvKind.Unknown,
                 undefined,
                 'posix3custom',
             ),
@@ -149,7 +149,7 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
         const interpreterPath = path.join(testWorkspaceFolder, 'posix2conda', 'python');
         const expected = createExpectedEnvInfo(
             path.join(testWorkspaceFolder, 'posix2conda', 'python'),
-            PythonEnvKind.Conda,
+            PythonEnvKind.Unknown,
             { major: 3, minor: 8, micro: 5 },
             'posix2conda',
         );
@@ -163,7 +163,7 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
         const interpreterPath = path.join(testWorkspaceFolder, 'posix2conda', 'python');
         const expected = createExpectedEnvInfo(
             path.join(testWorkspaceFolder, 'posix2conda', 'python'),
-            PythonEnvKind.Conda,
+            PythonEnvKind.Unknown,
             { major: 3, minor: 8, micro: 5 },
             'posix2conda',
         );

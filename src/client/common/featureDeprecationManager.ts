@@ -142,8 +142,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
                 return false;
             }
             if (Array.isArray(configValue)) {
-                // tslint:disable-next-line:no-any
-                return (configValue as any[]).length > 0;
+                return configValue.length > 0;
             }
             // If we have a value in the setting, then return.
             return true;
