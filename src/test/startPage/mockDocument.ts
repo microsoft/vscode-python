@@ -64,7 +64,7 @@ export class MockDocument implements TextDocument {
         this._contents = contents;
         this._lines = this.createLines();
         this._onSave = onSave;
-        this._language = language ? language : this._language;
+        this._language = language ?? this._language;
     }
 
     public setContent(contents: string) {
