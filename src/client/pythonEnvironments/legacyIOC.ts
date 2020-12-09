@@ -31,14 +31,17 @@ import { IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
 import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
+import { isMacDefaultPythonPath } from './base/locators/lowLevel/macDefaultLocator';
 import { getEnvs } from './base/locatorUtils';
 import { inExperiment } from './common/externalDependencies';
+import { getEnvironmentDirFromPath } from './common/commonUtils';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
 import { CondaEnvironmentInfo } from './discovery/locators/services/conda';
 import { CondaEnvFileService } from './discovery/locators/services/condaEnvFileService';
 import { CondaEnvService } from './discovery/locators/services/condaEnvService';
+import { isCondaEnvironment } from './discovery/locators/services/condaLocator';
 import { CondaService } from './discovery/locators/services/condaService';
 import { CurrentPathService, PythonInPathCommandProvider } from './discovery/locators/services/currentPathService';
 import {
@@ -53,6 +56,7 @@ import { PipEnvService } from './discovery/locators/services/pipEnvService';
 import { PipEnvServiceHelper } from './discovery/locators/services/pipEnvServiceHelper';
 import { WindowsRegistryService } from './discovery/locators/services/windowsRegistryService';
 import { WindowsStoreInterpreter } from './discovery/locators/services/windowsStoreInterpreter';
+import { isWindowsStoreEnvironment } from './discovery/locators/services/windowsStoreLocator';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
     WorkspaceVirtualEnvService,
@@ -164,11 +168,9 @@ class ComponentAdapter implements IComponentAdapter {
         if (!(await this.isEnabled())) {
             return undefined;
         }
-        const env = await this.api.resolveEnv(pythonPath);
-        if (env === undefined) {
-            return undefined;
-        }
-        return env.kind === PythonEnvKind.MacDefault;
+        // Eventually we won't be calling 'isMacDefaultPythonPath' in the component adapter, so we won't
+        // need to use 'isMacDefaultPythonPath' directly here. This is just a temporary implementation.
+        return isMacDefaultPythonPath(pythonPath);
     }
 
     // IInterpreterService
@@ -204,11 +206,9 @@ class ComponentAdapter implements IComponentAdapter {
         if (!(await this.isEnabled())) {
             return undefined;
         }
-        const env = await this.api.resolveEnv(interpreterPath);
-        if (env === undefined) {
-            return undefined;
-        }
-        return env.kind === PythonEnvKind.Conda;
+        // Eventually we won't be calling 'isCondaEnvironment' in the component adapter, so we won't
+        // need to use 'isCondaEnvironment' directly here. This is just a temporary implementation.
+        return isCondaEnvironment(interpreterPath);
     }
 
     // A result of `undefined` means "Fall back to the old code!"
@@ -216,18 +216,18 @@ class ComponentAdapter implements IComponentAdapter {
         if (!(await this.isEnabled())) {
             return undefined;
         }
-        const env = await this.api.resolveEnv(interpreterPath);
-        if (env === undefined) {
+        // For Conda we assume we don't set name for environments if they're prefix conda environments, similarly
+        // we don't have 'path' set if they're non-prefix conda environments.
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: Expose these two properties via a method in the Conda locator on a temporary basis. This method
+        // will go away eventually, and so exposing those properties will no longer be needed. Until then we only
+        // return location.
+        const location = getEnvironmentDirFromPath(interpreterPath);
+        if (!(await isCondaEnvironment(interpreterPath))) {
             return undefined;
-        }
-        if (env.kind !== PythonEnvKind.Conda) {
-            return undefined;
-        }
-        if (env.name !== '') {
-            return { name: env.name, path: '' };
         }
         // else
-        return { name: '', path: env.location };
+        return { name: '', path: location };
     }
 
     // IWindowsStoreInterpreter
@@ -237,11 +237,9 @@ class ComponentAdapter implements IComponentAdapter {
         if (!(await this.isEnabled())) {
             return undefined;
         }
-        const env = await this.api.resolveEnv(pythonPath);
-        if (env) {
-            return env.kind === PythonEnvKind.WindowsStore;
-        }
-        return undefined;
+        // Eventually we won't be calling 'isWindowsStoreInterpreter' in the component adapter, so we won't
+        // need to use 'isWindowsStoreEnvironment' directly here. This is just a temporary implementation.
+        return isWindowsStoreEnvironment(pythonPath);
     }
 
     // IInterpreterLocatorService
