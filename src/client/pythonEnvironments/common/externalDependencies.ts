@@ -5,6 +5,7 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../../common/process/types';
+import { IExperimentService } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IDisposable } from '../../common/utils/resourceLifecycle';
@@ -113,4 +114,9 @@ export function onDidChangePythonSetting(name: string, callback: () => void): ID
             callback();
         }
     });
+}
+
+export function inExperiment(experiment: string): Promise<boolean> {
+    const experimentService = internalServiceContainer.get<IExperimentService>(IExperimentService);
+    return experimentService.inExperiment(experiment);
 }

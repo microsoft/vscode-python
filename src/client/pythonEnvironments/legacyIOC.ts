@@ -3,6 +3,7 @@
 
 import { injectable } from 'inversify';
 import * as vscode from 'vscode';
+import { DiscoveryVariants } from '../common/experiments/groups';
 import { getVersionString, parseVersion } from '../common/utils/version';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -31,6 +32,7 @@ import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
 import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
 import { getEnvs } from './base/locatorUtils';
+import { inExperiment } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
@@ -134,19 +136,20 @@ export interface IPythonEnvironments extends ILocator {}
 
 @injectable()
 class ComponentAdapter implements IComponentAdapter {
+    // this will be set based on experiment
+    private _enabled?: boolean;
+
     constructor(
         // The adapter only wraps one thing: the component API.
         private readonly api: IPythonEnvironments,
         private readonly environmentsSecurity: IEnvironmentsSecurity,
-        // For now we effectively disable the component.
-        private readonly enabled = false,
     ) {}
 
     // IInterpreterHelper
 
     // A result of `undefined` means "Fall back to the old code!"
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
-        if (!this.enabled) {
+        if (!(await this.isEnabled())) {
             return undefined;
         }
         const env = await this.api.resolveEnv(pythonPath);
@@ -158,7 +161,7 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined> {
-        if (!this.enabled) {
+        if (!(await this.isEnabled())) {
             return undefined;
         }
         const env = await this.api.resolveEnv(pythonPath);
@@ -177,7 +180,7 @@ class ComponentAdapter implements IComponentAdapter {
         pythonPath: string,
         resource?: vscode.Uri,
     ): Promise<undefined | PythonEnvironment> {
-        if (!this.enabled) {
+        if (!(await this.isEnabled())) {
             return undefined;
         }
         const info = buildEnvInfo({ executable: pythonPath });
@@ -198,7 +201,7 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined> {
-        if (!this.enabled) {
+        if (!(await this.isEnabled())) {
             return undefined;
         }
         const env = await this.api.resolveEnv(interpreterPath);
@@ -210,7 +213,7 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public async getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined> {
-        if (!this.enabled) {
+        if (!(await this.isEnabled())) {
             return undefined;
         }
         const env = await this.api.resolveEnv(interpreterPath);
@@ -231,25 +234,27 @@ class ComponentAdapter implements IComponentAdapter {
 
     // A result of `undefined` means "Fall back to the old code!"
     public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined> {
-        if (!this.enabled) {
+        if (!(await this.isEnabled())) {
             return undefined;
         }
         const env = await this.api.resolveEnv(pythonPath);
-        if (env === undefined) {
-            return undefined;
+        if (env) {
+            return env.kind === PythonEnvKind.WindowsStore;
         }
-        return env.kind === PythonEnvKind.WindowsStore;
+        return undefined;
     }
 
     // IInterpreterLocatorService
 
     // A result of `undefined` means "Fall back to the old code!"
     public get hasInterpreters(): Promise<boolean | undefined> {
-        if (!this.enabled) {
-            return Promise.resolve(undefined);
-        }
-        const iterator = this.api.iterEnvs();
-        return iterator.next().then((res) => !res.done);
+        return this.isEnabled().then((enabled) => {
+            if (enabled) {
+                const iterator = this.api.iterEnvs();
+                return iterator.next().then((res) => !res.done);
+            }
+            return undefined;
+        });
     }
 
     // A result of `undefined` means "Fall back to the old code!"
@@ -262,7 +267,7 @@ class ComponentAdapter implements IComponentAdapter {
         //     onSuggestion?: boolean;
         // }
     ): Promise<PythonEnvironment[] | undefined> {
-        if (!this.enabled) {
+        if (!(await this.isEnabled())) {
             return undefined;
         }
         if (options?.onSuggestion) {
@@ -284,6 +289,19 @@ class ComponentAdapter implements IComponentAdapter {
         const iterator = this.api.iterEnvs(query);
         const envs = await getEnvs(iterator);
         return envs.map(convertEnvInfo);
+    }
+
+    private async isEnabled(): Promise<boolean> {
+        if (this._enabled === undefined) {
+            this._enabled = (await Promise.all(
+                [
+                    inExperiment(DiscoveryVariants.discoverWithFileWatching),
+                    inExperiment(DiscoveryVariants.discoveryWithoutFileWatching),
+                ],
+            )).includes(true);
+        }
+
+        return this._enabled;
     }
 }
 

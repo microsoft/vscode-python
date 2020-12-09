@@ -44,6 +44,7 @@ export type GetInterpreterOptions = {
 // The parts of IComponentAdapter used here.
 interface IComponent {
     getInterpreterDetails(pythonPath: string): Promise<undefined | PythonEnvironment>;
+    getInterpreters(resource?: Uri): Promise<PythonEnvironment[] | undefined>;
 }
 
 @injectable()
@@ -68,7 +69,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
     private readonly persistentStateFactory: IPersistentStateFactory;
     private readonly configService: IConfigurationService;
     private readonly interpreterPathService: IInterpreterPathService;
-    private readonly experiments: IExperimentsManager;
+    private readonly experimentsManager: IExperimentsManager;
     private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
     private readonly didChangeInterpreterInformation = new EventEmitter<PythonEnvironment>();
     private readonly inMemoryCacheOfDisplayNames = new Map<string, string>();
@@ -86,7 +87,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.persistentStateFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-        this.experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        this.experimentsManager = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     }
 
     public async refresh(resource?: Uri) {
@@ -105,7 +106,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const pySettings = this.configService.getSettings();
         this._pythonPathSetting = pySettings.pythonPath;
-        if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
+        if (this.experimentsManager.inExperiment(DeprecatePythonPath.experiment)) {
             disposables.push(
                 this.interpreterPathService.onDidChange((i) => {
                     this._onConfigChanged(i.uri);
@@ -124,14 +125,22 @@ export class InterpreterService implements Disposable, IInterpreterService {
             });
             disposables.push(disposable);
         }
-        this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+        this.experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
     }
 
     @captureTelemetry(EventName.PYTHON_INTERPRETER_DISCOVERY, { locator: 'all' }, true)
     public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
-        const interpreters = await this.locator.getInterpreters(resource, options);
+        let environments: PythonEnvironment[] = [];
+
+        const envs = await this.pyenvs.getInterpreters(resource);
+        if (envs !== undefined) {
+            environments = envs;
+        } else {
+            environments = await this.locator.getInterpreters(resource, options);
+        }
+
         await Promise.all(
-            interpreters
+            environments
                 .filter((item) => !item.displayName)
                 .map(async (item) => {
                     item.displayName = await this.getDisplayName(item, resource);
@@ -141,7 +150,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
                     }
                 })
         );
-        return interpreters;
+        return environments;
     }
 
     public dispose(): void {
