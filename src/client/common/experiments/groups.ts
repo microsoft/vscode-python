@@ -94,3 +94,9 @@ export enum LinterInstallationPromptVariants {
     flake8First = 'pythonInstallFlake8ButtonFirst',
     noPrompt = 'pythonNotDisplayLinterPrompt'
 }
+
+// AB test codeactions vs codelenses as an entrypoint for native TensorBoard sessions
+export enum NativeTensorBoardEntrypoints {
+    codeActions = 'pythonTensorBoardCodeActions',
+    codeLenses = 'pythonTensorBoardCodeLenses'
+}

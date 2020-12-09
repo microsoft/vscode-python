@@ -166,6 +166,14 @@ export namespace TensorBoard {
         'TensorBoard.selectAnotherFolderDetail',
         'Use the file explorer to select another folder'
     );
+    export const launchNativeTensorBoardSessionCodeLens = localize(
+        'TensorBoard.launchNativeTensorBoardSessionCodeLens',
+        '▶ Launch Native TensorBoard Session'
+    );
+    export const launchNativeTensorBoardSessionCodeAction = localize(
+        'TensorBoard.launchNativeTensorBoardSessionCodeAction',
+        'Launch native TensorBoard session'
+    );
 }
 
 export namespace LanguageService {
