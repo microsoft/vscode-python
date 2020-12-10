@@ -58,6 +58,7 @@ export class JoinMailingListPrompt implements IExtensionSingleActivationService 
 
     @swallowExceptions('Failed to display tip')
     private async showTip(promptContent: string) {
+        sendTelemetryEvent(EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED);
         const selection = await this.shell.showInformationMessage(
             promptContent,
             Common.bannerLabelYes(),
