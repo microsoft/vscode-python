@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Event, EventEmitter, TextEditor, window } from 'vscode';
+import { Event, EventEmitter, TextEditor } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
@@ -45,8 +45,7 @@ export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExt
 
     private async activateInternal() {
         // Process currently active text editor
-        this.onChangedActiveTextEditor(window.activeTextEditor);
-
+        this.onChangedActiveTextEditor(this.documentManager.activeTextEditor);
         // Process changes to active text editor as well
         this.documentManager.onDidChangeActiveTextEditor(
             (e) => this.onChangedActiveTextEditor(e),
