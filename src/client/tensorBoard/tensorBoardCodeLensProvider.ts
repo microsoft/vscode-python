@@ -7,15 +7,15 @@ import { CancellationToken, CodeLens, Command, languages, Position, Range, TextD
 import { IExtensionSingleActivationService } from '../activation/types';
 import { Commands, PYTHON } from '../common/constants';
 import { NativeTensorBoard, NativeTensorBoardEntrypoints } from '../common/experiments/groups';
-import { IExperimentService, IExtensionContext } from '../common/types';
+import { IDisposableRegistry, IExperimentService } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
 import { containsTensorBoardImport } from './helpers';
 
 @injectable()
 export class TensorBoardCodeLensProvider implements IExtensionSingleActivationService {
     constructor(
-        @inject(IExtensionContext) private extensionContext: IExtensionContext,
-        @inject(IExperimentService) private experimentService: IExperimentService
+        @inject(IExperimentService) private experimentService: IExperimentService,
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {}
 
     public async activate(): Promise<void> {
@@ -23,7 +23,7 @@ export class TensorBoardCodeLensProvider implements IExtensionSingleActivationSe
             (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) &&
             (await this.experimentService.inExperiment(NativeTensorBoardEntrypoints.codeLenses))
         ) {
-            this.extensionContext.subscriptions.push(languages.registerCodeLensProvider(PYTHON, this));
+            this.disposables.push(languages.registerCodeLensProvider(PYTHON, this));
         }
     }
 

@@ -18,15 +18,15 @@ import {
 import { IExtensionSingleActivationService } from '../activation/types';
 import { Commands, PYTHON } from '../common/constants';
 import { NativeTensorBoard, NativeTensorBoardEntrypoints } from '../common/experiments/groups';
-import { IExtensionContext, IExperimentService } from '../common/types';
+import { IExperimentService, IDisposableRegistry } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
 import { containsTensorBoardImport } from './helpers';
 
 @injectable()
 export class TensorBoardCodeActionProvider implements CodeActionProvider, IExtensionSingleActivationService {
     constructor(
-        @inject(IExtensionContext) private extensionContext: IExtensionContext,
-        @inject(IExperimentService) private experimentService: IExperimentService
+        @inject(IExperimentService) private experimentService: IExperimentService,
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {}
 
     public async activate(): Promise<void> {
@@ -34,7 +34,7 @@ export class TensorBoardCodeActionProvider implements CodeActionProvider, IExten
             (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) &&
             (await this.experimentService.inExperiment(NativeTensorBoardEntrypoints.codeActions))
         ) {
-            this.extensionContext.subscriptions.push(
+            this.disposables.push(
                 languages.registerCodeActionsProvider(PYTHON, this, {
                     providedCodeActionKinds: [CodeActionKind.QuickFix]
                 })

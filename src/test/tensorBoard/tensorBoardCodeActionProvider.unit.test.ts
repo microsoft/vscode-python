@@ -7,13 +7,12 @@ import * as TypeMoq from 'typemoq';
 import { mock } from 'ts-mockito';
 import { assert } from 'chai';
 import { CancellationToken, CodeActionContext, Position, Selection } from 'vscode';
-import { IExperimentService, IExtensionContext } from '../../client/common/types';
+import { IExperimentService } from '../../client/common/types';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { TensorBoardCodeActionProvider } from '../../client/tensorBoard/tensorBoardCodeActionProvider';
 import { MockDocument } from '../startPage/mockDocument';
 
 suite('TensorBoard code action provider', () => {
-    let extensionContext: TypeMoq.IMock<IExtensionContext>;
     let experimentService: IExperimentService;
     let codeActionProvider: TensorBoardCodeActionProvider;
     let selection: TypeMoq.IMock<Selection>;
@@ -21,10 +20,8 @@ suite('TensorBoard code action provider', () => {
     let token: TypeMoq.IMock<CancellationToken>;
 
     setup(() => {
-        extensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
-        extensionContext.setup((e) => e.subscriptions).returns(() => []);
         experimentService = mock(ExperimentService);
-        codeActionProvider = new TensorBoardCodeActionProvider(extensionContext.object, experimentService);
+        codeActionProvider = new TensorBoardCodeActionProvider(experimentService, []);
         context = TypeMoq.Mock.ofType<CodeActionContext>();
         token = TypeMoq.Mock.ofType<CancellationToken>();
     });
