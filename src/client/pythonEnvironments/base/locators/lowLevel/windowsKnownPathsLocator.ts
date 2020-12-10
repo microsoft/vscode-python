@@ -31,8 +31,8 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
     private readonly disposables = new Disposables();
 
     constructor() {
-        const dirLocators: DirFilesLocator[] = getSearchPathEntries()
-            .map((dirname) => new DirFilesLocator(dirname, PythonEnvKind.Unknown));
+        const dirLocators: (ILocator & IDisposable)[] = getSearchPathEntries()
+            .map((dirname) => getDirFilesLocator(dirname, PythonEnvKind.Unknown));
         this.disposables.push(...dirLocators);
         this.locators = new Locators(dirLocators);
         this.onChanged = this.locators.onChanged;
@@ -53,4 +53,11 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         return this.locators.resolveEnv(env);
     }
+}
+
+function getDirFilesLocator(
+    dirname: string,
+    kind: PythonEnvKind,
+): ILocator & IDisposable {
+    return new DirFilesLocator(dirname, kind);
 }
