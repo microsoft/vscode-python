@@ -97,7 +97,6 @@ export class DirFilesLocator extends FSWatchingLocator {
     }
 
     protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        // XXX Check the directory directly?
         return this.subLocator.resolveEnv(env);
     }
 }
