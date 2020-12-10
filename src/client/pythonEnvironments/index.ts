@@ -16,6 +16,7 @@ import { ILocator } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsReducer } from './base/locators/composite/environmentsReducer';
 import { PythonEnvsResolver } from './base/locators/composite/environmentsResolver';
+import { WindowsPathEnvVarLocator } from './base/locators/lowLevel/windowsKnownPathsLocator';
 import { WorkspaceVirtualEnvironmentLocator } from './base/locators/lowLevel/workspaceVirtualEnvLocator';
 import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
@@ -108,6 +109,7 @@ function createNonWorkspaceLocators(
         locators = [
             new WindowsRegistryLocator(),
             new WindowsStoreLocator(),
+            new WindowsPathEnvVarLocator(),
         ];
     } else {
         // Linux/Mac locators go here
