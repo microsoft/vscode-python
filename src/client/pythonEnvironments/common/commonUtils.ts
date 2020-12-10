@@ -23,9 +23,6 @@ export async function* findInterpretersInDir(
     root: string,
     recurseLevels?: number,
     filter?: (x: string) => boolean,
-    opts: {
-        failOnDirNotFound?: boolean,
-    } = {},
 ): AsyncIterableIterator<string> {
     const os = getOSType();
     const checkBin = os === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
@@ -37,7 +34,8 @@ export async function* findInterpretersInDir(
             .map((c) => path.join(root, c))
             .filter(itemFilter);
     } catch (err) {
-        if (err.code === 'ENOENT' && !opts.failOnDirNotFound) {
+        // Treat a missing directory as empty.
+        if (err.code === 'ENOENT') {
             return;
         }
         throw err; // re-throw
@@ -47,7 +45,7 @@ export async function* findInterpretersInDir(
         async function* generator() {
             if (await isDirectory(fullPath)) {
                 if (recurseLevels && recurseLevels > 0) {
-                    yield* findInterpretersInDir(fullPath, recurseLevels - 1, filter, opts);
+                    yield* findInterpretersInDir(fullPath, recurseLevels - 1, filter);
                 }
             } else if (checkBin(fullPath)) {
                 yield fullPath;
