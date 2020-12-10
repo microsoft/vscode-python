@@ -168,8 +168,10 @@ class ComponentAdapter implements IComponentAdapter {
         if (!(await this.isEnabled())) {
             return undefined;
         }
-        // Eventually we won't be calling 'isMacDefaultPythonPath' in the component adapter, so we won't
-        // need to use 'isMacDefaultPythonPath' directly here. This is just a temporary implementation.
+        // While `ComponentAdapter` represents how the component would be used in the rest of the
+        // extension, we cheat here for the sake of performance.  This is not a problem because when
+        // we start using the component's public API directly we will be dealing with `PythonEnvInfo`
+        // instead of just `pythonPath`.
         return isMacDefaultPythonPath(pythonPath);
     }
 
@@ -206,8 +208,10 @@ class ComponentAdapter implements IComponentAdapter {
         if (!(await this.isEnabled())) {
             return undefined;
         }
-        // Eventually we won't be calling 'isCondaEnvironment' in the component adapter, so we won't
-        // need to use 'isCondaEnvironment' directly here. This is just a temporary implementation.
+        // While `ComponentAdapter` represents how the component would be used in the rest of the
+        // extension, we cheat here for the sake of performance.  This is not a problem because when
+        // we start using the component's public API directly we will be dealing with `PythonEnvInfo`
+        // instead of just `pythonPath`.
         return isCondaEnvironment(interpreterPath);
     }
 
@@ -216,8 +220,13 @@ class ComponentAdapter implements IComponentAdapter {
         if (!(await this.isEnabled())) {
             return undefined;
         }
-        // For Conda we assume we don't set name for environments if they're prefix conda environments, similarly
-        // we don't have 'path' set if they're non-prefix conda environments.
+        // While `ComponentAdapter` represents how the component would be used in the rest of the
+        // extension, we cheat here for the sake of performance.  This is not a problem because when
+        // we start using the component's public API directly we will be dealing with `PythonEnvInfo`
+        // instead of just `pythonPath`.
+        //
+        // Also, for Conda we assume we don't set name for environments if they're prefix conda
+        // environments, similarly we don't have 'path' set if they're non-prefix conda environments.
         // tslint:disable-next-line:no-suspicious-comment
         // TODO: Expose these two properties via a method in the Conda locator on a temporary basis. This method
         // will go away eventually, and so exposing those properties will no longer be needed. Until then we only
