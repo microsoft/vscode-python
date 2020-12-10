@@ -22,13 +22,7 @@ export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExt
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry
-    ) {
-        this.documentManager.onDidChangeActiveTextEditor(
-            (e) => this.onChangedActiveTextEditor(e),
-            this,
-            this.disposables
-        );
-    }
+    ) {}
 
     // Fires when the active text editor contains a tensorboard import.
     public get onDidImportTensorBoard(): Event<void> {
@@ -40,8 +34,19 @@ export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExt
     }
 
     public async activate(): Promise<void> {
-        // Process active text editor with a timeout delay
+        this.activateInternal().ignoreErrors();
+    }
+
+    private async activateInternal() {
+        // Process currently active text editor
         this.onChangedActiveTextEditor(window.activeTextEditor);
+
+        // Process changes to active text editor as well
+        this.documentManager.onDidChangeActiveTextEditor(
+            (e) => this.onChangedActiveTextEditor(e),
+            this,
+            this.disposables
+        );
     }
 
     private onChangedActiveTextEditor(editor: TextEditor | undefined) {
