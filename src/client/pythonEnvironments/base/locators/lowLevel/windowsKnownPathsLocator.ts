@@ -59,5 +59,17 @@ function getDirFilesLocator(
     dirname: string,
     kind: PythonEnvKind,
 ): ILocator & IDisposable {
-    return new DirFilesLocator(dirname, kind);
+    const locator = new DirFilesLocator(dirname, kind);
+    async function* iterEnvs(query: PythonLocatorQuery): IPythonEnvsIterator {
+        yield* locator.iterEnvs(query);
+    }
+    async function resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        return locator.resolveEnv(env);
+    }
+    return {
+        iterEnvs,
+        resolveEnv,
+        onChanged: locator.onChanged,
+        dispose: () => locator.dispose(),
+    };
 }
