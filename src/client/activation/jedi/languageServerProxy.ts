@@ -126,7 +126,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public loadExtension(/* _args?: {} */): void {
+    public loadExtension(): void {
         // No body.
     }
 

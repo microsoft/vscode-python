@@ -256,14 +256,11 @@ export class TensorBoardSession {
             this.process?.kill();
             this.process = undefined;
         });
-        webviewPanel.onDidChangeViewState(
-            (/* _e */) => {
-                if (webviewPanel.visible) {
-                    this.update();
-                }
-            },
-            null
-        );
+        webviewPanel.onDidChangeViewState(() => {
+            if (webviewPanel.visible) {
+                this.update();
+            }
+        }, null);
         return webviewPanel;
     }
 

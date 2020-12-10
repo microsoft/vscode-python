@@ -87,10 +87,10 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
 
             // When a file is created or changed that matches `this.globPattern`, try to show our prompt
             this.disposables.push(
-                fileSystemWatcher.onDidCreate((/* _uri */) => this.tensorBoardPrompt.showNativeTensorBoardPrompt())
+                fileSystemWatcher.onDidCreate(() => this.tensorBoardPrompt.showNativeTensorBoardPrompt())
             );
             this.disposables.push(
-                fileSystemWatcher.onDidChange((/* _uri */) => this.tensorBoardPrompt.showNativeTensorBoardPrompt())
+                fileSystemWatcher.onDidChange(() => this.tensorBoardPrompt.showNativeTensorBoardPrompt())
             );
             this.disposables.push(fileSystemWatcher);
             fileWatchers.push(fileSystemWatcher);

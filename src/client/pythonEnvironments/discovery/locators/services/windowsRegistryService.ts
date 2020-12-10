@@ -56,7 +56,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
         // Do nothing.
     }
 
-    protected async getInterpretersImplementation(/* resource?: vscode.Uri */): Promise<PythonEnvironment[]> {
+    protected async getInterpretersImplementation(): Promise<PythonEnvironment[]> {
         return this.platform.isWindows
             ? this.getInterpretersFromRegistry().catch((ex) => {
                 traceError('Fetching interpreters from registry failed with error', ex);
