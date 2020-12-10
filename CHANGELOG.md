@@ -1,5 +1,101 @@
 # Changelog
 
+## 2020.12.0-rc (10 December 2020)
+
+### Enhancements
+
+1. FastAPI debugger feature.
+   (thanks [Marcelo Trylesinski](https://github.com/kludex/)!)
+   ([#14247](https://github.com/Microsoft/vscode-python/issues/14247))
+1. Put linter prompt behind an experiment flag.
+   ([#14760](https://github.com/Microsoft/vscode-python/issues/14760))
+1. Add Python: Launch TensorBoard command behind an experiment.
+   ([#14806](https://github.com/Microsoft/vscode-python/issues/14806))
+1. Detect tfevent files in workspace and prompt to launch native TensorBoard session.
+   ([#14807](https://github.com/Microsoft/vscode-python/issues/14807))
+1. Use default color for "Select Python interpreter" on the status bar.
+   (thanks [Daniel Rodriguez](https://github.com/danielfrg)!)
+   ([#14859](https://github.com/Microsoft/vscode-python/issues/14859))
+1. Experiment to use the new environment discovery module.
+   ([#14868](https://github.com/Microsoft/vscode-python/issues/14868))
+1. Add experimentation API support for Pylance.
+   ([#14895](https://github.com/Microsoft/vscode-python/issues/14895))
+
+### Fixes
+
+1. Format `.pyi` files correctly when using Black.
+   (thanks [Steve Dignam](https://github.com/sbdchd)!)
+   ([#13341](https://github.com/Microsoft/vscode-python/issues/13341))
+1. Add `node-loader` to support `webpack` for `fsevents` package.
+   ([#14664](https://github.com/Microsoft/vscode-python/issues/14664))
+1. Don't show play icon in diff editor.
+   (thanks [David Sanders](https://github.com/dsanders11)!)
+   ([#14800](https://github.com/Microsoft/vscode-python/issues/14800))
+1. Do not show "You need to select a Python interpreter before you start debugging" when "python" in debug configuration is invalid.
+   ([#14814](https://github.com/Microsoft/vscode-python/issues/14814))
+1. Fix custom language server message handlers being registered too late in startup.
+   ([#14893](https://github.com/Microsoft/vscode-python/issues/14893))
+
+### Code Health
+
+1. Modified the errors generated when `launch.json` is not properly configured to be more specific about which fields are missing.
+   (thanks [Shahzaib Paracha](https://github.com/ShahzaibP)!)
+   ([#14739](https://github.com/Microsoft/vscode-python/issues/14739))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2020.11.1 (17 November 2020)
 
 ### Enhancements
