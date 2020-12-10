@@ -23,20 +23,31 @@ export async function* findInterpretersInDir(
     root: string,
     recurseLevels?: number,
     filter?: (x: string) => boolean,
+    opts: {
+        failOnDirNotFound?: boolean,
+    } = {},
 ): AsyncIterableIterator<string> {
     const os = getOSType();
     const checkBin = os === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
     const itemFilter = filter ?? (() => true);
 
-    const dirContents = (await listDir(root))
-        .map((c) => path.join(root, c))
-        .filter(itemFilter);
+    let dirContents: string[];
+    try {
+        dirContents = (await listDir(root))
+            .map((c) => path.join(root, c))
+            .filter(itemFilter);
+    } catch (err) {
+        if (err.code === 'ENOENT' && !opts.failOnDirNotFound) {
+            return;
+        }
+        throw err; // re-throw
+    }
 
     const generators = dirContents.map((fullPath) => {
         async function* generator() {
             if (await isDirectory(fullPath)) {
                 if (recurseLevels && recurseLevels > 0) {
-                    yield* findInterpretersInDir(fullPath, recurseLevels - 1);
+                    yield* findInterpretersInDir(fullPath, recurseLevels - 1, filter, opts);
                 }
             } else if (checkBin(fullPath)) {
                 yield fullPath;
