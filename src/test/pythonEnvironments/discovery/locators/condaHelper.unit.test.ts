@@ -459,14 +459,14 @@ suite('Conda binary is located correctly', () => {
 });
 
 suite('Conda env list is parsed correctly', () => {
-    const condaInfo = {
-        conda_version: '4.8.0',
-        python_version: '3.9.0',
+    const condaInfo: CondaInfo = {
+        condaVersion: '4.8.0',
+        pythonVersion: '3.9.0',
         'sys.version': '3.9.0',
         'sys.prefix': '/some/env',
-        root_prefix: '/home/user/miniconda3',
-        default_prefix: '/home/user/miniconda3/envs/env1',
-        envs_dirs: [
+        rootPrefix: '/home/user/miniconda3',
+        defaultPrefix: '/home/user/miniconda3/envs/env1',
+        envsDirs: [
             '/home/user/miniconda3/envs',
             '/home/user/.conda/envs',
         ],
@@ -516,7 +516,7 @@ suite('Conda env list is parsed correctly', () => {
             },
             {
                 prefix: '/home/user/miniconda3/envs/dir/env3',
-                name: undefined // because it's not directly under envs_dirs
+                name: undefined // because it's not directly under envsDirs
             },
             {
                 prefix: '/home/user/.conda/envs/env4',
@@ -528,7 +528,7 @@ suite('Conda env list is parsed correctly', () => {
             },
             {
                 prefix: '/env6',
-                name: undefined // because it's not directly under envs_dirs
+                name: undefined // because it's not directly under envsDirs
             },
         ]);
     });
