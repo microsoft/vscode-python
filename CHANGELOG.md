@@ -9,10 +9,6 @@
    ([#14247](https://github.com/Microsoft/vscode-python/issues/14247))
 1. Put linter prompt behind an experiment flag.
    ([#14760](https://github.com/Microsoft/vscode-python/issues/14760))
-1. Add Python: Launch TensorBoard command behind an experiment.
-   ([#14806](https://github.com/Microsoft/vscode-python/issues/14806))
-1. Detect tfevent files in workspace and prompt to launch native TensorBoard session.
-   ([#14807](https://github.com/Microsoft/vscode-python/issues/14807))
 1. Use default color for "Select Python interpreter" on the status bar.
    (thanks [Daniel Rodriguez](https://github.com/danielfrg)!)
    ([#14859](https://github.com/Microsoft/vscode-python/issues/14859))
