@@ -7,20 +7,17 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 1.  Go for Visual Studio Code (https://github.com/Microsoft/vscode-go)
 2.  Files from the Python Project (https://www.python.org/)
 3.  Google Diff Match and Patch  (https://github.com/GerHobbelt/google-diff-match-patch)
-4.  enchannel-zmq-backend (https://github.com/nteract/enchannel-zmq-backend)
-6.  omnisharp-vscode (https://github.com/OmniSharp/omnisharp-vscode)
-8.  PTVS (https://github.com/Microsoft/PTVS)
-9.  Python documentation (https://docs.python.org/)
-10. python-functools32 (https://github.com/MiCHiLU/python-functools32/blob/master/functools32/functools32.py)
-11. pythonVSCode (https://github.com/DonJayamanne/pythonVSCode)
-12. Sphinx (http://sphinx-doc.org/)
-13. nteract (https://github.com/nteract/nteract)
-14. less-plugin-inline-urls (https://github.com/less/less-plugin-inline-urls/)
-15. jupyter-notebook (https://github.com/jupyter/notebook)
-16. ipywidgets (https://github.com/jupyter-widgets)
-17. vscode-cpptools (https://github.com/microsoft/vscode-cpptools)
-18. font-awesome (https://github.com/FortAwesome/Font-Awesome)
-19. mocha (https://github.com/mochajs/mocha)
+4.  omnisharp-vscode (https://github.com/OmniSharp/omnisharp-vscode)
+5.  PTVS (https://github.com/Microsoft/PTVS)
+6.  Python documentation (https://docs.python.org/)
+7.  python-functools32 (https://github.com/MiCHiLU/python-functools32/blob/master/functools32/functools32.py)
+8.  pythonVSCode (https://github.com/DonJayamanne/pythonVSCode)
+9.  Sphinx (http://sphinx-doc.org/)
+10. nteract (https://github.com/nteract/nteract)
+11. less-plugin-inline-urls (https://github.com/less/less-plugin-inline-urls/)
+12. vscode-cpptools (https://github.com/microsoft/vscode-cpptools)
+13. font-awesome (https://github.com/FortAwesome/Font-Awesome)
+14. mocha (https://github.com/mochajs/mocha)
 
 %%
 Go for Visual Studio Code NOTICES, INFORMATION, AND LICENSE BEGIN HERE
@@ -967,107 +964,9 @@ Apache License
 =========================================
 END OF less-plugin-inline-urls NOTICES, INFORMATION, AND LICENSE
 
-%% jupyter notebook NOTICES, INFORMATION, AND LICENSE BEGIN HERE
-=========================================
-# Licensing terms
-
-This project is licensed under the terms of the Modified BSD License
-(also known as New or Revised or 3-Clause BSD), as follows:
-
-- Copyright (c) 2001-2015, IPython Development Team
-- Copyright (c) 2015-, Jupyter Development Team
-
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or
-other materials provided with the distribution.
-
-Neither the name of the Jupyter Development Team nor the names of its
-contributors may be used to endorse or promote products derived from this
-software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-## About the Jupyter Development Team
-
-The Jupyter Development Team is the set of all contributors to the Jupyter project.
-This includes all of the Jupyter subprojects.
-
-The core team that coordinates development on GitHub can be found here:
-https://github.com/jupyter/.
-
-## Our Copyright Policy
-
-Jupyter uses a shared copyright model. Each contributor maintains copyright
-over their contributions to Jupyter. But, it is important to note that these
-contributions are typically only changes to the repositories. Thus, the Jupyter
-source code, in its entirety is not the copyright of any single person or
-institution.  Instead, it is the collective copyright of the entire Jupyter
-Development Team.  If individual contributors want to maintain a record of what
-changes/contributions they have specific copyright on, they should indicate
-their copyright in the commit message of the change, when they commit the
-change to one of the Jupyter repositories.
-
-With this in mind, the following banner should be used in any source code file
-to indicate the copyright and license terms:
-
-    # Copyright (c) Jupyter Development Team.
-    # Distributed under the terms of the Modified BSD License.
-
-=========================================
-END OF jupyter notebook NOTICES, INFORMATION, AND LICENSE
-
-%% ipywidgets NOTICES, INFORMATION, AND LICENSE BEGIN HERE
-=========================================
-Copyright (c) 2015 Project Jupyter Contributors
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-   contributors may be used to endorse or promote products derived from
-   this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-=========================================
-END OF ipywidgets NOTICES, INFORMATION, AND LICENSE
-
 %% vscode-cpptools NOTICES, INFORMATION, AND LICENSE BEGIN HERE
 =========================================
-vscode-cpptools 
+vscode-cpptools
 
 Copyright (c) Microsoft Corporation
 
@@ -1075,59 +974,27 @@ All rights reserved.
 
 MIT License
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of 
-this software and associated documentation files (the Software), to deal in the 
-Software without restriction, including without limitation the rights to use, 
-copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the 
-Software, and to permit persons to whom the Software is furnished to do so, 
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the Software), to deal in the
+Software without restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+Software, and to permit persons to whom the Software is furnished to do so,
 subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all 
+The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT
 
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN 
-ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 =========================================
 END OF vscode-cpptools NOTICES, INFORMATION, AND LICENSE
-
-%% enchannel-zmq-backend NOTICES, INFORMATION, AND LICENSE BEGIN HERE
-Copyright (c) 2016, 
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-
-* Neither the name of enchannel-zmq-backend nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-=========================================
-END OF enchannel-zmq-backend NOTICES, INFORMATION, AND LICENSE
-=======
 
 %% font-awesome NOTICES, INFORMATION, AND LICENSE BEGIN HERE
 =========================================
@@ -1169,34 +1036,6 @@ Awesome, nor vice versa. **Please do not use brand logos for any purpose except
 to represent the company, product, or service to which they refer.**
 =========================================
 END OF font-awesome NOTICES, INFORMATION, AND LICENSE
-
-%% jedi-language-server NOTICES, INFORMATION, AND LICENSE BEGIN HERE
-=========================================
-jedi-language-server
-
-MIT License
-
-Copyright (c) 2019 Sam Roeca
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-=========================================
-END OF jedi-language-server NOTICES, INFORMATION, AND LICENSE
 
 %% mocha NOTICES, INFORMATION, AND LICENSE BEGIN HERE
 =========================================
