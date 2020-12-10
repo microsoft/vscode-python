@@ -8,11 +8,13 @@ import * as path from 'path';
 import { Event, EventEmitter, TextEditor, window } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
+import { isTestExecution } from '../common/constants';
 import { IDisposableRegistry } from '../common/types';
 import { getDocumentLines } from '../telemetry/importTracker';
 import { containsTensorBoardImport } from './helpers';
 import { ITensorBoardImportTracker } from './types';
 
+const testExecution = isTestExecution();
 @injectable()
 export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExtensionSingleActivationService {
     private pendingChecks = new Map<string, NodeJS.Timer | number>();
@@ -34,7 +36,11 @@ export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExt
     }
 
     public async activate(): Promise<void> {
-        this.activateInternal().ignoreErrors();
+        if (testExecution) {
+            await this.activateInternal();
+        } else {
+            this.activateInternal().ignoreErrors();
+        }
     }
 
     private async activateInternal() {
