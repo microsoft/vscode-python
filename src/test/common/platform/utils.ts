@@ -10,6 +10,8 @@ import * as path from 'path';
 import * as tmpMod from 'tmp';
 import { CleanupFixture } from '../../fixtures';
 
+// XXX Move most of this file to src/test/utils/fs.ts and src/test/fixtures.ts.
+
 // Note: all functional tests that trigger the VS Code "fs" API are
 // found in filesystem.test.ts.
 
