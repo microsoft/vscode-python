@@ -1,3 +1,9 @@
+/* eslint-disable operator-linebreak */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable prefer-destructuring */
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable class-methods-use-this */
+/* eslint-disable comma-dangle */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -17,7 +23,7 @@ import {
 import { ICommandManager, IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';
 import { traceError, traceInfo } from '../common/logger';
-import { _SCRIPTS_DIR, tensorboardLauncher } from '../common/process/internal/scripts';
+import { tensorboardLauncher } from '../common/process/internal/scripts';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../common/process/types';
 import { IInstaller, InstallerResponse, Product } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
@@ -36,7 +42,9 @@ import { IInterpreterService } from '../interpreter/contracts';
  */
 export class TensorBoardSession {
     private webviewPanel: WebviewPanel | undefined;
+
     private url: string | undefined;
+
     private process: ChildProcess | undefined;
 
     constructor(
@@ -47,7 +55,7 @@ export class TensorBoardSession {
         private readonly commandManager: ICommandManager
     ) {}
 
-    public async initialize() {
+    public async initialize(): Promise<void> {
         const tensorBoardWasInstalled = await this.ensureTensorboardIsInstalled();
         if (!tensorBoardWasInstalled) {
             return;
@@ -65,15 +73,15 @@ export class TensorBoardSession {
     // Ensure that the TensorBoard package is installed before we attempt
     // to start a TensorBoard session.
     private async ensureTensorboardIsInstalled() {
-        traceInfo('Ensuring TensorBoard package is installed');
-        if (await this.installer.isInstalled(Product.tensorboard)) {
-            return true;
-        }
+        traceInfo('Ensuring TensorBoard package is installed into active interpreter');
         const interpreter =
             (await this.interpreterService.getActiveInterpreter()) ||
             (await this.commandManager.executeCommand('python.setInterpreter'));
         if (!interpreter) {
-            return;
+            return false;
+        }
+        if (await this.installer.isInstalled(Product.tensorboard, interpreter)) {
+            return true;
         }
         const tokenSource = new CancellationTokenSource();
         const installerToken = tokenSource.token;
@@ -86,10 +94,13 @@ export class TensorBoardSession {
             this.installer.promptToInstall(Product.tensorboard, interpreter, installerToken),
             cancellationPromise
         ]);
+        if (response === InstallerResponse.Failed) {
+            throw new Error(TensorBoard.installFailed());
+        }
         return response === InstallerResponse.Installed;
     }
 
-    private async showFilePicker() {
+    private async showFilePicker(): Promise<string | undefined> {
         const selection = await window.showOpenDialog({
             canSelectFiles: false,
             canSelectFolders: true,
@@ -100,6 +111,7 @@ export class TensorBoardSession {
         if (selection) {
             return selection[0].fsPath;
         }
+        return undefined;
     }
 
     private getQuickPickItems(logDir: string | undefined) {
@@ -113,13 +125,12 @@ export class TensorBoardSession {
                 detail: TensorBoard.selectAnotherFolderDetail()
             };
             return [useCwd, selectAnotherFolder];
-        } else {
-            const selectAFolder = {
-                label: TensorBoard.selectAFolder(),
-                detail: TensorBoard.selectAFolderDetail()
-            };
-            return [selectAFolder];
         }
+        const selectAFolder = {
+            label: TensorBoard.selectAFolder(),
+            detail: TensorBoard.selectAFolderDetail()
+        };
+        return [selectAFolder];
     }
 
     // Display a quickpick asking the user to acknowledge our autopopulated log directory or
@@ -287,9 +298,10 @@ export class TensorBoardSession {
         if (this.workspaceService.rootPath) {
             return this.workspaceService.rootPath;
         }
-        const activeTextEditor = window.activeTextEditor;
+        const { activeTextEditor } = window;
         if (activeTextEditor) {
             return path.dirname(activeTextEditor.document.uri.fsPath);
         }
+        return undefined;
     }
 }

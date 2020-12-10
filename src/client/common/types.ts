@@ -69,7 +69,8 @@ export type ExecutionInfo = {
 export enum InstallerResponse {
     Installed,
     Disabled,
-    Ignore
+    Ignore,
+    Failed
 }
 
 export enum ProductType {
@@ -78,7 +79,8 @@ export enum ProductType {
     TestFramework = 'TestFramework',
     RefactoringLibrary = 'RefactoringLibrary',
     WorkspaceSymbols = 'WorkspaceSymbols',
-    DataScience = 'DataScience'
+    DataScience = 'DataScience',
+    TensorBoard = 'TensorBoard'
 }
 
 export enum Product {

@@ -28,7 +28,7 @@ import {
     Product,
     ProductType
 } from '../types';
-import { Common, Installer, Linters } from '../utils/localize';
+import { Common, Installer, Linters, TensorBoard } from '../utils/localize';
 import { isResource, noop } from '../utils/misc';
 import { ProductNames } from './productNames';
 import {
@@ -570,6 +570,20 @@ export class DataScienceInstaller extends BaseInstaller {
     }
 }
 
+export class TensorBoardInstaller extends DataScienceInstaller {
+    protected async promptToInstallImplementation(
+        product: Product,
+        resource: Uri,
+        cancel: CancellationToken
+    ): Promise<InstallerResponse> {
+        // Show a prompt message specific to TensorBoard
+        const yes = Common.bannerLabelYes();
+        const no = Common.bannerLabelNo();
+        const selection = await this.appShell.showErrorMessage(TensorBoard.installPrompt(), ...[yes, no]);
+        return selection === yes ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
+    }
+}
+
 @injectable()
 export class ProductInstaller implements IInstaller {
     private readonly productService: IProductService;
@@ -626,6 +640,8 @@ export class ProductInstaller implements IInstaller {
                 return new RefactoringLibraryInstaller(this.serviceContainer, this.outputChannel);
             case ProductType.DataScience:
                 return new DataScienceInstaller(this.serviceContainer, this.outputChannel);
+            case ProductType.TensorBoard:
+                return new TensorBoardInstaller(this.serviceContainer, this.outputChannel);
             default:
                 break;
         }
