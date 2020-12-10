@@ -614,10 +614,9 @@ export class TensorBoardInstaller extends DataScienceInstaller {
         }
 
         try {
-            await installerModule
-                .installModule(moduleName, interpreter, cancel)
-                .catch((ex) => traceError(`Error in installing the module '${moduleName}'`, ex));
-        } catch (e) {
+            await installerModule.installModule(moduleName, interpreter, cancel);
+        } catch (ex) {
+            traceError(`Error in installing the module '${moduleName}'`, ex);
             return InstallerResponse.Failed;
         }
 
