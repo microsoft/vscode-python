@@ -7,6 +7,7 @@
 import { Event } from 'vscode';
 import { getSearchPathEntries } from '../../../../common/utils/exec';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
+import { isStandardPythonBinary } from '../../../common/commonUtils';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import {
     ILocator,
@@ -14,6 +15,7 @@ import {
     PythonLocatorQuery,
 } from '../../locator';
 import { Locators } from '../../locators';
+import { getEnvs } from '../../locatorUtils';
 import { PythonEnvsChangedEvent } from '../../watcher';
 import { DirFilesLocator } from './filesLocator';
 
@@ -60,10 +62,23 @@ function getDirFilesLocator(
     kind: PythonEnvKind,
 ): ILocator & IDisposable {
     const locator = new DirFilesLocator(dirname, kind);
+    // Really we should be checking for symlinks or something more
+    // sophisticated.  Also, this should be done in ReducingLocator
+    // rather than in each low-level locator.  In the meantime we
+    // take a naive approach.
     async function* iterEnvs(query: PythonLocatorQuery): IPythonEnvsIterator {
-        yield* locator.iterEnvs(query);
+        const envs = await getEnvs(locator.iterEnvs(query));
+        for (const env of envs) {
+            if (isStandardPythonBinary(env.executable?.filename || '')) {
+                yield env;
+            }
+        }
     }
     async function resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        const executable = typeof env === 'string' ? env : env.executable?.filename || '';
+        if (!isStandardPythonBinary(executable)) {
+            return undefined;
+        }
         return locator.resolveEnv(env);
     }
     return {

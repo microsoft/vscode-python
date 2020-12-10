@@ -154,14 +154,19 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
 
         test('some executables match', async () => {
             const expected: PythonEnvInfo[] = [
-                // On Windows we do not assume 2.7 for "python.exe".
-                getEnv('', '2.7', path.join(ROOT2, 'python2.exe')),
-                // This file isn't executable (but on Windows we can't tell that):
-                getEnv('', '2.7', path.join(ROOT1, 'python2.exe')),
                 getEnv('', '', path.join(ROOT1, 'python.exe')),
-                getEnv('', '2.7', path.join(ROOT1, 'python2.7.exe')),
-                getEnv('', '3.8', path.join(ROOT1, 'python3.8.exe')),
-                getEnv('', '3', path.join(ROOT1, 'python3.exe')),
+
+                // We will expect the following once we switch
+                // to a better filter than isStandardPythonBinary().
+
+                // // On Windows we do not assume 2.7 for "python.exe".
+                // getEnv('', '2.7', path.join(ROOT2, 'python2.exe')),
+                // // This file isn't executable (but on Windows we can't tell that):
+                // getEnv('', '2.7', path.join(ROOT1, 'python2.exe')),
+                // getEnv('', '', path.join(ROOT1, 'python.exe')),
+                // getEnv('', '2.7', path.join(ROOT1, 'python2.7.exe')),
+                // getEnv('', '3.8', path.join(ROOT1, 'python3.8.exe')),
+                // getEnv('', '3', path.join(ROOT1, 'python3.exe')),
             ];
             const locator = getActiveLocator(ROOT2, ROOT6, ROOT1);
             const query: PythonLocatorQuery | undefined = undefined;
@@ -175,8 +180,13 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
 
     suite('resolveEnv()', () => {
         test('found using filename', async () => {
-            const filename = path.join(ROOT1, 'python3.8.exe');
-            const expected = getEnv('', '3.8', filename);
+            const filename = path.join(ROOT1, 'python.exe');
+            const expected = getEnv('', '', filename);
+            // We will expect the following once we switch
+            // to a better filter than isStandardPythonBinary().
+            //
+            // const filename = path.join(ROOT1, 'python3.8.exe');
+            // const expected = getEnv('', '3.8', filename);
             const locator = getActiveLocator(ROOT2, ROOT6, ROOT1);
 
             const resolved = await locator.resolveEnv(filename);
@@ -185,11 +195,19 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
         });
 
         test('found using env info', async () => {
-            const filename = path.join(ROOT1, 'python3.8.exe');
+            const filename = path.join(ROOT1, 'python.exe');
             const env = {
                 executable: { ...EMPTY_EXECUTABLE, filename },
             };
-            const expected = getEnv('', '3.8', filename);
+            const expected = getEnv('', '', filename);
+            // We will expect the following once we switch
+            // to a better filter than isStandardPythonBinary().
+            //
+            // const filename = path.join(ROOT1, 'python3.8.exe');
+            // const env = {
+            //     executable: { ...EMPTY_EXECUTABLE, filename },
+            // };
+            // const expected = getEnv('', '3.8', filename);
             const locator = getActiveLocator(ROOT2, ROOT6, ROOT1);
 
             const resolved = await locator.resolveEnv(env as PythonEnvInfo);
@@ -274,19 +292,36 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
 
         test('multiple calls', async () => {
             const expected: (PythonEnvInfo | undefined)[] = [
-                getEnv('', '2.7', path.join(ROOT2, 'python2.exe')),
+                undefined,
                 undefined,
                 undefined,
                 getEnv('', '', path.join(ROOT1, 'python.exe')),
-                getEnv('', '2.7', path.join(ROOT1, 'python2.7.exe')),
-                getEnv('', '3.8', path.join(ROOT1, 'python3.8.exe')),
                 undefined,
                 undefined,
                 undefined,
                 undefined,
-                getEnv('', '3.8', path.join(ROOT1, 'python3.8.exe')),
                 undefined,
                 undefined,
+                undefined,
+                undefined,
+                undefined,
+
+                // We will expect the following once we switch
+                // to a better filter than isStandardPythonBinary().
+
+                // getEnv('', '2.7', path.join(ROOT2, 'python2.exe')),
+                // undefined,
+                // undefined,
+                // getEnv('', '', path.join(ROOT1, 'python.exe')),
+                // getEnv('', '2.7', path.join(ROOT1, 'python2.7.exe')),
+                // getEnv('', '3.8', path.join(ROOT1, 'python3.8.exe')),
+                // undefined,
+                // undefined,
+                // undefined,
+                // undefined,
+                // getEnv('', '3.8', path.join(ROOT1, 'python3.8.exe')),
+                // undefined,
+                // undefined,
             ];
             const executables = [
                 path.join(ROOT2, 'python2.exe'),
