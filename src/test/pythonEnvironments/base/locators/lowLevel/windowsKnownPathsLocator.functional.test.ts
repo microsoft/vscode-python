@@ -7,7 +7,7 @@ import { Architecture, getOSType, OSType } from '../../../../../client/common/ut
 import { PythonEnvInfo, PythonEnvKind, PythonExecutableInfo } from '../../../../../client/pythonEnvironments/base/info';
 import { PythonLocatorQuery } from '../../../../../client/pythonEnvironments/base/locator';
 import {
-    WindowsKnownPathsLocator,
+    WindowsPathEnvVarLocator,
 } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsKnownPathsLocator';
 import { ensureFSTree } from '../../../../utils/fs';
 import { createNamedEnv, getEnvs, sortedEnvs } from '../../common';
@@ -32,7 +32,7 @@ function getEnv(
     return env;
 }
 
-suite('Python envs locator - WindowsKnownPathsLocator', async () => {
+suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
     let cleanUps: (() => void)[];
 
     const ENV_VAR = 'Path';
@@ -122,9 +122,9 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
         });
     });
 
-    function getActiveLocator(...roots: string[]): WindowsKnownPathsLocator {
+    function getActiveLocator(...roots: string[]): WindowsPathEnvVarLocator {
         process.env[ENV_VAR] = roots.join(path.delimiter);
-        const locator = new WindowsKnownPathsLocator();
+        const locator = new WindowsPathEnvVarLocator();
         cleanUps.push(() => locator.dispose());
         return locator;
     }

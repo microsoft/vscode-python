@@ -23,7 +23,7 @@ import { DirFilesLocator } from './filesLocator';
  * Note that we assume $PATH won't change, so we don't need to watch
  * it for changes.
  */
-export class WindowsKnownPathsLocator implements ILocator, IDisposable {
+export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     private readonly locators: Locators;
