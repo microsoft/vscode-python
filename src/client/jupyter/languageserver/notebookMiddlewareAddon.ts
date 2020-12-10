@@ -118,6 +118,10 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         } else {
             next(document);
         }
+
+        return () => {
+            // Do nothing
+        };
     }
 
     public didClose(document: TextDocument, next: (ev: TextDocument) => void) {
@@ -133,16 +137,23 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         } else {
             next(document);
         }
+
+        return () => {
+            // Do nothing
+        };
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public didSave(event: TextDocument, next: (ev: TextDocument) => void) {
         return next(event);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public willSave(event: TextDocumentWillSaveEvent, next: (ev: TextDocumentWillSaveEvent) => void) {
         return next(event);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public willSaveWaitUntil(
         event: TextDocumentWillSaveEvent,
         next: (ev: TextDocumentWillSaveEvent) => Thenable<TextEdit[]>
@@ -187,6 +198,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         return next(document, position, token);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public resolveCompletionItem(
         item: CompletionItem,
         token: CancellationToken,
@@ -299,6 +311,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         return this.converter.toIncomingWorkspaceSymbols(result);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public provideCodeActions(
         document: TextDocument,
         range: Range,
@@ -307,24 +320,26 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         next: ProvideCodeActionsSignature
     ): ProviderResult<(Command | CodeAction)[]> {
         if (isNotebookCell(document.uri)) {
-            traceInfo(`provideCodeActions not currently supported for notebooks`);
+            traceInfo('provideCodeActions not currently supported for notebooks');
             return undefined;
         }
         return next(document, range, context, token);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public provideCodeLenses(
         document: TextDocument,
         token: CancellationToken,
         next: ProvideCodeLensesSignature
     ): ProviderResult<CodeLens[]> {
         if (isNotebookCell(document.uri)) {
-            traceInfo(`provideCodeLenses not currently supported for notebooks`);
+            traceInfo('provideCodeLenses not currently supported for notebooks');
             return undefined;
         }
         return next(document, token);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public resolveCodeLens(
         codeLens: CodeLens,
         token: CancellationToken,
@@ -337,6 +352,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         return next(codeLens, token);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public provideDocumentFormattingEdits(
         document: TextDocument,
         options: FormattingOptions,
@@ -344,12 +360,13 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         next: ProvideDocumentFormattingEditsSignature
     ): ProviderResult<TextEdit[]> {
         if (isNotebookCell(document.uri)) {
-            traceInfo(`provideDocumentFormattingEdits not currently supported for notebooks`);
+            traceInfo('provideDocumentFormattingEdits not currently supported for notebooks');
             return undefined;
         }
         return next(document, options, token);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public provideDocumentRangeFormattingEdits(
         document: TextDocument,
         range: Range,
@@ -358,12 +375,13 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         next: ProvideDocumentRangeFormattingEditsSignature
     ): ProviderResult<TextEdit[]> {
         if (isNotebookCell(document.uri)) {
-            traceInfo(`provideDocumentRangeFormattingEdits not currently supported for notebooks`);
+            traceInfo('provideDocumentRangeFormattingEdits not currently supported for notebooks');
             return undefined;
         }
         return next(document, range, options, token);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public provideOnTypeFormattingEdits(
         document: TextDocument,
         position: Position,
@@ -373,12 +391,13 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         next: ProvideOnTypeFormattingEditsSignature
     ): ProviderResult<TextEdit[]> {
         if (isNotebookCell(document.uri)) {
-            traceInfo(`provideOnTypeFormattingEdits not currently supported for notebooks`);
+            traceInfo('provideOnTypeFormattingEdits not currently supported for notebooks');
             return undefined;
         }
         return next(document, position, ch, options, token);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public provideRenameEdits(
         document: TextDocument,
         position: Position,
@@ -387,12 +406,13 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         next: ProvideRenameEditsSignature
     ): ProviderResult<WorkspaceEdit> {
         if (isNotebookCell(document.uri)) {
-            traceInfo(`provideRenameEdits not currently supported for notebooks`);
+            traceInfo('provideRenameEdits not currently supported for notebooks');
             return undefined;
         }
         return next(document, position, newName, token);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public prepareRename(
         document: TextDocument,
         position: Position,
@@ -406,24 +426,26 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
           }
     > {
         if (isNotebookCell(document.uri)) {
-            traceInfo(`prepareRename not currently supported for notebooks`);
+            traceInfo('prepareRename not currently supported for notebooks');
             return undefined;
         }
         return next(document, position, token);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public provideDocumentLinks(
         document: TextDocument,
         token: CancellationToken,
         next: ProvideDocumentLinksSignature
     ): ProviderResult<DocumentLink[]> {
         if (isNotebookCell(document.uri)) {
-            traceInfo(`provideDocumentLinks not currently supported for notebooks`);
+            traceInfo('provideDocumentLinks not currently supported for notebooks');
             return undefined;
         }
         return next(document, token);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public resolveDocumentLink(
         link: DocumentLink,
         token: CancellationToken,
@@ -436,6 +458,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         return next(link, token);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public provideDeclaration(
         document: TextDocument,
         position: VPosition,
@@ -443,7 +466,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         next: ProvideDeclarationSignature
     ): ProviderResult<VDeclaration> {
         if (isNotebookCell(document.uri)) {
-            traceInfo(`provideDeclaration not currently supported for notebooks`);
+            traceInfo('provideDeclaration not currently supported for notebooks');
             return undefined;
         }
         return next(document, position, token);

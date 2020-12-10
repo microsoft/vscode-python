@@ -27,11 +27,17 @@ import {
 @injectable()
 export class JediLanguageServerManager implements ILanguageServerManager {
     private languageServerProxy?: ILanguageServerProxy;
+
     private resource!: Resource;
+
     private interpreter: PythonEnvironment | undefined;
+
     private middleware: LanguageClientMiddleware | undefined;
+
     private disposables: IDisposable[] = [];
-    private connected: boolean = false;
+
+    private connected = false;
+
     private lsVersion: string | undefined;
 
     constructor(
@@ -54,14 +60,14 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         };
     }
 
-    public dispose() {
+    public dispose(): void {
         if (this.languageProxy) {
             this.languageProxy.dispose();
         }
         this.disposables.forEach((d) => d.dispose());
     }
 
-    public get languageProxy() {
+    public get languageProxy(): ILanguageServerProxy | undefined {
         return this.languageServerProxy;
     }
 
@@ -80,6 +86,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         // Search using a regex in the text
         const match = /jedi-language-server==([0-9\.]*)/.exec(requirementsTxt);
         if (match && match.length > 1) {
+            // eslint-disable-next-line prefer-destructuring
             this.lsVersion = match[1];
         } else {
             this.lsVersion = '0.19.3';
@@ -89,12 +96,12 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         await this.startLanguageServer();
     }
 
-    public connect() {
+    public connect(): void {
         this.connected = true;
         this.middleware?.connect();
     }
 
-    public disconnect() {
+    public disconnect(): void {
         this.connected = false;
         this.middleware?.disconnect();
     }
@@ -125,12 +132,13 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
 
         const options = await this.analysisOptions.getAnalysisOptions();
-        options.middleware = this.middleware = new LanguageClientMiddleware(
+        this.middleware = new LanguageClientMiddleware(
             this.serviceContainer,
             LanguageServerType.Jedi,
             () => this.languageServerProxy?.languageClient,
             this.lsVersion
         );
+        options.middleware = this.middleware;
 
         // Make sure the middleware is connected if we restart and we we're already connected.
         if (this.connected) {

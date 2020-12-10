@@ -109,9 +109,9 @@ export class CondaService implements ICondaService {
     private static detectCondaEnvironment(env: PythonEnvironment): boolean {
         return (
             env.envType === EnvironmentType.Conda
-            || (env.displayName ? env.displayName : '').toUpperCase().indexOf('ANACONDA') >= 0
-            || (env.companyDisplayName ? env.companyDisplayName : '').toUpperCase().indexOf('ANACONDA') >= 0
-            || (env.companyDisplayName ? env.companyDisplayName : '').toUpperCase().indexOf('CONTINUUM') >= 0
+            || (env.displayName ? env.displayName : '').toUpperCase().includes('ANACONDA')
+            || (env.companyDisplayName ? env.companyDisplayName : '').toUpperCase().includes('ANACONDA')
+            || (env.companyDisplayName ? env.companyDisplayName : '').toUpperCase().includes('CONTINUUM')
         );
     }
 
@@ -160,8 +160,8 @@ export class CondaService implements ICondaService {
         const processService = await this.processServiceFactory.create();
         const info = await this.getCondaInfo().catch<CondaInfo | undefined>(() => undefined);
         let versionString: string | undefined;
-        if (info && info.conda_version) {
-            versionString = info.conda_version;
+        if (info && info.condaVersion) {
+            versionString = info.condaVersion;
         } else {
             const stdOut = await this.getCondaFile()
                 .then((condaFile) => processService.exec(condaFile, ['--version'], {}))

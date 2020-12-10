@@ -17,7 +17,7 @@ import {
 import { ICommandManager, IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';
 import { traceError, traceInfo } from '../common/logger';
-import { _SCRIPTS_DIR, tensorboardLauncher } from '../common/process/internal/scripts';
+import { tensorboardLauncher } from '../common/process/internal/scripts';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../common/process/types';
 import { IInstaller, InstallerResponse, Product } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
@@ -36,7 +36,9 @@ import { IInterpreterService } from '../interpreter/contracts';
  */
 export class TensorBoardSession {
     private webviewPanel: WebviewPanel | undefined;
+
     private url: string | undefined;
+
     private process: ChildProcess | undefined;
 
     constructor(
@@ -47,7 +49,40 @@ export class TensorBoardSession {
         private readonly commandManager: ICommandManager
     ) {}
 
-    public async initialize() {
+    private static async showFilePicker(): Promise<string | undefined> {
+        const selection = await window.showOpenDialog({
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false
+        });
+        // If the user selected a folder, return the uri.fsPath
+        // There will only be one selection since canSelectMany: false
+        if (selection) {
+            return selection[0].fsPath;
+        }
+        return undefined;
+    }
+
+    private static getQuickPickItems(logDir: string | undefined) {
+        if (logDir) {
+            const useCwd = {
+                label: TensorBoard.useCurrentWorkingDirectory(),
+                detail: TensorBoard.useCurrentWorkingDirectoryDetail()
+            };
+            const selectAnotherFolder = {
+                label: TensorBoard.selectAnotherFolder(),
+                detail: TensorBoard.selectAnotherFolderDetail()
+            };
+            return [useCwd, selectAnotherFolder];
+        }
+        const selectAFolder = {
+            label: TensorBoard.selectAFolder(),
+            detail: TensorBoard.selectAFolderDetail()
+        };
+        return [selectAFolder];
+    }
+
+    public async initialize(): Promise<void> {
         const tensorBoardWasInstalled = await this.ensureTensorboardIsInstalled();
         if (!tensorBoardWasInstalled) {
             return;
@@ -73,7 +108,7 @@ export class TensorBoardSession {
             (await this.interpreterService.getActiveInterpreter()) ||
             (await this.commandManager.executeCommand('python.setInterpreter'));
         if (!interpreter) {
-            return;
+            return undefined;
         }
         const tokenSource = new CancellationTokenSource();
         const installerToken = tokenSource.token;
@@ -89,39 +124,6 @@ export class TensorBoardSession {
         return response === InstallerResponse.Installed;
     }
 
-    private async showFilePicker() {
-        const selection = await window.showOpenDialog({
-            canSelectFiles: false,
-            canSelectFolders: true,
-            canSelectMany: false
-        });
-        // If the user selected a folder, return the uri.fsPath
-        // There will only be one selection since canSelectMany: false
-        if (selection) {
-            return selection[0].fsPath;
-        }
-    }
-
-    private getQuickPickItems(logDir: string | undefined) {
-        if (logDir) {
-            const useCwd = {
-                label: TensorBoard.useCurrentWorkingDirectory(),
-                detail: TensorBoard.useCurrentWorkingDirectoryDetail()
-            };
-            const selectAnotherFolder = {
-                label: TensorBoard.selectAnotherFolder(),
-                detail: TensorBoard.selectAnotherFolderDetail()
-            };
-            return [useCwd, selectAnotherFolder];
-        } else {
-            const selectAFolder = {
-                label: TensorBoard.selectAFolder(),
-                detail: TensorBoard.selectAFolderDetail()
-            };
-            return [selectAFolder];
-        }
-    }
-
     // Display a quickpick asking the user to acknowledge our autopopulated log directory or
     // select a new one using the file picker. Default this to the folder that is open in
     // the editor, if any, then the directory that the active text editor is in, if any.
@@ -130,7 +132,7 @@ export class TensorBoardSession {
         const useCurrentWorkingDirectory = TensorBoard.useCurrentWorkingDirectory();
         const selectAFolder = TensorBoard.selectAFolder();
         const selectAnotherFolder = TensorBoard.selectAnotherFolder();
-        const items: QuickPickItem[] = this.getQuickPickItems(logDir);
+        const items: QuickPickItem[] = TensorBoardSession.getQuickPickItems(logDir);
         const quickPick = window.createQuickPick();
         quickPick.title = TensorBoard.logDirectoryPrompt();
         quickPick.canSelectMany = false;
@@ -152,7 +154,7 @@ export class TensorBoardSession {
                 return logDir;
             case selectAFolder:
             case selectAnotherFolder:
-                return this.showFilePicker();
+                return TensorBoardSession.showFilePicker();
             default:
                 return undefined;
         }
@@ -185,7 +187,7 @@ export class TensorBoardSession {
 
         const result = await window.withProgress(
             progressOptions,
-            (_progress: Progress<{}>, token: CancellationToken) => {
+            (_progress: Progress<unknown>, token: CancellationToken) => {
                 traceInfo(`Starting TensorBoard with log directory ${logDir}...`);
 
                 const spawnTensorBoard = this.waitForTensorBoardStart(observable);
@@ -221,6 +223,7 @@ export class TensorBoardSession {
                 if (output.source === 'stdout') {
                     const match = output.out.match(/TensorBoard started at (.*)/);
                     if (match && match[1]) {
+                        // eslint-disable-next-line prefer-destructuring
                         this.url = match[1];
                         urlThatTensorBoardIsRunningAt.resolve('success');
                     }
@@ -253,11 +256,14 @@ export class TensorBoardSession {
             this.process?.kill();
             this.process = undefined;
         });
-        webviewPanel.onDidChangeViewState((_e) => {
-            if (webviewPanel.visible) {
-                this.update();
-            }
-        }, null);
+        webviewPanel.onDidChangeViewState(
+            (/* _e */) => {
+                if (webviewPanel.visible) {
+                    this.update();
+                }
+            },
+            null
+        );
         return webviewPanel;
     }
 
@@ -287,9 +293,10 @@ export class TensorBoardSession {
         if (this.workspaceService.rootPath) {
             return this.workspaceService.rootPath;
         }
-        const activeTextEditor = window.activeTextEditor;
+        const { activeTextEditor } = window;
         if (activeTextEditor) {
             return path.dirname(activeTextEditor.document.uri.fsPath);
         }
+        return undefined;
     }
 }
