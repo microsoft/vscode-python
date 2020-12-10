@@ -1,5 +1,4 @@
 /* eslint-disable operator-linebreak */
-/* eslint-disable comma-dangle */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
@@ -30,16 +29,8 @@ export class TensorBoardCodeActionProvider implements CodeActionProvider, IExten
     ) {}
 
     public async activate(): Promise<void> {
-        if (
-            (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) &&
-            (await this.experimentService.inExperiment(NativeTensorBoardEntrypoints.codeActions))
-        ) {
-            this.disposables.push(
-                languages.registerCodeActionsProvider(PYTHON, this, {
-                    providedCodeActionKinds: [CodeActionKind.QuickFix]
-                })
-            );
-        }
+        // Don't hold up activation for this
+        this.activateInternal().ignoreErrors();
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -61,5 +52,18 @@ export class TensorBoardCodeActionProvider implements CodeActionProvider, IExten
             return [nativeTensorBoardSession];
         }
         return [];
+    }
+
+    private async activateInternal() {
+        if (
+            (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) &&
+            (await this.experimentService.inExperiment(NativeTensorBoardEntrypoints.codeActions))
+        ) {
+            this.disposables.push(
+                languages.registerCodeActionsProvider(PYTHON, this, {
+                    providedCodeActionKinds: [CodeActionKind.QuickFix]
+                })
+            );
+        }
     }
 }

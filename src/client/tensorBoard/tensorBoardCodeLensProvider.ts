@@ -1,6 +1,5 @@
 /* eslint-disable object-curly-newline */
 /* eslint-disable operator-linebreak */
-/* eslint-disable comma-dangle */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CodeLens, Command, languages, Position, Range, TextDocument } from 'vscode';
@@ -19,12 +18,7 @@ export class TensorBoardCodeLensProvider implements IExtensionSingleActivationSe
     ) {}
 
     public async activate(): Promise<void> {
-        if (
-            (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) &&
-            (await this.experimentService.inExperiment(NativeTensorBoardEntrypoints.codeLenses))
-        ) {
-            this.disposables.push(languages.registerCodeLensProvider(PYTHON, this));
-        }
+        this.activateInternal().ignoreErrors();
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -42,5 +36,14 @@ export class TensorBoardCodeLensProvider implements IExtensionSingleActivationSe
             }
         }
         return codelenses;
+    }
+
+    private async activateInternal() {
+        if (
+            (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) &&
+            (await this.experimentService.inExperiment(NativeTensorBoardEntrypoints.codeLenses))
+        ) {
+            this.disposables.push(languages.registerCodeLensProvider(PYTHON, this));
+        }
     }
 }
