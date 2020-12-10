@@ -35,7 +35,7 @@ function getEnv(
 suite('Python envs locator - WindowsKnownPathsLocator', async () => {
     let cleanUps: (() => void)[];
 
-    let ENV_VAR: string;
+    const ENV_VAR = 'Path';
 
     const datadir = path.join(__dirname, '.data');
     const ROOT1 = path.join(datadir, 'root1');
@@ -101,8 +101,6 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
             stub.returns(OSType.Windows);
         }
 
-        ENV_VAR = getOSType() === OSType.Windows ? 'Path' : 'PATH';
-
         await ensureFSTree(dataTree, __dirname);
     });
     setup(() => {
@@ -124,21 +122,17 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
         });
     });
 
-    function setSearchPath(dirnames: string[]): void {
-        process.env[ENV_VAR] = dirnames.join(path.delimiter);
-    }
-
-    async function ensureActivated(locator: WindowsKnownPathsLocator): Promise<void> {
-        await getEnvs(locator.iterEnvs());
+    function getActiveLocator(...roots: string[]): WindowsKnownPathsLocator {
+        process.env[ENV_VAR] = roots.join(path.delimiter);
+        const locator = new WindowsKnownPathsLocator();
         cleanUps.push(() => locator.dispose());
+        return locator;
     }
 
     suite('iterEnvs()', () => {
         test('no executables found', async () => {
             const expected: PythonEnvInfo[] = [];
-            const locator = new WindowsKnownPathsLocator();
-            setSearchPath([ROOT3, ROOT4, DOES_NOT_EXIST, ROOT5]);
-            await ensureActivated(locator);
+            const locator = getActiveLocator(ROOT3, ROOT4, DOES_NOT_EXIST, ROOT5);
             const query: PythonLocatorQuery | undefined = undefined;
 
             const iterator = locator.iterEnvs(query);
@@ -149,9 +143,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
 
         test('no executables match', async () => {
             const expected: PythonEnvInfo[] = [];
-            const locator = new WindowsKnownPathsLocator();
-            setSearchPath([ROOT6, DOES_NOT_EXIST]);
-            await ensureActivated(locator);
+            const locator = getActiveLocator(ROOT6, DOES_NOT_EXIST);
             const query: PythonLocatorQuery | undefined = undefined;
 
             const iterator = locator.iterEnvs(query);
@@ -171,9 +163,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
                 getEnv('', '3.8', path.join(ROOT1, 'python3.8.exe')),
                 getEnv('', '3', path.join(ROOT1, 'python3.exe')),
             ];
-            const locator = new WindowsKnownPathsLocator();
-            setSearchPath([ROOT2, ROOT6, ROOT1]);
-            await ensureActivated(locator);
+            const locator = getActiveLocator(ROOT2, ROOT6, ROOT1);
             const query: PythonLocatorQuery | undefined = undefined;
 
             const iterator = locator.iterEnvs(query);
@@ -187,9 +177,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
         test('found using filename', async () => {
             const filename = path.join(ROOT1, 'python3.8.exe');
             const expected = getEnv('', '3.8', filename);
-            const locator = new WindowsKnownPathsLocator();
-            setSearchPath([ROOT2, ROOT6, ROOT1]);
-            await ensureActivated(locator);
+            const locator = getActiveLocator(ROOT2, ROOT6, ROOT1);
 
             const resolved = await locator.resolveEnv(filename);
 
@@ -202,9 +190,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
                 executable: { ...EMPTY_EXECUTABLE, filename },
             };
             const expected = getEnv('', '3.8', filename);
-            const locator = new WindowsKnownPathsLocator();
-            setSearchPath([ROOT2, ROOT6, ROOT1]);
-            await ensureActivated(locator);
+            const locator = getActiveLocator(ROOT2, ROOT6, ROOT1);
 
             const resolved = await locator.resolveEnv(env as PythonEnvInfo);
 
@@ -223,9 +209,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
             path.join(ROOT6, 'py.exe'),
         ].forEach((executable) => {
             test(`no executables found (${executable})`, async () => {
-                const locator = new WindowsKnownPathsLocator();
-                setSearchPath([ROOT3, ROOT4, DOES_NOT_EXIST, ROOT5]);
-                await ensureActivated(locator);
+                const locator = getActiveLocator(ROOT3, ROOT4, DOES_NOT_EXIST, ROOT5);
 
                 const resolved = await locator.resolveEnv(executable);
 
@@ -239,9 +223,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
             path.join(ROOT5, 'subdir', 'python2.exe'),
         ].forEach((executable) => {
             test(`wrong search path entries (${executable})`, async () => {
-                const locator = new WindowsKnownPathsLocator();
-                setSearchPath([ROOT6, ROOT5, DOES_NOT_EXIST]);
-                await ensureActivated(locator);
+                const locator = getActiveLocator(ROOT6, ROOT5, DOES_NOT_EXIST);
 
                 const resolved = await locator.resolveEnv(executable);
 
@@ -256,9 +238,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
             path.join(ROOT6, 'py.exe'), // does not match regex
         ].forEach((executable) => {
             test(`does not match regex (${executable})`, async () => {
-                const locator = new WindowsKnownPathsLocator();
-                setSearchPath([ROOT6, ROOT1, DOES_NOT_EXIST]);
-                await ensureActivated(locator);
+                const locator = getActiveLocator(ROOT6, ROOT1, DOES_NOT_EXIST);
 
                 const resolved = await locator.resolveEnv(executable);
 
@@ -270,9 +250,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
             path.join(ROOT4, 'python2.exe'), // not executable
         ].forEach((executable) => {
             test(`not executable (${executable})`, async () => {
-                const locator = new WindowsKnownPathsLocator();
-                setSearchPath([ROOT4, DOES_NOT_EXIST]);
-                await ensureActivated(locator);
+                const locator = getActiveLocator(ROOT4, DOES_NOT_EXIST);
 
                 const resolved = await locator.resolveEnv(executable);
 
@@ -286,9 +264,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
             {},
         ].forEach((env) => {
             test(`missing executable (${env})`, async () => {
-                const locator = new WindowsKnownPathsLocator();
-                setSearchPath([ROOT2, ROOT6, ROOT1]);
-                await ensureActivated(locator);
+                const locator = getActiveLocator(ROOT2, ROOT6, ROOT1);
 
                 const resolved = await locator.resolveEnv(env as string | PythonEnvInfo);
 
@@ -332,9 +308,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
                 { name: 'env1' }, // matches an env but resolveEnv() doesn't care
                 {},
             ];
-            const locator = new WindowsKnownPathsLocator();
-            setSearchPath([ROOT2, ROOT6, ROOT1]);
-            await ensureActivated(locator);
+            const locator = getActiveLocator(ROOT2, ROOT6, ROOT1);
 
             const envs = await Promise.all(
                 executables.map((exe) => locator.resolveEnv(exe as string | PythonEnvInfo)),
