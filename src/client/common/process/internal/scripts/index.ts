@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { workspace } from 'vscode';
+import { EXTENSION_ROOT_DIR } from '../../../constants';
 
 function getUseIsolationSetting(): boolean {
     return workspace.getConfiguration('python').get<boolean>('useIsolation', true);
