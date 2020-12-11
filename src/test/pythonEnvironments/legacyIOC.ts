@@ -23,5 +23,6 @@ export function registerForIOC(
         serviceManager,
         instance(mock(PythonEnvironments)),
         instance(mock(EnvironmentsSecurity)),
+        []
     );
 }
