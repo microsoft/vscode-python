@@ -215,6 +215,7 @@ export class TensorBoardSession {
                 throw new Error(`Timed out after ${timeout / 1000} seconds waiting for TensorBoard to launch.`);
             case 'canceled':
                 traceInfo('Canceled starting TensorBoard session.');
+                observable.dispose();
                 return false;
             case 'success':
                 this.process = observable.proc;
