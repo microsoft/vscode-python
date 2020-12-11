@@ -6,7 +6,12 @@ import { workspace } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 
 function getUseIsolationSetting(): boolean {
-    return workspace.getConfiguration('python').get<boolean>('useIsolation', true);
+    try {
+        return workspace.getConfiguration('python').get<boolean>('useIsolation', true);
+    } catch (ex) {
+        // If we can't get the setting for any reason we assume default
+        return true;
+    }
 }
 
 // It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
