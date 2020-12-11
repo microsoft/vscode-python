@@ -25,7 +25,11 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
         @inject(IExperimentService) private experimentService: IExperimentService
     ) {}
 
-    public async activate() {
+    public async activate(): Promise<void> {
+        this.activateInternal().ignoreErrors();
+    }
+
+    private async activateInternal() {
         if (!(await this.experimentService.inExperiment(NativeTensorBoard.experiment))) {
             return;
         }

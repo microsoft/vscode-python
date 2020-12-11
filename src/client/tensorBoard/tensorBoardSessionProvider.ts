@@ -28,6 +28,10 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
     ) {}
 
     public async activate() {
+        this.activateInternal().ignoreErrors();
+    }
+
+    private async activateInternal() {
         if (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) {
             this.disposables.push(
                 this.commandManager.registerCommand(Commands.LaunchTensorBoard, () => this.createNewSession())
