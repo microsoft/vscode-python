@@ -1,9 +1,3 @@
-/* eslint-disable operator-linebreak */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable prefer-destructuring */
-/* eslint-disable @typescript-eslint/ban-types */
-/* eslint-disable class-methods-use-this */
-/* eslint-disable comma-dangle */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
