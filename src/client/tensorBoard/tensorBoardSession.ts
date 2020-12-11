@@ -139,23 +139,12 @@ export class TensorBoardSession {
         const selectAFolder = TensorBoard.selectAFolder();
         const selectAnotherFolder = TensorBoard.selectAnotherFolder();
         const items: QuickPickItem[] = this.getQuickPickItems(logDir);
-        const quickPick = window.createQuickPick();
-        quickPick.title = TensorBoard.logDirectoryPrompt();
-        quickPick.canSelectMany = false;
-        quickPick.enabled = false;
-        quickPick.items = items;
-        if (logDir) {
-            quickPick.placeholder = TensorBoard.currentDirectory().format(logDir);
-        }
-        const selection = createDeferred<QuickPickItem>();
-        quickPick.onDidAccept(() => {
-            quickPick.hide();
-            selection.resolve(quickPick.selectedItems[0]);
+        const item = await window.showQuickPick(items, {
+            canPickMany: false,
+            ignoreFocusOut: false,
+            placeHolder: logDir ? TensorBoard.currentDirectory().format(logDir) : undefined
         });
-        quickPick.show();
-        const item = await selection.promise;
-        quickPick.dispose();
-        switch (item.label) {
+        switch (item?.label) {
             case useCurrentWorkingDirectory:
                 return logDir;
             case selectAFolder:
