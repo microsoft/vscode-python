@@ -5,7 +5,7 @@ import * as path from 'path';
 import { workspace } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 
-function getUseIsolationSetting(): boolean {
+export function getUseIsolationSetting(): boolean {
     try {
         return workspace.getConfiguration('python').get<boolean>('useIsolation', true);
     } catch (ex) {
