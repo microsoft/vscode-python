@@ -94,9 +94,6 @@ export class TensorBoardSession {
             this.installer.promptToInstall(Product.tensorboard, interpreter, installerToken),
             cancellationPromise
         ]);
-        if (response === InstallerResponse.Failed) {
-            throw new Error(TensorBoard.installFailed());
-        }
         return response === InstallerResponse.Installed;
     }
 
