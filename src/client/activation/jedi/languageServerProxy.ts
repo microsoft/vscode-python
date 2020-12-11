@@ -30,10 +30,15 @@ import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 @injectable()
 export class JediLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
+
     private startupCompleted: Deferred<void>;
+
     private cancellationStrategy: FileBasedCancellationStrategy | undefined;
+
     private readonly disposables: Disposable[] = [];
-    private disposed: boolean = false;
+
+    private disposed = false;
+
     private lsVersion: string | undefined;
 
     constructor(
@@ -53,7 +58,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
     }
 
     @traceDecorators.verbose('Stopping language server')
-    public dispose() {
+    public dispose(): void {
         if (this.languageClient) {
             // Do not await on this.
             this.languageClient.stop().then(noop, (ex) => traceError('Stopping language client failed', ex));
@@ -120,8 +125,10 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         }
     }
 
-    // tslint:disable-next-line: no-empty
-    public loadExtension(_args?: {}) {}
+    // eslint-disable-next-line class-methods-use-this
+    public loadExtension(): void {
+        // No body.
+    }
 
     @captureTelemetry(
         EventName.LANGUAGE_SERVER_READY,
@@ -141,7 +148,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
     }
 
     @swallowExceptions('Activating Unit Tests Manager for Jedi language server')
-    protected async registerTestServices() {
+    protected async registerTestServices(): Promise<void> {
         if (!this.languageClient) {
             throw new Error('languageClient not initialized');
         }

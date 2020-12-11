@@ -45,7 +45,9 @@ function toPosition(positionLike: Position): Position {
 
 export class NotebookConverter implements Disposable {
     private activeDocuments: Map<string, NotebookConcatDocument> = new Map<string, NotebookConcatDocument>();
+
     private activeDocumentsOutgoingMap: Map<string, NotebookConcatDocument> = new Map<string, NotebookConcatDocument>();
+
     private disposables: Disposable[] = [];
 
     constructor(
@@ -59,6 +61,14 @@ export class NotebookConverter implements Disposable {
 
         // Call open on all of the active notebooks too
         api.notebookDocuments.forEach(this.onDidOpenNotebook.bind(this));
+    }
+
+    private static getDocumentKey(uri: Uri): string {
+        // Use the path of the doc uri. It should be the same for all cells
+        if (os.platform() === 'win32') {
+            return uri.fsPath.toLowerCase();
+        }
+        return uri.fsPath;
     }
 
     public dispose() {
@@ -75,6 +85,7 @@ export class NotebookConverter implements Disposable {
         if (wrapper) {
             return wrapper.firedOpen;
         }
+        return undefined;
     }
 
     public firedOpen(cell: TextDocument) {
@@ -89,6 +100,7 @@ export class NotebookConverter implements Disposable {
         if (wrapper) {
             return wrapper.firedClose;
         }
+        return undefined;
     }
 
     public firedClose(cell: TextDocument) {
@@ -166,7 +178,7 @@ export class NotebookConverter implements Disposable {
 
     public toOutgoingDocument(cell: TextDocument): TextDocument {
         const result = this.getTextDocumentWrapper(cell);
-        return result ? result : cell;
+        return result || cell;
     }
 
     public toOutgoingUri(cell: TextDocument | Uri): Uri {
@@ -225,6 +237,7 @@ export class NotebookConverter implements Disposable {
         }
         return hover;
     }
+
     public toIncomingCompletions(
         cell: TextDocument,
         completions: CompletionItem[] | CompletionList | null | undefined
@@ -232,12 +245,11 @@ export class NotebookConverter implements Disposable {
         if (completions) {
             if (Array.isArray(completions)) {
                 return completions.map(this.toIncomingCompletion.bind(this, cell));
-            } else {
-                return {
-                    ...completions,
-                    items: completions.items.map(this.toIncomingCompletion.bind(this, cell))
-                };
             }
+            return {
+                ...completions,
+                items: completions.items.map(this.toIncomingCompletion.bind(this, cell))
+            };
         }
         return completions;
     }
@@ -249,7 +261,8 @@ export class NotebookConverter implements Disposable {
         if (Array.isArray(location)) {
             // tslint:disable-next-line: no-any
             return (<any>location).map(this.toIncomingLocationFromLink.bind(this, cell));
-        } else if (location?.range) {
+        }
+        if (location?.range) {
             return this.toIncomingLocation(location.uri, location.range);
         }
         return location;
@@ -257,12 +270,10 @@ export class NotebookConverter implements Disposable {
 
     public toIncomingHighlight(cell: TextDocument, highlight: DocumentHighlight[] | null | undefined) {
         if (highlight) {
-            return highlight.map((h) => {
-                return {
-                    ...h,
-                    range: this.toIncomingRange(cell, h.range)
-                };
-            });
+            return highlight.map((h) => ({
+                ...h,
+                range: this.toIncomingRange(cell, h.range)
+            }));
         }
         return highlight;
     }
@@ -271,9 +282,8 @@ export class NotebookConverter implements Disposable {
         if (symbols && Array.isArray(symbols) && symbols.length) {
             if (symbols[0] instanceof DocumentSymbol) {
                 return (<DocumentSymbol[]>symbols).map(this.toIncomingSymbolFromDocumentSymbol.bind(this, cell));
-            } else {
-                return (<SymbolInformation[]>symbols).map(this.toIncomingSymbolFromSymbolInformation.bind(this, cell));
             }
+            return (<SymbolInformation[]>symbols).map(this.toIncomingSymbolFromSymbolInformation.bind(this, cell));
         }
         return symbols;
     }
@@ -295,6 +305,7 @@ export class NotebookConverter implements Disposable {
         };
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public toIncomingActions(_cell: TextDocument, actions: (Command | CodeAction)[] | null | undefined) {
         if (Array.isArray(actions)) {
             // Disable for now because actions are handled directly by the LS sometimes (at least in pylance)
@@ -308,24 +319,20 @@ export class NotebookConverter implements Disposable {
 
     public toIncomingCodeLenses(cell: TextDocument, lenses: CodeLens[] | null | undefined) {
         if (Array.isArray(lenses)) {
-            return lenses.map((c) => {
-                return {
-                    ...c,
-                    range: this.toIncomingRange(cell, c.range)
-                };
-            });
+            return lenses.map((c) => ({
+                ...c,
+                range: this.toIncomingRange(cell, c.range)
+            }));
         }
         return lenses;
     }
 
     public toIncomingEdits(cell: TextDocument, edits: TextEdit[] | null | undefined) {
         if (Array.isArray(edits)) {
-            return edits.map((e) => {
-                return {
-                    ...e,
-                    range: this.toIncomingRange(cell, e.range)
-                };
-            });
+            return edits.map((e) => ({
+                ...e,
+                range: this.toIncomingRange(cell, e.range)
+            }));
         }
         return edits;
     }
@@ -344,12 +351,11 @@ export class NotebookConverter implements Disposable {
         if (rangeOrRename) {
             if (rangeOrRename instanceof Range) {
                 return this.toIncomingLocation(cell, rangeOrRename).range;
-            } else {
-                return {
-                    ...rangeOrRename,
-                    range: this.toIncomingLocation(cell, rangeOrRename.range).range
-                };
             }
+            return {
+                ...rangeOrRename,
+                range: this.toIncomingLocation(cell, rangeOrRename.range).range
+            };
         }
         return rangeOrRename;
     }
@@ -379,12 +385,13 @@ export class NotebookConverter implements Disposable {
         return this.toIncomingLocation(cell, new Range(position, position)).range.start;
     }
 
-    private getCellAtLocation(location: Location) {
-        const key = this.getDocumentKey(location.uri);
+    private getCellAtLocation(location: Location): NotebookCell | undefined {
+        const key = NotebookConverter.getDocumentKey(location.uri);
         const wrapper = this.activeDocuments.get(key);
         if (wrapper) {
             return wrapper.getCellAtPosition(location.range.start);
         }
+        return undefined;
     }
 
     private toIncomingWorkspaceSymbol(symbol: SymbolInformation): SymbolInformation {
@@ -536,15 +543,14 @@ export class NotebookConverter implements Disposable {
                     ...item,
                     range: this.toIncomingRange(cell, item.range)
                 };
-            } else {
-                return {
-                    ...item,
-                    range: {
-                        inserting: this.toIncomingRange(cell, item.range.inserting),
-                        replacing: this.toIncomingRange(cell, item.range.replacing)
-                    }
-                };
             }
+            return {
+                ...item,
+                range: {
+                    inserting: this.toIncomingRange(cell, item.range.inserting),
+                    replacing: this.toIncomingRange(cell, item.range.replacing)
+                }
+            };
         }
         return item;
     }
@@ -575,14 +581,6 @@ export class NotebookConverter implements Disposable {
         };
     }
 
-    private getDocumentKey(uri: Uri): string {
-        // Use the path of the doc uri. It should be the same for all cells
-        if (os.platform() === 'win32') {
-            return uri.fsPath.toLowerCase();
-        }
-        return uri.fsPath;
-    }
-
     private onDidOpenNotebook(doc: NotebookDocument) {
         if (this.notebookFilter.test(doc.fileName)) {
             this.getTextDocumentWrapper(doc.uri);
@@ -591,20 +589,20 @@ export class NotebookConverter implements Disposable {
 
     private onDidCloseNotebook(doc: NotebookDocument) {
         if (this.notebookFilter.test(doc.fileName)) {
-            const key = this.getDocumentKey(doc.uri);
+            const key = NotebookConverter.getDocumentKey(doc.uri);
             const wrapper = this.getTextDocumentWrapper(doc.uri);
             this.activeDocuments.delete(key);
-            this.activeDocumentsOutgoingMap.delete(this.getDocumentKey(wrapper.uri));
+            this.activeDocumentsOutgoingMap.delete(NotebookConverter.getDocumentKey(wrapper.uri));
         }
     }
 
     private getWrapperFromOutgoingUri(outgoingUri: Uri): NotebookConcatDocument | undefined {
-        return this.activeDocumentsOutgoingMap.get(this.getDocumentKey(outgoingUri));
+        return this.activeDocumentsOutgoingMap.get(NotebookConverter.getDocumentKey(outgoingUri));
     }
 
     private getTextDocumentWrapper(cell: TextDocument | Uri): NotebookConcatDocument {
         const uri = cell instanceof Uri ? <Uri>cell : cell.uri;
-        const key = this.getDocumentKey(uri);
+        const key = NotebookConverter.getDocumentKey(uri);
         let result = this.activeDocuments.get(key);
         if (!result) {
             const doc = this.api.notebookDocuments.find((n) => this.fs.arePathsSame(uri.fsPath, n.uri.fsPath));
@@ -613,7 +611,7 @@ export class NotebookConverter implements Disposable {
             }
             result = new NotebookConcatDocument(doc, this.api, this.cellSelector);
             this.activeDocuments.set(key, result);
-            this.activeDocumentsOutgoingMap.set(this.getDocumentKey(result.uri), result);
+            this.activeDocumentsOutgoingMap.set(NotebookConverter.getDocumentKey(result.uri), result);
         }
         return result;
     }

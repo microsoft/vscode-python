@@ -25,9 +25,9 @@ export class YapfFormatter extends BaseFormatter {
         const formatSelection = range ? !range.isEmpty : false;
 
         const yapfArgs = ['--diff'];
-        if (formatSelection) {
+        if (formatSelection && range !== undefined) {
             // tslint:disable-next-line:no-non-null-assertion
-            yapfArgs.push(...['--lines', `${range!.start.line + 1}-${range!.end.line + 1}`]);
+            yapfArgs.push(...['--lines', `${range.start.line + 1}-${range.end.line + 1}`]);
         }
         // Yapf starts looking for config file starting from the file path.
         const fallbarFolder = this.getWorkspaceUri(document).fsPath;

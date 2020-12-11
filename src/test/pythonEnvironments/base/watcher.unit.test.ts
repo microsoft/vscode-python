@@ -40,7 +40,7 @@ suite('Python envs watcher - PythonEnvsWatcher', () => {
         KINDS_TO_TEST.forEach((kind) => {
             test(`non-empty event ("${kind}")`, () => {
                 const expected: PythonEnvsChangedEvent = {
-                    kind: kind,
+                    kind,
                     searchLocation: location
                 };
                 const watcher = new PythonEnvsWatcher();
@@ -99,7 +99,7 @@ suite('Python envs watcher - PythonEnvsWatcher', () => {
         KINDS_TO_TEST.forEach((kind) => {
             test(`non-empty event ("${kind}")`, () => {
                 const expected: BasicPythonEnvsChangedEvent = {
-                    kind: kind
+                    kind
                 };
                 const watcher = new PythonEnvsWatcher<BasicPythonEnvsChangedEvent>();
                 let event: BasicPythonEnvsChangedEvent | undefined;

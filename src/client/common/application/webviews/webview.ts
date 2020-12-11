@@ -31,22 +31,25 @@ export class Webview implements IWebview {
 
     // tslint:disable-next-line:no-any
     protected async generateLocalReactHtml(): Promise<string> {
+        let webview: vscodeWebview;
         if (!this.webview) {
             throw new Error('WebView not initialized, too early to get a Uri');
+        } else {
+            webview = this.webview;
         }
 
         const uriBase = this.webview.asWebviewUri(Uri.file(this.options.cwd)).toString();
-        const uris = this.options.scripts.map((script) => this.webview!.asWebviewUri(Uri.file(script)));
+        const uris = this.options.scripts.map((script) => webview.asWebviewUri(Uri.file(script))); // NOSONAR
         const testFiles = await this.fs.getFiles(this.options.rootPath);
 
         // This method must be called so VSC is aware of files that can be pulled.
         // Allow js and js.map files to be loaded by webpack in the webview.
         testFiles
             .filter((f) => f.toLowerCase().endsWith('.js') || f.toLowerCase().endsWith('.js.map'))
-            .forEach((f) => this.webview!.asWebviewUri(Uri.file(f)));
+            .forEach((f) => webview.asWebviewUri(Uri.file(f)));
 
-        const rootPath = this.webview.asWebviewUri(Uri.file(this.options.rootPath)).toString();
-        const fontAwesomePath = this.webview
+        const rootPath = webview.asWebviewUri(Uri.file(this.options.rootPath)).toString();
+        const fontAwesomePath = webview
             .asWebviewUri(
                 Uri.file(
                     path.join(this.options.rootPath, 'node_modules', 'font-awesome', 'css', 'font-awesome.min.css')
@@ -59,8 +62,8 @@ export class Webview implements IWebview {
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
                 <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob: ${
-                    this.webview.cspSource
-                }; default-src 'unsafe-inline' 'unsafe-eval' data: https: http: blob: ${this.webview.cspSource};">
+                    webview.cspSource
+                }; default-src 'unsafe-inline' 'unsafe-eval' data: https: http: blob: ${webview.cspSource};">
                 <meta name="theme-color" content="#000000">
                 <title>VS Code Python React UI</title>
                 <base href="${uriBase}${uriBase.endsWith('/') ? '' : '/'}"/>

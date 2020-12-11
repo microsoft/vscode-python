@@ -44,19 +44,30 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
     public get isClosed() {
         return this.concatDocument.isClosed;
     }
-    public get eol() {
+
+    // eslint-disable-next-line class-methods-use-this
+    public get eol(): EndOfLine {
         return EndOfLine.LF;
     }
-    public get lineCount() {
+
+    public get lineCount(): number {
         return this.notebook.cells.map((c) => c.document.lineCount).reduce((p, c) => p + c);
     }
+
     public firedOpen = false;
+
     public firedClose = false;
+
     public concatDocument: NotebookConcatTextDocument;
+
     private dummyFilePath: string;
+
     private dummyUri: Uri;
+
     private _version = 1;
+
     private onDidChangeSubscription: Disposable;
+
     constructor(public notebook: NotebookDocument, notebookApi: IVSCodeNotebook, selector: DocumentSelector) {
         const dir = path.dirname(notebook.uri.fsPath);
         // Note: Has to be different than the prefix for old notebook editor (HiddenFileFormat) so
@@ -74,10 +85,13 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
     public isCellOfDocument(uri: Uri) {
         return this.concatDocument.contains(uri);
     }
+
+    // eslint-disable-next-line class-methods-use-this
     public save(): Thenable<boolean> {
         // Not used
         throw new Error('Not implemented');
     }
+
     public lineAt(posOrNumber: Position | number) {
         const position = typeof posOrNumber === 'number' ? new Position(posOrNumber, 0) : posOrNumber;
 

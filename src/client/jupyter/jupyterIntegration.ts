@@ -196,7 +196,7 @@ export class JupyterExtensionIntegration {
         }
     }
 
-    public registerRemoteServerProvider(serverProvider: IJupyterUriProvider) {
+    public registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void {
         this.getExtensionApi()
             .then((e) => {
                 if (e) {
@@ -206,18 +206,19 @@ export class JupyterExtensionIntegration {
             .ignoreErrors();
     }
 
-    public async showDataViewer(dataProvider: IDataViewerDataProvider, title: string) {
+    public async showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
         const api = await this.getExtensionApi();
         if (api) {
             return api.showDataViewer(dataProvider, title);
         }
+        return undefined;
     }
 
     private async getExtensionApi(): Promise<JupyterExtensionApi | undefined> {
         if (!this.jupyterExtension) {
             const jupyterExtension = this.extensions.getExtension<JupyterExtensionApi>(JUPYTER_EXTENSION_ID);
             if (!jupyterExtension) {
-                return;
+                return undefined;
             }
             await jupyterExtension.activate();
             if (jupyterExtension.isActive) {
@@ -227,5 +228,6 @@ export class JupyterExtensionIntegration {
         } else {
             return this.jupyterExtension.exports;
         }
+        return undefined;
     }
 }

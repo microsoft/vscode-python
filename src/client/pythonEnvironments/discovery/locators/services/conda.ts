@@ -24,13 +24,13 @@ export type CondaEnvironmentInfo = {
 
 export type CondaInfo = {
     envs?: string[];
-    envs_dirs?: string[];
+    envsDirs?: string[];
     'sys.version'?: string;
     'sys.prefix'?: string;
-    python_version?: string;
-    default_prefix?: string;
-    root_prefix?: string;
-    conda_version?: string;
+    pythonVersion?: string;
+    defaultPrefix?: string;
+    rootPrefix?: string;
+    condaVersion?: string;
 };
 
 export type CondaEnvInfo = {
@@ -50,8 +50,8 @@ export async function parseCondaInfo(
     // The root of the conda environment is itself a Python interpreter
     // envs reported as e.g.: /Users/bob/miniconda3/envs/someEnv.
     const envs = Array.isArray(info.envs) ? info.envs : [];
-    if (info.default_prefix && info.default_prefix.length > 0) {
-        envs.push(info.default_prefix);
+    if (info.defaultPrefix && info.defaultPrefix.length > 0) {
+        envs.push(info.defaultPrefix);
     }
 
     const promises = envs.map(async (envPath) => {
@@ -152,6 +152,7 @@ export class Conda {
                     items = await fsapi.readdir(prefix);
                 } catch (ex) {
                     // Directory doesn't exist or is not readable - not an error.
+                    // eslint-disable-next-line no-continue
                     continue;
                 }
                 yield* items
@@ -216,19 +217,19 @@ export class Conda {
      */
     public async getEnvList(): Promise<CondaEnvInfo[]> {
         const info = await this.getInfo();
-        const envs = info.envs;
+        const { envs } = info;
         if (envs === undefined) {
             return [];
         }
 
         function getName(prefix: string) {
-            if (prefix === info.root_prefix) {
+            if (prefix === info.rootPrefix) {
                 return 'base';
             }
 
             const parentDir = path.dirname(prefix);
-            if (info.envs_dirs !== undefined) {
-                for (const envsDir of info.envs_dirs) {
+            if (info.envsDirs !== undefined) {
+                for (const envsDir of info.envsDirs) {
                     if (parentDir === envsDir) {
                         return path.basename(prefix);
                     }
@@ -238,7 +239,7 @@ export class Conda {
             return undefined;
         }
 
-        return envs.map(prefix => ({
+        return envs.map((prefix) => ({
             prefix,
             name: getName(prefix)
         }));

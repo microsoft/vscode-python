@@ -17,7 +17,7 @@ import { Common } from '../../../client/common/utils/localize';
 import * as telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
 
-suite('Interpreters - Interpreter Selection Tip', () => {
+suite('Join Mailing list Prompt Tests', () => {
     let joinMailingList: JoinMailingListPrompt;
     let appShell: IApplicationShell;
     let storage: IPersistentState<boolean>;
@@ -74,6 +74,7 @@ suite('Interpreters - Interpreter Selection Tip', () => {
 
         await joinMailingList.activate();
 
+        assert.ok(sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED));
         verify(appShell.showInformationMessage(anything(), Common.bannerLabelYes(), Common.bannerLabelNo())).once();
         verify(storage.updateValue(true)).once();
     });
@@ -86,6 +87,7 @@ suite('Interpreters - Interpreter Selection Tip', () => {
 
         await joinMailingList.activate();
 
+        assert.ok(sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED));
         verify(appShell.showInformationMessage(anything(), Common.bannerLabelYes(), Common.bannerLabelNo())).once();
         verify(storage.updateValue(true)).once();
     });
@@ -98,6 +100,7 @@ suite('Interpreters - Interpreter Selection Tip', () => {
 
         await joinMailingList.activate();
 
+        assert.ok(sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED));
         verify(appShell.showInformationMessage(anything(), Common.bannerLabelYes(), Common.bannerLabelNo())).once();
         verify(storage.updateValue(true)).once();
     });
@@ -113,6 +116,7 @@ suite('Interpreters - Interpreter Selection Tip', () => {
 
         await joinMailingList.activate();
 
+        assert.ok(sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED));
         verify(
             browserService.launch('https://aka.ms/python-vscode-mailinglist?m=test.sessionId&utm_source=vscode')
         ).once();
@@ -133,6 +137,7 @@ suite('Interpreters - Interpreter Selection Tip', () => {
 
         await joinMailingList.activate();
 
+        assert.ok(sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED));
         verify(storage.updateValue(true)).once();
         assert.ok(
             sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT, undefined, { selection: 'No' })
@@ -149,6 +154,7 @@ suite('Interpreters - Interpreter Selection Tip', () => {
 
         await joinMailingList.activate();
 
+        assert.ok(sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED));
         verify(storage.updateValue(true)).once();
         assert.ok(
             sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT, undefined, { selection: undefined })

@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { DiscoveryVariants } from '../../../../common/experiments/groups';
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
+import { inExperiment } from '../../../common/externalDependencies';
 import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
 import { PythonEnvKind } from '../../info';
 import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
@@ -38,12 +40,14 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
     }
 
     protected async initWatchers(): Promise<void> {
-        // Start the FS watchers.
-        let roots = await this.getRoots();
-        if (typeof roots === 'string') {
-            roots = [roots];
+        if (await inExperiment(DiscoveryVariants.discoverWithFileWatching)) {
+            // Start the FS watchers.
+            let roots = await this.getRoots();
+            if (typeof roots === 'string') {
+                roots = [roots];
+            }
+            roots.forEach((root) => this.startWatcher(root));
         }
-        roots.forEach((root) => this.startWatcher(root));
     }
 
     private startWatcher(root: string): void {

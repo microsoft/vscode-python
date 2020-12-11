@@ -4,6 +4,8 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as sinon from 'sinon';
+import { DiscoveryVariants } from '../../../../client/common/experiments/groups';
 import { traceWarning } from '../../../../client/common/logger';
 import { FileChangeType } from '../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, Deferred, sleep } from '../../../../client/common/utils/async';
@@ -14,7 +16,7 @@ import { ILocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
 import { getInterpreterPathFromDir } from '../../../../client/pythonEnvironments/common/commonUtils';
-import { arePathsSame } from '../../../../client/pythonEnvironments/common/externalDependencies';
+import * as externalDeps from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { deleteFiles, PYTHON_PATH } from '../../../common';
 import { TEST_TIMEOUT } from '../../../constants';
 import { run } from './envTestUtils';
@@ -121,6 +123,7 @@ export function testLocatorWatcher(
     },
 ): void {
     let locator: ILocator & IDisposable;
+    let inExperimentStub: sinon.SinonStub;
     const venvs = new Venvs(root);
 
     async function waitForChangeToBeDetected(deferred: Deferred<void>) {
@@ -133,10 +136,15 @@ export function testLocatorWatcher(
 
     async function isLocated(executable: string): Promise<boolean> {
         const items = await getEnvs(locator.iterEnvs());
-        return items.some((item) => arePathsSame(item.executable.filename, executable));
+        return items.some((item) => externalDeps.arePathsSame(item.executable.filename, executable));
     }
 
     suiteSetup(() => venvs.cleanUp());
+
+    setup(() => {
+        inExperimentStub = sinon.stub(externalDeps, 'inExperiment');
+        inExperimentStub.withArgs(DiscoveryVariants.discoverWithFileWatching).resolves(true);
+    });
 
     async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
         locator = options?.arg ? await createLocatorFactoryFunc(options.arg) : await createLocatorFactoryFunc();
@@ -149,6 +157,7 @@ export function testLocatorWatcher(
     teardown(async () => {
         await venvs.cleanUp();
         locator.dispose();
+        inExperimentStub.restore();
     });
 
     test('Detect a new environment', async () => {

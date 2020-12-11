@@ -3,6 +3,7 @@
 
 // tslint:disable:no-any
 
+// eslint-disable-next-line max-classes-per-file
 import { injectable, unmanaged } from 'inversify';
 import * as md5 from 'md5';
 import {
@@ -146,7 +147,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         }
         deferred.promise
             .then((items) => this._hasInterpreters.resolve(items.length > 0))
-            .catch((_) => this._hasInterpreters.resolve(false));
+            .catch(() => this._hasInterpreters.resolve(false));
 
         if (deferred.completed) {
             return deferred.promise;
@@ -176,6 +177,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         });
     }
 
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
     protected async getInterpreterWatchers(_resource: Uri | undefined): Promise<IInterpreterWatcher[]> {
         return [];
     }
@@ -194,7 +196,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     protected getCachedInterpreters(resource?: Uri): PythonEnvironment[] | undefined {
         const persistence = this.createPersistenceStore(resource);
         if (!Array.isArray(persistence.value)) {
-            return;
+            return undefined;
         }
         return persistence.value.map((item) => ({
             ...item,
