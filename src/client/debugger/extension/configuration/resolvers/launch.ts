@@ -12,6 +12,7 @@ import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
 import { DebuggerTypeName } from '../../../constants';
 import { DebugOptions, LaunchRequestArguments } from '../../../types';
+import { PythonPathSource } from '../../types';
 import { BaseConfigurationResolver } from './base';
 import { IDebugEnvironmentVariablesService } from './helper';
 
@@ -183,18 +184,17 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         debugConfiguration: LaunchRequestArguments
     ): Promise<boolean> {
         const diagnosticService = this.invalidPythonPathInDebuggerService;
-        return (
-            diagnosticService.validatePythonPath(debugConfiguration.python, this.pythonPathSource, folder?.uri) &&
-            diagnosticService.validatePythonPath(
-                debugConfiguration.debugAdapterPython,
-                this.pythonPathSource,
-                folder?.uri
-            ) &&
-            diagnosticService.validatePythonPath(
-                debugConfiguration.debugLauncherPython,
-                this.pythonPathSource,
-                folder?.uri
-            )
-        );
+        for (const executable of [
+            debugConfiguration.python,
+            debugConfiguration.debugAdapterPython,
+            debugConfiguration.debugLauncherPython
+        ]) {
+            const source =
+                executable === debugConfiguration.pythonPath ? this.pythonPathSource : PythonPathSource.launchJson;
+            if (!(await diagnosticService.validatePythonPath(executable, source, folder?.uri))) {
+                return false;
+            }
+        }
+        return true;
     }
 }

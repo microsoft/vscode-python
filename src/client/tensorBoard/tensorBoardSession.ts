@@ -182,7 +182,7 @@ export class TensorBoardSession {
 
         const result = await window.withProgress(
             progressOptions,
-            (_progress: Progress<{}>, token: CancellationToken) => {
+            (_progress: Progress<unknown>, token: CancellationToken) => {
                 traceInfo(`Starting TensorBoard with log directory ${logDir}...`);
 
                 const spawnTensorBoard = this.waitForTensorBoardStart(observable);
@@ -219,6 +219,7 @@ export class TensorBoardSession {
                 if (output.source === 'stdout') {
                     const match = output.out.match(/TensorBoard started at (.*)/);
                     if (match && match[1]) {
+                        // eslint-disable-next-line prefer-destructuring
                         this.url = match[1];
                         urlThatTensorBoardIsRunningAt.resolve('success');
                     }
@@ -251,7 +252,7 @@ export class TensorBoardSession {
             this.process?.kill();
             this.process = undefined;
         });
-        webviewPanel.onDidChangeViewState((_e) => {
+        webviewPanel.onDidChangeViewState(() => {
             if (webviewPanel.visible) {
                 this.update();
             }

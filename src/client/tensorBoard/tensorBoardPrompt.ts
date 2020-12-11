@@ -15,9 +15,12 @@ enum TensorBoardPromptStateKeys {
 @injectable()
 export class TensorBoardPrompt {
     private state: IPersistentState<boolean>;
+
     private enabled: Promise<boolean> | undefined;
-    private enabledInCurrentSession: boolean = true;
-    private waitingForUserSelection: boolean = false;
+
+    private enabledInCurrentSession = true;
+
+    private waitingForUserSelection = false;
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -34,7 +37,7 @@ export class TensorBoardPrompt {
         this.importTracker.onDidImportTensorBoard(this.showNativeTensorBoardPrompt, this, this.disposableRegistry);
     }
 
-    public async showNativeTensorBoardPrompt() {
+    public async showNativeTensorBoardPrompt(): Promise<void> {
         if ((await this.enabled) && this.enabledInCurrentSession && !this.waitingForUserSelection) {
             const yes = Common.bannerLabelYes();
             const no = Common.bannerLabelNo();

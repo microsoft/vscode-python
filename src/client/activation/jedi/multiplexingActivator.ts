@@ -11,6 +11,7 @@ import {
     SignatureHelpContext,
     TextDocument
 } from 'vscode';
+import { ServerCapabilities } from 'vscode-languageserver-protocol';
 // tslint:disable-next-line: import-name
 import { IWorkspaceService } from '../../common/application/types';
 import { isTestExecution } from '../../common/constants';
@@ -26,7 +27,7 @@ import {
 import { IServiceManager } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { JediExtensionActivator } from '../jedi';
-import { ILanguageServerActivator, ILanguageServerManager } from '../types';
+import { ILanguageServerActivator, ILanguageServerConnection, ILanguageServerManager } from '../types';
 import { JediLanguageServerActivator } from './activator';
 
 /**
@@ -40,7 +41,9 @@ import { JediLanguageServerActivator } from './activator';
 @injectable()
 export class MultiplexingJediLanguageServerActivator implements ILanguageServerActivator {
     private realLanguageServerPromise: Promise<ILanguageServerActivator>;
+
     private realLanguageServer: ILanguageServerActivator | undefined;
+
     private onDidChangeCodeLensesEmitter = new EventEmitter<void>();
 
     constructor(
@@ -64,6 +67,7 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
             return this.realLanguageServer;
         });
     }
+
     public async start(resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void> {
         const realServer = await this.realLanguageServerPromise;
         if (!isTestExecution()) {
@@ -71,30 +75,35 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
         }
         return realServer.start(resource, interpreter);
     }
+
     public activate(): void {
         if (this.realLanguageServer) {
             this.realLanguageServer.activate();
         }
     }
+
     public deactivate(): void {
         if (this.realLanguageServer) {
             this.realLanguageServer.deactivate();
         }
     }
+
     public get onDidChangeCodeLenses(): Event<void> {
         return this.onDidChangeCodeLensesEmitter.event;
     }
 
-    public get connection() {
+    public get connection(): ILanguageServerConnection | undefined {
         if (this.realLanguageServer) {
             return this.realLanguageServer.connection;
         }
+        return undefined;
     }
 
-    public get capabilities() {
+    public get capabilities(): ServerCapabilities | undefined {
         if (this.realLanguageServer) {
             return this.realLanguageServer.capabilities;
         }
+        return undefined;
     }
 
     public async provideRenameEdits(
@@ -106,14 +115,17 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
         const server = await this.realLanguageServerPromise;
         return server.provideRenameEdits(document, position, newName, token);
     }
+
     public async provideDefinition(document: TextDocument, position: Position, token: CancellationToken) {
         const server = await this.realLanguageServerPromise;
         return server.provideDefinition(document, position, token);
     }
+
     public async provideHover(document: TextDocument, position: Position, token: CancellationToken) {
         const server = await this.realLanguageServerPromise;
         return server.provideHover(document, position, token);
     }
+
     public async provideReferences(
         document: TextDocument,
         position: Position,
@@ -123,6 +135,7 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
         const server = await this.realLanguageServerPromise;
         return server.provideReferences(document, position, context, token);
     }
+
     public async provideCompletionItems(
         document: TextDocument,
         position: Position,
@@ -132,14 +145,17 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
         const server = await this.realLanguageServerPromise;
         return server.provideCompletionItems(document, position, token, context);
     }
+
     public async provideCodeLenses(document: TextDocument, token: CancellationToken) {
         const server = await this.realLanguageServerPromise;
         return server.provideCodeLenses(document, token);
     }
+
     public async provideDocumentSymbols(document: TextDocument, token: CancellationToken) {
         const server = await this.realLanguageServerPromise;
         return server.provideDocumentSymbols(document, token);
     }
+
     public async provideSignatureHelp(
         document: TextDocument,
         position: Position,
@@ -149,6 +165,7 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
         const server = await this.realLanguageServerPromise;
         return server.provideSignatureHelp(document, position, token, context);
     }
+
     public dispose(): void {
         if (this.realLanguageServer) {
             this.realLanguageServer.dispose();

@@ -18,6 +18,7 @@ const ImportRegEx = /^\s*from (?<fromImport>\w+(?:\.\w+)*) import (?<fromImportT
 @injectable()
 export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExtensionSingleActivationService {
     private pendingChecks = new Map<string, NodeJS.Timer | number>();
+
     private _onDidImportTensorBoard = new EventEmitter<void>();
 
     constructor(
@@ -49,7 +50,7 @@ export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExt
         if (!editor || !editor.document) {
             return;
         }
-        const document = editor.document;
+        const { document } = editor;
         if (
             (path.extname(document.fileName) === '.ipynb' && document.languageId === 'python') ||
             path.extname(document.fileName) === '.py'
@@ -64,6 +65,7 @@ export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExt
             for (const s of lines) {
                 const matches = s ? ImportRegEx.exec(s) : null;
                 if (matches === null || matches.groups === undefined) {
+                    // eslint-disable-next-line no-continue
                     continue;
                 }
                 let componentsToCheck: string[] = [];

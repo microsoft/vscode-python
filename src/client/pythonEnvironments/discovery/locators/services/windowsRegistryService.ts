@@ -2,7 +2,6 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
 import {
     IFileSystem, IPlatformService, IRegistry, RegistryHive,
@@ -18,7 +17,7 @@ import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
 import { WindowsStoreInterpreter } from './windowsStoreInterpreter';
 
-const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
+const flatten = require('lodash/flatten');
 
 // tslint:disable-next-line:variable-name
 const DefaultPythonExecutable = 'python.exe';
@@ -53,9 +52,11 @@ export class WindowsRegistryService extends CacheableLocatorService {
     }
 
     // tslint:disable-next-line:no-empty
-    public dispose() {}
+    public dispose(): void {
+        // Do nothing.
+    }
 
-    protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
+    protected async getInterpretersImplementation(): Promise<PythonEnvironment[]> {
         return this.platform.isWindows
             ? this.getInterpretersFromRegistry().catch((ex) => {
                 traceError('Fetching interpreters from registry failed with error', ex);
@@ -64,7 +65,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
             : [];
     }
 
-    private async getInterpretersFromRegistry() {
+    private async getInterpretersFromRegistry(): Promise<PythonEnvironment[]> {
         // https://github.com/python/peps/blob/master/pep-0514.txt#L357
         const hkcuArch = this.platform.is64bit ? undefined : Architecture.x86;
         const promises: Promise<CompanyInterpreter[]>[] = [
@@ -79,16 +80,14 @@ export class WindowsRegistryService extends CacheableLocatorService {
         const companies = await Promise.all<CompanyInterpreter[]>(promises);
         const companyInterpreters = await Promise.all(
             flatten(companies)
-                .filter((item) => item !== undefined && item !== null)
-                .map((company) => this.getInterpretersForCompany(company.companyKey, company.hive, company.arch)),
+                .filter((item: CompanyInterpreter) => item !== undefined && item !== null)
+                .map((company: CompanyInterpreter) => this.getInterpretersForCompany(company.companyKey, company.hive, company.arch)),
         );
 
         return (
             flatten(companyInterpreters)
-                .filter((item) => item !== undefined && item !== null)
-                // tslint:disable-next-line:no-non-null-assertion
-                .map((item) => item!)
-                .reduce<PythonEnvironment[]>((prev, current) => {
+                .filter((item: PythonEnvironment | null | undefined) => item !== undefined && item !== null)
+                .reduce((prev: PythonEnvironment[], current: PythonEnvironment) => {
                     if (prev.findIndex((item) => item.path.toUpperCase() === current.path.toUpperCase()) === -1) {
                         prev.push(current);
                     }
@@ -159,7 +158,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
             })
             .then(async (interpreterInfo?: InterpreterInformation) => {
                 if (!interpreterInfo) {
-                    return;
+                    return undefined;
                 }
 
                 const executablePath = interpreterInfo.executablePath && interpreterInfo.executablePath.length > 0
@@ -167,12 +166,12 @@ export class WindowsRegistryService extends CacheableLocatorService {
                     : path.join(interpreterInfo.installPath, DefaultPythonExecutable);
 
                 if (this.windowsStoreInterpreter.isHiddenInterpreter(executablePath)) {
-                    return;
+                    return undefined;
                 }
                 const helper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
                 const details = await helper.getInterpreterInformation(executablePath);
                 if (!details) {
-                    return;
+                    return undefined;
                 }
                 const version = interpreterInfo.version
                     ? this.pathUtils.basename(interpreterInfo.version)

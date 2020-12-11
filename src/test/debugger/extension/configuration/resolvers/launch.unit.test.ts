@@ -18,6 +18,7 @@ import { OSType } from '../../../../../client/common/utils/platform';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
 import { IDebugEnvironmentVariablesService } from '../../../../../client/debugger/extension/configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/launch';
+import { PythonPathSource } from '../../../../../client/debugger/extension/types';
 import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterHelper } from '../../../../../client/interpreter/contracts';
 import { getOSType } from '../../../../common';
@@ -928,6 +929,8 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
         test('Test validation of Python Path when launching debugger (with invalid "python")', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
+            const debugLauncherPython = `DebugLauncherPythonPath_${new Date().toString()}`;
+            const debugAdapterPython = `DebugAdapterPythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             const pythonFile = 'xyz.py';
             setupIoc(pythonPath);
@@ -936,22 +939,148 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             diagnosticsService.reset();
             diagnosticsService
                 .setup((h) =>
-                    h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                    h.validatePythonPath(
+                        TypeMoq.It.isValue(pythonPath),
+                        PythonPathSource.launchJson,
+                        TypeMoq.It.isAny()
+                    )
                 )
-                .returns(() => Promise.resolve(false))
-                .verifiable(TypeMoq.Times.atLeastOnce());
+                // Invalid
+                .returns(() => Promise.resolve(false));
+            diagnosticsService
+                .setup((h) =>
+                    h.validatePythonPath(
+                        TypeMoq.It.isValue(debugLauncherPython),
+                        PythonPathSource.launchJson,
+                        TypeMoq.It.isAny()
+                    )
+                )
+                .returns(() => Promise.resolve(true));
+            diagnosticsService
+                .setup((h) =>
+                    h.validatePythonPath(
+                        TypeMoq.It.isValue(debugAdapterPython),
+                        PythonPathSource.launchJson,
+                        TypeMoq.It.isAny()
+                    )
+                )
+                .returns(() => Promise.resolve(true));
 
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
                 redirectOutput: false,
-                python: pythonPath
+                python: pythonPath,
+                debugLauncherPython,
+                debugAdapterPython
             });
 
             diagnosticsService.verifyAll();
             expect(debugConfig).to.be.equal(undefined, 'Not undefined');
         });
 
-        test('Test validation of Python Path when launching debugger (with valid "python")', async () => {
+        test('Test validation of Python Path when launching debugger (with invalid "debugLauncherPython")', async () => {
+            const pythonPath = `PythonPath_${new Date().toString()}`;
+            const debugLauncherPython = `DebugLauncherPythonPath_${new Date().toString()}`;
+            const debugAdapterPython = `DebugAdapterPythonPath_${new Date().toString()}`;
+            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+            const pythonFile = 'xyz.py';
+            setupIoc(pythonPath);
+            setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
+
+            diagnosticsService.reset();
+            diagnosticsService
+                .setup((h) =>
+                    h.validatePythonPath(
+                        TypeMoq.It.isValue(pythonPath),
+                        PythonPathSource.launchJson,
+                        TypeMoq.It.isAny()
+                    )
+                )
+                .returns(() => Promise.resolve(true));
+            diagnosticsService
+                .setup((h) =>
+                    h.validatePythonPath(
+                        TypeMoq.It.isValue(debugLauncherPython),
+                        PythonPathSource.launchJson,
+                        TypeMoq.It.isAny()
+                    )
+                )
+                // Invalid
+                .returns(() => Promise.resolve(false));
+            diagnosticsService
+                .setup((h) =>
+                    h.validatePythonPath(
+                        TypeMoq.It.isValue(debugAdapterPython),
+                        PythonPathSource.launchJson,
+                        TypeMoq.It.isAny()
+                    )
+                )
+                .returns(() => Promise.resolve(true));
+
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
+                redirectOutput: false,
+                python: pythonPath,
+                debugLauncherPython,
+                debugAdapterPython
+            });
+
+            diagnosticsService.verifyAll();
+            expect(debugConfig).to.be.equal(undefined, 'Not undefined');
+        });
+
+        test('Test validation of Python Path when launching debugger (with invalid "debugAdapterPython")', async () => {
+            const pythonPath = `PythonPath_${new Date().toString()}`;
+            const debugLauncherPython = `DebugLauncherPythonPath_${new Date().toString()}`;
+            const debugAdapterPython = `DebugAdapterPythonPath_${new Date().toString()}`;
+            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+            const pythonFile = 'xyz.py';
+            setupIoc(pythonPath);
+            setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
+
+            diagnosticsService.reset();
+            diagnosticsService
+                .setup((h) =>
+                    h.validatePythonPath(
+                        TypeMoq.It.isValue(pythonPath),
+                        PythonPathSource.launchJson,
+                        TypeMoq.It.isAny()
+                    )
+                )
+                .returns(() => Promise.resolve(true));
+            diagnosticsService
+                .setup((h) =>
+                    h.validatePythonPath(
+                        TypeMoq.It.isValue(debugLauncherPython),
+                        PythonPathSource.launchJson,
+                        TypeMoq.It.isAny()
+                    )
+                )
+                .returns(() => Promise.resolve(true));
+            diagnosticsService
+                .setup((h) =>
+                    h.validatePythonPath(
+                        TypeMoq.It.isValue(debugAdapterPython),
+                        PythonPathSource.launchJson,
+                        TypeMoq.It.isAny()
+                    )
+                )
+                // Invalid
+                .returns(() => Promise.resolve(false));
+
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
+                ...launch,
+                redirectOutput: false,
+                python: pythonPath,
+                debugLauncherPython,
+                debugAdapterPython
+            });
+
+            diagnosticsService.verifyAll();
+            expect(debugConfig).to.be.equal(undefined, 'Not undefined');
+        });
+
+        test('Test validation of Python Path when launching debugger (with valid "python/debugAdapterPython/debugLauncherPython")', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             const pythonFile = 'xyz.py';
@@ -961,7 +1090,11 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             diagnosticsService.reset();
             diagnosticsService
                 .setup((h) =>
-                    h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                    h.validatePythonPath(
+                        TypeMoq.It.isValue(pythonPath),
+                        PythonPathSource.launchJson,
+                        TypeMoq.It.isAny()
+                    )
                 )
                 .returns(() => Promise.resolve(true))
                 .verifiable(TypeMoq.Times.atLeastOnce());

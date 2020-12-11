@@ -9,4 +9,5 @@ isort==5.6.3 ; python_version >= "3.6"  # via -r requirements.in
 git+git://github.com/vscode-python/jedi-language-server@42823a2598d4b6369e9273c5ad237a48c5d67553 ; python_version >= "3.6"  # via -r requirements.in
 jedi==0.17.2              # via jedi-language-server
 parso==0.7.0              # via jedi
-pygls==0.9.0 ; python_version >= "3.6"  # via -r requirements.in, jedi-language-server
+pygls==0.9.1 ; python_version >= "3.6"  # via -r requirements.in, jedi-language-server
+python-jsonrpc-server==0.2.0  # via -r requirements.in

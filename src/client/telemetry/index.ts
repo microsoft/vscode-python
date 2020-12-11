@@ -1388,6 +1388,10 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry sent back when join mailing list prompt is shown.
      */
+    [EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED]: never | undefined;
+    /**
+     * Telemetry sent back when user selects an option from join mailing list prompt.
+     */
     [EventName.JOIN_MAILING_LIST_PROMPT]: {
         /**
          * Carries the selection of user when they are asked to join the mailing list.

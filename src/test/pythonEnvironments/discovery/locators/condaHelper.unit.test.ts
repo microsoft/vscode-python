@@ -25,7 +25,7 @@ suite('Interpreters display name from Conda Environments', () => {
     });
     test('Must return at least Python Version', () => {
         const info: CondaInfo = {
-            python_version: '3.6.1.final.10',
+            pythonVersion: '3.6.1.final.10',
         };
         const displayName = getDisplayName(info);
         assert.equal(displayName, AnacondaDisplayName, 'Incorrect display name');
@@ -40,7 +40,7 @@ suite('Interpreters display name from Conda Environments', () => {
     });
     test("Must return info without prefixing with word 'Python'", () => {
         const info: CondaInfo = {
-            python_version: '3.6.1.final.10',
+            pythonVersion: '3.6.1.final.10',
             'sys.version':
                 '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
         };
@@ -49,7 +49,7 @@ suite('Interpreters display name from Conda Environments', () => {
     });
     test('Must include Ananconda name if Company name not found', () => {
         const info: CondaInfo = {
-            python_version: '3.6.1.final.10',
+            pythonVersion: '3.6.1.final.10',
             'sys.version': '3.6.1 |4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
         };
         const displayName = getDisplayName(info);
@@ -137,12 +137,10 @@ suite('Conda binary is located correctly', () => {
         for (const fileName of segments) {
             if (typeof dir !== 'object') {
                 throw new Error(`${currentPath} is not a directory`);
+            } else if (fileName !== '') {
+                dir = dir[fileName];
+                currentPath = `${currentPath}/${fileName}`;
             }
-            if (fileName === '') {
-                continue;
-            }
-            dir = dir[fileName];
-            currentPath = `${currentPath}/${fileName}`;
         }
         return dir;
     }
@@ -165,11 +163,11 @@ suite('Conda binary is located correctly', () => {
 
     function condaInfo(condaVersion: string): CondaInfo {
         return {
-            conda_version: condaVersion,
-            python_version: '3.9.0',
+            condaVersion,
+            pythonVersion: '3.9.0',
             'sys.version': '3.9.0',
             'sys.prefix': '/some/env',
-            default_prefix: '/conda/base',
+            defaultPrefix: '/conda/base',
             envs: [],
         };
     }
@@ -218,13 +216,11 @@ suite('Conda binary is located correctly', () => {
             async (command: string, args: string[]) => {
                 for (const prefix of ['', ...execPath]) {
                     const contents = getFile(path.join(prefix, command));
-                    if (typeof contents !== 'string' || !contents) {
-                        continue;
-                    }
                     if (args[0] !== 'info' || args[1] !== '--json') {
                         throw new Error(`Invalid arguments: ${util.inspect(args)}`);
+                    } else if (typeof contents === 'string' && contents !== '') {
+                        return { stdout: contents };
                     }
-                    return { stdout: contents };
                 }
                 throw new Error(`${command} is missing or is not executable`);
             },
@@ -349,7 +345,7 @@ suite('Conda binary is located correctly', () => {
     });
 
     suite('Must find conda in environments.txt', () => {
-        test(`Must find conda in environments.txt on Unix`, async () => {
+        test('Must find conda in environments.txt on Unix', async () => {
             osType = platform.OSType.Linux;
             homeDir = '/home/user';
 
@@ -359,11 +355,11 @@ suite('Conda binary is located correctly', () => {
                         '.conda': {
                             'environments.txt': [
                                 '',
-                                '/missing',  // stale entries shouldn't break things
+                                '/missing', // stale entries shouldn't break things
                                 '',
                                 '# comment',
                                 '',
-                                '  /present  ',  // whitespace should be ignored
+                                '  /present  ', // whitespace should be ignored
                                 '',
                             ].join('\n')
                         },
@@ -379,22 +375,22 @@ suite('Conda binary is located correctly', () => {
             await expectConda('/present/bin/conda');
         });
 
-        test(`Must find conda in environments.txt on Windows`, async () => {
+        test('Must find conda in environments.txt on Windows', async () => {
             osType = platform.OSType.Windows;
             homeDir = 'D:\\Users\\user';
 
             files = {
-                'D:' : {
+                'D:': {
                     Users: {
                         user: {
                             '.conda': {
                                 'environments.txt': [
                                     '',
-                                    'C:\\Missing',  // stale entries shouldn't break things
+                                    'C:\\Missing', // stale entries shouldn't break things
                                     '',
                                     '# comment',
                                     '',
-                                    '  E:\\Present  ',  // whitespace should be ignored
+                                    '  E:\\Present  ', // whitespace should be ignored
                                     '',
                                 ].join('\r\n')
                             },
@@ -463,14 +459,14 @@ suite('Conda binary is located correctly', () => {
 });
 
 suite('Conda env list is parsed correctly', () => {
-    const condaInfo = {
-        conda_version: '4.8.0',
-        python_version: '3.9.0',
+    const condaInfo: CondaInfo = {
+        condaVersion: '4.8.0',
+        pythonVersion: '3.9.0',
         'sys.version': '3.9.0',
         'sys.prefix': '/some/env',
-        root_prefix: '/home/user/miniconda3',
-        default_prefix: '/home/user/miniconda3/envs/env1',
-        envs_dirs: [
+        rootPrefix: '/home/user/miniconda3',
+        defaultPrefix: '/home/user/miniconda3/envs/env1',
+        envsDirs: [
             '/home/user/miniconda3/envs',
             '/home/user/.conda/envs',
         ],
@@ -503,7 +499,7 @@ suite('Conda env list is parsed correctly', () => {
     });
 
     test('Must compute conda environment name from prefix', async () => {
-        const conda = new Conda("conda");
+        const conda = new Conda('conda');
         const envs = await conda.getEnvList();
         expect(envs).to.have.deep.members([
             {
@@ -520,7 +516,7 @@ suite('Conda env list is parsed correctly', () => {
             },
             {
                 prefix: '/home/user/miniconda3/envs/dir/env3',
-                name: undefined  // because it's not directly under envs_dirs
+                name: undefined // because it's not directly under envsDirs
             },
             {
                 prefix: '/home/user/.conda/envs/env4',
@@ -532,10 +528,8 @@ suite('Conda env list is parsed correctly', () => {
             },
             {
                 prefix: '/env6',
-                name: undefined  // because it's not directly under envs_dirs
+                name: undefined // because it's not directly under envsDirs
             },
         ]);
-
     });
 });
-

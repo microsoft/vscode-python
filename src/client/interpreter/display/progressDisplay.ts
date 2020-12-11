@@ -4,14 +4,23 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
+import { Disposable, Event, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Common, Interpreters } from '../../common/utils/localize';
-import { IInterpreterLocatorProgressHandler, IInterpreterLocatorProgressService } from '../contracts';
+import {
+    IComponentAdapter,
+    IInterpreterLocatorProgressHandler,
+    IInterpreterLocatorProgressService
+} from '../contracts';
 
+// The parts of IComponentAdapter used here.
+export interface IComponent {
+    readonly onRefreshing: Event<void> | undefined;
+    readonly onRefreshed: Event<void> | undefined;
+}
 @injectable()
 export class InterpreterLocatorProgressStatubarHandler implements IInterpreterLocatorProgressHandler {
     private deferred: Deferred<void> | undefined;
@@ -20,11 +29,14 @@ export class InterpreterLocatorProgressStatubarHandler implements IInterpreterLo
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IInterpreterLocatorProgressService)
         private readonly progressService: IInterpreterLocatorProgressService,
-        @inject(IDisposableRegistry) private readonly disposables: Disposable[]
+        @inject(IDisposableRegistry) private readonly disposables: Disposable[],
+        @inject(IComponentAdapter) private readonly pyenvs: IComponent
     ) {}
     public register() {
-        this.progressService.onRefreshing(() => this.showProgress(), this, this.disposables);
-        this.progressService.onRefreshed(() => this.hideProgress(), this, this.disposables);
+        const onRefreshing = this.pyenvs.onRefreshing ?? this.progressService.onRefreshing;
+        const onRefreshed = this.pyenvs.onRefreshed ?? this.progressService.onRefreshed;
+        onRefreshing(() => this.showProgress(), this, this.disposables);
+        onRefreshed(() => this.hideProgress(), this, this.disposables);
     }
     @traceDecorators.verbose('Display locator refreshing progress')
     private showProgress(): void {

@@ -40,7 +40,16 @@
         "no-useless-constructor": "off",
         "@typescript-eslint/no-useless-constructor": "error",
         "@typescript-eslint/no-var-requires": "off",
+        // Overriding formatting rules to let Prettier handle them
+        "comma-dangle": "off",
+        "function-paren-newline": "off",
+        "implicit-arrow-linebreak": "off",
+        "indent": "off",
+        "max-len": "off",
+        "object-curly-newline": ["error", {"ImportDeclaration": {"consistent": true}}],
+        "operator-linebreak": "off",
         // Other rules
+        "class-methods-use-this": ["error", {"exceptMethods": ["dispose"]}],
         "func-names": "off",
         "import/extensions": "off",
         "import/namespace": "off",
@@ -52,24 +61,7 @@
             }
         ],
         "import/prefer-default-export": "off",
-        "indent": [
-            "error",
-            4,
-            {
-                "SwitchCase": 1
-            }
-        ],
         "linebreak-style": "off",
-        "max-len": [
-            "warn",
-            {
-                "code": 120,
-                "ignorePattern": "^import\\s.+\\sfrom\\s.+;$",
-                "ignoreStrings": true,
-                "ignoreTemplateLiterals": true,
-                "ignoreUrls": true
-            }
-        ],
         "no-await-in-loop": "off",
         "no-confusing-arrow": [
             "error",
