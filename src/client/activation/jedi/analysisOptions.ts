@@ -8,6 +8,7 @@ import { ILanguageServerOutputChannel } from '../types';
 
 @injectable()
 export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsBase {
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         @inject(IEnvironmentVariablesProvider) envVarsProvider: IEnvironmentVariablesProvider,
         @inject(ILanguageServerOutputChannel) lsOutputChannel: ILanguageServerOutputChannel

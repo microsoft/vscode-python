@@ -39,7 +39,9 @@ export class CurrentPathService extends CacheableLocatorService {
      * Called by VS Code to indicate it is done with the resource.
      */
     // tslint:disable-next-line:no-empty
-    public dispose() {}
+    public dispose(): void {
+        // No body
+    }
 
     /**
      * Return the located interpreters.
@@ -77,7 +79,7 @@ export class CurrentPathService extends CacheableLocatorService {
     private async getInterpreterDetails(pythonPath: string): Promise<PythonEnvironment | undefined> {
         return this.helper.getInterpreterInformation(pythonPath).then((details) => {
             if (!details) {
-                return;
+                return undefined;
             }
             this._hasInterpreters.resolve(true);
             return {
@@ -110,7 +112,7 @@ export class CurrentPathService extends CacheableLocatorService {
                     );
                     return '';
                 })
-                .catch((_ex) => {
+                .catch(() => {
                     traceInfo(
                         `Detection of Python Interpreter for Command ${options.command} and args ${pyArgs.join(
                             ' ',

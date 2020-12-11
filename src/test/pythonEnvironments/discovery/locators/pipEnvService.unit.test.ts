@@ -175,7 +175,7 @@ suite('Interpreters - PipEnv', () => {
                     currentProcess.setup((c) => c.env).returns(() => env);
                     processService
                         .setup((p) => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
-                        .returns(() => Promise.reject(''));
+                        .returns(() => Promise.reject(new Error()));
                     fileSystem
                         .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
                         .returns(() => Promise.resolve(true));

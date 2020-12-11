@@ -28,6 +28,8 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         if (!isUnitTestExecution()) {
             return this.skip();
         }
+
+        return undefined;
     });
     teardown(() => {
         disposables.forEach((d) => {
@@ -56,6 +58,7 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         when(platformService.isMac).thenReturn(os === OSType.OSX);
 
         class FSWatcher {
+            // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
             public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
@@ -112,6 +115,7 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         class FSWatcher {
             private listener?: (e: Uri) => any;
 
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             public onDidCreate(listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 this.listener = listener;
                 return { dispose: noop };
@@ -126,7 +130,9 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         when(workspaceService.createFileSystemWatcher(anything())).thenReturn((fsWatcher as any) as FileSystemWatcher);
         await watcher.register(undefined);
         let invoked = false;
-        watcher.onDidCreate(() => (invoked = true), watcher);
+        watcher.onDidCreate(() => {
+            invoked = true;
+        }, watcher);
 
         fsWatcher.invokeListener(Uri.file(''));
         // We need this sleep, as we have a debounce (so lets wait).

@@ -97,6 +97,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
      * @returns {Promise<boolean>}
      * @memberof IInterpreterHelper
      */
+    // eslint-disable-next-line class-methods-use-this
     public isHiddenInterpreter(pythonPath: string): boolean {
         return isRestrictedWindowsStoreInterpreterPath(pythonPath);
     }

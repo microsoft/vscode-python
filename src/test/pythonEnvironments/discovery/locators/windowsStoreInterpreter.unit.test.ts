@@ -21,6 +21,7 @@ import { WindowsStoreInterpreter } from '../../../../client/pythonEnvironments/d
 
 // We use this for mocking.
 class ComponentAdapter {
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
     public async isWindowsStoreInterpreter(_pythonPath: string): Promise<boolean | undefined> {
         return undefined;
     }

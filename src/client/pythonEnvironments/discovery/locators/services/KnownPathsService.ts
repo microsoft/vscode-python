@@ -4,6 +4,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { ICurrentProcess, IPathUtils } from '../../../../common/types';
 import { IInterpreterHelper, IKnownSearchPathsForInterpreters } from '../../../../interpreter/contracts';
@@ -34,16 +35,18 @@ export class KnownPathsService extends CacheableLocatorService {
      * Called by VS Code to indicate it is done with the resource.
      */
     // tslint:disable:no-empty
-    // eslint-disable-next-line @typescript-eslint/no-empty-function,class-methods-use-this
-    public dispose(): void {}
-    // tslint:enable:no-empty
+    // eslint-disable-next-line
+    public dispose(): void {
+        // No body
+    }
 
     /**
      * Return the located interpreters.
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
-    protected getInterpretersImplementation(): Promise<PythonEnvironment[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    protected getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
         return this.suggestionsFromKnownPaths();
     }
 

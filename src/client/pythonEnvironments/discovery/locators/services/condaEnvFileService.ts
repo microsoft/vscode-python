@@ -39,13 +39,16 @@ export class CondaEnvFileService extends CacheableLocatorService {
      * Called by VS Code to indicate it is done with the resource.
      */
     // tslint:disable-next-line:no-empty
-    public dispose() {}
+    public dispose(): void {
+        // No body
+    }
 
     /**
      * Return the located interpreters.
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     protected getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
         return this.getSuggestionsFromConda();
     }
@@ -108,12 +111,12 @@ export class CondaEnvFileService extends CacheableLocatorService {
     private async getInterpreterDetails(environmentPath: string): Promise<PythonEnvironment | undefined> {
         const interpreter = this.condaService.getInterpreterPath(environmentPath);
         if (!interpreter || !(await this.fileSystem.fileExists(interpreter))) {
-            return;
+            return undefined;
         }
 
         const details = await this.helperService.getInterpreterInformation(interpreter);
         if (!details) {
-            return;
+            return undefined;
         }
         const envName = details.envName ? details.envName : path.basename(environmentPath);
         this._hasInterpreters.resolve(true);

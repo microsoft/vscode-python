@@ -80,6 +80,7 @@ export class FileBasedCancellationStrategy implements CancellationStrategy, Disp
         this._sender = new FileCancellationSenderStrategy(folderName);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     get receiver(): CancellationReceiverStrategy {
         return CancellationReceiverStrategy.Message;
     }

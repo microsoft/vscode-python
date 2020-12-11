@@ -46,7 +46,7 @@ export type PythonVersion = {
 // (e.g. 3.9.2b1, 3.8.10rc3).
 export function parsePythonVersion(raw: string): PythonVersion | undefined {
     if (!raw || raw.trim().length === 0) {
-        return;
+        return undefined;
     }
     const versionParts = (raw || '')
         .split('.')

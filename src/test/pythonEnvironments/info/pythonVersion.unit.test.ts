@@ -13,9 +13,7 @@ interface IDeps {
 }
 
 suite('parsePythonVersion()', () => {
-    test('Must convert undefined if empty string', async () => {
-        // tslint:disable-next-line: no-any
-        assert.equal(parsePythonVersion(undefined as any), undefined);
+    test('Must return undefined if empty string', async () => {
         assert.equal(parsePythonVersion(''), undefined);
     });
     test('Must convert version correctly', async () => {
@@ -71,7 +69,7 @@ suite('getPythonVersion()', () => {
         const mock = Mock.ofType<IDeps>(undefined, MockBehavior.Strict);
         mock.setup((p) => p.exec(TypeMoqIt.isValue(pythonPath), TypeMoqIt.isValue(['--version'])))
             // Fake the process stdout.
-            .returns(() => Promise.reject({}));
+            .returns(() => Promise.reject(new Error()));
         const exec = (c: string, a: string[]) => mock.object.exec(c, a);
 
         const pyVersion = await getPythonVersion(pythonPath, 'DEFAULT_TEST_VALUE', exec);

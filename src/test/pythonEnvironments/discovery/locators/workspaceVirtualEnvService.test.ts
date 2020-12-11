@@ -148,6 +148,8 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
         // before proceeding with other tests.
         await venvs.cleanUp();
         await locator.getInterpreters(workspaceUri);
+
+        return undefined;
     });
 
     suiteTeardown(async () => venvs.cleanUp());
@@ -184,5 +186,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
         // Workspace4 should still not have any interpreters.
         items4 = await locator.getInterpreters(workspace4);
         expect(items4).to.be.lengthOf(0);
+
+        return undefined;
     });
 });

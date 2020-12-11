@@ -32,35 +32,43 @@ suite('Interpreters - Cacheable Locator Service', () => {
                 noop();
             }
 
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
                 return this.mockLocator.getInterpretersImplementation();
             }
 
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             protected getCachedInterpreters(_resource?: Uri): PythonEnvironment[] | undefined {
                 return this.mockLocator.getCachedInterpreters();
             }
 
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             protected async cacheInterpreters(_interpreters: PythonEnvironment[], _resource?: Uri) {
                 return this.mockLocator.cacheInterpreters();
             }
 
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             protected getCacheKey(_resource?: Uri) {
                 return this.mockLocator.getCacheKey();
             }
         }
         class MockLocator {
+            // eslint-disable-next-line class-methods-use-this
             public async getInterpretersImplementation(): Promise<PythonEnvironment[]> {
                 return [];
             }
 
+            // eslint-disable-next-line class-methods-use-this
             public getCachedInterpreters(): PythonEnvironment[] | undefined {
                 return undefined;
             }
 
+            // eslint-disable-next-line class-methods-use-this
             public async cacheInterpreters() {
                 return undefined;
             }
 
+            // eslint-disable-next-line class-methods-use-this
             public getCacheKey(): string {
                 return '';
             }
@@ -74,8 +82,11 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const expectedInterpreters = [1, 2] as any;
             const mockedLocatorForVerification = mock(MockLocator);
             const locator = new (class extends Locator {
+                // eslint-disable-next-line class-methods-use-this
                 protected async addHandlersForInterpreterWatchers(
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     _cacheKey: string,
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     _resource: Resource,
                 ): Promise<void> {
                     noop();
@@ -103,9 +114,13 @@ suite('Interpreters - Cacheable Locator Service', () => {
         test('Ensure onDidCreate event handler is attached', async () => {
             const mockedLocatorForVerification = mock(MockLocator);
             class Watcher implements IInterpreterWatcher {
+                // eslint-disable-next-line class-methods-use-this
                 public onDidCreate(
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     _listener: (e: Resource) => any,
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     _thisArgs?: any,
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     _disposables?: Disposable[],
                 ): Disposable {
                     return { dispose: noop };
@@ -114,6 +129,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const watcher: IInterpreterWatcher = mock(Watcher);
 
             const locator = new (class extends Locator {
+                // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
                 protected async getInterpreterWatchers(_resource: Resource): Promise<IInterpreterWatcher[]> {
                     return [instance(watcher)];
                 }
@@ -132,7 +148,9 @@ suite('Interpreters - Cacheable Locator Service', () => {
 
                 public onDidCreate(
                     listener: (e: Resource) => any,
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     _thisArgs?: any,
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     _disposables?: Disposable[],
                 ): Disposable {
                     this.listner = listener;
@@ -146,6 +164,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const watcher = new Watcher();
 
             const locator = new (class extends Locator {
+                // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
                 protected async getInterpreterWatchers(_resource: Resource): Promise<IInterpreterWatcher[]> {
                     return [watcher];
                 }
@@ -186,13 +205,16 @@ suite('Interpreters - Cacheable Locator Service', () => {
         test('Ensure locating event is raised', async () => {
             const mockedLocatorForVerification = mock(MockLocator);
             const locator = new (class extends Locator {
+                // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
                 protected async getInterpreterWatchers(_resource: Resource): Promise<IInterpreterWatcher[]> {
                     return [];
                 }
             })('dummy', instance(serviceContainer), instance(mockedLocatorForVerification));
 
             let locatingEventRaised = false;
-            locator.onLocating(() => (locatingEventRaised = true));
+            locator.onLocating(() => {
+                locatingEventRaised = true;
+            });
 
             when(mockedLocatorForVerification.getInterpretersImplementation()).thenResolve([1, 2] as any);
             when(mockedLocatorForVerification.getCacheKey()).thenReturn('xyz');
@@ -213,14 +235,17 @@ suite('Interpreters - Cacheable Locator Service', () => {
                 return super.getCacheKey(resource);
             }
 
+            // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
             protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
                 return [];
             }
 
+            // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
             protected getCachedInterpreters(_resource?: Uri): PythonEnvironment[] | undefined {
                 return [];
             }
 
+            // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
             protected async cacheInterpreters(_interpreters: PythonEnvironment[], _resource?: Uri) {
                 noop();
             }

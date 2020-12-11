@@ -31,13 +31,16 @@ export class CondaEnvService extends CacheableLocatorService {
      * Called by VS Code to indicate it is done with the resource.
      */
     // tslint:disable-next-line:no-empty
-    public dispose() {}
+    public dispose(): void {
+        // No body
+    }
 
     /**
      * Return the located interpreters.
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     protected getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
         return this.getSuggestionsFromConda();
     }

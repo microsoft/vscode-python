@@ -6,9 +6,7 @@ import {
 } from 'winreg';
 import { createDeferred } from '../../common/utils/async';
 
-
 export { HKCU, HKLM, REG_SZ, Options };
-
 
 export interface IRegistryKey {
     hive: string;

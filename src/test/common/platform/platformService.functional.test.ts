@@ -87,6 +87,8 @@ suite('PlatformService', () => {
         const result = await svc.getVersion();
 
         expect(result.compare(expectedVersion)).to.be.equal(0, 'invalid value');
+
+        return undefined;
     });
     test('getVersion on Linux shoud throw an exception', async function () {
         if (osType !== OSType.Linux) {
@@ -96,17 +98,20 @@ suite('PlatformService', () => {
         const svc = new PlatformService();
 
         await expect(svc.getVersion()).to.eventually.be.rejectedWith('Not Supported');
+
+        return undefined;
     });
 });
 
 function getOSType(platform: string = process.platform): OSType {
     if (/^win/.test(platform)) {
         return OSType.Windows;
-    } else if (/^darwin/.test(platform)) {
-        return OSType.OSX;
-    } else if (/^linux/.test(platform)) {
-        return OSType.Linux;
-    } else {
-        return OSType.Unknown;
     }
+    if (/^darwin/.test(platform)) {
+        return OSType.OSX;
+    }
+    if (/^linux/.test(platform)) {
+        return OSType.Linux;
+    }
+    return OSType.Unknown;
 }
