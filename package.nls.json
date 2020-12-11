@@ -232,6 +232,5 @@
     "TensorBoard.selectAFolderDetail": "Select a log directory containing tfevent files",
     "TensorBoard.selectAnotherFolderDetail": "Use the file explorer to select another folder",
     "TensorBoard.useCurrentWorkingDirectoryDetail": "TensorBoard will search for tfevent files in all subdirectories of the current working directory",
-    "TensorBoard.installPrompt": "The package TensorBoard is required to launch a TensorBoard session. Would you like to install it?",
-    "TensorBoard.installFailed": "We failed to install the TensorBoard package. Please check the 'Python' output panel for more information."
+    "TensorBoard.installPrompt": "The package TensorBoard is required to launch a TensorBoard session. Would you like to install it?"
 }

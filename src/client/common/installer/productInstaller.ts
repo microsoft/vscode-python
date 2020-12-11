@@ -582,48 +582,6 @@ export class TensorBoardInstaller extends DataScienceInstaller {
         const selection = await this.appShell.showErrorMessage(TensorBoard.installPrompt(), ...[yes, no]);
         return selection === yes ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
     }
-    public async install(
-        product: Product,
-        interpreterUri?: InterpreterUri,
-        cancel?: CancellationToken
-    ): Promise<InstallerResponse> {
-        // Precondition
-        if (isResource(interpreterUri)) {
-            throw new Error('All data science packages require an interpreter be passed in');
-        }
-
-        // At this point we know that `interpreterUri` is of type PythonInterpreter
-        const interpreter = interpreterUri as PythonEnvironment;
-
-        // Get a list of known installation channels, pip, conda, etc.
-        const channels: IModuleInstaller[] = await this.serviceContainer
-            .get<IInstallationChannelManager>(IInstallationChannelManager)
-            .getInstallationChannels();
-
-        let installerModule;
-        if (interpreter.envType === 'Conda') {
-            installerModule = channels.find((v) => v.name === 'Conda');
-        } else {
-            installerModule = channels.find((v) => v.name === 'Pip');
-        }
-
-        const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
-        if (!installerModule) {
-            this.appShell.showErrorMessage(Installer.couldNotInstallLibrary().format(moduleName)).then(noop, noop);
-            return InstallerResponse.Ignore;
-        }
-
-        try {
-            await installerModule.installModule(moduleName, interpreter, cancel);
-        } catch (ex) {
-            traceError(`Error in installing the module '${moduleName}'`, ex);
-            return InstallerResponse.Failed;
-        }
-
-        return this.isInstalled(product, interpreter).then((isInstalled) =>
-            isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore
-        );
-    }
 }
 
 @injectable()

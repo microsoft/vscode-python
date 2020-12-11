@@ -170,10 +170,6 @@ export namespace TensorBoard {
         'TensorBoard.installPrompt',
         'The package TensorBoard is required to launch a TensorBoard session. Would you like to install it?'
     );
-    export const installFailed = localize(
-        'TensorBoard.installFailed',
-        "We failed to install the TensorBoard package. Please check the 'Python' output panel for more information."
-    );
 }
 
 export namespace LanguageService {
