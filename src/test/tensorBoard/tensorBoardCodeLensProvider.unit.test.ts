@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as TypeMoq from 'typemoq';
-import { mock } from 'ts-mockito';
 import { assert } from 'chai';
+import { mock } from 'ts-mockito';
+import * as TypeMoq from 'typemoq';
 import { CancellationToken } from 'vscode';
-import { MockDocument } from '../startPage/mockDocument';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { IExperimentService } from '../../client/common/types';
 import { TensorBoardCodeLensProvider } from '../../client/tensorBoard/tensorBoardCodeLensProvider';
+import { MockDocument } from '../startPage/mockDocument';
 
 suite('TensorBoard code lens provider', () => {
     let experimentService: IExperimentService;

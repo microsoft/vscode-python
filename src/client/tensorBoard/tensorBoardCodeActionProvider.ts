@@ -1,5 +1,3 @@
-/* eslint-disable operator-linebreak */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -17,7 +15,7 @@ import {
 import { IExtensionSingleActivationService } from '../activation/types';
 import { Commands, PYTHON } from '../common/constants';
 import { NativeTensorBoard, NativeTensorBoardEntrypoints } from '../common/experiments/groups';
-import { IExperimentService, IDisposableRegistry } from '../common/types';
+import { IDisposableRegistry, IExperimentService } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
 import { containsTensorBoardImport } from './helpers';
 

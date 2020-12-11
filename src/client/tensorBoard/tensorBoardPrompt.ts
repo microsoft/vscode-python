@@ -1,5 +1,3 @@
-/* eslint-disable object-curly-newline */
-/* eslint-disable operator-linebreak */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 

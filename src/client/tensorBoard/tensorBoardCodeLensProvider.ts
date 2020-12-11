@@ -1,6 +1,6 @@
-/* eslint-disable object-curly-newline */
-/* eslint-disable operator-linebreak */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CodeLens, Command, languages, Position, Range, TextDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
