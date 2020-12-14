@@ -304,30 +304,15 @@ function compareVersionRelease(left: PythonVersion, right: PythonVersion): [numb
     return [0, ''];
 }
 
-function compareVersionsRaw(left: PythonVersion, right: PythonVersion): [number, string] {
-    const [result, prop] = basic.compareVersions(left, right);
-    if (result !== 0) {
-        return [result, prop];
-    }
-    const [release] = compareVersionRelease(left, right);
-    return release === 0 ? [0, ''] : [release, 'release'];
-}
-
 /**
  * Build a new version based on the given objects.
  *
- * "version" is used if the two are equivalent and "other" does not
- * have more info.  Otherwise "other" is used.
+ * "version" is copied if it is later than "other" or if the two are
+ * similar and "other" does not have more info.  Otherwise "other"
+ * is used.
  */
-export function mergeVersions(version: PythonVersion, other: PythonVersion): PythonVersion {
-    let winner = version;
-    const [result] = compareVersionsRaw(version, other);
-    if (result === 0) {
-        if (version.major === 2 && version.minor === -1) {
-            winner = other;
-        }
-    } else if (result > 0) {
-        winner = other;
-    }
+export function copyBestVersion(version: PythonVersion, other: PythonVersion): PythonVersion {
+    const [result] = basic.compareVersions(version, other, compareVersionRelease);
+    const winner = result > 0 ? other : version;
     return cloneDeep(winner);
 }
