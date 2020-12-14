@@ -181,7 +181,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     }
 
     public get onRefreshed(): vscode.Event<void> | undefined {
-        return this.enabled ? this.refreshing.event : undefined;
+        return this.enabled ? this.refreshed.event : undefined;
     }
 
     // IInterpreterHelper
