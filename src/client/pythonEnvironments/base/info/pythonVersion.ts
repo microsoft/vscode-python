@@ -259,14 +259,23 @@ export function areIdenticalVersion(left: PythonVersion, right: PythonVersion): 
  * For Python 3+, at least the minor version must be set. `(2, -1, -1)`
  * implies 2.7, so in that case only the major version must be set (to 2).
  */
-export function areSimilarVersions(left: PythonVersion, right: PythonVersion): boolean {
+export function areSimilarVersions(
+    left: PythonVersion,
+    right: PythonVersion,
+    opts: {
+        allowMajorOnly?: boolean;
+    } = {},
+): boolean {
     if (!basic.areSimilarVersions(left, right, compareVersionRelease)) {
         return false;
     }
-    if (left.major === 2) {
-        return true;
+    if (!opts.allowMajorOnly) {
+        if (left.major === 2) {
+            return true;
+        }
+        return left.minor > -1 && right.minor > -1;
     }
-    return left.minor > -1 && right.minor > -1;
+    return true;
 }
 
 /**
