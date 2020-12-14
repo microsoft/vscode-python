@@ -1,9 +1,7 @@
 // tslint:disable:no-require-imports no-var-requires no-unnecessary-callback-wrapper
-// tslint:disable-next-line:no-single-line-block-comment
-/* eslint-disable max-classes-per-file */
-
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { ICurrentProcess, IPathUtils } from '../../../../common/types';
 import { IInterpreterHelper, IKnownSearchPathsForInterpreters } from '../../../../interpreter/contracts';
@@ -12,7 +10,6 @@ import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
-// eslint-disable-next-line global-require
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 /**
@@ -33,17 +30,15 @@ export class KnownPathsService extends CacheableLocatorService {
      *
      * Called by VS Code to indicate it is done with the resource.
      */
-    // tslint:disable:no-empty
-    // eslint-disable-next-line @typescript-eslint/no-empty-function,class-methods-use-this
-    public dispose(): void {}
-    // tslint:enable:no-empty
+    // tslint:disable-next-line:no-empty
+    public dispose() {}
 
     /**
      * Return the located interpreters.
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
-    protected getInterpretersImplementation(): Promise<PythonEnvironment[]> {
+    protected getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
         return this.suggestionsFromKnownPaths();
     }
 
@@ -71,7 +66,7 @@ export class KnownPathsService extends CacheableLocatorService {
     private async getInterpreterDetails(interpreter: string) {
         const details = await this.helper.getInterpreterInformation(interpreter);
         if (!details) {
-            return undefined;
+            return;
         }
         this._hasInterpreters.resolve(true);
         return {
@@ -114,7 +109,7 @@ export class KnownSearchPathsForInterpreters implements IKnownSearchPathsForInte
                 searchPaths.push(path.join(pathUtils.home, p));
             });
             // Add support for paths such as /Users/xxx/anaconda/bin.
-            if (pathUtils.home && pathUtils.home !== '') {
+            if (process.env.HOME) {
                 searchPaths.push(path.join(pathUtils.home, 'anaconda', 'bin'));
                 searchPaths.push(path.join(pathUtils.home, 'python', 'bin'));
             }
