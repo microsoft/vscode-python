@@ -5,6 +5,7 @@ import { injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { DiscoveryVariants } from '../common/experiments/groups';
+import { IDisposableRegistry } from '../common/types';
 import { getVersionString, parseVersion } from '../common/utils/version';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -152,6 +153,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         // The adapter only wraps one thing: the component API.
         private readonly api: IPythonEnvironments,
         private readonly environmentsSecurity: IEnvironmentsSecurity,
+        private readonly disposables: IDisposableRegistry,
     ) {}
 
     public async activate(): Promise<void> {
@@ -161,6 +163,14 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
                 inExperiment(DiscoveryVariants.discoveryWithoutFileWatching),
             ],
         )).includes(true);
+        this.disposables.push(this.api.onChanged((e) => {
+            const query = {
+                kinds: e.kind ? [e.kind] : undefined,
+                searchLocations: e.searchLocation ? { roots: [e.searchLocation] } : undefined
+            };
+            // Trigger a background refresh of the environments.
+            getEnvs(this.api.iterEnvs(query)).ignoreErrors();
+        }));
     }
 
     // IInterpreterLocatorProgressHandler
@@ -409,10 +419,11 @@ export function registerNewDiscoveryForIOC(
     serviceManager: IServiceManager,
     api: IPythonEnvironments,
     environmentsSecurity: EnvironmentsSecurity,
+    disposables: IDisposableRegistry
 ): void {
     serviceManager.addSingletonInstance<IComponentAdapter>(
         IComponentAdapter,
-        new ComponentAdapter(api, environmentsSecurity),
+        new ComponentAdapter(api, environmentsSecurity, disposables),
     );
     serviceManager.addBinding(IComponentAdapter, IExtensionSingleActivationService);
 }

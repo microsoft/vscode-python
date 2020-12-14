@@ -55,6 +55,7 @@ export function initialize(ext: ExtensionState): PythonEnvironments {
         ext.legacyIOC.serviceManager,
         api,
         environmentsSecurity,
+        ext.disposables
     );
 
     return api;
