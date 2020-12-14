@@ -396,43 +396,6 @@ export function areSimilarVersions<T extends BasicVersionInfo, V extends BasicVe
     // tslint:enable:no-any
 }
 
-/**
- * Build a new version based on the given objects.
- *
- * "version" is used if the two are equivalent and "other" does not
- * have more info.  Otherwise "other" is used.
- */
-export function mergeVersions<T extends BasicVersionInfo, V extends BasicVersionInfo>(
-    // the versions to merge:
-    version: T,
-    other: V
-): VersionInfo {
-    let winner: BasicVersionInfo = version;
-    const [result] = compareVersions(version, other);
-    if (result > 0) {
-        winner = other;
-    }
-    const merged: VersionInfo = {
-        // Copy the winner's info.
-        major: winner.major,
-        minor: winner.minor,
-        micro: winner.micro
-    };
-
-    let raw = ((version as unknown) as VersionInfo).raw;
-    let otherRaw = ((other as unknown) as VersionInfo).raw;
-    if (winner === other) {
-        [otherRaw, raw] = [raw, otherRaw];
-    }
-    if (raw !== undefined && raw !== '') {
-        merged.raw = raw;
-    } else if (otherRaw !== undefined) {
-        merged.raw = otherRaw;
-    }
-
-    return merged;
-}
-
 //===========================
 // semver
 
