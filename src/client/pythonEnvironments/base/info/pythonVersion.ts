@@ -283,6 +283,14 @@ export function areSimilarVersions(left: PythonVersion, right: PythonVersion): b
     return left.minor > -1 && right.minor > -1;
 }
 
+/**
+ * Determine if the first version is less-than (-1), equal (0), or greater-than (1).
+ */
+export function compareVersions(left: PythonVersion, right: PythonVersion): number {
+    const [compared] = basic.compareVersions(left, right, compareVersionRelease);
+    return compared;
+}
+
 function compareVersionRelease(left: PythonVersion, right: PythonVersion): [number, string] {
     if (left.release === undefined) {
         if (right.release === undefined) {
