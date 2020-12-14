@@ -49,6 +49,7 @@ export class Disposables implements IDisposables {
     }
 
     public async dispose(): Promise<void> {
+        // tslint:disable-next-line: no-this-assignment
         const { disposables } = this;
         this.disposables = [];
         await disposeAll(disposables);
