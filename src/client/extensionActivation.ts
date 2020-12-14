@@ -8,7 +8,11 @@
 import { CodeActionKind, debug, DebugConfigurationProvider, languages, OutputChannel, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
-import { IExtensionActivationManager, IExtensionSingleActivationService, ILanguageServerExtension } from './activation/types';
+import {
+    IExtensionActivationManager,
+    IExtensionSingleActivationService,
+    ILanguageServerExtension
+} from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
