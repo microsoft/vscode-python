@@ -245,60 +245,29 @@ export function getShortVersionString(ver: PythonVersion): string {
 }
 
 /**
- * Checks if all the fields in the version object match.
+ * Checks if all the important properties of the version objects match.
  *
- * Note that "sysVersion" is ignored.
+ * Only major, minor, micro, and release are compared.
  */
 export function areIdenticalVersion(left: PythonVersion, right: PythonVersion): boolean {
-    // We do not do a simple deep-equal check here due to "sysVersion".
-    const [result] = compareVersionsRaw(left, right);
-    return result === 0;
+    return basic.areIdenticalVersion(left, right, compareVersionRelease);
 }
 
 /**
- * Checks if major and minor version fields match. True here means that the python ABI is the
- * same, but the micro version could be different. But for the purpose this is being used
- * it does not matter.
+ * Checks if the versions are identical or one is more complete than other (and otherwise the same).
+ *
+ * A `true` result means the Python executables are strictly compatible.
+ * For Python 3+, at least the minor version must be set. `(2, -1, -1)`
+ * implies 2.7, so in that case only the major version must be set (to 2).
  */
 export function areSimilarVersions(left: PythonVersion, right: PythonVersion): boolean {
-    let [result, prop] = compareVersionsRaw(left, right);
-    if (result === 0) {
+    if (!basic.areSimilarVersions(left, right, compareVersionRelease)) {
+        return false;
+    }
+    if (left.major === 2) {
         return true;
     }
-    if (left.major === 2 && right.major === 2) {
-        // We are going to assume that if the major version is 2 then the version is 2.7
-        if (left.minor === -1) {
-            [result, prop] = basic.compareVersions({ ...left, minor: 7 }, right);
-        }
-        if (right.minor === -1) {
-            [result, prop] = basic.compareVersions(left, { ...right, minor: 7 });
-        }
-    }
-    // tslint:disable:no-any
-    if (result < 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return ((right as unknown) as any)[prop] === -1;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return ((left as unknown) as any)[prop] === -1;
-    // tslint:enable:no-any
-}
-
-/**
- * Determine if the first version is less-than (-1), equal (0), or greater-than (1).
- */
-export function compareVersions(left: PythonVersion, right: PythonVersion): number {
-    const [compared] = compareVersionsRaw(left, right);
-    return compared;
-}
-
-function compareVersionsRaw(left: PythonVersion, right: PythonVersion): [number, string] {
-    const [result, prop] = basic.compareVersions(left, right);
-    if (result !== 0) {
-        return [result, prop];
-    }
-    const [release] = compareVersionRelease(left, right);
-    return release === 0 ? [0, ''] : [release, 'release'];
+    return left.minor > -1 && right.minor > -1;
 }
 
 function compareVersionRelease(left: PythonVersion, right: PythonVersion): [number, string] {
@@ -333,6 +302,15 @@ function compareVersionRelease(left: PythonVersion, right: PythonVersion): [numb
     }
 
     return [0, ''];
+}
+
+function compareVersionsRaw(left: PythonVersion, right: PythonVersion): [number, string] {
+    const [result, prop] = basic.compareVersions(left, right);
+    if (result !== 0) {
+        return [result, prop];
+    }
+    const [release] = compareVersionRelease(left, right);
+    return release === 0 ? [0, ''] : [release, 'release'];
 }
 
 /**

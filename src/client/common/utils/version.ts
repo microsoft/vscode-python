@@ -79,6 +79,25 @@ export const EMPTY_VERSION: RawBasicVersionInfo = {
 };
 Object.freeze(EMPTY_VERSION);
 
+function copyStrict<T extends BasicVersionInfo>(info: T): RawBasicVersionInfo {
+    const copied: RawBasicVersionInfo = {
+        major: info.major,
+        minor: info.minor,
+        micro: info.micro
+    };
+
+    const unnormalized = ((info as unknown) as RawBasicVersionInfo).unnormalized;
+    if (unnormalized !== undefined) {
+        copied.unnormalized = {
+            major: unnormalized.major,
+            minor: unnormalized.minor,
+            micro: unnormalized.micro
+        };
+    }
+
+    return copied;
+}
+
 /**
  * Make a copy and set all the properties properly.
  *
@@ -89,25 +108,13 @@ export function normalizeBasicVersionInfo<T extends BasicVersionInfo>(info: T | 
     if (!info) {
         return EMPTY_VERSION as T;
     }
-    const norm = {
-        major: info.major,
-        minor: info.minor,
-        micro: info.micro
-    };
-    const infoRaw = (info as unknown) as RawBasicVersionInfo;
-    const raw = (norm as unknown) as RawBasicVersionInfo;
+    const norm = copyStrict(info);
     // Do not normalize if it has already been normalized.
-    if (infoRaw.unnormalized === undefined) {
-        raw.unnormalized = {};
-        [norm.major, raw.unnormalized.major] = normalizeVersionPart(norm.major);
-        [norm.minor, raw.unnormalized.minor] = normalizeVersionPart(norm.minor);
-        [norm.micro, raw.unnormalized.micro] = normalizeVersionPart(norm.micro);
-    } else {
-        raw.unnormalized = {
-            major: infoRaw.unnormalized.major,
-            minor: infoRaw.unnormalized.minor,
-            micro: infoRaw.unnormalized.micro
-        };
+    if (norm.unnormalized === undefined) {
+        norm.unnormalized = {};
+        [norm.major, norm.unnormalized.major] = normalizeVersionPart(norm.major);
+        [norm.minor, norm.unnormalized.minor] = normalizeVersionPart(norm.minor);
+        [norm.micro, norm.unnormalized.micro] = normalizeVersionPart(norm.micro);
     }
     return norm as T;
 }
@@ -248,20 +255,24 @@ export function isVersionInfoEmpty<T extends BasicVersionInfo>(info: T): boolean
  * Note that a less-complete object that otherwise matches
  * is considered "less".
  *
+ * Additional checks for an otherwise "identical" version may be made
+ * through `compareExtra()`.
+ *
  * @returns - the customary comparison indicator (e.g. -1 means left is "more")
  * @returns - a string that indicates the property where they differ (if any)
  */
 export function compareVersions<T extends BasicVersionInfo, V extends BasicVersionInfo>(
     // the versions to compare:
     left: T,
-    right: V
+    right: V,
+    compareExtra?: (v1: T, v2: V) => [number, string]
 ): [number, string] {
     if (left.major < right.major) {
         return [1, 'major'];
     } else if (left.major > right.major) {
         return [-1, 'major'];
     } else if (left.major === -1) {
-        // Don't bother checking the minor or micro.
+        // Don't bother checking minor or micro.
         return [0, ''];
     }
 
@@ -270,7 +281,7 @@ export function compareVersions<T extends BasicVersionInfo, V extends BasicVersi
     } else if (left.minor > right.minor) {
         return [-1, 'minor'];
     } else if (left.minor === -1) {
-        // Don't bother checking the micro.
+        // Don't bother checking micro.
         return [0, ''];
     }
 
@@ -278,6 +289,10 @@ export function compareVersions<T extends BasicVersionInfo, V extends BasicVersi
         return [1, 'micro'];
     } else if (left.micro > right.micro) {
         return [-1, 'micro'];
+    }
+
+    if (compareExtra !== undefined) {
+        return compareExtra(left, right);
     }
 
     return [0, ''];
@@ -333,6 +348,52 @@ export function parseVersionInfo<T extends VersionInfo>(verStr: string): ParseRe
     }
     result.version.raw = verStr;
     return result;
+}
+
+/**
+ * Checks if major, minor, and micro match.
+ *
+ * Additional checks may be made through `compareExtra()`.
+ */
+export function areIdenticalVersion<T extends BasicVersionInfo, V extends BasicVersionInfo>(
+    // the versions to compare:
+    left: T,
+    right: V,
+    compareExtra?: (v1: T, v2: V) => [number, string]
+): boolean {
+    const [result] = compareVersions(left, right, compareExtra);
+    return result === 0;
+}
+
+/**
+ * Checks if the versions are identical or one is more complete than other (and otherwise the same).
+ *
+ * At the least the major version must be set (non-negative).
+ */
+export function areSimilarVersions<T extends BasicVersionInfo, V extends BasicVersionInfo>(
+    // the versions to compare:
+    left: T,
+    right: V,
+    compareExtra?: (v1: T, v2: V) => [number, string]
+): boolean {
+    const [result, prop] = compareVersions(left, right, compareExtra);
+    if (result === 0) {
+        return true;
+    }
+
+    if (prop === 'major') {
+        // An empty version is never similar (except to another empty version).
+        return false;
+    }
+
+    // tslint:disable:no-any
+    if (result < 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return ((right as unknown) as any)[prop] === -1;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return ((left as unknown) as any)[prop] === -1;
+    // tslint:enable:no-any
 }
 
 /**
