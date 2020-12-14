@@ -5,7 +5,6 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { getDedentedLines, getIndent } from '../../client/common/utils/text';
 import {
     FlattenedTestFunction,
     FlattenedTestSuite,
@@ -21,7 +20,7 @@ import {
     TestSuite,
     TestSummary
 } from '../../client/testing/common/types';
-import { fixPath, RESOURCE } from './helper';
+import { fixPath, getDedentedLines, getIndent, RESOURCE } from './helper';
 
 type SuperTest = TestFunction & {
     subtests: TestFunction[];
