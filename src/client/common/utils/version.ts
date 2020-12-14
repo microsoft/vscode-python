@@ -81,23 +81,34 @@ export const EMPTY_VERSION: RawBasicVersionInfo = {
 /**
  * Make a copy and set all the properties properly.
  *
- * Only the "basic" version info will be normalized.  The caller
- * is responsible for any other properties beyond that.
+ * Only the "basic" version info will be set (and normalized).
+ * The caller is responsible for any other properties beyond that.
  */
 export function normalizeBasicVersionInfo<T extends BasicVersionInfo>(info: T | undefined): T {
     if (!info) {
         return EMPTY_VERSION as T;
     }
-    const norm: T = { ...info };
+    const norm = {
+        major: info.major,
+        minor: info.minor,
+        micro: info.micro
+    };
+    const infoRaw = (info as unknown) as RawBasicVersionInfo;
     const raw = (norm as unknown) as RawBasicVersionInfo;
     // Do not normalize if it has already been normalized.
-    if (raw.unnormalized === undefined) {
+    if (infoRaw.unnormalized === undefined) {
         raw.unnormalized = {};
         [norm.major, raw.unnormalized.major] = normalizeVersionPart(norm.major);
         [norm.minor, raw.unnormalized.minor] = normalizeVersionPart(norm.minor);
         [norm.micro, raw.unnormalized.micro] = normalizeVersionPart(norm.micro);
+    } else {
+        raw.unnormalized = {
+            major: infoRaw.unnormalized.major,
+            minor: infoRaw.unnormalized.minor,
+            micro: infoRaw.unnormalized.micro
+        };
     }
-    return norm;
+    return norm as T;
 }
 
 function validateVersionPart(prop: string, part: number, unnormalized?: ErrorMsg) {
@@ -287,15 +298,12 @@ export type VersionInfo = BasicVersionInfo & {
  * Make a copy and set all the properties properly.
  */
 export function normalizeVersionInfo<T extends VersionInfo>(info: T): T {
-    const basic = normalizeBasicVersionInfo(info);
-    if (!info) {
-        basic.raw = '';
-        return basic;
-    }
-    const norm = { ...info, ...basic };
+    const norm = normalizeBasicVersionInfo(info);
+    norm.raw = info.raw;
     if (!norm.raw) {
         norm.raw = '';
     }
+    // Any string value of "raw" is considered normalized.
     return norm;
 }
 

@@ -130,7 +130,7 @@ export function parseBasicVersion(versionStr: string): [PythonVersion, string] {
  * Get a new version object with all properties "zeroed out".
  */
 export function getEmptyVersion(): PythonVersion {
-    return { ...EMPTY_VERSION };
+    return cloneDeep(EMPTY_VERSION);
 }
 
 /**
@@ -138,7 +138,7 @@ export function getEmptyVersion(): PythonVersion {
  */
 export function isVersionEmpty(version: PythonVersion): boolean {
     // We really only care the `version.major` is -1.  However, using
-   // generic util is better in the long run.
+    // generic util is better in the long run.
     return isVersionInfoEmpty(version);
 }
 
@@ -146,25 +146,18 @@ export function isVersionEmpty(version: PythonVersion): boolean {
  * Make an as-is (deep) copy of the given info.
  */
 export function copyVersion(info: PythonVersion): PythonVersion {
-    const copied = { ...info };
-    if (copied.release !== undefined) {
-        copied.release = {
-            level: copied.release.level,
-            serial: copied.release.serial,
-        };
-    }
-    return copied;
+    return cloneDeep(info);
 }
 
 /**
- * Make a copy and set all the properties properly.
+ * Make a copy with all appropriate properties set (and normalized).
  */
 export function normalizeVersion(info: PythonVersion): PythonVersion {
-    const norm = { ...info, ...normalizeVersionInfo(info) };
-    if (norm.release !== undefined) {
-        norm.release = normalizeRelease(norm.release);
+    const norm = normalizeVersionInfo(info);
+    if (info.release !== undefined) {
+        norm.release = normalizeRelease(info.release);
     }
-    if (!norm.sysVersion || norm.sysVersion === '') {
+    if (!info.sysVersion || info.sysVersion === '') {
         norm.sysVersion = undefined;
     }
     return norm;
@@ -174,10 +167,15 @@ export function normalizeVersion(info: PythonVersion): PythonVersion {
  * Make a copy and set all the properties properly.
  */
 function normalizeRelease(info: PythonVersionRelease): PythonVersionRelease {
-    const norm = { ...info };
+    const norm = {
+        level: info.level,
+        serial: info.serial,
+    };
+
     if (!norm.serial || norm.serial < 0) {
         norm.serial = 0;
     }
+
     if (!norm.level || (norm.level as string) === '') {
         norm.level = PythonReleaseLevel.Final;
     } else if ((norm.level as string) === 'c' || (norm.level as string) === 'rc') {
@@ -187,6 +185,8 @@ function normalizeRelease(info: PythonVersionRelease): PythonVersionRelease {
     } else if ((norm.level as string) === 'a') {
         norm.level = PythonReleaseLevel.Alpha;
     }
+    // Otherwise we leave it as-is and let validateRelease() pick it up.
+
     return norm;
 }
 
