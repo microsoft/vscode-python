@@ -8,7 +8,11 @@
 import { CodeActionKind, debug, DebugConfigurationProvider, languages, OutputChannel, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
-import { IExtensionActivationManager, ILanguageServerExtension } from './activation/types';
+import {
+    IExtensionActivationManager,
+    IExtensionSingleActivationService,
+    ILanguageServerExtension
+} from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
@@ -38,6 +42,7 @@ import { registerTypes as debugConfigurationRegisterTypes } from './debugger/ext
 import { IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import {
+    IComponentAdapter,
     IInterpreterLocatorProgressHandler,
     IInterpreterLocatorProgressService,
     IInterpreterService
@@ -152,6 +157,11 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     activationRegisterTypes(serviceManager, languageServerType);
 
     // "initialize" "services"
+
+    // There's a bug now due to which IExtensionSingleActivationService is only activated in background.
+    // However for some cases particularly IComponentAdapter we need to block on activation before rest
+    // of the extension is activated. Hence explicitly activate it for now.
+    await serviceContainer.get<IExtensionSingleActivationService>(IComponentAdapter).activate();
 
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
     interpreterManager.initialize();
