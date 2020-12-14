@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { _ISOLATED as ISOLATED, getUseIsolationSetting } from './scripts';
+import { _ISOLATED as ISOLATED, getUseIsolationSetting, maybeIsolated } from './scripts';
 
 // "python" contains functions corresponding to the various ways that
 // the extension invokes a Python executable internally.  Each function
@@ -16,9 +16,9 @@ import { _ISOLATED as ISOLATED, getUseIsolationSetting } from './scripts';
 // string as the stdout text and returns the relevant data.
 
 export function execCode(code: string, isolated = true): string[] {
-    const args = ['-c', code];
-    if (isolated && getUseIsolationSetting()) {
-        args.splice(0, 0, ISOLATED);
+    let args = ['-c', code];
+    if (isolated) {
+        args = maybeIsolated(args);
     }
     // "code" isn't specific enough to know how to parse it,
     // so we only return the args.
@@ -47,9 +47,7 @@ export function getVersion(): [string[], (out: string) => string] {
 }
 
 export function getSysPrefix(): [string[], (out: string) => string] {
-    const args = getUseIsolationSetting()
-        ? [ISOLATED, '-c', 'import sys;print(sys.prefix)']
-        : ['-c', 'import sys;print(sys.prefix)'];
+    const args = maybeIsolated(['-c', 'import sys;print(sys.prefix)']);
 
     function parse(out: string): string {
         return out.trim();
@@ -59,9 +57,7 @@ export function getSysPrefix(): [string[], (out: string) => string] {
 }
 
 export function getExecutable(): [string[], (out: string) => string] {
-    const args = getUseIsolationSetting()
-        ? [ISOLATED, '-c', 'import sys;print(sys.executable)']
-        : ['-c', 'import sys;print(sys.executable)'];
+    const args = maybeIsolated(['-c', 'import sys;print(sys.executable)']);
 
     function parse(out: string): string {
         return out.trim();
@@ -74,9 +70,7 @@ export function getSitePackages(): [string[], (out: string) => string] {
     // On windows we also need the libs path (second item will
     // return c:\xxx\lib\site-packages).  This is returned by
     // the following: get_python_lib
-    const args = getUseIsolationSetting()
-        ? [ISOLATED, '-c', 'from distutils.sysconfig import get_python_lib; print(get_python_lib())']
-        : ['-c', 'from distutils.sysconfig import get_python_lib; print(get_python_lib())'];
+    const args = maybeIsolated(['-c', 'from distutils.sysconfig import get_python_lib; print(get_python_lib())']);
 
     function parse(out: string): string {
         return out.trim();
@@ -86,7 +80,7 @@ export function getSitePackages(): [string[], (out: string) => string] {
 }
 
 export function getUserSitePackages(): [string[], (out: string) => string] {
-    const args = getUseIsolationSetting() ? [ISOLATED, 'site', '--user-site'] : ['site', '--user-site'];
+    const args = maybeIsolated(['site', '--user-site']);
 
     function parse(out: string): string {
         return out.trim();
@@ -107,7 +101,7 @@ export function isValid(): [string[], (out: string) => boolean] {
 }
 
 export function isModuleInstalled(name: string): [string[], (out: string) => boolean] {
-    const args = getUseIsolationSetting() ? [ISOLATED, '-c', `import ${name}`] : ['-c', `import ${name}`];
+    const args = maybeIsolated(['-c', `import ${name}`]);
 
     function parse(_out: string): boolean {
         // If the command did not fail then the module is installed.
@@ -118,7 +112,7 @@ export function isModuleInstalled(name: string): [string[], (out: string) => boo
 }
 
 export function getModuleVersion(name: string): [string[], (out: string) => string] {
-    const args = getUseIsolationSetting() ? [ISOLATED, name, '--version'] : [name, '--version'];
+    const args = maybeIsolated([name, '--version']);
 
     function parse(out: string): string {
         return out.trim();

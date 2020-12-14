@@ -5,6 +5,12 @@ import * as path from 'path';
 import { workspace } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 
+// It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
+export const _SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+const SCRIPTS_DIR = _SCRIPTS_DIR;
+export const _ISOLATED = path.join(_SCRIPTS_DIR, 'pyvsc-run-isolated.py');
+const ISOLATED = _ISOLATED;
+
 export function getUseIsolationSetting(): boolean {
     try {
         return workspace.getConfiguration('python').get<boolean>('useIsolation', true);
@@ -14,11 +20,12 @@ export function getUseIsolationSetting(): boolean {
     }
 }
 
-// It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
-export const _SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
-const SCRIPTS_DIR = _SCRIPTS_DIR;
-export const _ISOLATED = path.join(_SCRIPTS_DIR, 'pyvsc-run-isolated.py');
-const ISOLATED = _ISOLATED;
+export function maybeIsolated(args: string[]): string[] {
+    if (getUseIsolationSetting()) {
+        args.splice(0, 0, ISOLATED);
+    }
+    return args;
+}
 
 // "scripts" contains everything relevant to the scripts found under
 // the top-level "pythonFiles" directory.  Each of those scripts has
@@ -59,7 +66,7 @@ export type InterpreterInfoJson = {
 
 export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJson] {
     const script = path.join(SCRIPTS_DIR, 'interpreterInfo.py');
-    const args = getUseIsolationSetting() ? [ISOLATED, script] : [script];
+    const args = maybeIsolated([script]);
 
     function parse(out: string): InterpreterInfoJson {
         let json: InterpreterInfoJson;
@@ -169,7 +176,7 @@ namespace _completion {
 
 export function completion(jediPath?: string): [string[], (out: string) => _completion.Response[]] {
     const script = path.join(SCRIPTS_DIR, 'completion.py');
-    const args = getUseIsolationSetting() ? [ISOLATED, script] : [script];
+    const args = maybeIsolated([script]);
     if (jediPath) {
         args.push('custom');
         args.push(jediPath);
@@ -187,7 +194,7 @@ export function completion(jediPath?: string): [string[], (out: string) => _comp
 
 export function sortImports(filename: string, sortArgs?: string[]): [string[], (out: string) => string] {
     const script = path.join(SCRIPTS_DIR, 'sortImports.py');
-    const args = getUseIsolationSetting() ? [ISOLATED, script, filename, '--diff'] : [script, filename, '--diff'];
+    const args = maybeIsolated([script, filename, '--diff']);
     if (sortArgs) {
         args.push(...sortArgs);
     }
@@ -205,7 +212,7 @@ export function sortImports(filename: string, sortArgs?: string[]): [string[], (
 
 export function refactor(root: string): [string[], (out: string) => object[]] {
     const script = path.join(SCRIPTS_DIR, 'refactor.py');
-    const args = getUseIsolationSetting() ? [ISOLATED, script, root] : [script, root];
+    const args = maybeIsolated([script, root]);
 
     // tslint:disable-next-line:no-suspicious-comment
     // TODO: Make the return type more specific, like we did
@@ -227,7 +234,7 @@ export function refactor(root: string): [string[], (out: string) => object[]] {
 
 export function normalizeForInterpreter(): [string[], (out: string) => string] {
     const script = path.join(SCRIPTS_DIR, 'normalizeForInterpreter.py');
-    const args = getUseIsolationSetting() ? [ISOLATED, script] : [script];
+    const args = maybeIsolated([script]);
 
     function parse(out: string) {
         // The text will be used as-is.
@@ -242,7 +249,7 @@ export function normalizeForInterpreter(): [string[], (out: string) => string] {
 
 export function normalizeSelection(): [string[], (out: string) => string] {
     const script = path.join(SCRIPTS_DIR, 'normalizeSelection.py');
-    const args = getUseIsolationSetting() ? [ISOLATED, script] : [script];
+    const args = maybeIsolated([script]);
 
     function parse(out: string) {
         // The text will be used as-is.
@@ -282,7 +289,7 @@ export function symbolProvider(
     text?: string
 ): [string[], (out: string) => _symbolProvider.Symbols] {
     const script = path.join(SCRIPTS_DIR, 'symbolProvider.py');
-    const args = getUseIsolationSetting() ? [ISOLATED, script, filename] : [script, filename];
+    const args = maybeIsolated([script, filename]);
     if (text) {
         args.push(text);
     }
@@ -299,7 +306,7 @@ export function symbolProvider(
 
 export function printEnvVariables(): [string[], (out: string) => NodeJS.ProcessEnv] {
     const script = path.join(SCRIPTS_DIR, 'printEnvVariables.py').fileToCommandArgument();
-    const args = getUseIsolationSetting() ? [ISOLATED, script] : [script];
+    const args = maybeIsolated([script]);
 
     function parse(out: string): NodeJS.ProcessEnv {
         return JSON.parse(out);
@@ -313,9 +320,7 @@ export function printEnvVariables(): [string[], (out: string) => NodeJS.ProcessE
 
 export function printEnvVariablesToFile(filename: string): [string[], (out: string) => NodeJS.ProcessEnv] {
     const script = path.join(SCRIPTS_DIR, 'printEnvVariablesToFile.py');
-    const args = getUseIsolationSetting()
-        ? [ISOLATED, script, filename.fileToCommandArgument()]
-        : [script, filename.fileToCommandArgument()];
+    const args = maybeIsolated([script, filename.fileToCommandArgument()]);
 
     function parse(out: string): NodeJS.ProcessEnv {
         return JSON.parse(out);
@@ -331,24 +336,14 @@ export function shell_exec(command: string, lockfile: string, shellArgs: string[
     const script = path.join(SCRIPTS_DIR, 'shell_exec.py');
     // We don't bother with a "parse" function since the output
     // could be anything.
-    return getUseIsolationSetting()
-        ? [
-              ISOLATED,
-              script,
-              command.fileToCommandArgument(),
-              // The shell args must come after the command
-              // but before the lockfile.
-              ...shellArgs,
-              lockfile.fileToCommandArgument()
-          ]
-        : [
-              script,
-              command.fileToCommandArgument(),
-              // The shell args must come after the command
-              // but before the lockfile.
-              ...shellArgs,
-              lockfile.fileToCommandArgument()
-          ];
+    return maybeIsolated([
+        script,
+        command.fileToCommandArgument(),
+        // The shell args must come after the command
+        // but before the lockfile.
+        ...shellArgs,
+        lockfile.fileToCommandArgument()
+    ]);
 }
 
 //============================
@@ -357,7 +352,7 @@ export function shell_exec(command: string, lockfile: string, shellArgs: string[
 export function testlauncher(testArgs: string[]): string[] {
     const script = path.join(SCRIPTS_DIR, 'testlauncher.py');
     // There is no output to parse, so we do not return a function.
-    return getUseIsolationSetting() ? [ISOLATED, script, ...testArgs] : [script, ...testArgs];
+    return maybeIsolated([script, ...testArgs]);
 }
 
 //============================
@@ -374,5 +369,5 @@ export function visualstudio_py_testlauncher(testArgs: string[]): string[] {
 
 export function tensorboardLauncher(args: string[]) {
     const script = path.join(SCRIPTS_DIR, 'tensorboard_launcher.py');
-    return getUseIsolationSetting() ? [ISOLATED, script, ...args] : [script, ...args];
+    return maybeIsolated([script, ...args]);
 }
