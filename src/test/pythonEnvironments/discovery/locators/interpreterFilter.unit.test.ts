@@ -52,7 +52,7 @@ suite('Interpreters - Filter', () => {
     hideThesePaths.forEach((interpreterPath) => {
         test(`Interpreter path should be hidden - ${interpreterPath}`, () => {
             const interpreter: PythonEnvironment = getInterpreterFromPath(interpreterPath);
-            expect(isHiddenInterpreter(interpreter), `${interpreterPath} should be treated as hidden.`).to.be.equal(false);
+            expect(isHiddenInterpreter(interpreter), `${interpreterPath} should be treated as hidden.`).to.equal(true);
         });
     });
 });
