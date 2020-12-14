@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { traceError } from '../../../common/logger';
 import { normalizeFilename } from '../../../common/utils/filesystem';
@@ -38,21 +39,17 @@ export function getEnvExecutable(env: string | Partial<PythonEnvInfo>): string {
  * Make an as-is (deep) copy of the given info.
  */
 export function copyExecutable(info: PythonExecutableInfo): PythonExecutableInfo {
-    return { ...info };
+    return cloneDeep(info);
 }
 
 /**
  * Make a copy and set all the properties properly.
  */
 export function normalizeExecutable(info: PythonExecutableInfo): PythonExecutableInfo {
-    const norm = { ...info };
-    if (!norm.filename) {
-        norm.filename = '';
-    }
-    if (!norm.sysPrefix) {
-        norm.sysPrefix = '';
-    }
-    return norm;
+    return {
+        ...normalizeFileInfo(info),
+        sysPrefix: info.sysPrefix === undefined ? '' : info.sysPrefix,
+    };
 }
 
 /**
@@ -63,9 +60,7 @@ export function normalizeExecutable(info: PythonExecutableInfo): PythonExecutabl
  * This assumes that the info has already been normalized.
  */
 export function validateExecutable(info: PythonExecutableInfo): void {
-    if (info.filename === '') {
-        throw Error('missing executable filename');
-    }
+    validateFileInfo(info);
     // info.sysPrefix can be empty.
 }
 
@@ -215,6 +210,23 @@ export function mergeExecutables(
     return merged;
 }
 
+// *** FileInfo helpers ***
+
+function normalizeFileInfo(info: FileInfo): FileInfo {
+    return {
+        filename: info.filename === undefined ? '' : info.filename,
+        ctime: info.ctime === undefined ? -1 : info.ctime,
+        mtime: info.mtime === undefined ? -1 : info.mtime,
+    };
+}
+
+function validateFileInfo(info: FileInfo): void {
+    if (info.filename === '') {
+        throw Error('missing executable filename');
+    }
+    // For now, we do not worry about ctime or mtime.
+}
+
 function mergeFileInfo(file: FileInfo, other: FileInfo): FileInfo {
     const merged: FileInfo = {
         filename: file.filename,
@@ -222,15 +234,15 @@ function mergeFileInfo(file: FileInfo, other: FileInfo): FileInfo {
         mtime: file.mtime,
     };
 
-    if (file.filename === '') {
+    if (merged.filename === '') {
         merged.filename = other.filename;
     }
 
     if (merged.filename === other.filename || other.filename === '') {
-        if (file.ctime < 0 && other.ctime > -1) {
+        if (merged.ctime < 0 && other.ctime > -1) {
             merged.ctime = other.ctime;
         }
-        if (file.mtime < 0 && other.mtime > -1) {
+        if (merged.mtime < 0 && other.mtime > -1) {
             merged.mtime = other.mtime;
         }
     }
