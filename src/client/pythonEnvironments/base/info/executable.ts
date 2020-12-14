@@ -10,6 +10,7 @@ import {
     areSimilarVersions,
     compareVersions,
     getEmptyVersion,
+    isVersionEmpty,
     parseBasicVersion,
     parseRelease,
     parseVersion,
@@ -155,12 +156,19 @@ function walkExecutablePath(filename: string): PythonVersion {
         if (current !== undefined && isPythonDirectory(basename, after)) {
             [current.release] = parseRelease(after);
 
-            if (!areSimilarVersions(current, best)) {
+            if (isVersionEmpty(best)) {
+                best = current;
+                if (current.release !== undefined) {
+                    // It can't get better.
+                    break;
+                }
+            } else if (isVersionEmpty(current)) {
+                // Skip it!
+            } else if (!areSimilarVersions(current, best, { allowMajorOnly: true })) {
                 // We treat the right-most version in the filename
                 // as authoritative in this case.
                 break;
-            }
-            if (compareVersions(current, best) < 0) {
+            } else if (compareVersions(current, best) < 0) {
                 best = current;
                 if (current.release !== undefined) {
                     // It can't get better.
