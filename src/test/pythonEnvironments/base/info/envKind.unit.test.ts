@@ -34,12 +34,11 @@ test('all Python env kinds are covered', () => {
     assert.equal(
         KIND_NAMES.length,
         getNamesAndValues(PythonEnvKind).length,
-    )
+    );
 });
 
 suite('pyenvs info - getKindName()', () => {
     suite('known', () => {
-
         KIND_NAMES.forEach(([kind, expected]) => {
             test(`check ${kind}`, () => {
                 const name = getKindName(kind);
@@ -91,6 +90,6 @@ suite('pyenvs info - getPrioritizedEnvKinds()', () => {
         assert.equal(
             getPrioritizedEnvKinds().length,
             getNamesAndValues(PythonEnvKind).length,
-        )
+        );
     });
 });
