@@ -10,10 +10,12 @@ const kindsByName: Record<string, PythonEnvKind> = {
     winStore: PythonEnvKind.WindowsStore,
     pyenv: PythonEnvKind.Pyenv,
     condaBase: PythonEnvKind.CondaBase,
+    poetry: PythonEnvKind.Poetry,
     customGlobal: PythonEnvKind.Custom,
     otherGlobal: PythonEnvKind.OtherGlobal,
     venv: PythonEnvKind.Venv,
     virtualenv: PythonEnvKind.VirtualEnv,
+    virtualenvWrapper: PythonEnvKind.VirtualEnvWrapper,
     pipenv: PythonEnvKind.Pipenv,
     conda: PythonEnvKind.Conda,
     otherVirtual: PythonEnvKind.OtherVirtual
