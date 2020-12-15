@@ -222,6 +222,19 @@ function validateRelease(info: PythonVersionRelease): void {
 }
 
 /**
+ * Convert the info to a user-facing representation.
+ */
+export function getVersionDisplayString(ver: PythonVersion): string {
+    if (isVersionEmpty(ver)) {
+        return '';
+    }
+    if (ver.micro !== -1) {
+        return getShortVersionString(ver);
+    }
+    return `${getShortVersionString(ver)}.x`;
+}
+
+/**
  * Convert the info to a simple string.
  */
 export function getShortVersionString(ver: PythonVersion): string {
