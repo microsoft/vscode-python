@@ -4,7 +4,7 @@
 import { injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { DiscoveryVariants } from '../common/experiments/groups';
+// import { DiscoveryVariants } from '../common/experiments/groups';
 import { IDisposableRegistry } from '../common/types';
 import { getVersionString, parseVersion } from '../common/utils/version';
 import {
@@ -36,7 +36,7 @@ import { ILocator, PythonLocatorQuery } from './base/locator';
 import { isMacDefaultPythonPath } from './base/locators/lowLevel/macDefaultLocator';
 import { getEnvs } from './base/locatorUtils';
 import { getEnvironmentDirFromPath } from './common/commonUtils';
-import { inExperiment } from './common/externalDependencies';
+// import { inExperiment } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
@@ -157,12 +157,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     ) {}
 
     public async activate(): Promise<void> {
-        this.enabled = (await Promise.all(
-            [
-                inExperiment(DiscoveryVariants.discoverWithFileWatching),
-                inExperiment(DiscoveryVariants.discoveryWithoutFileWatching),
-            ],
-        )).includes(true);
+        this.enabled = true;
         this.disposables.push(this.api.onChanged((e) => {
             const query = {
                 kinds: e.kind ? [e.kind] : undefined,
