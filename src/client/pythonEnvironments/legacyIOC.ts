@@ -132,8 +132,7 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     return env;
 }
 
-// Shouldn't be used outside of the discovery component.
-async function inDiscoveryExperiment(): Promise<boolean> {
+export async function isComponentEnabled(): Promise<boolean> {
     const results = await Promise.all([
         inExperiment(DiscoveryVariants.discoverWithFileWatching),
         inExperiment(DiscoveryVariants.discoveryWithoutFileWatching),
@@ -359,7 +358,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
 }
 
 export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): Promise<void> {
-    const inExp = await inDiscoveryExperiment().catch((ex) => {
+    const inExp = await isComponentEnabled().catch((ex) => {
         // This is mainly to support old tests, where IExperimentService was registered
         // out of sequence / or not registered, so this throws an error. But we do not
         // care about that error as we don't care about IExperimentService in old tests.
