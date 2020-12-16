@@ -23,6 +23,7 @@ import {
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
+import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -73,6 +74,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
+        @inject(IEnvironmentVariablesProvider) private readonly environmentService: IEnvironmentVariablesProvider,
     ) {
         this.startupCompleted = createDeferred<void>();
     }
@@ -199,6 +201,14 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
                 }),
             );
         }
+
+        this.disposables.push(
+            this.environmentService.onDidEnvironmentVariablesChange(() => {
+                this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, {
+                    settings: null,
+                });
+            }),
+        );
 
         const settings = this.configurationService.getSettings(resource);
         if (settings.downloadLanguageServer) {

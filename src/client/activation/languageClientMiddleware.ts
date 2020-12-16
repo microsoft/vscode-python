@@ -26,7 +26,6 @@ import {
     ConfigurationParams,
     ConfigurationRequest,
     HandleDiagnosticsSignature,
-    HandlerResult,
     LanguageClient,
     Middleware,
     ResponseError,
@@ -39,6 +38,7 @@ import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager, IExtensions } from '../common/types';
 import { isThenable } from '../common/utils/async';
 import { StopWatch } from '../common/utils/stopWatch';
+import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import { NotebookMiddlewareAddon } from '../jupyter/languageserver/notebookMiddlewareAddon';
 import { sendTelemetryEvent } from '../telemetry';
@@ -63,38 +63,38 @@ export class LanguageClientMiddleware implements Middleware {
     public eventCount: number = 0;
 
     public workspace = {
-        configuration: (
+        configuration: async (
             params: ConfigurationParams,
             token: CancellationToken,
             next: ConfigurationRequest.HandlerSignature,
-        ): HandlerResult<any[], void> => {
+        ) => {
             const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+            const envService = this.serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
 
-            // Hand-collapse "Thenable<A> | Thenable<B> | Thenable<A|B>" into just "Thenable<A|B>" to make TS happy.
-            const result: any[] | ResponseError<void> | Thenable<any[] | ResponseError<void>> = next(params, token);
-
-            // For backwards compatibility, set python.pythonPath to the configured
-            // value as though it were in the user's settings.json file.
-            const addPythonPath = (settings: any[] | ResponseError<void>) => {
-                if (settings instanceof ResponseError) {
-                    return settings;
-                }
-
-                params.items.forEach((item, i) => {
-                    if (item.section === 'python') {
-                        const uri = item.scopeUri ? Uri.parse(item.scopeUri) : undefined;
-                        settings[i].pythonPath = configService.getSettings(uri).pythonPath;
-                    }
-                });
-
+            let settings = next(params, token);
+            if (isThenable(settings)) {
+                settings = await settings;
+            }
+            if (settings instanceof ResponseError) {
                 return settings;
-            };
-
-            if (isThenable(result)) {
-                return result.then(addPythonPath);
             }
 
-            return addPythonPath(result);
+            for (const [i, item] of params.items.entries()) {
+                if (item.section === 'python') {
+                    const uri = item.scopeUri ? Uri.parse(item.scopeUri) : undefined;
+                    // For backwards compatibility, set python.pythonPath to the configured
+                    // value as though it were in the user's settings.json file.
+                    settings[i].pythonPath = configService.getSettings(uri).pythonPath;
+
+                    const env = await envService.getEnvironmentVariables(uri);
+                    const envPYTHONPATH = env.PYTHONPATH;
+                    if (envPYTHONPATH) {
+                        settings[i]._envPYTHONPATH = envPYTHONPATH;
+                    }
+                }
+            }
+
+            return settings;
         },
     };
     private notebookAddon: NotebookMiddlewareAddon | undefined;
