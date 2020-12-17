@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { Dirent } from 'fs';
 import * as path from 'path';
-import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
 import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from '../discovery/locators/services/condaLocator';
 import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/virtualEnvironmentIdentifier';
-import { isDirectory, listDir } from './externalDependencies';
+import { listDir } from './externalDependencies';
 import { isPosixPythonBin } from './posixUtils';
 import { isWindowsPythonExe } from './windowsUtils';
 
@@ -26,15 +26,10 @@ export async function* findInterpretersInDir(
 ): AsyncIterableIterator<string> {
     const os = getOSType();
     const checkBin = os === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
-    const itemFilter = filter ?? (() => true);
 
-    let dirContents: string[];
+    let entries: Dirent[];
     try {
-        dirContents = (await listDir(root))
-            // Build the full filename.
-            .map((c) => path.join(root, c))
-            // Apply the filter.
-            .filter(itemFilter);
+        entries = await listDir(root);
     } catch (err) {
         // Treat a missing directory as empty.
         if (err.code === 'ENOENT') {
@@ -43,21 +38,26 @@ export async function* findInterpretersInDir(
         throw err; // re-throw
     }
 
-    const generators = dirContents.map((fullPath) => {
-        async function* generator() {
-            if (await isDirectory(fullPath)) {
-                if (recurseLevels && recurseLevels > 0) {
-                    yield* findInterpretersInDir(fullPath, recurseLevels - 1, filter);
-                }
-            } else if (checkBin(fullPath)) {
-                yield fullPath;
+    for (const entry of entries) {
+        const filename = path.join(root, entry.name);
+        if (filter && !filter(filename)) {
+            // eslint-disable-next-line no-continue
+            continue;
+        }
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: If the "withFileTypes" option doesn't help us on Windows
+        // then we will need to check manually (using `stat()`)..
+        if (entry.isDirectory()) {
+            if (recurseLevels && recurseLevels > 0) {
+                yield* findInterpretersInDir(filename, recurseLevels - 1, filter);
+            }
+        } else if (entry.isFile()) {
+            if (checkBin(filename)) {
+                yield filename;
             }
         }
-
-        return generator();
-    });
-
-    yield* iterable(chain(generators));
+        // We ignore all other file types, including symlinks.
+    }
 }
 
 /**
