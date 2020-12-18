@@ -8,6 +8,7 @@ import { Commands, PYTHON } from '../common/constants';
 import { NativeTensorBoard, NativeTensorBoardEntrypoints } from '../common/experiments/groups';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
+import { TensorBoardLaunchSource } from './constants';
 import { containsTensorBoardImport } from './helpers';
 
 @injectable()
@@ -25,7 +26,8 @@ export class TensorBoardCodeLensProvider implements IExtensionSingleActivationSe
     public provideCodeLenses(document: TextDocument, _token: CancellationToken): CodeLens[] {
         const command: Command = {
             title: TensorBoard.launchNativeTensorBoardSessionCodeLens(),
-            command: Commands.LaunchTensorBoard
+            command: Commands.LaunchTensorBoard,
+            arguments: [TensorBoardLaunchSource.codelens]
         };
         const codelenses: CodeLens[] = [];
         for (let index = 0; index < document.lineCount; index += 1) {

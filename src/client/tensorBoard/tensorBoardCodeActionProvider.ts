@@ -17,6 +17,7 @@ import { Commands, PYTHON } from '../common/constants';
 import { NativeTensorBoard, NativeTensorBoardEntrypoints } from '../common/experiments/groups';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
+import { TensorBoardLaunchSource } from './constants';
 import { containsTensorBoardImport } from './helpers';
 
 @injectable()
@@ -45,7 +46,8 @@ export class TensorBoardCodeActionProvider implements CodeActionProvider, IExten
             const nativeTensorBoardSession = new CodeAction(title, CodeActionKind.QuickFix);
             nativeTensorBoardSession.command = {
                 title,
-                command: Commands.LaunchTensorBoard
+                command: Commands.LaunchTensorBoard,
+                arguments: [TensorBoardLaunchSource.codeaction]
             };
             return [nativeTensorBoardSession];
         }

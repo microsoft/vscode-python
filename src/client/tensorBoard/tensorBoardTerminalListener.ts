@@ -3,6 +3,7 @@ import { Disposable, Terminal, TerminalDataWriteEvent, window } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDisposableRegistry } from '../common/types';
 import { noop } from '../common/utils/misc';
+import { TensorBoardLaunchSource } from './constants';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 
 @injectable()
@@ -71,7 +72,7 @@ export class TensorBoardTerminalListener implements IExtensionSingleActivationSe
         }
 
         if (match) {
-            this.prompt.showNativeTensorBoardPrompt().ignoreErrors();
+            this.prompt.showNativeTensorBoardPrompt(TensorBoardLaunchSource.terminal).ignoreErrors();
             // Once we notify the user of a match, no need to keep listening for writes
             this.disposable.dispose();
         }

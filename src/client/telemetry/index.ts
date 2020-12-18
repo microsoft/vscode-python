@@ -18,6 +18,7 @@ import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { LinterId } from '../linters/types';
 import { EnvironmentType } from '../pythonEnvironments/info';
+import { TensorBoardLaunchSource, TensorBoardPromptSelection, TensorBoardSessionStartResult } from '../tensorBoard/constants';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
 import { LinterTrigger, TestTool } from './types';
@@ -1722,4 +1723,16 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartPageOpenFileBrowser]: never | undefined;
     [Telemetry.StartPageOpenFolder]: never | undefined;
     [Telemetry.StartPageOpenWorkspace]: never | undefined;
+
+    // TensorBoard events
+    [EventName.TENSORBOARD_PROMPT_SELECTION]: {
+        selection: TensorBoardPromptSelection
+    };
+    [EventName.TENSORBOARD_SESSION_LAUNCH]: {
+        entrypoint: TensorBoardLaunchSource
+    };
+    [EventName.TENSORBOARD_SESSION_STARTUP_DURATION]: {
+        result: TensorBoardSessionStartResult
+    };
+    [EventName.TENSORBOARD_SESSION_DURATION]: never | undefined;
 }

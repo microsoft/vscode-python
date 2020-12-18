@@ -8,6 +8,7 @@ import { IWorkspaceService } from '../common/application/types';
 import { NativeTensorBoard } from '../common/experiments/groups';
 import { traceError } from '../common/logger';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
+import { TensorBoardLaunchSource } from './constants';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 
 @injectable()
@@ -91,10 +92,14 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
 
             // When a file is created or changed that matches `this.globPattern`, try to show our prompt
             this.disposables.push(
-                fileSystemWatcher.onDidCreate(() => this.tensorBoardPrompt.showNativeTensorBoardPrompt())
+                fileSystemWatcher.onDidCreate(() =>
+                    this.tensorBoardPrompt.showNativeTensorBoardPrompt(TensorBoardLaunchSource.tfeventfiles)
+                )
             );
             this.disposables.push(
-                fileSystemWatcher.onDidChange(() => this.tensorBoardPrompt.showNativeTensorBoardPrompt())
+                fileSystemWatcher.onDidChange(() =>
+                    this.tensorBoardPrompt.showNativeTensorBoardPrompt(TensorBoardLaunchSource.tfeventfiles)
+                )
             );
             this.disposables.push(fileSystemWatcher);
             fileWatchers.push(fileSystemWatcher);
