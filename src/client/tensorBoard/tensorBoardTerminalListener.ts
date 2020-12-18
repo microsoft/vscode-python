@@ -38,6 +38,10 @@ export class TensorBoardTerminalListener implements IExtensionSingleActivationSe
     // It can also fire with multiple characters from terminal prompt characters or terminal
     // output, which we want to ignore.
     private async handleTerminalInput(e: TerminalDataWriteEvent) {
+        if (!window.activeTerminal || window.activeTerminal !== e.terminal) {
+            return;
+        }
+
         const { data, terminal } = e;
 
         // At any given time, this array contains the current line being built

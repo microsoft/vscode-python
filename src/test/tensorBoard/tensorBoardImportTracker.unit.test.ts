@@ -76,15 +76,4 @@ suite('TensorBoard import tracker', () => {
         await tensorBoardImportTracker.activate();
         assert.ok(showNativeTensorBoardPrompt.notCalled);
     });
-    test('Ignore docstrings', async () => {
-        const document = documentManager.addDocument(
-            `"""
-import tensorboard
-"""`,
-            'foo.py'
-        );
-        await documentManager.showTextDocument(document);
-        await tensorBoardImportTracker.activate();
-        assert.ok(showNativeTensorBoardPrompt.notCalled);
-    });
 });

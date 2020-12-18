@@ -56,8 +56,7 @@ suite('TensorBoard terminal listener', () => {
     });
 
     test('Backspaces are correctly handled', async () => {
-        terminal.sendText('tensor', false);
-        terminal.sendText('\b', false);
+        terminal.sendText('tensor\b', false);
         terminal.sendText('rboard', true);
         await sleep(terminalActivationTimeout);
         assert.ok(showNativeTensorBoardPrompt.called);
