@@ -31,7 +31,6 @@
         "editor.formatOnSave": true
     },
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
-    "tslint.enable": true,
     "python.linting.enabled": false,
     "python.testing.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
@@ -42,8 +41,7 @@
     "prettier.printWidth": 120,
     "prettier.singleQuote": true,
     "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": true,
-        "source.fixAll.tslint": true
+        "source.fixAll.eslint": true
     },
     "python.languageServer": "Pylance",
     "python.analysis.logLevel": "Trace",

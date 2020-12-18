@@ -21,7 +21,6 @@ sprint-planning.github-issues
 test.ipynb
 tsconfig*.json
 tsfmt.json
-tslint.json
 vscode-python-signing.*
 
 .github/**
