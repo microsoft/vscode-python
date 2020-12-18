@@ -23,7 +23,7 @@ The following projects have their own repositories:
 1. Windows, macOS, or Linux
 1. [Visual Studio Code](https://code.visualstudio.com/)
 1. The following VS Code extensions:
-    - [TSLint](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-tslint-plugin)
+    - [ESlint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
     - [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
     - [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
 1. Have an issue which has a "needs PR" label (feel free to indicate you would like to provide a PR for the issue so others don't work on it as well)
@@ -49,7 +49,7 @@ If you see warnings that `The engine "vscode" appears to be invalid.`, you can i
 
 ### Incremental Build
 
-Run the `Compile` and `Hygiene` build Tasks from the [Run Build Task...](https://code.visualstudio.com/docs/editor/tasks) command picker (short cut `CTRL+SHIFT+B` or `⇧⌘B`). This will leave build and hygiene tasks running in the background and which will re-run as files are edited and saved. You can see the output from either task in the Terminal panel (use the selector to choose which output to look at).
+Run the `Compile` build task from the [Run Build Task...](https://code.visualstudio.com/docs/editor/tasks) command picker (short cut `CTRL+SHIFT+B` or `⇧⌘B`). This will leave build task running in the background and which will re-run as files are edited and saved. You can see the output from either task in the Terminal panel (use the selector to choose which output to look at).
 
 You can also compile from the command-line. For a full compile you can use:
 
