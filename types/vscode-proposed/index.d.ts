@@ -16,11 +16,12 @@ import {
     WorkspaceEditEntryMetadata,
     Command,
     AccessibilityInformation,
-    Location
+    Location,
+    Terminal
 } from 'vscode';
 
 // Copy nb section from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.
-//#region @rebornix: Notebook
+// #region @rebornix: Notebook
 
 export enum CellKind {
     Markdown = 1,
@@ -734,7 +735,7 @@ export namespace notebook {
     ): NotebookCellStatusBarItem;
 }
 
-//#region debug
+// #region debug
 
 /**
  * A DebugProtocolVariableContainer is an opaque stand-in type for the intersection of the Scope and Variable types defined in the Debug Adapter Protocol.
@@ -751,4 +752,28 @@ export interface DebugProtocolVariableContainer {
 export interface DebugProtocolVariable {
     // Properties: see details [here](https://microsoft.github.io/debug-adapter-protocol/specification#Base_Protocol_Variable).
 }
-//#endregion
+// #endregion
+
+declare module 'vscode' {
+    // #region Terminal data write event https://github.com/microsoft/vscode/issues/78502
+    export interface TerminalDataWriteEvent {
+        /**
+         * The [terminal](#Terminal) for which the data was written.
+         */
+        readonly terminal: Terminal;
+        /**
+         * The data being written.
+         */
+        readonly data: string;
+    }
+    namespace window {
+        /**
+         * An event which fires when the terminal's child pseudo-device is written to (the shell).
+         * In other words, this provides access to the raw data stream from the process running
+         * within the terminal, including VT sequences.
+         */
+        export const onDidWriteTerminalData: Event<TerminalDataWriteEvent>;
+    }
+
+    // #endregion
+}

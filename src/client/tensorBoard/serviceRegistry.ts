@@ -9,7 +9,7 @@ import { TensorBoardFileWatcher } from './tensorBoardFileWatcher';
 import { TensorBoardImportTracker } from './tensorBoardImportTracker';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 import { TensorBoardSessionProvider } from './tensorBoardSessionProvider';
-import { ITensorBoardImportTracker } from './types';
+import { TensorBoardTerminalListener } from './tensorBoardTerminalListener';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -21,8 +21,14 @@ export function registerTypes(serviceManager: IServiceManager): void {
         TensorBoardFileWatcher
     );
     serviceManager.addSingleton<TensorBoardPrompt>(TensorBoardPrompt, TensorBoardPrompt);
-    serviceManager.addSingleton<ITensorBoardImportTracker>(ITensorBoardImportTracker, TensorBoardImportTracker);
-    serviceManager.addBinding(ITensorBoardImportTracker, IExtensionSingleActivationService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        TensorBoardImportTracker
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        TensorBoardTerminalListener
+    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         TensorBoardCodeLensProvider
