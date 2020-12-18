@@ -16,6 +16,5 @@ export enum TensorBoardLaunchSource {
 export enum TensorBoardSessionStartResult {
     cancel = 'canceled',
     success = 'success',
-    timeout = 'timeout',
     error = 'error'
 }
