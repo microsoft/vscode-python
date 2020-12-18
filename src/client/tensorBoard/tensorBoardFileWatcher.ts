@@ -60,7 +60,7 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
             for (const pattern of [this.globPattern1, this.globPattern2]) {
                 const matches = await this.workspaceService.findFiles(pattern, undefined, 1);
                 if (matches.length > 0) {
-                    await this.tensorBoardPrompt.showNativeTensorBoardPrompt();
+                    await this.tensorBoardPrompt.showNativeTensorBoardPrompt(TensorBoardLaunchSource.tfeventfiles);
                     return;
                 }
             }

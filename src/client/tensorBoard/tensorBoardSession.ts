@@ -45,6 +45,7 @@ export class TensorBoardSession {
 
     private process: ChildProcess | undefined;
 
+    // This tracks the total duration of time that the user kept the TensorBoard panel open
     private sessionDurationStopwatch: StopWatch | undefined;
 
     constructor(
@@ -56,6 +57,7 @@ export class TensorBoardSession {
     ) {}
 
     public async initialize(): Promise<void> {
+        const e2eStartupDurationStopwatch = new StopWatch();
         const tensorBoardWasInstalled = await this.ensureTensorboardIsInstalled();
         if (!tensorBoardWasInstalled) {
             return;
@@ -67,6 +69,12 @@ export class TensorBoardSession {
         const startedSuccessfully = await this.startTensorboardSession(logDir);
         if (startedSuccessfully) {
             this.showPanel();
+            // Not using captureTelemetry on this method as we only want to send
+            // this particular telemetry event if the whole session creation succeeded
+            sendTelemetryEvent(
+                EventName.TENSORBOARD_SESSION_E2E_STARTUP_DURATION,
+                e2eStartupDurationStopwatch.elapsedTime
+            );
         }
         this.sessionDurationStopwatch = new StopWatch();
     }
@@ -201,21 +209,33 @@ export class TensorBoardSession {
         switch (result) {
             case 'canceled':
                 traceInfo('Canceled starting TensorBoard session.');
-                sendTelemetryEvent(EventName.TENSORBOARD_SESSION_STARTUP_DURATION, sessionStartStopwatch.elapsedTime, {
-                    result: TensorBoardSessionStartResult.cancel
-                });
+                sendTelemetryEvent(
+                    EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION,
+                    sessionStartStopwatch.elapsedTime,
+                    {
+                        result: TensorBoardSessionStartResult.cancel
+                    }
+                );
                 observable.dispose();
                 return false;
             case 'success':
                 this.process = observable.proc;
-                sendTelemetryEvent(EventName.TENSORBOARD_SESSION_STARTUP_DURATION, sessionStartStopwatch.elapsedTime, {
-                    result: TensorBoardSessionStartResult.success
-                });
+                sendTelemetryEvent(
+                    EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION,
+                    sessionStartStopwatch.elapsedTime,
+                    {
+                        result: TensorBoardSessionStartResult.success
+                    }
+                );
                 return true;
             case timeout:
-                sendTelemetryEvent(EventName.TENSORBOARD_SESSION_STARTUP_DURATION, sessionStartStopwatch.elapsedTime, {
-                    result: TensorBoardSessionStartResult.error
-                });
+                sendTelemetryEvent(
+                    EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION,
+                    sessionStartStopwatch.elapsedTime,
+                    {
+                        result: TensorBoardSessionStartResult.error
+                    }
+                );
                 throw new Error(`Timed out after ${timeout / 1000} seconds waiting for TensorBoard to launch.`);
             default:
                 // We should never get here

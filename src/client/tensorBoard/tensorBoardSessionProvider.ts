@@ -37,10 +37,15 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
     private async activateInternal() {
         if (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) {
             this.disposables.push(
-                this.commandManager.registerCommand(Commands.LaunchTensorBoard, (entrypoint: TensorBoardLaunchSource) => {
-                    sendTelemetryEvent(EventName.TENSORBOARD_SESSION_LAUNCH, undefined, { entrypoint });
-                    this.createNewSession();
-                })
+                this.commandManager.registerCommand(
+                    Commands.LaunchTensorBoard,
+                    (entrypoint: TensorBoardLaunchSource | undefined) => {
+                        sendTelemetryEvent(EventName.TENSORBOARD_SESSION_LAUNCH, undefined, {
+                            entrypoint: entrypoint ?? TensorBoardLaunchSource.palette
+                        });
+                        this.createNewSession();
+                    }
+                )
             );
             const contextKey = new ContextKey('python.isInNativeTensorBoardExperiment', this.commandManager);
             contextKey.set(true).ignoreErrors();
