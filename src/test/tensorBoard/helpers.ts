@@ -1,6 +1,6 @@
 import * as TypeMoq from 'typemoq';
 import { IApplicationShell, ICommandManager } from '../../client/common/application/types';
-import { IPersistentStateFactory, IExperimentService } from '../../client/common/types';
+import { IExperimentService, IPersistentStateFactory } from '../../client/common/types';
 import { TensorBoardPrompt } from '../../client/tensorBoard/tensorBoardPrompt';
 import { MockState } from '../interpreters/mocks';
 
