@@ -36,8 +36,7 @@ export class TensorBoardTerminalListener implements IExtensionSingleActivationSe
     // something into terminal, so this function buffers characters and flushes them on a newline.
     // It can also be a series of characters if the user pastes a command into the terminal
     // or uses terminal history to fetch past commands.
-    // It can also fire with multiple characters from terminal prompt characters or terminal
-    // output, which we want to ignore.
+    // It can also fire with multiple characters from terminal prompt characters or terminal output.
     private async handleTerminalInput(e: TerminalDataWriteEvent) {
         if (!window.activeTerminal || window.activeTerminal !== e.terminal) {
             return;
