@@ -57,12 +57,10 @@ suite('TensorBoard terminal listener', async () => {
     });
 
     test('Backspaces are correctly handled', async () => {
-        terminal.sendText('\b\b\b\b', false); // We should just ignore these
-        await sleep(terminalWriteTimeout);
-        assert.ok(showNativeTensorBoardPrompt.notCalled);
-        terminal.sendText('tensor\b', false);
-        await sleep(terminalWriteTimeout);
-        assert.ok(showNativeTensorBoardPrompt.notCalled);
+        terminal.sendText('te', false);
+        terminal.sendText('\b', false);
+        terminal.sendText('ensor', false);
+        terminal.sendText('\b', false);
         terminal.sendText('rboard', true);
         await sleep(terminalWriteTimeout);
         assert.ok(showNativeTensorBoardPrompt.called);

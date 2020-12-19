@@ -31,6 +31,7 @@ export class TensorBoardTerminalListener implements IExtensionSingleActivationSe
     // This function is called whenever any data is written to a VS Code integrated
     // terminal. It fires onDidRunTensorBoardCommand when the user attempts to launch
     // tensorboard from the active terminal.
+    // onDidWriteTerminalData emits raw data being written to the terminal output.
     // TerminalDataWriteEvent.data can be a individual single character as user is typing
     // something into terminal, so this function buffers characters and flushes them on a newline.
     // It can also be a series of characters if the user pastes a command into the terminal
@@ -48,7 +49,13 @@ export class TensorBoardTerminalListener implements IExtensionSingleActivationSe
         let buffer = this.terminalBuffers.get(terminal) || [];
         let match = false;
 
-        if (data.match(/^[\b]/)) {
+        console.log('Got data', data);
+        console.log('Buffer contents are', buffer);
+
+        if (data.match(/[\b]|\^H/)) {
+            // On Linux backspaces appear in `data` as ^H
+            // Assumption here is that backspaces only get written to terminal output
+            // one character at a time
             if (buffer.length > 0) {
                 // Handle user backspace
                 buffer.pop();
