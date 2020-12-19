@@ -32,12 +32,12 @@ export class TensorBoardTerminalListener implements IExtensionSingleActivationSe
     // This function is called whenever any data is written to a VS Code integrated
     // terminal. It fires onDidRunTensorBoardCommand when the user attempts to launch
     // tensorboard from the active terminal.
+    // onDidWriteTerminalData emits raw data being written to the terminal output.
     // TerminalDataWriteEvent.data can be a individual single character as user is typing
     // something into terminal, so this function buffers characters and flushes them on a newline.
     // It can also be a series of characters if the user pastes a command into the terminal
     // or uses terminal history to fetch past commands.
-    // It can also fire with multiple characters from terminal prompt characters or terminal
-    // output, which we want to ignore.
+    // It can also fire with multiple characters from terminal prompt characters or terminal output.
     private async handleTerminalInput(e: TerminalDataWriteEvent) {
         if (!window.activeTerminal || window.activeTerminal !== e.terminal) {
             return;
@@ -49,9 +49,18 @@ export class TensorBoardTerminalListener implements IExtensionSingleActivationSe
         let buffer = this.terminalBuffers.get(terminal) || [];
         let match = false;
 
-        if (data.match(/^[\b]/) && buffer.length > 0) {
-            // Handle user backspace
-            buffer.pop();
+        console.log('Got data', data);
+        console.log('Buffer contents are', buffer);
+
+        if (data.match(/[\b]|\^H/)) {
+            // On Linux backspaces appear in `data` as ^H
+            // Assumption here is that backspaces only get written to terminal output
+            // one character at a time
+            if (buffer.length > 0) {
+                // Handle user backspace
+                buffer.pop();
+            }
+            // If there's nothing in the buffer, backspace is a noop
         } else {
             // `data` here could be a single character, multiple characters,
             // or a multiline string

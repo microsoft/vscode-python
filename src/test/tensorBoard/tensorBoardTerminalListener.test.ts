@@ -5,9 +5,9 @@ import { sleep } from '../../client/common/utils/async';
 import { TensorBoardPrompt } from '../../client/tensorBoard/tensorBoardPrompt';
 import { initialize } from '../initialize';
 
-const terminalActivationTimeout = 5000;
+const terminalWriteTimeout = 5000;
 
-suite('TensorBoard terminal listener', () => {
+suite('TensorBoard terminal listener', async () => {
     let showNativeTensorBoardPrompt: sinon.SinonSpy;
     let terminal: vscode.Terminal;
 
@@ -22,13 +22,14 @@ suite('TensorBoard terminal listener', () => {
 
     teardown(async () => {
         showNativeTensorBoardPrompt.restore();
+        terminal.dispose();
     });
 
     test('Paste tensorboard launch command', async () => {
         // Simulate user pasting in a launch command all at once
         // or filling it in using terminal command history
         terminal.sendText('tensorboard --logdir logs/fit', true);
-        await sleep(terminalActivationTimeout);
+        await sleep(terminalWriteTimeout);
         assert.ok(showNativeTensorBoardPrompt.called);
     });
 
@@ -39,26 +40,29 @@ suite('TensorBoard terminal listener', () => {
         for (const ch of 'tensorboard\n') {
             terminal.sendText(ch, false);
         }
-        await sleep(terminalActivationTimeout);
+        await sleep(terminalWriteTimeout);
         assert.ok(showNativeTensorBoardPrompt.called);
     });
 
     test('Multiline terminal write', async () => {
         terminal.sendText('foo\ntensorboard --logdir logs/fit\nbar', false);
-        await sleep(terminalActivationTimeout);
+        await sleep(terminalWriteTimeout);
         assert.ok(showNativeTensorBoardPrompt.called);
     });
 
     test('Prompt not shown if no matching command', async () => {
         terminal.sendText('tensorboar', true);
-        await sleep(terminalActivationTimeout);
+        await sleep(terminalWriteTimeout);
         assert.ok(showNativeTensorBoardPrompt.notCalled);
     });
 
     test('Backspaces are correctly handled', async () => {
-        terminal.sendText('tensor\b', false);
+        terminal.sendText('te', false);
+        terminal.sendText('\b', false);
+        terminal.sendText('ensor', false);
+        terminal.sendText('\b', false);
         terminal.sendText('rboard', true);
-        await sleep(terminalActivationTimeout);
+        await sleep(terminalWriteTimeout);
         assert.ok(showNativeTensorBoardPrompt.called);
     });
 });
