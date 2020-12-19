@@ -1,12 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable-next-line:no-single-line-block-comment
-/* eslint-disable max-classes-per-file */
-
 import { Event, EventEmitter } from 'vscode';
-import { findInterpretersInDir } from '../../../common/commonUtils';
-import { normalizePath } from '../../../common/externalDependencies';
+import { normalizeFilename } from '../../../../common/utils/filesystem';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { getFastEnvInfo } from '../../info/env';
 import {
@@ -17,7 +13,6 @@ import {
 } from '../../locator';
 import { iterAndUpdateEnvs, resolveEnvFromIterator } from '../../locatorUtils';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
-import { FSWatchingLocator } from './fsWatchingLocator';
 
 /**
  * A naive locator the wraps a function that finds Python executables.
@@ -30,8 +25,13 @@ export class FoundFilesLocator implements ILocator {
     constructor(
         private readonly kind: PythonEnvKind,
         private readonly getExecutables: () => Promise<string[]> | AsyncIterableIterator<string>,
+        onUpdated?: Event<void>,
     ) {
         this.onChanged = this.watcher.onChanged;
+
+        if (onUpdated !== undefined) {
+            onUpdated(() => this.watcher.fire({}));
+        }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -66,37 +66,7 @@ async function* iterMinimalEnvsFromExecutables(
     kind: PythonEnvKind,
 ): AsyncIterableIterator<PythonEnvInfo> {
     for await (const filename of executables) {
-        const executable = normalizePath(filename);
+        const executable = normalizeFilename(filename);
         yield getFastEnvInfo(kind, executable);
-    }
-}
-
-/**
- * A locator for executables in a single directory.
- */
-export class DirFilesLocator extends FSWatchingLocator {
-    private readonly subLocator: ILocator;
-
-    constructor(
-        dirname: string,
-        kind: PythonEnvKind,
-        getExecutables: (dir: string) => AsyncIterableIterator<string> = findInterpretersInDir,
-    ) {
-        super(
-            () => [dirname],
-            async () => kind,
-        );
-        this.subLocator = new FoundFilesLocator(
-            kind,
-            () => getExecutables(dirname),
-        );
-    }
-
-    protected doIterEnvs(query: PythonLocatorQuery): IPythonEnvsIterator {
-        return this.subLocator.iterEnvs(query);
-    }
-
-    protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        return this.subLocator.resolveEnv(env);
     }
 }

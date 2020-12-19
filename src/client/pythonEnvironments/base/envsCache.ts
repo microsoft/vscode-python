@@ -65,8 +65,7 @@ export class PythonEnvsCache {
         if (this.byExecutable === undefined) {
             this.byExecutable = {};
             for (const env of this.envs) {
-                const key = getEnvExecutable(env.executable.filename);
-                this.byExecutable[key] = env;
+                this.byExecutable[env.executable.filename] = env;
             }
         }
         return this.byExecutable[executable];

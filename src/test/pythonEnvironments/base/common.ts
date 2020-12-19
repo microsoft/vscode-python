@@ -9,7 +9,7 @@ import { Event } from 'vscode';
 import {
     createDeferred, flattenIterator, iterable, mapToIterator,
 } from '../../../client/common/utils/async';
-import { getArchitecture } from '../../../client/common/utils/platform';
+import { Architecture } from '../../../client/common/utils/platform';
 import { getVersionString } from '../../../client/common/utils/version';
 import {
     PythonDistroInfo,
@@ -18,10 +18,7 @@ import {
     PythonExecutableInfo,
 } from '../../../client/pythonEnvironments/base/info';
 import { buildEnvInfo } from '../../../client/pythonEnvironments/base/info/env';
-import {
-    getEmptyVersion,
-    parseVersion,
-} from '../../../client/pythonEnvironments/base/info/pythonVersion';
+import { parseVersion } from '../../../client/pythonEnvironments/base/info/pythonVersion';
 import {
     IPythonEnvsIterator,
     Locator,
@@ -45,13 +42,11 @@ export function createLocatedEnv(
             ? normalizedExecutable
             : path.join(location, 'bin', normalizedExecutable);
     }
-    const version = versionStr === ''
-        ? getEmptyVersion()
-        : parseVersion(versionStr);
+    const version = parseVersion(versionStr);
     const env = buildEnvInfo({
         kind, executable, location, version,
     });
-    env.arch = getArchitecture();
+    env.arch = Architecture.x86;
     env.distro = distro;
     if (typeof exec !== 'string') {
         env.executable = exec;

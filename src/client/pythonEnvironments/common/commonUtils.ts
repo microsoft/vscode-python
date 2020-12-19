@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
@@ -9,7 +10,6 @@ import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from '../discovery/locators/services/condaLocator';
 import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/virtualEnvironmentIdentifier';
-import { isDirectory, listDir } from './externalDependencies';
 import { isPosixPythonBin } from './posixUtils';
 import { isWindowsPythonExe } from './windowsUtils';
 
@@ -28,24 +28,16 @@ export async function* findInterpretersInDir(
     const checkBin = os === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
     const itemFilter = filter ?? (() => true);
 
-    let dirContents: string[];
-    try {
-        dirContents = (await listDir(root))
-            .map((c) => path.join(root, c))
-            .filter(itemFilter);
-    } catch (err) {
-        // Treat a missing directory as empty.
-        if (err.code === 'ENOENT') {
-            return;
-        }
-        throw err; // re-throw
-    }
+    const dirContents = (await fsapi.readdir(root)).filter(itemFilter);
 
-    const generators = dirContents.map((fullPath) => {
+    const generators = dirContents.map((item) => {
         async function* generator() {
-            if (await isDirectory(fullPath)) {
+            const fullPath = path.join(root, item);
+            const stat = await fsapi.lstat(fullPath);
+
+            if (stat.isDirectory()) {
                 if (recurseLevels && recurseLevels > 0) {
-                    yield* findInterpretersInDir(fullPath, recurseLevels - 1, filter);
+                    yield* findInterpretersInDir(fullPath, recurseLevels - 1);
                 }
             } else if (checkBin(fullPath)) {
                 yield fullPath;
