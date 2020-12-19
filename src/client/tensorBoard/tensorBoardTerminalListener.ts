@@ -48,9 +48,12 @@ export class TensorBoardTerminalListener implements IExtensionSingleActivationSe
         let buffer = this.terminalBuffers.get(terminal) || [];
         let match = false;
 
-        if (data.match(/^[\b]/) && buffer.length > 0) {
-            // Handle user backspace
-            buffer.pop();
+        if (data.match(/^[\b]/)) {
+            if (buffer.length > 0) {
+                // Handle user backspace
+                buffer.pop();
+            }
+            // If there's nothing in the buffer, backspace is a noop
         } else {
             // `data` here could be a single character, multiple characters,
             // or a multiline string
