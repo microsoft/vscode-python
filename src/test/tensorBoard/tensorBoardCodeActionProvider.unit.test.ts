@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import { mock } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { CancellationToken, CodeActionContext, Position, Selection } from 'vscode';
+import { Position, Selection } from 'vscode';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { IExperimentService } from '../../client/common/types';
 import { TensorBoardCodeActionProvider } from '../../client/tensorBoard/tensorBoardCodeActionProvider';
@@ -14,14 +14,10 @@ suite('TensorBoard code action provider', () => {
     let experimentService: IExperimentService;
     let codeActionProvider: TensorBoardCodeActionProvider;
     let selection: TypeMoq.IMock<Selection>;
-    let context: TypeMoq.IMock<CodeActionContext>;
-    let token: TypeMoq.IMock<CancellationToken>;
 
     setup(() => {
         experimentService = mock(ExperimentService);
         codeActionProvider = new TensorBoardCodeActionProvider(experimentService, []);
-        context = TypeMoq.Mock.ofType<CodeActionContext>();
-        token = TypeMoq.Mock.ofType<CancellationToken>();
     });
 
     test('Provides code action for Python files', () => {
@@ -32,8 +28,6 @@ suite('TensorBoard code action provider', () => {
         const codeActions = codeActionProvider.provideCodeActions(
             document,
             selection.object,
-            context.object,
-            token.object
         );
         assert.ok(
             codeActions.length > 0,
@@ -47,8 +41,6 @@ suite('TensorBoard code action provider', () => {
         const codeActions = codeActionProvider.provideCodeActions(
             document,
             selection.object,
-            context.object,
-            token.object
         );
         assert.ok(
             codeActions.length > 0,
@@ -62,8 +54,6 @@ suite('TensorBoard code action provider', () => {
         const codeActions = codeActionProvider.provideCodeActions(
             document,
             selection.object,
-            context.object,
-            token.object
         );
         assert.ok(codeActions.length === 0, 'Provided code action for file without tensorboard import');
     });
@@ -74,8 +64,6 @@ suite('TensorBoard code action provider', () => {
         const codeActions = codeActionProvider.provideCodeActions(
             document,
             selection.object,
-            context.object,
-            token.object
         );
         assert.ok(
             codeActions.length === 0,

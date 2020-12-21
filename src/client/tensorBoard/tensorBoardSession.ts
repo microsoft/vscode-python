@@ -91,6 +91,7 @@ export class TensorBoardSession {
         return response === InstallerResponse.Installed;
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private async showFilePicker(): Promise<string | undefined> {
         const selection = await window.showOpenDialog({
             canSelectFiles: false,
@@ -105,6 +106,7 @@ export class TensorBoardSession {
         return undefined;
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private getQuickPickItems(logDir: string | undefined) {
         if (logDir) {
             const useCwd = {

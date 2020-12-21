@@ -3,9 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import {
-    CancellationToken,
     CodeAction,
-    CodeActionContext,
     CodeActionKind,
     CodeActionProvider,
     languages,
@@ -34,9 +32,7 @@ export class TensorBoardCodeActionProvider implements CodeActionProvider, IExten
     // eslint-disable-next-line class-methods-use-this
     public provideCodeActions(
         document: TextDocument,
-        range: Selection,
-        _context: CodeActionContext,
-        _token: CancellationToken
+        range: Selection
     ): CodeAction[] {
         const cursorPosition = range.active;
         const { text } = document.lineAt(cursorPosition);
