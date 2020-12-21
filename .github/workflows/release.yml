@@ -78,9 +78,11 @@ jobs:
       - name: Check dependencies
         run: npm run checkDependencies
 
-      # TODO: Uncomment once we are ready to rely on eslint.
-      # - name: Run linting on TypeScript code
-      #   run: npm run lint
+      - name: Run linting on TypeScript code
+        run: npm run lint
+
+      - name: Run formatting on TypeScript code
+        run: npm run format-check
 
   ### Non-smoke tests
   tests:
