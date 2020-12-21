@@ -10,13 +10,12 @@ import { IFileSystem, IPlatformService } from '../../../../common/platform/types
 import { IProcessServiceFactory } from '../../../../common/process/types';
 import { IConfigurationService, ICurrentProcess } from '../../../../common/types';
 import { StopWatch } from '../../../../common/utils/stopWatch';
-import { IInterpreterHelper, IPipEnvService } from '../../../../interpreter/contracts';
+import { GetInterpreterLocatorOptions, IInterpreterHelper, IPipEnvService } from '../../../../interpreter/contracts';
 import { IPipEnvServiceHelper } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
-import { GetInterpreterLocatorOptions } from '../types';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
 const pipEnvFileNameVariable = 'PIPENV_PIPFILE';

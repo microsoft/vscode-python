@@ -17,6 +17,7 @@ import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
+    GetInterpreterLocatorOptions,
     GLOBAL_VIRTUAL_ENV_SERVICE,
     IComponentAdapter,
     IInterpreterLocatorHelper,
@@ -41,7 +42,6 @@ import {
 import { LazyResourceBasedLocator } from '../../base/locators/common/resourceBasedLocator';
 import { PythonEnvironment } from '../../info';
 import { isHiddenInterpreter } from './services/interpreterFilter';
-import { GetInterpreterLocatorOptions } from './types';
 
 /**
  * A wrapper around all locators used by the extension.

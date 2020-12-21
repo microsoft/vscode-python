@@ -2,7 +2,6 @@ import { SemVer } from 'semver';
 import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
 import { Resource } from '../common/types';
 import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/discovery/locators/services/conda';
-import { GetInterpreterLocatorOptions } from '../pythonEnvironments/discovery/locators/types';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 
 export const INTERPRETER_LOCATOR_SERVICE = 'IInterpreterLocatorService';
@@ -153,3 +152,5 @@ export type WorkspacePythonPath = {
 export type GetInterpreterOptions = {
     onSuggestion?: boolean;
 };
+
+export type GetInterpreterLocatorOptions = GetInterpreterOptions & { ignoreCache?: boolean };

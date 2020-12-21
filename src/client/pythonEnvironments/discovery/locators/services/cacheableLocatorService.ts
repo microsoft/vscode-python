@@ -15,12 +15,11 @@ import { traceDecorators, traceVerbose } from '../../../../common/logger';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../../../common/types';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
-import { IInterpreterLocatorService, IInterpreterWatcher } from '../../../../interpreter/contracts';
+import { GetInterpreterLocatorOptions, IInterpreterLocatorService, IInterpreterWatcher } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { PythonEnvironment } from '../../../info';
-import { GetInterpreterLocatorOptions } from '../types';
 
 /**
  * This class exists so that the interpreter fetching can be cached in between tests. Normally
