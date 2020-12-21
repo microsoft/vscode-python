@@ -2,14 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    CodeAction,
-    CodeActionKind,
-    CodeActionProvider,
-    languages,
-    Selection,
-    TextDocument
-} from 'vscode';
+import { CodeAction, CodeActionKind, CodeActionProvider, languages, Selection, TextDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { Commands, PYTHON } from '../common/constants';
 import { NativeTensorBoard, NativeTensorBoardEntrypoints } from '../common/experiments/groups';
@@ -30,10 +23,7 @@ export class TensorBoardCodeActionProvider implements CodeActionProvider, IExten
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public provideCodeActions(
-        document: TextDocument,
-        range: Selection
-    ): CodeAction[] {
+    public provideCodeActions(document: TextDocument, range: Selection): CodeAction[] {
         const cursorPosition = range.active;
         const { text } = document.lineAt(cursorPosition);
         if (containsTensorBoardImport([text])) {
