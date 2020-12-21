@@ -14,7 +14,6 @@ import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { DebugSessionLoggingFactory } from '../../../../client/debugger/extension/adapter/logging';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Debugging - Session Logging', () => {
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
     const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;

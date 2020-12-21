@@ -12,8 +12,6 @@ import { IEnvironmentActivationService } from '../../interpreter/activation/type
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILanguageClientFactory, ILanguageServerFolderService, IPlatformData } from '../types';
 
-// tslint:disable:no-require-imports no-require-imports no-var-requires max-classes-per-file
-
 const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
 

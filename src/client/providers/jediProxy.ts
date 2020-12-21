@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-var-requires no-require-imports no-any
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
 // @ts-ignore
@@ -361,7 +360,6 @@ export class JediProxy implements Disposable {
             if (this.proc) {
                 this.proc.kill();
             }
-            // tslint:disable-next-line:no-empty
         } catch (ex) {}
         this.proc = undefined;
     }
@@ -370,7 +368,6 @@ export class JediProxy implements Disposable {
         traceError(`${source} jediProxy`, `Error (${source}) ${errorMessage}`);
     }
 
-    // tslint:disable-next-line:max-func-body-length
     private async spawnProcess() {
         if (this.languageServerStarted && !this.languageServerStarted.completed) {
             this.languageServerStarted.reject(new Error('Language server not started.'));
@@ -416,7 +413,7 @@ export class JediProxy implements Disposable {
                     // Possible there was an exception in parsing the data returned,
                     // so append the data and then parse it.
                     const dataStr = (this.previousData = `${this.previousData}${data}`);
-                    // tslint:disable-next-line:no-any
+
                     let responses: any[];
                     try {
                         responses = parse(dataStr);
@@ -500,7 +497,6 @@ export class JediProxy implements Disposable {
         let results = JediProxy.getProperty<IAutoCompleteItem[]>(response, 'results');
         results = Array.isArray(results) ? results : [];
         results.forEach((item) => {
-            // tslint:disable-next-line:no-any
             const originalType = <string>(<any>item.type);
             item.type = getMappedVSCodeType(originalType);
             item.kind = getMappedVSCodeSymbol(originalType);
@@ -514,7 +510,6 @@ export class JediProxy implements Disposable {
     }
 
     private onDefinition(command: IExecutionCommand<ICommandResult>, response: object): void {
-        // tslint:disable-next-line:no-any
         const defs = JediProxy.getProperty<any[]>(response, 'results');
         const defResult: IDefinitionResult = {
             requestId: command.id,
@@ -543,7 +538,6 @@ export class JediProxy implements Disposable {
     }
 
     private onHover(command: IExecutionCommand<ICommandResult>, response: object): void {
-        // tslint:disable-next-line:no-any
         const defs = JediProxy.getProperty<any[]>(response, 'results');
         const defResult: IHoverResult = {
             requestId: command.id,
@@ -561,7 +555,6 @@ export class JediProxy implements Disposable {
     }
 
     private onSymbols(command: IExecutionCommand<ICommandResult>, response: object): void {
-        // tslint:disable-next-line:no-any
         let defs = JediProxy.getProperty<any[]>(response, 'results');
         defs = Array.isArray(defs) ? defs : [];
         const defResults: ISymbolResult = {
@@ -589,7 +582,6 @@ export class JediProxy implements Disposable {
     }
 
     private onUsages(command: IExecutionCommand<ICommandResult>, response: object): void {
-        // tslint:disable-next-line:no-any
         let defs = JediProxy.getProperty<any[]>(response, 'results');
         defs = Array.isArray(defs) ? defs : [];
         const refResult: IReferenceResult = {
@@ -608,9 +600,8 @@ export class JediProxy implements Disposable {
     }
 
     private onArguments(command: IExecutionCommand<ICommandResult>, response: object): void {
-        // tslint:disable-next-line:no-any
         const defs = JediProxy.getProperty<any[]>(response, 'results');
-        // tslint:disable-next-line:no-object-literal-type-assertion
+
         this.safeResolve(command, <IArgumentsResult>{
             requestId: command.id,
             definitions: defs,
@@ -625,7 +616,6 @@ export class JediProxy implements Disposable {
                     const cmd1 = this.commands.get(id);
                     try {
                         this.safeResolve(cmd1, undefined);
-                        // tslint:disable-next-line:no-empty
                     } catch (ex) {
                     } finally {
                         this.commands.delete(id);
@@ -767,7 +757,6 @@ export class JediProxy implements Disposable {
     }
 }
 
-// tslint:disable-next-line:no-unused-variable
 export interface ICommand {
     telemetryEvent?: string;
     command: CommandType;

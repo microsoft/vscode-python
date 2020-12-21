@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires max-func-body-length no-unnecessary-override no-invalid-template-strings no-any
-
 import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';

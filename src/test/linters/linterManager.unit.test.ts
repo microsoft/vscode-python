@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length messages-must-be-localized
-
 import * as assert from 'assert';
 import { expect } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';

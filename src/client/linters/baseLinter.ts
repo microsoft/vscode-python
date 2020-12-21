@@ -14,7 +14,6 @@ import { IServiceContainer } from '../ioc/types';
 import { ErrorHandler } from './errorHandlers/errorHandler';
 import { ILinter, ILinterInfo, ILinterManager, ILintMessage, LinterId, LintMessageSeverity } from './types';
 
-// tslint:disable-next-line:no-require-imports no-var-requires no-any
 const namedRegexp = require('named-js-regexp');
 // Allow negative column numbers (https://github.com/PyCQA/pylint/issues/1822)
 // Allow codes with more than one letter (i.e. ABC123)
@@ -49,9 +48,8 @@ export function parseLine(
         return;
     }
 
-    // tslint:disable-next-line:no-any
     match.line = Number(<any>match.line);
-    // tslint:disable-next-line:no-any
+
     match.column = Number(<any>match.column);
 
     return {
@@ -108,7 +106,6 @@ export abstract class BaseLinter implements ILinter {
         cancellation: vscode.CancellationToken,
     ): Promise<ILintMessage[]>;
 
-    // tslint:disable-next-line:no-any
     protected parseMessagesSeverity(error: string, categorySeverity: any): LintMessageSeverity {
         if (categorySeverity[error]) {
             const severityName = categorySeverity[error];
@@ -123,7 +120,6 @@ export abstract class BaseLinter implements ILinter {
                     return LintMessageSeverity.Warning;
                 default: {
                     if (LintMessageSeverity[severityName]) {
-                        // tslint:disable-next-line:no-any
                         return <LintMessageSeverity>(<any>LintMessageSeverity[severityName]);
                     }
                 }

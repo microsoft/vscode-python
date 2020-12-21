@@ -110,7 +110,6 @@ suite('Join Mailing list Prompt Tests', () => {
         when(experimentService.getExperimentValue(JoinMailingListPromptVariants.variant1)).thenResolve('Sample value');
 
         when(appShell.showInformationMessage(anything(), Common.bannerLabelYes(), Common.bannerLabelNo())).thenResolve(
-            // tslint:disable-next-line: no-any
             Common.bannerLabelYes() as any,
         );
 
@@ -131,7 +130,6 @@ suite('Join Mailing list Prompt Tests', () => {
         when(experimentService.getExperimentValue(JoinMailingListPromptVariants.variant1)).thenResolve('Sample value');
 
         when(appShell.showInformationMessage(anything(), Common.bannerLabelYes(), Common.bannerLabelNo())).thenResolve(
-            // tslint:disable-next-line: no-any
             Common.bannerLabelNo() as any,
         );
 

@@ -7,7 +7,6 @@ import { TextRangeCollection } from '../../client/language/textRangeCollection';
 import { Tokenizer } from '../../client/language/tokenizer';
 import { TokenizerMode, TokenType } from '../../client/language/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Language.Tokenizer', () => {
     test('Empty', () => {
         const t = new Tokenizer();
@@ -66,7 +65,7 @@ suite('Language.Tokenizer', () => {
     });
     test('Strings: single quote escape', () => {
         const t = new Tokenizer();
-        // tslint:disable-next-line:quotemark
+
         const tokens = t.tokenize("'\\'quoted\\''");
         assert.equal(tokens.count, 1);
         assert.equal(tokens.getItemAt(0).type, TokenType.String);
@@ -81,7 +80,7 @@ suite('Language.Tokenizer', () => {
     });
     test('Strings: single quoted f-string ', () => {
         const t = new Tokenizer();
-        // tslint:disable-next-line:quotemark
+
         const tokens = t.tokenize("a+f'quoted'");
         assert.equal(tokens.count, 3);
         assert.equal(tokens.getItemAt(0).type, TokenType.Identifier);
@@ -103,7 +102,7 @@ suite('Language.Tokenizer', () => {
     });
     test('Strings: single quoted multiline f-string ', () => {
         const t = new Tokenizer();
-        // tslint:disable-next-line:quotemark
+
         const tokens = t.tokenize("f'''quoted'''");
         assert.equal(tokens.count, 1);
         assert.equal(tokens.getItemAt(0).type, TokenType.String);
@@ -118,7 +117,7 @@ suite('Language.Tokenizer', () => {
     });
     test('Strings: escape at the end of single quoted string ', () => {
         const t = new Tokenizer();
-        // tslint:disable-next-line:quotemark
+
         const tokens = t.tokenize("'quoted\\'\nx");
         assert.equal(tokens.count, 2);
         assert.equal(tokens.getItemAt(0).type, TokenType.String);

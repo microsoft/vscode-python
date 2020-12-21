@@ -14,8 +14,6 @@ import { TestTreeViewProvider } from '../../../client/testing/explorer/testTreeV
 import { TreeViewService } from '../../../client/testing/explorer/treeView';
 import { ITestTreeViewProvider, TestDataItem } from '../../../client/testing/types';
 
-// tslint:disable:no-any
-
 suite('Unit Tests Test Explorer Tree View', () => {
     let treeViewService: TreeViewService;
     let treeView: typemoq.IMock<TreeView<TestDataItem>>;

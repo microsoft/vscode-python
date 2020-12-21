@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { anyFunction, anything, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationTarget } from 'vscode';
 import { SourceMapSupportService } from '../../../client/application/diagnostics/surceMapSupportService';

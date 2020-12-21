@@ -19,8 +19,6 @@ import {
     WriteStream,
 } from '../../../client/common/platform/types';
 
-// tslint:disable:max-func-body-length chai-vague-errors
-
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
 }
@@ -1369,7 +1367,7 @@ suite('FileSystemUtils', () => {
             const dirname = 'x/y/z/spam';
             const filename = `${dirname}/___vscpTest___`;
             const err = new Error('not permitted');
-            // tslint:disable-next-line:no-any
+
             (err as any).code = 'EACCES'; // errno
             deps.setup((d) => d.stat(dirname)) // Success!
                 .returns(() => Promise.resolve((undefined as unknown) as FileStat));
@@ -1385,7 +1383,7 @@ suite('FileSystemUtils', () => {
         test('fails if the directory does not exist', async () => {
             const dirname = 'x/y/z/spam';
             const err = new Error('not found');
-            // tslint:disable-next-line:no-any
+
             (err as any).code = 'ENOENT'; // errno
             deps.setup((d) => d.stat(dirname)) // file-not-found
                 .returns(() => Promise.reject(err));

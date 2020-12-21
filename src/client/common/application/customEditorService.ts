@@ -33,7 +33,6 @@ export class CustomEditorService implements ICustomEditorService {
         },
     ): vscode.Disposable {
         if (this.useCustomEditorApi) {
-            // tslint:disable-next-line: no-any
             return (vscode.window as any).registerCustomEditorProvider(viewType, provider, options);
         } else {
             return { dispose: noop };
@@ -46,7 +45,6 @@ export class CustomEditorService implements ICustomEditorService {
         }
     }
 
-    // tslint:disable-next-line: no-any
     private async enableCustomEditors() {
         // This code is temporary.
         const settings = this.workspace.getConfiguration('workbench', undefined);

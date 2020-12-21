@@ -24,7 +24,6 @@ type LaunchJsonSchema = {
     configurations: DebugConfiguration[];
 };
 
-// tslint:disable:no-any no-multiline-string max-func-body-length
 suite('Debugging - launch.json Updater Service', () => {
     let helper: LaunchJsonUpdaterServiceHelper;
     let commandManager: ICommandManager;

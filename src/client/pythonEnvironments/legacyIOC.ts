@@ -255,7 +255,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         // we don't have 'path' set if they're non-prefix conda environments.
         // So we don't have a helper function yet to give us a conda env's name (if it has one). So for
         // now we always set `path` (and never `name`).  Once we have such a helper we will use it.
-        // tslint:disable-next-line:no-suspicious-comment
+
         // TODO: Expose these two properties via a helper in the Conda locator on a temporary basis.
         const location = getEnvironmentDirFromPath(interpreterPath);
         // else

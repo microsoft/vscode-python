@@ -16,7 +16,6 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { noop, sleep } from '../../core';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Terminal Service (synchronous)', () => {
     let service: SynchronousTerminalService;
     let fs: IFileSystem;

@@ -14,7 +14,7 @@ export function formatErrorForLogging(error: Error | string): string {
         if (error.name && error.message.indexOf(error.name) === -1) {
             message += `, (${error.name})`;
         }
-        // tslint:disable-next-line:no-any
+
         const innerException = (error as any).innerException;
         if (innerException && (innerException.message || innerException.name)) {
             if (innerException.message) {

@@ -20,7 +20,6 @@ suite('Language Server - Change Handler', () => {
     let extensionsChangedEvent: EventEmitter<void>;
     let handler: LanguageServerChangeHandler;
 
-    // tslint:disable-next-line: no-any
     let pylanceExtension: Extension<any>;
     setup(() => {
         extensions = mock<IExtensions>();
@@ -28,7 +27,6 @@ suite('Language Server - Change Handler', () => {
         appEnv = mock<IApplicationEnvironment>();
         commands = mock<ICommandManager>();
 
-        // tslint:disable-next-line: no-any
         pylanceExtension = mock<Extension<any>>();
         when(appEnv.uriScheme).thenReturn('scheme');
 

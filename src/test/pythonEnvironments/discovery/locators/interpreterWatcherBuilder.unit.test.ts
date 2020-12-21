@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-classes-per-file max-func-body-length
-
 import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { WorkspaceService } from '../../../../client/common/application/workspace';

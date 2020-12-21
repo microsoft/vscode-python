@@ -11,7 +11,6 @@ import { DocumentManager } from '../../client/common/application/documentManager
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Active resource service', () => {
     let documentManager: IDocumentManager;
     let workspaceService: IWorkspaceService;
@@ -29,7 +28,7 @@ suite('Active resource service', () => {
                 uri: Uri.parse('a'),
             },
         };
-        // tslint:disable-next-line:no-any
+
         when(documentManager.activeTextEditor).thenReturn(activeTextEditor as any);
 
         const activeResource = activeResourceService.getActiveResource();
@@ -46,7 +45,7 @@ suite('Active resource service', () => {
                 uri: Uri.parse('a'),
             },
         };
-        // tslint:disable-next-line:no-any
+
         when(documentManager.activeTextEditor).thenReturn(activeTextEditor as any);
         when(workspaceService.workspaceFolders).thenReturn([]);
 
@@ -67,7 +66,7 @@ suite('Active resource service', () => {
             },
         ];
         when(documentManager.activeTextEditor).thenReturn(undefined);
-        // tslint:disable-next-line:no-any
+
         when(workspaceService.workspaceFolders).thenReturn(workspaceFolders as any);
 
         const activeResource = activeResourceService.getActiveResource();

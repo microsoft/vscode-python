@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:chai-vague-errors no-unused-expression max-func-body-length no-any
-
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
@@ -56,7 +54,6 @@ suite('Linter Info - Pylint', () => {
         } as any);
 
         const pythonConfig = {
-            // tslint:disable-next-line:no-empty
             inspect: () => {},
         };
         when(workspace.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
@@ -97,7 +94,6 @@ suite('Linter Info - Pylint', () => {
     suite('Test is enabled when using Language Server and Pylint is configured', () => {
         testsForisEnabled.forEach((testParams) => {
             test(testParams.testName, async () => {
-                // tslint:disable-next-line:no-shadowed-variable
                 const config = mock(ConfigurationService);
                 const workspaceService = mock(WorkspaceService);
                 const linterInfo = new PylintLinterInfo(instance(config), instance(workspaceService), []);

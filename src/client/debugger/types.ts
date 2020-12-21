@@ -99,7 +99,6 @@ export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
     pythonPath?: string;
 }
 
-// tslint:disable-next-line:interface-name
 export interface LaunchRequestArguments
     extends DebugProtocol.LaunchRequestArguments,
         IKnownLaunchRequestArguments,
@@ -107,7 +106,6 @@ export interface LaunchRequestArguments
     type: typeof DebuggerTypeName;
 }
 
-// tslint:disable-next-line:interface-name
 export interface AttachRequestArguments
     extends DebugProtocol.AttachRequestArguments,
         IKnownAttachDebugArguments,
@@ -115,7 +113,6 @@ export interface AttachRequestArguments
     type: typeof DebuggerTypeName;
 }
 
-// tslint:disable-next-line:interface-name
 export interface DebugConfigurationArguments extends LaunchRequestArguments, AttachRequestArguments {}
 
 export type ConsoleType = 'internalConsole' | 'integratedTerminal' | 'externalTerminal';

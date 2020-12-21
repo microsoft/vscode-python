@@ -20,7 +20,6 @@ suite('Debugging - Configuration Provider FastAPI', () => {
     let provider: TestFastAPILaunchDebugConfigurationProvider;
     let input: MultiStepInput<DebugConfigurationState>;
     class TestFastAPILaunchDebugConfigurationProvider extends FastAPILaunchDebugConfigurationProvider {
-        // tslint:disable-next-line:no-unnecessary-override
         public async getApplicationPath(folder: WorkspaceFolder): Promise<string | undefined> {
             return super.getApplicationPath(folder);
         }

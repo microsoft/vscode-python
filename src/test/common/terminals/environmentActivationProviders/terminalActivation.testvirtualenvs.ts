@@ -24,7 +24,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, TEST_TIMEOUT } from '../../../constants';
 import { sleep } from '../../../core';
 import { initialize, initializeTest } from '../../../initialize';
 
-// tslint:disable:max-func-body-length no-any
 suite('Activation of Environments in Terminal', () => {
     const file = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -82,7 +81,6 @@ suite('Activation of Environments in Terminal', () => {
     });
 
     suiteTeardown(async function () {
-        // tslint:disable-next-line: no-invalid-this
         this.timeout(TEST_TIMEOUT * 2);
         await revertSettings();
 
@@ -175,7 +173,6 @@ suite('Activation of Environments in Terminal', () => {
 
     test('Should activate with venv', async function () {
         if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
-            // tslint:disable-next-line: no-invalid-this
             this.skip();
         }
         await testActivation(envPaths.venvPath);

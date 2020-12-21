@@ -104,7 +104,6 @@ suite('Telemetry', () => {
         const properties = { hello: 'world', foo: 'bar' };
         const measures = { start: 123, end: 987 };
 
-        // tslint:disable-next-line:no-any
         sendTelemetryEvent(eventName as any, measures, properties as any);
 
         expect(Reporter.eventName).to.deep.equal([eventName]);
@@ -134,7 +133,6 @@ suite('Telemetry', () => {
 
         setSharedProperty('one' as any, 'two' as any);
 
-        // tslint:disable-next-line:no-any
         sendTelemetryEvent(eventName as any, measures, properties as any);
 
         expect(Reporter.eventName).to.deep.equal([eventName]);
@@ -152,7 +150,6 @@ suite('Telemetry', () => {
 
         setSharedProperty('foo' as any, 'baz' as any);
 
-        // tslint:disable-next-line:no-any
         sendTelemetryEvent(eventName as any, measures, properties as any);
 
         expect(Reporter.eventName).to.deep.equal([eventName]);
@@ -168,7 +165,6 @@ suite('Telemetry', () => {
         const measures = { start: 123, end: 987 };
         const properties = { hello: 'world', foo: 'bar' };
 
-        // tslint:disable-next-line:no-any
         sendTelemetryEvent(eventName as any, measures, properties as any, error);
 
         const expectedProperties = {

@@ -77,7 +77,6 @@ suite('Interpreter Path Service', async () => {
                         globalValue: 'globalPythonPath',
                         workspaceFolderValue: 'workspaceFolderPythonPath',
                         workspaceValue: 'workspacePythonPath',
-                        // tslint:disable-next-line: no-any
                     } as any),
             );
 
@@ -249,7 +248,6 @@ suite('Interpreter Path Service', async () => {
                 () =>
                     ({
                         globalValue: interpreterPath,
-                        // tslint:disable-next-line: no-any
                     } as any),
             );
         workspaceConfig
@@ -271,7 +269,6 @@ suite('Interpreter Path Service', async () => {
                 () =>
                     ({
                         globalValue: 'storedValue',
-                        // tslint:disable-next-line: no-any
                     } as any),
             );
         workspaceConfig
@@ -459,7 +456,6 @@ suite('Interpreter Path Service', async () => {
                 () =>
                     ({
                         globalValue: 'default/path/to/interpreter',
-                        // tslint:disable-next-line: no-any
                     } as any),
             );
         const persistentState = TypeMoq.Mock.ofType<IPersistentState<string | undefined>>();
@@ -492,7 +488,6 @@ suite('Interpreter Path Service', async () => {
                 () =>
                     ({
                         globalValue: 'default/path/to/interpreter',
-                        // tslint:disable-next-line: no-any
                     } as any),
             );
         const workspaceFolderPersistentState = TypeMoq.Mock.ofType<IPersistentState<string | undefined>>();
@@ -529,7 +524,6 @@ suite('Interpreter Path Service', async () => {
                 () =>
                     ({
                         globalValue: 'default/path/to/interpreter',
-                        // tslint:disable-next-line: no-any
                     } as any),
             );
         const workspaceFolderPersistentState = TypeMoq.Mock.ofType<IPersistentState<string | undefined>>();

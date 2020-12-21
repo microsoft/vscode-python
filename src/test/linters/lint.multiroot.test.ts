@@ -19,8 +19,6 @@ import { TEST_TIMEOUT } from '../constants';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 
-// tslint:disable:max-func-body-length no-invalid-this
-
 const multirootPath = path.join(__dirname, '..', '..', '..', 'src', 'testMultiRootWkspc');
 
 suite('Multiroot Linting', () => {

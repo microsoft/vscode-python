@@ -20,10 +20,8 @@ import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { ExecutionInfo, IConfigurationService } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Module Installer - Poetry', () => {
     class TestInstaller extends PoetryInstaller {
-        // tslint:disable-next-line:no-unnecessary-override
         public getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
             return super.getExecutionInfo(moduleName, resource);
         }

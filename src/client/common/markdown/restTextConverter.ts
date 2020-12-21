@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { EOL } from 'os';
-// tslint:disable-next-line:import-name
+
 import Char from 'typescript-char';
 import { isDecimal, isWhiteSpace } from '../../language/characters';
 
@@ -16,7 +16,6 @@ export class RestTextConverter {
     private state: State = State.Default;
     private md: string[] = [];
 
-    // tslint:disable-next-line:cyclomatic-complexity
     public toMarkdown(docstring: string): string {
         // Translates reStructruredText (Python doc syntax) to markdown.
         // It only translates as much as needed to display tooltips

@@ -17,7 +17,6 @@ const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(
     'single',
 );
 
-// tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - pytest - discovery against actual python process', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST

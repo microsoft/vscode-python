@@ -150,7 +150,6 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         }
     }
 
-    // tslint:disable-next-line: no-empty
     public loadExtension(_args?: {}) {}
 
     @captureTelemetry(

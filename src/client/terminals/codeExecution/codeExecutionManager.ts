@@ -36,16 +36,12 @@ export class CodeExecutionManager implements ICodeExecutionManager {
     public registerCommands() {
         [Commands.Exec_In_Terminal, Commands.Exec_In_Terminal_Icon].forEach((cmd) => {
             this.disposableRegistry.push(
-                this.commandManager.registerCommand(
-                    // tslint:disable-next-line:no-any
-                    cmd as any,
-                    async (file: Resource) => {
-                        const trigger = cmd === Commands.Exec_In_Terminal ? 'command' : 'icon';
-                        await this.executeFileInTerminal(file, trigger).catch((ex) =>
-                            traceError('Failed to execute file in terminal', ex),
-                        );
-                    },
-                ),
+                this.commandManager.registerCommand(cmd as any, async (file: Resource) => {
+                    const trigger = cmd === Commands.Exec_In_Terminal ? 'command' : 'icon';
+                    await this.executeFileInTerminal(file, trigger).catch((ex) =>
+                        traceError('Failed to execute file in terminal', ex),
+                    );
+                }),
             );
         });
         this.disposableRegistry.push(

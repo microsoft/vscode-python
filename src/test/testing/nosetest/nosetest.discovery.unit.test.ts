@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable-next-line:max-func-body-length
-
 import { expect, use } from 'chai';
 import * as chaipromise from 'chai-as-promised';
 import * as typeMoq from 'typemoq';
@@ -24,7 +22,6 @@ import { IArgumentsService, TestFilter } from '../../../client/testing/types';
 
 use(chaipromise);
 
-// tslint:disable-next-line: max-func-body-length
 suite('Unit Tests - nose - Discovery', () => {
     let discoveryService: ITestDiscoveryService;
     let argsService: typeMoq.IMock<IArgumentsService>;

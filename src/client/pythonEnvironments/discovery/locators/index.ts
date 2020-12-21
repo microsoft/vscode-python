@@ -1,4 +1,3 @@
-// tslint:disable-next-line: no-single-line-block-comment
 /* eslint-disable max-classes-per-file */
 
 import { inject, injectable } from 'inversify';

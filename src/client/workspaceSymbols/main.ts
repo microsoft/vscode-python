@@ -101,7 +101,6 @@ export class WorkspaceSymbols implements Disposable {
         }
     }
 
-    // tslint:disable-next-line:no-any
     private buildWorkspaceSymbols(rebuild: boolean = true, token?: CancellationToken): Promise<any>[] {
         if (token && token.isCancellationRequested) {
             return [];

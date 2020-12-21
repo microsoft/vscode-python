@@ -37,8 +37,6 @@ import { MockUnitTestSocketServer } from '../mocks';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 
-// tslint:disable:max-func-body-length
-
 const testFilesPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles');
 const UNITTEST_TEST_FILES_PATH = path.join(testFilesPath, 'standard');
 const unitTestSpecificTestFilesPath = path.join(testFilesPath, 'specificTest');
@@ -159,7 +157,6 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         socketServer.addResults(results);
     }
 
-    // tslint:disable-next-line:max-func-body-length
     cliSwitches.forEach((cfg) => {
         test(`Run Tests [${cfg.startDirSwitch}, ${cfg.patternSwitch}]`, async () => {
             await updateSetting(
@@ -168,7 +165,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                 rootWorkspaceUri,
                 configTarget,
             );
-            // tslint:disable-next-line:no-multiline-string
+
             await injectTestDiscoveryOutput(`start
             test_unittest_one.Test_test1.test_A
             test_unittest_one.Test_test1.test_B
@@ -235,7 +232,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                 rootWorkspaceUri,
                 configTarget,
             );
-            // tslint:disable-next-line:no-multiline-string
+
             await injectTestDiscoveryOutput(`start
             test_unittest_one.Test_test1.test_A
             test_unittest_one.Test_test1.test_B
@@ -343,7 +340,6 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                 configTarget,
             );
 
-            // tslint:disable-next-line:no-multiline-string
             await injectTestDiscoveryOutput(`start
             test_unittest_one.Test_test_one_1.test_1_1_1
             test_unittest_one.Test_test_one_1.test_1_1_2
@@ -387,7 +383,6 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             const testManager = factory('unittest', rootWorkspaceUri!, unitTestSpecificTestFilesPath);
             const tests = await testManager.discoverTests(CommandSource.ui, true, true);
 
-            // tslint:disable-next-line:no-non-null-assertion
             const testFileToTest = tests.testFiles.find((f) => f.name === 'test_unittest_one.py')!;
             const testFile: TestsToRun = {
                 testFile: [testFileToTest],
@@ -410,7 +405,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                 rootWorkspaceUri,
                 configTarget,
             );
-            // tslint:disable-next-line:no-multiline-string
+
             await injectTestDiscoveryOutput(`start
             test_unittest_one.Test_test_one_1.test_1_1_1
             test_unittest_one.Test_test_one_1.test_1_1_2
@@ -454,7 +449,6 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             const testManager = factory('unittest', rootWorkspaceUri!, unitTestSpecificTestFilesPath);
             const tests = await testManager.discoverTests(CommandSource.ui, true, true);
 
-            // tslint:disable-next-line:no-non-null-assertion
             const testSuiteToTest = tests.testSuites.find((s) => s.testSuite.name === 'Test_test_one_1')!.testSuite;
             const testSuite: TestsToRun = {
                 testFile: [],
@@ -477,7 +471,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                 rootWorkspaceUri,
                 configTarget,
             );
-            // tslint:disable-next-line:no-multiline-string
+
             await injectTestDiscoveryOutput(`start
             test_unittest_one.Test_test1.test_A
             test_unittest_one.Test_test1.test_B

@@ -28,7 +28,6 @@ export class AutoPep8Formatter extends BaseFormatter {
 
         const autoPep8Args = ['--diff'];
         if (formatSelection) {
-            // tslint:disable-next-line:no-non-null-assertion
             autoPep8Args.push(
                 ...['--line-range', (range!.start.line + 1).toString(), (range!.end.line + 1).toString()],
             );

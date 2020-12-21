@@ -1,7 +1,5 @@
 'use strict';
 
-// tslint:disable:no-duplicate-imports no-unnecessary-callback-wrapper
-
 import { inject, injectable } from 'inversify';
 import {
     ConfigurationChangeEvent,
@@ -50,8 +48,6 @@ import {
     TestWorkspaceFolder,
     WorkspaceTestStatus,
 } from './types';
-
-// tslint:disable:no-any
 
 @injectable()
 export class UnitTestManagementService implements ITestManagementService, Disposable {
@@ -175,7 +171,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
             if (this.testResultDisplay) {
                 this.testResultDisplay.enabled = false;
             }
-            // tslint:disable-next-line:no-suspicious-comment
+
             // TODO: Why are we disposing, what happens when tests are enabled.
             if (this.workspaceTestManagerService) {
                 this.workspaceTestManagerService.dispose();
@@ -340,11 +336,11 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         if (!selectedTestFn) {
             return;
         }
-        // tslint:disable-next-line:prefer-type-cast
+
         await this.runTestsImpl(
             cmdSource,
             testManager.workspaceFolder,
-            // tslint:disable-next-line:no-object-literal-type-assertion
+
             { testFunction: [selectedTestFn.testFunction] } as TestsToRun,
             false,
             debug,
@@ -458,7 +454,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         const configurationService = this.serviceContainer.get<ITestConfigurationService>(ITestConfigurationService);
         await configurationService.promptToEnableAndConfigureTestFramework(wkspace!);
     }
-    // tslint:disable-next-line: max-func-body-length
+
     public registerCommands(): void {
         const disposablesRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);

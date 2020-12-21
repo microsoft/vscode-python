@@ -130,7 +130,6 @@ import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Installer', () => {
     let ioc: UnitTestIocContainer;
     const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
@@ -332,7 +331,6 @@ suite('Installer', () => {
     getNamesAndValues<Product>(Product).forEach((prod) => {
         test(`Ensure isInstalled for Product: '${prod.name}' executes the right command`, async function () {
             if (new ProductService().getProductType(prod.value) === ProductType.DataScience) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
@@ -370,7 +368,6 @@ suite('Installer', () => {
         test(`Ensure install for Product: '${prod.name}' executes the right command in IModuleInstaller`, async function () {
             const productType = new ProductService().getProductType(prod.value);
             if (productType === ProductType.DataScience || productType === ProductType.TensorBoard) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(

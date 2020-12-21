@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:max-func-body-length chai-vague-errors
-
 import { expect, use } from 'chai';
 import * as fs from 'fs-extra';
 import { TemporaryFileSystem } from '../../../client/common/platform/fs-temp';
 import { TemporaryFile } from '../../../client/common/platform/types';
 import { assertDoesNotExist, assertExists, FSFixture, WINDOWS } from './utils';
 
-// tslint:disable:no-require-imports no-var-requires
 const assertArrays = require('chai-arrays');
 use(require('chai-as-promised'));
 use(assertArrays);
@@ -61,7 +58,6 @@ suite('FileSystem - TemporaryFileSystem', () => {
 
         test('Ensure writing to a temp file is supported via file stream', async function () {
             if (WINDOWS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const tempfile = await createFile('.tmp');

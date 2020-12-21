@@ -5,7 +5,6 @@
 
 import * as childProcess from 'child_process';
 
-// tslint:disable:no-any no-function-expression prefer-template
 export function open(opts: any): Promise<childProcess.ChildProcess> {
     // opts = objectAssign({wait: true}, opts);
     if (!opts.hasOwnProperty('wait')) {

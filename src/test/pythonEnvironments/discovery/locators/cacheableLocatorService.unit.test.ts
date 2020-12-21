@@ -4,8 +4,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-classes-per-file max-func-body-length
-
 import { expect } from 'chai';
 import * as md5 from 'md5';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
@@ -229,7 +227,6 @@ suite('Interpreters - Cacheable Locator Service', () => {
                 noop();
             }
 
-            // tslint:disable-next-line:no-unnecessary-override
             public getCacheKey(resource?: Uri) {
                 return super.getCacheKey(resource);
             }

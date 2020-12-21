@@ -66,7 +66,6 @@ class ExecutionState implements Disposable {
         }, 100);
 
         this.disposable = {
-            // tslint:disable-next-line: no-any
             dispose: () => clearInterval(timeout as any),
         };
     }

@@ -8,8 +8,6 @@ import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { TestStatus, TestsToRun } from '../../../client/testing/common/types';
 
-// tslint:disable: no-any
-
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
 
 export interface ITestDetails {

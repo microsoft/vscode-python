@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable:no-any
-
 import { injectable } from 'inversify';
 import { ICurrentProcess } from '../types';
 import { EnvironmentVariables } from '../variables/types';

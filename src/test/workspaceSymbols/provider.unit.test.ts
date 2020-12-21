@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import * as assert from 'assert';
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -22,7 +20,6 @@ use(chaiAsPromised);
 
 const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
 
-// tslint:disable-next-line:max-func-body-length
 suite('Workspace Symbols Provider', () => {
     let generator: Generator;
     let fs: IFileSystem;

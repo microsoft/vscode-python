@@ -10,12 +10,11 @@ import { cache, makeDebounceAsyncDecorator, makeDebounceDecorator } from '../../
 import { sleep } from '../../core';
 use(chaiPromise);
 
-// tslint:disable:no-any max-func-body-length no-unnecessary-class
 suite('Common Utils - Decorators', function () {
     // For some reason, sometimes we have timeouts on CI.
     // Note: setTimeout and similar functions are not guaranteed to execute
     // at the precise time prescribed.
-    // tslint:disable-next-line: no-invalid-this
+
     this.retries(3);
     suite('Cache Decorator', () => {
         const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
@@ -106,7 +105,7 @@ suite('Common Utils - Decorators', function () {
                 `Actual delay  ${actualDelay}, expected delay ${expectedDelay}, not within 5% of accuracy`,
             );
         }
-        // tslint:disable-next-line: max-classes-per-file
+
         class Base {
             public created: number;
             public calls: string[];
@@ -138,7 +137,7 @@ suite('Common Utils - Decorators', function () {
         }
         test('Debounce: one sync call', async () => {
             const wait = 100;
-            // tslint:disable-next-line:max-classes-per-file
+
             class One extends Base {
                 @makeDebounceDecorator(wait)
                 public run(): void {
@@ -158,7 +157,7 @@ suite('Common Utils - Decorators', function () {
         });
         test('Debounce: one async call & no wait', async () => {
             const wait = 100;
-            // tslint:disable-next-line:max-classes-per-file
+
             class One extends Base {
                 @makeDebounceAsyncDecorator(wait)
                 public async run(): Promise<void> {
@@ -180,7 +179,7 @@ suite('Common Utils - Decorators', function () {
         });
         test('Debounce: one async call', async () => {
             const wait = 100;
-            // tslint:disable-next-line:max-classes-per-file
+
             class One extends Base {
                 @makeDebounceAsyncDecorator(wait)
                 public async run(): Promise<void> {
@@ -200,7 +199,7 @@ suite('Common Utils - Decorators', function () {
         });
         test('Debounce: one async call and ensure exceptions are re-thrown', async () => {
             const wait = 100;
-            // tslint:disable-next-line:max-classes-per-file
+
             class One extends Base {
                 @makeDebounceAsyncDecorator(wait)
                 public async run(): Promise<void> {
@@ -223,7 +222,7 @@ suite('Common Utils - Decorators', function () {
         });
         test('Debounce: multiple async calls', async () => {
             const wait = 100;
-            // tslint:disable-next-line:max-classes-per-file
+
             class One extends Base {
                 @makeDebounceAsyncDecorator(wait)
                 public async run(): Promise<void> {
@@ -248,7 +247,7 @@ suite('Common Utils - Decorators', function () {
         });
         test('Debounce: multiple async calls when awaiting on all', async function () {
             const wait = 100;
-            // tslint:disable-next-line:max-classes-per-file
+
             class One extends Base {
                 @makeDebounceAsyncDecorator(wait)
                 public async run(): Promise<void> {
@@ -268,7 +267,7 @@ suite('Common Utils - Decorators', function () {
         });
         test('Debounce: multiple async calls & wait on some', async () => {
             const wait = 100;
-            // tslint:disable-next-line:max-classes-per-file
+
             class One extends Base {
                 @makeDebounceAsyncDecorator(wait)
                 public async run(): Promise<void> {
@@ -293,7 +292,7 @@ suite('Common Utils - Decorators', function () {
         });
         test('Debounce: multiple calls grouped', async () => {
             const wait = 100;
-            // tslint:disable-next-line:max-classes-per-file
+
             class One extends Base {
                 @makeDebounceDecorator(wait)
                 public run(): void {
@@ -315,7 +314,7 @@ suite('Common Utils - Decorators', function () {
         });
         test('Debounce: multiple calls spread', async () => {
             const wait = 100;
-            // tslint:disable-next-line:max-classes-per-file
+
             class One extends Base {
                 @makeDebounceDecorator(wait)
                 public run(): void {

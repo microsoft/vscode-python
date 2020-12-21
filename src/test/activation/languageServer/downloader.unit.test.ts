@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { SemVer } from 'semver';
@@ -31,7 +29,6 @@ import { MockOutputChannel } from '../../mockClasses';
 
 use(chaiAsPromised);
 
-// tslint:disable-next-line:max-func-body-length
 suite('Language Server Activation - Downloader', () => {
     let languageServerDownloader: LanguageServerDownloader;
     let folderService: TypeMoq.IMock<ILanguageServerFolderService>;
@@ -127,14 +124,13 @@ suite('Language Server Activation - Downloader', () => {
 
         folderService.verifyAll();
         workspaceService.verifyAll();
-        // tslint:disable-next-line:no-http-string
+
         expect(uri).to.deep.equal('http://a.b.com/x/y/z/ls.nupkg');
         expect(version).to.equal(pkg.version.raw);
         expect(name).to.equal('ls');
     });
 
     test('Get download info - HTTP', async () => {
-        // tslint:disable-next-line:no-http-string
         const pkg = makePkgInfo('ls', 'http://a.b.com/x/y/z/ls.nupkg');
         folderService
             .setup((f) => f.getLatestLanguageServerVersion(resource))
@@ -171,7 +167,7 @@ suite('Language Server Activation - Downloader', () => {
         let outputChannelDownload: IOutputChannel;
         let fileDownloader: IFileDownloader;
         let lsOutputChannelDownload: TypeMoq.IMock<ILanguageServerOutputChannel>;
-        // tslint:disable-next-line: no-http-string
+
         const downloadUri = 'http://wow.com/file.txt';
         const downloadTitle = 'Downloadimg file.txt';
         setup(() => {
@@ -180,7 +176,7 @@ suite('Language Server Activation - Downloader', () => {
             const lsFolderService = mock(DotNetLanguageServerFolderService);
             const appShell = mock(ApplicationShell);
             const fs = mock(FileSystem);
-            // tslint:disable-next-line: no-shadowed-variable
+
             const workspaceService = mock(WorkspaceService);
             lsOutputChannelDownload = TypeMoq.Mock.ofType<ILanguageServerOutputChannel>();
             lsOutputChannelDownload.setup((l) => l.channel).returns(() => instance(outputChannelDownload));
@@ -231,12 +227,10 @@ suite('Language Server Activation - Downloader', () => {
         });
     });
 
-    // tslint:disable-next-line:max-func-body-length
     suite('Test LanguageServerDownloader.downloadLanguageServer', () => {
         const failure = new Error('kaboom');
 
         class LanguageServerDownloaderTest extends LanguageServerDownloader {
-            // tslint:disable-next-line:no-unnecessary-override
             public async downloadLanguageServer(destinationFolder: string, res?: Resource): Promise<void> {
                 return super.downloadLanguageServer(destinationFolder, res);
             }
@@ -245,11 +239,10 @@ suite('Language Server Activation - Downloader', () => {
             }
         }
         class LanguageServerExtractorTest extends LanguageServerDownloader {
-            // tslint:disable-next-line:no-unnecessary-override
             public async downloadLanguageServer(destinationFolder: string, res?: Resource): Promise<void> {
                 return super.downloadLanguageServer(destinationFolder, res);
             }
-            // tslint:disable-next-line:no-unnecessary-override
+
             public async getDownloadInfo(res?: Resource) {
                 return super.getDownloadInfo(res);
             }
@@ -261,11 +254,10 @@ suite('Language Server Activation - Downloader', () => {
             }
         }
         class LanguageServeBundledTest extends LanguageServerDownloader {
-            // tslint:disable-next-line:no-unnecessary-override
             public async downloadLanguageServer(destinationFolder: string, res?: Resource): Promise<void> {
                 return super.downloadLanguageServer(destinationFolder, res);
             }
-            // tslint:disable-next-line:no-unnecessary-override
+
             public async getDownloadInfo(_res?: Resource): Promise<string[]> {
                 throw failure;
             }

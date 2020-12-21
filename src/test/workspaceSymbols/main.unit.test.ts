@@ -34,8 +34,6 @@ import { MockOutputChannel } from '../mockClasses';
 
 use(chaiAsPromised);
 
-// tslint:disable: no-any
-// tslint:disable-next-line: max-func-body-length
 suite('Workspace symbols main', () => {
     const mockDisposable = {
         dispose: () => {

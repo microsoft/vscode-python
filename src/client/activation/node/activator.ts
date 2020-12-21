@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CompletionItem, ProviderResult } from 'vscode';
-// tslint:disable-next-line: import-name
+
 import ProtocolCompletionItem from 'vscode-languageclient/lib/common/protocolCompletionItem';
 import { CompletionResolveRequest } from 'vscode-languageclient/node';
 import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../../common/application/types';

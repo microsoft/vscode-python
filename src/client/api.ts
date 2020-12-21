@@ -97,7 +97,6 @@ export interface IExtensionApi {
 }
 
 export function buildApi(
-    // tslint:disable-next-line:no-any
     ready: Promise<any>,
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer,
@@ -142,7 +141,6 @@ export function buildApi(
         // These are for backwards compatibility. Other extensions are using these APIs and we don't want
         // to force them to move to the jupyter extension ... yet.
         datascience: {
-            // tslint:disable:no-any
             registerRemoteServerProvider: jupyterIntegration
                 ? jupyterIntegration.registerRemoteServerProvider.bind(jupyterIntegration)
                 : (noop as any),
@@ -154,10 +152,8 @@ export function buildApi(
 
     // In test environment return the DI Container.
     if (isTestExecution()) {
-        // tslint:disable:no-any
         (api as any).serviceContainer = serviceContainer;
         (api as any).serviceManager = serviceManager;
-        // tslint:enable:no-any
     }
     return api;
 }

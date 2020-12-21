@@ -71,7 +71,7 @@ function logResult(loggers: ILogger[], info: LogInfo, traced: TraceInfo, call?: 
         }
     } else {
         logToAll(loggers, LogLevel.Error, [formatted, traced.err]);
-        // tslint:disable-next-line:no-any
+
         sendTelemetryEvent('ERROR' as any, undefined, undefined, traced.err);
     }
 }

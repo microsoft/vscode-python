@@ -38,7 +38,7 @@ function flattenSymbolTree(tree: DocumentSymbol, uri: Uri, containerName: string
         tree.name,
         // Type coercion is a bit fuzzy when it comes to enums, so we
         // play it safe by explicitly converting.
-        // tslint:disable-next-line:no-any
+
         (SymbolKind as any)[(SymbolKind as any)[kind]],
         containerName,
         new Location(uri, range),
@@ -114,7 +114,7 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
         const key = `${document.uri.fsPath}`;
         if (this.debounceRequest.has(key)) {
             const item = this.debounceRequest.get(key)!;
-            // tslint:disable-next-line: no-any
+
             clearTimeout(item.timer);
             item.deferred.resolve([]);
         }

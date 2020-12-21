@@ -6,8 +6,6 @@
 // disable the ' quotemark, as we need to consume many strings from stdout that use that
 // test delimiter exclusively.
 
-// tslint:disable:quotemark
-
 export enum PytestDataPlatformType {
     NonWindows = 'non-windows',
     Windows = 'windows',

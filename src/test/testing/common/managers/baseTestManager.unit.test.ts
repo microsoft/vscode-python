@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, OutputChannel, Uri } from 'vscode';
@@ -50,7 +48,6 @@ import { TestManagerRunner } from '../../../../client/testing/unittest/runner';
 import { noop } from '../../../core';
 import { MockOutputChannel } from '../../../mockClasses';
 
-// tslint:disable: max-func-body-length
 suite('Unit Tests - Base Test Manager', () => {
     [
         { name: 'nose', class: NoseTestManager },
@@ -149,7 +146,6 @@ suite('Unit Tests - Base Test Manager', () => {
             });
             test('When failing to discover tests prompt to install test framework', async function () {
                 if (item.name === 'unittest') {
-                    // tslint:disable-next-line: no-invalid-this
                     return this.skip();
                 }
 
@@ -166,7 +162,6 @@ suite('Unit Tests - Base Test Manager', () => {
             });
             test('When failing to discover tests do not prompt to install test framework', async function () {
                 if (item.name === 'unittest') {
-                    // tslint:disable-next-line: no-invalid-this
                     return this.skip();
                 }
 
@@ -183,7 +178,6 @@ suite('Unit Tests - Base Test Manager', () => {
             });
             test('When failing to discover tests do not prompt to install test framework if installed', async function () {
                 if (item.name === 'unittest') {
-                    // tslint:disable-next-line: no-invalid-this
                     return this.skip();
                 }
 

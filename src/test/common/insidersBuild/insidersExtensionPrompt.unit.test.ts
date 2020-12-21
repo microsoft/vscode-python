@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
@@ -20,7 +18,6 @@ import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { Common, ExtensionChannels, ExtensionSurveyBanner } from '../../../client/common/utils/localize';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Insiders Extension prompt', () => {
     let appShell: IApplicationShell;
     let extensionChannelService: IExtensionChannelService;

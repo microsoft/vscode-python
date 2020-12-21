@@ -44,7 +44,7 @@ export function getArchitecture(): Architecture {
     if (fromProc !== undefined) {
         return fromProc;
     }
-    // tslint:disable-next-line:no-require-imports
+
     const arch = require('arch');
     return architectures[arch()] || Architecture.Unknown;
 }
@@ -53,7 +53,6 @@ export function getArchitecture(): Architecture {
  * Look up the requested env var value (or  undefined` if not set).
  */
 export function getEnvironmentVariable(key: string): string | undefined {
-    // tslint:disable-next-line: no-any
     return ((process.env as any) as EnvironmentVariables)[key];
 }
 

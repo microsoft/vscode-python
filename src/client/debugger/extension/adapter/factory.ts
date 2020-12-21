@@ -134,7 +134,6 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
      */
     private async notifySelectInterpreter() {
         await this.appShell.showErrorMessage(
-            // tslint:disable-next-line: messages-must-be-localized
             'Please install Python or select a Python Interpreter to use the debugger.',
         );
     }

@@ -1,5 +1,3 @@
-// tslint:disable:no-any no-empty member-ordering prefer-const prefer-template no-var-self
-
 import { ChildProcess } from 'child_process';
 import { Disposable, Position, Range, TextDocument, TextEditorOptions, window } from 'vscode';
 import '../common/extensions';
@@ -117,7 +115,6 @@ export class RefactorProxy extends Disposable {
     }
     private sendCommand<T>(command: string): Promise<T> {
         return this.initialize().then(() => {
-            // tslint:disable-next-line:promise-must-complete
             return new Promise<T>((resolve, reject) => {
                 this._commandResolve = resolve;
                 this._commandReject = reject;

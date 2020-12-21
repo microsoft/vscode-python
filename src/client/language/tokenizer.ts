@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable-next-line:import-name
 import Char from 'typescript-char';
 import { isBinary, isDecimal, isHex, isIdentifierChar, isIdentifierStartChar, isOctal } from './characters';
 import { CharacterStream } from './characterStream';
@@ -81,7 +80,6 @@ export class Tokenizer implements ITokenizer {
         }
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity
     private handleCharacter(): boolean {
         // f-strings, b-strings, etc
         const stringPrefixLength = this.getStringPrefixLength();
@@ -168,7 +166,6 @@ export class Tokenizer implements ITokenizer {
         return false;
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity
     private isPossibleNumber(): boolean {
         if (isDecimal(this.cs.currentChar)) {
             return true;
@@ -217,7 +214,6 @@ export class Tokenizer implements ITokenizer {
         return false;
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity
     private tryNumber(): boolean {
         const start = this.cs.position;
         let leadingSign = 0;
@@ -310,7 +306,6 @@ export class Tokenizer implements ITokenizer {
         return false;
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity
     private tryOperator(): boolean {
         let length = 0;
         const nextChar = this.cs.nextChar;
@@ -393,7 +388,6 @@ export class Tokenizer implements ITokenizer {
         this.tokens.push(new Token(TokenType.Comment, start, this.cs.position - start));
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity
     private getStringPrefixLength(): number {
         if (this.cs.currentChar === Char.SingleQuote || this.cs.currentChar === Char.DoubleQuote) {
             return 0; // Simple string, no prefix

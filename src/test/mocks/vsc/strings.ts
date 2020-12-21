@@ -4,8 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 'use strict';
 
-// tslint:disable:all
-
 export namespace vscMockStrings {
     /**
      * Determines if haystack starts with needle.

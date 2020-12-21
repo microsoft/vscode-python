@@ -10,7 +10,6 @@ import { BaseTerminalActivator } from '../../../../client/common/terminal/activa
 import { ITerminalActivator, ITerminalHelper } from '../../../../client/common/terminal/types';
 import { noop } from '../../../../client/common/utils/misc';
 
-// tslint:disable:max-func-body-length no-any
 suite('Terminal Base Activator', () => {
     let activator: ITerminalActivator;
     let helper: TypeMoq.IMock<ITerminalHelper>;

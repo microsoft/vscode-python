@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any no-invalid-template-strings max-func-body-length
-
 import { expect } from 'chai';
 import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
@@ -28,11 +26,10 @@ suite('Debugging - Configuration Provider Django', () => {
     let provider: TestDjangoLaunchDebugConfigurationProvider;
     let input: MultiStepInput<DebugConfigurationState>;
     class TestDjangoLaunchDebugConfigurationProvider extends DjangoLaunchDebugConfigurationProvider {
-        // tslint:disable-next-line:no-unnecessary-override
         public resolveVariables(pythonPath: string, resource: Uri | undefined): string {
             return super.resolveVariables(pythonPath, resource);
         }
-        // tslint:disable-next-line:no-unnecessary-override
+
         public async getManagePyPath(folder: WorkspaceFolder): Promise<string | undefined> {
             return super.getManagePyPath(folder);
         }
@@ -66,7 +63,6 @@ suite('Debugging - Configuration Provider Django', () => {
 
         const file = await provider.getManagePyPath(folder);
 
-        // tslint:disable-next-line:no-invalid-template-strings
         expect(file).to.be.equal('${workspaceFolder}-manage.py');
     });
     test('Resolve variables (with resource)', async () => {

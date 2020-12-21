@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-// tslint:disable-next-line: import-name
+
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';

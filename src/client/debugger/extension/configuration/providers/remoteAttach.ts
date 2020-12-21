@@ -31,7 +31,6 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
             },
             pathMappings: [
                 {
-                    // tslint:disable-next-line:no-invalid-template-strings
                     localRoot: '${workspaceFolder}',
                     remoteRoot: '.',
                 },

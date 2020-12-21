@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-classes-per-file max-func-body-length
-
 import { expect } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
@@ -18,7 +16,6 @@ suite('Interpreters - Workspace VirtualEnv Service', () => {
         const serviceContainer = mock(ServiceContainer);
         const builder = mock(InterpreterWatcherBuilder);
         const locator = new (class extends WorkspaceVirtualEnvService {
-            // tslint:disable-next-line:no-unnecessary-override
             public async getInterpreterWatchers(resource: Uri | undefined): Promise<IInterpreterWatcher[]> {
                 return super.getInterpreterWatchers(resource);
             }

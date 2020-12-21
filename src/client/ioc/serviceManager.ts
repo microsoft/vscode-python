@@ -11,7 +11,7 @@ export class ServiceManager implements IServiceManager {
     constructor(private container: Container) {}
     public add<T>(
         serviceIdentifier: identifier<T>,
-        // tslint:disable-next-line:no-any
+
         constructor: new (...args: any[]) => T,
         name?: string | number | symbol | undefined,
         bindings?: symbol[],
@@ -41,7 +41,7 @@ export class ServiceManager implements IServiceManager {
 
     public addSingleton<T>(
         serviceIdentifier: identifier<T>,
-        // tslint:disable-next-line:no-any
+
         constructor: new (...args: any[]) => T,
         name?: string | number | symbol | undefined,
         bindings?: symbol[],

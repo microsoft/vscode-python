@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
-
 import { expect } from 'chai';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';

@@ -40,7 +40,6 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         return debugConfiguration;
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity
     protected async provideAttachDefaults(
         workspaceFolder: Uri | undefined,
         debugConfiguration: AttachRequestArguments,

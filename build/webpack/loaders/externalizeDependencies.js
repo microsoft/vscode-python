@@ -7,7 +7,7 @@ function replaceModule(prefixRegex, prefix, contents, moduleName, quotes) {
     const stringToReplaceWith = `${prefix}${quotes}./node_modules/${moduleName}${quotes}`;
     return contents.replace(new RegExp(stringToSearch, 'gm'), stringToReplaceWith);
 }
-// tslint:disable:no-default-export no-invalid-this
+
 function default_1(source) {
     common.nodeModulesToReplacePaths.forEach((moduleName) => {
         if (source.indexOf(moduleName) > 0) {

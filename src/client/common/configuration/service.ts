@@ -76,7 +76,6 @@ export class ConfigurationService implements IConfigurationService {
         }
         if (section === 'python' && setting === 'pythonPath') {
             if (inExperiment) {
-                // tslint:disable-next-line: no-any
                 await interpreterPathService.update(settingsInfo.uri, configTarget, value as any);
             }
         } else {

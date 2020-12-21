@@ -24,7 +24,6 @@ import { IDocumentSymbolProvider } from '../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { TestFileSymbolProvider } from '../../../client/testing/navigation/symbolProvider';
 
-// tslint:disable:max-func-body-length no-any
 suite('Unit Tests - Navigation Command Handler', () => {
     let symbolProvider: IDocumentSymbolProvider;
     let pythonExecFactory: typemoq.IMock<IPythonExecutionFactory>;

@@ -90,7 +90,6 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
             case TerminalShellType.powershellCore:
                 return this.getPowershellCommands(condaEnv);
 
-            // tslint:disable-next-line:no-suspicious-comment
             // TODO: Do we really special-case fish on Windows?
             case TerminalShellType.fish:
                 return this.getFishCommands(condaEnv, await this.condaService.getCondaFile());

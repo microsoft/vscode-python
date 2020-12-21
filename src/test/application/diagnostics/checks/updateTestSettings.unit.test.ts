@@ -18,7 +18,6 @@ import { IFileSystem } from '../../../../client/common/platform/types';
 import { IPersistentState } from '../../../../client/common/types';
 import { UpdateTestSettingService } from '../../../../client/testing/common/updateTestSettings';
 
-// tslint:disable:max-func-body-length no-invalid-this no-any
 suite('Application Diagnostics - Check Test Settings', () => {
     let diagnosticService: UpdateTestSettingService;
     let fs: IFileSystem;

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-template-strings max-func-body-length no-any
-
 import { expect } from 'chai';
 import * as path from 'path';
 import * as typemoq from 'typemoq';

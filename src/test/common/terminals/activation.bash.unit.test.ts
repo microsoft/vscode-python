@@ -12,8 +12,6 @@ import { IConfigurationService, IPythonSettings } from '../../../client/common/t
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../client/ioc/types';
 
-// tslint:disable: max-func-body-length
-
 suite('Terminal Environment Activation (bash)', () => {
     [
         'usr/bin/python',

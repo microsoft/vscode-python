@@ -18,7 +18,6 @@ const testFileWithFewTests = path.join(testFilesPath, 'tests', 'test_debugger_tw
 const testFileWithMoreTests = path.join(testFilesPath, 'tests', 'test_debugger_two.updated.txt');
 const defaultUnitTestArgs = ['-v', '-s', '.', '-p', '*test*.py'];
 
-// tslint:disable-next-line:max-func-body-length
 suite('Unit Tests re-discovery', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
@@ -26,7 +25,6 @@ suite('Unit Tests re-discovery', () => {
         await initialize();
     });
     setup(async function () {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(TEST_TIMEOUT * 2); // This hook requires more timeout as we're dealing with files as well
         await fs.copy(testFileWithFewTests, testFile, { overwrite: true });
         await deleteDirectory(path.join(testFilesPath, '.cache'));
@@ -36,7 +34,7 @@ suite('Unit Tests re-discovery', () => {
     });
     teardown(async function () {
         // This is doing a lot more than what a teardown does normally, so increasing the timeout.
-        // tslint:disable-next-line: no-invalid-this
+
         this.timeout(TEST_TIMEOUT * 2);
         await ioc.dispose();
         await resetSettings();

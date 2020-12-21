@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
-
 import { assert, expect } from 'chai';
 import * as path from 'path';
 import { instance, mock, when } from 'ts-mockito';

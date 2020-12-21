@@ -3,7 +3,6 @@
 
 'use strict';
 
-// tslint:disable-next-line:ordered-imports
 import {
     DiagnosticSeverity,
     Disposable,
@@ -134,7 +133,7 @@ export interface IArgumentsService {
     getKnownOptions(): { withArgs: string[]; withoutArgs: string[] };
     getOptionValue(args: string[], option: string): string | string[] | undefined;
     filterArguments(args: string[], argumentToRemove: string[]): string[];
-    // tslint:disable-next-line:unified-signatures
+
     filterArguments(args: string[], filter: TestFilter): string[];
     getTestFolders(args: string[]): string[];
 }

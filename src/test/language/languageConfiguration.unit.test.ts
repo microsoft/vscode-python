@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-
 import { expect } from 'chai';
 
 import { getLanguageConfiguration } from '../../client/language/languageConfiguration';

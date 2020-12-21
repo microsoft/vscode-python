@@ -15,7 +15,6 @@ import {
 } from '../../../../client/common/terminal/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Terminal Activation Powershell Failed Handler', () => {
     let psHandler: ITerminalActivationHandler;
     let helper: TypeMoq.IMock<ITerminalHelper>;

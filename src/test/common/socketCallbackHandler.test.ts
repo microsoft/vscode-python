@@ -1,5 +1,3 @@
-// tslint:disable:no-any max-classes-per-file max-func-body-length no-stateless-class no-require-imports no-var-requires no-empty
-
 import { expect } from 'chai';
 import * as getFreePort from 'get-port';
 import * as net from 'net';
@@ -10,7 +8,6 @@ import { createDeferred, Deferred } from '../../client/common/utils/async';
 
 const uint64be = require('uint64be');
 
-// tslint:disable-next-line:no-unnecessary-class
 class Commands {
     public static ExitCommandBytes: Buffer = new Buffer('exit');
     public static PingBytes: Buffer = new Buffer('ping');

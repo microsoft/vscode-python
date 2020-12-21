@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { assert, expect } from 'chai';
 import { mock } from 'ts-mockito';
 import * as typemoq from 'typemoq';
@@ -16,7 +14,6 @@ import { LanguageServerSymbolProvider } from '../../../client/providers/symbolPr
 import { TestFileCodeLensProvider } from '../../../client/testing/codeLenses/testFiles';
 import { ITestCollectionStorageService } from '../../../client/testing/common/types';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Code lenses - Test files', () => {
     let testCollectionStorage: typemoq.IMock<ITestCollectionStorageService>;
     let workspaceService: typemoq.IMock<IWorkspaceService>;

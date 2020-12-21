@@ -64,7 +64,7 @@ export function getTextEditsFromPatch(before: string, patch: string): TextEdit[]
     // Remove the text added by unified_diff
     // # Work around missing newline (http://bugs.python.org/issue2142).
     patch = patch.replace(/\\ No newline at end of file[\r\n]/, '');
-    // tslint:disable-next-line:no-require-imports
+
     const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
     const d = new dmp.diff_match_patch();
     const patches = patch_fromText.call(d, patch);
@@ -122,7 +122,6 @@ export function getWorkspaceEditsFromPatch(
         // # Work around missing newline (http://bugs.python.org/issue2142).
         patch = patch.replace(/\\ No newline at end of file[\r\n]/, '');
 
-        // tslint:disable-next-line:no-require-imports
         const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
         const d = new dmp.diff_match_patch();
         const patches = patch_fromText.call(d, patch);
@@ -160,7 +159,6 @@ export function getWorkspaceEditsFromPatch(
     return workspaceEdit;
 }
 export function getTextEdits(before: string, after: string): TextEdit[] {
-    // tslint:disable-next-line:no-require-imports
     const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
     const d = new dmp.diff_match_patch();
     const diffs = d.diff_main(before, after);
@@ -177,11 +175,10 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
     let edit: Edit | null = null;
     let end: Position;
 
-    // tslint:disable-next-line:prefer-for-of
     for (let i = 0; i < diffs.length; i += 1) {
         let start = new Position(line, character);
         // Compute the line/character after the diff is applied.
-        // tslint:disable-next-line:prefer-for-of
+
         for (let curr = 0; curr < diffs[i][1].length; curr += 1) {
             if (diffs[i][1][curr] !== '\n') {
                 character += 1;
@@ -191,9 +188,8 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
             }
         }
 
-        // tslint:disable-next-line:no-require-imports
         const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
-        // tslint:disable-next-line:switch-default
+
         switch (diffs[i][0]) {
             case dmp.DIFF_DELETE:
                 if (
@@ -257,7 +253,6 @@ export async function getTempFileWithDocumentContents(document: TextDocument, fs
     // because the language server is watching the file system for Python
     // file add/delete/change and we don't want this temp file to trigger it.
 
-    // tslint:disable-next-line:no-require-imports
     let fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}.tmp`;
     try {
         // When dealing with untitled notebooks, there's no original physical file, hence create a temp file.
@@ -293,7 +288,7 @@ function patch_fromText(textline: string): Patch[] {
         if (!m) {
             throw new Error(`Invalid patch string: ${text[textPointer]}`);
         }
-        // tslint:disable-next-line:no-any
+
         const patch = new (<any>diff_match_patch).patch_obj();
         patches.push(patch);
         patch.start1 = parseInt(m[1], 10);
@@ -318,7 +313,7 @@ function patch_fromText(textline: string): Patch[] {
             patch.length2 = parseInt(m[4], 10);
         }
         textPointer += 1;
-        // tslint:disable-next-line:no-require-imports
+
         const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
 
         while (textPointer < text.length) {
@@ -373,7 +368,6 @@ export class EditorUtils implements IEditorUtils {
         // # Work around missing newline (http://bugs.python.org/issue2142).
         patch = patch.replace(/\\ No newline at end of file[\r\n]/, '');
 
-        // tslint:disable-next-line:no-require-imports
         const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
         const d = new dmp.diff_match_patch();
         const patches = patch_fromText.call(d, patch);

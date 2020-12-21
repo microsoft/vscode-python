@@ -12,7 +12,7 @@ import {
     TextDocument,
 } from 'vscode';
 import { ServerCapabilities } from 'vscode-languageserver-protocol';
-// tslint:disable-next-line: import-name
+
 import { IWorkspaceService } from '../../common/application/types';
 import { isTestExecution } from '../../common/constants';
 import { JediLSP } from '../../common/experiments/groups';

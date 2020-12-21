@@ -63,7 +63,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
                 label: 'pytest',
                 product: Product.pytest,
                 description: 'pytest framework',
-                // tslint:disable-next-line:no-http-string
+
                 detail: 'http://docs.pytest.org/',
             },
             {
@@ -80,7 +80,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
             placeHolder: placeHolderMessage,
         };
         const selectedTestRunner = await this.appShell.showQuickPick(items, options);
-        // tslint:disable-next-line:prefer-type-cast
+
         return selectedTestRunner ? (selectedTestRunner.product as UnitTestProduct) : undefined;
     }
     public async enableTest(wkspace: Uri, product: UnitTestProduct): Promise<void> {

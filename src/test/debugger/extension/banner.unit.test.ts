@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
-
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DebugSession } from 'vscode';

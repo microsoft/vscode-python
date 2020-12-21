@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any no-invalid-template-strings max-func-body-length
-
 import { expect } from 'chai';
 import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
@@ -22,7 +20,6 @@ suite('Debugging - Configuration Provider Flask', () => {
     let provider: TestFlaskLaunchDebugConfigurationProvider;
     let input: MultiStepInput<DebugConfigurationState>;
     class TestFlaskLaunchDebugConfigurationProvider extends FlaskLaunchDebugConfigurationProvider {
-        // tslint:disable-next-line:no-unnecessary-override
         public async getApplicationPath(folder: WorkspaceFolder): Promise<string | undefined> {
             return super.getApplicationPath(folder);
         }
@@ -49,7 +46,6 @@ suite('Debugging - Configuration Provider Flask', () => {
 
         const file = await provider.getApplicationPath(folder);
 
-        // tslint:disable-next-line:no-invalid-template-strings
         expect(file).to.be.equal('app.py');
     });
     test('Launch JSON with valid python path', async () => {

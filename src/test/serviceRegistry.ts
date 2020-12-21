@@ -209,7 +209,7 @@ export class IocContainer {
             if (!disposable) {
                 continue;
             }
-            // tslint:disable-next-line:no-any
+
             const promise = disposable.dispose() as Promise<any>;
             if (promise) {
                 await promise;
@@ -268,7 +268,7 @@ export class IocContainer {
     public registerMockProcessTypes() {
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
         const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
-        // tslint:disable-next-line:no-any
+
         const processService = new MockProcessService(new ProcessService(new BufferDecoder(), process.env as any));
         processServiceFactory.setup((f) => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService));
         this.serviceManager.addSingletonInstance<IProcessServiceFactory>(

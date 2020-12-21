@@ -11,7 +11,6 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILanguageClientFactory } from '../types';
 
-// tslint:disable:no-require-imports no-require-imports no-var-requires max-classes-per-file
 const languageClientName = 'Python Tools';
 
 @injectable()

@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file */
-// tslint:disable:no-require-imports no-var-requires no-unnecessary-callback-wrapper
+
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
@@ -32,7 +32,7 @@ export class KnownPathsService extends CacheableLocatorService {
      *
      * Called by VS Code to indicate it is done with the resource.
      */
-    // tslint:disable:no-empty
+
     // eslint-disable-next-line
     public dispose(): void {
         // No body

@@ -49,7 +49,7 @@ suite('Interpreter Path Command', () => {
         const args = { workspaceFolder: 'folderPath' };
         when(configService.getSettings(anything())).thenCall((arg) => {
             assert.deepEqual(arg, Uri.parse('folderPath'));
-            // tslint:disable-next-line: no-any
+
             return { pythonPath: 'settingValue' } as any;
         });
         const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
@@ -60,7 +60,7 @@ suite('Interpreter Path Command', () => {
         const args = ['command', 'folderPath'];
         when(configService.getSettings(anything())).thenCall((arg) => {
             assert.deepEqual(arg, Uri.parse('folderPath'));
-            // tslint:disable-next-line: no-any
+
             return { pythonPath: 'settingValue' } as any;
         });
         const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
@@ -69,7 +69,7 @@ suite('Interpreter Path Command', () => {
 
     test('If neither of these exists, value of workspace folder is `undefined`', async () => {
         const args = ['command'];
-        // tslint:disable-next-line: no-any
+
         when(configService.getSettings(undefined)).thenReturn({ pythonPath: 'settingValue' } as any);
         const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
         expect(setting).to.equal('settingValue');

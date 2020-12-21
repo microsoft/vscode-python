@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-invalid-this
-
 import { fail } from 'assert';
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -106,7 +104,6 @@ suite('Product Path', () => {
                 });
                 test('Returns false if translating product to module name fails with error', () => {
                     productInstaller.translateProductToModuleName = () => {
-                        // tslint:disable-next-line: no-any
                         return new Error('Kaboom') as any;
                     };
                     const productPathService = new TestBaseProductPathsService(serviceContainer.object);

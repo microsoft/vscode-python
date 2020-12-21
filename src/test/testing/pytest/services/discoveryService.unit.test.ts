@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-
 import { expect } from 'chai';
 import { deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Uri } from 'vscode';
@@ -24,7 +22,6 @@ import { TestDiscoveryService } from '../../../../client/testing/pytest/services
 import { IArgumentsService, TestFilter } from '../../../../client/testing/types';
 import { MockOutputChannel } from '../../../mockClasses';
 
-// tslint:disable: no-unnecessary-override no-any
 suite('Unit Tests - PyTest - Discovery', () => {
     class DiscoveryService extends TestDiscoveryService {
         public buildTestCollectionArgs(options: TestDiscoveryOptions): string[] {

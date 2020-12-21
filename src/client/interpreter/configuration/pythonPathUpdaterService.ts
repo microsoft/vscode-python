@@ -37,7 +37,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
             await pythonPathUpdater.updatePythonPath(pythonPath ? path.normalize(pythonPath) : undefined);
         } catch (reason) {
             failed = true;
-            // tslint:disable-next-line:no-unsafe-any prefer-type-cast
+
             const message = reason && typeof reason.message === 'string' ? (reason.message as string) : '';
             window.showErrorMessage(`Failed to set 'pythonPath'. Error: ${message}`);
             traceError(reason);
@@ -88,14 +88,14 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
                 if (!wkspace) {
                     throw new Error('Workspace Uri not defined');
                 }
-                // tslint:disable-next-line:no-non-null-assertion
+
                 return this.pythonPathSettingsUpdaterFactory.getWorkspacePythonPathConfigurationService(wkspace!);
             }
             default: {
                 if (!wkspace) {
                     throw new Error('Workspace Uri not defined');
                 }
-                // tslint:disable-next-line:no-non-null-assertion
+
                 return this.pythonPathSettingsUpdaterFactory.getWorkspaceFolderPythonPathConfigurationService(wkspace!);
             }
         }

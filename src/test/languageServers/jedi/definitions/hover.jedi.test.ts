@@ -21,7 +21,6 @@ const fileEncodingUsed = path.join(autoCompPath, 'five.py');
 const fileHover = path.join(autoCompPath, 'hoverTest.py');
 const fileStringFormat = path.join(hoverPath, 'functionHover.py');
 
-// tslint:disable-next-line:max-func-body-length
 suite('Language Server: Hover Definition (Jedi)', () => {
     let skipTest: boolean;
     suiteSetup(async () => {
@@ -63,7 +62,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                     'End position is incorrect',
                 );
                 assert.equal(def[0].contents.length, 1, 'Invalid content items');
-                // tslint:disable-next-line:prefer-template
+
                 const expectedContent = '```python' + EOL + 'def method1()' + EOL + '```' + EOL + 'This is method1';
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
@@ -75,11 +74,9 @@ suite('Language Server: Hover Definition (Jedi)', () => {
     });
 
     test('Across files', function (done) {
-        // tslint:disable-next-line:no-suspicious-comment
         // TODO: Fix this test.
         // See https://github.com/microsoft/vscode-python/issues/10399.
         if (skipTest) {
-            // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
         let textDocument: vscode.TextDocument;
@@ -113,7 +110,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 );
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
-                    // tslint:disable-next-line:prefer-template
+
                     '```python' + EOL + 'def fun()' + EOL + '```' + EOL + 'This is fun',
                     'Invalid contents',
                 );
@@ -153,7 +150,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 );
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
-                    // tslint:disable-next-line:prefer-template
+
                     '```python' +
                         EOL +
                         'def bar()' +
@@ -172,11 +169,9 @@ suite('Language Server: Hover Definition (Jedi)', () => {
     });
 
     test('Across files with Unicode Characters', function (done) {
-        // tslint:disable-next-line:no-suspicious-comment
         // TODO: Fix this test.
         // See https://github.com/microsoft/vscode-python/issues/10399.
         if (skipTest) {
-            // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
         let textDocument: vscode.TextDocument;
@@ -210,7 +205,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 );
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
-                    // tslint:disable-next-line:prefer-template
+
                     '```python' +
                         EOL +
                         'def showMessage()' +
@@ -273,11 +268,9 @@ suite('Language Server: Hover Definition (Jedi)', () => {
     });
 
     test('Highlighting Class', function (done) {
-        // tslint:disable-next-line:no-suspicious-comment
         // TODO: Fix this test.
         // See https://github.com/microsoft/vscode-python/issues/10399.
         if (skipTest) {
-            // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
         let textDocument: vscode.TextDocument;
@@ -310,7 +303,6 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                     'End position is incorrect',
                 );
                 const documentation =
-                    // tslint:disable-next-line:prefer-template
                     '```python' +
                     EOL +
                     'class Random(x=None)' +
@@ -343,11 +335,9 @@ suite('Language Server: Hover Definition (Jedi)', () => {
     });
 
     test('Highlight Method', function (done) {
-        // tslint:disable-next-line:no-suspicious-comment
         // TODO: Fix this test.
         // See https://github.com/microsoft/vscode-python/issues/10399.
         if (skipTest) {
-            // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
         let textDocument: vscode.TextDocument;
@@ -381,7 +371,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 );
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
-                    // tslint:disable-next-line:prefer-template
+
                     '```python' +
                         EOL +
                         'def randint(a, b)' +
@@ -427,7 +417,6 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 );
 
                 const minExpectedContent =
-                    // tslint:disable-next-line:prefer-template
                     '```python' +
                     EOL +
                     'def acos(x: SupportsFloat)' +
@@ -441,11 +430,9 @@ suite('Language Server: Hover Definition (Jedi)', () => {
     });
 
     test('Highlight Multiline Method Signature', function (done) {
-        // tslint:disable-next-line:no-suspicious-comment
         // TODO: Fix this test.
         // See https://github.com/microsoft/vscode-python/issues/10399.
         if (skipTest) {
-            // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
         let textDocument: vscode.TextDocument;
@@ -479,7 +466,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 );
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
-                    // tslint:disable-next-line:prefer-template
+
                     '```python' +
                         EOL +
                         'class Thread(group=None, target=None, name=None, args=(), kwargs=None, verbose=None)' +

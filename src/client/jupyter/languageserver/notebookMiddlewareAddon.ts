@@ -205,7 +205,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         next: ResolveCompletionItemSignature,
     ): ProviderResult<CompletionItem> {
         // Range should have already been remapped.
-        // tslint:disable-next-line: no-suspicious-comment
+
         // TODO: What if the LS needs to read the range? It won't make sense. This might mean
         // doing this at the extension level is not possible.
         return next(item, token);
@@ -346,7 +346,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         next: ResolveCodeLensSignature,
     ): ProviderResult<CodeLens> {
         // Range should have already been remapped.
-        // tslint:disable-next-line: no-suspicious-comment
+
         // TODO: What if the LS needs to read the range? It won't make sense. This might mean
         // doing this at the extension level is not possible.
         return next(codeLens, token);
@@ -452,7 +452,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         next: ResolveDocumentLinkSignature,
     ): ProviderResult<DocumentLink> {
         // Range should have already been remapped.
-        // tslint:disable-next-line: no-suspicious-comment
+
         // TODO: What if the LS needs to read the range? It won't make sense. This might mean
         // doing this at the extension level is not possible.
         return next(link, token);

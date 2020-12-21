@@ -127,7 +127,7 @@ export function createCondaEnv(
     const deps = createDeps(
         async (filename) => fs.fileExists(filename),
         pythonArgv,
-        // tslint:disable-next-line:no-suspicious-comment
+
         // TODO: Use pythonArgv here once 'conda run' can be
         // run without buffering output.
         // See https://github.com/microsoft/vscode-python/issues/8473.

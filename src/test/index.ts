@@ -3,7 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires no-any
 // Always place at the top, to ensure other modules are imported first.
 require('./common/exitCIAfterTestReporter');
 
@@ -39,7 +38,7 @@ process.on('unhandledRejection', (ex: any, _a) => {
             message.push(ex.stack);
         }
     }
-    // tslint:disable-next-line: no-console
+
     console.log(`Unhandled Promise Rejection with the message ${message.join(', ')}`);
 });
 
@@ -115,7 +114,7 @@ function activatePythonExtensionScript() {
     });
     const initializationPromise = initialize();
     const promise = Promise.race([initializationPromise, failed]);
-    // tslint:disable-next-line: no-console
+
     promise.finally(() => clearTimeout(timer!)).catch((e) => console.error(e));
     return initializationPromise;
 }
@@ -153,7 +152,6 @@ export async function run(): Promise<void> {
     // Setup test files that need to be run.
     testFiles.forEach((file) => mocha.addFile(path.join(testsRoot, file)));
 
-    // tslint:disable: no-console
     console.time('Time taken to activate the extension');
     try {
         await activatePythonExtensionScript();

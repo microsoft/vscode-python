@@ -24,7 +24,6 @@ import {
 
 use(chaisAsPromised);
 
-// tslint:disable:max-func-body-length no-any
 suite('Unit Tests - Navigation Service Registry', () => {
     test('Ensure services are registered', async () => {
         const serviceManager = mock(ServiceManager);

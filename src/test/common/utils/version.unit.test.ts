@@ -22,11 +22,10 @@ type Unnormalized = {
 };
 
 function ver(
-    // tslint:disable:no-any
     major: any,
     minor: any = NOT_USED,
     micro: any = NOT_USED,
-    // tslint:enable:no-any
+
     unnormalized?: Unnormalized,
 ): VersionInfo {
     if (minor === NOT_USED) {
@@ -42,7 +41,6 @@ function ver(
         raw: undefined,
     };
     if (unnormalized !== undefined) {
-        // tslint:disable-next-line:no-any
         ((info as unknown) as any).unnormalized = unnormalized;
     }
     return info;
@@ -144,7 +142,7 @@ suite('common utils - normalizeVersionInfo', () => {
         test(`noop`, () => {
             const info = ver(1, 2, 3);
             info.raw = '1.2.3';
-            // tslint:disable-next-line:no-any
+
             ((info as unknown) as any).unnormalized = unnorm('', '', '');
             const expected = info;
 
@@ -156,7 +154,7 @@ suite('common utils - normalizeVersionInfo', () => {
         test(`same`, () => {
             const info = ver(1, 2, 3);
             info.raw = '1.2.3';
-            // tslint:disable-next-line:no-any
+
             const expected: any = { ...info };
             expected.unnormalized = unnorm('', '', '');
 
@@ -189,7 +187,7 @@ suite('common utils - normalizeVersionInfo', () => {
             [ver(3, 4, '-5'), ver(3, 4, -1)],
         ].forEach((data) => {
             const [info, expected] = data;
-            // tslint:disable-next-line:no-any
+
             ((expected as unknown) as any).unnormalized = unnorm('', '', '');
             expected.raw = '';
             test(`[${info.major}, ${info.minor}, ${info.micro}]`, () => {
@@ -220,7 +218,7 @@ suite('common utils - normalizeVersionInfo', () => {
             } else {
                 expected.micro = -1;
             }
-            // tslint:disable-next-line:no-any
+
             ((expected as unknown) as any).unnormalized = unnormalized;
             expected.raw = '';
             test(`[${info.major}, ${info.minor}, ${info.micro}]`, () => {

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any no-invalid-template-strings max-func-body-length
-
 import { expect } from 'chai';
 import * as path from 'path';
 import { Uri } from 'vscode';
@@ -27,7 +25,7 @@ suite('Debugging - Configuration Provider File', () => {
             name: DebugConfigStrings.file.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
-            // tslint:disable-next-line:no-invalid-template-strings
+
             program: '${file}',
             console: 'integratedTerminal',
         };

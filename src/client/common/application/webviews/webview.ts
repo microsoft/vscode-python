@@ -29,7 +29,6 @@ export class Webview implements IWebview {
         }
     }
 
-    // tslint:disable-next-line:no-any
     protected async generateLocalReactHtml(): Promise<string> {
         let webview: vscodeWebview;
         if (!this.webview) {

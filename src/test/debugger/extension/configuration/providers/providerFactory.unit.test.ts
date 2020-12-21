@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { expect } from 'chai';
 import { getNamesAndValues } from '../../../../../client/common/utils/enum';
 import { DebugConfigurationProviderFactory } from '../../../../../client/debugger/extension/configuration/providers/providerFactory';

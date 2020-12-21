@@ -127,7 +127,6 @@ export interface IInstaller {
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 
-// tslint:disable-next-line:no-suspicious-comment
 // TODO: Drop IPathUtils in favor of IFileSystemPathUtils.
 // See https://github.com/microsoft/vscode-python/issues/8542.
 export const IPathUtils = Symbol('IPathUtils');
@@ -222,7 +221,7 @@ export interface IPycodestyleCategorySeverity {
     readonly W: DiagnosticSeverity;
     readonly E: DiagnosticSeverity;
 }
-// tslint:disable-next-line:interface-name
+
 export interface Flake8CategorySeverity {
     readonly F: DiagnosticSeverity;
     readonly E: DiagnosticSeverity;
@@ -427,7 +426,7 @@ export interface IExtensions {
     /**
      * All extensions currently known to the system.
      */
-    // tslint:disable-next-line:no-any
+
     readonly all: readonly Extension<any>[];
 
     /**
@@ -442,7 +441,7 @@ export interface IExtensions {
      * @param extensionId An extension identifier.
      * @return An extension or `undefined`.
      */
-    // tslint:disable-next-line:no-any
+
     getExtension(extensionId: string): Extension<any> | undefined;
 
     /**

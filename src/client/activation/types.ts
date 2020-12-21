@@ -72,7 +72,6 @@ export enum LanguageServerType {
 export const DotNetLanguageServerFolder = 'languageServer';
 export const NodeLanguageServerFolder = 'nodeLanguageServer';
 
-// tslint:disable-next-line: interface-name
 export interface LanguageServerCommandHandler {
     clearAnalysisCache(): void;
 }

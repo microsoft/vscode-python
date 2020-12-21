@@ -3,7 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-unused-variable
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
 import { PlatformData, PlatformLSExecutables } from '../../../client/activation/languageServer/platformData';
@@ -31,7 +30,6 @@ const testDataModuleName = [
     { isWindows: false, isMac: false, isLinux: true, expectedName: PlatformLSExecutables.Linux },
 ];
 
-// tslint:disable-next-line:max-func-body-length
 suite('Language Server Activation - platform data', () => {
     test('Name and hash (Windows/Mac)', async () => {
         for (const t of testDataWinMac) {

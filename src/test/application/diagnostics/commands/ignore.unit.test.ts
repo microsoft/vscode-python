@@ -13,8 +13,6 @@ import {
 } from '../../../../client/application/diagnostics/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
-// tslint:disable:no-any
-
 suite('Application Diagnostics - Commands Ignore', () => {
     let ignoreCommand: IDiagnosticCommand;
     let serviceContainer: typemoq.IMock<IServiceContainer>;

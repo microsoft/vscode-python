@@ -8,7 +8,6 @@ import { getExtensionSettings } from '../common';
 import { initialize } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Formatting - Helper', () => {
     let ioc: UnitTestIocContainer;
     let formatHelper: FormatterHelper;

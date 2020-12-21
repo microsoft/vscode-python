@@ -147,7 +147,7 @@ export class ArgumentsService implements IArgumentsService {
     public getOptionValue(args: string[], option: string): string | string[] | undefined {
         return this.helper.getOptionValues(args, option);
     }
-    // tslint:disable-next-line: max-func-body-length
+
     public filterArguments(args: string[], argumentToRemoveOrFilter: string[] | TestFilter): string[] {
         const optionsWithoutArgsToRemove: string[] = [];
         const optionsWithArgsToRemove: string[] = [];

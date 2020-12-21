@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-this no-require-imports no-var-requires no-any max-classes-per-file
-
 import { EventEmitter as NodeEventEmitter } from 'events';
 import * as vscode from 'vscode';
 // export * from './range';
@@ -275,7 +273,6 @@ export namespace vscMock {
         }
     }
 
-    // tslint:disable-next-line: interface-name
     export interface DebugAdapterExecutableOptions {
         env?: { [key: string]: string };
         cwd?: string;

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { expect } from 'chai';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { ChildProcessAttachEventHandler } from '../../../../client/debugger/extension/hooks/childProcessAttachHandler';

@@ -21,9 +21,6 @@ import {
 } from '../../../client/interpreter/virtualEnvs/condaInheritEnvPrompt';
 import { EnvironmentType } from '../../../client/pythonEnvironments/info';
 
-// tslint:disable:no-any
-
-// tslint:disable:max-func-body-length
 suite('Conda Inherit Env Prompt', async () => {
     const resource = Uri.file('a');
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;

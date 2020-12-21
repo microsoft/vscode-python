@@ -4,8 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 'use strict';
 
-// tslint:disable:all
-
 export namespace vscMockArrays {
     /**
      * Returns the last element of an array.

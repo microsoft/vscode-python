@@ -85,7 +85,6 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
                     }
                 }
 
-                // tslint:disable-next-line:no-object-literal-type-assertion
                 const sig = <SignatureInformation>{
                     label,
                     documentation,
@@ -97,7 +96,7 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
                         if (arg.docstring.length === 0) {
                             arg.docstring = extractParamDocString(arg.name, def.docstring);
                         }
-                        // tslint:disable-next-line:no-object-literal-type-assertion
+
                         return <ParameterInformation>{
                             documentation: arg.docstring.length > 0 ? arg.docstring : arg.description,
                             label: arg.name.trim(),

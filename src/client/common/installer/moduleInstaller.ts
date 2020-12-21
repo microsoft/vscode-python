@@ -92,7 +92,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
 
         outputChannel.appendLine('');
         outputChannel.appendLine(`[Elevated] ${command}`);
-        // tslint:disable-next-line:no-require-imports no-var-requires
+
         const sudo = require('sudo-prompt');
 
         sudo.exec(command, options, async (error: string, stdout: string, stderr: string) => {

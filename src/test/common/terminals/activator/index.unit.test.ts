@@ -14,7 +14,6 @@ import {
 } from '../../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../../client/common/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Terminal Activator', () => {
     let activator: TerminalActivator;
     let baseActivator: TypeMoq.IMock<ITerminalActivator>;

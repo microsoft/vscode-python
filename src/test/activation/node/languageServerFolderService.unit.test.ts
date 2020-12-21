@@ -16,8 +16,6 @@ import { PYLANCE_EXTENSION_ID } from '../../../client/common/constants';
 import { IConfigurationService, IExtensions, IPythonSettings } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
-// tslint:disable:max-func-body-length
-
 suite('Node Language Server Folder Service', () => {
     const resource = Uri.parse('a');
 
@@ -29,7 +27,6 @@ suite('Node Language Server Folder Service', () => {
     let extensions: TypeMoq.IMock<IExtensions>;
 
     class TestService extends NodeLanguageServerFolderService {
-        // tslint:disable-next-line: no-unnecessary-override
         public languageServerFolder(): Promise<ILanguageServerFolder | undefined> {
             return super.languageServerFolder();
         }

@@ -26,7 +26,6 @@ export class SettingsInterpretersAutoSelectionRule extends BaseRuleService {
         _resource: Resource,
         _manager?: IInterpreterAutoSelectionService,
     ): Promise<NextAction> {
-        // tslint:disable-next-line:no-any
         const pythonConfig = this.workspaceService.getConfiguration('python', null as any)!;
         const pythonPathInConfig = this.experiments.inExperiment(DeprecatePythonPath.experiment)
             ? this.interpreterPathService.inspect(undefined)

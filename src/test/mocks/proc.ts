@@ -39,7 +39,6 @@ export class MockProcessService extends EventEmitter implements IProcessService 
             const output = value as Output<string>;
             if (['stderr', 'stdout'].some((source) => source === output.source)) {
                 return {
-                    // tslint:disable-next-line:no-any
                     proc: {} as any,
                     out: Observable.of(output),
                     dispose: () => {
@@ -48,7 +47,6 @@ export class MockProcessService extends EventEmitter implements IProcessService 
                 };
             } else {
                 return {
-                    // tslint:disable-next-line:no-any
                     proc: {} as any,
                     out: value as Observable<Output<string>>,
                     dispose: () => {

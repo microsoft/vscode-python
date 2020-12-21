@@ -36,7 +36,6 @@ type TestCaseResult = {
     }[];
 };
 
-// tslint:disable-next-line:no-any
 function getSafeInt(value: string, defaultValue: any = 0): number {
     const num = parseInt(value, 10);
     if (isNaN(num)) {
@@ -62,12 +61,11 @@ export class XUnitParser implements IXUnitParser {
 }
 
 // An async wrapper around xml2js.parseString().
-// tslint:disable-next-line:no-any
+
 async function parseXML(data: string): Promise<any> {
     const xml2js = await import('xml2js');
-    // tslint:disable-next-line:no-any
+
     return new Promise<any>((resolve, reject) => {
-        // tslint:disable-next-line:no-any
         xml2js.parseString(data, (error: Error, result: any) => {
             if (error) {
                 return reject(error);
@@ -78,7 +76,7 @@ async function parseXML(data: string): Promise<any> {
 }
 
 // Return the actual test results from the given data.
-// tslint:disable-next-line:no-any
+
 function getJunitResults(parserResult: any): TestSuiteResult | undefined {
     // This is the newer JUnit XML format (e.g. pytest 5.1 and later).
     const fullResults = parserResult as { testsuites: { testsuite: TestSuiteResult[] } };

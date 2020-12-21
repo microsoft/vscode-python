@@ -56,7 +56,6 @@ export class TestManagerRunner implements ITestManagerRunner {
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(this.server);
     }
 
-    // tslint:disable-next-line:max-func-body-length
     public async runTest(
         testResultsService: ITestResultsService,
         options: TestRunOptions,
@@ -197,7 +196,7 @@ export class TestManagerRunner implements ITestManagerRunner {
     // remove all the listeners from the server after all tests are complete,
     // and just pass the promise `after` through as we do not want to get in
     // the way here.
-    // tslint:disable-next-line:no-any
+
     private async removeListenersAfter(after: Promise<any>): Promise<any> {
         return after
             .then(() => this.server.removeAllListeners())

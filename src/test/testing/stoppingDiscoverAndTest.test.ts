@@ -16,7 +16,7 @@ import { UnitTestIocContainer } from './serviceRegistry';
 use(chaiAsPromised);
 
 const testFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'debuggerTest');
-// tslint:disable-next-line:variable-name
+
 const EmptyTests = {
     summary: {
         passed: 0,
@@ -31,7 +31,6 @@ const EmptyTests = {
     rootTestFolders: [],
 };
 
-// tslint:disable-next-line:max-func-body-length
 suite('Unit Tests Stopping Discovery and Runner', () => {
     let ioc: UnitTestIocContainer;
     suiteSetup(initialize);
@@ -110,7 +109,7 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
         mockTestManager.discoveryDeferred.resolve(EmptyTests);
         await mockTestManager.discoverTests(CommandSource.auto);
         const runPromise = mockTestManager.runTest(CommandSource.ui);
-        // tslint:disable-next-line:no-string-based-set-timeout
+
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         // User manually discovering tests will kill the existing test runner.

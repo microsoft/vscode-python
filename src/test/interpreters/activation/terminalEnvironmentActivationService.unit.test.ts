@@ -19,7 +19,6 @@ import { IEnvironmentActivationService } from '../../../client/interpreter/activ
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { noop } from '../../core';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Interpreters Activation - Python Environment Variables (using terminals)', () => {
     let envActivationService: IEnvironmentActivationService;
     let terminalFactory: ITerminalServiceFactory;

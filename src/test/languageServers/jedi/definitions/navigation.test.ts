@@ -15,7 +15,6 @@ const decoratorsPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles
 const fileDefinitions = path.join(decoratorsPath, 'definitions.py');
 const fileUsages = path.join(decoratorsPath, 'usages.py');
 
-// tslint:disable-next-line:max-func-body-length
 suite('Language Server: Definition Navigation', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;

@@ -47,10 +47,10 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
                         .setup((e) => e.inExperiment(DeprecatePythonPath.experiment))
                         .returns(() => false);
                     const workspaceConfig = setupConfigProvider();
-                    // tslint:disable-next-line: no-any
+
                     workspaceConfig
                         .setup((w) => w.inspect('pythonPath'))
-                        // tslint:disable-next-line: no-any
+
                         .returns(() => ({ globalValue, workspaceValue, workspaceFolderValue } as any));
                     const result = hasUserDefinedPythonPath(resource, serviceContainer.object);
                     expect(result).to.equal(false, 'Should be false');
@@ -62,7 +62,7 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
     test('Return true if using setting value equals something else', () => {
         experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
-        // tslint:disable-next-line: no-any
+
         workspaceConfig.setup((w) => w.inspect('pythonPath')).returns(() => ({ globalValue: 'something else' } as any));
         const result = hasUserDefinedPythonPath(resource, serviceContainer.object);
         expect(result).to.equal(true, 'Should be true');

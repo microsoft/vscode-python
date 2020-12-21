@@ -1,5 +1,3 @@
-// tslint:disable:no-require-imports no-var-requires underscore-consistent-invocation
-
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { traceError } from '../../../../common/logger';
@@ -17,13 +15,12 @@ import { WindowsStoreInterpreter } from './windowsStoreInterpreter';
 
 const flatten = require('lodash/flatten');
 
-// tslint:disable-next-line:variable-name
 const DefaultPythonExecutable = 'python.exe';
-// tslint:disable-next-line:variable-name
+
 const CompaniesToIgnore = ['PYLAUNCHER'];
-// tslint:disable-next-line:variable-name
+
 const PythonCoreCompanyDisplayName = 'Python Software Foundation';
-// tslint:disable-next-line:variable-name
+
 const PythonCoreComany = 'PYTHONCORE';
 
 type CompanyInterpreter = {
@@ -49,7 +46,6 @@ export class WindowsRegistryService extends CacheableLocatorService {
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
-    // tslint:disable-next-line:no-empty
     public dispose(): void {
         // Do nothing.
     }
@@ -151,7 +147,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                         AnacondaCompanyNames.indexOf(companyDisplayName!) === -1
                             ? companyDisplayName
                             : AnacondaCompanyName;
-                    // tslint:disable-next-line:prefer-type-cast no-object-literal-type-assertion
+
                     return {
                         installPath: installedPath,
                         executablePath,
@@ -182,7 +178,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                     ? this.pathUtils.basename(interpreterInfo.version)
                     : this.pathUtils.basename(tagKey);
                 this._hasInterpreters.resolve(true);
-                // tslint:disable-next-line:prefer-type-cast no-object-literal-type-assertion
+
                 return {
                     ...(details as PythonEnvironment),
                     path: executablePath,

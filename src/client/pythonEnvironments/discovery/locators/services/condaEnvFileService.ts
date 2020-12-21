@@ -38,7 +38,7 @@ export class CondaEnvFileService extends CacheableLocatorService {
      *
      * Called by VS Code to indicate it is done with the resource.
      */
-    // tslint:disable-next-line:no-empty
+
     public dispose(): void {
         // No body
     }

@@ -12,8 +12,6 @@ This block of code merely launches the tests by using either the dev or release 
 and spawning the tests (mimic user starting tests from command line), this way we can run tests multiple times.
 */
 
-// tslint:disable:no-console no-require-imports no-var-requires
-
 // Must always be on top to setup expected env.
 process.env.VSC_PYTHON_PERF_TEST = '1';
 
@@ -151,7 +149,6 @@ class TestRunner {
     }
 
     private async getDevVersion(): Promise<string> {
-        // tslint:disable-next-line:non-literal-require
         return require(path.join(EXTENSION_ROOT_DIR, 'package.json')).version;
     }
 

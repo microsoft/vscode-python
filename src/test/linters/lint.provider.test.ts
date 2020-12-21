@@ -36,7 +36,6 @@ import { initialize } from '../initialize';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockMemento } from '../mocks/mementos';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Linting - Provider', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let engine: TypeMoq.IMock<ILintingEngine>;

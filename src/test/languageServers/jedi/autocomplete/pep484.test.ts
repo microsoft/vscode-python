@@ -22,7 +22,6 @@ suite('Language Server: Autocomplete PEP 484', () => {
         initializeDI();
         isPython2 = (await ioc.getPythonMajorVersion(rootWorkspaceUri!)) === 2;
         if (isPython2) {
-            // tslint:disable-next-line:no-invalid-this
             this.skip();
             return;
         }

@@ -77,8 +77,6 @@ import type {
 import { IAsyncDisposable, Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';
 
-// tslint:disable:no-any unified-signatures
-
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
     /**
@@ -1139,7 +1137,7 @@ export interface IWebviewPanelOptions extends IWebviewOptions {
      * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
      */
     additionalPaths?: string[];
-    // tslint:disable-next-line: no-any
+
     settings?: any;
     // Web panel to use if supplied by VS code instead
     webViewPanel?: WebviewPanel;
@@ -1186,7 +1184,6 @@ export interface IActiveResourceService {
 
 // Temporary hack to get the nyc compiler to find these types. vscode.proposed.d.ts doesn't work for some reason.
 
-// tslint:disable: interface-name
 //#region Custom editor https://github.com/microsoft/vscode/issues/77131
 
 /**

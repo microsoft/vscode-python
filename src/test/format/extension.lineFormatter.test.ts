@@ -13,7 +13,7 @@ const formatFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'p
 const grammarFile = path.join(formatFilesPath, 'pythonGrammar.py');
 
 // https://www.python.org/dev/peps/pep-0008/#code-lay-out
-// tslint:disable-next-line:max-func-body-length
+
 suite('Formatting - line formatter', () => {
     const formatter = new LineFormatter();
 
@@ -156,7 +156,6 @@ suite('Formatting - line formatter', () => {
         testFormatMultiline('z=foo (0 , x= 1, (3+7) , y , z )', 0, 'z = foo(0, x=1, (3 + 7), y, z)');
         testFormatMultiline('foo (0,\n x= 1,', 1, ' x=1,');
         testFormatMultiline(
-            // tslint:disable-next-line:no-multiline-string
             `async def fetch():
   async with aiohttp.ClientSession() as session:
     async with session.ws_connect(

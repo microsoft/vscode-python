@@ -25,7 +25,6 @@ export class SocketServer extends EventEmitter implements ISocketServer {
         }
         try {
             this.socketServer.close();
-            // tslint:disable-next-line:no-empty
         } catch (ex) {}
         this.socketServer = undefined;
     }

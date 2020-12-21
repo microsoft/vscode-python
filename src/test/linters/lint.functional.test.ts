@@ -737,15 +737,14 @@ class TestFixture extends BaseTestFixture {
     }
 }
 
-// tslint:disable-next-line:max-func-body-length
 suite('Linting Functional Tests', () => {
     const pythonPath = child_process.execSync(`${PYTHON_PATH} -c "import sys;print(sys.executable)"`);
-    // tslint:disable-next-line: no-console
+
     console.log(`Testing linter with python ${pythonPath}`);
 
     // These are integration tests that mock out everything except
     // the filesystem and process execution.
-    // tslint:disable-next-line:no-any
+
     async function testLinterMessages(
         fixture: TestFixture,
         product: Product,
@@ -775,7 +774,6 @@ suite('Linting Functional Tests', () => {
     for (const product of LINTERID_BY_PRODUCT.keys()) {
         test(getProductName(product), async function () {
             if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some((p) => p === product)) {
-                // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }
 
@@ -785,10 +783,8 @@ suite('Linting Functional Tests', () => {
         });
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
-        // tslint:disable-next-line:max-func-body-length
         test(`${getProductName(product)} with config in root`, async function () {
             if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some((p) => p === product)) {
-                // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }
 

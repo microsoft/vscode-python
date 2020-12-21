@@ -17,14 +17,12 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { CondaEnvironmentInfo } from '../../../client/pythonEnvironments/discovery/locators/services/conda';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Common - Conda Installer', () => {
     let installer: CondaInstallerTest;
     let serviceContainer: IServiceContainer;
     let condaService: ICondaService;
     let configService: IConfigurationService;
     class CondaInstallerTest extends CondaInstaller {
-        // tslint:disable-next-line: no-unnecessary-override
         public async getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo> {
             return super.getExecutionInfo(moduleName, resource);
         }

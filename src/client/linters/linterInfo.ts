@@ -8,8 +8,6 @@ import { IWorkspaceService } from '../common/application/types';
 import { ExecutionInfo, IConfigurationService, Product } from '../common/types';
 import { ILinterInfo, LinterId } from './types';
 
-// tslint:disable:no-any
-
 export class LinterInfo implements ILinterInfo {
     private _id: LinterId;
     private _product: Product;

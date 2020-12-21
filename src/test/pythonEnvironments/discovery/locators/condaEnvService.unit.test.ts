@@ -18,7 +18,6 @@ import { UnitTestIocContainer } from '../../../testing/serviceRegistry';
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
 
-// tslint:disable-next-line:max-func-body-length
 suite('Interpreters from Conda Environments', () => {
     let ioc: UnitTestIocContainer;
     let condaProvider: CondaEnvService;
@@ -60,7 +59,6 @@ suite('Interpreters from Conda Environments', () => {
 
     test('Must return an empty list for empty json', async () => {
         const interpreters = await _parseCondaInfo(
-            // tslint:disable-next-line:no-any prefer-type-cast
             {} as CondaInfo,
             condaService.object,
             fileSystem.object,

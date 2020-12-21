@@ -1,5 +1,3 @@
-// tslint:disable:no-console
-
 import * as path from 'path';
 import { runTests } from 'vscode-test';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';

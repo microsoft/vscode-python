@@ -15,7 +15,6 @@ import { ExtensionActivationForTerminalActivation, TerminalAutoActivation } from
 import { ITerminalAutoActivation } from '../../client/terminals/types';
 import { noop } from '../core';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Terminal', () => {
     suite('Terminal - Terminal Activation', () => {
         let autoActivation: ITerminalAutoActivation;
@@ -67,7 +66,7 @@ suite('Terminal', () => {
 
         test('Should activate terminal', async () => {
             // Trigger opening a terminal.
-            // tslint:disable-next-line: no-any
+
             await ((onDidOpenTerminalEventEmitter.fire(terminal) as any) as Promise<void>);
 
             // The terminal should get activated.
@@ -75,7 +74,7 @@ suite('Terminal', () => {
         });
         test('Should not activate terminal if name starts with specific prefix', async () => {
             // Trigger opening a terminal.
-            // tslint:disable-next-line: no-any
+
             await ((onDidOpenTerminalEventEmitter.fire(nonActivatedTerminal) as any) as Promise<void>);
 
             // The terminal should get activated.
@@ -104,7 +103,6 @@ suite('Terminal', () => {
         }
 
         test("If code runner extension is installed, don't show the play icon", async () => {
-            // tslint:disable-next-line:no-any
             const extension = TypeMoq.Mock.ofType<Extension<any>>(undefined, TypeMoq.MockBehavior.Strict);
             extensions
                 .setup((e) => e.getExtension(CODE_RUNNER_EXTENSION_ID))

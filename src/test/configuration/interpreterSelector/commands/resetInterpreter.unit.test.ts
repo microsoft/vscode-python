@@ -9,7 +9,6 @@ import { Interpreters } from '../../../../client/common/utils/localize';
 import { ResetInterpreterCommand } from '../../../../client/interpreter/configuration/interpreterSelector/commands/resetInterpreter';
 import { IPythonPathUpdaterServiceManager } from '../../../../client/interpreter/configuration/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Reset Interpreter Command', () => {
     let workspace: TypeMoq.IMock<IWorkspaceService>;
     let appShell: TypeMoq.IMock<IApplicationShell>;
@@ -34,7 +33,6 @@ suite('Reset Interpreter Command', () => {
         );
     });
 
-    // tslint:disable-next-line: max-func-body-length
     suite('Test method resetInterpreter()', async () => {
         test('Update Global settings when there are no workspaces', async () => {
             workspace.setup((w) => w.workspaceFolders).returns(() => undefined);

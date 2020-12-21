@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable:no-suspicious-comment
-
 import { createHash } from 'crypto';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
@@ -454,7 +452,6 @@ export class FileSystemUtils implements IFileSystemUtils {
     }
 
     public async search(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {
-        // tslint:disable-next-line: no-any
         let options: any;
         if (cwd) {
             options = { ...options, cwd };

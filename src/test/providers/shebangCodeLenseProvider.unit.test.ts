@@ -17,7 +17,6 @@ import { IProcessService, IProcessServiceFactory } from '../../client/common/pro
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Shebang detection', () => {
     let configurationService: IConfigurationService;
     let pythonSettings: typemoq.IMock<IPythonSettings>;
@@ -33,7 +32,7 @@ suite('Shebang detection', () => {
         factory = mock(ProcessServiceFactory);
         processService = typemoq.Mock.ofType<IProcessService>();
         platformService = typemoq.Mock.ofType<IPlatformService>();
-        // tslint:disable-next-line:no-any
+
         processService.setup((p) => (p as any).then).returns(() => undefined);
         when(configurationService.getSettings(anything())).thenReturn(pythonSettings.object);
         when(factory.create(anything())).thenResolve(processService.object);

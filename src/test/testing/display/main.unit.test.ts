@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any
-
 import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
 import { StatusBarItem, Uri } from 'vscode';

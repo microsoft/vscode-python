@@ -25,8 +25,6 @@ import { sleep } from '../../core';
 
 use(chaiAsPromised);
 
-// tslint:disable:max-func-body-length no-any chai-vague-errors no-unused-expression
-
 suite('Language Server - Manager', () => {
     let manager: DotNetLanguageServerManager;
     let serviceContainer: IServiceContainer;

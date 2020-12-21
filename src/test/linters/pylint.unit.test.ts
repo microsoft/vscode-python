@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-any
-// tslint:disable: max-classes-per-file
-
 import { assert, expect } from 'chai';
 import * as os from 'os';
 import * as path from 'path';
@@ -19,7 +16,6 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { Pylint } from '../../client/linters/pylint';
 import { ILinterInfo, ILinterManager, ILintMessage, LintMessageSeverity } from '../../client/linters/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Pylint - Function hasConfigurationFile()', () => {
     const folder = path.join('user', 'a', 'b', 'c', 'd');
     const oldValueOfPYLINTRC = process.env.PYLINTRC;
@@ -117,7 +113,6 @@ suite('Pylint - Function hasConfigurationFile()', () => {
 
     test('If /etc/pylintrc exists in non-Windows platform, return true', async function () {
         if (new PlatformService().isWindows) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
         const home = os.homedir();
@@ -192,7 +187,6 @@ suite('Pylint - Function hasConfigurationFile()', () => {
     });
 });
 
-// tslint:disable-next-line:max-func-body-length
 suite('Pylint - Function hasConfigurationFileInWorkspace()', () => {
     const pylintrc = 'pylintrc';
     const dotPylintrc = '.pylintrc';
@@ -297,7 +291,6 @@ suite('Pylint - Function hasConfigurationFileInWorkspace()', () => {
     });
 });
 
-// tslint:disable-next-line:max-func-body-length
 suite('Pylint - Function runLinter()', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -354,7 +347,7 @@ suite('Pylint - Function runLinter()', () => {
         public get info(): ILinterInfo {
             return _info.object;
         }
-        // tslint:disable-next-line: no-unnecessary-override
+
         public async runLinter(
             document: vscode.TextDocument,
             cancellation: vscode.CancellationToken,

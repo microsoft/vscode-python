@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any
-
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Disposable, WorkspaceConfiguration } from 'vscode';
@@ -73,7 +71,7 @@ suite('Feature Deprecation Manager Tests', () => {
     test('Ensure setting is checked', () => {
         const pythonConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         const deprecatedSetting: DeprecatedSettingAndValue = { setting: 'autoComplete.preloadModules' };
-        // tslint:disable-next-line:no-any
+
         const _ = {} as any;
         const featureDepMgr = new FeatureDeprecationManager(_, _, _, _);
 

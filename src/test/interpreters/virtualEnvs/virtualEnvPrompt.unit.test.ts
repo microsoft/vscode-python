@@ -24,14 +24,12 @@ import { CacheableLocatorService } from '../../../client/pythonEnvironments/disc
 import { InterpreterWatcherBuilder } from '../../../client/pythonEnvironments/discovery/locators/services/interpreterWatcherBuilder';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Virtual Environment Prompt', () => {
     class VirtualEnvironmentPromptTest extends VirtualEnvironmentPrompt {
-        // tslint:disable-next-line:no-unnecessary-override
         public async handleNewEnvironment(resource: Uri): Promise<void> {
             await super.handleNewEnvironment(resource);
         }
-        // tslint:disable-next-line:no-unnecessary-override
+
         public async notifyUser(interpreter: PythonEnvironment, resource: Uri): Promise<void> {
             await super.notifyUser(interpreter, resource);
         }
@@ -69,7 +67,7 @@ suite('Virtual Environment Prompt', () => {
         const interpreter2 = { path: 'path/to/interpreter2' };
         const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-        // tslint:disable:no-any
+
         when(locator.getInterpreters(resource)).thenResolve([interpreter1, interpreter2] as any);
         when(helper.getBestInterpreter(anything())).thenReturn(interpreter2 as any);
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(

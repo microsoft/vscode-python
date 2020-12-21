@@ -57,7 +57,6 @@ These test results are from `/src/test/pythonFiles/testFiles/...` directories.
 Run the command `python <ExtensionDir>/pythonFiles/testing_tools/run_adapter.py discover pytest -- -s --cache-clear` to get the JSON output.
 */
 
-// tslint:disable:max-func-body-length
 suite('Unit Tests - pytest - discovery with mocked process output', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST

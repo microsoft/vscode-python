@@ -35,7 +35,6 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Formatting - Test Arguments', () => {
     let container: IServiceContainer;
     let outputChannel: IOutputChannel;

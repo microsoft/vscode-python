@@ -27,7 +27,6 @@ import { ICurrentProcess, IPathUtils } from '../../../../client/common/types';
 import { EnvironmentVariables } from '../../../../client/common/variables/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
-// tslint:disable:max-func-body-length no-any
 suite('Application Diagnostics - PowerShell Activation', () => {
     let diagnosticService: IDiagnosticsService;
     let platformService: typemoq.IMock<IPlatformService>;

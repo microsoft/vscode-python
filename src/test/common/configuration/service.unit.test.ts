@@ -72,7 +72,7 @@ suite('Configuration Service', () => {
     test('Do not update global settings if global value is already equal to the new value', async () => {
         experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
-        // tslint:disable-next-line: no-any
+
         workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ globalValue: 'globalValue' } as any));
         workspaceConfig
             .setup((w) => w.update('setting', 'globalValue', ConfigurationTarget.Global))
@@ -87,7 +87,7 @@ suite('Configuration Service', () => {
     test('Update global settings if global value is not equal to the new value', async () => {
         experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
-        // tslint:disable-next-line: no-any
+
         workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ globalValue: 'globalValue' } as any));
         workspaceConfig
             .setup((w) => w.update('setting', 'newGlobalValue', ConfigurationTarget.Global))
@@ -102,7 +102,7 @@ suite('Configuration Service', () => {
     test('Do not update workspace settings if workspace value is already equal to the new value', async () => {
         experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
-        // tslint:disable-next-line: no-any
+
         workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ workspaceValue: 'workspaceValue' } as any));
         workspaceConfig
             .setup((w) => w.update('setting', 'workspaceValue', ConfigurationTarget.Workspace))
@@ -117,7 +117,7 @@ suite('Configuration Service', () => {
     test('Update workspace settings if workspace value is not equal to the new value', async () => {
         experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
-        // tslint:disable-next-line: no-any
+
         workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ workspaceValue: 'workspaceValue' } as any));
         workspaceConfig
             .setup((w) => w.update('setting', 'newWorkspaceValue', ConfigurationTarget.Workspace))
@@ -134,7 +134,7 @@ suite('Configuration Service', () => {
         const workspaceConfig = setupConfigProvider();
         workspaceConfig
             .setup((w) => w.inspect('setting'))
-            // tslint:disable-next-line: no-any
+
             .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue' } as any));
         workspaceConfig
             .setup((w) => w.update('setting', 'workspaceFolderValue', ConfigurationTarget.WorkspaceFolder))
@@ -156,7 +156,7 @@ suite('Configuration Service', () => {
         const workspaceConfig = setupConfigProvider();
         workspaceConfig
             .setup((w) => w.inspect('setting'))
-            // tslint:disable-next-line: no-any
+
             .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue' } as any));
         workspaceConfig
             .setup((w) => w.update('setting', 'newWorkspaceFolderValue', ConfigurationTarget.WorkspaceFolder))
@@ -177,7 +177,7 @@ suite('Configuration Service', () => {
         experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
         interpreterPathService
             .setup((w) => w.inspect(resource))
-            // tslint:disable-next-line: no-any
+
             .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue' } as any));
         interpreterPathService
             .setup((w) => w.update(resource, ConfigurationTarget.WorkspaceFolder, 'newWorkspaceFolderValue'))

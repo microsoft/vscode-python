@@ -44,12 +44,10 @@ use(chaiAsPromised);
 const testFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'debuggerTest');
 const defaultUnitTestArgs = ['-v', '-s', '.', '-p', '*test*.py'];
 
-// tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - debugging', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
     suiteSetup(async function () {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(TEST_TIMEOUT * 2);
         // Test discovery is where the delay is, hence give 10 seconds (as we discover tests at least twice in each test).
         await initialize();
@@ -60,7 +58,6 @@ suite('Unit Tests - debugging', () => {
         ]);
     });
     setup(async function () {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(TEST_TIMEOUT * 2); // This hook requires more timeout as we're deleting files as well
         await deleteDirectory(path.join(testFilesPath, '.cache'));
         await initializeTest();
@@ -68,7 +65,7 @@ suite('Unit Tests - debugging', () => {
     });
     teardown(async function () {
         // It's been observed that each call to `updateSetting` can take upto 20 seconds on Windows, hence increasing timeout.
-        // tslint:disable-next-line:no-invalid-this
+
         this.timeout(TEST_TIMEOUT * 3);
         await ioc.dispose();
         await Promise.all([
@@ -225,16 +222,16 @@ suite('Unit Tests - debugging', () => {
         const deferred = createDeferred<string>();
 
         discoveryPromise
-            // tslint:disable-next-line:no-unsafe-any
+
             .then(() => deferred.resolve(''))
-            // tslint:disable-next-line:no-unsafe-any
+
             .catch((ex) => deferred.reject(ex));
 
         // This promise should never resolve nor reject.
         runningPromise
             .then(() => "Debugger stopped when it shouldn't have")
             .catch(() => "Debugger crashed when it shouldn't have")
-            // tslint:disable-next-line: no-floating-promises
+
             .then((error) => {
                 deferred.reject(error);
             });

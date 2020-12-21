@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable:no-var-requires no-any unified-signatures
-
 import { injectable } from 'inversify';
 import {
     CancellationToken,

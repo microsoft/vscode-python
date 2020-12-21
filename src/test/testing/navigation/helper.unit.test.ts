@@ -23,7 +23,6 @@ import { TestNavigatorHelper } from '../../../client/testing/navigation/helper';
 
 use(chaisAsPromised);
 
-// tslint:disable:max-func-body-length no-any
 suite('Unit Tests - Navigation Helper', () => {
     let helper: TestNavigatorHelper;
     let docManager: IDocumentManager;

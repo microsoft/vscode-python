@@ -26,12 +26,11 @@ import { noop } from '../../core';
 
 use(chaiAsPromised);
 
-// tslint:disable-next-line: max-func-body-length
 suite('Process - Python tool execution service', () => {
     const resource = Uri.parse('one');
     const observable: ObservableExecutionResult<string> = {
         proc: undefined,
-        // tslint:disable-next-line: no-any
+
         out: {} as any,
         dispose: () => {
             noop();
@@ -53,7 +52,7 @@ suite('Process - Python tool execution service', () => {
         when(pythonService.execModuleObservable(anything(), anything(), anything())).thenReturn(observable);
         when(pythonService.execModule(anything(), anything(), anything())).thenResolve(executionResult);
         const pythonServiceInstance = instance(pythonService);
-        // tslint:disable-next-line: no-any
+
         (pythonServiceInstance as any).then = undefined;
 
         executionFactory = mock(PythonExecutionFactory);

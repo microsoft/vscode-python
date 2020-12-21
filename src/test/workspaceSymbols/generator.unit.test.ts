@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
@@ -22,7 +20,6 @@ import { IConfigurationService, IOutputChannel, IPythonSettings } from '../../cl
 import { Generator } from '../../client/workspaceSymbols/generator';
 use(chaiAsPromised);
 
-// tslint:disable-next-line:max-func-body-length
 suite('Workspace Symbols Generator', () => {
     let configurationService: IConfigurationService;
     let pythonSettings: typemoq.IMock<IPythonSettings>;

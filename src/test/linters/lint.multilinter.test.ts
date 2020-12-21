@@ -42,7 +42,6 @@ class MockPythonToolExecService extends PythonToolExecutionService {
     }
 }
 
-// tslint:disable-next-line:max-func-body-length
 suite('Linting - Multiple Linters Enabled Test', () => {
     let api: IExtensionTestApi;
     let configService: IConfigurationService;

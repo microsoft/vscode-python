@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable: no-any
-
 import { instance, mock, verify } from 'ts-mockito';
 import {
     CONDA_ENV_FILE_SERVICE,

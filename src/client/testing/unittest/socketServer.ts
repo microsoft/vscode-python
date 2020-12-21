@@ -5,7 +5,6 @@ import * as net from 'net';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { IUnitTestSocketServer } from '../common/types';
 
-// tslint:disable:variable-name no-any
 const MaxConnections = 100;
 
 @injectable()
@@ -70,7 +69,6 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
             // Assume we have just one client socket connection
             let dataStr = (this.ipcBuffer += data);
 
-            // tslint:disable-next-line:no-constant-condition
             while (true) {
                 const startIndex = dataStr.indexOf('{');
                 if (startIndex === -1) {
@@ -83,7 +81,7 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
                 if (dataStr.length < startIndex + lengthOfMessage) {
                     return;
                 }
-                // tslint:disable-next-line:no-any
+
                 let message: any;
                 try {
                     message = JSON.parse(dataStr.substring(startIndex, lengthOfMessage + startIndex));
@@ -101,16 +99,14 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
         this.emit('log', message, ...data);
     }
     private onCloseSocket() {
-        // tslint:disable-next-line:one-variable-per-declaration
         for (let i = 0, count = this.sockets.length; i < count; i += 1) {
             const socket = this.sockets[i];
             let destroyedSocketId = false;
             if (socket && socket.readable) {
                 continue;
             }
-            // tslint:disable-next-line:no-any prefer-type-cast
+
             if ((socket as any).id) {
-                // tslint:disable-next-line:no-any prefer-type-cast
                 destroyedSocketId = (socket as any).id;
             }
             this.log('socket disconnected', destroyedSocketId.toString());

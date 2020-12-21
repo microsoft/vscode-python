@@ -1,6 +1,5 @@
-// tslint:disable-next-line: no-single-line-block-comment
 /* eslint-disable comma-dangle */
-// tslint:disable-next-line: no-single-line-block-comment
+
 /* eslint-disable implicit-arrow-linebreak */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.

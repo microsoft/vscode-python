@@ -231,13 +231,11 @@ export interface ITestDebugLauncher {
 
 export const ITestManagerFactory = Symbol('ITestManagerFactory');
 export interface ITestManagerFactory extends Function {
-    // tslint:disable-next-line:callable-types
     (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string): ITestManager;
 }
 
 export const ITestManagerServiceFactory = Symbol('TestManagerServiceFactory');
 export interface ITestManagerServiceFactory extends Function {
-    // tslint:disable-next-line:callable-types
     (workspaceFolder: Uri): ITestManagerService;
 }
 

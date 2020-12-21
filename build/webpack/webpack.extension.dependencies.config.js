@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable-next-line: no-require-imports
 const copyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
 const constants = require('../constants');
@@ -38,5 +37,5 @@ const config = {
         devtoolModuleFilenameTemplate: '../../[resource-path]',
     },
 };
-// tslint:disable-next-line:no-default-export
+
 exports.default = config;

@@ -63,7 +63,6 @@ export class PyDocStyle extends BaseLinter {
                         const trmmedSourceLine = sourceLine.trim();
                         const sourceStart = sourceLine.indexOf(trmmedSourceLine);
 
-                        // tslint:disable-next-line:no-object-literal-type-assertion
                         return {
                             code: code,
                             message: message,

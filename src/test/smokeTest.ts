@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-console no-require-imports no-var-requires
-
 // Must always be on top to setup expected env.
 process.env.VSC_PYTHON_SMOKE_TEST = '1';
 

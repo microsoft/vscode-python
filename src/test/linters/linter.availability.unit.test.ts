@@ -28,7 +28,6 @@ import { AvailableLinterActivator } from '../../client/linters/linterAvailabilit
 import { LinterInfo } from '../../client/linters/linterInfo';
 import { IAvailableLinterActivator, ILinterInfo, LinterId } from '../../client/linters/types';
 
-// tslint:disable:max-func-body-length no-any
 suite('Linter Availability Provider tests', () => {
     test('Availability feature is disabled when global default for languageServer === Jedi.', async () => {
         // set expectations

@@ -52,8 +52,6 @@ enum CancellationTokenType {
     testRunner,
 }
 
-// tslint:disable: member-ordering max-func-body-length
-
 export abstract class BaseTestManager implements ITestManager {
     public diagnosticCollection: DiagnosticCollection;
     protected readonly settings: IPythonSettings;
@@ -191,7 +189,7 @@ export abstract class BaseTestManager implements ITestManager {
         }
         const telementryProperties: TestDiscoverytTelemetry = {
             tool: this.testProvider,
-            // tslint:disable-next-line:no-any prefer-type-cast
+
             trigger: cmdSource as any,
             failed: false,
         };

@@ -8,7 +8,7 @@ import { QuickPickItem } from 'vscode';
 export interface IJupyterServerUri {
     baseUrl: string;
     token: string;
-    // tslint:disable-next-line: no-any
+
     authorizationHeader: any; // JSON object for authorization header.
     expiration?: Date; // Date/time when header expires and should be refreshed.
     displayName: string;
@@ -42,5 +42,4 @@ export enum ColumnType {
     Bool = 'bool',
 }
 
-// tslint:disable-next-line: no-any
 export type IRowsResponse = any[];

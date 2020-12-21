@@ -3,8 +3,6 @@ import * as vscode from 'vscode';
 import { IFileSystem } from '../common/platform/types';
 import { ITag } from './contracts';
 
-// tslint:disable:no-require-imports no-var-requires no-suspicious-comment
-// tslint:disable:no-any
 // TODO: Turn these into imports.
 const LineByLineReader = require('line-by-line');
 const NamedRegexp = require('named-js-regexp');

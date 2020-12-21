@@ -1,5 +1,3 @@
-// tslint:disable:max-func-body-length
-
 import { expect, should as chai_should, use as chai_use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
@@ -534,7 +532,7 @@ suite('Module Installer', () => {
                 });
             interpreterService
                 .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-                // tslint:disable-next-line:no-any
+
                 .returns(() => Promise.resolve({ envType: EnvironmentType.Unknown } as any));
 
             await pipInstaller.installModule(moduleName, resource);

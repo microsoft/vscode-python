@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-string-literal no-unused-expression chai-vague-errors max-func-body-length no-any
-
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
@@ -28,7 +26,6 @@ suite('Resolving Environment Variables when Debugging', () => {
 
     suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
         await initialize();
@@ -64,7 +61,6 @@ suite('Resolving Environment Variables when Debugging', () => {
             args: [],
             envFile: '',
             console,
-            // tslint:disable-next-line:no-any
         } as any) as LaunchRequestArguments;
 
         const envVars = await debugEnvParser.getEnvironmentVariables(args);
@@ -107,12 +103,10 @@ suite('Resolving Environment Variables when Debugging', () => {
             envFile: '',
             console,
             env,
-            // tslint:disable-next-line:no-any
         } as any) as LaunchRequestArguments;
 
         const envVars = await debugEnvParser.getEnvironmentVariables(args);
 
-        // tslint:disable-next-line:no-unused-expression chai-vague-errors
         expect(envVars).not.be.undefined;
         expect(Object.keys(envVars)).lengthOf(expectedNumberOfVariables, 'Incorrect number of variables');
         expect(envVars).to.have.property('PYTHONUNBUFFERED', '1', 'Property not found');
@@ -224,7 +218,6 @@ suite('Resolving Environment Variables when Debugging', () => {
     test('Confirm paths get appended correctly when using json variables and launched in external terminal', async function () {
         // test is flakey on windows, path separator problems. GH issue #4758
         if (isOs(OSType.Windows)) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
         await testAppendingOfPaths('externalTerminal', 6, false);
@@ -233,7 +226,6 @@ suite('Resolving Environment Variables when Debugging', () => {
     test('Confirm paths get appended correctly when using json variables and launched in integrated terminal', async function () {
         // test is flakey on windows, path separator problems. GH issue #4758
         if (isOs(OSType.Windows)) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
         await testAppendingOfPaths('integratedTerminal', 6, false);
@@ -242,7 +234,6 @@ suite('Resolving Environment Variables when Debugging', () => {
     test('Confirm paths get appended correctly when using json variables and launched in debug console', async function () {
         // test is flakey on windows, path separator problems. GH issue #4758
         if (isOs(OSType.Windows)) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
 

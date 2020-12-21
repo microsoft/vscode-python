@@ -20,12 +20,11 @@ import {
 import { TestDataItemType } from '../../../../client/testing/types';
 import { createMockTestDataItem } from '../testUtils.unit.test';
 
-// tslint:disable:no-any max-func-body-length
 suite('Unit Tests - Tests Results Service', () => {
     let testResultsService: TestResultsService;
     let resultResetVisitor: typemoq.IMock<ITestVisitor>;
     let tests!: Tests;
-    // tslint:disable:one-variable-per-declaration
+
     let folder1: TestFolder,
         folder2: TestFolder,
         folder3: TestFolder,

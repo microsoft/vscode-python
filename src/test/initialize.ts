@@ -1,5 +1,3 @@
-// tslint:disable:no-string-literal
-
 import * as path from 'path';
 import * as vscode from 'vscode';
 import type { IExtensionApi } from '../client/api';
@@ -31,7 +29,6 @@ export async function initializePython() {
     await setPythonPathInWorkspaceRoot(PYTHON_PATH);
 }
 
-// tslint:disable-next-line:no-any
 export async function initialize(): Promise<IExtensionTestApi> {
     await initializePython();
     const api = await activateExtension();
@@ -41,7 +38,7 @@ export async function initialize(): Promise<IExtensionTestApi> {
         // Dispose any cached python settings (used only in test env).
         configSettings.PythonSettings.dispose();
     }
-    // tslint:disable-next-line:no-any
+
     return (api as any) as IExtensionTestApi;
 }
 export async function activateExtension() {
@@ -51,7 +48,7 @@ export async function activateExtension() {
     await api.ready;
     return api;
 }
-// tslint:disable-next-line:no-any
+
 export async function initializeTest(): Promise<any> {
     await initializePython();
     await closeActiveWindows();
@@ -71,7 +68,7 @@ export async function closeActiveNotebooks(): Promise<void> {
         return;
     }
     // We could have untitled notebooks, close them by reverting changes.
-    // tslint:disable-next-line: no-any
+
     while ((vscode as any).notebook.activeNotebookEditor || vscode.window.activeTextEditor) {
         await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
     }
@@ -104,7 +101,6 @@ async function closeWindowsInteral() {
 }
 
 function isANotebookOpen() {
-    // tslint:disable
     if (
         Array.isArray((vscode as any).notebook.visibleNotebookEditors) &&
         (vscode as any).notebook.visibleNotebookEditors.length

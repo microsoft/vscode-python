@@ -11,7 +11,6 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionManager } from '../../../client/terminals/codeExecution/codeExecutionManager';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../../client/terminals/types';
 
-// tslint:disable:no-multiline-string no-trailing-whitespace max-func-body-length no-any
 suite('Terminal - Code Execution Manager', () => {
     let executionManager: ICodeExecutionManager;
     let workspace: TypeMoq.IMock<IWorkspaceService>;

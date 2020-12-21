@@ -20,8 +20,6 @@ import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { OSType } from '../../../client/common/utils/platform';
 import { MockProcess } from '../../../test/mocks/process';
 
-// tslint:disable:max-func-body-length no-any
-
 suite('Shell Detector', () => {
     let platformService: IPlatformService;
     const defaultOSShells = {

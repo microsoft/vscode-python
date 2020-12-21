@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-classes-per-file
-
 import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -46,13 +44,13 @@ class DebugAdapterTracker {
     ) {}
 
     // debugpy -> VS Code
-    // tslint:disable-next-line:no-any
+
     public onDidSendMessage(message: any): void {
         this.onDAPMessage('debugpy', message as DebugProtocol.ProtocolMessage);
     }
 
     // VS Code -> debugpy
-    // tslint:disable-next-line:no-any
+
     public onWillReceiveMessage(message: any): void {
         this.onDAPMessage('vscode', message as DebugProtocol.ProtocolMessage);
     }
@@ -338,7 +336,6 @@ export class DebuggerFixture extends PythonFixture {
                 host: 'localhost',
                 pathMappings: [
                     {
-                        // tslint:disable-next-line:no-invalid-template-strings
                         localRoot: '${workspaceFolder}',
                         remoteRoot: '.',
                     },

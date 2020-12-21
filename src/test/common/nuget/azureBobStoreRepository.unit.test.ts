@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-http-string
-
 import { BlobService, ErrorOrResult } from 'azure-storage';
 import { expect } from 'chai';
 import { SemVer } from 'semver';
@@ -33,7 +31,6 @@ suite('Nuget Azure Storage Repository', () => {
     });
 
     class FakeBlobStore {
-        // tslint:disable-next-line:no-any
         public calls: [string, string, any][] = [];
         public results?: BlobService.BlobResult[];
         public error?: Error;
@@ -43,13 +40,13 @@ suite('Nuget Azure Storage Repository', () => {
         public listBlobsSegmentedWithPrefix(
             c: string,
             p: string,
-            // tslint:disable-next-line:no-any
+
             t: any,
             cb: ErrorOrResult<BlobService.ListBlobsResult>,
         ) {
             this.calls.push([c, p, t]);
             const result: BlobService.ListBlobsResult = { entries: this.results! };
-            // tslint:disable-next-line:no-any
+
             cb(this.error as Error, result, undefined as any);
         }
     }
@@ -70,13 +67,13 @@ suite('Nuget Azure Storage Repository', () => {
                 cfg.setup((c) => c.get('proxyStrictSSL', true)).returns(() => setting);
             }
             const blobstore = new FakeBlobStore();
-            // tslint:disable:no-object-literal-type-assertion
+
             blobstore.results = [
                 { name: 'Azarath' } as BlobService.BlobResult,
                 { name: 'Metrion' } as BlobService.BlobResult,
                 { name: 'Zinthos' } as BlobService.BlobResult,
             ];
-            // tslint:enable:no-object-literal-type-assertion
+
             const version = new SemVer('1.1.1');
             blobstore.results.forEach((r) => {
                 nugetService.setup((n) => n.getVersionFromPackageFileName(r.name)).returns(() => version);

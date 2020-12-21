@@ -14,12 +14,10 @@ class DocumentPosition {
     constructor(public document: vscode.TextDocument, public position: vscode.Position) {}
 
     public static fromObject(item: object): DocumentPosition {
-        // tslint:disable-next-line:no-any
         return (item as any)._documentPosition as DocumentPosition;
     }
 
     public attachTo(item: object): void {
-        // tslint:disable-next-line:no-any
         (item as any)._documentPosition = this;
     }
 }

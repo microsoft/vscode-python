@@ -33,7 +33,7 @@ function tryRun(callback: () => void) {
     try {
         callback();
     } catch (e) {
-        // tslint:disable-next-line: no-empty
+        // No body.
     }
 }
 

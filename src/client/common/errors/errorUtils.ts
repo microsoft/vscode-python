@@ -3,7 +3,6 @@
 
 import { EOL } from 'os';
 
-// tslint:disable-next-line:no-stateless-class no-unnecessary-class
 export class ErrorUtils {
     public static outputHasModuleNotInstalledError(moduleName: string, content?: string): boolean {
         return content &&

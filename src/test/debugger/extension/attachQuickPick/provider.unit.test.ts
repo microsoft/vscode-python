@@ -17,7 +17,6 @@ import { PsProcessParser } from '../../../../client/debugger/extension/attachQui
 import { IAttachItem } from '../../../../client/debugger/extension/attachQuickPick/types';
 import { WmicProcessParser } from '../../../../client/debugger/extension/attachQuickPick/wmicProcessParser';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Attach to process - process provider', () => {
     let platformService: IPlatformService;
     let processService: IProcessService;
@@ -200,7 +199,6 @@ ProcessId=5912\r
         await expect(promise).to.eventually.be.rejectedWith(`Operating system '${OSType.Unknown}' not supported.`);
     });
 
-    // tslint:disable-next-line: max-func-body-length
     suite('POSIX getAttachItems (Linux)', () => {
         setup(() => {
             when(platformService.isMac).thenReturn(false);
@@ -308,7 +306,6 @@ ProcessId=5912\r
         });
     });
 
-    // tslint:disable-next-line: max-func-body-length
     suite('Windows getAttachItems', () => {
         setup(() => {
             when(platformService.isMac).thenReturn(false);

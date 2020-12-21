@@ -286,7 +286,6 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
                 token,
             );
             if (result && result.length) {
-                // tslint:disable-next-line: no-any
                 if ((result[0] as any).range) {
                     // Document symbols
                     const docSymbols = result as vscodeLanguageClient.DocumentSymbol[];

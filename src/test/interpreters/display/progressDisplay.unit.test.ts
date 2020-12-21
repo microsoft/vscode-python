@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { expect } from 'chai';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
 import { CancellationToken, Disposable, Progress, ProgressOptions } from 'vscode';

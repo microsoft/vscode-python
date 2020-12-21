@@ -6,7 +6,6 @@
 import { ConfigurationTarget, WorkspaceConfiguration } from 'vscode';
 
 export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
-    // tslint:disable: no-any
     private values = new Map<string, any>();
 
     constructor(defaultSettings?: any) {
@@ -22,7 +21,6 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
     }
 
     public get<T>(key: string, defaultValue?: T): T | undefined {
-        // tslint:disable-next-line: use-named-parameter
         if (this.values.has(key)) {
             return this.values.get(key);
         }

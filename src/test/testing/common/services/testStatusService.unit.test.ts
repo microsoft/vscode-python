@@ -24,7 +24,6 @@ import {
 import { TestDataItem, TestDataItemType } from '../../../../client/testing/types';
 import { createMockTestDataItem } from '../testUtils.unit.test';
 
-// tslint:disable:no-any max-func-body-length
 suite('Unit Tests - Tests Status Updater', () => {
     let storage: ITestCollectionStorageService;
     let updater: ITestsStatusUpdaterService;

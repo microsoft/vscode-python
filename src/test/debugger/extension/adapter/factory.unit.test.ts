@@ -7,7 +7,7 @@ import * as assert from 'assert';
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
-// tslint:disable-next-line: match-default-export-name
+
 import rewiremock from 'rewiremock';
 import { SemVer } from 'semver';
 import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
@@ -28,7 +28,6 @@ import { EventName } from '../../../../client/telemetry/constants';
 
 use(chaiAsPromised);
 
-// tslint:disable-next-line: max-func-body-length
 suite('Debugging - Adapter Factory', () => {
     let factory: IDebugAdapterDescriptorFactory;
     let interpreterService: IInterpreterService;
@@ -68,7 +67,6 @@ suite('Debugging - Adapter Factory', () => {
         const configurationService = mock(ConfigurationService);
         when(configurationService.getSettings(undefined)).thenReturn(({
             experiments: { enabled: true },
-            // tslint:disable-next-line: no-any
         } as any) as IPythonSettings);
 
         interpreterService = mock(InterpreterService);

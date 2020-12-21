@@ -14,7 +14,6 @@ import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 
-// tslint:disable-next-line:no-suspicious-comment
 // TODO: rename the class since it is not used just for test settings
 @injectable()
 export class UpdateTestSettingService implements IExtensionActivationService {
@@ -77,7 +76,6 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         fileContents = fileContents.replace(setting_pep8_enabled, '.pycodestyleEnabled');
         fileContents = fileContents.replace(setting_pep8_path, '.pycodestylePath');
 
-        // tslint:disable-next-line:no-suspicious-comment
         // TODO: remove when python.jediEnabled is no longer in typical user settings.
         if (fixLanguageServerSetting) {
             fileContents = this.fixLanguageServerSettings(fileContents);
@@ -147,8 +145,6 @@ export class UpdateTestSettingService implements IExtensionActivationService {
                     modify(fileContent, languageServerPath, LanguageServerType.Microsoft, modificationOptions),
                 );
             }
-
-            // tslint:disable-next-line:no-empty
         } catch {}
         return fileContent;
     }

@@ -10,7 +10,6 @@ export class PythonReferenceProvider implements vscode.ReferenceProvider {
     public constructor(private jediFactory: JediFactory) {}
     private static parseData(data: proxy.IReferenceResult): vscode.Location[] {
         if (data && data.references.length > 0) {
-            // tslint:disable-next-line:no-unnecessary-local-variable
             const references = data.references
                 .filter((ref) => {
                     if (

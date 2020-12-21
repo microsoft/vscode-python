@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any
-
 import * as assert from 'assert';
 import { expect } from 'chai';
 import * as path from 'path';
@@ -79,7 +77,6 @@ suite('Interpreters - PipEnv', () => {
                     .setup((p) => p.create(TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(processService.object));
 
-                // tslint:disable-next-line:no-any
                 const persistentState = TypeMoq.Mock.ofType<IPersistentState<any>>();
                 persistentStateFactory
                     .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny()))

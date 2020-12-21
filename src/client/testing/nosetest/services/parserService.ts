@@ -81,7 +81,7 @@ export class TestsParser implements ITestsParser {
         let fileName = '';
         let testFile: TestFile;
         const resource = Uri.file(rootDirectory);
-        // tslint:disable-next-line: max-func-body-length
+
         lines.forEach((line) => {
             if (line.startsWith(NOSE_WANT_FILE_PREFIX) && line.endsWith(NOSE_WANT_FILE_SUFFIX)) {
                 fileName = line.substring(NOSE_WANT_FILE_PREFIX.length);

@@ -6,7 +6,7 @@ const path = require('path');
 const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
 const constants = require('../constants');
 const common = require('./common');
-// tslint:disable-next-line:no-var-requires no-require-imports
+
 const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.json');
 // Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
 // We need to ensure they do not get bundled into the output (as they are large).
@@ -69,5 +69,5 @@ const config = {
         devtoolModuleFilenameTemplate: '../../[resource-path]',
     },
 };
-// tslint:disable-next-line:no-default-export
+
 exports.default = config;

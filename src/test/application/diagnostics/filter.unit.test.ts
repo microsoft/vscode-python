@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DiagnosticFilterService, FilterKeys } from '../../../client/application/diagnostics/filter';

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable: no-any
-
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { IExtensionSingleActivationService } from '../../client/activation/types';

@@ -86,7 +86,7 @@ export abstract class BaseFormatter {
                 if (this.checkCancellation(document.fileName, tempFile, token)) {
                     return [] as vscode.TextEdit[];
                 }
-                // tslint:disable-next-line:no-empty
+
                 this.handleError(this.Id, error, document.uri).catch(() => {});
                 return [] as vscode.TextEdit[];
             })

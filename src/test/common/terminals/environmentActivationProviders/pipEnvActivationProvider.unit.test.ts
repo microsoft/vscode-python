@@ -18,8 +18,6 @@ import { IInterpreterService, IPipEnvService } from '../../../../client/interpre
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 
-// tslint:disable:no-any
-
 suite('Terminals Activation - Pipenv', () => {
     [undefined, Uri.parse('x')].forEach((resource) => {
         suite(resource ? 'With a resource' : 'Without a resource', () => {

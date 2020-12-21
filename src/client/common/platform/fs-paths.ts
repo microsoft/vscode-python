@@ -5,7 +5,7 @@ import * as nodepath from 'path';
 import { getSearchPathEnvVarNames } from '../utils/exec';
 import { getOSType, OSType } from '../utils/platform';
 import { IExecutables, IFileSystemPaths, IFileSystemPathUtils } from './types';
-// tslint:disable-next-line:no-var-requires no-require-imports
+
 const untildify = require('untildify');
 
 // The parts of node's 'path' module used by FileSystemPaths.

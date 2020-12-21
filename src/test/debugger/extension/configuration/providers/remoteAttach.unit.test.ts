@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any no-invalid-template-strings max-func-body-length
-
 import { expect } from 'chai';
 import * as path from 'path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
@@ -20,7 +18,6 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
     let provider: TestRemoteAttachDebugConfigurationProvider;
     let input: MultiStepInput<DebugConfigurationState>;
     class TestRemoteAttachDebugConfigurationProvider extends RemoteAttachDebugConfigurationProvider {
-        // tslint:disable-next-line:no-unnecessary-override
         public async configurePort(
             i: MultiStepInput<DebugConfigurationState>,
             config: Partial<AttachRequestArguments>,

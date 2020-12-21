@@ -13,7 +13,6 @@ import { IDisposableRegistry } from '../types';
 import { StopWatch } from '../utils/stopWatch';
 import { IDebugService } from './types';
 
-// tslint:disable-next-line no-any
 function isResponse(a: any): a is DebugProtocol.Response {
     return a.type === 'response';
 }
@@ -32,7 +31,6 @@ class TelemetryTracker implements DebugAdapterTracker {
         this.sendTelemetry(EventName.DEBUG_SESSION_START);
     }
 
-    // tslint:disable-next-line no-any
     public onDidSendMessage(message: any): void {
         if (isResponse(message)) {
             if (message.command === 'configurationDone') {

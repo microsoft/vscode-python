@@ -14,7 +14,6 @@ import { IVirtualEnvironmentManager } from '../../../../interpreter/virtualEnvs/
 import { IServiceContainer } from '../../../../ioc/types';
 import { BaseVirtualEnvService } from './baseVirtualEnvService';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
 const untildify: (value: string) => string = require('untildify');
 
 @injectable()
@@ -60,7 +59,6 @@ export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvi
             folders.push(untildify(workonHomePath));
         }
 
-        // tslint:disable-next-line:no-string-literal
         const pyenvRoot = await this.virtualEnvMgr.getPyEnvRoot(resource);
         if (pyenvRoot) {
             folders.push(pyenvRoot);

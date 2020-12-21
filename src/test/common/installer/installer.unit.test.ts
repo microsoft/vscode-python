@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:max-func-body-length no-invalid-this messages-must-be-localized no-any
-
 import { assert, expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as sinon from 'sinon';
@@ -71,10 +69,9 @@ use(chaiAsPromised);
 
 suite('Module Installer only', () => {
     [undefined, Uri.file('resource')].forEach((resource) => {
-        // tslint:disable-next-line: cyclomatic-complexity
         getNamesAndValues<Product>(Product)
             .concat([{ name: 'Unknown product', value: 404 }])
-            // tslint:disable-next-line: cyclomatic-complexity
+
             .forEach((product) => {
                 let disposables: Disposable[] = [];
                 let installer: ProductInstaller;
@@ -122,7 +119,7 @@ suite('Module Installer only', () => {
                         .returns(() => persistentStore.object);
 
                     moduleInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
-                    // tslint:disable-next-line:no-any
+
                     moduleInstaller.setup((x: any) => x.then).returns(() => undefined);
                     installationChannel
                         .setup((i) => i.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -143,7 +140,7 @@ suite('Module Installer only', () => {
                         .returns(() => true);
                     interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
                     const pythonInterpreter = TypeMoq.Mock.ofType<PythonEnvironment>();
-                    // tslint:disable-next-line:no-any
+
                     pythonInterpreter.setup((i) => (i as any).then).returns(() => undefined);
                     interpreterService
                         .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
@@ -179,7 +176,7 @@ suite('Module Installer only', () => {
                                 a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                             ).verifiable(TypeMoq.Times.never());
                             const getProductType = sinon.stub(ProductService.prototype, 'getProductType');
-                            // tslint:disable-next-line: no-any
+
                             getProductType.returns('random' as any);
                             const promise = installer.promptToInstall(product.value, resource);
                             await expect(promise).to.eventually.be.rejectedWith(`Unknown product ${product.value}`);
@@ -647,10 +644,7 @@ suite('Module Installer only', () => {
                         pythonExecutionFactory
                             .setup((p) => p.createActivatedEnvironment(TypeMoq.It.isAny()))
                             .returns(() => Promise.resolve(pythonExecutionService.object));
-                        pythonExecutionService
-                            // tslint:disable-next-line: no-any
-                            .setup((p) => (p as any).then)
-                            .returns(() => undefined);
+                        pythonExecutionService.setup((p) => (p as any).then).returns(() => undefined);
                         pythonExecutionService
                             .setup((p) => p.isModuleInstalled(TypeMoq.It.isAny()))
                             .returns(() => Promise.resolve(true))
@@ -671,10 +665,7 @@ suite('Module Installer only', () => {
                         pythonExecutionFactory
                             .setup((p) => p.createActivatedEnvironment(TypeMoq.It.isAny()))
                             .returns(() => Promise.resolve(pythonExecutionService.object));
-                        pythonExecutionService
-                            // tslint:disable-next-line: no-any
-                            .setup((p) => (p as any).then)
-                            .returns(() => undefined);
+                        pythonExecutionService.setup((p) => (p as any).then).returns(() => undefined);
                         pythonExecutionService
                             .setup((p) => p.isModuleInstalled(TypeMoq.It.isAny()))
                             .returns(() => Promise.resolve(false))
@@ -696,10 +687,7 @@ suite('Module Installer only', () => {
                         processServiceFactory
                             .setup((p) => p.create(TypeMoq.It.isAny()))
                             .returns(() => Promise.resolve(processService.object));
-                        processService
-                            // tslint:disable-next-line: no-any
-                            .setup((p) => (p as any).then)
-                            .returns(() => undefined);
+                        processService.setup((p) => (p as any).then).returns(() => undefined);
                         const executionResult: ExecutionResult<string> = {
                             stdout: 'output',
                         };
@@ -729,10 +717,7 @@ suite('Module Installer only', () => {
                         processServiceFactory
                             .setup((p) => p.create(TypeMoq.It.isAny()))
                             .returns(() => Promise.resolve(processService.object));
-                        processService
-                            // tslint:disable-next-line: no-any
-                            .setup((p) => (p as any).then)
-                            .returns(() => undefined);
+                        processService.setup((p) => (p as any).then).returns(() => undefined);
                         processService
                             .setup((p) => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                             .returns(() => Promise.reject('Kaboom'))
@@ -799,7 +784,6 @@ suite('Module Installer only', () => {
 
         suite('Test FormatterInstaller.promptToInstallImplementation', () => {
             class FormatterInstallerTest extends FormatterInstaller {
-                // tslint:disable-next-line:no-unnecessary-override
                 public async promptToInstallImplementation(product: Product, uri?: Uri): Promise<InstallerResponse> {
                     return super.promptToInstallImplementation(product, uri);
                 }
@@ -849,7 +833,6 @@ suite('Module Installer only', () => {
                         'Use black',
                         'Use yapf',
                     ),
-                    // tslint:disable-next-line: no-any
                 ).thenReturn(undefined as any);
 
                 const response = await installer.promptToInstallImplementation(product, resource);
@@ -877,7 +860,6 @@ suite('Module Installer only', () => {
                         'Use black',
                         'Use yapf',
                     ),
-                    // tslint:disable-next-line: no-any
                 ).thenReturn('Yes' as any);
                 const response = await installer.promptToInstallImplementation(product, resource);
 
@@ -905,7 +887,6 @@ suite('Module Installer only', () => {
                         'Use black',
                         'Use yapf',
                     ),
-                    // tslint:disable-next-line: no-any
                 ).thenReturn('Use black' as any);
                 when(configService.updateSetting('formatting.provider', 'black', resource)).thenResolve();
 
@@ -936,7 +917,6 @@ suite('Module Installer only', () => {
                         'Use black',
                         'Use yapf',
                     ),
-                    // tslint:disable-next-line: no-any
                 ).thenReturn('Use yapf' as any);
                 when(configService.updateSetting('formatting.provider', 'yapf', resource)).thenResolve();
 
@@ -962,7 +942,7 @@ suite('Module Installer only', () => {
     suite(`Test LinterInstaller with resource: ${resource}`, () => {
         class LinterInstallerTest extends LinterInstaller {
             public isModuleExecutable: boolean = true;
-            // tslint:disable-next-line:no-unnecessary-override
+
             public async promptToInstallImplementation(product: Product, uri?: Uri): Promise<InstallerResponse> {
                 return super.promptToInstallImplementation(product, uri);
             }
@@ -1039,7 +1019,6 @@ suite('Module Installer only', () => {
             const productName = ProductNames.get(product)!;
             when(
                 appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
-                // tslint:disable-next-line:no-any
             ).thenResolve('Select Linter' as any);
             when(cmdManager.executeCommand(Commands.Set_Linter)).thenResolve(undefined);
 
@@ -1057,7 +1036,6 @@ suite('Module Installer only', () => {
             const productName = ProductNames.get(product)!;
             when(
                 appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
-                // tslint:disable-next-line:no-any
             ).thenResolve('Install' as any);
             when(cmdManager.executeCommand(Commands.Set_Linter)).thenResolve(undefined);
             const install = sinon.stub(LinterInstaller.prototype, 'install');

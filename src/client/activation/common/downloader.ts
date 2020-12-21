@@ -24,8 +24,6 @@ import {
     IPlatformData,
 } from '../types';
 
-// tslint:disable:no-require-imports no-any
-
 const downloadFileExtension = '.nupkg';
 
 @injectable()
@@ -50,7 +48,6 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         if (uri.startsWith('https:')) {
             const cfg = this.workspace.getConfiguration('http', resource);
             if (!cfg.get<boolean>('proxyStrictSSL', true)) {
-                // tslint:disable-next-line:no-http-string
                 uri = uri.replace(/^https:/, 'http:');
             }
         }
@@ -153,7 +150,6 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
                 location: ProgressLocation.Window,
             },
             (progress) => {
-                // tslint:disable-next-line:no-require-imports no-var-requires
                 const StreamZip = require('node-stream-zip');
                 const zip = new StreamZip({
                     file: tempFilePath,
@@ -193,7 +189,6 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
                 const platformData = this.services.get<IPlatformData>(IPlatformData);
                 const executablePath = path.join(destinationFolder, platformData.engineExecutableName);
                 await this.fs.chmod(executablePath, '0764'); // -rwxrw-r--
-                // tslint:disable-next-line: no-empty
             } catch {}
         }
 

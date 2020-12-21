@@ -16,7 +16,6 @@ const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-r
 
 use(chaiAsPromised);
 
-// tslint:disable-next-line: max-func-body-length
 suite('PythonProcessService', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
@@ -32,7 +31,7 @@ suite('PythonProcessService', () => {
         const options = {};
         const observable = {
             proc: undefined,
-            // tslint:disable-next-line: no-any
+
             out: {} as any,
             dispose: () => {
                 noop();
@@ -55,7 +54,7 @@ suite('PythonProcessService', () => {
         const options = {};
         const observable = {
             proc: undefined,
-            // tslint:disable-next-line: no-any
+
             out: {} as any,
             dispose: () => {
                 noop();

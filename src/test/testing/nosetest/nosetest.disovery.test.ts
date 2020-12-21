@@ -35,7 +35,6 @@ const filesToDelete = [
     path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids'),
 ];
 
-// tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - nose - discovery with mocked process output', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST

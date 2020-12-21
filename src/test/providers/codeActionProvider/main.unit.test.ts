@@ -3,7 +3,6 @@
 
 'use strict';
 
-// tslint:disable: match-default-export-name
 import { assert, expect } from 'chai';
 import rewiremock from 'rewiremock';
 import * as typemoq from 'typemoq';
@@ -49,7 +48,6 @@ suite('Code Action Provider service', async () => {
             pattern: '**/launch.json',
         });
         assert.deepEqual(metadata!, {
-            // tslint:disable-next-line:no-any
             providedCodeActionKinds: ['CodeAction' as any],
         });
         expect(provider!).instanceOf(LaunchJsonCodeActionProvider);

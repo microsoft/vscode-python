@@ -3,7 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-console no-require-imports no-var-requires
 import * as path from 'path';
 
 process.env.CODE_TESTS_WORKSPACE = path.join(__dirname, '..', '..', 'src', 'test');

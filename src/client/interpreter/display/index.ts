@@ -25,7 +25,7 @@ export class AlwaysDisplayStatusBar implements IInterpreterStatusbarVisibilityFi
         return false;
     }
 }
-// tslint:disable-next-line:completed-docs
+
 @injectable()
 export class InterpreterDisplay implements IInterpreterDisplay {
     private readonly statusBar: StatusBarItem;

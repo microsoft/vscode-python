@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-
 import { strictEqual } from 'assert';
 import { expect } from 'chai';
 import { spawnSync } from 'child_process';
@@ -33,7 +31,7 @@ suite('ArgsService: Common', () => {
 
             setup(function () {
                 // Take the spawning of process into account.
-                // tslint:disable-next-line:no-invalid-this
+
                 this.timeout(TEST_TIMEOUT * 2);
                 const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
 
@@ -168,7 +166,6 @@ function getOptionsWithArguments(output: string) {
     return getMatches('\\s{1,}(-{1,2}[A-Za-z0-9-]+)(?:=|\\s{0,1}[A-Z])', output);
 }
 
-// tslint:disable-next-line:no-any
 function getMatches(pattern: any, str: string) {
     const matches: string[] = [];
     const regex = new RegExp(pattern, 'gm');

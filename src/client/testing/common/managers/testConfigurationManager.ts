@@ -37,7 +37,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
         );
         await this.testConfigSettingsService.enable(this.workspace, this.product);
     }
-    // tslint:disable-next-line:no-any
+
     public async disable() {
         return this.testConfigSettingsService.enable(this.workspace, this.product);
     }

@@ -8,7 +8,7 @@
 */
 
 // https://stackoverflow.com/questions/39877156/how-to-extend-string-prototype-and-use-it-next-in-typescript
-// tslint:disable-next-line:interface-name
+
 declare interface String {
     /**
      * Split a string using the cr and lf characters and return them as an array.
@@ -38,7 +38,7 @@ declare interface String {
     trimQuotes(): string;
 }
 
-// tslint:disable-next-line:interface-name
+
 declare interface Promise<T> {
     /**
      * Catches task errors and ignores them.

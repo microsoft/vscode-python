@@ -44,8 +44,6 @@ import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 import { ITestDetails, ITestScenarioDetails, testScenarios } from './pytest_run_tests_data';
 
-// tslint:disable:max-func-body-length
-
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
 const PYTEST_RESULTS_PATH = path.join(
     EXTENSION_ROOT_DIR,
@@ -431,17 +429,15 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             };
         }
     }
-    // tslint:disable-next-line: no-function-expression
+
     suiteSetup(async function () {
-        // tslint:disable-next-line: no-invalid-this
         this.timeout(TEST_TIMEOUT * 2);
-        // tslint:disable: no-console
+
         console.time('Pytest before all hook');
         await initialize();
         console.timeLog('Pytest before all hook');
         await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
         console.timeEnd('Pytest before all hook');
-        // tslint:enable: no-console
     });
     function initializeDI() {
         ioc = new UnitTestIocContainer();
@@ -513,7 +509,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             let diagnostics: readonly vscode.Diagnostic[];
             suiteSetup(async function () {
                 // This "before all" hook is doing way more than normal
-                // tslint:disable-next-line: no-invalid-this
+
                 this.timeout(TEST_TIMEOUT * 2);
                 await initializeTest();
                 initializeDI();
@@ -532,7 +528,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                 await ioc.dispose();
                 await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
             });
-            // tslint:disable: max-func-body-length
+
             const shouldRunProperly = (suiteName: string, failedRun = false) => {
                 suite(suiteName, () => {
                     testDetails = getScenarioTestDetails(scenario, failedRun);

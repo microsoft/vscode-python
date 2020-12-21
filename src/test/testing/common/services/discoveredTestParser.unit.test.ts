@@ -11,7 +11,6 @@ import { IWorkspaceService } from '../../../../client/common/application/types';
 import { TestDiscoveredTestParser } from '../../../../client/testing/common/services/discoveredTestParser';
 import { Tests } from '../../../../client/testing/common/types';
 
-// tslint:disable:no-any max-func-body-length
 suite('Services - Discovered test parser', () => {
     let workspaceService: typemoq.IMock<IWorkspaceService>;
     let parser: TestDiscoveredTestParser;

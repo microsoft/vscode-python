@@ -19,7 +19,6 @@ import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { CondaEnvironmentInfo, CondaInfo } from './conda';
 import { parseCondaEnvFileContents } from './condaHelper';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
 const untildify: (value: string) => string = require('untildify');
 
 // This glob pattern will match all of the following:
@@ -93,7 +92,7 @@ export class CondaService implements ICondaService {
      */
     private static getLatestVersion(interpreters: PythonEnvironment[]): PythonEnvironment | undefined {
         const sortedInterpreters = interpreters.slice();
-        // tslint:disable-next-line:no-non-null-assertion
+
         sortedInterpreters.sort((a, b) => (a.version && b.version ? compare(a.version.raw, b.version.raw) : 0));
         if (sortedInterpreters.length > 0) {
             return sortedInterpreters[sortedInterpreters.length - 1];
@@ -119,7 +118,7 @@ export class CondaService implements ICondaService {
      *
      * Called by VS Code to indicate it is done with the resource.
      */
-    // tslint:disable-next-line:no-empty
+
     public dispose(): void {} // eslint-disable-line
 
     /**

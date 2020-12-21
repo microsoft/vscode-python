@@ -73,7 +73,7 @@ export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsS
         const options = [
             {
                 prompt: 'Use Command Prompt',
-                // tslint:disable-next-line:no-object-literal-type-assertion
+
                 command: {
                     diagnostic,
                     invoke: async (): Promise<void> => {

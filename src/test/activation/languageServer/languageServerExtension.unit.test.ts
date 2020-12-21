@@ -14,13 +14,10 @@ import { IDisposable } from '../../../client/common/types';
 
 use(chaiAsPromised);
 
-// tslint:disable:max-func-body-length no-any chai-vague-errors no-unused-expression
-
 const loadExtensionCommand = 'python._loadLanguageServerExtension';
 
 suite('Language Server - Language Server Extension', () => {
     class LanguageServerExtensionTest extends LanguageServerExtension {
-        // tslint:disable-next-line:no-unnecessary-override
         public async register(): Promise<void> {
             return super.register();
         }

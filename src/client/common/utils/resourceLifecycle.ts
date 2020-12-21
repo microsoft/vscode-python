@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:max-classes-per-file
-
 import { logWarning } from '../../logging';
 
 /**
@@ -49,7 +47,6 @@ export class Disposables implements IDisposables {
     }
 
     public async dispose(): Promise<void> {
-        // tslint:disable-next-line: no-this-assignment
         const { disposables } = this;
         this.disposables = [];
         await disposeAll(disposables);

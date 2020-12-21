@@ -30,7 +30,6 @@ interface IStopWatch {
 }
 
 export async function sendStartupTelemetry(
-    // tslint:disable-next-line:no-any
     activatedPromise: Promise<any>,
     durations: Record<string, number>,
     stopWatch: IStopWatch,
@@ -56,7 +55,6 @@ export async function sendErrorTelemetry(
     serviceContainer?: IServiceContainer,
 ) {
     try {
-        // tslint:disable-next-line:no-any
         let props: any = {};
         if (serviceContainer) {
             try {
@@ -108,9 +106,8 @@ function getPreferredWorkspaceInterpreter(resource: Resource, serviceContainer: 
 }
 
 async function getActivationTelemetryProps(serviceContainer: IServiceContainer): Promise<EditorLoadTelemetry> {
-    // tslint:disable-next-line:no-suspicious-comment
     // TODO: Not all of this data is showing up in the database...
-    // tslint:disable-next-line:no-suspicious-comment
+
     // TODO: If any one of these parts fails we send no info.  We should
     // be able to partially populate as much as possible instead
     // (through granular try-catch statements).

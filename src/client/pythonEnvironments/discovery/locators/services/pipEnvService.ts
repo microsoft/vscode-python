@@ -44,7 +44,6 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         this.pipEnvServiceHelper = this.serviceContainer.get<IPipEnvServiceHelper>(IPipEnvServiceHelper);
     }
 
-    // tslint:disable-next-line:no-empty
     public dispose(): void {
         // No body
     }
@@ -154,7 +153,6 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             }
             const pythonPath = await this.invokePipenv('--py', cwd);
             return pythonPath && (await this.fs.fileExists(pythonPath)) ? pythonPath : undefined;
-            // tslint:disable-next-line:no-empty
         } catch (error) {
             traceError('PipEnv identification failed', error);
             if (ignoreErrors) {
@@ -190,7 +188,6 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
                 }
                 return stdout;
             }
-            // tslint:disable-next-line:no-empty
         } catch (error) {
             const platformService = this.serviceContainer.get<IPlatformService>(IPlatformService);
             const currentProc = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);

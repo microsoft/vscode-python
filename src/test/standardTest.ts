@@ -1,5 +1,3 @@
-// tslint:disable:no-console
-
 import { spawnSync } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -9,7 +7,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 
 // If running smoke tests, we don't have access to this.
 if (process.env.TEST_FILES_SUFFIX !== 'smoke.test') {
-    // tslint:disable-next-line: no-var-requires no-require-imports
     const logger = require('./testLogger');
     logger.initializeLogger();
 }

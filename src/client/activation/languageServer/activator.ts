@@ -56,7 +56,7 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
             languageServerFolderPath,
             'Microsoft.Python.LanguageServer.runtimeconfig.json',
         );
-        // tslint:disable-next-line:no-any
+
         let content: any = {};
         if (await this.fs.fileExists(targetJsonFile)) {
             try {

@@ -35,8 +35,6 @@ import { CondaService } from '../../../client/pythonEnvironments/discovery/locat
 import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
-// tslint:disable:no-any max-func-body-length chai-vague-errors
-
 const pythonInterpreter: PythonEnvironment = {
     path: '/foo/bar/python.exe',
     version: new SemVer('3.6.6-final'),
@@ -223,7 +221,6 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
-                // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
                 const pythonPath = 'path/to/python';
@@ -251,7 +248,6 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure `create` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function () {
-                // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
                 const pythonPath = 'path/to/python';
@@ -273,7 +269,6 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure `createActivatedEnvironment` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
-                // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
                 const pythonPath = 'path/to/python';
@@ -306,7 +301,6 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure `createActivatedEnvironment` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function () {
-                // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
                 let createInvoked = false;

@@ -23,8 +23,6 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IExtensions, IPythonSettings } from '../../../client/common/types';
 import { Common, Pylance } from '../../../client/common/utils/localize';
 
-// tslint:disable:max-func-body-length
-
 suite('Pylance Language Server - Activator', () => {
     let activator: NodeLanguageServerActivator;
     let workspaceService: IWorkspaceService;
@@ -37,7 +35,6 @@ suite('Pylance Language Server - Activator', () => {
     let appEnv: IApplicationEnvironment;
     let extensionsChangedEvent: EventEmitter<void>;
 
-    // tslint:disable-next-line: no-any
     let pylanceExtension: Extension<any>;
     setup(() => {
         manager = mock(NodeLanguageServerManager);
@@ -50,7 +47,6 @@ suite('Pylance Language Server - Activator', () => {
         appEnv = mock<IApplicationEnvironment>();
         when(appEnv.uriScheme).thenReturn('scheme');
 
-        // tslint:disable-next-line: no-any
         pylanceExtension = mock<Extension<any>>();
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
         when(appEnv.uriScheme).thenReturn('scheme');
@@ -110,7 +106,6 @@ suite('Pylance Language Server - Activator', () => {
 
         try {
             await activator.start(undefined);
-            // tslint:disable-next-line: no-empty
         } catch {}
         verify(
             appShell.showWarningMessage(
@@ -133,7 +128,6 @@ suite('Pylance Language Server - Activator', () => {
 
         try {
             await activator.start(undefined);
-            // tslint:disable-next-line: no-empty
         } catch {}
         verify(appShell.openUrl(`scheme:extension/${PYLANCE_EXTENSION_ID}`)).once();
     });

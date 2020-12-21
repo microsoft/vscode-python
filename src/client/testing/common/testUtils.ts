@@ -113,7 +113,6 @@ export class TestsHelper implements ITestsHelper {
     public flattenTestFiles(testFiles: TestFile[], workspaceFolder: string): Tests {
         testFiles.forEach((testFile) => this.flatteningVisitor.visitTestFile(testFile));
 
-        // tslint:disable-next-line:no-object-literal-type-assertion
         const tests = <Tests>{
             testFiles: testFiles,
             testFunctions: this.flatteningVisitor.flattenedTestFunctions,
@@ -181,7 +180,6 @@ export class TestsHelper implements ITestsHelper {
         });
     }
     public parseTestName(name: string, rootDirectory: string, tests: Tests): TestsToRun | undefined {
-        // tslint:disable-next-line:no-suspicious-comment
         // TODO: We need a better way to match (currently we have raw name, name, xmlname, etc = which one do we.
         // Use to identify a file given the full file name, similarly for a folder and function.
         // Perhaps something like a parser or methods like TestFunction.fromString()... something).
@@ -598,10 +596,8 @@ function copyResultsForSuites(source: TestSuite[], target: TestSuite[]): void {
 
 function copyValueTypes<T>(source: T, target: T): void {
     Object.keys(source).forEach((key) => {
-        // tslint:disable-next-line:no-any
         const value = (source as any)[key];
         if (['boolean', 'number', 'string', 'undefined'].indexOf(typeof value) >= 0) {
-            // tslint:disable-next-line:no-any
             (target as any)[key] = value;
         }
     });

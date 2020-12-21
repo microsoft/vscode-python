@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 'use strict';
-// tslint:disable:all
+
 import { vscMockPosition } from './position';
 import { vscMockRange } from './range';
 export namespace vscMockSelection {

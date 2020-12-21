@@ -12,7 +12,6 @@ import { EXTENSION_ROOT_DIR } from './constants';
 
 type VSCode = typeof import('vscode');
 
-// tslint:disable:no-require-imports
 const setting = 'sourceMapsEnabled';
 
 export class SourceMapSupport {
