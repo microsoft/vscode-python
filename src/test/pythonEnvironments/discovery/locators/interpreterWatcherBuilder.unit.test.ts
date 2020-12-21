@@ -21,6 +21,7 @@ suite('Interpreters - Watcher Builder', () => {
 
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn();
         when(serviceContainer.get<IInterpreterWatcher>(IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE)).thenReturn(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (watcher as any) as IInterpreterWatcher,
         );
 
@@ -36,6 +37,7 @@ suite('Interpreters - Watcher Builder', () => {
 
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn();
         when(serviceContainer.get<IInterpreterWatcher>(IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE)).thenReturn(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (watcher as any) as IInterpreterWatcher,
         );
 

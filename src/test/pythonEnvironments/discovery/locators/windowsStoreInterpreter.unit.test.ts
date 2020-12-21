@@ -157,6 +157,7 @@ suite('Interpreters - Windows Store Interpreter', () => {
         const key = `WINDOWS_STORE_INTERPRETER_HASH_${pythonPath}`;
         const pythonService = mock<IPythonExecutionService>();
         const pythonServiceInstance = instance(pythonService);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (pythonServiceInstance as any).then = undefined;
         const oneHour = 60 * 60 * 1000;
 

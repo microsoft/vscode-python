@@ -189,9 +189,9 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         const cacheKey = this.getCacheKey(resource);
         const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         if (this.cachePerWorkspace) {
-            return persistentFactory.createWorkspacePersistentState<PythonEnvironment[]>(cacheKey, undefined as any);
+            return persistentFactory.createWorkspacePersistentState<PythonEnvironment[]>(cacheKey, undefined);
         }
-        return persistentFactory.createGlobalPersistentState<PythonEnvironment[]>(cacheKey, undefined as any);
+        return persistentFactory.createGlobalPersistentState<PythonEnvironment[]>(cacheKey, undefined);
     }
 
     protected getCachedInterpreters(resource?: Uri): PythonEnvironment[] | undefined {
