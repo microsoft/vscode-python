@@ -257,11 +257,11 @@ suite('Conda binary is located correctly', () => {
     });
 
     suite('Must find conda in well-known locations', () => {
-        for (const condaDirName of ['Anaconda', 'anaconda', 'Miniconda', 'miniconda']) {
-            for (const prefix of ['/usr/share', '/usr/local/share', '/opt', '/home/user', '/home/user/opt']) {
-                const condaPath = `${prefix}/${condaDirName}`;
+        const condaDirNames = ['Anaconda', 'anaconda', 'Miniconda', 'miniconda'];
 
-                test(`Must find conda in ${condaPath}`, async () => {
+        condaDirNames.forEach((condaDirName) => {
+            suite(`Must find conda in well-known locations on Linux with ${condaDirName} directory name`, () => {
+                setup(() => {
                     osType = platform.OSType.Linux;
                     homeDir = '/home/user';
 
@@ -283,23 +283,26 @@ suite('Conda binary is located correctly', () => {
                             },
                         },
                     };
-
-                    const prefixDir = getFile(prefix) as Directory;
-                    prefixDir[condaDirName] = {
-                        bin: {
-                            conda: JSON.stringify(condaInfo('4.8.0')),
-                        },
-                    };
-
-                    await expectConda(`${condaPath}/bin/conda`);
                 });
-            }
 
-            // Drive letters are intentionally unusual to ascertain that locator doesn't hardcode paths.
-            for (const prefix of ['D:\\ProgramData', 'E:\\Users\\user', 'F:\\Users\\user\\AppData\\Local\\Continuum']) {
-                const condaPath = `${prefix}\\${condaDirName}`;
+                ['/usr/share', '/usr/local/share', '/opt', '/home/user', '/home/user/opt'].forEach((prefix) => {
+                    const condaPath = `${prefix}/${condaDirName}`;
 
-                test(`Must find conda in ${condaPath}`, async () => {
+                    test(`Must find conda in ${condaPath}`, async () => {
+                        const prefixDir = getFile(prefix) as Directory;
+                        prefixDir[condaDirName] = {
+                            bin: {
+                                conda: JSON.stringify(condaInfo('4.8.0')),
+                            },
+                        };
+
+                        await expectConda(`${condaPath}/bin/conda`);
+                    });
+                });
+            });
+
+            suite(`Must find conda in well-known locations on Windows with ${condaDirName} directory name`, () => {
+                setup(() => {
                     osType = platform.OSType.Windows;
                     homeDir = 'E:\\Users\\user';
 
@@ -330,18 +333,25 @@ suite('Conda binary is located correctly', () => {
                             },
                         },
                     };
-
-                    const prefixDir = getFile(prefix) as Directory;
-                    prefixDir[condaDirName] = {
-                        Scripts: {
-                            'conda.exe': JSON.stringify(condaInfo('4.8.0')),
-                        },
-                    };
-
-                    await expectConda(`${condaPath}\\Scripts\\conda.exe`);
                 });
-            }
-        }
+
+                // Drive letters are intentionally unusual to ascertain that locator doesn't hardcode paths.
+                ['D:\\ProgramData', 'E:\\Users\\user', 'F:\\Users\\user\\AppData\\Local\\Continuum'].forEach((prefix) => {
+                    const condaPath = `${prefix}\\${condaDirName}`;
+
+                    test(`Must find conda in ${condaPath}`, async () => {
+                        const prefixDir = getFile(prefix) as Directory;
+                        prefixDir[condaDirName] = {
+                            Scripts: {
+                                'conda.exe': JSON.stringify(condaInfo('4.8.0')),
+                            },
+                        };
+
+                        await expectConda(`${condaPath}\\Scripts\\conda.exe`);
+                    });
+                });
+            });
+        });
     });
 
     suite('Must find conda in environments.txt', () => {
