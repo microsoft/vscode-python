@@ -62,38 +62,36 @@ suite('Interpreters - Windows Store Interpreter', () => {
         'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
         'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe',
     ];
+
+    async function isWindowsStoreInterpreter(interpreter: string) {
+        return windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter);
+    }
+
+    function isHiddenInterpreter(interpreter: string) {
+        return windowsStoreInterpreter.isHiddenInterpreter(interpreter);
+    }
+
     for (const interpreter of windowsStoreInterpreters) {
-        test(`${interpreter} must be identified as a windows store interpter`, async () => {
-            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter)).to.equal(true, 'Must be true');
+        test(`${interpreter} must be identified as a Windows Store interpreter`, async () => {
+            expect(await isWindowsStoreInterpreter(interpreter)).to.equal(true, 'Must be true');
         });
-        test(`${interpreter.toLowerCase()} must be identified as a windows store interpter (ignoring case)`, async () => {
-            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toLowerCase())).to.equal(
-                true,
-                'Must be true',
-            );
-            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(
-                true,
-                'Must be true',
-            );
+
+        test(`${interpreter.toLowerCase()} must be identified as a Windows Store interpreter (lower case)`, async () => {
+            expect(await isWindowsStoreInterpreter(interpreter.toLowerCase())).to.equal(true, 'Must be true');
+            expect(await isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(true, 'Must be true');
         });
-        test(`D${interpreter.substring(
-            1,
-        )} must be identified as a windows store interpter (ignoring driver letter)`, async () => {
-            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(
-                true,
-                'Must be true',
-            );
+
+        const otherDrive = `D${interpreter.substring(1)}`;
+        test(`${otherDrive} must be identified as a Windows Store interpreter (ignoring driver letter)`, async () => {
+            expect(await isWindowsStoreInterpreter(otherDrive)).to.equal(true, 'Must be true');
         });
-        test(`${interpreter.replace(
-            /\\/g,
-            '/',
-        )} must be identified as a windows store interpter (ignoring path separator)`, async () => {
-            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
-                true,
-                'Must be true',
-            );
+
+        const ignorePathSeparator = interpreter.replace(/\\/g, '/');
+        test(`${ignorePathSeparator} must be identified as a Windows Store interpreter (ignoring path separator)`, async () => {
+            expect(await isWindowsStoreInterpreter(ignorePathSeparator)).to.equal(true, 'Must be true');
         });
     }
+
     const nonWindowsStoreInterpreters = [
         '..\\Program Filess\\WindowsApps\\Something\\Python.exe',
         'C:\\Program Filess\\WindowsApps\\Something\\Python.exe',
@@ -109,29 +107,18 @@ suite('Interpreters - Windows Store Interpreter', () => {
         'C:\\Apps\\Python.exe',
     ];
     for (const interpreter of nonWindowsStoreInterpreters) {
-        test(`${interpreter} must not be identified as a windows store interpter`, async () => {
-            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter)).to.equal(false, 'Must be false');
-            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
-                false,
-                'Must be false',
-            );
-            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter)).to.equal(false, 'Must be false');
-            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
-                false,
-                'Must be false',
-            );
-            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.toLowerCase())).to.equal(
-                false,
-                'Must be false',
-            );
-            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(
-                false,
-                'Must be false',
-            );
-            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(
-                false,
-                'Must be false',
-            );
+        test(`${interpreter} must not be identified as a Windows Store interpreter`, async () => {
+            const ignorePathSeparator = interpreter.replace(/\\/g, '/');
+
+            expect(isHiddenInterpreter(interpreter)).to.equal(false, 'Must be false');
+            expect(isHiddenInterpreter(ignorePathSeparator)).to.equal(false, 'Must be false');
+
+            expect(await isWindowsStoreInterpreter(interpreter)).to.equal(false, 'Must be false');
+            expect(await isWindowsStoreInterpreter(ignorePathSeparator)).to.equal(false, 'Must be false');
+
+            expect(isHiddenInterpreter(interpreter.toLowerCase())).to.equal(false, 'Must be false');
+            expect(await isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(false, 'Must be false');
+            expect(await isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(false, 'Must be false');
         });
     }
     const windowsStoreHiddenInterpreters = [
@@ -141,24 +128,18 @@ suite('Interpreters - Windows Store Interpreter', () => {
         'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe',
     ];
     for (const interpreter of windowsStoreHiddenInterpreters) {
-        test(`${interpreter} must be identified as a windows store (hidden) interpter`, () => {
-            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter)).to.equal(true, 'Must be true');
+        test(`${interpreter} must be identified as a Windows Store (hidden) interpreter`, () => {
+            expect(isHiddenInterpreter(interpreter)).to.equal(true, 'Must be true');
         });
-        test(`${interpreter.toLowerCase()} must be identified as a windows store (hidden) interpter (ignoring case)`, () => {
-            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.toLowerCase())).to.equal(
-                true,
-                'Must be true',
-            );
-            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.toUpperCase())).to.equal(
-                true,
-                'Must be true',
-            );
+
+        test(`${interpreter.toLowerCase()} must be identified as a Windows Store (hidden) interpreter (ignoring case)`, () => {
+            expect(isHiddenInterpreter(interpreter.toLowerCase())).to.equal(true, 'Must be true');
+            expect(isHiddenInterpreter(interpreter.toUpperCase())).to.equal(true, 'Must be true');
         });
-        test(`${interpreter} must be identified as a windows store (hidden) interpter (ignoring driver letter)`, () => {
-            expect(windowsStoreInterpreter.isHiddenInterpreter(`D${interpreter.substring(1)}`)).to.equal(
-                true,
-                'Must be true',
-            );
+
+        const otherDrive = `D${interpreter.substring(1)}`;
+        test(`${otherDrive} must be identified as a Windows Store (hidden) interpreter (ignoring driver letter)`, () => {
+            expect(isHiddenInterpreter(otherDrive)).to.equal(true, 'Must be true');
         });
     }
     const nonWindowsStoreHiddenInterpreters = [
@@ -166,8 +147,8 @@ suite('Interpreters - Windows Store Interpreter', () => {
         'C:\\Microsoft\\WindowsAppss\\Python.exe',
     ];
     for (const interpreter of nonWindowsStoreHiddenInterpreters) {
-        test(`${interpreter} must not be identified as a windows store (hidden) interpter`, () => {
-            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter)).to.equal(false, 'Must be true');
+        test(`${interpreter} must not be identified as a Windows Store (hidden) interpreter`, () => {
+            expect(isHiddenInterpreter(interpreter)).to.equal(false, 'Must be true');
         });
     }
 
