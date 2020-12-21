@@ -4,7 +4,6 @@ import { Resource } from '../common/types';
 import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/discovery/locators/services/conda';
 import { GetInterpreterLocatorOptions } from '../pythonEnvironments/discovery/locators/types';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
-import { GetInterpreterOptions } from './interpreterService';
 
 export const INTERPRETER_LOCATOR_SERVICE = 'IInterpreterLocatorService';
 export const WINDOWS_REGISTRY_SERVICE = 'WindowsRegistryService';
@@ -149,4 +148,8 @@ export interface IInterpreterStatusbarVisibilityFilter {
 export type WorkspacePythonPath = {
     folderUri: Uri;
     configTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder;
+};
+
+export type GetInterpreterOptions = {
+    onSuggestion?: boolean;
 };

@@ -25,6 +25,7 @@ import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import {
+    GetInterpreterOptions,
     IComponentAdapter,
     IInterpreterDisplay,
     IInterpreterHelper,
@@ -36,10 +37,6 @@ import { IInterpreterHashProviderFactory } from './locators/types';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
 const EXPITY_DURATION = 24 * 60 * 60 * 1000;
-
-export type GetInterpreterOptions = {
-    onSuggestion?: boolean;
-};
 
 // The parts of IComponentAdapter used here.
 interface IComponent {
