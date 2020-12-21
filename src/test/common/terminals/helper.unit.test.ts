@@ -32,8 +32,6 @@ import { InterpreterService } from '../../../client/interpreter/interpreterServi
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
-// tslint:disable:max-func-body-length no-any
-
 suite('Terminal Service helpers', () => {
     let helper: TerminalHelper;
     let terminalManager: ITerminalManager;

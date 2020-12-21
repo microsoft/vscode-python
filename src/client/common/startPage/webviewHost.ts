@@ -88,7 +88,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         return this.postMessageInternal(type.toString(), payload);
     }
 
-    // tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any): void {
         switch (message) {
             case CssMessages.GetCssRequest:
@@ -114,7 +113,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
     }
 
-    // tslint:disable-next-line:no-any
     protected async postMessageInternal(type: string, payload?: any): Promise<void> {
         if (this.webviewInit) {
             // Make sure the webpanel is up before we send it anything.

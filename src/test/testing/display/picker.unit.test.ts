@@ -20,9 +20,6 @@ import { ITestCollectionStorageService, TestFunction, Tests, TestsToRun } from '
 import { onItemSelected, TestDisplay, Type } from '../../../client/testing/display/picker';
 import { createEmptyResults } from '../results';
 
-// tslint:disable:no-any
-// tslint:disable:max-func-body-length
-
 suite('Unit Tests - Picker (execution of commands)', () => {
     getNamesAndValues<Type>(Type).forEach((item) => {
         getNamesAndValues<CommandSource>(CommandSource).forEach((commandSource) => {

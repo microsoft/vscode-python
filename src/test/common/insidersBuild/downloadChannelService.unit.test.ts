@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { expect } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
@@ -21,7 +19,6 @@ import { IConfigurationService } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { sleep } from '../../../test/common';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Download channel service', () => {
     let configService: IConfigurationService;
     let workspaceService: IWorkspaceService;

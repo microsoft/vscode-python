@@ -6,13 +6,12 @@ import { exec } from '../../../common/externalDependencies';
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 
-// tslint:disable-next-line:variable-name
 export const AnacondaCompanyNames = ['Anaconda, Inc.', 'Continuum Analytics, Inc.'];
-// tslint:disable-next-line:variable-name
+
 export const AnacondaCompanyName = 'Anaconda, Inc.';
-// tslint:disable-next-line:variable-name
+
 export const AnacondaDisplayName = 'Anaconda';
-// tslint:disable-next-line:variable-name
+
 export const AnacondaIdentifiers = ['Anaconda', 'Conda', 'Continuum'];
 
 export type CondaEnvironmentInfo = {
@@ -72,14 +71,10 @@ export async function parseCondaInfo(
         };
     });
 
-    return (
-        Promise.all(promises)
-            .then((interpreters) =>
-                interpreters.filter((interpreter) => interpreter !== null && interpreter !== undefined),
-            )
-            // tslint:disable-next-line:no-non-null-assertion
-            .then((interpreters) => interpreters.map((interpreter) => interpreter!))
-    );
+    return Promise.all(promises)
+        .then((interpreters) => interpreters.filter((interpreter) => interpreter !== null && interpreter !== undefined))
+
+        .then((interpreters) => interpreters.map((interpreter) => interpreter!));
 }
 
 /** Wraps the "conda" utility, and exposes its functionality.

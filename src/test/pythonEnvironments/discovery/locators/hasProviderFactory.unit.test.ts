@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-classes-per-file max-func-body-length
-
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { instance, mock, verify, when } from 'ts-mockito';

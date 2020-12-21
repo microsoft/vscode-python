@@ -14,7 +14,6 @@ import { LintingEngine } from '../../client/linters/lintingEngine';
 import { ILinterManager, ILintingEngine } from '../../client/linters/types';
 import { initialize } from '../initialize';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Linting - LintingEngine', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let lintManager: TypeMoq.IMock<ILinterManager>;

@@ -22,14 +22,12 @@ import { DiscoveredTests, ITestDiscoveredTestParser } from '../../../../client/t
 import { TestDiscoveryOptions, Tests } from '../../../../client/testing/common/types';
 import { MockOutputChannel } from '../../../mockClasses';
 
-// tslint:disable:no-unnecessary-override no-any
 suite('Unit Tests - Common Discovery', () => {
     let output: OutputChannel;
     let discovery: TestsDiscoveryService;
     let executionFactory: IPythonExecutionFactory;
     let parser: ITestDiscoveredTestParser;
     setup(() => {
-        // tslint:disable-next-line:no-use-before-declare
         output = mock(StubOutput);
         executionFactory = mock(PythonExecutionFactory);
         parser = mock(TestDiscoveredTestParser);
@@ -88,8 +86,6 @@ suite('Unit Tests - Common Discovery', () => {
         assert.deepEqual(result, discoveredTests);
     });
 });
-
-// tslint:disable:no-empty
 
 //class StubOutput implements OutputChannel {
 class StubOutput {

@@ -19,9 +19,9 @@ suite('Python interpreter locator service', () => {
     let interpreters: PythonEnvironment[];
     suiteSetup(async function () {
         // https://github.com/microsoft/vscode-python/issues/12634
-        // tslint:disable-next-line: no-invalid-this
+
         return this.skip();
-        // tslint:disable-next-line:no-invalid-this
+
         this.timeout(getOSType() === OSType.Windows ? TEST_TIMEOUT * 7 : TEST_TIMEOUT * 2);
         await initialize();
         initializeDI();

@@ -8,8 +8,6 @@ import { Terminal } from 'vscode';
 import { traceVerbose } from '../../logger';
 import { IShellDetector, ShellIdentificationTelemetry, TerminalShellType } from '../types';
 
-// tslint:disable: max-classes-per-file
-
 /*
 When identifying the shell use the following algorithm:
 * 1. Identify shell based on the name of the terminal (if there is one already opened and used).

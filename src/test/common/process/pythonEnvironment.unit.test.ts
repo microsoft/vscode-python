@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable: max-func-body-length
-
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
@@ -116,7 +114,7 @@ suite('PythonEnvironment', () => {
     test('getInterpreterInformation should error out if interpreterInfo.py times out', async () => {
         processService
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            // tslint:disable-next-line: no-any
+
             .returns(() => Promise.reject(new Error('timed out')));
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
 

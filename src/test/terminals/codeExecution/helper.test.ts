@@ -33,7 +33,6 @@ import { PYTHON_PATH } from '../../common';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
 
-// tslint:disable-next-line:max-func-body-length
 suite('Terminal - Code Execution Helper', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let applicationShell: TypeMoq.IMock<IApplicationShell>;
@@ -61,7 +60,7 @@ suite('Terminal - Code Execution Helper', () => {
         processService = TypeMoq.Mock.ofType<IProcessService>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         experimentService = TypeMoq.Mock.ofType<IExperimentService>();
-        // tslint:disable-next-line:no-any
+
         processService.setup((x: any) => x.then).returns(() => undefined);
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))

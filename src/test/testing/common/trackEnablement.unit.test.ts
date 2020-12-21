@@ -18,7 +18,6 @@ import { ITestsHelper, TestProvider } from '../../../client/testing/common/types
 import { ITestConfigSettingsService } from '../../../client/testing/types';
 import { noop } from '../../core';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Unit Tests - Track Enablement', () => {
     const sandbox = sinon.createSandbox();
     let workspaceService: IWorkspaceService;
@@ -115,7 +114,7 @@ suite('Unit Tests - Track Enablement', () => {
         const getConfigSettings = sinon.stub<[string], boolean>().returns(false);
 
         when(workspaceService.workspaceFolders).thenReturn([]);
-        // tslint:disable-next-line: no-any
+
         when(workspaceService.getConfiguration('python', anything())).thenReturn({ get: getConfigSettings } as any);
         when(configService.getTestEnablingSetting(Product.unittest)).thenReturn('testing.unittestEnabled');
         when(configService.getTestEnablingSetting(Product.pytest)).thenReturn('testing.pytestEnabled');
@@ -161,7 +160,7 @@ suite('Unit Tests - Track Enablement', () => {
             .callsFake((setting) => setting.includes(sendForProvider));
 
         when(workspaceService.workspaceFolders).thenReturn([]);
-        // tslint:disable-next-line: no-any
+
         when(workspaceService.getConfiguration('python', anything())).thenReturn({ get: getConfigSettings } as any);
         when(configService.getTestEnablingSetting(Product.unittest)).thenReturn('testing.unittestEnabled');
         when(configService.getTestEnablingSetting(Product.pytest)).thenReturn('testing.pytestEnabled');

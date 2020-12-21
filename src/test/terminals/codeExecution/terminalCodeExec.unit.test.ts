@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-multiline-string no-trailing-whitespace max-func-body-length
-
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
@@ -150,7 +148,6 @@ suite('Terminal - Code Execution', () => {
         });
 
         suite(testSuiteName, async function () {
-            // tslint:disable-next-line:no-invalid-this
             this.timeout(5000); // Activation of terminals take some time (there's a delay in the code to account for VSC Terminal issues).
             setup(() => {
                 terminalFactory
@@ -465,7 +462,7 @@ suite('Terminal - Code Execution', () => {
             test('Ensure nothing happens when blank text is sent to the terminal', async () => {
                 await executor.execute('');
                 await executor.execute('   ');
-                // tslint:disable-next-line:no-any
+
                 await executor.execute((undefined as any) as string);
 
                 terminalService.verify(

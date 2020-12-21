@@ -9,7 +9,6 @@ export function createTemporaryFile(
     extension: string,
     temporaryDirectory?: string,
 ): Promise<{ filePath: string; cleanupCallback: Function }> {
-    // tslint:disable-next-line:no-any
     const options: any = { postfix: extension };
     if (temporaryDirectory) {
         options.dir = temporaryDirectory;

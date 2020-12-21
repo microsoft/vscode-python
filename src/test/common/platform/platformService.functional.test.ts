@@ -12,7 +12,6 @@ import { OSType } from '../../../client/common/utils/platform';
 
 use(chaiAsPromised);
 
-// tslint:disable-next-line:max-func-body-length
 suite('PlatformService', () => {
     const osType = getOSType();
     test('pathVariableName', async () => {
@@ -79,7 +78,6 @@ suite('PlatformService', () => {
 
     test('getVersion on Mac/Windows', async function () {
         if (osType === OSType.Linux) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
         const expectedVersion = parse(os.release())!;
@@ -92,7 +90,6 @@ suite('PlatformService', () => {
     });
     test('getVersion on Linux shoud throw an exception', async function () {
         if (osType !== OSType.Linux) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
         const svc = new PlatformService();

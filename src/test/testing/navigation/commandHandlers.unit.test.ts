@@ -16,7 +16,6 @@ import { TestFunctionCodeNavigator } from '../../../client/testing/navigation/fu
 import { TestSuiteCodeNavigator } from '../../../client/testing/navigation/suiteNavigator';
 import { ITestCodeNavigator, ITestCodeNavigatorCommandHandler } from '../../../client/testing/navigation/types';
 
-// tslint:disable:max-func-body-length
 suite('Unit Tests - Navigation Command Handler', () => {
     let commandHandler: ITestCodeNavigatorCommandHandler;
     let cmdManager: ICommandManager;
@@ -29,7 +28,7 @@ suite('Unit Tests - Navigation Command Handler', () => {
         fileHandler = mock(TestFileCodeNavigator);
         functionHandler = mock(TestFunctionCodeNavigator);
         suiteHandler = mock(TestSuiteCodeNavigator);
-        // tslint:disable-next-line: no-any
+
         disposableRegistry = mock(AsyncDisposableRegistry) as any;
         commandHandler = new TestCodeNavigatorCommandHandler(
             instance(cmdManager),

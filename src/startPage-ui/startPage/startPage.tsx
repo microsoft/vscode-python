@@ -32,7 +32,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.RequestShowAgainSetting);
     }
 
-    // tslint:disable: no-any
     public componentWillMount() {
         // Add ourselves as a handler for the post office
         this.postOffice.addHandler(this);
@@ -52,7 +51,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     }
 
     public render() {
-        // tslint:disable: react-a11y-anchors
         return (
             <div className="main-page">
                 <div className="title-row">
@@ -147,7 +145,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         );
     }
 
-    // tslint:disable-next-line: no-any
     public handleMessage = (msg: string, payload?: any) => {
         if (msg === StartPageMessages.SendSetting) {
             this.releaseNotes.showAgainSetting = payload.showAgainSetting;
@@ -170,7 +167,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     }
 
     private renderNotebookDescription(): JSX.Element {
-        // tslint:disable: react-no-dangerous-html
         return (
             <div
                 className="paragraph list"
@@ -185,7 +181,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     }
 
     private renderPythonFileDescription(): JSX.Element {
-        // tslint:disable: react-no-dangerous-html
         return (
             <div
                 className="paragraph list"
@@ -200,7 +195,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     }
 
     private renderInteractiveWindowDescription(): JSX.Element {
-        // tslint:disable: react-no-dangerous-html
         return (
             <div
                 className="paragraph list"
@@ -215,7 +209,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     }
 
     private renderFolderDescription(): JSX.Element {
-        // tslint:disable: react-no-dangerous-html
         return (
             <div
                 className="paragraph list"
@@ -230,7 +223,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     }
 
     private renderReleaseNotesLink(): JSX.Element {
-        // tslint:disable: react-no-dangerous-html
         return (
             <div
                 className="paragraph"
@@ -245,7 +237,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     }
 
     private renderTutorialAndDoc(): JSX.Element {
-        // tslint:disable: react-no-dangerous-html
         return (
             <div
                 className="paragraph"

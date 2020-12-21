@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:max-func-body-length chai-vague-errors
-
 import { expect, use } from 'chai';
 import * as fs from 'fs-extra';
 import { convertStat, FileSystem, FileSystemUtils, RawFileSystem } from '../../../client/common/platform/fileSystem';
@@ -21,7 +19,6 @@ import {
     WINDOWS,
 } from './utils';
 
-// tslint:disable:no-require-imports no-var-requires
 const assertArrays = require('chai-arrays');
 use(require('chai-as-promised'));
 use(assertArrays);
@@ -43,7 +40,6 @@ suite('FileSystem - raw', () => {
     suite('lstat', () => {
         test('for symlinks, gives the link info', async function () {
             if (!SUPPORTS_SYMLINKS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const filename = await fix.createFile('x/y/z/spam.py', '...');
@@ -80,7 +76,6 @@ suite('FileSystem - raw', () => {
         suiteSetup(function () {
             // On Windows, chmod won't have any effect on the file itself.
             if (WINDOWS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
         });
@@ -191,7 +186,6 @@ suite('FileSystem - raw', () => {
 
         test('for symlinks, gives the linked info', async function () {
             if (!SUPPORTS_SYMLINKS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const filename = await fix.createFile('x/y/z/spam.py', '...');
@@ -239,12 +233,11 @@ suite('FileSystem - raw', () => {
 
     suite('createReadStream', () => {
         setup(function () {
-            // tslint:disable-next-line: no-suspicious-comment
             // TODO: This appears to be producing
             // false negative test results, so we're skipping
             // it for now.
             // See https://github.com/microsoft/vscode-python/issues/10031.
-            // tslint:disable-next-line:no-invalid-this
+
             this.skip();
         });
 
@@ -267,12 +260,11 @@ suite('FileSystem - raw', () => {
 
     suite('createWriteStream', () => {
         setup(function () {
-            // tslint:disable-next-line: no-suspicious-comment
             // TODO This appears to be producing
             // false negative test results, so we're skipping
             // it for now.
             // See https://github.com/microsoft/vscode-python/issues/10031.
-            // tslint:disable-next-line:no-invalid-this
+
             this.skip();
         });
 
@@ -459,7 +451,6 @@ suite('FileSystem - utils', () => {
 
         test('symlink', async function () {
             if (!SUPPORTS_SYMLINKS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const filename = await fix.createFile('x/y/z/spam.py', '...');
@@ -476,7 +467,6 @@ suite('FileSystem - utils', () => {
 
         test('unknown', async function () {
             if (!SUPPORTS_SOCKETS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const sockFile = await fix.createSocket('x/y/z/ipc.sock');
@@ -555,7 +545,6 @@ suite('FileSystem', () => {
             suiteSetup(function () {
                 // On Windows, chmod won't have any effect on the file itself.
                 if (WINDOWS) {
-                    // tslint:disable-next-line:no-invalid-this
                     this.skip();
                 }
             });
@@ -588,7 +577,7 @@ suite('FileSystem', () => {
         suite('createReadStream', () => {
             test('wraps the low-level impl', async function () {
                 // This test seems to randomly fail.
-                // tslint:disable-next-line: no-invalid-this
+
                 this.skip();
 
                 const filename = await fix.createFile('x/y/z/spam.py', '...');
@@ -605,7 +594,7 @@ suite('FileSystem', () => {
         suite('createWriteStream', () => {
             test('wraps the low-level impl', async function () {
                 // This test seems to randomly fail.
-                // tslint:disable-next-line: no-invalid-this
+
                 this.skip();
 
                 const filename = await fix.resolve('x/y/z/spam.py');
@@ -758,7 +747,6 @@ suite('FileSystem', () => {
 
             test('symlink', async function () {
                 if (!SUPPORTS_SYMLINKS) {
-                    // tslint:disable-next-line:no-invalid-this
                     this.skip();
                 }
                 const filename = await fix.createFile('x/y/z/spam.py', '...');
@@ -775,7 +763,6 @@ suite('FileSystem', () => {
 
             test('unknown', async function () {
                 if (!SUPPORTS_SOCKETS) {
-                    // tslint:disable-next-line:no-invalid-this
                     this.skip();
                 }
                 const sockFile = await fix.createSocket('x/y/z/ipc.sock');

@@ -17,7 +17,6 @@ import {
     parseCondaEnvFileContents,
 } from '../../../../client/pythonEnvironments/discovery/locators/services/condaHelper';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Interpreters display name from Conda Environments', () => {
     test('Must return default display name for invalid Conda Info', () => {
         assert.equal(getDisplayName(), AnacondaDisplayName, 'Incorrect display name');
@@ -56,7 +55,6 @@ suite('Interpreters display name from Conda Environments', () => {
         assert.equal(displayName, `4.4.0 (64-bit) : ${AnacondaDisplayName}`, 'Incorrect display name');
     });
     test('Parse conda environments', () => {
-        // tslint:disable-next-line:no-multiline-string
         const environments = `
 # conda environments:
 #
@@ -192,7 +190,6 @@ suite('Conda binary is located correctly', () => {
             return Object.keys(getFile(filePath));
         });
 
-        // tslint:disable-next-line: no-any
         sinon.stub(fsapi, 'readFile' as any).callsFake(async (filePath: string | Buffer | number, encoding: string) => {
             if (typeof filePath !== 'string') {
                 throw new Error(`expected filePath to be string, got ${typeof filePath}`);

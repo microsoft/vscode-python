@@ -34,7 +34,6 @@ const info: PythonEnvironment = {
     sysVersion: '',
 };
 
-// tslint:disable-next-line:max-func-body-length
 suite('Installation - channel messages', () => {
     let serviceContainer: IServiceContainer;
     let platform: TypeMoq.IMock<IPlatformService>;

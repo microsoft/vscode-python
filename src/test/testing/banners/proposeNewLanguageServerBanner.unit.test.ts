@@ -300,7 +300,7 @@ function preparePopup(
     });
 
     const extensions = typemoq.Mock.ofType<IExtensions>();
-    // tslint:disable-next-line: no-any
+
     const extension = typemoq.Mock.ofType<Extension<any>>();
     extensions
         .setup((x) => x.getExtension(PYLANCE_EXTENSION_ID))

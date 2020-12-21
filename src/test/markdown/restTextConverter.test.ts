@@ -17,7 +17,6 @@ async function testConversion(fileName: string): Promise<void> {
     compareFiles(expected, actual);
 }
 
-// tslint:disable-next-line:max-func-body-length
 suite('Hover - RestTextConverter', () => {
     test('scipy', async () => testConversion('scipy'));
     test('scipy.spatial', async () => testConversion('scipy.spatial'));

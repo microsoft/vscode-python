@@ -19,7 +19,7 @@ suite('InterpreterVersionService', () => {
     setup(() => {
         const processFactory = typeMoq.Mock.ofType<IProcessServiceFactory>();
         processService = typeMoq.Mock.ofType<IProcessService>();
-        // tslint:disable-next-line:no-any
+
         processService.setup((p: any) => p.then).returns(() => undefined);
 
         processFactory.setup((p) => p.create()).returns(() => Promise.resolve(processService.object));

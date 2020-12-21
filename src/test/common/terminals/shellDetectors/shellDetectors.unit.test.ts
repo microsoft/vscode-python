@@ -19,8 +19,6 @@ import { ShellIdentificationTelemetry, TerminalShellType } from '../../../../cli
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { OSType } from '../../../../client/common/utils/platform';
 
-// tslint:disable:max-func-body-length no-any
-
 suite('Shell Detectors', () => {
     let platformService: IPlatformService;
     let currentProcess: CurrentProcess;

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:insecure-random max-func-body-length no-any
-
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DiagnosticSeverity } from 'vscode';

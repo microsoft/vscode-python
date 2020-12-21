@@ -110,7 +110,6 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
         this.closedEvent.fire(this);
     }
 
-    // tslint:disable-next-line: no-any
     public async onMessage(message: string, payload: any) {
         switch (message) {
             case StartPageMessages.Started:

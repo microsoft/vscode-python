@@ -33,7 +33,7 @@ class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
     public label: string;
     public description!: string;
     public detail?: string;
-    // tslint:disable-next-line: no-any
+
     public interpreter = {} as any;
     constructor(l: string, p: string) {
         this.path = p;
@@ -41,7 +41,6 @@ class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
     }
 }
 
-// tslint:disable-next-line:max-func-body-length
 suite('Interpreters - selector', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
@@ -51,7 +50,6 @@ suite('Interpreters - selector', () => {
     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
 
     class TestInterpreterSelector extends InterpreterSelector {
-        // tslint:disable-next-line:no-unnecessary-override
         public async suggestionToQuickPickItem(
             suggestion: PythonEnvironment,
             workspaceUri?: Uri,
@@ -138,23 +136,22 @@ suite('Interpreters - selector', () => {
     });
 
     test('When in Deprecate PythonPath experiment, remove unsafe interpreters from the suggested interpreters list', async () => {
-        // tslint:disable-next-line: no-any
         const interpreterList = ['interpreter1', 'interpreter2', 'interpreter3'] as any;
         interpreterService
             .setup((i) => i.getInterpreters(folder1.uri, { onSuggestion: true }))
             .returns(() => interpreterList);
-        // tslint:disable-next-line: no-any
+
         interpreterSecurityService.setup((i) => i.isSafe('interpreter1' as any)).returns(() => true);
-        // tslint:disable-next-line: no-any
+
         interpreterSecurityService.setup((i) => i.isSafe('interpreter2' as any)).returns(() => false);
-        // tslint:disable-next-line: no-any
+
         interpreterSecurityService.setup((i) => i.isSafe('interpreter3' as any)).returns(() => undefined);
         experimentsManager.reset();
         experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
         experimentsManager
             .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
             .returns(() => undefined);
-        // tslint:disable-next-line: no-any
+
         selector.suggestionToQuickPickItem = (item, _) => Promise.resolve(item as any);
         const suggestion = await selector.getSuggestions(folder1.uri);
         assert.deepEqual(suggestion, ['interpreter1', 'interpreter3']);

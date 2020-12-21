@@ -5,7 +5,6 @@
 import * as assert from 'assert';
 import { TextIterator } from '../../client/language/textIterator';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Language.TextIterator', () => {
     test('Construction', async () => {
         const content = 'some text';

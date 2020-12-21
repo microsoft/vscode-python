@@ -10,7 +10,6 @@ import { WebBrowserPanel } from './webBrowserPanel';
 export class WebBrowserPanelProvider implements IWebviewPanelProvider {
     constructor(@inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry) {}
 
-    // tslint:disable-next-line:no-any
     public async create(options: IWebviewPanelOptions): Promise<IWebviewPanel> {
         return new WebBrowserPanel(this.disposableRegistry, options);
     }

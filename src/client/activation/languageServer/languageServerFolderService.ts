@@ -25,7 +25,6 @@ export class DotNetLanguageServerFolderService extends LanguageServerFolderServi
             if (appEnv) {
                 minVersion = appEnv.packageJson[DotNetLanguageServerMinVersionKey] as string;
             }
-            // tslint:disable-next-line: no-empty
         } catch {}
         return minVersion;
     }

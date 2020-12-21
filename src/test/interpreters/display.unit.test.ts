@@ -38,8 +38,6 @@ import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs
 import { IServiceContainer } from '../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 
-// tslint:disable:no-any max-func-body-length
-
 const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
     companyDisplayName: '',
@@ -215,7 +213,7 @@ suite('Interpreters Display', () => {
         const pythonPath = path.join('user', 'development', 'env', 'bin', 'python');
         const workspaceFolder = Uri.file('workspace');
         setupWorkspaceFolder(resource, workspaceFolder);
-        // tslint:disable-next-line:no-any
+
         interpreterService
             .setup((i) => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder)))
             .returns(() => Promise.resolve([{} as any]));

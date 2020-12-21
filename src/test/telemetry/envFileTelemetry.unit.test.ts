@@ -38,7 +38,6 @@ suite('Env file telemetry', () => {
             }),
         };
 
-        // tslint:disable-next-line: no-any
         when(workspaceService.getConfiguration('python')).thenReturn(mockWorkspaceConfig as any);
 
         const mockSendTelemetryEvent = (

@@ -50,7 +50,7 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
                 throw new Error('Invalid Test Product');
         }
     }
-    // tslint:disable-next-line:no-any
+
     private async updateSetting(testDirectory: string | Uri, setting: string, value: any) {
         let pythonConfig: WorkspaceConfiguration;
         const resource = typeof testDirectory === 'string' ? Uri.file(testDirectory) : testDirectory;
@@ -66,7 +66,7 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
             if (!workspaceFolder) {
                 throw new Error(`Test directory does not belong to any workspace (${testDirectory})`);
             }
-            // tslint:disable-next-line:no-non-null-assertion
+
             pythonConfig = this.workspaceService.getConfiguration('python', workspaceFolder.uri);
         }
 

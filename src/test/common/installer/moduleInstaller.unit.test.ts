@@ -3,11 +3,9 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length no-invalid-this
-
 import { assert } from 'chai';
 import * as path from 'path';
-// tslint:disable-next-line: match-default-export-name
+
 import rewiremock from 'rewiremock';
 import { SemVer } from 'semver';
 import * as sinon from 'sinon';
@@ -79,7 +77,7 @@ suite('Module Installer', () => {
         public getExecutionInfo(_moduleName: string, _resource?: InterpreterUri): Promise<ExecutionInfo> {
             return Promise.resolve({ moduleName: 'executionInfo', args: [] });
         }
-        // tslint:disable-next-line: no-unnecessary-override
+
         public elevatedInstall(execPath: string, args: string[]) {
             return super.elevatedInstall(execPath, args);
         }
@@ -120,7 +118,7 @@ suite('Module Installer', () => {
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             outputChannel
-                // tslint:disable-next-line: messages-must-be-localized
+
                 .setup((o) => o.appendLine(`[Elevated] ${command}`))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
@@ -141,7 +139,7 @@ suite('Module Installer', () => {
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
             outputChannel
-                // tslint:disable-next-line: messages-must-be-localized
+
                 .setup((o) => o.appendLine(`[Elevated] ${command}`))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
@@ -161,7 +159,7 @@ suite('Module Installer', () => {
             rewiremock.enable();
             rewiremock('sudo-prompt').with(sudoPromptMock);
             outputChannel
-                // tslint:disable-next-line: messages-must-be-localized
+
                 .setup((o) => o.appendLine(`[Elevated] ${command}`))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
@@ -170,7 +168,7 @@ suite('Module Installer', () => {
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
             outputChannel
-                // tslint:disable-next-line: messages-must-be-localized
+
                 .setup((o) => o.append(`Warning: ${stderr}`))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
@@ -317,7 +315,6 @@ suite('Module Installer', () => {
                             }
 
                             if (product.value === Product.pylint) {
-                                // tslint:disable-next-line:no-shadowed-variable
                                 generatePythonInterpreterVersions().forEach((interpreterInfo) => {
                                     const majorVersion = interpreterInfo.version ? interpreterInfo.version.major : 0;
                                     if (majorVersion === 2) {

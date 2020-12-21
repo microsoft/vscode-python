@@ -70,7 +70,7 @@ suite('Language Server: Code, Hover Definition and Intellisense (Jedi)', () => {
             'End position is incorrect',
         );
         assert.equal(hoverDef![0].contents.length, 1, 'Invalid content items');
-        // tslint:disable-next-line:prefer-template
+
         const expectedContent = '```python' + EOL + 'def method1()' + EOL + '```' + EOL + 'This is method1';
         assert.equal(normalizeMarkedString(hoverDef![0].contents[0]), expectedContent, 'function signature incorrect');
     });

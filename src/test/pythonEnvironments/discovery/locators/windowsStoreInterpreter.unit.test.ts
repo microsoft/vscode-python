@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-classes-per-file max-func-body-length
-
 import { expect } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';

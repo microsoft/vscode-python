@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:insecure-random no-any
-
 import * as assert from 'assert';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
@@ -26,7 +24,6 @@ import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { sleep } from '../../common';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Application Diagnostics - ApplicationDiagnostics', () => {
     let serviceContainer: typemoq.IMock<IServiceContainer>;
     let envHealthCheck: typemoq.IMock<IDiagnosticsService>;

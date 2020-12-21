@@ -270,7 +270,7 @@ export class BaseTestFixture {
 
     public async getLinter(product: Product, enabled = true): Promise<ILinter> {
         const info = this.linterManager.getLinterInfo(product);
-        // tslint:disable-next-line:no-any
+
         (this.lintingSettings as any)[info.enabledSettingName] = enabled;
 
         await this.linterManager.setActiveLintersAsync([product]);
@@ -313,7 +313,6 @@ export class BaseTestFixture {
                 }
                 const prefix = 'linting.';
                 if (setting.startsWith(prefix)) {
-                    // tslint:disable-next-line:no-any
                     (this.lintingSettings as any)[setting.substring(prefix.length)] = value;
                 }
             })

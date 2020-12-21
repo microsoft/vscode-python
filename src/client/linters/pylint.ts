@@ -87,7 +87,6 @@ export class Pylint extends BaseLinter {
         return messages;
     }
 
-    // tslint:disable-next-line:member-ordering
     public static async hasConfigurationFile(
         fs: IFileSystem,
         folder: string,
@@ -149,7 +148,6 @@ export class Pylint extends BaseLinter {
         return false;
     }
 
-    // tslint:disable-next-line:member-ordering
     public static async hasConfigurationFileInWorkspace(
         fs: IFileSystem,
         folder: string,

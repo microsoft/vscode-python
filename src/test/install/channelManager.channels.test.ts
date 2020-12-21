@@ -34,7 +34,6 @@ const info: PythonEnvironment = {
     sysVersion: '',
 };
 
-// tslint:disable-next-line:max-func-body-length
 suite('Installation - installation channels', () => {
     let serviceManager: ServiceManager;
     let serviceContainer: IServiceContainer;
@@ -106,7 +105,6 @@ suite('Installation - installation channels', () => {
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
-        // tslint:disable-next-line:no-any
         let items: any[] | undefined;
         appShell
             .setup((x) => x.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))

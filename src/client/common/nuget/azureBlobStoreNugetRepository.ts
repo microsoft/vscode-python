@@ -64,7 +64,7 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
         const blobStore = await this.getBlobStore(azureBlobStorageAccount);
         return new Promise<IBlobResult[]>((resolve, reject) => {
             // We must pass undefined according to docs, but type definition doesn't all it to be undefined or null!!!
-            // tslint:disable-next-line:no-any
+
             const token = undefined as any;
             blobStore.listBlobsSegmentedWithPrefix(azureBlobStorageContainer, packageName, token, (error, result) => {
                 if (error) {
@@ -85,7 +85,6 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
             return uri;
         }
 
-        // tslint:disable-next-line:no-http-string
         return uri.replace(/^https:/, 'http:');
     }
 }
@@ -108,14 +107,13 @@ interface IAZBlobStore {
     listBlobsSegmentedWithPrefix(
         container: string,
         prefix: string,
-        // tslint:disable-next-line:no-any
+
         currentToken: any,
         callback: ErrorOrResult<IBlobResults>,
     ): void;
 }
 
 async function _getAZBlobStore(uri: string): Promise<IAZBlobStore> {
-    // tslint:disable-next-line:no-require-imports
     const az = (await import('azure-storage')) as typeof import('azure-storage');
     return az.createBlobServiceAnonymous(uri);
 }

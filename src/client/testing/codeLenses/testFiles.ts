@@ -1,7 +1,5 @@
 'use strict';
 
-// tslint:disable:no-object-literal-type-assertion
-
 import {
     CancellationToken,
     CancellationTokenSource,
@@ -39,7 +37,7 @@ type FunctionsAndSuites = {
 export class TestFileCodeLensProvider implements CodeLensProvider {
     private workspaceService: IWorkspaceService;
     private fileSystem: IFileSystem;
-    // tslint:disable-next-line:variable-name
+
     constructor(
         private _onDidChange: EventEmitter<void>,
         private symbolProvider: DocumentSymbolProvider,
@@ -288,7 +286,6 @@ function getFunctionCodeLens(
 }
 
 function getAllTestSuitesAndFunctionsPerFile(testFile: TestFile): FunctionsAndSuites {
-    // tslint:disable-next-line:prefer-type-cast
     const all = { functions: [...testFile.functions], suites: [] as TestSuite[] };
     testFile.suites.forEach((suite) => {
         all.suites.push(suite);

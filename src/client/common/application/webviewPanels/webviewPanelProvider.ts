@@ -19,7 +19,6 @@ export class WebviewPanelProvider implements IWebviewPanelProvider {
         @inject(IExtensionContext) private readonly context: IExtensionContext,
     ) {}
 
-    // tslint:disable-next-line:no-any
     public async create(options: IWebviewPanelOptions): Promise<IWebviewPanel> {
         // Allow loading resources from the `<extension folder>/tmp` folder when in webiviews.
         // Used by widgets to place files that are not otherwise accessible.

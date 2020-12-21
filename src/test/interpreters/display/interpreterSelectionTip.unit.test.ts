@@ -75,7 +75,6 @@ suite('Interpreters - Interpreter Selection Tip', () => {
         when(experimentService.inExperiment(SurveyAndInterpreterTipNotification.tipExperiment)).thenResolve(false);
         when(experimentService.inExperiment(SurveyAndInterpreterTipNotification.surveyExperiment)).thenResolve(true);
         when(appShell.showInformationMessage(anything(), Common.bannerLabelYes(), Common.bannerLabelNo())).thenResolve(
-            // tslint:disable-next-line: no-any
             Common.bannerLabelYes() as any,
         );
 

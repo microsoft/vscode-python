@@ -1,4 +1,3 @@
-// tslint:disable:no-require-imports no-var-requires no-any max-func-body-length
 import * as assert from 'assert';
 import { expect } from 'chai';
 import { EOL } from 'os';

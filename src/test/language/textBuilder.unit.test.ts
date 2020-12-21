@@ -5,7 +5,6 @@
 import * as assert from 'assert';
 import { TextBuilder } from '../../client/language/textBuilder';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Language.TextBuilder', () => {
     test('Test get text.', () => {
         const builder = new TextBuilder();

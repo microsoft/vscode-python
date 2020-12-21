@@ -36,8 +36,6 @@ import {
     getMockTestSuite,
 } from './explorerTestData';
 
-// tslint:disable:no-any
-
 /**
  * Class that is useful to track any Tree View update requests made by the view provider.
  */
@@ -60,7 +58,6 @@ class TestExplorerCaptureRefresh implements IDisposable {
     }
 }
 
-// tslint:disable:max-func-body-length
 suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
     suite('Misc', () => {
         const testResource: Uri = Uri.parse('anything');

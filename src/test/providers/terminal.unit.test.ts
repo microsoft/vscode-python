@@ -13,7 +13,6 @@ import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../..
 import { IServiceContainer } from '../../client/ioc/types';
 import { TerminalProvider } from '../../client/providers/terminalProvider';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Terminal Provider', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let commandManager: TypeMoq.IMock<ICommandManager>;
@@ -33,7 +32,6 @@ suite('Terminal Provider', () => {
     teardown(() => {
         try {
             terminalProvider.dispose();
-            // tslint:disable-next-line:no-empty
         } catch {}
     });
 
@@ -94,7 +92,6 @@ suite('Terminal Provider', () => {
         terminalService.verify((t) => t.show(false), TypeMoq.Times.once());
     });
 
-    // tslint:disable-next-line: max-func-body-length
     suite('terminal.activateCurrentTerminal setting', () => {
         let pythonSettings: TypeMoq.IMock<IPythonSettings>;
         let terminalSettings: TypeMoq.IMock<ITerminalSettings>;

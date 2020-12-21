@@ -8,8 +8,6 @@ import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/config
 import { IPythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
-// tslint:disable:no-invalid-template-strings max-func-body-length
-
 suite('Python Path Settings Updater', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
@@ -54,7 +52,6 @@ suite('Python Path Settings Updater', () => {
                 workspaceConfig
                     .setup((w) => w.inspect(TypeMoq.It.isValue('pythonPath')))
                     .returns(() => {
-                        // tslint:disable-next-line:no-any
                         return { globalValue: pythonPath } as any;
                     });
 
@@ -94,7 +91,6 @@ suite('Python Path Settings Updater', () => {
                 workspaceConfig
                     .setup((w) => w.inspect(TypeMoq.It.isValue('pythonPath')))
                     .returns(() => {
-                        // tslint:disable-next-line:no-any
                         return { workspaceFolderValue: pythonPath } as any;
                     });
 
@@ -155,7 +151,6 @@ suite('Python Path Settings Updater', () => {
                 workspaceConfig
                     .setup((w) => w.inspect(TypeMoq.It.isValue('pythonPath')))
                     .returns(() => {
-                        // tslint:disable-next-line:no-any
                         return { workspaceValue: pythonPath } as any;
                     });
 

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-unnecessary-override no-any max-func-body-length no-invalid-this
-
 import * as assert from 'assert';
 import { expect } from 'chai';
 import { SemVer } from 'semver';

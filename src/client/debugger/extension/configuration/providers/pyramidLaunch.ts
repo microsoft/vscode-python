@@ -18,7 +18,6 @@ import { DebuggerTypeName } from '../../../constants';
 import { LaunchRequestArguments } from '../../../types';
 import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationProvider } from '../../types';
 
-// tslint:disable-next-line:no-invalid-template-strings
 const workspaceFolderToken = '${workspaceFolder}';
 
 @injectable()

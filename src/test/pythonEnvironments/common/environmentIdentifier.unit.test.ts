@@ -172,7 +172,6 @@ suite('Environment Identifier', () => {
 
         test('PYENV_ROOT is not set on non-Windows, fallback to the default value ~/.pyenv', async function () {
             if (getOSTypeForTest() === OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
 
@@ -197,7 +196,6 @@ suite('Environment Identifier', () => {
 
         test('PYENV is not set on Windows, fallback to the default value %USERPROFILE%\\.pyenv\\pyenv-win', async function () {
             if (getOSTypeForTest() !== OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
 
@@ -224,7 +222,6 @@ suite('Environment Identifier', () => {
 
         test('PYENV_ROOT is set to a custom value on non-Windows', async function () {
             if (getOSTypeForTest() === OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
 
@@ -240,7 +237,6 @@ suite('Environment Identifier', () => {
 
         test('PYENV is set to a custom value on Windows', async function () {
             if (getOSTypeForTest() !== OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
 
@@ -290,7 +286,6 @@ suite('Environment Identifier', () => {
 
         test('WORKON_HOME is set to its default value ~/.virtualenvs on non-Windows', async function () {
             if (getOSTypeForTest() === OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
 
@@ -313,7 +308,6 @@ suite('Environment Identifier', () => {
 
         test('WORKON_HOME is set to its default value %USERPROFILE%\\Envs on Windows', async function () {
             if (getOSTypeForTest() !== OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
 

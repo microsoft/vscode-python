@@ -23,7 +23,6 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Interpreters Activation - Python Environment Variables (wrap terminal and proc approach)', () => {
     let envActivationService: IEnvironmentActivationService;
     let procActivation: IEnvironmentActivationService;
@@ -43,12 +42,9 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
         envType: EnvironmentType.Conda,
     };
 
-    // tslint:disable-next-line: max-func-body-length
     [undefined, Uri.file('some Resource')].forEach((resource) => {
-        // tslint:disable-next-line: max-func-body-length
         [undefined, mockInterpreter].forEach((interpreter) => {
             [undefined, path.join('a')].forEach((storagePath) => {
-                // tslint:disable-next-line: max-func-body-length
                 suite(resource ? 'With an extension storagepath' : 'Without an extension storagepath', () => {
                     suite(resource ? 'With a resource' : 'Without a resource', () => {
                         setup(() => {
@@ -65,7 +61,6 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                 get storagePath() {
                                     return storagePath;
                                 },
-                                // tslint:disable-next-line: no-any
                             } as any;
                             when(crypto.createHash(anything(), anything(), anything())).thenCall((value) => value);
                             when(experiment.inExperiment(anything())).thenReturn(true);
@@ -93,7 +88,6 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                             );
                         });
 
-                        // tslint:disable-next-line: max-func-body-length
                         suite(interpreter ? 'With an interpreter' : 'Without an interpreter', () => {
                             test('Environment variables returned by process provider should be used if terminal provider crashes', async () => {
                                 const expectedVars = { WOW: '1' };
@@ -308,7 +302,6 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                             });
                             test('Use variables from file cache', async function () {
                                 if (!storagePath) {
-                                    // tslint:disable-next-line: no-invalid-this
                                     return this.skip();
                                 }
                                 const expectedVars = { WOW: '1' };

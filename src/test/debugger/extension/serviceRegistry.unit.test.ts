@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-unnecessary-override no-invalid-template-strings max-func-body-length no-any
-
 import { instance, mock, verify } from 'ts-mockito';
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { DebugAdapterActivator } from '../../../client/debugger/extension/adapter/activator';

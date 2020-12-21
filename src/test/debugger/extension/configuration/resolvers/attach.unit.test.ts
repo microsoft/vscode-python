@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-invalid-template-strings no-any no-object-literal-type-assertion no-invalid-this
-
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';

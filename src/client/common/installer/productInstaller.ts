@@ -1,5 +1,3 @@
-// tslint:disable:max-classes-per-file max-classes-per-file
-
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
@@ -597,7 +595,6 @@ export class ProductInstaller implements IInstaller {
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
     }
 
-    // tslint:disable-next-line:no-empty
     public dispose() {}
     public async promptToInstall(
         product: Product,
@@ -649,7 +646,6 @@ export class ProductInstaller implements IInstaller {
     }
 }
 
-// tslint:disable-next-line: cyclomatic-complexity
 function translateProductToModule(product: Product, purpose: ModuleNamePurpose): string {
     switch (product) {
         case Product.mypy:

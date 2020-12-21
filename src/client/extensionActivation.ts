@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-
 import { CodeActionKind, debug, DebugConfigurationProvider, languages, OutputChannel, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
@@ -89,7 +87,6 @@ export async function activateComponents(
     // activation resolves `ActivationResult`, which can safely wrap
     // the "inner" promise.
     const promises: Promise<ActivationResult>[] = [
-        // tslint:disable-next-line:no-suspicious-comment
         // TODO: For now the extension should only interact with the component via the component adapter,
         // which takes care of putting the component behind the experiment flag. It already activates the
         // component among other things, hence the following is not needed.
@@ -105,7 +102,6 @@ export async function activateComponents(
 /////////////////////////////
 // old activation code
 
-// tslint:disable-next-line:no-suspicious-comment
 // TODO: Gradually move simple initialization
 // and DI registration currently in this function over
 // to initializeComponents().  Likewise with complex

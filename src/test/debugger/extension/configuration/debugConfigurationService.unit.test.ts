@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { expect } from 'chai';
 import { instance, mock } from 'ts-mockito';
 import * as typemoq from 'typemoq';
@@ -16,7 +14,6 @@ import { IDebugConfigurationResolver } from '../../../../client/debugger/extensi
 import { DebugConfigurationState } from '../../../../client/debugger/extension/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../../../client/debugger/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Debugging - Configuration Service', () => {
     let attachResolver: typemoq.IMock<IDebugConfigurationResolver<AttachRequestArguments>>;
     let launchResolver: typemoq.IMock<IDebugConfigurationResolver<LaunchRequestArguments>>;
@@ -25,7 +22,6 @@ suite('Debugging - Configuration Service', () => {
     let providerFactory: DebugConfigurationProviderFactory;
 
     class TestPythonDebugConfigurationService extends PythonDebugConfigurationService {
-        // tslint:disable-next-line:no-unnecessary-override
         public async pickDebugConfiguration(
             input: IMultiStepInput<DebugConfigurationState>,
             state: DebugConfigurationState,
@@ -95,7 +91,6 @@ suite('Debugging - Configuration Service', () => {
         });
     });
     test('Picker should be displayed', async () => {
-        // tslint:disable-next-line:no-object-literal-type-assertion
         const state = ({ configs: [], folder: {}, token: undefined } as any) as DebugConfigurationState;
         const multiStepInput = typemoq.Mock.ofType<IMultiStepInput<DebugConfigurationState>>();
         multiStepInput
@@ -108,7 +103,6 @@ suite('Debugging - Configuration Service', () => {
         multiStepInput.verifyAll();
     });
     test('Existing Configuration items must be removed before displaying picker', async () => {
-        // tslint:disable-next-line:no-object-literal-type-assertion
         const state = ({ configs: [1, 2, 3], folder: {}, token: undefined } as any) as DebugConfigurationState;
         const multiStepInput = typemoq.Mock.ofType<IMultiStepInput<DebugConfigurationState>>();
         multiStepInput

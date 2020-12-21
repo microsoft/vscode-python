@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-// tslint:disable-next-line:no-require-imports
+
 import untildify = require('untildify');
 
 import { PathUtils } from '../../../client/common/platform/pathUtils';
@@ -15,7 +15,6 @@ import { IOutputChannel } from '../../../client/common/types';
 import { Logging } from '../../../client/common/utils/localize';
 import { getOSType, OSType } from '../../common';
 
-// tslint:disable: max-func-body-length
 suite('ProcessLogger suite', () => {
     let outputChannel: TypeMoq.IMock<IOutputChannel>;
     let pathUtils: PathUtils;

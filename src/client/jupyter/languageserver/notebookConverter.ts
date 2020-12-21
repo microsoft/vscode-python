@@ -259,7 +259,7 @@ export class NotebookConverter implements Disposable {
         location: Location | Location[] | LocationLink[] | null | undefined,
     ) {
         if (Array.isArray(location)) {
-            // tslint:disable-next-line: no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (<any>location).map(this.toIncomingLocationFromLink.bind(this, cell));
         }
         if (location?.range) {
@@ -424,7 +424,7 @@ export class NotebookConverter implements Disposable {
         };
     }
 
-    // tslint:disable-next-line: no-any
+
     private toIncomingArgument(cell: TextDocument, argument: any): any {
         // URIs in a command should be remapped to the cell document if part
         // of one of our open notebooks

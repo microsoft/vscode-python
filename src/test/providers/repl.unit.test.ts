@@ -15,7 +15,6 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { ReplProvider } from '../../client/providers/replProvider';
 import { ICodeExecutionService } from '../../client/terminals/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('REPL Provider', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let commandManager: TypeMoq.IMock<ICommandManager>;
@@ -42,7 +41,6 @@ suite('REPL Provider', () => {
     teardown(() => {
         try {
             replProvider.dispose();
-            // tslint:disable-next-line:no-empty
         } catch {}
     });
 

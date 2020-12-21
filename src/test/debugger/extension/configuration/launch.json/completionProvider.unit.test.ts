@@ -20,7 +20,6 @@ import { ILanguageService } from '../../../../../client/common/application/types
 import { DebugConfigStrings } from '../../../../../client/common/utils/localize';
 import { LaunchJsonCompletionProvider } from '../../../../../client/debugger/extension/configuration/launch.json/completionProvider';
 
-// tslint:disable:no-any no-multiline-string max-func-body-length
 suite('Debugging - launch.json Completion Provider', () => {
     let completionProvider: LaunchJsonCompletionProvider;
     let languageService: ILanguageService;

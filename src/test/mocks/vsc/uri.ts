@@ -78,7 +78,6 @@ export namespace vscUri {
             return scheme || _empty;
         }
         if (!scheme) {
-            // tslint:disable-next-line: no-console
             console.trace('BAD uri lacks scheme, falling back to file-scheme.');
             scheme = 'file';
         }
@@ -123,7 +122,7 @@ export namespace vscUri {
      *       / \ /                        \
      *       urn:example:animal:ferret:nose
      */
-    // tslint:disable-next-line: no-use-before-declare
+
     export class URI implements UriComponents {
         static isUri(thing: any): thing is URI {
             if (thing instanceof URI) {
@@ -461,7 +460,6 @@ export namespace vscUri {
 
     const _pathSepMarker = isWindows ? 1 : undefined;
 
-    // tslint:disable-next-line:class-name
     class _URI extends URI {
         _formatted: string | null = null;
         _fsPath: string | null = null;

@@ -49,7 +49,6 @@ import { ArgumentsService } from '../../../client/testing/unittest/services/args
 import { MockOutputChannel } from '../../mockClasses';
 import { createMockTestDataItem } from '../common/testUtils.unit.test';
 
-// tslint:disable:max-func-body-length no-any
 suite('Unit Tests - unittest - run failed tests', () => {
     let testManager: TestManager;
     const workspaceFolder = Uri.file(__dirname);

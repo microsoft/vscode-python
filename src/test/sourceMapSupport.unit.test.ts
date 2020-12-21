@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-unused-expression chai-vague-errors no-unnecessary-override max-func-body-length max-classes-per-file match-default-export-name
-
 import { expect } from 'chai';
 import * as path from 'path';
 import rewiremock from 'rewiremock';
@@ -24,7 +22,6 @@ suite('Source Map Support', () => {
         };
         const vscode = {
             workspace: {
-                // tslint:disable-next-line: no-any
                 getConfiguration: (setting: string, _defaultValue: any) => {
                     if (setting !== 'python.diagnostics') {
                         return;
@@ -70,7 +67,7 @@ suite('Source Map Support', () => {
     });
     test('Test message is not displayed when source maps are not enabled', async () => {
         const stub = createVSCStub(false);
-        // tslint:disable-next-line: no-any
+
         initialize(stub.vscode as any);
         await sleep(100);
         expect(stub.stubInfo.configValueRetrieved).to.be.equal(true, 'Config Value not retrieved');
@@ -82,7 +79,6 @@ suite('Source Map Support', () => {
             protected async enableSourceMaps(_enable: boolean) {
                 noop();
             }
-            // tslint:disable-next-line: no-any
         })(stub.vscode as any);
         rewiremock.enable();
         const installStub = sinon.stub();
@@ -100,7 +96,6 @@ suite('Source Map Support', () => {
             protected async enableSourceMaps(_enable: boolean) {
                 noop();
             }
-            // tslint:disable-next-line: no-any
         })(stub.vscode as any);
 
         await instance.initialize();
@@ -120,7 +115,6 @@ suite('Source Map Support', () => {
                 sourceFilesPassed.push(sourceFile);
                 return Promise.resolve();
             }
-            // tslint:disable-next-line: no-any
         })(stub.vscode as any);
 
         await instance.enableSourceMaps(enableSourceMaps);

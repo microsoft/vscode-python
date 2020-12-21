@@ -28,7 +28,6 @@ suite('Debugger Integration', () => {
     let fix: DebuggerFixture;
     suiteSetup(async function () {
         if (IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
-            // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
         await initialize();

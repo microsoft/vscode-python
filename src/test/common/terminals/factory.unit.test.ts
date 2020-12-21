@@ -14,7 +14,6 @@ import { IDisposableRegistry } from '../../../client/common/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Terminal Service Factory', () => {
     let factory: ITerminalServiceFactory;
     let disposables: Disposable[] = [];

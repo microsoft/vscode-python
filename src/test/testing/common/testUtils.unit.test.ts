@@ -30,8 +30,6 @@ import {
 } from '../../../client/testing/common/types';
 import { TestDataItem, TestDataItemType, TestWorkspaceFolder } from '../../../client/testing/types';
 
-// tslint:disable:prefer-template
-
 function longestCommonSubstring(strings: string[]): string {
     strings = strings.concat().sort();
     let substr = strings.shift() || '';
@@ -135,7 +133,6 @@ export function createTests(
     suites: TestSuite[],
     funcs: TestFunction[],
 ): Tests {
-    // tslint:disable:no-any
     return {
         summary: { errors: 0, skipped: 0, passed: 0, failures: 0 },
         rootTestFolders: folders.length > 0 ? [folders[0]] : [],
@@ -156,7 +153,6 @@ export function createTests(
     };
 }
 
-// tslint:disable:max-func-body-length no-any
 suite('Unit Tests - TestUtils', () => {
     test('Get TestDataItemType for Folders', () => {
         const item = createMockTestDataItem(TestDataItemType.folder);

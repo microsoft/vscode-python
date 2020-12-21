@@ -20,7 +20,6 @@ suite('Decoder', () => {
 
     test('Test decoding cp932 strings', function () {
         if (!encodingExists('cp866')) {
-            // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
         const value = 'Sample input string Сделать это';

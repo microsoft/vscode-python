@@ -27,7 +27,6 @@ import { UnitTestIocContainer } from '../testing/serviceRegistry';
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const workspaceUri = Uri.file(workspaceDir);
 
-// tslint:disable-next-line:max-func-body-length
 suite('Linting Settings', () => {
     let ioc: UnitTestIocContainer;
     let linterManager: ILinterManager;
@@ -36,7 +35,7 @@ suite('Linting Settings', () => {
     suiteSetup(async function () {
         // These tests are still consistently failing during teardown.
         // See https://github.com/Microsoft/vscode-python/issues/4326.
-        // tslint:disable-next-line:no-invalid-this
+
         this.skip();
 
         await initialize();
@@ -119,16 +118,13 @@ suite('Linting Settings', () => {
             const settings = configService.getSettings();
             await resetSettings();
 
-            // tslint:disable-next-line:no-any
             assert.equal((settings.linting as any)[`${Product[product]}Enabled`], false, 'mismatch');
 
             await linterManager.setActiveLintersAsync([product]);
 
-            // tslint:disable-next-line:no-any
             assert.equal((settings.linting as any)[`${Product[product]}Enabled`], true, 'mismatch');
             linterManager.getAllLinterInfos().forEach(async (x) => {
                 if (x.product !== product) {
-                    // tslint:disable-next-line:no-any
                     assert.equal((settings.linting as any)[x.enabledSettingName], false, 'mismatch');
                 }
             });

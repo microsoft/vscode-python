@@ -1,5 +1,3 @@
-// tslint:disable:interface-name no-any max-func-body-length estrict-plus-operands no-empty
-
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -137,10 +135,8 @@ suite('Variable Extraction', () => {
         }
     }
 
-    // tslint:disable-next-line:no-function-expression
     test('Extract Variable', async function () {
         if (isPythonVersion('3.7')) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         } else {
             const startPos = new Position(234, 29);
@@ -191,7 +187,6 @@ suite('Variable Extraction', () => {
     // This test fails on linux (text document not getting updated in time)
     test('Extract Variable (end to end)', async function () {
         if (!IS_CI_SERVER) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
         const startPos = new Position(234, 29);

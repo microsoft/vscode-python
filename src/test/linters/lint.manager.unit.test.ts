@@ -32,19 +32,17 @@ function getServiceContainerMockForLinterManagerTests(): TypeMoq.IMock<IServiceC
     serviceContainerMock.setup((c) => c.get(IConfigurationService)).returns(() => configMock.object);
 
     const pythonConfig = {
-        // tslint:disable-next-line:no-empty
         inspect: () => {},
     };
     workspaceService
         .setup((x) => x.getConfiguration('python', TypeMoq.It.isAny()))
-        // tslint:disable-next-line:no-any
+
         .returns(() => pythonConfig as any);
     serviceContainerMock.setup((c) => c.get(IWorkspaceService)).returns(() => workspaceService.object);
 
     return serviceContainerMock;
 }
 
-// tslint:disable-next-line:max-func-body-length
 suite('Lint Manager Unit Tests', () => {
     test('Linter manager isLintingEnabled checks availability when silent = false.', async () => {
         // set expectations

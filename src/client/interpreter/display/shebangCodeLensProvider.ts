@@ -16,7 +16,6 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
     ) {
-        // tslint:disable-next-line:no-any
         this.onDidChangeCodeLenses = (workspaceService.onDidChangeConfiguration as any) as Event<void>;
     }
     public async detectShebang(

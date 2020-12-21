@@ -24,7 +24,6 @@ import {
 import { clearTelemetryReporter } from '../../../../client/telemetry';
 import { noop } from '../../../core';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Debugging - Adapter Factory and logger Registration', () => {
     let activator: IExtensionSingleActivationService;
     let debugService: IDebugService;
@@ -39,7 +38,6 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
 
         when(configurationService.getSettings(undefined)).thenReturn(({
             experiments: { enabled: true },
-            // tslint:disable-next-line: no-any
         } as any) as IPythonSettings);
         attachFactory = mock(AttachProcessProviderFactory);
 

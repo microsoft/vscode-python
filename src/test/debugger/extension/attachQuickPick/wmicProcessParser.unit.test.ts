@@ -7,7 +7,6 @@ import * as assert from 'assert';
 import { IAttachItem } from '../../../../client/debugger/extension/attachQuickPick/types';
 import { WmicProcessParser } from '../../../../client/debugger/extension/attachQuickPick/wmicProcessParser';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Attach to process - wmic process parser (Windows)', () => {
     test('Processes should be parsed correctly if it is valid input', () => {
         const input = `

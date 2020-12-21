@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-// tslint:disable:trailing-comma no-any
+
 import { Uri, WorkspaceFolder } from 'vscode';
 
 export class MockWorkspaceFolder implements WorkspaceFolder {

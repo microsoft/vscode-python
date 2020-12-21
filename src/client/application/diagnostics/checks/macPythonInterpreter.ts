@@ -70,7 +70,6 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
     }
     public dispose() {
         if (this.timeOut) {
-            // tslint:disable-next-line: no-any
             clearTimeout(this.timeOut as any);
             this.timeOut = undefined;
         }
@@ -177,7 +176,6 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         }
         // Lets wait, for more changes, dirty simple throttling.
         if (this.timeOut) {
-            // tslint:disable-next-line: no-any
             clearTimeout(this.timeOut as any);
             this.timeOut = undefined;
         }

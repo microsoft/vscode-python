@@ -27,7 +27,6 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 import { noop } from '../../core';
 
-// tslint:disable:no-any max-func-body-length
 suite('Multiroot Environment Variables Provider', () => {
     let provider: EnvironmentVariablesProvider;
     let envVarsService: IEnvironmentVariablesService;

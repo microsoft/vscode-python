@@ -22,7 +22,6 @@ import { ITestManagementService } from '../../../client/testing/types';
 
 suite('Language Server - LanguageServer', () => {
     class LanguageServerTest extends DotNetLanguageServerProxy {
-        // tslint:disable-next-line:no-unnecessary-override
         public async registerTestServices() {
             return super.registerTestServices();
         }

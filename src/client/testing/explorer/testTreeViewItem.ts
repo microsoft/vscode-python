@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-classes-per-file
-
 import { ThemeIcon, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 import { Commands } from '../../common/constants';
 import { getIcon } from '../../common/utils/icons';

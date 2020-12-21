@@ -4,8 +4,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-classes-per-file max-func-body-length no-invalid-this
-
 import { expect } from 'chai';
 import * as path from 'path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';

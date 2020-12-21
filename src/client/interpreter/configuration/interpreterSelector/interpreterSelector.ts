@@ -46,7 +46,6 @@ export class InterpreterSelector implements IInterpreterSelector {
         const detail = this.pathUtils.getDisplayName(suggestion.path, workspaceUri ? workspaceUri.fsPath : undefined);
         const cachedPrefix = suggestion.cachedEntry ? '(cached) ' : '';
         return {
-            // tslint:disable-next-line:no-non-null-assertion
             label: suggestion.displayName!,
             detail: `${cachedPrefix}${detail}`,
             path: suggestion.path,

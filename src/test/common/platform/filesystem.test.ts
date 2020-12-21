@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:max-func-body-length chai-vague-errors
-// tslint:disable:no-suspicious-comment
-
 import { expect } from 'chai';
 import * as fsextra from 'fs-extra';
 import * as path from 'path';
@@ -39,7 +36,7 @@ suite('FileSystem - raw', () => {
     suite('stat', () => {
         setup(function () {
             // https://github.com/microsoft/vscode-python/issues/10294
-            // tslint:disable-next-line: no-invalid-this
+
             this.skip();
         });
         test('gets the info for an existing file', async () => {
@@ -64,7 +61,6 @@ suite('FileSystem - raw', () => {
 
         test('for symlinks, gets the info for the linked file', async function () {
             if (!SUPPORTS_SYMLINKS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const filename = await fix.createFile('x/y/z/spam.py', '...');
@@ -79,7 +75,6 @@ suite('FileSystem - raw', () => {
 
         test('gets the info for a socket', async function () {
             if (!SUPPORTS_SOCKETS) {
-                // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }
             const sock = await fix.createSocket('x/spam.sock');
@@ -129,7 +124,6 @@ suite('FileSystem - raw', () => {
 
         test('rename symlink', async function () {
             if (!SUPPORTS_SYMLINKS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const filename = await fix.createFile('spam.py');
@@ -177,7 +171,6 @@ suite('FileSystem - raw', () => {
 
         test('move symlink', async function () {
             if (!SUPPORTS_SYMLINKS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const filename = await fix.createFile('spam.py');
@@ -476,7 +469,7 @@ suite('FileSystem - raw', () => {
     suite('listdir', () => {
         test('mixed', async function () {
             // https://github.com/microsoft/vscode-python/issues/10240
-            // tslint:disable-next-line: no-invalid-this
+
             return this.skip();
             // Create the target directory and its contents.
             const dirname = await fix.createDirectory('x/y/z');
@@ -682,7 +675,6 @@ suite('FileSystem - utils', () => {
 
         test('symlinks are followed', async function () {
             if (!SUPPORTS_SYMLINKS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const filename = await fix.createFile('x/y/z/spam.py', '...');
@@ -707,7 +699,6 @@ suite('FileSystem - utils', () => {
 
         test('matches (type: unknown)', async function () {
             if (!SUPPORTS_SOCKETS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const sockFile = await fix.createSocket('x/y/z/ipc.sock');
@@ -745,7 +736,6 @@ suite('FileSystem - utils', () => {
 
         test('symlink', async function () {
             if (!SUPPORTS_SYMLINKS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const filename = await fix.createFile('x/y/z/spam.py', '...');
@@ -759,7 +749,6 @@ suite('FileSystem - utils', () => {
 
         test('unknown', async function () {
             if (!SUPPORTS_SOCKETS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const sockFile = await fix.createSocket('x/y/z/ipc.sock');
@@ -771,7 +760,6 @@ suite('FileSystem - utils', () => {
 
         test('failure in stat()', async function () {
             if (WINDOWS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const dirname = await fix.createDirectory('x/y/z');
@@ -808,7 +796,6 @@ suite('FileSystem - utils', () => {
 
         test('symlink', async function () {
             if (!SUPPORTS_SYMLINKS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const dirname = await fix.createDirectory('x/y/z/spam');
@@ -822,7 +809,6 @@ suite('FileSystem - utils', () => {
 
         test('unknown', async function () {
             if (!SUPPORTS_SOCKETS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const sockFile = await fix.createSocket('x/y/z/ipc.sock');
@@ -834,7 +820,6 @@ suite('FileSystem - utils', () => {
 
         test('failure in stat()', async function () {
             if (WINDOWS) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
             const parentdir = await fix.createDirectory('x/y/z');
@@ -890,7 +875,6 @@ suite('FileSystem - utils', () => {
         suite('non-Windows', () => {
             suiteSetup(function () {
                 if (WINDOWS) {
-                    // tslint:disable-next-line:no-invalid-this
                     this.skip();
                 }
             });
@@ -939,7 +923,7 @@ suite('FileSystem', () => {
         suite('stat', () => {
             setup(function () {
                 // https://github.com/microsoft/vscode-python/issues/10294
-                // tslint:disable-next-line: no-invalid-this
+
                 this.skip();
             });
             test('gets the info for an existing file', async () => {
@@ -964,10 +948,9 @@ suite('FileSystem', () => {
 
             test('for symlinks, gets the info for the linked file', async function () {
                 // https://github.com/microsoft/vscode-python/issues/10294
-                // tslint:disable-next-line:no-invalid-this
+
                 this.skip();
                 if (!SUPPORTS_SYMLINKS) {
-                    // tslint:disable-next-line:no-invalid-this
                     this.skip();
                 }
                 const filename = await fix.createFile('x/y/z/spam.py', '...');
@@ -982,7 +965,6 @@ suite('FileSystem', () => {
 
             test('gets the info for a socket', async function () {
                 if (!SUPPORTS_SOCKETS) {
-                    // tslint:disable-next-line:no-invalid-this
                     return this.skip();
                 }
                 const sock = await fix.createSocket('x/spam.sock');
@@ -1127,7 +1109,6 @@ suite('FileSystem', () => {
 
             test('symlink', async function () {
                 if (!SUPPORTS_SYMLINKS) {
-                    // tslint:disable-next-line:no-invalid-this
                     this.skip();
                 }
                 const filename = await fix.createFile('x/y/z/spam.py', '...');
@@ -1141,7 +1122,6 @@ suite('FileSystem', () => {
 
             test('unknown', async function () {
                 if (!SUPPORTS_SOCKETS) {
-                    // tslint:disable-next-line:no-invalid-this
                     this.skip();
                 }
                 const sockFile = await fix.createSocket('x/y/z/ipc.sock');
@@ -1171,7 +1151,6 @@ suite('FileSystem', () => {
 
             test('symlink', async function () {
                 if (!SUPPORTS_SYMLINKS) {
-                    // tslint:disable-next-line:no-invalid-this
                     this.skip();
                 }
                 const dirname = await fix.createDirectory('x/y/z/spam');
@@ -1185,7 +1164,6 @@ suite('FileSystem', () => {
 
             test('unknown', async function () {
                 if (!SUPPORTS_SOCKETS) {
-                    // tslint:disable-next-line:no-invalid-this
                     this.skip();
                 }
                 const sockFile = await fix.createSocket('x/y/z/ipc.sock');
@@ -1277,7 +1255,6 @@ suite('FileSystem', () => {
             suite('non-Windows', () => {
                 suiteSetup(function () {
                     if (WINDOWS) {
-                        // tslint:disable-next-line:no-invalid-this
                         this.skip();
                     }
                 });

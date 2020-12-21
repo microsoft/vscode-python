@@ -31,7 +31,7 @@ export class PythonObjectDefinitionProvider {
             startColumn = `from ${mod} import `.length;
         }
         const range = new vscode.Range(0, startColumn, 0, source.length - 1);
-        // tslint:disable-next-line:no-any
+
         const doc = <vscode.TextDocument>(<any>{
             fileName: 'test.py',
             lineAt: (_line: number) => {

@@ -215,7 +215,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             const found = interpreters.find((i) => fs.arePathsSame(i.path, pythonPath));
             if (found) {
                 // Cache the interpreter info, only if we get the data from interpretr list.
-                // tslint:disable-next-line:no-any
+
                 (found as any).__store = true;
                 return found;
             }
@@ -231,7 +231,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
             interpreterInfo = both[0] ? both[0] : both[1];
         }
 
-        // tslint:disable-next-line:no-any
         if (interpreterInfo && (interpreterInfo as any).__store) {
             await this.updateCachedInterpreterInformation(interpreterInfo, resource);
         }

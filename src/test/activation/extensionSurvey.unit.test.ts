@@ -24,9 +24,6 @@ import { Common, ExtensionSurveyBanner } from '../../client/common/utils/localiz
 import { OSType } from '../../client/common/utils/platform';
 import { sleep } from '../core';
 
-// tslint:disable:no-any
-
-// tslint:disable-next-line:max-func-body-length
 suite('Extension survey prompt - shouldShowBanner()', () => {
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let browserService: TypeMoq.IMock<IBrowserService>;
@@ -178,7 +175,6 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
     });
 });
 
-// tslint:disable-next-line: max-func-body-length
 suite('Extension survey prompt - showSurvey()', () => {
     let experiments: TypeMoq.IMock<IExperimentsManager>;
     let appShell: TypeMoq.IMock<IApplicationShell>;
@@ -415,7 +411,6 @@ suite('Extension survey prompt - showSurvey()', () => {
     });
 });
 
-// tslint:disable-next-line: max-func-body-length
 suite('Extension survey prompt - activate()', () => {
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let browserService: TypeMoq.IMock<IBrowserService>;

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-template-strings no-suspicious-comment
-
 import { injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';

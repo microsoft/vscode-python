@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-invalid-this no-any
-
 import * as assert from 'assert';
 import { expect } from 'chai';
 import * as path from 'path';

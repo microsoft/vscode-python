@@ -75,7 +75,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
     }
     public async validatePythonPath(pythonPath?: string, pythonPathSource?: PythonPathSource, resource?: Uri) {
         pythonPath = pythonPath ? this.resolveVariables(pythonPath, resource) : undefined;
-        // tslint:disable-next-line:no-invalid-template-strings
+
         if (pythonPath === '${command:python.interpreterPath}' || !pythonPath) {
             pythonPath = this.configService.getSettings(resource).pythonPath;
         }

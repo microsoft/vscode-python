@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable: no-any
-
 import { instance, mock, verify } from 'ts-mockito';
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../../client/activation/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';

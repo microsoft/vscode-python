@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-// tslint:disable:trailing-comma no-any
+
 import * as child_process from 'child_process';
 import { ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
@@ -151,7 +151,6 @@ export class StartPageIocContainer extends UnitTestIocContainer {
                 await Promise.all(tempFiles.map((t) => fs.remove(t)));
             }
         } catch (exc) {
-            // tslint:disable-next-line: no-console
             console.log(`Exception on cleanup: ${exc}`);
         }
         await this.asyncRegistry.dispose();
@@ -160,7 +159,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
 
         if (!this.uiTest) {
             // Blur window focus so we don't have editors polling
-            // tslint:disable-next-line: no-require-imports
+
             const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
             reactHelpers.blurWindow();
         }
@@ -179,7 +178,6 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         EnvironmentActivationServiceCache.forceUseNormal();
     }
 
-    // tslint:disable:max-func-body-length
     public registerStartPageTypes() {
         this.defaultPythonPath = this.findPythonPath();
 
@@ -194,7 +192,6 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         // Create the workspace service first as it's used to set config values.
         this.createWorkspaceService();
 
-        // tslint:disable-next-line: no-require-imports
         const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
         reactHelpers.setUpDomEnvironment();
 
@@ -269,7 +266,6 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         });
     }
 
-    // tslint:disable:any
     public createWebView(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, id: string) {
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
         this.pendingWebPanel = this.get<IMountedWebViewFactory>(IMountedWebViewFactory).create(id, mount);
@@ -334,17 +330,14 @@ export class StartPageIocContainer extends UnitTestIocContainer {
 
             public ignoreDeleteEvents = false;
 
-            // tslint:disable-next-line:no-any
             public onDidChange(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
 
-            // tslint:disable-next-line:no-any
             public onDidDelete(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
 
-            // tslint:disable-next-line:no-any
             public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }

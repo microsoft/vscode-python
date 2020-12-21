@@ -11,7 +11,6 @@ import { LaunchJsonCodeActionProvider } from './launchJsonCodeActionProvider';
 export class CodeActionProviderService implements IExtensionSingleActivationService {
     constructor(@inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry) {}
     public async activate(): Promise<void> {
-        // tslint:disable-next-line:no-require-imports
         const vscode = require('vscode') as typeof vscodeTypes;
         const documentSelector: vscodeTypes.DocumentFilter = {
             scheme: 'file',

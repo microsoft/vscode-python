@@ -8,7 +8,6 @@ import { IAsyncDisposable, IDisposable, Resource } from '../types';
 import { isPromise } from './async';
 import { StopWatch } from './stopWatch';
 
-// tslint:disable-next-line:no-empty
 export function noop() {}
 
 /**
@@ -46,7 +45,7 @@ export async function usingAsync<T extends IAsyncDisposable, R>(
  *
  * See https://github.com/Microsoft/TypeScript/pull/21316.
  */
-// tslint:disable-next-line:no-any
+
 export type DeepReadonly<T> = T extends any[] ? IDeepReadonlyArray<T[number]> : DeepReadonlyNonArray<T>;
 type DeepReadonlyNonArray<T> = T extends object ? DeepReadonlyObject<T> : T;
 interface IDeepReadonlyArray<T> extends ReadonlyArray<DeepReadonly<T>> {}
@@ -59,7 +58,7 @@ type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? nev
 export type TraceInfo = {
     elapsed: number; // milliseconds
     // Either returnValue or err will be set.
-    // tslint:disable-next-line:no-any
+
     returnValue?: any;
     err?: Error;
 };
@@ -68,12 +67,10 @@ export type TraceInfo = {
 export function tracing<T>(log: (t: TraceInfo) => void, run: () => T): T {
     const timer = new StopWatch();
     try {
-        // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
         const result = run();
 
         // If method being wrapped returns a promise then wait for it.
         if (isPromise(result)) {
-            // tslint:disable-next-line:prefer-type-cast
             (result as Promise<void>)
                 .then((data) => {
                     log({ elapsed: timer.elapsedTime, returnValue: data });
@@ -81,7 +78,7 @@ export function tracing<T>(log: (t: TraceInfo) => void, run: () => T): T {
                 })
                 .catch((ex) => {
                     log({ elapsed: timer.elapsedTime, err: ex });
-                    // tslint:disable-next-line:no-suspicious-comment
+
                     // TODO(GH-11645) Re-throw the error like we do
                     // in the non-Promise case.
                 });
@@ -121,7 +118,7 @@ export function isResource(resource?: InterpreterUri): resource is Resource {
  * @param {InterpreterUri} [resource]
  * @returns {resource is Uri}
  */
-// tslint:disable-next-line: no-any
+
 export function isUri(resource?: Uri | any): resource is Uri {
     if (!resource) {
         return false;

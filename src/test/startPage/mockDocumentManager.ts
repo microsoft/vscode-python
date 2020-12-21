@@ -26,8 +26,6 @@ import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { MockDocument } from './mockDocument';
 import { MockEditor } from './mockTextEditor';
 
-// tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
-
 export class MockDocumentManager implements IDocumentManager {
     public textDocuments: TextDocument[] = [];
     public activeTextEditor: TextEditor | undefined;

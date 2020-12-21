@@ -24,7 +24,6 @@ const UNITTEST_MULTI_TEST_FILE_PATH = path.join(testFilesPath, 'multi');
 const UNITTEST_COUNTS_TEST_FILE_PATH = path.join(testFilesPath, 'counter');
 const defaultUnitTestArgs = ['-v', '-s', '.', '-p', '*test*.py'];
 
-// tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - unittest - discovery against actual python process', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
@@ -177,7 +176,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
 
     test('Ensure correct test count for running a set of tests multiple times', async function () {
         // https://github.com/microsoft/vscode-python/issues/11634
-        // tslint:disable-next-line: no-invalid-this
+
         return this.skip();
         await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
@@ -224,7 +223,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
 
     test('Re-run failed tests results in the correct number of tests counted', async function () {
         // https://github.com/microsoft/vscode-python/issues/11634
-        // tslint:disable-next-line: no-invalid-this
+
         return this.skip();
         await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);

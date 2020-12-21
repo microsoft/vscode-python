@@ -34,7 +34,6 @@ suite('Terminal - Service Registry', () => {
                 services
                     .setup((s) =>
                         s.addSingleton(
-                            // tslint:disable-next-line:no-any
                             typemoq.It.isValue(args[0] as any),
                             typemoq.It.is((value) => args[1] === value),
                         ),
@@ -44,10 +43,9 @@ suite('Terminal - Service Registry', () => {
                 services
                     .setup((s) =>
                         s.addSingleton(
-                            // tslint:disable-next-line:no-any
                             typemoq.It.isValue(args[0] as any),
                             typemoq.It.is((value) => args[1] === value),
-                            // tslint:disable-next-line:no-any
+
                             typemoq.It.isValue(args[2] as any),
                         ),
                     )

@@ -33,12 +33,10 @@ import { ITestManagementService } from '../../../client/testing/types';
  * ITestManagementService.
  */
 export class ExplorerTestsDisposable implements IDisposable {
-    // tslint:disable-next-line:no-empty
     public dispose() {}
 }
 
 export function getMockTestFolder(folderPath: string, testFiles: TestFile[] = []): TestFolder {
-    // tslint:disable-next-line:no-unnecessary-local-variable
     const folder: TestFolder = {
         resource: Uri.file(__filename),
         folders: [],
@@ -56,7 +54,6 @@ export function getMockTestFile(
     testSuites: TestSuite[] = [],
     testFunctions: TestFunction[] = [],
 ): TestFile {
-    // tslint:disable-next-line:no-unnecessary-local-variable
     const testFile: TestFile = {
         resource: Uri.file(__filename),
         name: path_parse(filePath).base,
@@ -81,7 +78,6 @@ export function getMockTestSuite(
     const suiteNameChunks = suiteNameToRun.split('::');
     const suiteName = suiteNameChunks[suiteNameChunks.length - 1];
 
-    // tslint:disable-next-line:no-unnecessary-local-variable
     const testSuite: TestSuite = {
         resource: Uri.file(__filename),
         functions: testFunctions,
@@ -100,7 +96,6 @@ export function getMockTestFunction(fnNameToRun: string): TestFunction {
     const fnNameChunks = fnNameToRun.split('::');
     const fnName = fnNameChunks[fnNameChunks.length - 1];
 
-    // tslint:disable-next-line:no-unnecessary-local-variable
     const fn: TestFunction = {
         resource: Uri.file(__filename),
         name: fnName,

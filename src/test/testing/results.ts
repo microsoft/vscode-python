@@ -434,7 +434,6 @@ namespace declarative {
             case 0:
                 break;
             case 1:
-                // tslint:disable-next-line:no-any
                 if (isNaN(parts[0] as any)) {
                     throw Error(`expected a time (float), got ${parts[0]}`);
                 }
@@ -457,7 +456,7 @@ namespace declarative {
                     default:
                         throw Error('expected a status and then a time');
                 }
-                // tslint:disable-next-line:no-any
+
                 if (isNaN(parts[1] as any)) {
                     throw Error(`expected a time (float), got ${parts[1]}`);
                 }

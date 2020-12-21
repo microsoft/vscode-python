@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires
-
 export enum UnicodeCategory {
     Unknown,
     UppercaseLetter,

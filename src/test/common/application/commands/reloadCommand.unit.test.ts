@@ -28,7 +28,7 @@ suite('Common Commands ReloadCommand', () => {
     });
     test('Display prompt to reload VS Code with message passed into command', async () => {
         const message = 'Hello World!';
-        // tslint:disable-next-line: no-any
+
         const commandHandler = capture(cmdManager.registerCommand as any).first()[1] as Function;
 
         await commandHandler.call(reloadCommandHandler, message);
@@ -37,9 +37,9 @@ suite('Common Commands ReloadCommand', () => {
     });
     test('Do not reload VS Code if user selects `Reload` option', async () => {
         const message = 'Hello World!';
-        // tslint:disable-next-line: no-any
+
         const commandHandler = capture(cmdManager.registerCommand as any).first()[1] as Function;
-        // tslint:disable-next-line: no-any
+
         when(appShell.showInformationMessage(message, Common.reload())).thenResolve(Common.reload() as any);
 
         await commandHandler.call(reloadCommandHandler, message);
@@ -49,7 +49,7 @@ suite('Common Commands ReloadCommand', () => {
     });
     test('Do not reload VS Code if user does not select `Reload` option', async () => {
         const message = 'Hello World!';
-        // tslint:disable-next-line: no-any
+
         const commandHandler = capture(cmdManager.registerCommand as any).first()[1] as Function;
         when(appShell.showInformationMessage(message, Common.reload())).thenResolve();
 

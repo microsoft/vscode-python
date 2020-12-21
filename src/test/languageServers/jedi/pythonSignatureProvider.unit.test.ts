@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-
 import { assert, expect, use } from 'chai';
 import * as chaipromise from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
@@ -63,7 +61,7 @@ suite('Signature Provider unit tests', () => {
         doc.setup((d) => d.uri).returns(() => docUri.object);
         lineText.setup((l) => l.text).returns(() => source);
         argsResult.setup((c) => c.requestId).returns(() => 1);
-        // tslint:disable-next-line:no-any
+
         argsResult.setup((c) => c.definitions).returns(() => (argResultItems as any)[0].definitions);
         jediHandler
             .setup((j) => j.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()))

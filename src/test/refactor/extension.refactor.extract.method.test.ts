@@ -1,5 +1,3 @@
-// tslint:disable:interface-name no-any max-func-body-length estrict-plus-operands no-empty
-
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -107,7 +105,6 @@ suite('Method Extraction', () => {
         const workspaceRoot = path.dirname(refactorTargetFile);
         const proxy = new RefactorProxy(workspaceRoot, createPythonExecGetter(workspaceRoot));
 
-        // tslint:disable-next-line:no-multiline-string
         const DIFF = `--- a/refactor.py\n+++ b/refactor.py\n@@ -237,9 +237,12 @@\n             try:\n                 self._process_request(self._input.readline())\n             except Exception as ex:\n-                message = ex.message + '  \\n' + traceback.format_exc()\n-                sys.stderr.write(str(len(message)) + ':' + message)\n-                sys.stderr.flush()\n+                self.myNewMethod(ex)\n+\n+    def myNewMethod(self, ex):\n+        message = ex.message + '  \\n' + traceback.format_exc()\n+        sys.stderr.write(str(len(message)) + ':' + message)\n+        sys.stderr.flush()\n \n if __name__ == '__main__':\n     RopeRefactoring().watch()\n`;
         const mockTextDoc = await workspace.openTextDocument(refactorTargetFile);
         const expectedTextEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);

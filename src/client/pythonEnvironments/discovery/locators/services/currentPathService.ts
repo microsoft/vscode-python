@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file */
-// tslint:disable:no-require-imports no-var-requires underscore-consistent-invocation no-unnecessary-callback-wrapper
+
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { traceError, traceInfo } from '../../../../common/logger';
@@ -39,7 +39,7 @@ export class CurrentPathService extends CacheableLocatorService {
      *
      * Called by VS Code to indicate it is done with the resource.
      */
-    // tslint:disable-next-line:no-empty
+
     public dispose(): void {
         // No body
     }
@@ -63,15 +63,13 @@ export class CurrentPathService extends CacheableLocatorService {
         const pathsToCheck = [...this.pythonCommandProvider.getCommands(), { command: configSettings.pythonPath }];
 
         const pythonPaths = Promise.all(pathsToCheck.map((item) => this.getInterpreter(item)));
-        return (
-            pythonPaths
-                .then((interpreters) => interpreters.filter((item) => item.length > 0))
-                // tslint:disable-next-line:promise-function-async
-                .then((interpreters) =>
-                    Promise.all(interpreters.map((interpreter) => this.getInterpreterDetails(interpreter))),
-                )
-                .then((interpreters) => interpreters.filter((item) => !!item).map((item) => item!))
-        );
+        return pythonPaths
+            .then((interpreters) => interpreters.filter((item) => item.length > 0))
+
+            .then((interpreters) =>
+                Promise.all(interpreters.map((interpreter) => this.getInterpreterDetails(interpreter))),
+            )
+            .then((interpreters) => interpreters.filter((item) => !!item).map((item) => item!));
     }
 
     /**

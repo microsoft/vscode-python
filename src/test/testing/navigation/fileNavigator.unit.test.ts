@@ -13,7 +13,6 @@ import { ITestNavigatorHelper } from '../../../client/testing/navigation/types';
 
 use(chaisAsPromised);
 
-// tslint:disable:max-func-body-length no-any
 suite('Unit Tests - Navigation File', () => {
     let navigator: TestFileCodeNavigator;
     let helper: ITestNavigatorHelper;

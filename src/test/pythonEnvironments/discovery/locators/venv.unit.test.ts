@@ -21,10 +21,8 @@ import { GlobalVirtualEnvironmentsSearchPathProvider } from '../../../../client/
 import { WorkspaceVirtualEnvironmentsSearchPathProvider } from '../../../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvService';
 import { MockAutoSelectionService } from '../../../mocks/autoSelector';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
 const untildify: (value: string) => string = require('untildify');
 
-// tslint:disable-next-line: max-func-body-length
 suite('Virtual environments', () => {
     let serviceManager: ServiceManager;
     let serviceContainer: ServiceContainer;

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any no-unnecessary-class
-
 import { inject, injectable } from 'inversify';
 import { Disposable, QuickInput, QuickInputButton, QuickInputButtons, QuickPickItem } from 'vscode';
 import { IApplicationShell } from '../application/types';
@@ -36,7 +34,6 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     shouldResume?(): Promise<boolean>;
 }
 
-// tslint:disable-next-line: interface-name
 export interface InputBoxParameters {
     title: string;
     password?: boolean;

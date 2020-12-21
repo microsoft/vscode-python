@@ -17,7 +17,6 @@ import { Common } from '../../../../client/common/utils/localize';
 import { OutdatedDebuggerPromptFactory } from '../../../../client/debugger/extension/adapter/outdatedDebuggerPrompt';
 import { clearTelemetryReporter } from '../../../../client/telemetry';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Debugging - Outdated Debugger Prompt tests.', () => {
     let promptFactory: OutdatedDebuggerPromptFactory;
     let appShell: IApplicationShell;
@@ -41,7 +40,6 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
         const configurationService = mock(ConfigurationService);
         when(configurationService.getSettings(undefined)).thenReturn(({
             experiments: { enabled: true },
-            // tslint:disable-next-line: no-any
         } as any) as IPythonSettings);
 
         appShell = mock(ApplicationShell);

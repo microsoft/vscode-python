@@ -63,7 +63,6 @@ export class LanguageClientMiddleware implements Middleware {
     public eventCount: number = 0;
 
     public workspace = {
-        // tslint:disable:no-any
         configuration: (
             params: ConfigurationParams,
             token: CancellationToken,
@@ -97,7 +96,6 @@ export class LanguageClientMiddleware implements Middleware {
 
             return addPythonPath(result);
         },
-        // tslint:enable:no-any
     };
     private notebookAddon: NotebookMiddlewareAddon | undefined;
 
@@ -369,7 +367,7 @@ export class LanguageClientMiddleware implements Middleware {
         // middleware, it calls into the notebook middleware first.
         if (this.notebookAddon) {
             // It would be nice to use args.callee, but not supported in strict mode
-            // tslint:disable-next-line: no-any
+
             return (this.notebookAddon as any)[funcName](...args);
         } else {
             return args[args.length - 1](...args);
@@ -378,11 +376,9 @@ export class LanguageClientMiddleware implements Middleware {
 }
 
 function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: number) {
-    // tslint:disable-next-line:no-function-expression no-any
     return function (_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
 
-        // tslint:disable-next-line:no-any
         descriptor.value = function (this: LanguageClientMiddleware, ...args: any[]) {
             const eventName = this.eventName;
             if (!eventName) {
@@ -417,10 +413,9 @@ function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: numb
             };
 
             const stopWatch = new StopWatch();
-            // tslint:disable-next-line:no-unsafe-any
+
             const result = originalMethod.apply(this, args);
 
-            // tslint:disable-next-line:no-unsafe-any
             if (result && isThenable<void>(result)) {
                 result.then(() => {
                     sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);

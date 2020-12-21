@@ -32,7 +32,6 @@ import { ILinterManager } from '../../client/linters/types';
 import { MockLintingSettings } from '../mockClasses';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Linting - Pylint', () => {
     const basePath = '/user/a/b/c/d';
     const pylintrc = 'pylintrc';
@@ -211,9 +210,9 @@ suite('Linting - Pylint', () => {
 
         const lintSettings = new MockLintingSettings();
         lintSettings.pylintUseMinimalCheckers = true;
-        // tslint:disable-next-line:no-string-literal
+
         lintSettings['pylintPath'] = 'pyLint';
-        // tslint:disable-next-line:no-string-literal
+
         lintSettings['pylintEnabled'] = true;
 
         const settings = TypeMoq.Mock.ofType<IPythonSettings>();

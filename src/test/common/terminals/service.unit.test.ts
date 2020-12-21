@@ -11,7 +11,6 @@ import { ITerminalActivator, ITerminalHelper, TerminalShellType } from '../../..
 import { IDisposableRegistry } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Terminal Service', () => {
     let service: TerminalService;
     let terminal: TypeMoq.IMock<VSCodeTerminal>;
@@ -41,7 +40,6 @@ suite('Terminal Service', () => {
     });
     teardown(() => {
         if (service) {
-            // tslint:disable-next-line:no-any
             service.dispose();
         }
         disposables.filter((item) => !!item).forEach((item) => item.dispose());
@@ -208,7 +206,7 @@ suite('Terminal Service', () => {
             .setup((m) => m.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((handler) => {
                 eventHandler = handler;
-                // tslint:disable-next-line:no-empty
+
                 return { dispose: () => {} };
             });
         service = new TerminalService(mockServiceContainer.object);
@@ -234,7 +232,7 @@ suite('Terminal Service', () => {
             .setup((m) => m.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((handler) => {
                 eventHandler = handler;
-                // tslint:disable-next-line:no-empty
+
                 return { dispose: () => {} };
             });
         service = new TerminalService(mockServiceContainer.object);

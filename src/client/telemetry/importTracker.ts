@@ -47,7 +47,7 @@ const testExecution = isTestExecution();
 export class ImportTracker implements IExtensionSingleActivationService {
     private pendingChecks = new Map<string, NodeJS.Timer>();
     private sentMatches: Set<string> = new Set<string>();
-    // tslint:disable-next-line:no-require-imports
+
     private hashFn = require('hash.js').sha256;
 
     constructor(

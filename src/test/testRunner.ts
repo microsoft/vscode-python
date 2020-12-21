@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-require-imports no-var-requires import-name no-function-expression no-any prefer-template no-console no-var-self
 // Most of the source is in node_modules/vscode/lib/testrunner.js
 
 'use strict';

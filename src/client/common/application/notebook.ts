@@ -71,7 +71,6 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     }
     private get notebook() {
         if (!this._notebook) {
-            // tslint:disable-next-line: no-require-imports
             this._notebook = require('vscode').notebook;
         }
         return this._notebook!;
@@ -93,7 +92,6 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     }
     public createConcatTextDocument(doc: NotebookDocument, selector?: DocumentSelector): NotebookConcatTextDocument {
         if (this.useProposedApi) {
-            // tslint:disable-next-line: no-any
             return this.notebook.createConcatTextDocument(doc, selector) as any; // Types of Position are different for some reason. Fix this later.
         }
         throw new Error('createConcatDocument not supported');

@@ -14,18 +14,14 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
-// tslint:disable:max-func-body-length
-
 suite('Language Server Folder Service', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let languageServerFolderService: DotNetLanguageServerFolderService;
     const resource = Uri.parse('a');
 
-    // tslint:disable-next-line:max-func-body-length
     suite('Method getLanguageServerFolderName()', async () => {
-        // tslint:disable-next-line: no-any
         let shouldLookForNewLS: sinon.SinonStub<any>;
-        // tslint:disable-next-line: no-any
+
         let getCurrentLanguageServerDirectory: sinon.SinonStub<any>;
         const currentLSDirectory = {
             path: 'path/to/currentLSDirectoryName',
@@ -67,7 +63,7 @@ suite('Language Server Folder Service', () => {
             shouldLookForNewLS.resolves(true);
             languageServerPackageService
                 .setup((l) => l.getLatestNugetPackageVersion(resource))
-                // tslint:disable-next-line: no-any
+
                 .returns(() => Promise.resolve(undefined) as any);
             getCurrentLanguageServerDirectory = sinon.stub(
                 DotNetLanguageServerFolderService.prototype,
@@ -161,7 +157,7 @@ suite('Language Server Folder Service', () => {
             };
             configurationService
                 .setup((c) => c.getSettings())
-                // tslint:disable-next-line: no-any
+
                 .returns(() => settings as any);
             const result = await languageServerFolderService.shouldLookForNewLanguageServer(currentLSDirectory);
             expect(result).to.equal(false, 'Should be false');
@@ -174,7 +170,7 @@ suite('Language Server Folder Service', () => {
             };
             configurationService
                 .setup((c) => c.getSettings())
-                // tslint:disable-next-line: no-any
+
                 .returns(() => settings as any);
             const result = await languageServerFolderService.shouldLookForNewLanguageServer(currentLSDirectory);
             expect(result).to.equal(false, 'Should be false');
@@ -187,7 +183,7 @@ suite('Language Server Folder Service', () => {
             };
             configurationService
                 .setup((c) => c.getSettings())
-                // tslint:disable-next-line: no-any
+
                 .returns(() => settings as any);
             downloadChannelRule
                 .setup((d) => d.shouldLookForNewLanguageServer(undefined))
@@ -223,7 +219,7 @@ suite('Language Server Folder Service', () => {
             };
             configurationService
                 .setup((c) => c.getSettings())
-                // tslint:disable-next-line: no-any
+
                 .returns(() => settings as any);
             const result = await languageServerFolderService.getCurrentLanguageServerDirectory();
             assert.deepEqual(result, expectedLSDirectory);
@@ -236,7 +232,7 @@ suite('Language Server Folder Service', () => {
             const directories = ['path/to/directory1', 'path/to/directory2'];
             configurationService
                 .setup((c) => c.getSettings())
-                // tslint:disable-next-line: no-any
+
                 .returns(() => settings as any);
             fs.setup((f) => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve(directories));
             const result = await languageServerFolderService.getCurrentLanguageServerDirectory();
@@ -260,7 +256,7 @@ suite('Language Server Folder Service', () => {
             };
             configurationService
                 .setup((c) => c.getSettings())
-                // tslint:disable-next-line: no-any
+
                 .returns(() => settings as any);
             fs.setup((f) => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve(directories));
             const result = await languageServerFolderService.getCurrentLanguageServerDirectory();

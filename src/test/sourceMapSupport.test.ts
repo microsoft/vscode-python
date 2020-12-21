@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any no-unused-expression chai-vague-errors no-unnecessary-override max-func-body-length max-classes-per-file
-
 import { expect } from 'chai';
 import * as fs from 'fs';
 import { ConfigurationTarget, Disposable } from 'vscode';

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
-
 import { assert, expect } from 'chai';
 import { ChildProcess } from 'child_process';
 import { EOL } from 'os';
@@ -160,7 +158,7 @@ suite('Import Sort Provider', () => {
     test('Ensure no edits are provided when there is only one line', async () => {
         const uri = Uri.file('TestDoc');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
-        // tslint:disable-next-line:no-any
+
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
             .setup((d) => d.lineCount)
@@ -183,7 +181,7 @@ suite('Import Sort Provider', () => {
     test('Ensure no edits are provided when there are no lines', async () => {
         const uri = Uri.file('TestDoc');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
-        // tslint:disable-next-line:no-any
+
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
             .setup((d) => d.lineCount)

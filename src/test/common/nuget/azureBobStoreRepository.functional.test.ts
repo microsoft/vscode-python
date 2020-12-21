@@ -51,7 +51,6 @@ suite('Nuget Azure Storage Repository', () => {
     });
 
     test('Get all packages', async function () {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const platformService = new PlatformService();
         const packageJson = { [DotNetLanguageServerMinVersionKey]: '0.0.1' };

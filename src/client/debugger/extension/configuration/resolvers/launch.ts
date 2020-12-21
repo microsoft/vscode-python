@@ -77,7 +77,6 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         return debugConfiguration;
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity
     protected async provideLaunchDefaults(
         workspaceFolder: Uri | undefined,
         debugConfiguration: LaunchRequestArguments,

@@ -1,4 +1,3 @@
-// tslint:disable-next-line:no-suspicious-comment
 // TODO: Drop this file.
 // See https://github.com/microsoft/vscode-python/issues/8542.
 
@@ -7,7 +6,7 @@ import * as path from 'path';
 import { IPathUtils, IsWindows } from '../types';
 import { OSType } from '../utils/platform';
 import { Executables, FileSystemPaths, FileSystemPathUtils } from './fs-paths';
-// tslint:disable-next-line:no-var-requires no-require-imports
+
 const untildify = require('untildify');
 
 @injectable()
@@ -40,10 +39,8 @@ export class PathUtils implements IPathUtils {
         return this.utils.paths.sep;
     }
 
-    // tslint:disable-next-line:no-suspicious-comment
     // TODO: Deprecate in favor of IPlatformService?
     public getPathVariableName(): 'Path' | 'PATH' {
-        // tslint:disable-next-line:no-any
         return this.utils.executables.envVar as any;
     }
 

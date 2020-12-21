@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any max-classes-per-file
-
 import { assert, expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, Uri } from 'vscode';

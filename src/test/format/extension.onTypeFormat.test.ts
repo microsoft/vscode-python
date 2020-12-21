@@ -8,8 +8,6 @@ import * as vscode from 'vscode';
 import { BlockFormatProviders } from '../../client/typeFormatters/blockFormatProvider';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
-// tslint:disable: max-func-body-length
-
 const srcPythoFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'typeFormatFiles');
 const outPythoFilesPath = path.join(__dirname, 'pythonFiles', 'typeFormatFiles');
 
@@ -449,7 +447,6 @@ suite('Else blocks with indentation of 2 spaces', () => {
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
 
-    // tslint:disable-next-line:interface-name
     interface TestCase {
         title: string;
         line: number;

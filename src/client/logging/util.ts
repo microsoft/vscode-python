@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable-next-line:no-any
 export type Arguments = any[];
 
 function valueToLogString(value: unknown, kind: string): string {
@@ -13,9 +12,7 @@ function valueToLogString(value: unknown, kind: string): string {
         return 'null';
     }
     try {
-        // tslint:disable-next-line:no-any
         if (value && (value as any).fsPath) {
-            // tslint:disable-next-line:no-any
             return `<Uri:${(value as any).fsPath}>`;
         }
         return JSON.stringify(value);

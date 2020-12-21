@@ -13,7 +13,7 @@ fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, undefined, ' '));
 // Rewrite settings json so we're not overriding the experiment values
 const settingsJsonPath = path.join(__dirname, '..', '..', '..', '..', 'src', 'test', '.vscode', 'settings.json');
 const settingsJsonPromise = import('../../.vscode/settings.json');
-// tslint:disable-next-line: no-floating-promises
+
 settingsJsonPromise.then((settingsJson) =>
     fs.writeFile(settingsJsonPath, JSON.stringify(settingsJson, undefined, ' ')),
 );

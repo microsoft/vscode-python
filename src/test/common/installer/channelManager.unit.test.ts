@@ -15,13 +15,12 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType } from '../../../client/pythonEnvironments/info';
 
-// tslint:disable-next-line: max-func-body-length
 suite('InstallationChannelManager - getInstallationChannel()', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let appShell: TypeMoq.IMock<IApplicationShell>;
-    // tslint:disable-next-line:no-any
+
     let getInstallationChannels: sinon.SinonStub<any>;
-    // tslint:disable-next-line:no-any
+
     let showNoInstallersMessage: sinon.SinonStub<any>;
     const resource = Uri.parse('a');
     let installChannelManager: InstallationChannelManager;
@@ -39,16 +38,13 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
     test('If there is exactly one installation channel, return it', async () => {
         const moduleInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
         moduleInstaller.setup((m) => m.name).returns(() => 'singleChannel');
-        moduleInstaller
-            // tslint:disable-next-line:no-any
-            .setup((m) => (m as any).then)
-            .returns(() => undefined);
+        moduleInstaller.setup((m) => (m as any).then).returns(() => undefined);
         getInstallationChannels = sinon.stub(InstallationChannelManager.prototype, 'getInstallationChannels');
         getInstallationChannels.resolves([moduleInstaller.object]);
         showNoInstallersMessage = sinon.stub(InstallationChannelManager.prototype, 'showNoInstallersMessage');
         showNoInstallersMessage.resolves();
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
-        // tslint:disable-next-line:no-any
+
         const channel = await installChannelManager.getInstallationChannel(undefined as any, resource);
         expect(channel).to.not.equal(undefined, 'Channel should be set');
         expect(channel!.name).to.equal('singleChannel');
@@ -60,7 +56,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
         showNoInstallersMessage = sinon.stub(InstallationChannelManager.prototype, 'showNoInstallersMessage');
         showNoInstallersMessage.resolves();
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
-        // tslint:disable-next-line:no-any
+
         const channel = await installChannelManager.getInstallationChannel(Product.autopep8, resource);
         expect(channel).to.equal(undefined, 'should be undefined');
         assert.ok(showNoInstallersMessage.calledOnceWith(resource));
@@ -69,16 +65,10 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
     test('If no channel is selected in the quickpick, return undefined', async () => {
         const moduleInstaller1 = TypeMoq.Mock.ofType<IModuleInstaller>();
         moduleInstaller1.setup((m) => m.displayName).returns(() => 'moduleInstaller1');
-        moduleInstaller1
-            // tslint:disable-next-line:no-any
-            .setup((m) => (m as any).then)
-            .returns(() => undefined);
+        moduleInstaller1.setup((m) => (m as any).then).returns(() => undefined);
         const moduleInstaller2 = TypeMoq.Mock.ofType<IModuleInstaller>();
         moduleInstaller2.setup((m) => m.displayName).returns(() => 'moduleInstaller2');
-        moduleInstaller2
-            // tslint:disable-next-line:no-any
-            .setup((m) => (m as any).then)
-            .returns(() => undefined);
+        moduleInstaller2.setup((m) => (m as any).then).returns(() => undefined);
         appShell
             .setup((a) => a.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
@@ -88,7 +78,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
         showNoInstallersMessage = sinon.stub(InstallationChannelManager.prototype, 'showNoInstallersMessage');
         showNoInstallersMessage.resolves();
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
-        // tslint:disable-next-line:no-any
+
         const channel = await installChannelManager.getInstallationChannel(Product.autopep8, resource);
         assert.ok(showNoInstallersMessage.notCalled);
         appShell.verifyAll();
@@ -98,16 +88,10 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
     test('If multiple channels are returned by the resource, show quick pick of the channel names and return the selected channel installer', async () => {
         const moduleInstaller1 = TypeMoq.Mock.ofType<IModuleInstaller>();
         moduleInstaller1.setup((m) => m.displayName).returns(() => 'moduleInstaller1');
-        moduleInstaller1
-            // tslint:disable-next-line:no-any
-            .setup((m) => (m as any).then)
-            .returns(() => undefined);
+        moduleInstaller1.setup((m) => (m as any).then).returns(() => undefined);
         const moduleInstaller2 = TypeMoq.Mock.ofType<IModuleInstaller>();
         moduleInstaller2.setup((m) => m.displayName).returns(() => 'moduleInstaller2');
-        moduleInstaller2
-            // tslint:disable-next-line:no-any
-            .setup((m) => (m as any).then)
-            .returns(() => undefined);
+        moduleInstaller2.setup((m) => (m as any).then).returns(() => undefined);
         const selection = {
             label: 'some label',
             description: '',
@@ -122,7 +106,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
         showNoInstallersMessage = sinon.stub(InstallationChannelManager.prototype, 'showNoInstallersMessage');
         showNoInstallersMessage.resolves();
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
-        // tslint:disable-next-line:no-any
+
         const channel = await installChannelManager.getInstallationChannel(Product.autopep8, resource);
         assert.ok(showNoInstallersMessage.notCalled);
         appShell.verifyAll();
@@ -152,10 +136,7 @@ suite('InstallationChannelManager - getInstallationChannels()', () => {
         // Setup 2 installers with priority 1, where one is supported and other is not
         for (let i = 0; i < 2; i = i + 1) {
             const moduleInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
-            moduleInstaller
-                // tslint:disable-next-line:no-any
-                .setup((m) => (m as any).then)
-                .returns(() => undefined);
+            moduleInstaller.setup((m) => (m as any).then).returns(() => undefined);
             moduleInstaller.setup((m) => m.priority).returns(() => 1);
             moduleInstaller.setup((m) => m.isSupported(resource)).returns(() => Promise.resolve(i % 2 === 0));
             moduleInstallers.push(moduleInstaller.object);
@@ -163,10 +144,7 @@ suite('InstallationChannelManager - getInstallationChannels()', () => {
         // Setup 3 installers with priority 2, where two are supported and other is not
         for (let i = 2; i < 5; i = i + 1) {
             const moduleInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
-            moduleInstaller
-                // tslint:disable-next-line:no-any
-                .setup((m) => (m as any).then)
-                .returns(() => undefined);
+            moduleInstaller.setup((m) => (m as any).then).returns(() => undefined);
             moduleInstaller.setup((m) => m.priority).returns(() => 2);
             moduleInstaller.setup((m) => m.isSupported(resource)).returns(() => Promise.resolve(i % 2 === 0));
             moduleInstallers.push(moduleInstaller.object);
@@ -174,10 +152,7 @@ suite('InstallationChannelManager - getInstallationChannels()', () => {
         // Setup 2 installers with priority 3, but none are supported
         for (let i = 5; i < 7; i = i + 1) {
             const moduleInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
-            moduleInstaller
-                // tslint:disable-next-line:no-any
-                .setup((m) => (m as any).then)
-                .returns(() => undefined);
+            moduleInstaller.setup((m) => (m as any).then).returns(() => undefined);
             moduleInstaller.setup((m) => m.priority).returns(() => 3);
             moduleInstaller.setup((m) => m.isSupported(resource)).returns(() => Promise.resolve(false));
             moduleInstallers.push(moduleInstaller.object);
@@ -193,7 +168,6 @@ suite('InstallationChannelManager - getInstallationChannels()', () => {
     });
 });
 
-// tslint:disable-next-line: max-func-body-length
 suite('InstallationChannelManager - showNoInstallersMessage()', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -230,7 +204,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
             .verifiable(TypeMoq.Times.once());
         interpreterService
             .setup((i) => i.getActiveInterpreter(resource))
-            // tslint:disable-next-line: no-any
+
             .returns(() => Promise.resolve(activeInterpreter as any));
         appShell
             .setup((a) => a.showErrorMessage(Installer.noCondaOrPipInstaller(), Installer.searchForHelp()))
@@ -255,7 +229,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
             .verifiable(TypeMoq.Times.once());
         interpreterService
             .setup((i) => i.getActiveInterpreter(resource))
-            // tslint:disable-next-line: no-any
+
             .returns(() => Promise.resolve(activeInterpreter as any));
         appShell
             .setup((a) => a.showErrorMessage(Installer.noPipInstaller(), Installer.searchForHelp()))
@@ -310,7 +284,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
                     .verifiable(TypeMoq.Times.once());
                 interpreterService
                     .setup((i) => i.getActiveInterpreter(resource))
-                    // tslint:disable-next-line: no-any
+
                     .returns(() => Promise.resolve(activeInterpreter as any));
                 platformService.setup((p) => p.isWindows).returns(() => testParams.isWindows);
                 platformService.setup((p) => p.isMac).returns(() => testParams.isMac);
@@ -348,7 +322,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
             .verifiable(TypeMoq.Times.never());
         interpreterService
             .setup((i) => i.getActiveInterpreter(resource))
-            // tslint:disable-next-line: no-any
+
             .returns(() => Promise.resolve(activeInterpreter as any));
         platformService.setup((p) => p.isWindows).returns(() => true);
         appShell

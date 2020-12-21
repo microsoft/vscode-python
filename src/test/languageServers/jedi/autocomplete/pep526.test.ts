@@ -14,13 +14,11 @@ import { UnitTestIocContainer } from '../../../testing/serviceRegistry';
 const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'autocomp');
 const filePep526 = path.join(autoCompPath, 'pep526.py');
 
-// tslint:disable-next-line:max-func-body-length
 suite('Language Server: Autocomplete PEP 526', () => {
     let ioc: UnitTestIocContainer;
     suiteSetup(async function () {
         // Pep526 only valid for 3.6+ (#2545)
         if (await isPythonVersion('2', '3.4', '3.5')) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
 

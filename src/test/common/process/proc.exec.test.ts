@@ -15,7 +15,6 @@ import { initialize } from './../../initialize';
 
 use(chaiAsPromised);
 
-// tslint:disable-next-line:max-func-body-length
 suite('ProcessService Observable', () => {
     let pythonPath: string;
     suiteSetup(() => {
@@ -39,7 +38,6 @@ suite('ProcessService Observable', () => {
         // This test has not been working for many months in Python 2.7 under
         // Windows. Tracked by #2546. (unicode under Py2.7 is tough!)
         if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
 
@@ -53,7 +51,6 @@ suite('ProcessService Observable', () => {
     });
 
     test('exec should wait for completion of program with new lines', async function () {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(5000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
@@ -80,7 +77,6 @@ suite('ProcessService Observable', () => {
     });
 
     test('exec should wait for completion of program without new lines', async function () {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(5000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
@@ -107,7 +103,6 @@ suite('ProcessService Observable', () => {
     });
 
     test('exec should end when cancellationToken is cancelled', async function () {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
@@ -136,7 +131,6 @@ suite('ProcessService Observable', () => {
     });
 
     test('exec should stream stdout and stderr separately', async function () {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(7000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
@@ -178,7 +172,6 @@ suite('ProcessService Observable', () => {
     });
 
     test('exec should merge stdout and stderr streams', async function () {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(7000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [

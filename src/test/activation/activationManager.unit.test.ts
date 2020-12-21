@@ -34,18 +34,16 @@ import * as EnvFileTelemetry from '../../client/telemetry/envFileTelemetry';
 import { sleep } from '../core';
 
 suite('Activation Manager', () => {
-    // tslint:disable:max-func-body-length no-any
     suite('Language Server Activation - ActivationManager', () => {
         class ExtensionActivationManagerTest extends ExtensionActivationManager {
-            // tslint:disable-next-line:no-unnecessary-override
             public addHandlers() {
                 return super.addHandlers();
             }
-            // tslint:disable-next-line:no-unnecessary-override
+
             public async initialize() {
                 return super.initialize();
             }
-            // tslint:disable-next-line:no-unnecessary-override
+
             public addRemoveDocOpenedHandlers() {
                 super.addRemoveDocOpenedHandlers();
             }

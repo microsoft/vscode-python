@@ -23,7 +23,6 @@ const originalFileToFormatWithConfig = path.join(sortingPath, 'withconfig', 'ori
 const fileToFormatWithConfig1 = path.join(sortingPath, 'withconfig', 'before.1.py');
 const originalFileToFormatWithConfig1 = path.join(sortingPath, 'withconfig', 'original.1.py');
 
-// tslint:disable-next-line:max-func-body-length
 suite('Sorting', () => {
     let ioc: UnitTestIocContainer;
     let sorter: ISortImportsEditingProvider;
@@ -35,7 +34,6 @@ suite('Sorting', () => {
             ? parseFloat(process.env.PythonVersion)
             : undefined;
         if (pythonVersion && pythonVersion < 3) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
         await initialize();
@@ -48,7 +46,6 @@ suite('Sorting', () => {
         await closeActiveWindows();
     });
     setup(async function () {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(TEST_TIMEOUT * 2);
         await initializeTest();
         initializeDI();

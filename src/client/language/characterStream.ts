@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable-next-line:import-name
 import Char from 'typescript-char';
 import { isLineBreak, isWhiteSpace } from './characters';
 import { TextIterator } from './textIterator';

@@ -15,8 +15,6 @@ import { IFileSystem } from '../platform/types';
 import { ICurrentProcess, IExtensions } from '../types';
 import { IThemeFinder } from './types';
 
-// tslint:disable:no-any
-
 interface IThemeData {
     rootFile: string;
     isDark: boolean;

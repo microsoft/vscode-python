@@ -10,7 +10,7 @@ import { clearCache, InMemoryCache, InMemoryInterpreterSpecificCache } from '../
 
 type CacheUtilsTestScenario = {
     scenarioDesc: string;
-    // tslint:disable-next-line:no-any
+
     dataToStore: any;
 };
 
@@ -47,7 +47,6 @@ class TestInMemoryInterpreterSpecificCache extends InMemoryInterpreterSpecificCa
     }
 }
 
-// tslint:disable:no-any max-func-body-length
 suite('Common Utils - CacheUtils', () => {
     suite('InMemory Cache', () => {
         let clock: sinon.SinonFakeTimers;

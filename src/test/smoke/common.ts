@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any no-invalid-this no-default-export no-console
-
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';

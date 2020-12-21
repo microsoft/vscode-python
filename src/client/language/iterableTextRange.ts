@@ -20,7 +20,7 @@ export class IterableTextRange<T extends ITextRange> implements Iterable<T> {
                 } else {
                     return {
                         done: true,
-                        // tslint:disable-next-line:no-any
+
                         value: undefined as any,
                     };
                 }

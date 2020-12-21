@@ -10,25 +10,23 @@ import { IDisposable } from '../../client/common/types';
 import { logMessage } from './logger';
 
 export interface IVsCodeApi {
-    // tslint:disable-next-line:no-any
     postMessage(msg: any): void;
-    // tslint:disable-next-line:no-any
+
     setState(state: any): void;
-    // tslint:disable-next-line:no-any
+
     getState(): any;
 }
 
 export interface IMessageHandler {
-    // tslint:disable-next-line:no-any
     handleMessage(type: string, payload?: any): boolean;
     dispose?(): void;
 }
 
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;
-// tslint:disable-next-line: no-any
+
 export type PostOfficeMessage = { type: string; payload?: any };
-// tslint:disable-next-line: no-unnecessary-class
+
 export class PostOffice implements IDisposable {
     private registered: boolean = false;
     private vscodeApi: IVsCodeApi | undefined;
@@ -53,7 +51,6 @@ export class PostOffice implements IDisposable {
         return this.sendUnsafeMessage(type.toString(), payload);
     }
 
-    // tslint:disable-next-line:no-any
     public sendUnsafeMessage(type: string, payload?: any) {
         const api = this.acquireApi();
         if (api) {
@@ -75,7 +72,7 @@ export class PostOffice implements IDisposable {
 
     private acquireApi(): IVsCodeApi | undefined {
         // Only do this once as it crashes if we ask more than once
-        // tslint:disable-next-line:no-typeof-undefined
+
         if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
             this.vscodeApi = acquireVsCodeApi(); // NOSONAR
         }
@@ -87,7 +84,7 @@ export class PostOffice implements IDisposable {
                 // For testing, we might use a  browser to load  the stuff.
                 // In such instances the `acquireVSCodeApi` will return the event handler to get messages from extension.
                 // See ./src/startPage-ui/startPage/index.html
-                // tslint:disable-next-line: no-any
+
                 const api = (this.vscodeApi as any) as { handleMessage?: Function };
                 if (api && api.handleMessage) {
                     api.handleMessage(this.handleMessages.bind(this));

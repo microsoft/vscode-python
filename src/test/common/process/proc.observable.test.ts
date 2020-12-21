@@ -12,7 +12,6 @@ import { initialize } from './../../initialize';
 
 use(chaiAsPromised);
 
-// tslint:disable-next-line:max-func-body-length
 suite('ProcessService', () => {
     let pythonPath: string;
     suiteSetup(() => {
@@ -23,7 +22,6 @@ suite('ProcessService', () => {
     teardown(initialize);
 
     test('execObservable should stream output with new lines', function (done) {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(10000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
@@ -65,10 +63,9 @@ suite('ProcessService', () => {
     test('execObservable should stream output without new lines', function (done) {
         // Skipping to get nightly build to pass. Opened this issue:
         // https://github.com/microsoft/vscode-python/issues/7411
-        // tslint:disable-next-line: no-invalid-this
+
         this.skip();
 
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(10000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
@@ -108,7 +105,6 @@ suite('ProcessService', () => {
     });
 
     test('execObservable should end when cancellationToken is cancelled', function (done) {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
@@ -155,7 +151,6 @@ suite('ProcessService', () => {
     });
 
     test('execObservable should end when process is killed', function (done) {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
@@ -200,7 +195,6 @@ suite('ProcessService', () => {
     });
 
     test('execObservable should stream stdout and stderr separately', function (done) {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(20000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
@@ -256,7 +250,6 @@ suite('ProcessService', () => {
     test('execObservable should send stdout and stderr streams separately', async function () {
         // This test is failing on Windows. Tracked by GH #4755.
         if (isOs(OSType.Windows)) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
     });

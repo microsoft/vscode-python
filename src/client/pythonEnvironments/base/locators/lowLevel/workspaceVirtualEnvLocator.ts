@@ -64,7 +64,7 @@ async function buildSimpleVirtualEnvInfo(executablePath: string, kind: PythonEnv
     const location = getEnvironmentDirFromPath(executablePath);
     envInfo.location = location;
     envInfo.name = path.basename(location);
-    // tslint:disable-next-line:no-suspicious-comment
+
     // TODO: Call a general display name provider here to build display name.
     const fileData = await getFileInfo(executablePath);
     envInfo.executable.ctime = fileData.ctime;

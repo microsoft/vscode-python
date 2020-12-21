@@ -25,8 +25,6 @@ import { EnvironmentVariablesProvider } from '../../../client/common/variables/e
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { sleep } from '../../core';
 
-// tslint:disable:no-unnecessary-override no-any chai-vague-errors no-unused-expression max-func-body-length
-
 suite('Language Server - Analysis Options', () => {
     class TestClass extends DotNetLanguageServerAnalysisOptions {
         public getDocumentFilters(workspaceFolder?: WorkspaceFolder): DocumentFilter[] {

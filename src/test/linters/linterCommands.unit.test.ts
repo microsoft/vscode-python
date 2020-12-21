@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length messages-must-be-localized
-
 import { expect } from 'chai';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../client/common/application/applicationShell';

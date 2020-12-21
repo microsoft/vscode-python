@@ -24,7 +24,6 @@ import { IFileSystem } from '../../../../client/common/platform/types';
 import { Diagnostics } from '../../../../client/common/utils/localize';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
-// tslint:disable:max-func-body-length no-any
 suite('Application Diagnostics - Checks if launch.json is invalid', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let diagnosticService: IDiagnosticsService;

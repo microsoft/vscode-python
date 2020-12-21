@@ -65,7 +65,6 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
         return PYTHON;
     }
 
-    // tslint:disable-next-line: no-any
     protected async getInitializationOptions(): Promise<any> {
         return undefined;
     }

@@ -5,7 +5,6 @@
 import * as assert from 'assert';
 import { TextRange } from '../../client/language/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Language.TextRange', () => {
     test('Empty static', async () => {
         const e = TextRange.empty;

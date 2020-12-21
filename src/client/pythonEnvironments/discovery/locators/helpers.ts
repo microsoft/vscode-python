@@ -14,7 +14,6 @@ export async function lookForInterpretersInDirectory(pathToCheck: string): Promi
     // Technically, we should be able to use fs.getFiles().  However,
     // that breaks some tests.  So we stick with the broader behavior.
     try {
-        // tslint:disable-next-line: no-suspicious-comment
         // TODO https://github.com/microsoft/vscode-python/issues/11338
         const files = await fsapi.readdir(pathToCheck);
         return files

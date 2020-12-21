@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-this no-require-imports no-var-requires no-any
-
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 import * as vscodeMocks from './mocks/vsc';

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:max-classes-per-file
-
 import { Event, EventEmitter, Uri } from 'vscode';
 import { FileChangeType } from '../../common/platform/fileSystemWatcher';
 import { PythonEnvKind } from './info';

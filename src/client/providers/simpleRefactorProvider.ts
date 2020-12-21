@@ -29,7 +29,6 @@ export function activateSimplePythonRefactorProvider(
             vscode.window.activeTextEditor!.selection,
             outputChannel,
             serviceContainer,
-            // tslint:disable-next-line:no-empty
         ).catch(() => {});
         sendTelemetryWhenDone(EventName.REFACTOR_EXTRACT_VAR, promise, stopWatch);
     });
@@ -42,7 +41,6 @@ export function activateSimplePythonRefactorProvider(
             vscode.window.activeTextEditor!.selection,
             outputChannel,
             serviceContainer,
-            // tslint:disable-next-line:no-empty
         ).catch(() => {});
         sendTelemetryWhenDone(EventName.REFACTOR_EXTRACT_FUNCTION, promise, stopWatch);
     });
@@ -55,7 +53,6 @@ export function extractVariable(
     range: vscode.Range,
     outputChannel: vscode.OutputChannel,
     serviceContainer: IServiceContainer,
-    // tslint:disable-next-line:no-any
 ): Promise<any> {
     let workspaceFolder = vscode.workspace.getWorkspaceFolder(textEditor.document.uri);
     if (
@@ -95,7 +92,6 @@ export function extractMethod(
     range: vscode.Range,
     outputChannel: vscode.OutputChannel,
     serviceContainer: IServiceContainer,
-    // tslint:disable-next-line:no-any
 ): Promise<any> {
     let workspaceFolder = vscode.workspace.getWorkspaceFolder(textEditor.document.uri);
     if (
@@ -129,13 +125,11 @@ export function extractMethod(
     });
 }
 
-// tslint:disable-next-line:no-any
 function validateDocumentForRefactor(textEditor: vscode.TextEditor): Promise<any> {
     if (!textEditor.document.isDirty) {
         return Promise.resolve();
     }
 
-    // tslint:disable-next-line:no-any
     return new Promise<any>((resolve, reject) => {
         vscode.window.showInformationMessage('Please save changes before refactoring', 'Save').then((item) => {
             if (item === 'Save') {
@@ -152,7 +146,6 @@ function extractName(
     newName: string,
     renameResponse: Promise<string>,
     outputChannel: vscode.OutputChannel,
-    // tslint:disable-next-line:no-any
 ): Promise<any> {
     let changeStartsAtLine = -1;
     return renameResponse

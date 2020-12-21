@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-
 import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';

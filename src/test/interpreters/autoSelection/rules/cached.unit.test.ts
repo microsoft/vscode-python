@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-unnecessary-override no-any max-func-body-length no-invalid-this
-
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';

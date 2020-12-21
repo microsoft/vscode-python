@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any
-
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, CompletionItemKind, Position, SymbolKind, TextDocument, TextLine } from 'vscode';
 import { IAutoCompleteSettings, IConfigurationService, IPythonSettings } from '../../../client/common/types';

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any no-require-imports
-
 import { Uri } from 'vscode';
 import '../../common/extensions';
 import { IServiceContainer } from '../../ioc/types';

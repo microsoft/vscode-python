@@ -10,7 +10,6 @@ import { PipInstaller } from '../../../client/common/installer/pipInstaller';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Pip installer', async () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let pythonExecutionFactory: TypeMoq.IMock<IPythonExecutionFactory>;
@@ -44,12 +43,8 @@ suite('Pip installer', async () => {
             })
             .returns(() => Promise.resolve(pythonExecutionService.object))
             .verifiable(TypeMoq.Times.once());
-        pythonExecutionService
-            // tslint:disable-next-line: no-any
-            .setup((p) => (p as any).then)
-            .returns(() => undefined);
+        pythonExecutionService.setup((p) => (p as any).then).returns(() => undefined);
 
-        // tslint:disable-next-line: no-any
         await pipInstaller.isSupported(interpreter as any);
 
         pythonExecutionFactory.verifyAll();
@@ -65,10 +60,7 @@ suite('Pip installer', async () => {
             })
             .returns(() => Promise.resolve(pythonExecutionService.object))
             .verifiable(TypeMoq.Times.once());
-        pythonExecutionService
-            // tslint:disable-next-line: no-any
-            .setup((p) => (p as any).then)
-            .returns(() => undefined);
+        pythonExecutionService.setup((p) => (p as any).then).returns(() => undefined);
 
         await pipInstaller.isSupported(resource);
 
@@ -81,10 +73,7 @@ suite('Pip installer', async () => {
         pythonExecutionFactory
             .setup((p) => p.create(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(pythonExecutionService.object));
-        pythonExecutionService
-            // tslint:disable-next-line: no-any
-            .setup((p) => (p as any).then)
-            .returns(() => undefined);
+        pythonExecutionService.setup((p) => (p as any).then).returns(() => undefined);
         pythonExecutionService.setup((p) => p.isModuleInstalled('pip')).returns(() => Promise.resolve(true));
 
         const expected = await pipInstaller.isSupported(resource);
@@ -98,10 +87,7 @@ suite('Pip installer', async () => {
         pythonExecutionFactory
             .setup((p) => p.create(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(pythonExecutionService.object));
-        pythonExecutionService
-            // tslint:disable-next-line: no-any
-            .setup((p) => (p as any).then)
-            .returns(() => undefined);
+        pythonExecutionService.setup((p) => (p as any).then).returns(() => undefined);
         pythonExecutionService.setup((p) => p.isModuleInstalled('pip')).returns(() => Promise.resolve(false));
 
         const expected = await pipInstaller.isSupported(resource);
@@ -115,10 +101,7 @@ suite('Pip installer', async () => {
         pythonExecutionFactory
             .setup((p) => p.create(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(pythonExecutionService.object));
-        pythonExecutionService
-            // tslint:disable-next-line: no-any
-            .setup((p) => (p as any).then)
-            .returns(() => undefined);
+        pythonExecutionService.setup((p) => (p as any).then).returns(() => undefined);
         pythonExecutionService
             .setup((p) => p.isModuleInstalled('pip'))
             .returns(() => Promise.reject('Unable to check if module is installed'));

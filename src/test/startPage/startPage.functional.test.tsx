@@ -22,7 +22,6 @@ suite('StartPage tests', () => {
         await ioc.dispose();
     });
 
-    // tslint:disable-next-line: no-any
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
         // Setup our webview panel
         const wrapper = ioc.createWebView(
@@ -36,7 +35,6 @@ suite('StartPage tests', () => {
         return wrapper.wrapper;
     }
 
-    // tslint:disable:no-any
     function runMountedTest(
         name: string,
         testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
@@ -62,7 +60,6 @@ suite('StartPage tests', () => {
                     originalUpdateFunc = originalUpdateFunc.bind(component);
                 }
 
-                // tslint:disable-next-line:no-any
                 component.componentDidUpdate = (prevProps: Readonly<P>, prevState: Readonly<S>, snapshot?: any) => {
                     // When the component updates, call the original function and resolve our promise
                     if (originalUpdateFunc) {

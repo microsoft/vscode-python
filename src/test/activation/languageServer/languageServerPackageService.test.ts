@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any no-invalid-this max-func-body-length
-
 import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';

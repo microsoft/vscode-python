@@ -23,7 +23,6 @@ class SignatureHelpResult {
     ) {}
 }
 
-// tslint:disable-next-line:max-func-body-length
 suite('Language Server: Signatures (Jedi)', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
@@ -106,7 +105,6 @@ suite('Language Server: Signatures (Jedi)', () => {
 
     test('For ellipsis', async function () {
         if (isPython2) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
         const expected = [

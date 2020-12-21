@@ -7,7 +7,6 @@
 import '../common/main';
 // This must be on top, do not change. Required by webpack.
 
-// tslint:disable-next-line: ordered-imports
 import '../common/index.css';
 
 import * as React from 'react';
@@ -21,9 +20,9 @@ import { StartPage } from './startPage';
 export declare function acquireVsCodeApi(): IVsCodeApi;
 
 const baseTheme = detectBaseTheme();
-// tslint:disable-next-line: no-any
+
 const testMode = (window as any).inTestMode;
-// tslint:disable-next-line: no-typeof-undefined
+
 const skipDefault = testMode ? false : typeof acquireVsCodeApi !== 'undefined';
 
 ReactDOM.render(

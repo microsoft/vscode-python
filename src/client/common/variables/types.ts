@@ -29,7 +29,7 @@ export interface ISystemVariables {
     resolve(value: IStringDictionary<string[]>): IStringDictionary<string[]>;
     resolve(value: IStringDictionary<IStringDictionary<string>>): IStringDictionary<IStringDictionary<string>>;
     resolveAny<T>(value: T): T;
-    // tslint:disable-next-line:no-any
+
     [key: string]: any;
 }
 

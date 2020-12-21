@@ -18,7 +18,6 @@ import {
 import { TestDataItemType } from '../../../../client/testing/types';
 import { createMockTestDataItem } from '../testUtils.unit.test';
 
-// tslint:disable:no-any max-func-body-length
 suite('Unit Tests - Storage Service', () => {
     let testData1: Tests;
     let testData2: Tests;

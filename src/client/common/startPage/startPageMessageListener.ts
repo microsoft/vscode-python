@@ -4,7 +4,6 @@
 import { IWebviewPanel, IWebviewPanelMessageListener } from '../application/types';
 import '../extensions';
 
-// tslint:disable:no-any
 // This class listens to messages that come from the local Python Interactive window
 export class StartPageMessageListener implements IWebviewPanelMessageListener {
     private disposedCallback: () => void;

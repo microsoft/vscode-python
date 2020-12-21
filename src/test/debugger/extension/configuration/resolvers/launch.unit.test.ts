@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-invalid-template-strings no-any no-object-literal-type-assertion
-
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
@@ -163,7 +161,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(debugConfig).to.have.property('envFile');
             expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env2').toLowerCase());
             expect(debugConfig).to.have.property('env');
-            // tslint:disable-next-line:no-any
+
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
 
@@ -191,7 +189,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(debugConfig).to.have.property('envFile');
             expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env2').toLowerCase());
             expect(debugConfig).to.have.property('env');
-            // tslint:disable-next-line:no-any
+
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
 
@@ -218,7 +216,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(debugConfig).to.have.property('envFile');
             expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env2').toLowerCase());
             expect(debugConfig).to.have.property('env');
-            // tslint:disable-next-line:no-any
+
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
 
@@ -241,7 +239,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(debugConfig).not.to.have.property('cwd');
             expect(debugConfig).not.to.have.property('envFile');
             expect(debugConfig).to.have.property('env');
-            // tslint:disable-next-line:no-any
+
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
 
@@ -265,7 +263,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(debugConfig).not.to.have.property('cwd');
             expect(debugConfig).not.to.have.property('envFile');
             expect(debugConfig).to.have.property('env');
-            // tslint:disable-next-line:no-any
+
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
 
@@ -293,7 +291,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(debugConfig).to.have.property('envFile');
             expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env2').toLowerCase());
             expect(debugConfig).to.have.property('env');
-            // tslint:disable-next-line:no-any
+
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
 
@@ -465,7 +463,6 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
         test('Ensure drive letter is lower cased for local path mappings on Windows when with existing path mappings', async function () {
             if (getOSType() !== OSType.Windows || osType !== OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
             const workspaceFolder = createMoqWorkspaceFolder(path.join('C:', 'Debug', 'Python_Path'));
@@ -496,7 +493,6 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
         test('Ensure drive letter is not lower cased for local path mappings on non-Windows when with existing path mappings', async function () {
             if (getOSType() === OSType.Windows || osType === OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
             const workspaceFolder = createMoqWorkspaceFolder(path.join('USR', 'Debug', 'Python_Path'));

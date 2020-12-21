@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable-next-line:import-name
 import Char from 'typescript-char';
 import { Position, Range, TextDocument } from 'vscode';
 import { BraceCounter } from '../language/braceCounter';
@@ -44,7 +43,6 @@ export class LineFormatter {
     private document?: TextDocument;
     private lineNumber = 0;
 
-    // tslint:disable-next-line:cyclomatic-complexity
     public formatLine(document: TextDocument, lineNumber: number): string {
         this.document = document;
         this.lineNumber = lineNumber;
@@ -125,7 +123,6 @@ export class LineFormatter {
         return this.builder.getText();
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity
     private handleOperator(index: number): void {
         const t = this.tokens.getItemAt(index);
         const prev = index > 0 ? this.tokens.getItemAt(index - 1) : undefined;
@@ -305,7 +302,6 @@ export class LineFormatter {
         }
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity
     private isEqualsInsideArguments(index: number): boolean {
         if (index < 1) {
             return false;
@@ -354,7 +350,6 @@ export class LineFormatter {
         );
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity
     private isInsideFunctionArguments(position: number): boolean {
         if (!this.document) {
             return false; // unable to determine

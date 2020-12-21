@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any no-unnecessary-override
-
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { Container } from 'inversify';
@@ -214,7 +212,6 @@ suite('Interpreters service', () => {
                 });
             serviceManager.addSingletonInstance(IDocumentManager, documentManager.object);
 
-            // tslint:disable-next-line:no-any
             service.initialize();
             const textEditor = TypeMoq.Mock.ofType<TextEditor>();
             const uri = Uri.file(path.join('usr', 'file.py'));
@@ -245,7 +242,6 @@ suite('Interpreters service', () => {
                 });
             serviceManager.addSingletonInstance(IDocumentManager, documentManager.object);
 
-            // tslint:disable-next-line:no-any
             service.initialize();
             activeTextEditorChangeHandler!();
 
@@ -289,7 +285,6 @@ suite('Interpreters service', () => {
                 });
             serviceManager.addSingletonInstance(IDocumentManager, documentManager.object);
 
-            // tslint:disable-next-line:no-any
             service.initialize();
             expect(interpreterPathServiceHandler).to.not.equal(undefined, 'Handler not set');
 

@@ -28,7 +28,6 @@ const filesToDelete = [
     path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids'),
 ];
 
-// tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - nose - run against actual python process', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST
@@ -152,7 +151,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const testFileToRun = tests.testFiles.find((t) => t.fullPath.endsWith('test_root.py'));
         assert.ok(testFileToRun, 'Test file not found');
-        // tslint:disable-next-line:no-non-null-assertion
+
         const testFile: TestsToRun = { testFile: [testFileToRun!], testFolder: [], testFunction: [], testSuite: [] };
         const results = await testManager.runTest(CommandSource.ui, testFile);
         assert.equal(results.summary.errors, 0, 'Errors');
@@ -170,7 +169,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const testSuiteToRun = tests.testSuites.find((s) => s.xmlClassName === 'test_root.Test_Root_test1');
         assert.ok(testSuiteToRun, 'Test suite not found');
-        // tslint:disable-next-line:no-non-null-assertion
+
         const testSuite: TestsToRun = {
             testFile: [],
             testFolder: [],
@@ -193,7 +192,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const testFnToRun = tests.testFunctions.find((f) => f.xmlClassName === 'test_root.Test_Root_test1');
         assert.ok(testFnToRun, 'Test function not found');
-        // tslint:disable-next-line:no-non-null-assertion
+
         const testFn: TestsToRun = {
             testFile: [],
             testFolder: [],

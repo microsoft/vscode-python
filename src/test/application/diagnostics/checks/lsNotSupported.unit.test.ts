@@ -25,7 +25,6 @@ import {
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
-// tslint:disable:max-func-body-length no-any
 suite('Application Diagnostics - Checks LS not supported', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let diagnosticService: IDiagnosticsService;

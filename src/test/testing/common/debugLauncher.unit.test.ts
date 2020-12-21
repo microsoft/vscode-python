@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
@@ -32,7 +30,6 @@ import { isOs, OSType } from '../../common';
 
 use(chaiAsPromised);
 
-// tslint:disable-next-line:max-func-body-length no-any
 suite('Unit Tests - Debug Launcher', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let unitTestSettings: TypeMoq.IMock<ITestingSettings>;
@@ -244,7 +241,7 @@ suite('Unit Tests - Debug Launcher', () => {
     }
 
     const testProviders: TestProvider[] = ['nosetest', 'pytest', 'unittest'];
-    // tslint:disable-next-line:max-func-body-length
+
     testProviders.forEach((testProvider) => {
         const testTitleSuffix = `(Test Framework '${testProvider}')`;
 
@@ -457,7 +454,7 @@ suite('Unit Tests - Debug Launcher', () => {
             testProvider: 'unittest',
         };
         const expected = getDefaultDebugConfig();
-        // tslint:disable:no-object-literal-type-assertion
+
         setupSuccess(options, 'unittest', expected, [
             {} as DebugConfiguration,
             { name: 'spam1' } as DebugConfiguration,
@@ -467,7 +464,6 @@ suite('Unit Tests - Debug Launcher', () => {
             { type: DebuggerTypeName, request: 'test' } as DebugConfiguration,
             { request: 'test' } as DebugConfiguration,
         ]);
-        // tslint:enable:no-object-literal-type-assertion
 
         await debugLauncher.launchDebugger(options);
 

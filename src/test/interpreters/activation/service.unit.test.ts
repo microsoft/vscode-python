@@ -37,7 +37,6 @@ const defaultShells = {
     [OSType.Unknown]: undefined,
 };
 
-// tslint:disable:no-unnecessary-override no-any max-func-body-length
 suite('Interpreters Activation - Python Environment Variables', () => {
     let service: EnvironmentActivationService;
     let helper: ITerminalHelper;
@@ -175,7 +174,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                             const options = capture(processService.shellExec).first()[1];
 
                             const expectedShell = defaultShells[osType.value];
-                            // tslint:disable-next-line: chai-vague-errors
+
                             expect(options).to.deep.equal({
                                 shell: expectedShell,
                                 env: envVars,
@@ -210,7 +209,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                             const options = capture(processService.shellExec).first()[1];
 
                             const expectedShell = defaultShells[osType.value];
-                            // tslint:disable-next-line: chai-vague-errors
+
                             expect(options).to.deep.equal({
                                 env: envVars,
                                 shell: expectedShell,

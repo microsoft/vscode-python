@@ -106,7 +106,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         }
     }
 
-    // tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
             case SharedMessages.Started:
@@ -199,7 +198,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         this.onViewStateChanged({ current, previous });
     };
 
-    // tslint:disable-next-line:no-any
     private webPanelRendered() {
         if (this.webviewInit && !this.webviewInit.resolved) {
             // Send telemetry for startup

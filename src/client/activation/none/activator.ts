@@ -44,11 +44,11 @@ export class NoLanguageServerExtensionActivator implements ILanguageServerActiva
             this.proposePylancePopup.showBanner().ignoreErrors();
         }
     }
-    // tslint:disable-next-line: no-empty
+
     public dispose(): void {}
-    // tslint:disable-next-line: no-empty
+
     public activate(): void {}
-    // tslint:disable-next-line: no-empty
+
     public deactivate(): void {}
 
     public provideRenameEdits(

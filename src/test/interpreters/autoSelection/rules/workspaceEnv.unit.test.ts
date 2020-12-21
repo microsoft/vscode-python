@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-unnecessary-override no-any max-func-body-length no-invalid-this
-
 import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import * as assert from 'assert';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
@@ -94,7 +92,6 @@ suite('Insiders Extension Service - Handle channel', () => {
     });
 });
 
-// tslint:disable-next-line: max-func-body-length
 suite('Insiders Extension Service - Activation', () => {
     let appEnvironment: IApplicationEnvironment;
     let serviceContainer: IServiceContainer;
@@ -214,7 +211,6 @@ suite('Insiders Extension Service - Activation', () => {
     });
 });
 
-// tslint:disable-next-line: max-func-body-length
 suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     let appEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -376,7 +372,6 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     });
 });
 
-// tslint:disable-next-line: max-func-body-length
 suite('Insiders Extension Service - Function registerCommandsAndHandlers()', () => {
     let appEnvironment: IApplicationEnvironment;
     let serviceContainer: IServiceContainer;

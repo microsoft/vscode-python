@@ -23,7 +23,6 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
         return this._launched.promise;
     }
     public get debuggerPromise(): Deferred<Tests> {
-        // tslint:disable-next-line:no-non-null-assertion
         return this._promise!;
     }
     public get cancellationToken(): CancellationToken {
@@ -32,11 +31,11 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
         }
         return this._token;
     }
-    // tslint:disable-next-line:variable-name
+
     private _launched: Deferred<boolean>;
-    // tslint:disable-next-line:variable-name
+
     private _promise?: Deferred<Tests>;
-    // tslint:disable-next-line:variable-name
+
     private _token?: CancellationToken;
     constructor() {
         this._launched = createDeferred<boolean>();
@@ -46,10 +45,10 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
     }
     public async launchDebugger(options: LaunchOptions): Promise<void> {
         this._launched.resolve(true);
-        // tslint:disable-next-line:no-non-null-assertion
+
         this._token = options.token!;
         this._promise = createDeferred<Tests>();
-        // tslint:disable-next-line:no-non-null-assertion
+
         options.token!.onCancellationRequested(() => {
             if (this._promise) {
                 this._promise.reject('Mock-User Cancelled');
@@ -64,10 +63,9 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
 
 @injectable()
 export class MockTestManagerWithRunningTests extends BaseTestManager {
-    // tslint:disable-next-line:no-any
     public readonly runnerDeferred = createDeferred<Tests>();
     public readonly enabled = true;
-    // tslint:disable-next-line:no-any
+
     public readonly discoveryDeferred = createDeferred<Tests>();
     constructor(
         testProvider: TestProvider,
@@ -79,24 +77,21 @@ export class MockTestManagerWithRunningTests extends BaseTestManager {
         super(testProvider, product, workspaceFolder, rootDirectory, serviceContainer);
     }
     protected getDiscoveryOptions(_ignoreCache: boolean) {
-        // tslint:disable-next-line:no-object-literal-type-assertion
         return {} as TestDiscoveryOptions;
     }
-    // tslint:disable-next-line:no-any
+
     protected async runTestImpl(
         _tests: Tests,
         _testsToRun?: TestsToRun,
         _runFailedTests?: boolean,
         _debug?: boolean,
     ): Promise<Tests> {
-        // tslint:disable-next-line:no-non-null-assertion
         this.testRunnerCancellationToken!.onCancellationRequested(() => {
             this.runnerDeferred.reject(CANCELLATION_REASON);
         });
         return this.runnerDeferred.promise;
     }
     protected async discoverTestsImpl(_ignoreCache: boolean, _debug?: boolean): Promise<Tests> {
-        // tslint:disable-next-line:no-non-null-assertion
         this.testDiscoveryCancellationToken!.onCancellationRequested(() => {
             this.discoveryDeferred.reject(CANCELLATION_REASON);
         });
@@ -112,7 +107,6 @@ export class MockDiscoveryService implements ITestDiscoveryService {
     }
 }
 
-// tslint:disable-next-line:max-classes-per-file
 @injectable()
 export class MockUnitTestSocketServer extends EventEmitter implements IUnitTestSocketServer {
     private results: {}[] = [];
@@ -129,8 +123,8 @@ export class MockUnitTestSocketServer extends EventEmitter implements IUnitTestS
         this.results = [];
         return typeof options.port === 'number' ? options.port! : 0;
     }
-    // tslint:disable-next-line:no-empty
+
     public stop(): void {}
-    // tslint:disable-next-line:no-empty
+
     public dispose() {}
 }

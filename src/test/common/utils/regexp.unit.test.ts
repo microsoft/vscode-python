@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-multiline-string
-
 import { expect } from 'chai';
 
 import { verboseRegExp } from '../../../client/common/utils/regexp';

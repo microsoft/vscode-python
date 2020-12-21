@@ -432,7 +432,7 @@ export namespace DebugConfigStrings {
         export const snippet = {
             name: localize('python.snippet.launch.standard.label'),
         };
-        // tslint:disable-next-line:no-shadowed-variable
+
         export const selectConfiguration = {
             label: localize('debug.debugFileConfigurationLabel'),
             description: localize('debug.debugFileConfigurationDescription'),
@@ -443,7 +443,7 @@ export namespace DebugConfigStrings {
             name: localize('python.snippet.launch.module.label'),
             default: localize('python.snippet.launch.module.default'),
         };
-        // tslint:disable-next-line:no-shadowed-variable
+
         export const selectConfiguration = {
             label: localize('debug.debugModuleConfigurationLabel'),
             description: localize('debug.debugModuleConfigurationDescription'),
@@ -459,7 +459,7 @@ export namespace DebugConfigStrings {
         export const snippet = {
             name: localize('python.snippet.launch.attach.label'),
         };
-        // tslint:disable-next-line:no-shadowed-variable
+
         export const selectConfiguration = {
             label: localize('debug.remoteAttachConfigurationLabel'),
             description: localize('debug.remoteAttachConfigurationDescription'),
@@ -479,7 +479,7 @@ export namespace DebugConfigStrings {
         export const snippet = {
             name: localize('python.snippet.launch.attachpid.label'),
         };
-        // tslint:disable-next-line:no-shadowed-variable
+
         export const selectConfiguration = {
             label: localize('debug.attachPidConfigurationLabel'),
             description: localize('debug.attachPidConfigurationDescription'),
@@ -489,7 +489,7 @@ export namespace DebugConfigStrings {
         export const snippet = {
             name: localize('python.snippet.launch.django.label'),
         };
-        // tslint:disable-next-line:no-shadowed-variable
+
         export const selectConfiguration = {
             label: localize('debug.debugDjangoConfigurationLabel'),
             description: localize('debug.debugDjangoConfigurationDescription'),
@@ -504,7 +504,7 @@ export namespace DebugConfigStrings {
         export const snippet = {
             name: localize('python.snippet.launch.fastapi.label'),
         };
-        // tslint:disable-next-line:no-shadowed-variable
+
         export const selectConfiguration = {
             label: localize('debug.debugFastAPIConfigurationLabel'),
             description: localize('debug.debugFastAPIConfigurationDescription'),
@@ -519,7 +519,7 @@ export namespace DebugConfigStrings {
         export const snippet = {
             name: localize('python.snippet.launch.flask.label'),
         };
-        // tslint:disable-next-line:no-shadowed-variable
+
         export const selectConfiguration = {
             label: localize('debug.debugFlaskConfigurationLabel'),
             description: localize('debug.debugFlaskConfigurationDescription'),
@@ -534,7 +534,7 @@ export namespace DebugConfigStrings {
         export const snippet = {
             name: localize('python.snippet.launch.pyramid.label'),
         };
-        // tslint:disable-next-line:no-shadowed-variable
+
         export const selectConfiguration = {
             label: localize('debug.debugPyramidConfigurationLabel'),
             description: localize('debug.debugPyramidConfigurationDescription'),
@@ -594,7 +594,6 @@ export function getCollectionJSON(): string {
     return JSON.stringify({ ...defaultCollection, ...loadedCollection });
 }
 
-// tslint:disable-next-line:no-suspicious-comment
 export function localize(key: string, defValue?: string) {
     // Return a pointer to function so that we refetch it on each call.
     return () => {

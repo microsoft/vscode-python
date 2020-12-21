@@ -3,7 +3,6 @@
 
 'use strict';
 
-// tslint:disable: no-var-requires no-require-imports max-func-body-length no-any match-default-export-name
 import * as assert from 'assert';
 import { expect } from 'chai';
 import * as fsExtra from 'fs-extra';

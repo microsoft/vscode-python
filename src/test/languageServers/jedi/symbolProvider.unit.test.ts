@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any no-require-imports no-var-requires
-
 import { expect, use } from 'chai';
 import * as TypeMoq from 'typemoq';
 import {
@@ -333,7 +331,7 @@ suite('Language Server Symbol Provider', () => {
         //           self.assertTrue(False)
         //
         // See: LanguageServerSymbolProvider.provideDocumentSymbols()
-        // tslint:disable-next-line:no-suspicious-comment
+
         // TODO: Change "raw" once the following issues are resolved:
         //  * https://github.com/Microsoft/python-language-server/issues/1
         //  * https://github.com/Microsoft/python-language-server/issues/2

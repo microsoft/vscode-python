@@ -14,7 +14,6 @@ import {
     REG_SZ,
 } from './windowsRegistry';
 
-// tslint:disable-next-line: no-single-line-block-comment
 /* eslint-disable global-require */
 
 /**

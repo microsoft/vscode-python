@@ -3,7 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-unused-variable
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -22,17 +21,16 @@ const fileEncoding = path.join(autoCompPath, 'four.py');
 const fileEncodingUsed = path.join(autoCompPath, 'five.py');
 const fileSuppress = path.join(autoCompPath, 'suppress.py');
 
-// tslint:disable-next-line:max-func-body-length
 suite('Language Server: Autocomplete Base Tests', function () {
     // Attempt to fix #1301
-    // tslint:disable-next-line:no-invalid-this
+
     this.timeout(60000);
     let ioc: UnitTestIocContainer;
     let skipTest: boolean;
 
     suiteSetup(async function () {
         // Attempt to fix #1301
-        // tslint:disable-next-line:no-invalid-this
+
         this.timeout(60000);
         await initialize();
         initializeDI();
@@ -118,7 +116,6 @@ suite('Language Server: Autocomplete Base Tests', function () {
     // https://github.com/DonJayamanne/pythonVSCode/issues/265
     test('For "lambda"', async function () {
         if (await isPythonVersion('2')) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
         const textDocument = await vscode.workspace.openTextDocument(fileLambda);
@@ -252,11 +249,9 @@ suite('Language Server: Autocomplete Base Tests', function () {
     });
 
     test('Across files With Unicode Characters', function (done) {
-        // tslint:disable-next-line:no-suspicious-comment
         // TODO: Fix this test.
         // See https://github.com/microsoft/vscode-python/issues/10399.
         if (skipTest) {
-            // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
         let textDocument: vscode.TextDocument;
@@ -327,7 +322,6 @@ suite('Language Server: Autocomplete Base Tests', function () {
     });
 });
 
-// tslint:disable-next-line:no-any
 function checkDocumentation(item: vscode.CompletionItem, expectedContains: string): void {
     let isValidType = false;
     let documentation: string;

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable-next-line: import-name
 import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
 
 import { LanguageServerType } from '../activation/types';
@@ -22,8 +21,6 @@ import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
 import { LinterTrigger, TestTool } from './types';
 
-// tslint:disable: no-any
-
 /**
  * Checks whether telemetry is supported.
  * Its possible this function gets called within Debug Adapter, vscode isn't available in there.
@@ -32,9 +29,8 @@ import { LinterTrigger, TestTool } from './types';
  */
 function isTelemetrySupported(): boolean {
     try {
-        // tslint:disable-next-line:no-require-imports
         const vsc = require('vscode');
-        // tslint:disable-next-line:no-require-imports
+
         const reporter = require('vscode-extension-telemetry');
         return vsc !== undefined && reporter !== undefined;
     } catch {
@@ -83,12 +79,11 @@ function getTelemetryReporter() {
         return telemetryReporter;
     }
     const extensionId = PVSC_EXTENSION_ID;
-    // tslint:disable-next-line:no-require-imports
+
     const extensions = (require('vscode') as typeof import('vscode')).extensions;
     const extension = extensions.getExtension(extensionId)!;
     const extensionVersion = extension.packageJSON.version;
 
-    // tslint:disable-next-line:no-require-imports
     const reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
     return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true));
 }
@@ -175,7 +170,7 @@ type TypedMethodDescriptor<T> = (
  * @param lazyProperties A static function on the decorated class which returns extra properties to add to the event.
  * This can be used to provide properties which are only known at runtime (after the decorator has executed).
  */
-// tslint:disable-next-line:no-any function-name
+
 export function captureTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     properties?: P[E],
@@ -183,20 +178,19 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
     failureEventName?: E,
     lazyProperties?: (obj: This) => P[E],
 ): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
-    // tslint:disable-next-line:no-function-expression no-any
     return function (
         _target: Object,
         _propertyKey: string | symbol,
         descriptor: TypedPropertyDescriptor<(this: This, ...args: any[]) => any>,
     ) {
         const originalMethod = descriptor.value!;
-        // tslint:disable-next-line:no-function-expression no-any
+
         descriptor.value = function (this: This, ...args: any[]) {
             // Legacy case; fast path that sends event before method executes.
             // Does not set "failed" if the result is a Promise and throws an exception.
             if (!captureDuration && !lazyProperties) {
                 sendTelemetryEvent(eventName, undefined, properties);
-                // tslint:disable-next-line:no-invalid-this
+
                 return originalMethod.apply(this, args);
             }
 
@@ -209,21 +203,18 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
 
             const stopWatch = captureDuration ? new StopWatch() : undefined;
 
-            // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
             const result = originalMethod.apply(this, args);
 
             // If method being wrapped returns a promise then wait for it.
-            // tslint:disable-next-line:no-unsafe-any
+
             if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
-                // tslint:disable-next-line:prefer-type-cast
                 (result as Promise<void>)
                     .then((data) => {
                         sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
                         return data;
                     })
-                    // tslint:disable-next-line:promise-function-async
+
                     .catch((ex) => {
-                        // tslint:disable-next-line:no-any
                         const failedProps: P[E] = props() || ({} as any);
                         (failedProps as any).failed = true;
                         sendTelemetryEvent(
@@ -253,16 +244,12 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
 ) {
     stopWatch = stopWatch ? stopWatch : new StopWatch();
     if (typeof promise.then === 'function') {
-        // tslint:disable-next-line:prefer-type-cast no-any
         (promise as Promise<any>).then(
             (data) => {
-                // tslint:disable-next-line:no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties);
                 return data;
-                // tslint:disable-next-line:promise-function-async
             },
             (ex) => {
-                // tslint:disable-next-line:no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties, ex);
                 return Promise.reject(ex);
             },

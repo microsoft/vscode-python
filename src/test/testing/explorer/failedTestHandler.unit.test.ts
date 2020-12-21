@@ -20,8 +20,6 @@ import {
 import { FailedTestHandler } from '../../../client/testing/explorer/failedTestHandler';
 import { noop, sleep } from '../../core';
 
-// tslint:disable:no-any
-
 suite('Unit Tests Test Explorer View Items', () => {
     let failedTestHandler: FailedTestHandler;
     let commandManager: ICommandManager;

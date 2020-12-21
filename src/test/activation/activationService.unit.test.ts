@@ -34,8 +34,6 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 
-// tslint:disable:max-func-body-length no-any
-
 suite('Language Server Activation - ActivationService', () => {
     [LanguageServerType.Jedi, LanguageServerType.Microsoft].forEach((languageServerType) => {
         suite(

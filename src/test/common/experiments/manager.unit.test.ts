@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
@@ -37,8 +35,6 @@ import {
 import { createDeferred, createDeferredFromPromise } from '../../../client/common/utils/async';
 import { sleep } from '../../common';
 import { noop } from '../../core';
-
-// tslint:disable: max-func-body-length
 
 suite('A/B experiments', () => {
     let httpClient: IHttpClient;
@@ -106,7 +102,6 @@ suite('A/B experiments', () => {
 
         try {
             await expManager.initializeInBackground();
-            // tslint:disable-next-line:no-empty
         } catch {}
 
         isDownloadedStorageValid.verifyAll();
@@ -424,7 +419,6 @@ suite('A/B experiments', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
-        // tslint:disable-next-line:no-multiline-string
         const fileContent = `
         // Yo! I am a JSON file with comments as well as trailing commas!
 
@@ -475,7 +469,6 @@ suite('A/B experiments', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
-        // tslint:disable-next-line:no-multiline-string
         const fileContent = `
         // Yo! I am a JSON file with comments as well as trailing commas!
 
@@ -623,7 +616,6 @@ suite('A/B experiments', () => {
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
 
-                // tslint:disable-next-line:no-multiline-string
                 const fileContent = `
             // Yo! I am a JSON file with comments as well as trailing commas!
 

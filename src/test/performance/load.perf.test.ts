@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-this no-console
-
 import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import { EOL } from 'os';

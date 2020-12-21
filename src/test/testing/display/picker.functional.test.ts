@@ -18,9 +18,6 @@ import { ITestCollectionStorageService, TestFunction, Tests } from '../../../cli
 import { TestDisplay } from '../../../client/testing/display/picker';
 import { createEmptyResults } from '../results';
 
-// tslint:disable:no-any
-
-// tslint:disable-next-line: max-func-body-length
 suite('Testing - TestDisplay', () => {
     const wkspace = Uri.file(__dirname);
     let mockedCommandManager: ICommandManager;
@@ -113,7 +110,6 @@ suite('Testing - TestDisplay', () => {
 
         test(`Test that clicking a codelens on parametrized tests opens a dropdown picker on windows (#8627)`, function () {
             if (process.platform !== 'win32') {
-                // tslint:disable-next-line: no-invalid-this
                 this.skip();
             }
             // The error described in #8627 originated from the problem that the casing of the drive letter was different

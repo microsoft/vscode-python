@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-constant-condition no-typeof-undefined
-
 import { EventEmitter } from 'events';
 import { injectable } from 'inversify';
 import { Readable } from 'stream';
@@ -11,7 +9,6 @@ import { IProtocolParser } from '../types';
 
 const PROTOCOL_START_INDENTIFIER = '\r\n\r\n';
 
-// tslint:disable-next-line: no-any
 type Listener = (...args: any[]) => void;
 
 /**

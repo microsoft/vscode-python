@@ -16,7 +16,6 @@ import { TerminalAutoActivation } from '../../../client/terminals/activation';
 import { ITerminalAutoActivation } from '../../../client/terminals/types';
 import { noop } from '../../core';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Terminal Auto Activation', () => {
     let activator: ITerminalActivator;
     let terminalManager: ITerminalManager;

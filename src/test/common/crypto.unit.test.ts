@@ -11,7 +11,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
 const RANDOM_WORDS = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'common', 'randomWords.txt');
 
-// tslint:disable-next-line: max-func-body-length
 suite('Crypto Utils', async () => {
     let crypto: CryptoUtils;
     let wordsText: string;
@@ -126,7 +125,7 @@ suite('Crypto Utils', async () => {
                 buckets[hash % 100] += 1;
                 hashes.push(hash % 100);
             }
-            // tslint:disable: prefer-for-of
+
             for (let i = 0; i < hashes.length; i += 1) {
                 for (let j = 0; j < hashes.length; j += 1) {
                     if (hashes[i] > hashes[j]) {

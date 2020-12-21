@@ -9,7 +9,6 @@ import { DocStringFoldingProvider } from '../../client/providers/docStringFoldin
 type FileFoldingRanges = { file: string; ranges: FoldingRange[] };
 const pythonFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'folding');
 
-// tslint:disable-next-line:max-func-body-length
 suite('Provider - Folding Provider', () => {
     const docStringFileAndExpectedFoldingRanges: FileFoldingRanges[] = [
         {

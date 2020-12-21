@@ -1,7 +1,7 @@
 'use strict';
 
 import * as net from 'net';
-// tslint:disable:no-var-requires no-require-imports member-ordering no-any
+
 const uint64be = require('uint64be');
 
 enum DataType {

@@ -20,8 +20,6 @@ import { createDeferred } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { sleep } from '../../core';
 
-// tslint:disable:max-func-body-length
-
 suite('Microsoft Language Server - Activator', () => {
     let activator: DotNetLanguageServerActivator;
     let workspaceService: IWorkspaceService;

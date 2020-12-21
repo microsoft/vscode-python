@@ -21,8 +21,6 @@ import {
 
 import { IDocumentManager } from './types';
 
-// tslint:disable:no-any unified-signatures
-
 @injectable()
 export class DocumentManager implements IDocumentManager {
     public get textDocuments(): readonly TextDocument[] {

@@ -7,7 +7,6 @@ import * as assert from 'assert';
 import { PsProcessParser } from '../../../../client/debugger/extension/attachQuickPick/psProcessParser';
 import { IAttachItem } from '../../../../client/debugger/extension/attachQuickPick/types';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Attach to process - ps process parser (POSIX)', () => {
     test('Processes should be parsed correctly if it is valid input', () => {
         const input = `\

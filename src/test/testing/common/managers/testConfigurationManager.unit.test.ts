@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import * as TypeMoq from 'typemoq';
 import { OutputChannel, Uri } from 'vscode';
 import { IInstaller, IOutputChannel, Product } from '../../../../client/common/types';

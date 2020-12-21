@@ -1,5 +1,3 @@
-// tslint:disable:no-unnecessary-callback-wrapper no-require-imports no-var-requires
-
 import { injectable, unmanaged } from 'inversify';
 import { flatten, noop } from 'lodash';
 import * as path from 'path';
