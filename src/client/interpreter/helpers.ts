@@ -15,16 +15,11 @@ import {
     PythonEnvironment,
     sortInterpreters
 } from '../pythonEnvironments/info';
-import { IComponentAdapter, IInterpreterHelper } from './contracts';
+import { IComponentAdapter, IInterpreterHelper, WorkspacePythonPath } from './contracts';
 import { IInterpreterHashProviderFactory } from './locators/types';
 
 const EXPITY_DURATION = 24 * 60 * 60 * 1000;
 type CachedPythonInterpreter = Partial<PythonEnvironment> & { fileHash: string };
-
-export type WorkspacePythonPath = {
-    folderUri: Uri;
-    configTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder;
-};
 
 export function getFirstNonEmptyLineFromMultilineString(stdout: string) {
     if (!stdout) {
