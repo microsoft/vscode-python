@@ -64,7 +64,7 @@ suite('PlatformService', () => {
     });
 
     test('is64bit', async () => {
-        // tslint:disable-next-line:no-require-imports
+        // eslint-disable-next-line global-require
         const arch = require('arch');
 
         const hostReports64Bit = arch() === 'x64';

@@ -25,7 +25,7 @@ export interface IRegistryValue {
 }
 
 export async function readRegistryValues(options: Options): Promise<IRegistryValue[]> {
-    // tslint:disable-next-line:no-require-imports
+    // eslint-disable-next-line global-require
     const WinReg = require('winreg');
     const regKey = new WinReg(options);
     const deferred = createDeferred<RegistryItem[]>();
@@ -39,7 +39,7 @@ export async function readRegistryValues(options: Options): Promise<IRegistryVal
 }
 
 export async function readRegistryKeys(options: Options): Promise<IRegistryKey[]> {
-    // tslint:disable-next-line:no-require-imports
+    // eslint-disable-next-line global-require
     const WinReg = require('winreg');
     const regKey = new WinReg(options);
     const deferred = createDeferred<Registry[]>();
