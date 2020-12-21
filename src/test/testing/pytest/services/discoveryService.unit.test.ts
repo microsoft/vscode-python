@@ -17,7 +17,7 @@ import {
     ITestDiscoveryService,
     ITestsHelper,
     TestDiscoveryOptions,
-    Tests
+    Tests,
 } from '../../../../client/testing/common/types';
 import { ArgumentsService } from '../../../../client/testing/pytest/services/argsService';
 import { TestDiscoveryService } from '../../../../client/testing/pytest/services/discoveryService';
@@ -44,7 +44,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         argsService = mock(ArgumentsService);
 
         when(serviceContainer.get<IArgumentsService>(IArgumentsService, PYTEST_PROVIDER)).thenReturn(
-            instance(argsService)
+            instance(argsService),
         );
         when(serviceContainer.get<ITestsHelper>(ITestsHelper)).thenReturn(instance(helper));
         discoveryService = new DiscoveryService(instance(serviceContainer));
@@ -56,7 +56,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
             ignoreCache: true,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
-            workspaceFolder: Uri.file(__dirname)
+            workspaceFolder: Uri.file(__dirname),
         };
         const args = ['1', '2', '3'];
         const discoveredTests = ('Hello World' as any) as Tests;
@@ -75,7 +75,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
             ignoreCache: true,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
-            workspaceFolder: Uri.file(__dirname)
+            workspaceFolder: Uri.file(__dirname),
         };
         const args = ['1', '2', '3'];
         discoveryService.buildTestCollectionArgs = () => args;
@@ -92,7 +92,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         };
         when(argsService.getTestFolders(deepEqual(options.args))).thenReturn(directories);
         when(helper.mergeTests(deepEqual([('Result A' as any) as Tests, ('Result B' as any) as Tests]))).thenReturn(
-            'mergedTests' as any
+            'mergedTests' as any,
         );
 
         const tests = await discoveryService.discoverTests(options);
@@ -107,7 +107,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
             ignoreCache: false,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
-            workspaceFolder: Uri.file(__dirname)
+            workspaceFolder: Uri.file(__dirname),
         };
 
         const filteredArgs = options.args;
@@ -126,7 +126,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
             ignoreCache: true,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
-            workspaceFolder: Uri.file(__dirname)
+            workspaceFolder: Uri.file(__dirname),
         };
 
         const filteredArgs = options.args;
@@ -145,7 +145,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
             ignoreCache: true,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
-            workspaceFolder: Uri.file(__dirname)
+            workspaceFolder: Uri.file(__dirname),
         };
 
         const filteredArgs = options.args;
@@ -164,7 +164,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
             ignoreCache: true,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
-            workspaceFolder: Uri.file(__dirname)
+            workspaceFolder: Uri.file(__dirname),
         };
         const expectedDiscoveryArgs = ['discover', 'pytest', '--', ...options.args];
         const discoveryOptions = { ...options };
@@ -173,7 +173,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         const commonDiscoveryService = mock(TestsDiscoveryService);
         const discoveredTests = ('Hello' as any) as Tests;
         when(serviceContainer.get<ITestDiscoveryService>(ITestDiscoveryService, 'common')).thenReturn(
-            instance(commonDiscoveryService)
+            instance(commonDiscoveryService),
         );
         when(commonDiscoveryService.discoverTests(deepEqual(discoveryOptions))).thenResolve(discoveredTests);
 

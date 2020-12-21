@@ -11,7 +11,7 @@ import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/ap
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import {
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt
+    MessageCommandPrompt,
 } from '../../../../client/application/diagnostics/promptHandler';
 import {
     DiagnosticScope,
@@ -19,7 +19,7 @@ import {
     IDiagnosticCommand,
     IDiagnosticFilterService,
     IDiagnosticHandlerService,
-    IDiagnosticsService
+    IDiagnosticsService,
 } from '../../../../client/application/diagnostics/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../../client/common/application/types';
 import { IPlatformService } from '../../../../client/common/platform/types';
@@ -52,8 +52,8 @@ suite('Application Diagnostics - PowerShell Activation', () => {
             .setup((s) =>
                 s.get(
                     typemoq.It.isValue(IDiagnosticHandlerService),
-                    typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId)
-                )
+                    typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId),
+                ),
             )
             .returns(() => messageHandler.object);
 
@@ -136,9 +136,9 @@ suite('Application Diagnostics - PowerShell Activation', () => {
                     typemoq.It.isAny(),
                     typemoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({
                         type: 'ignore',
-                        options: DiagnosticScope.Global
-                    })
-                )
+                        options: DiagnosticScope.Global,
+                    }),
+                ),
             )
             .returns(() => alwaysIgnoreCommand.object)
             .verifiable(typemoq.Times.once());
@@ -147,8 +147,8 @@ suite('Application Diagnostics - PowerShell Activation', () => {
             .setup((f) =>
                 f.createCommand(
                     typemoq.It.isAny(),
-                    typemoq.It.isObjectWith<CommandOption<'launch', string>>({ type: 'launch' })
-                )
+                    typemoq.It.isObjectWith<CommandOption<'launch', string>>({ type: 'launch' }),
+                ),
             )
             .returns(() => launchBrowserCommand.object)
             .verifiable(typemoq.Times.once());

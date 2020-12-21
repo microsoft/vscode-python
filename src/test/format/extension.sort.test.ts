@@ -83,26 +83,26 @@ suite('Sorting', () => {
         assert.equal(
             edits.filter((value) => value.newText === EOL && value.range.isEqual(new Range(2, 0, 2, 0))).length,
             1,
-            'EOL not found'
+            'EOL not found',
         );
         assert.equal(
             edits.filter((value) => value.newText === '' && value.range.isEqual(new Range(3, 0, 4, 0))).length,
             1,
-            '"" not found'
+            '"" not found',
         );
         assert.equal(
             edits.filter(
                 (value) =>
                     value.newText === `from rope.refactor.extract import ExtractMethod, ExtractVariable${EOL}` &&
-                    value.range.isEqual(new Range(15, 0, 15, 0))
+                    value.range.isEqual(new Range(15, 0, 15, 0)),
             ).length,
             1,
-            'Text not found'
+            'Text not found',
         );
         assert.equal(
             edits.filter((value) => value.newText === '' && value.range.isEqual(new Range(16, 0, 18, 0))).length,
             1,
-            '"" not found'
+            '"" not found',
         );
     });
 
@@ -125,7 +125,7 @@ suite('Sorting', () => {
         assert.equal(
             edits.filter((value) => value.newText === newValue && value.range.isEqual(new Range(0, 0, 3, 0))).length,
             1,
-            'New Text not found'
+            'New Text not found',
         );
     });
 
@@ -142,7 +142,7 @@ suite('Sorting', () => {
             'sortImports.args',
             ['--sp', path.join(sortingPath, 'withconfig')],
             Uri.file(sortingPath),
-            ConfigurationTarget.Workspace
+            ConfigurationTarget.Workspace,
         );
         const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
         const editor = await window.showTextDocument(textDocument);
@@ -159,7 +159,7 @@ suite('Sorting', () => {
             'sortImports.args',
             ['--sp', path.join(sortingPath, 'withconfig')],
             Uri.file(sortingPath),
-            configTarget
+            configTarget,
         );
         const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
         const editor = await window.showTextDocument(textDocument);

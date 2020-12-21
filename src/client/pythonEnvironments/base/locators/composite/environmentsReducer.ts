@@ -6,9 +6,7 @@ import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { areSameEnv, mergeEnvironments } from '../../info/env';
-import {
-    ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery,
-} from '../../locator';
+import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
 import { getEnvs } from '../../locatorUtils';
 import { PythonEnvsChangedEvent } from '../../watcher';
 

@@ -12,7 +12,7 @@ interface IRawTempFS {
     file(
         config: tmp.Options,
         // tslint:disable-next-line:no-any
-        callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void
+        callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void,
     ): void;
 }
 
@@ -20,12 +20,12 @@ interface IRawTempFS {
 export class TemporaryFileSystem implements ITempFileSystem {
     constructor(
         // (effectively) the third-party "tmp" module to use
-        private readonly raw: IRawTempFS
+        private readonly raw: IRawTempFS,
     ) {}
     public static withDefaults(): TemporaryFileSystem {
         return new TemporaryFileSystem(
             // Use the actual "tmp" module.
-            tmp
+            tmp,
         );
     }
 
@@ -33,7 +33,7 @@ export class TemporaryFileSystem implements ITempFileSystem {
     public createFile(suffix: string, mode?: number): Promise<TemporaryFile> {
         const opts = {
             postfix: suffix,
-            mode
+            mode,
         };
         return new Promise<TemporaryFile>((resolve, reject) => {
             this.raw.file(opts, (err, filename, _fd, cleanUp) => {
@@ -42,7 +42,7 @@ export class TemporaryFileSystem implements ITempFileSystem {
                 }
                 resolve({
                     filePath: filename,
-                    dispose: cleanUp
+                    dispose: cleanUp,
                 });
             });
         });

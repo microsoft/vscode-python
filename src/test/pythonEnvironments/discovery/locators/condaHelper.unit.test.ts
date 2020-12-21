@@ -185,46 +185,40 @@ suite('Conda binary is located correctly', () => {
 
         sinon.stub(platform, 'getUserHomeDir').callsFake(() => homeDir);
 
-        sinon.stub(fsapi, 'readdir').callsFake(
-            async (filePath: string | Buffer) => {
-                if (typeof filePath !== 'string') {
-                    throw new Error(`expected filePath to be string, got ${typeof filePath}`);
-                }
-                return Object.keys(getFile(filePath));
+        sinon.stub(fsapi, 'readdir').callsFake(async (filePath: string | Buffer) => {
+            if (typeof filePath !== 'string') {
+                throw new Error(`expected filePath to be string, got ${typeof filePath}`);
             }
-        );
+            return Object.keys(getFile(filePath));
+        });
 
         // tslint:disable-next-line: no-any
-        sinon.stub(fsapi, 'readFile' as any).callsFake(
-            async (filePath: string | Buffer | number, encoding: string) => {
-                if (typeof filePath !== 'string') {
-                    throw new Error(`expected filePath to be string, got ${typeof filePath}`);
-                } else if (encoding !== 'utf8') {
-                    throw new Error(`Unsupported encoding ${encoding}`);
-                }
-
-                const contents = getFile(filePath);
-                if (typeof contents !== 'string') {
-                    throw new Error(`${filePath} is not a file`);
-                }
-
-                return contents;
+        sinon.stub(fsapi, 'readFile' as any).callsFake(async (filePath: string | Buffer | number, encoding: string) => {
+            if (typeof filePath !== 'string') {
+                throw new Error(`expected filePath to be string, got ${typeof filePath}`);
+            } else if (encoding !== 'utf8') {
+                throw new Error(`Unsupported encoding ${encoding}`);
             }
-        );
 
-        sinon.stub(externalDependencies, 'exec').callsFake(
-            async (command: string, args: string[]) => {
-                for (const prefix of ['', ...execPath]) {
-                    const contents = getFile(path.join(prefix, command));
-                    if (args[0] !== 'info' || args[1] !== '--json') {
-                        throw new Error(`Invalid arguments: ${util.inspect(args)}`);
-                    } else if (typeof contents === 'string' && contents !== '') {
-                        return { stdout: contents };
-                    }
+            const contents = getFile(filePath);
+            if (typeof contents !== 'string') {
+                throw new Error(`${filePath} is not a file`);
+            }
+
+            return contents;
+        });
+
+        sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
+            for (const prefix of ['', ...execPath]) {
+                const contents = getFile(path.join(prefix, command));
+                if (args[0] !== 'info' || args[1] !== '--json') {
+                    throw new Error(`Invalid arguments: ${util.inspect(args)}`);
+                } else if (typeof contents === 'string' && contents !== '') {
+                    return { stdout: contents };
                 }
-                throw new Error(`${command} is missing or is not executable`);
-            },
-        );
+            }
+            throw new Error(`${command} is missing or is not executable`);
+        });
     });
 
     teardown(() => {
@@ -306,8 +300,10 @@ suite('Conda binary is located correctly', () => {
                     osType = platform.OSType.Windows;
                     homeDir = 'E:\\Users\\user';
 
-                    sinon.stub(platform, 'getEnvironmentVariable')
-                        .withArgs('PROGRAMDATA').returns('D:\\ProgramData')
+                    sinon
+                        .stub(platform, 'getEnvironmentVariable')
+                        .withArgs('PROGRAMDATA')
+                        .returns('D:\\ProgramData')
                         .withArgs('LOCALAPPDATA')
                         .returns('F:\\Users\\user\\AppData\\Local');
 
@@ -336,20 +332,22 @@ suite('Conda binary is located correctly', () => {
                 });
 
                 // Drive letters are intentionally unusual to ascertain that locator doesn't hardcode paths.
-                ['D:\\ProgramData', 'E:\\Users\\user', 'F:\\Users\\user\\AppData\\Local\\Continuum'].forEach((prefix) => {
-                    const condaPath = `${prefix}\\${condaDirName}`;
+                ['D:\\ProgramData', 'E:\\Users\\user', 'F:\\Users\\user\\AppData\\Local\\Continuum'].forEach(
+                    (prefix) => {
+                        const condaPath = `${prefix}\\${condaDirName}`;
 
-                    test(`Must find conda in ${condaPath}`, async () => {
-                        const prefixDir = getFile(prefix) as Directory;
-                        prefixDir[condaDirName] = {
-                            Scripts: {
-                                'conda.exe': JSON.stringify(condaInfo('4.8.0')),
-                            },
-                        };
+                        test(`Must find conda in ${condaPath}`, async () => {
+                            const prefixDir = getFile(prefix) as Directory;
+                            prefixDir[condaDirName] = {
+                                Scripts: {
+                                    'conda.exe': JSON.stringify(condaInfo('4.8.0')),
+                                },
+                            };
 
-                        await expectConda(`${condaPath}\\Scripts\\conda.exe`);
-                    });
-                });
+                            await expectConda(`${condaPath}\\Scripts\\conda.exe`);
+                        });
+                    },
+                );
             });
         });
     });
@@ -371,14 +369,14 @@ suite('Conda binary is located correctly', () => {
                                 '',
                                 '  /present  ', // whitespace should be ignored
                                 '',
-                            ].join('\n')
+                            ].join('\n'),
                         },
                     },
                 },
                 present: {
                     bin: {
                         conda: JSON.stringify(condaInfo('4.8.0')),
-                    }
+                    },
                 },
             };
 
@@ -402,18 +400,18 @@ suite('Conda binary is located correctly', () => {
                                     '',
                                     '  E:\\Present  ', // whitespace should be ignored
                                     '',
-                                ].join('\r\n')
+                                ].join('\r\n'),
                             },
                         },
-                    }
+                    },
                 },
                 'E:': {
                     Present: {
                         Scripts: {
-                            'conda.exe': JSON.stringify(condaInfo('4.8.0'))
-                        }
-                    }
-                }
+                            'conda.exe': JSON.stringify(condaInfo('4.8.0')),
+                        },
+                    },
+                },
             };
 
             await expectConda('E:\\Present\\Scripts\\conda.exe');
@@ -447,19 +445,19 @@ suite('Conda binary is located correctly', () => {
                     // Shouldn't be located because it's not a well-known conda path,
                     // and it's listed under PythonCore in the registry.
                     Scripts: {
-                        'conda.exe': JSON.stringify(condaInfo('4.8.0'))
-                    }
+                        'conda.exe': JSON.stringify(condaInfo('4.8.0')),
+                    },
                 },
                 Anaconda2: {
                     // Shouldn't be located because it can't handle "conda info --json".
                     Scripts: {
-                        'conda.exe': ''
-                    }
+                        'conda.exe': '',
+                    },
                 },
                 Anaconda3: {
                     Scripts: {
-                        'conda.exe': JSON.stringify(condaInfo('4.8.1'))
-                    }
+                        'conda.exe': JSON.stringify(condaInfo('4.8.1')),
+                    },
                 },
             },
         };
@@ -476,10 +474,7 @@ suite('Conda env list is parsed correctly', () => {
         'sys.prefix': '/some/env',
         rootPrefix: '/home/user/miniconda3',
         defaultPrefix: '/home/user/miniconda3/envs/env1',
-        envsDirs: [
-            '/home/user/miniconda3/envs',
-            '/home/user/.conda/envs',
-        ],
+        envsDirs: ['/home/user/miniconda3/envs', '/home/user/.conda/envs'],
         envs: [
             '/home/user/miniconda3',
             '/home/user/miniconda3/envs/env1',
@@ -488,20 +483,18 @@ suite('Conda env list is parsed correctly', () => {
             '/home/user/.conda/envs/env4',
             '/home/user/.conda/envs/env5',
             '/env6',
-        ]
+        ],
     };
 
     setup(() => {
-        sinon.stub(externalDependencies, 'exec').callsFake(
-            async (command: string, args: string[]) => {
-                if (command !== 'conda') {
-                    throw new Error(`Unknown command: ${util.inspect(command)}`);
-                } else if (args[0] !== 'info' || args[1] !== '--json') {
-                    throw new Error(`Invalid arguments: ${util.inspect(args)}`);
-                }
-                return { stdout: JSON.stringify(condaInfo) };
-            },
-        );
+        sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
+            if (command !== 'conda') {
+                throw new Error(`Unknown command: ${util.inspect(command)}`);
+            } else if (args[0] !== 'info' || args[1] !== '--json') {
+                throw new Error(`Invalid arguments: ${util.inspect(args)}`);
+            }
+            return { stdout: JSON.stringify(condaInfo) };
+        });
     });
 
     teardown(() => {
@@ -514,31 +507,31 @@ suite('Conda env list is parsed correctly', () => {
         expect(envs).to.have.deep.members([
             {
                 prefix: '/home/user/miniconda3',
-                name: 'base'
+                name: 'base',
             },
             {
                 prefix: '/home/user/miniconda3/envs/env1',
-                name: 'env1'
+                name: 'env1',
             },
             {
                 prefix: '/home/user/miniconda3/envs/env2',
-                name: 'env2'
+                name: 'env2',
             },
             {
                 prefix: '/home/user/miniconda3/envs/dir/env3',
-                name: undefined // because it's not directly under envsDirs
+                name: undefined, // because it's not directly under envsDirs
             },
             {
                 prefix: '/home/user/.conda/envs/env4',
-                name: 'env4'
+                name: 'env4',
             },
             {
                 prefix: '/home/user/.conda/envs/env5',
-                name: 'env5'
+                name: 'env5',
             },
             {
                 prefix: '/env6',
-                name: undefined // because it's not directly under envsDirs
+                name: undefined, // because it's not directly under envsDirs
             },
         ]);
     });

@@ -73,7 +73,7 @@ function configure(): SetupOptions {
         testFilesSuffix,
         // Force Mocha to exit after tests.
         // It has been observed that this isn't sufficient, hence the reason for src/test/common/exitCIAfterTestReporter.ts
-        exit: true
+        exit: true,
     };
 
     // If the `MOCHA_REPORTER_JUNIT` env var is true, set up the CI reporter for
@@ -84,7 +84,7 @@ function configure(): SetupOptions {
         options.reporter = 'mocha-multi-reporters';
         const reporterPath = path.join(__dirname, 'common', 'exitCIAfterTestReporter.js');
         options.reporterOptions = {
-            reporterEnabled: `spec,mocha-junit-reporter,${reporterPath}`
+            reporterEnabled: `spec,mocha-junit-reporter,${reporterPath}`,
         };
     }
 
@@ -146,7 +146,7 @@ export async function run(): Promise<void> {
                     return reject(error);
                 }
                 resolve(files);
-            }
+            },
         );
     });
 

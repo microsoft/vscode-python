@@ -58,7 +58,7 @@ suite('Language Server: Definition Navigation', () => {
         startFile: string,
         startPosition: vscode.Position,
         expectedFiles: string[],
-        expectedRanges: vscode.Range[]
+        expectedRanges: vscode.Range[],
     ) => {
         return async () => {
             const textDocument = await vscode.workspace.openTextDocument(startFile);
@@ -68,7 +68,7 @@ suite('Language Server: Definition Navigation', () => {
             const locations = await vscode.commands.executeCommand<vscode.Location[]>(
                 'vscode.executeDefinitionProvider',
                 textDocument.uri,
-                startPosition
+                startPosition,
             );
             assert.equal(locations!.length, expectedFiles.length, 'Wrong number of results');
 
@@ -81,61 +81,61 @@ suite('Language Server: Definition Navigation', () => {
 
     test(
         'From own definition',
-        buildTest(fileDefinitions, new vscode.Position(2, 6), [fileDefinitions], [new vscode.Range(2, 0, 11, 17)])
+        buildTest(fileDefinitions, new vscode.Position(2, 6), [fileDefinitions], [new vscode.Range(2, 0, 11, 17)]),
     );
 
     test(
         'Nested function',
-        buildTest(fileDefinitions, new vscode.Position(11, 16), [fileDefinitions], [new vscode.Range(6, 4, 10, 16)])
+        buildTest(fileDefinitions, new vscode.Position(11, 16), [fileDefinitions], [new vscode.Range(6, 4, 10, 16)]),
     );
 
     test(
         'Decorator usage',
-        buildTest(fileDefinitions, new vscode.Position(13, 1), [fileDefinitions], [new vscode.Range(2, 0, 11, 17)])
+        buildTest(fileDefinitions, new vscode.Position(13, 1), [fileDefinitions], [new vscode.Range(2, 0, 11, 17)]),
     );
 
     test(
         'Function decorated by stdlib',
-        buildTest(fileDefinitions, new vscode.Position(29, 6), [fileDefinitions], [new vscode.Range(21, 0, 27, 17)])
+        buildTest(fileDefinitions, new vscode.Position(29, 6), [fileDefinitions], [new vscode.Range(21, 0, 27, 17)]),
     );
 
     test(
         'Function decorated by local decorator',
-        buildTest(fileDefinitions, new vscode.Position(30, 6), [fileDefinitions], [new vscode.Range(14, 0, 18, 7)])
+        buildTest(fileDefinitions, new vscode.Position(30, 6), [fileDefinitions], [new vscode.Range(14, 0, 18, 7)]),
     );
 
     test(
         'Module imported decorator usage',
-        buildTest(fileUsages, new vscode.Position(3, 15), [fileDefinitions], [new vscode.Range(2, 0, 11, 17)])
+        buildTest(fileUsages, new vscode.Position(3, 15), [fileDefinitions], [new vscode.Range(2, 0, 11, 17)]),
     );
 
     test(
         'Module imported function decorated by stdlib',
-        buildTest(fileUsages, new vscode.Position(11, 19), [fileDefinitions], [new vscode.Range(21, 0, 27, 17)])
+        buildTest(fileUsages, new vscode.Position(11, 19), [fileDefinitions], [new vscode.Range(21, 0, 27, 17)]),
     );
 
     test(
         'Module imported function decorated by local decorator',
-        buildTest(fileUsages, new vscode.Position(12, 19), [fileDefinitions], [new vscode.Range(14, 0, 18, 7)])
+        buildTest(fileUsages, new vscode.Position(12, 19), [fileDefinitions], [new vscode.Range(14, 0, 18, 7)]),
     );
 
     test('Specifically imported decorator usage', async () => {
         const navigationTest = buildTest(fileUsages, new vscode.Position(7, 1), isPython2 ? [] : [fileDefinitions], [
-            new vscode.Range(2, 0, 11, 17)
+            new vscode.Range(2, 0, 11, 17),
         ]);
         await navigationTest();
     });
 
     test('Specifically imported function decorated by stdlib', async () => {
         const navigationTest = buildTest(fileUsages, new vscode.Position(14, 6), isPython2 ? [] : [fileDefinitions], [
-            new vscode.Range(21, 0, 27, 17)
+            new vscode.Range(21, 0, 27, 17),
         ]);
         await navigationTest();
     });
 
     test('Specifically imported function decorated by local decorator', async () => {
         const navigationTest = buildTest(fileUsages, new vscode.Position(15, 6), isPython2 ? [] : [fileDefinitions], [
-            new vscode.Range(14, 0, 18, 7)
+            new vscode.Range(14, 0, 18, 7),
         ]);
         await navigationTest();
     });

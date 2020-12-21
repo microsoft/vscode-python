@@ -18,7 +18,7 @@ use(chaiAsPromised);
 type PathVar = 'Path' | 'PATH';
 const PATHS = [
     'Path', // Windows
-    'PATH' // non-Windows
+    'PATH', // non-Windows
 ];
 
 suite('Environment Variables Service', () => {
@@ -32,7 +32,7 @@ suite('Environment Variables Service', () => {
         variablesService = new EnvironmentVariablesService(
             // This is the only place that the mocks are used.
             pathUtils.object,
-            fs.object
+            fs.object,
         );
     });
     function verifyAll() {
@@ -91,7 +91,7 @@ suite('Environment Variables Service', () => {
                 `
 X1234PYEXTUNITTESTVAR=1234
 PYTHONPATH=../workspace5
-                `
+                `,
             );
 
             const vars = await variablesService.parseFile(filename);
@@ -117,7 +117,7 @@ PYTHONPATH=/usr/one/three:/usr/one/four
 PATH=/usr/x:/usr/y
 # Windows Path variable
 Path=/usr/x:/usr/y
-                `
+                `,
             );
 
             const vars = await variablesService.parseFile(filename);
@@ -140,7 +140,7 @@ Path=/usr/x:/usr/y
 REPO=/home/user/git/foobar\n\
 PYTHONPATH=${REPO}/foo:${REPO}/bar\n\
 PYTHON=${BINDIR}/python3\n\
-                '
+                ',
                 // tslint:enable:no-invalid-template-strings
             );
 
@@ -152,7 +152,7 @@ PYTHON=${BINDIR}/python3\n\
             expect(vars).to.have.property(
                 'PYTHONPATH',
                 '/home/user/git/foobar/foo:/home/user/git/foobar/bar',
-                'value is invalid'
+                'value is invalid',
             );
             expect(vars).to.have.property('PYTHON', '/usr/bin/python3', 'value is invalid');
             verifyAll();
@@ -333,7 +333,7 @@ PYTHON=${BINDIR}/python3\n\
             expect(vars).to.have.property(
                 'PYTHONPATH',
                 `PYTHONPATH${path.delimiter}${pathToAppend}`,
-                'Incorrect value'
+                'Incorrect value',
             );
             verifyAll();
         });
@@ -520,7 +520,7 @@ EGGS=9012  # ...
                     '\
 REPO=/home/user/git/foobar \n\
 PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
-                '
+                ',
                 );
 
                 expect(vars).to.not.equal(undefined, 'Variables is undefiend');
@@ -529,7 +529,7 @@ PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
                 expect(vars).to.have.property(
                     'PYTHONPATH',
                     '/home/user/git/foobar/foo:/home/user/git/foobar/bar',
-                    'value is invalid'
+                    'value is invalid',
                 );
             });
 
@@ -557,7 +557,7 @@ abcEGGSxyz=!!! \n\
 HAM2="-- ${abc${SPAM}xyz} --"\n\
 HAM3="-- ${${SPAM} --"\n\
 HAM4="-- ${${SPAM}} ${EGGS} --"\n\
-                    '
+                    ',
                 );
 
                 expect(vars).to.not.equal(undefined, 'Variables is undefiend');
@@ -581,7 +581,7 @@ HAM1=${} \n\
 HAM2=${ \n\
 HAM3=${SPAM+EGGS} \n\
 HAM4=$SPAM \n\
-                '
+                ',
                 );
 
                 expect(vars).to.not.equal(undefined, 'Variables is undefiend');
@@ -601,7 +601,7 @@ HAM4=$SPAM \n\
 REPO=/home/user/git/foobar \n\
 PYTHONPATH=${REPO}/foo \n\
 PYTHONPATH=${PYTHONPATH}:${REPO}/bar \n\
-                '
+                ',
                 );
 
                 expect(vars).to.not.equal(undefined, 'Variables is undefiend');
@@ -610,7 +610,7 @@ PYTHONPATH=${PYTHONPATH}:${REPO}/bar \n\
                 expect(vars).to.have.property(
                     'PYTHONPATH',
                     '/home/user/git/foobar/foo:/home/user/git/foobar/bar',
-                    'value is invalid'
+                    'value is invalid',
                 );
             });
 
@@ -621,7 +621,7 @@ PYTHONPATH=${PYTHONPATH}:${REPO}/bar \n\
 SPAM=1234 \n\
 EGGS=\\${SPAM}/foo:\\${SPAM}/bar \n\
 HAM=$ ... $$ \n\
-                '
+                ',
                 );
 
                 expect(vars).to.not.equal(undefined, 'Variables is undefiend');
@@ -636,7 +636,7 @@ HAM=$ ... $$ \n\
                 const vars = parseEnvFile('\
 PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
                 ', {
-                    REPO: '/home/user/git/foobar'
+                    REPO: '/home/user/git/foobar',
                 });
 
                 expect(vars).to.not.equal(undefined, 'Variables is undefiend');
@@ -644,7 +644,7 @@ PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
                 expect(vars).to.have.property(
                     'PYTHONPATH',
                     '/home/user/git/foobar/foo:/home/user/git/foobar/bar',
-                    'value is invalid'
+                    'value is invalid',
                 );
             });
 

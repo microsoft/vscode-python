@@ -59,7 +59,7 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
         } else if (this.workspaceService.workspaceFolders!.length === 1) {
             pythonConfig = this.workspaceService.getConfiguration(
                 'python',
-                this.workspaceService.workspaceFolders![0].uri
+                this.workspaceService.workspaceFolders![0].uri,
             );
         } else {
             const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);

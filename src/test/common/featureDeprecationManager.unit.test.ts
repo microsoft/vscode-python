@@ -24,21 +24,21 @@ suite('Feature Deprecation Manager Tests', () => {
             .setup((a) =>
                 a.createGlobalPersistentState(
                     TypeMoq.It.isValue('SHOW_DEPRECATED_FEATURE_PROMPT_BUILD_WORKSPACE_SYMBOLS'),
-                    TypeMoq.It.isValue(true)
-                )
+                    TypeMoq.It.isValue(true),
+                ),
             )
             .returns(() => persistentBool.object)
             .verifiable(TypeMoq.Times.once());
         const popupMgr: TypeMoq.IMock<IApplicationShell> = TypeMoq.Mock.ofType<IApplicationShell>();
         popupMgr
             .setup((p) =>
-                p.showInformationMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())
+                p.showInformationMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()),
             )
             .returns(
                 (_val) =>
                     new Promise<string>((resolve, _reject) => {
                         resolve('Learn More');
-                    })
+                    }),
             );
         const cmdDisposable: TypeMoq.IMock<Disposable> = TypeMoq.Mock.ofType<Disposable>();
         const cmdManager: TypeMoq.IMock<ICommandManager> = TypeMoq.Mock.ofType<ICommandManager>();
@@ -47,8 +47,8 @@ suite('Feature Deprecation Manager Tests', () => {
                 c.registerCommand(
                     TypeMoq.It.isValue('python.buildWorkspaceSymbols'),
                     TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
-                )
+                    TypeMoq.It.isAny(),
+                ),
             )
             .returns(() => cmdDisposable.object)
             .verifiable(TypeMoq.Times.atLeastOnce());
@@ -65,7 +65,7 @@ suite('Feature Deprecation Manager Tests', () => {
             persistentState.object,
             cmdManager.object,
             workspace.object,
-            popupMgr.object
+            popupMgr.object,
         );
 
         featureDepMgr.initialize();
@@ -91,7 +91,7 @@ suite('Feature Deprecation Manager Tests', () => {
             { valueInSetting: [], expectedValue: false },
             { valueInSetting: ['1'], expectedValue: true },
             { valueInSetting: [1], expectedValue: true },
-            { valueInSetting: [{}], expectedValue: true }
+            { valueInSetting: [{}], expectedValue: true },
         ];
 
         for (const config of testConfigs) {
@@ -114,7 +114,7 @@ suite('Feature Deprecation Manager Tests', () => {
             { valueInSetting: 'true', expectedValue: true, valuesToLookFor: ['true', true] },
             { valueInSetting: true, expectedValue: true, valuesToLookFor: ['true', true] },
             { valueInSetting: 'false', expectedValue: true, valuesToLookFor: ['false', false] },
-            { valueInSetting: false, expectedValue: true, valuesToLookFor: ['false', false] }
+            { valueInSetting: false, expectedValue: true, valuesToLookFor: ['false', false] },
         ];
 
         for (const config of testConfigs) {

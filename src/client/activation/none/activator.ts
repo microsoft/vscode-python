@@ -18,7 +18,7 @@ import {
     SignatureHelpContext,
     SymbolInformation,
     TextDocument,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 import { isTestExecution } from '../../common/constants';
 import { BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner, Resource } from '../../common/types';
@@ -37,7 +37,7 @@ export class NoLanguageServerExtensionActivator implements ILanguageServerActiva
     constructor(
         @inject(IPythonExtensionBanner)
         @named(BANNER_NAME_PROPOSE_LS)
-        private proposePylancePopup: IPythonExtensionBanner
+        private proposePylancePopup: IPythonExtensionBanner,
     ) {}
     public async start(_resource: Resource, _interpreter?: PythonEnvironment): Promise<void> {
         if (!isTestExecution()) {
@@ -55,21 +55,21 @@ export class NoLanguageServerExtensionActivator implements ILanguageServerActiva
         _document: TextDocument,
         _position: Position,
         _newName: string,
-        _token: CancellationToken
+        _token: CancellationToken,
     ): ProviderResult<WorkspaceEdit> {
         return null;
     }
     public provideDefinition(
         _document: TextDocument,
         _position: Position,
-        _token: CancellationToken
+        _token: CancellationToken,
     ): ProviderResult<Location | Location[] | LocationLink[]> {
         return null;
     }
     public provideHover(
         _document: TextDocument,
         _position: Position,
-        _token: CancellationToken
+        _token: CancellationToken,
     ): ProviderResult<Hover> {
         return null;
     }
@@ -77,7 +77,7 @@ export class NoLanguageServerExtensionActivator implements ILanguageServerActiva
         _document: TextDocument,
         _position: Position,
         _context: ReferenceContext,
-        _token: CancellationToken
+        _token: CancellationToken,
     ): ProviderResult<Location[]> {
         return null;
     }
@@ -85,7 +85,7 @@ export class NoLanguageServerExtensionActivator implements ILanguageServerActiva
         _document: TextDocument,
         _position: Position,
         _token: CancellationToken,
-        _context: CompletionContext
+        _context: CompletionContext,
     ): ProviderResult<CompletionItem[] | CompletionList> {
         return null;
     }
@@ -94,7 +94,7 @@ export class NoLanguageServerExtensionActivator implements ILanguageServerActiva
     }
     public provideDocumentSymbols(
         _document: TextDocument,
-        _token: CancellationToken
+        _token: CancellationToken,
     ): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
         return null;
     }
@@ -102,7 +102,7 @@ export class NoLanguageServerExtensionActivator implements ILanguageServerActiva
         _document: TextDocument,
         _position: Position,
         _token: CancellationToken,
-        _context: SignatureHelpContext
+        _context: SignatureHelpContext,
     ): ProviderResult<SignatureHelp> {
         return null;
     }

@@ -28,17 +28,17 @@ suite('Diagnostisc - Source Maps', () => {
             instance(commandManager),
             [],
             instance(configService),
-            undefined as any
+            undefined as any,
         );
         when(
-            configService.updateSetting('diagnostics.sourceMapsEnabled', true, undefined, ConfigurationTarget.Global)
+            configService.updateSetting('diagnostics.sourceMapsEnabled', true, undefined, ConfigurationTarget.Global),
         ).thenResolve();
         when(commandManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
 
         await service.enable();
 
         verify(
-            configService.updateSetting('diagnostics.sourceMapsEnabled', true, undefined, ConfigurationTarget.Global)
+            configService.updateSetting('diagnostics.sourceMapsEnabled', true, undefined, ConfigurationTarget.Global),
         ).once();
         verify(commandManager.executeCommand('workbench.action.reloadWindow')).once();
     });
@@ -67,17 +67,17 @@ suite('Diagnostisc - Source Maps', () => {
         })(instance(commandManager), [], instance(configService), instance(shell));
 
         when(
-            configService.updateSetting('diagnostics.sourceMapsEnabled', true, undefined, ConfigurationTarget.Global)
+            configService.updateSetting('diagnostics.sourceMapsEnabled', true, undefined, ConfigurationTarget.Global),
         ).thenResolve();
         when(shell.showWarningMessage(anything(), anything())).thenResolve(
-            Diagnostics.enableSourceMapsAndReloadVSC() as any
+            Diagnostics.enableSourceMapsAndReloadVSC() as any,
         );
         when(commandManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
 
         await service.onEnable();
 
         verify(
-            configService.updateSetting('diagnostics.sourceMapsEnabled', true, undefined, ConfigurationTarget.Global)
+            configService.updateSetting('diagnostics.sourceMapsEnabled', true, undefined, ConfigurationTarget.Global),
         ).once();
         verify(commandManager.executeCommand('workbench.action.reloadWindow')).once();
     });

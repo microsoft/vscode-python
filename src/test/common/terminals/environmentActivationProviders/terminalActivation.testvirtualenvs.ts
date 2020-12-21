@@ -18,7 +18,7 @@ import {
     setGlobalInterpreterPath,
     setPythonPathInWorkspaceRoot,
     updateSetting,
-    waitForCondition
+    waitForCondition,
 } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, TEST_TIMEOUT } from '../../../constants';
 import { sleep } from '../../../core';
@@ -31,7 +31,7 @@ suite('Activation of Environments in Terminal', () => {
         'src',
         'testMultiRootWkspc',
         'smokeTests',
-        'testExecInTerminal.py'
+        'testExecInTerminal.py',
     );
     let outputFile = '';
     let outputFileCounter = 0;
@@ -53,7 +53,7 @@ suite('Activation of Environments in Terminal', () => {
     const defaultShell = {
         Windows: '',
         Linux: '',
-        MacOS: ''
+        MacOS: '',
     };
     let terminalSettings: any;
     let pythonSettings: any;
@@ -75,7 +75,7 @@ suite('Activation of Environments in Terminal', () => {
             'src',
             'testMultiRootWkspc',
             'smokeTests',
-            `testExecInTerminal_${outputFileCounter}.log`
+            `testExecInTerminal_${outputFileCounter}.log`,
         );
         outputFileCounter += 1;
         outputFilesCreated.push(outputFile);
@@ -99,12 +99,12 @@ suite('Activation of Environments in Terminal', () => {
             'terminal.activateEnvironment',
             undefined,
             vscode.workspace.workspaceFolders![0].uri,
-            vscode.ConfigurationTarget.WorkspaceFolder
+            vscode.ConfigurationTarget.WorkspaceFolder,
         );
         await terminalSettings.update(
             'integrated.shell.windows',
             defaultShell.Windows,
-            vscode.ConfigurationTarget.Global
+            vscode.ConfigurationTarget.Global,
         );
         await terminalSettings.update('integrated.shell.linux', defaultShell.Linux, vscode.ConfigurationTarget.Global);
         await pythonSettings.update('condaPath', undefined, vscode.ConfigurationTarget.Workspace);
@@ -128,7 +128,7 @@ suite('Activation of Environments in Terminal', () => {
         consoleInitWaitMs: number,
         pythonFile: string,
         logFile: string,
-        logFileCreationWaitMs: number
+        logFileCreationWaitMs: number,
     ): Promise<string> {
         const terminal = vscode.window.createTerminal();
         await sleep(consoleInitWaitMs);
@@ -151,7 +151,7 @@ suite('Activation of Environments in Terminal', () => {
             'terminal.activateEnvironment',
             true,
             vscode.workspace.workspaceFolders![0].uri,
-            vscode.ConfigurationTarget.WorkspaceFolder
+            vscode.ConfigurationTarget.WorkspaceFolder,
         );
         if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
             await setGlobalInterpreterPath(envPath);
@@ -167,7 +167,7 @@ suite('Activation of Environments in Terminal', () => {
             'terminal.activateEnvironment',
             false,
             vscode.workspace.workspaceFolders![0].uri,
-            vscode.ConfigurationTarget.WorkspaceFolder
+            vscode.ConfigurationTarget.WorkspaceFolder,
         );
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(fileSystem.arePathsSame(content, PYTHON_PATH)).to.equal(false, 'Environment not activated');
@@ -190,7 +190,7 @@ suite('Activation of Environments in Terminal', () => {
         await terminalSettings.update(
             'integrated.shell.windows',
             'C:\\Windows\\System32\\cmd.exe',
-            vscode.ConfigurationTarget.Global
+            vscode.ConfigurationTarget.Global,
         );
         await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
         await testActivation(envPaths.condaPath);

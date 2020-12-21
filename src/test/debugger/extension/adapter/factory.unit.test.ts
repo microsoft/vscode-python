@@ -43,7 +43,7 @@ suite('Debugging - Adapter Factory', () => {
         sysPrefix: '',
         sysVersion: '',
         envType: EnvironmentType.Unknown,
-        version: new SemVer('3.7.4-test')
+        version: new SemVer('3.7.4-test'),
     };
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
     const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
@@ -67,7 +67,7 @@ suite('Debugging - Adapter Factory', () => {
 
         const configurationService = mock(ConfigurationService);
         when(configurationService.getSettings(undefined)).thenReturn(({
-            experiments: { enabled: true }
+            experiments: { enabled: true },
             // tslint:disable-next-line: no-any
         } as any) as IPythonSettings);
 
@@ -97,7 +97,7 @@ suite('Debugging - Adapter Factory', () => {
             name: 'python',
             type: 'python',
             workspaceFolder,
-            customRequest: () => Promise.resolve()
+            customRequest: () => Promise.resolve(),
         };
     }
 
@@ -155,7 +155,7 @@ suite('Debugging - Adapter Factory', () => {
         const session = createSession({ request: 'attach', connect: { port: 5678, host: 'localhost' } });
         const debugServer = new DebugAdapterServer(
             session.configuration.connect.port,
-            session.configuration.connect.host
+            session.configuration.connect.host,
         );
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
@@ -181,13 +181,13 @@ suite('Debugging - Adapter Factory', () => {
             port: undefined,
             processId: undefined,
             listen: undefined,
-            connect: undefined
+            connect: undefined,
         });
 
         const promise = factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
         await expect(promise).to.eventually.be.rejectedWith(
-            '"request":"attach" requires either "connect", "listen", or "processId"'
+            '"request":"attach" requires either "connect", "listen", or "processId"',
         );
     });
 
@@ -196,7 +196,7 @@ suite('Debugging - Adapter Factory', () => {
         const debugExecutable = new DebugAdapterExecutable(pythonPath, [
             debugAdapterPath,
             '--log-dir',
-            EXTENSION_ROOT_DIR
+            EXTENSION_ROOT_DIR,
         ]);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);

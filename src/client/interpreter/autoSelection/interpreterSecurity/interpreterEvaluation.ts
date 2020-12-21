@@ -21,7 +21,7 @@ const telemetrySelections: ['Yes', 'No', 'Learn more', 'Do not show again'] = [
     'Yes',
     'No',
     'Learn more',
-    'Do not show again'
+    'Do not show again',
 ];
 
 @injectable()
@@ -30,7 +30,7 @@ export class InterpreterEvaluation implements IInterpreterEvaluation {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
-        @inject(IInterpreterSecurityStorage) private readonly interpreterSecurityStorage: IInterpreterSecurityStorage
+        @inject(IInterpreterSecurityStorage) private readonly interpreterSecurityStorage: IInterpreterSecurityStorage,
     ) {}
 
     public async evaluateIfInterpreterIsSafe(interpreter: PythonEnvironment, resource: Resource): Promise<boolean> {
@@ -62,7 +62,7 @@ export class InterpreterEvaluation implements IInterpreterEvaluation {
 
     public async _inferValueUsingPrompt(activeWorkspaceUri: Uri): Promise<boolean> {
         const areInterpretersInWorkspaceSafe = this.interpreterSecurityStorage.hasUserApprovedWorkspaceInterpreters(
-            activeWorkspaceUri
+            activeWorkspaceUri,
         );
         await this.interpreterSecurityStorage.storeKeyForWorkspace(activeWorkspaceUri);
         let selection = await this.showPromptAndGetSelection();
@@ -83,10 +83,10 @@ export class InterpreterEvaluation implements IInterpreterEvaluation {
     private async showPromptAndGetSelection(): Promise<string | undefined> {
         const selection = await this.appShell.showInformationMessage(
             Interpreters.unsafeInterpreterMessage(),
-            ...prompts
+            ...prompts,
         );
         sendTelemetryEvent(EventName.UNSAFE_INTERPRETER_PROMPT, undefined, {
-            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined
+            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined,
         });
         return selection;
     }

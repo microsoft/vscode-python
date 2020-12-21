@@ -12,7 +12,7 @@ import { ILanguageServerManager } from '../../../client/activation/types';
 import {
     IApplicationEnvironment,
     IApplicationShell,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
@@ -65,7 +65,7 @@ suite('Pylance Language Server - Activator', () => {
             instance(configuration),
             instance(extensions),
             instance(appShell),
-            instance(appEnv)
+            instance(appEnv),
         );
     });
     teardown(() => {
@@ -104,8 +104,8 @@ suite('Pylance Language Server - Activator', () => {
             appShell.showWarningMessage(
                 Pylance.installPylanceMessage(),
                 Common.bannerLabelYes(),
-                Common.bannerLabelNo()
-            )
+                Common.bannerLabelNo(),
+            ),
         ).thenReturn(Promise.resolve(Common.bannerLabelNo()));
 
         try {
@@ -116,8 +116,8 @@ suite('Pylance Language Server - Activator', () => {
             appShell.showWarningMessage(
                 Pylance.installPylanceMessage(),
                 Common.bannerLabelYes(),
-                Common.bannerLabelNo()
-            )
+                Common.bannerLabelNo(),
+            ),
         ).once();
         verify(appShell.openUrl(`scheme:extension/${PYLANCE_EXTENSION_ID}`)).never();
     });
@@ -127,8 +127,8 @@ suite('Pylance Language Server - Activator', () => {
             appShell.showWarningMessage(
                 Pylance.installPylanceMessage(),
                 Common.bannerLabelYes(),
-                Common.bannerLabelNo()
-            )
+                Common.bannerLabelNo(),
+            ),
         ).thenReturn(Promise.resolve(Common.bannerLabelYes()));
 
         try {

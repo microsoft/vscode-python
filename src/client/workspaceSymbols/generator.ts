@@ -24,7 +24,7 @@ export class Generator implements Disposable {
         private readonly appShell: IApplicationShell,
         private readonly fs: IFileSystem,
         private readonly processServiceFactory: IProcessServiceFactory,
-        configurationService: IConfigurationService
+        configurationService: IConfigurationService,
     ) {
         this.disposables = [];
         this.optionsFile = path.join(EXTENSION_ROOT_DIR, 'resources', 'ctagOptions');
@@ -85,7 +85,7 @@ export class Generator implements Disposable {
                         } else {
                             resolve();
                         }
-                    }
+                    },
                 );
             } catch (ex) {
                 reject(ex);

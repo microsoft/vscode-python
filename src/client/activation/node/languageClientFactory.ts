@@ -19,13 +19,14 @@ const languageClientName = 'Python Tools';
 export class NodeLanguageClientFactory implements ILanguageClientFactory {
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
+        @inject(ILanguageServerFolderService)
+        private readonly languageServerFolderService: ILanguageServerFolderService,
     ) {}
 
     public async createLanguageClient(
         resource: Resource,
         _interpreter: PythonEnvironment | undefined,
-        clientOptions: LanguageClientOptions
+        clientOptions: LanguageClientOptions,
     ): Promise<LanguageClient> {
         // this must exist for node language client
         const commandArgs = (clientOptions.connectionOptions
@@ -46,7 +47,7 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
             run: {
                 module: bundlePath,
                 transport: TransportKind.ipc,
-                args: commandArgs
+                args: commandArgs,
             },
             // In debug mode, use the non-bundled code if it's present. The production
             // build includes only the bundled package, so we don't want to crash if
@@ -55,8 +56,8 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
                 module: modulePath,
                 transport: TransportKind.ipc,
                 options: debugOptions,
-                args: commandArgs
-            }
+                args: commandArgs,
+            },
         };
 
         const vscodeLanguageClient = require('vscode-languageclient/node');
@@ -64,7 +65,7 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
             PYTHON_LANGUAGE,
             languageClientName,
             serverOptions,
-            clientOptions
+            clientOptions,
         );
     }
 }

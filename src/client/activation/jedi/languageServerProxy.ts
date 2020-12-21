@@ -8,7 +8,7 @@ import {
     Disposable,
     LanguageClient,
     LanguageClientOptions,
-    State
+    State,
 } from 'vscode-languageclient/node';
 
 import { DeprecatePythonPath } from '../../common/experiments/groups';
@@ -46,14 +46,14 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         @inject(ITestManagementService) private readonly testManager: ITestManagementService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
-        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService
+        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
     ) {
         this.startupCompleted = createDeferred<void>();
     }
 
     private static versionTelemetryProps(instance: JediLanguageServerProxy) {
         return {
-            lsVersion: instance.lsVersion
+            lsVersion: instance.lsVersion,
         };
     }
 
@@ -85,12 +85,12 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         undefined,
         true,
         undefined,
-        JediLanguageServerProxy.versionTelemetryProps
+        JediLanguageServerProxy.versionTelemetryProps,
     )
     public async start(
         resource: Resource,
         interpreter: PythonEnvironment | undefined,
-        options: LanguageClientOptions
+        options: LanguageClientOptions,
     ): Promise<void> {
         if (!this.languageClient) {
             this.lsVersion =
@@ -135,7 +135,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         undefined,
         true,
         undefined,
-        JediLanguageServerProxy.versionTelemetryProps
+        JediLanguageServerProxy.versionTelemetryProps,
     )
     protected async serverReady(): Promise<void> {
         while (this.languageClient && !this.languageClient.initializeResult) {
@@ -172,9 +172,9 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
                     // This is needed as interpreter changes via the interpreter path service happen
                     // outside of VS Code's settings (which would mean VS Code sends the config updates itself).
                     this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, {
-                        settings: null
+                        settings: null,
                     });
-                })
+                }),
             );
         }
 
@@ -185,7 +185,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
                 const formattedProperties = {
                     ...telemetryEvent.Properties,
                     // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
-                    method: telemetryEvent.Properties.method?.replace(/\//g, '.')
+                    method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
                 };
                 sendTelemetryEvent(eventName, telemetryEvent.Measurements, formattedProperties);
             });

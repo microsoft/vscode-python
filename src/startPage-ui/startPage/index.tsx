@@ -28,5 +28,5 @@ const skipDefault = testMode ? false : typeof acquireVsCodeApi !== 'undefined';
 
 ReactDOM.render(
     <StartPage baseTheme={baseTheme} skipDefault={skipDefault} testMode={testMode} />,
-    document.getElementById('root') as HTMLElement
+    document.getElementById('root') as HTMLElement,
 );

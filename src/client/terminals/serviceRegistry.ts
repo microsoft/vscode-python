@@ -16,7 +16,7 @@ interface IServiceRegistry {
     addSingleton<T>(
         serviceIdentifier: interfaces.ServiceIdentifier<T>,
         constructor: ClassType<T>,
-        name?: string | number | symbol
+        name?: string | number | symbol,
     ): void;
 }
 
@@ -28,12 +28,12 @@ export function registerTypes(serviceManager: IServiceRegistry) {
     serviceManager.addSingleton<ICodeExecutionService>(
         ICodeExecutionService,
         DjangoShellCodeExecutionProvider,
-        'djangoShell'
+        'djangoShell',
     );
     serviceManager.addSingleton<ICodeExecutionService>(
         ICodeExecutionService,
         TerminalCodeExecutionProvider,
-        'standard'
+        'standard',
     );
     serviceManager.addSingleton<ICodeExecutionService>(ICodeExecutionService, ReplProvider, 'repl');
 
@@ -41,6 +41,6 @@ export function registerTypes(serviceManager: IServiceRegistry) {
 
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        ExtensionActivationForTerminalActivation
+        ExtensionActivationForTerminalActivation,
     );
 }

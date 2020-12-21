@@ -9,7 +9,7 @@ import {
     DiagnosticScope,
     IDiagnostic,
     IDiagnosticCommand,
-    IDiagnosticFilterService
+    IDiagnosticFilterService,
 } from '../../../../client/application/diagnostics/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 

@@ -15,7 +15,7 @@ import {
     TreeDataProvider,
     TreeItem,
     Uri,
-    WorkspaceFolder
+    WorkspaceFolder,
 } from 'vscode';
 import { Product, Resource } from '../common/types';
 import { CommandSource } from './common/constants';
@@ -31,7 +31,7 @@ import {
     TestStatus,
     TestsToRun,
     TestSuite,
-    UnitTestProduct
+    UnitTestProduct,
 } from './common/types';
 
 export const ITestConfigurationService = Symbol('ITestConfigurationService');
@@ -63,7 +63,7 @@ export interface ITestDisplay {
         rootDirectory: string,
         file: Uri,
         testFunctions: TestFunction[],
-        debug?: boolean
+        debug?: boolean,
     ): void;
 }
 
@@ -79,7 +79,7 @@ export interface ITestManagementService {
         resource?: Uri,
         ignoreCache?: boolean,
         userInitiated?: boolean,
-        quietMode?: boolean
+        quietMode?: boolean,
     ): Promise<void>;
     stopTests(resource: Uri): Promise<void>;
     displayStopUI(message: string): Promise<void>;
@@ -90,7 +90,7 @@ export interface ITestManagementService {
         resource?: Uri,
         testsToRun?: TestsToRun,
         runFailedTests?: boolean,
-        debug?: boolean
+        debug?: boolean,
     ): Promise<void>;
     runCurrentTestFile(cmdSource: CommandSource): Promise<void>;
 
@@ -127,7 +127,7 @@ export enum TestFilter {
     runAll = 'runAll',
     runSpecific = 'runSpecific',
     debugAll = 'debugAll',
-    debugSpecific = 'debugSpecific'
+    debugSpecific = 'debugSpecific',
 }
 export const IArgumentsService = Symbol('IArgumentsService');
 export interface IArgumentsService {
@@ -145,7 +145,7 @@ export interface IArgumentsHelper {
     getPositionalArguments(
         args: string[],
         optionsWithArguments?: string[],
-        optionsWithoutArguments?: string[]
+        optionsWithoutArguments?: string[],
     ): string[];
 }
 
@@ -154,7 +154,7 @@ export interface ITestManagerRunner {
     runTest(
         testResultsService: ITestResultsService,
         options: TestRunOptions,
-        testManager: ITestManager
+        testManager: ITestManager,
     ): Promise<Tests>;
 }
 
@@ -185,13 +185,13 @@ export enum PythonTestMessageSeverity {
     Error,
     Failure,
     Skip,
-    Pass
+    Pass,
 }
 export enum DiagnosticMessageType {
     Error,
     Fail,
     Skipped,
-    Pass
+    Pass,
 }
 
 export interface ILocationStackFrameDetails {
@@ -206,7 +206,7 @@ export enum TestDataItemType {
     folder = 'folder',
     file = 'file',
     suite = 'suite',
-    function = 'function'
+    function = 'function',
 }
 export type TestDataItem = TestWorkspaceFolder | TestFolder | TestFile | TestSuite | TestFunction;
 

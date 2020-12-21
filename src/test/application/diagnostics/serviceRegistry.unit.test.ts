@@ -8,39 +8,39 @@ import { IExtensionSingleActivationService, LanguageServerType } from '../../../
 import { ApplicationDiagnostics } from '../../../client/application/diagnostics/applicationDiagnostics';
 import {
     EnvironmentPathVariableDiagnosticsService,
-    EnvironmentPathVariableDiagnosticsServiceId
+    EnvironmentPathVariableDiagnosticsServiceId,
 } from '../../../client/application/diagnostics/checks/envPathVariable';
 import {
     InvalidLaunchJsonDebuggerService,
-    InvalidLaunchJsonDebuggerServiceId
+    InvalidLaunchJsonDebuggerServiceId,
 } from '../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
 import {
     InvalidPythonPathInDebuggerService,
-    InvalidPythonPathInDebuggerServiceId
+    InvalidPythonPathInDebuggerServiceId,
 } from '../../../client/application/diagnostics/checks/invalidPythonPathInDebugger';
 import {
     LSNotSupportedDiagnosticService,
-    LSNotSupportedDiagnosticServiceId
+    LSNotSupportedDiagnosticServiceId,
 } from '../../../client/application/diagnostics/checks/lsNotSupported';
 import {
     InvalidMacPythonInterpreterService,
-    InvalidMacPythonInterpreterServiceId
+    InvalidMacPythonInterpreterServiceId,
 } from '../../../client/application/diagnostics/checks/macPythonInterpreter';
 import {
     PowerShellActivationHackDiagnosticsService,
-    PowerShellActivationHackDiagnosticsServiceId
+    PowerShellActivationHackDiagnosticsServiceId,
 } from '../../../client/application/diagnostics/checks/powerShellActivation';
 import {
     InvalidPythonInterpreterService,
-    InvalidPythonInterpreterServiceId
+    InvalidPythonInterpreterServiceId,
 } from '../../../client/application/diagnostics/checks/pythonInterpreter';
 import {
     PythonPathDeprecatedDiagnosticService,
-    PythonPathDeprecatedDiagnosticServiceId
+    PythonPathDeprecatedDiagnosticServiceId,
 } from '../../../client/application/diagnostics/checks/pythonPathDeprecated';
 import {
     UpgradeCodeRunnerDiagnosticService,
-    UpgradeCodeRunnerDiagnosticServiceId
+    UpgradeCodeRunnerDiagnosticServiceId,
 } from '../../../client/application/diagnostics/checks/upgradeCodeRunner';
 import { DiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/factory';
 import { IDiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/types';
@@ -48,13 +48,13 @@ import { DiagnosticFilterService } from '../../../client/application/diagnostics
 import {
     DiagnosticCommandPromptHandlerService,
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt
+    MessageCommandPrompt,
 } from '../../../client/application/diagnostics/promptHandler';
 import { registerTypes } from '../../../client/application/diagnostics/serviceRegistry';
 import {
     IDiagnosticFilterService,
     IDiagnosticHandlerService,
-    IDiagnosticsService
+    IDiagnosticsService,
 } from '../../../client/application/diagnostics/types';
 import { JoinMailingListPrompt } from '../../../client/application/misc/joinMailingListPrompt';
 import { IApplicationDiagnostics } from '../../../client/application/types';
@@ -70,90 +70,90 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
         registerTypes(instance(serviceManager), LanguageServerType.Microsoft);
 
         verify(
-            serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService)
+            serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService),
         );
         verify(
             serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(
                 IDiagnosticHandlerService,
                 DiagnosticCommandPromptHandlerService,
-                DiagnosticCommandPromptHandlerServiceId
-            )
+                DiagnosticCommandPromptHandlerServiceId,
+            ),
         );
         verify(
             serviceManager.addSingleton<IDiagnosticsService>(
                 IDiagnosticsService,
                 EnvironmentPathVariableDiagnosticsService,
-                EnvironmentPathVariableDiagnosticsServiceId
-            )
+                EnvironmentPathVariableDiagnosticsServiceId,
+            ),
         );
         verify(
             serviceManager.addSingleton<IDiagnosticsService>(
                 IDiagnosticsService,
                 InvalidLaunchJsonDebuggerService,
-                InvalidLaunchJsonDebuggerServiceId
-            )
+                InvalidLaunchJsonDebuggerServiceId,
+            ),
         );
         verify(
             serviceManager.addSingleton<IDiagnosticsService>(
                 IDiagnosticsService,
                 UpgradeCodeRunnerDiagnosticService,
-                UpgradeCodeRunnerDiagnosticServiceId
-            )
+                UpgradeCodeRunnerDiagnosticServiceId,
+            ),
         );
         verify(
             serviceManager.addSingleton<IDiagnosticsService>(
                 IDiagnosticsService,
                 InvalidPythonInterpreterService,
-                InvalidPythonInterpreterServiceId
-            )
+                InvalidPythonInterpreterServiceId,
+            ),
         );
         verify(
             serviceManager.addSingleton<IDiagnosticsService>(
                 IDiagnosticsService,
                 InvalidPythonPathInDebuggerService,
-                InvalidPythonPathInDebuggerServiceId
-            )
+                InvalidPythonPathInDebuggerServiceId,
+            ),
         );
         verify(
             serviceManager.addSingleton<IDiagnosticsService>(
                 IDiagnosticsService,
                 LSNotSupportedDiagnosticService,
-                LSNotSupportedDiagnosticServiceId
-            )
+                LSNotSupportedDiagnosticServiceId,
+            ),
         );
         verify(
             serviceManager.addSingleton<IDiagnosticsService>(
                 IDiagnosticsService,
                 PowerShellActivationHackDiagnosticsService,
-                PowerShellActivationHackDiagnosticsServiceId
-            )
+                PowerShellActivationHackDiagnosticsServiceId,
+            ),
         );
         verify(
             serviceManager.addSingleton<IDiagnosticsService>(
                 IDiagnosticsService,
                 InvalidMacPythonInterpreterService,
-                InvalidMacPythonInterpreterServiceId
-            )
+                InvalidMacPythonInterpreterServiceId,
+            ),
         );
         verify(
             serviceManager.addSingleton<IDiagnosticsService>(
                 IDiagnosticsService,
                 PythonPathDeprecatedDiagnosticService,
-                PythonPathDeprecatedDiagnosticServiceId
-            )
+                PythonPathDeprecatedDiagnosticServiceId,
+            ),
         );
         verify(
             serviceManager.addSingleton<IDiagnosticsCommandFactory>(
                 IDiagnosticsCommandFactory,
-                DiagnosticsCommandFactory
-            )
+                DiagnosticsCommandFactory,
+            ),
         );
         verify(serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics));
         verify(
             serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
-                JoinMailingListPrompt
-            )
+                JoinMailingListPrompt,
+            ),
         );
     });
 });

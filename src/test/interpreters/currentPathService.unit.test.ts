@@ -15,7 +15,7 @@ import {
     IConfigurationService,
     IPersistentState,
     IPersistentStateFactory,
-    IPythonSettings
+    IPythonSettings,
 } from '../../client/common/types';
 import { OSType } from '../../client/common/utils/platform';
 import { IInterpreterVersionService } from '../../client/interpreter/contracts';
@@ -25,7 +25,7 @@ import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs
 import { IServiceContainer } from '../../client/ioc/types';
 import {
     CurrentPathService,
-    PythonInPathCommandProvider
+    PythonInPathCommandProvider,
 } from '../../client/pythonEnvironments/discovery/locators/services/currentPathService';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
@@ -86,7 +86,7 @@ suite('Interpreters CurrentPath Service', () => {
             interpreterHelper.object,
             procServiceFactory.object,
             pythonInPathCommandProvider,
-            serviceContainer.object
+            serviceContainer.object,
         );
     });
 
@@ -106,7 +106,7 @@ suite('Interpreters CurrentPath Service', () => {
             pythonSettings.setup((p) => p.pythonPath).returns(() => 'root:Python');
             processService
                 .setup((p) =>
-                    p.exec(TypeMoq.It.isValue('root:Python'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny())
+                    p.exec(TypeMoq.It.isValue('root:Python'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny()),
                 )
                 .returns(() => Promise.resolve({ stdout: 'c:/root:python' }))
                 .verifiable(TypeMoq.Times.once());

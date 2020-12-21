@@ -55,7 +55,7 @@ export function arePathsSame(path1: string, path2: string): boolean {
     return normCasePath(path1) === normCasePath(path2);
 }
 
-export async function getFileInfo(filePath: string): Promise<{ ctime: number, mtime: number }> {
+export async function getFileInfo(filePath: string): Promise<{ ctime: number; mtime: number }> {
     try {
         const data = await fsapi.lstat(filePath);
         return {
@@ -78,7 +78,7 @@ export async function resolveSymbolicLink(filepath: string): Promise<string> {
     return filepath;
 }
 
-export async function* getSubDirs(root:string): AsyncIterableIterator<string> {
+export async function* getSubDirs(root: string): AsyncIterableIterator<string> {
     const dirContents = await fsapi.readdir(root);
     const generators = dirContents.map((item) => {
         async function* generator() {

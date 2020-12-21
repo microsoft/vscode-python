@@ -7,19 +7,13 @@ import { getURIFilter } from '../../common/utils/misc';
 import { IDisposable } from '../../common/utils/resourceLifecycle';
 import { PythonEnvInfo } from './info';
 import { getEnvMatcher, getMaxDerivedEnvInfo } from './info/env';
-import {
-    IPythonEnvsIterator,
-    PythonEnvUpdatedEvent,
-    PythonLocatorQuery,
-} from './locator';
+import { IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from './locator';
 
 /**
  * Create a filter function to match the given query.
  */
 export function getQueryFilter(query: PythonLocatorQuery): (env: PythonEnvInfo) => boolean {
-    const kinds = (query.kinds !== undefined && query.kinds.length > 0)
-        ? query.kinds
-        : undefined;
+    const kinds = query.kinds !== undefined && query.kinds.length > 0 ? query.kinds : undefined;
     let includeNonRooted = true;
     if (query.searchLocations !== undefined) {
         if (query.searchLocations.includeNonRooted !== undefined) {
@@ -67,10 +61,12 @@ function getSearchLocationFilters(query: PythonLocatorQuery): ((u: Uri) => boole
     if (query.searchLocations.roots.length === 0) {
         return [];
     }
-    return query.searchLocations.roots.map((loc) => getURIFilter(loc, {
-        checkParent: true,
-        checkExact: true,
-    }));
+    return query.searchLocations.roots.map((loc) =>
+        getURIFilter(loc, {
+            checkParent: true,
+            checkExact: true,
+        }),
+    );
 }
 
 /**
@@ -128,7 +124,7 @@ export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvI
 export async function* iterAndUpdateEnvs(
     envs: PythonEnvInfo[] | AsyncIterableIterator<PythonEnvInfo>,
     notify: (event: PythonEnvUpdatedEvent | null) => void,
-    getUpdate: ((env: PythonEnvInfo) => Promise<PythonEnvInfo>) = getMaxDerivedEnvInfo,
+    getUpdate: (env: PythonEnvInfo) => Promise<PythonEnvInfo> = getMaxDerivedEnvInfo,
 ): IPythonEnvsIterator {
     let done = false;
     let numRemaining = 0;
@@ -152,8 +148,7 @@ export async function* iterAndUpdateEnvs(
 
         // Get the full info the in background and send updates.
         numRemaining += 1;
-        doUpdate(env, index)
-            .ignoreErrors();
+        doUpdate(env, index).ignoreErrors();
     }
     done = true;
     if (numRemaining === 0) {

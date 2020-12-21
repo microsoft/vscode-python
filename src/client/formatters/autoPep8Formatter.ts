@@ -16,7 +16,7 @@ export class AutoPep8Formatter extends BaseFormatter {
         document: vscode.TextDocument,
         options: vscode.FormattingOptions,
         token: vscode.CancellationToken,
-        range?: vscode.Range
+        range?: vscode.Range,
     ): Thenable<vscode.TextEdit[]> {
         const stopWatch = new StopWatch();
         const settings = this.serviceContainer
@@ -30,14 +30,14 @@ export class AutoPep8Formatter extends BaseFormatter {
         if (formatSelection) {
             // tslint:disable-next-line:no-non-null-assertion
             autoPep8Args.push(
-                ...['--line-range', (range!.start.line + 1).toString(), (range!.end.line + 1).toString()]
+                ...['--line-range', (range!.start.line + 1).toString(), (range!.end.line + 1).toString()],
             );
         }
         const promise = super.provideDocumentFormattingEdits(document, options, token, autoPep8Args);
         sendTelemetryWhenDone(EventName.FORMAT, promise, stopWatch, {
             tool: 'autopep8',
             hasCustomArgs,
-            formatSelection
+            formatSelection,
         });
         return promise;
     }

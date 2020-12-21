@@ -38,5 +38,5 @@ export const SMOKE_TEST_EXTENSIONS_DIR = path.join(
     EXTENSION_ROOT_DIR_FOR_TESTS,
     'tmp',
     'ext',
-    'smokeTestExtensionsFolder'
+    'smokeTestExtensionsFolder',
 );

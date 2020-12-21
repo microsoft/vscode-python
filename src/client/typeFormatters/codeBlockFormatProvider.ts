@@ -5,7 +5,7 @@ export class CodeBlockFormatProvider {
     constructor(
         private blockRegExp: BlockRegEx,
         private previousBlockRegExps: BlockRegEx[],
-        private boundaryRegExps: BlockRegEx[]
+        private boundaryRegExps: BlockRegEx[],
     ) {}
     public canProvideEdits(line: string): boolean {
         return this.blockRegExp.test(line);
@@ -16,7 +16,7 @@ export class CodeBlockFormatProvider {
         position: Position,
         _ch: string,
         options: FormattingOptions,
-        line: TextLine
+        line: TextLine,
     ): TextEdit[] {
         // We can have else for the following blocks:
         // if:
@@ -64,7 +64,7 @@ export class CodeBlockFormatProvider {
 
                 return [
                     TextEdit.delete(new Range(startDeletePosition, endDeletePosition)),
-                    TextEdit.insert(startDeletePosition, prefixOfPreviousBlock)
+                    TextEdit.insert(startDeletePosition, prefixOfPreviousBlock),
                 ];
             }
         }

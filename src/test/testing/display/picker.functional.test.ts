@@ -33,8 +33,8 @@ suite('Testing - TestDisplay', () => {
         collectedTests.testFiles = [
             {
                 fullPath: fullpath ? fullpath : 'path/to/testfile',
-                ...anything()
-            }
+                ...anything(),
+            },
         ];
         return collectedTests;
     }
@@ -45,7 +45,7 @@ suite('Testing - TestDisplay', () => {
         mockedTestCollectionStorage = mock(TestCollectionStorageService);
         mockedAppShell = mock(ApplicationShell);
         when(mockedServiceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService)).thenReturn(
-            instance(mockedTestCollectionStorage)
+            instance(mockedTestCollectionStorage),
         );
         when(mockedServiceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(mockedAppShell));
 
@@ -56,12 +56,12 @@ suite('Testing - TestDisplay', () => {
         const paths: { [key: string]: any } = {
             match: {
                 fullPath: '/path/to/testfile',
-                fileName: '/path/to/testfile'
+                fileName: '/path/to/testfile',
             },
             mismatch: {
                 fullPath: '/path/to/testfile',
-                fileName: '/testfile/to/path'
-            }
+                fileName: '/testfile/to/path',
+            },
         };
         let tests: Tests;
 
@@ -90,7 +90,7 @@ suite('Testing - TestDisplay', () => {
                 wkspace,
                 'rootDirectory',
                 Uri.file(fileName),
-                codeLensTestFunctions()
+                codeLensTestFunctions(),
             );
 
             verify(mockedAppShell.showQuickPick(anything(), anything())).once();
@@ -105,7 +105,7 @@ suite('Testing - TestDisplay', () => {
                 wkspace,
                 'rootDirectory',
                 Uri.file(fileName),
-                codeLensTestFunctions()
+                codeLensTestFunctions(),
             );
 
             verify(mockedAppShell.showQuickPick(anything(), anything())).never();
@@ -126,7 +126,7 @@ suite('Testing - TestDisplay', () => {
                 wkspace,
                 'rootDirectory',
                 Uri.file(fileName),
-                codeLensTestFunctions()
+                codeLensTestFunctions(),
             );
 
             verify(mockedAppShell.showQuickPick(anything(), anything())).once();

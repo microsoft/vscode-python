@@ -60,13 +60,13 @@ suite('PythonExecutableService', () => {
             'envFile',
             'someInvalidFile.env',
             workspace4PyFile,
-            ConfigurationTarget.WorkspaceFolder
+            ConfigurationTarget.WorkspaceFolder,
         );
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], {
             cwd: path.dirname(workspace4PyFile.fsPath),
-            throwOnStdErr: true
+            throwOnStdErr: true,
         });
 
         await expect(promise).to.eventually.be.rejectedWith(StdErrError);
@@ -84,7 +84,7 @@ suite('PythonExecutableService', () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], {
             cwd: path.dirname(workspace4PyFile.fsPath),
-            throwOnStdErr: true
+            throwOnStdErr: true,
         });
 
         await expect(promise).to.eventually.have.property('stdout', `Hello${EOL}`);
@@ -104,7 +104,7 @@ suite('PythonExecutableService', () => {
         const randomModuleIsInstalled = pythonExecService.isModuleInstalled(randomModuleName);
         await expect(randomModuleIsInstalled).to.eventually.equal(
             false,
-            `Random module '${randomModuleName}' is installed`
+            `Random module '${randomModuleName}' is installed`,
         );
     });
 

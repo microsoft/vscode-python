@@ -18,11 +18,11 @@ import {
     IInstaller,
     ILintingSettings,
     IOutputChannel,
-    IPythonSettings
+    IPythonSettings,
 } from '../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -45,7 +45,7 @@ suite('Linting - Arguments', () => {
     [undefined, path.join('users', 'dev_user')].forEach((workspaceUri) => {
         [
             Uri.file(path.join('users', 'dev_user', 'development path to', 'one.py')),
-            Uri.file(path.join('users', 'dev_user', 'development', 'one.py'))
+            Uri.file(path.join('users', 'dev_user', 'development', 'one.py')),
         ].forEach((fileUri) => {
             suite(
                 `File path ${fileUri.fsPath.indexOf(' ') > 0 ? 'with' : 'without'} spaces and ${
@@ -73,10 +73,10 @@ suite('Linting - Arguments', () => {
 
                         const fs = TypeMoq.Mock.ofType<IFileSystem>();
                         fs.setup((x) => x.fileExists(TypeMoq.It.isAny())).returns(
-                            () => new Promise<boolean>((resolve, _reject) => resolve(true))
+                            () => new Promise<boolean>((resolve, _reject) => resolve(true)),
                         );
                         fs.setup((x) => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(
-                            () => true
+                            () => true,
                         );
                         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fs.object);
 
@@ -85,15 +85,15 @@ suite('Linting - Arguments', () => {
                         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
                         serviceManager.addSingletonInstance<IInterpreterService>(
                             IInterpreterService,
-                            interpreterService.object
+                            interpreterService.object,
                         );
                         serviceManager.addSingleton<IInterpreterAutoSelectionService>(
                             IInterpreterAutoSelectionService,
-                            MockAutoSelectionService
+                            MockAutoSelectionService,
                         );
                         serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
                             IInterpreterAutoSeletionProxyService,
-                            MockAutoSelectionService
+                            MockAutoSelectionService,
                         );
                         engine = TypeMoq.Mock.ofType<ILintingEngine>();
                         serviceManager.addSingletonInstance<ILintingEngine>(ILintingEngine, engine.object);
@@ -112,7 +112,7 @@ suite('Linting - Arguments', () => {
                         configService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
                         serviceManager.addSingletonInstance<IConfigurationService>(
                             IConfigurationService,
-                            configService.object
+                            configService.object,
                         );
 
                         const workspaceFolder: WorkspaceFolder | undefined = workspaceUri
@@ -124,7 +124,7 @@ suite('Linting - Arguments', () => {
                             .returns(() => workspaceFolder);
                         serviceManager.addSingletonInstance<IWorkspaceService>(
                             IWorkspaceService,
-                            workspaceService.object
+                            workspaceService.object,
                         );
 
                         const installer = TypeMoq.Mock.ofType<IInstaller>();
@@ -205,11 +205,11 @@ suite('Linting - Arguments', () => {
                             '{line},0,{severity},{test_id}:{msg}',
                             '-n',
                             '-1',
-                            fileUri.fsPath
+                            fileUri.fsPath,
                         ];
                         await testLinter(linter, expectedArgs);
                     });
-                }
+                },
             );
         });
     });

@@ -87,7 +87,7 @@ suite('ArgsService: Common', () => {
                         '1234',
                         '--another-value-with-inline=1234',
                         option,
-                        'abcd'
+                        'abcd',
                     ];
                     const value = argumentsService.getOptionValue(args, option);
                     expect(value).to.equal('abcd');
@@ -102,7 +102,7 @@ suite('ArgsService: Common', () => {
                         option,
                         'abcd',
                         option,
-                        'xyz'
+                        'xyz',
                     ];
                     const value = argumentsService.getOptionValue(args, option);
                     expect(value).to.deep.equal(['abcd', 'xyz']);

@@ -19,7 +19,7 @@ export function getCommandPromptLocation(currentProcess: ICurrentProcess) {
 }
 export async function useCommandPromptAsDefaultShell(
     currentProcess: ICurrentProcess,
-    configService: IConfigurationService
+    configService: IConfigurationService,
 ) {
     const cmdPromptLocation = getCommandPromptLocation(currentProcess);
     await configService.updateSectionSetting(
@@ -27,6 +27,6 @@ export async function useCommandPromptAsDefaultShell(
         'integrated.shell.windows',
         cmdPromptLocation,
         undefined,
-        ConfigurationTarget.Global
+        ConfigurationTarget.Global,
     );
 }

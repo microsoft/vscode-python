@@ -37,7 +37,7 @@ function monkeypatchConsole() {
     const streams = ['log', 'error', 'warn', 'info', 'debug', 'trace'];
     const levels: { [key: string]: LogLevel } = {
         error: LogLevel.Error,
-        warn: LogLevel.Warn
+        warn: LogLevel.Warn,
     };
     // tslint:disable-next-line:no-any
     const consoleAny: any = console;

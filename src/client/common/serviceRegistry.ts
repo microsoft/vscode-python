@@ -33,7 +33,7 @@ import {
     ILanguageService,
     ITerminalManager,
     IVSCodeNotebook,
-    IWorkspaceService
+    IWorkspaceService,
 } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
@@ -47,7 +47,7 @@ import { FeatureDeprecationManager } from './featureDeprecationManager';
 import {
     ExtensionInsidersDailyChannelRule,
     ExtensionInsidersOffChannelRule,
-    ExtensionInsidersWeeklyChannelRule
+    ExtensionInsidersWeeklyChannelRule,
 } from './insidersBuild/downloadChannelRules';
 import { ExtensionChannelService } from './insidersBuild/downloadChannelService';
 import { InsidersExtensionPrompt } from './insidersBuild/insidersExtensionPrompt';
@@ -56,7 +56,7 @@ import {
     ExtensionChannel,
     IExtensionChannelRule,
     IExtensionChannelService,
-    IInsiderExtensionPrompt
+    IInsiderExtensionPrompt,
 } from './insidersBuild/types';
 import { ProductInstaller } from './installer/productInstaller';
 import { InterpreterPathService } from './interpreterPathService';
@@ -95,7 +95,7 @@ import {
     ITerminalActivator,
     ITerminalHelper,
     ITerminalServiceFactory,
-    TerminalActivationProviders
+    TerminalActivationProviders,
 } from './terminal/types';
 import {
     IAsyncDisposableRegistry,
@@ -111,7 +111,7 @@ import {
     IPathUtils,
     IPersistentStateFactory,
     IRandom,
-    IsWindows
+    IsWindows,
 } from './types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { Random } from './utils/random';
@@ -134,7 +134,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
     serviceManager.addSingleton<IJupyterExtensionDependencyManager>(
         IJupyterExtensionDependencyManager,
-        JupyterExtensionDependencyManager
+        JupyterExtensionDependencyManager,
     );
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
@@ -153,7 +153,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITerminalActivator>(ITerminalActivator, TerminalActivator);
     serviceManager.addSingleton<ITerminalActivationHandler>(
         ITerminalActivationHandler,
-        PowershellTerminalActivationFailedHandler
+        PowershellTerminalActivationFailedHandler,
     );
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentsManager>(IExperimentsManager, ExperimentsManager);
@@ -163,27 +163,27 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
         ITerminalActivationCommandProvider,
         Bash,
-        TerminalActivationProviders.bashCShellFish
+        TerminalActivationProviders.bashCShellFish,
     );
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
         ITerminalActivationCommandProvider,
         CommandPromptAndPowerShell,
-        TerminalActivationProviders.commandPromptAndPowerShell
+        TerminalActivationProviders.commandPromptAndPowerShell,
     );
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
         ITerminalActivationCommandProvider,
         PyEnvActivationCommandProvider,
-        TerminalActivationProviders.pyenv
+        TerminalActivationProviders.pyenv,
     );
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
         ITerminalActivationCommandProvider,
         CondaActivationCommandProvider,
-        TerminalActivationProviders.conda
+        TerminalActivationProviders.conda,
     );
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
         ITerminalActivationCommandProvider,
         PipEnvActivationCommandProvider,
-        TerminalActivationProviders.pipenv
+        TerminalActivationProviders.pipenv,
     );
     serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);
 
@@ -198,35 +198,35 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInsiderExtensionPrompt>(IInsiderExtensionPrompt, InsidersExtensionPrompt);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        InsidersExtensionService
+        InsidersExtensionService,
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        ReloadVSCodeCommandHandler
+        ReloadVSCodeCommandHandler,
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        DebuggerDataViewerExperimentEnabler
+        DebuggerDataViewerExperimentEnabler,
     );
     serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
     serviceManager.addSingleton<IExtensionChannelRule>(
         IExtensionChannelRule,
         ExtensionInsidersOffChannelRule,
-        ExtensionChannel.off
+        ExtensionChannel.off,
     );
     serviceManager.addSingleton<IExtensionChannelRule>(
         IExtensionChannelRule,
         ExtensionInsidersDailyChannelRule,
-        ExtensionChannel.daily
+        ExtensionChannel.daily,
     );
     serviceManager.addSingleton<IExtensionChannelRule>(
         IExtensionChannelRule,
         ExtensionInsidersWeeklyChannelRule,
-        ExtensionChannel.weekly
+        ExtensionChannel.weekly,
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        DebugSessionTelemetry
+        DebugSessionTelemetry,
     );
     serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
     serviceManager.addSingleton<IStartPage>(IStartPage, StartPage, undefined, [IExtensionSingleActivationService]);

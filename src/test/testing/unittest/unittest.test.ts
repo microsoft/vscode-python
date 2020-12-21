@@ -60,11 +60,11 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
         when(
-            mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())
+            mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything()),
         ).thenResolve();
         ioc.serviceManager.rebindInstance<IEnvironmentActivationService>(
             IEnvironmentActivationService,
-            instance(mockEnvironmentActivationService)
+            instance(mockEnvironmentActivationService),
         );
     }
 
@@ -79,14 +79,14 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         assert.equal(
             tests.testFiles.some((t) => t.name === 'test_one.py' && t.nameToRun === 'test_one'),
             true,
-            'Test File not found'
+            'Test File not found',
         );
         assert.equal(
             tests.testFunctions.some(
-                (t) => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A'
+                (t) => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A',
             ),
             true,
-            'Test File not found'
+            'Test File not found',
         );
     });
 
@@ -101,40 +101,40 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         assert.equal(
             tests.testFiles.some((t) => t.name === 'test_one.py' && t.nameToRun === 'test_one'),
             true,
-            'Test File one not found'
+            'Test File one not found',
         );
         assert.equal(
             tests.testFiles.some((t) => t.name === 'test_two.py' && t.nameToRun === 'test_two'),
             true,
-            'Test File two not found'
+            'Test File two not found',
         );
         assert.equal(
             tests.testFiles.some((t) => t.name === 'test_three.py' && t.nameToRun === 'more_tests.test_three'),
             true,
-            'Test File three not found'
+            'Test File three not found',
         );
         assert.equal(
             tests.testFunctions.some(
-                (t) => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A'
+                (t) => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A',
             ),
             true,
-            'Test File one not found'
+            'Test File one not found',
         );
         assert.equal(
             tests.testFunctions.some(
-                (t) => t.testFunction.name === 'test_2A' && t.testFunction.nameToRun === 'test_two.Test_test2.test_2A'
+                (t) => t.testFunction.name === 'test_2A' && t.testFunction.nameToRun === 'test_two.Test_test2.test_2A',
             ),
             true,
-            'Test File two not found'
+            'Test File two not found',
         );
         assert.equal(
             tests.testFunctions.some(
                 (t) =>
                     t.testFunction.name === 'test_3A' &&
-                    t.testFunction.nameToRun === 'more_tests.test_three.Test_test3.test_3A'
+                    t.testFunction.nameToRun === 'more_tests.test_three.Test_test3.test_3A',
             ),
             true,
-            'Test File three not found'
+            'Test File three not found',
         );
     });
 
@@ -144,34 +144,34 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         const testManager = factory('unittest', rootWorkspaceUri!, UNITTEST_MULTI_TEST_FILE_PATH);
         const testsDiscovered: Tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const testFile: TestFile | undefined = testsDiscovered.testFiles.find((value: TestFile) =>
-            value.nameToRun.endsWith('_three')
+            value.nameToRun.endsWith('_three'),
         );
         assert.notEqual(testFile, undefined, 'No test file suffixed with _3A in test files.');
         assert.equal(testFile!.suites.length, 1, 'Expected only 1 test suite in test file three.');
         const testFunc: TestFunction | undefined = testFile!.suites[0].functions.find(
-            (value: TestFunction) => value.name === 'test_3A'
+            (value: TestFunction) => value.name === 'test_3A',
         );
         assert.notEqual(testFunc, undefined, 'No test in file test_three.py named test_3A');
         const testsToRun: TestsToRun = {
-            testFunction: [testFunc!]
+            testFunction: [testFunc!],
         };
         const testRunResult: Tests = await testManager.runTest(CommandSource.ui, testsToRun);
         assert.equal(
             testRunResult.summary.failures + testRunResult.summary.passed + testRunResult.summary.skipped,
             1,
-            'Expected to see only 1 test run in the summary for tests run.'
+            'Expected to see only 1 test run in the summary for tests run.',
         );
         assert.equal(testRunResult.summary.errors, 0, 'Unexpected: Test file ran with errors.');
         assert.equal(testRunResult.summary.failures, 0, 'Unexpected: Test has failed during test run.');
         assert.equal(
             testRunResult.summary.passed,
             1,
-            `Only one test should have passed during our test run. Instead, ${testRunResult.summary.passed} passed.`
+            `Only one test should have passed during our test run. Instead, ${testRunResult.summary.passed} passed.`,
         );
         assert.equal(
             testRunResult.summary.skipped,
             0,
-            `Expected to have skipped 0 tests during this test-run. Instead, ${testRunResult.summary.skipped} where skipped.`
+            `Expected to have skipped 0 tests during this test-run. Instead, ${testRunResult.summary.skipped} where skipped.`,
         );
     });
 
@@ -184,16 +184,16 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         const testManager = factory('unittest', rootWorkspaceUri!, UNITTEST_COUNTS_TEST_FILE_PATH);
         const testsDiscovered: Tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const testsFile: TestFile | undefined = testsDiscovered.testFiles.find((value: TestFile) =>
-            value.name.startsWith('test_unit_test_counter')
+            value.name.startsWith('test_unit_test_counter'),
         );
         assert.notEqual(
             testsFile,
             undefined,
-            `No test file suffixed with _counter in test files. Looked in ${UNITTEST_COUNTS_TEST_FILE_PATH}.`
+            `No test file suffixed with _counter in test files. Looked in ${UNITTEST_COUNTS_TEST_FILE_PATH}.`,
         );
         assert.equal(testsFile!.suites.length, 1, 'Expected only 1 test suite in counter test file.');
         const testsToRun: TestsToRun = {
-            testFolder: [testsDiscovered.testFolders[0]]
+            testFolder: [testsDiscovered.testFolders[0]],
         };
 
         // ensure that each re-run of the unit tests in question result in the same summary count information.
@@ -201,24 +201,24 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         assert.equal(
             testRunResult.summary.failures,
             2,
-            'This test was written assuming there was 2 tests run that would fail. (iteration 1)'
+            'This test was written assuming there was 2 tests run that would fail. (iteration 1)',
         );
         assert.equal(
             testRunResult.summary.passed,
             2,
-            'This test was written assuming there was 2 tests run that would succeed. (iteration 1)'
+            'This test was written assuming there was 2 tests run that would succeed. (iteration 1)',
         );
 
         testRunResult = await testManager.runTest(CommandSource.ui, testsToRun);
         assert.equal(
             testRunResult.summary.failures,
             2,
-            'This test was written assuming there was 2 tests run that would fail. (iteration 2)'
+            'This test was written assuming there was 2 tests run that would fail. (iteration 2)',
         );
         assert.equal(
             testRunResult.summary.passed,
             2,
-            'This test was written assuming there was 2 tests run that would succeed. (iteration 2)'
+            'This test was written assuming there was 2 tests run that would succeed. (iteration 2)',
         );
     });
 
@@ -231,16 +231,16 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         const testManager = factory('unittest', rootWorkspaceUri!, UNITTEST_COUNTS_TEST_FILE_PATH);
         const testsDiscovered: Tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const testsFile: TestFile | undefined = testsDiscovered.testFiles.find((value: TestFile) =>
-            value.name.startsWith('test_unit_test_counter')
+            value.name.startsWith('test_unit_test_counter'),
         );
         assert.notEqual(
             testsFile,
             undefined,
-            `No test file suffixed with _counter in test files. Looked in ${UNITTEST_COUNTS_TEST_FILE_PATH}.`
+            `No test file suffixed with _counter in test files. Looked in ${UNITTEST_COUNTS_TEST_FILE_PATH}.`,
         );
         assert.equal(testsFile!.suites.length, 1, 'Expected only 1 test suite in counter test file.');
         const testsToRun: TestsToRun = {
-            testFolder: [testsDiscovered.testFolders[0]]
+            testFolder: [testsDiscovered.testFolders[0]],
         };
 
         // ensure that each re-run of the unit tests in question result in the same summary count information.
@@ -248,19 +248,19 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         assert.equal(
             testRunResult.summary.failures,
             2,
-            'This test was written assuming there was 2 tests run that would fail. (iteration 1)'
+            'This test was written assuming there was 2 tests run that would fail. (iteration 1)',
         );
         assert.equal(
             testRunResult.summary.passed,
             2,
-            'This test was written assuming there was 2 tests run that would succeed. (iteration 1)'
+            'This test was written assuming there was 2 tests run that would succeed. (iteration 1)',
         );
 
         testRunResult = await testManager.runTest(CommandSource.ui, testsToRun, true);
         assert.equal(
             testRunResult.summary.failures,
             2,
-            'This test was written assuming there was 2 tests run that would fail. (iteration 2)'
+            'This test was written assuming there was 2 tests run that would fail. (iteration 2)',
         );
     });
 });

@@ -15,7 +15,7 @@ import {
     TestFunction,
     Tests,
     TestStatus,
-    TestSuite
+    TestSuite,
 } from '../../../../client/testing/common/types';
 import { TestDataItemType } from '../../../../client/testing/types';
 import { createMockTestDataItem } from '../testUtils.unit.test';
@@ -105,67 +105,67 @@ suite('Unit Tests - Tests Results Service', () => {
         suite5.functions.push(fn7);
         const flattendSuite1: FlattenedTestSuite = {
             testSuite: suite1,
-            xmlClassName: suite1.xmlName
+            xmlClassName: suite1.xmlName,
         } as any;
         const flattendSuite2: FlattenedTestSuite = {
             testSuite: suite2,
-            xmlClassName: suite2.xmlName
+            xmlClassName: suite2.xmlName,
         } as any;
         const flattendSuite3: FlattenedTestSuite = {
             testSuite: suite3,
-            xmlClassName: suite3.xmlName
+            xmlClassName: suite3.xmlName,
         } as any;
         const flattendSuite4: FlattenedTestSuite = {
             testSuite: suite4,
-            xmlClassName: suite4.xmlName
+            xmlClassName: suite4.xmlName,
         } as any;
         const flattendSuite5: FlattenedTestSuite = {
             testSuite: suite5,
-            xmlClassName: suite5.xmlName
+            xmlClassName: suite5.xmlName,
         } as any;
         const flattendFn1: FlattenedTestFunction = {
             testFunction: fn1,
-            xmlClassName: fn1.name
+            xmlClassName: fn1.name,
         } as any;
         const flattendFn2: FlattenedTestFunction = {
             testFunction: fn2,
-            xmlClassName: fn2.name
+            xmlClassName: fn2.name,
         } as any;
         const flattendFn3: FlattenedTestFunction = {
             testFunction: fn3,
-            xmlClassName: fn3.name
+            xmlClassName: fn3.name,
         } as any;
         const flattendFn4: FlattenedTestFunction = {
             testFunction: fn4,
-            xmlClassName: fn4.name
+            xmlClassName: fn4.name,
         } as any;
         const flattendFn5: FlattenedTestFunction = {
             testFunction: fn5,
-            xmlClassName: fn5.name
+            xmlClassName: fn5.name,
         } as any;
         const flattendFn6: FlattenedTestFunction = {
             testFunction: fn6,
-            xmlClassName: fn6.name
+            xmlClassName: fn6.name,
         } as any;
         const flattendFn7: FlattenedTestFunction = {
             testFunction: fn7,
-            xmlClassName: fn7.name
+            xmlClassName: fn7.name,
         } as any;
         const flattendFn8: FlattenedTestFunction = {
             testFunction: fn8,
-            xmlClassName: fn8.name
+            xmlClassName: fn8.name,
         } as any;
         const flattendFn9: FlattenedTestFunction = {
             testFunction: fn9,
-            xmlClassName: fn9.name
+            xmlClassName: fn9.name,
         } as any;
         const flattendFn10: FlattenedTestFunction = {
             testFunction: fn10,
-            xmlClassName: fn10.name
+            xmlClassName: fn10.name,
         } as any;
         const flattendFn11: FlattenedTestFunction = {
             testFunction: fn11,
-            xmlClassName: fn11.name
+            xmlClassName: fn11.name,
         } as any;
         tests = {
             rootTestFolders: [folder1],
@@ -183,9 +183,9 @@ suite('Unit Tests - Tests Results Service', () => {
                 flattendFn8,
                 flattendFn9,
                 flattendFn10,
-                flattendFn11
+                flattendFn11,
             ],
-            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5]
+            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5],
         };
         testResultsService = new TestResultsService(resultResetVisitor.object);
     });

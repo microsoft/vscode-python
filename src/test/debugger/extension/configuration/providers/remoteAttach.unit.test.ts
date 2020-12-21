@@ -23,7 +23,7 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
         // tslint:disable-next-line:no-unnecessary-override
         public async configurePort(
             i: MultiStepInput<DebugConfigurationState>,
-            config: Partial<AttachRequestArguments>
+            config: Partial<AttachRequestArguments>,
         ) {
             return super.configurePort(i, config);
         }
@@ -87,14 +87,14 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
             request: 'attach',
             connect: {
                 host: 'localhost',
-                port: 5678
+                port: 5678,
             },
             pathMappings: [
                 {
                     localRoot: '${workspaceFolder}',
-                    remoteRoot: '.'
-                }
-            ]
+                    remoteRoot: '.',
+                },
+            ],
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -122,14 +122,14 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
             request: 'attach',
             connect: {
                 host: 'Hello',
-                port: 9999
+                port: 9999,
             },
             pathMappings: [
                 {
                     localRoot: '${workspaceFolder}',
-                    remoteRoot: '.'
-                }
-            ]
+                    remoteRoot: '.',
+                },
+            ],
         };
 
         expect(state.config).to.be.deep.equal(config);

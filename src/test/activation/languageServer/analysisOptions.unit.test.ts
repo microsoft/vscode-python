@@ -19,7 +19,7 @@ import {
     IDisposable,
     IExtensionContext,
     IOutputChannel,
-    IPathUtils
+    IPathUtils,
 } from '../../../client/common/types';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
@@ -77,7 +77,7 @@ suite('Language Server - Analysis Options', () => {
             instance(workspace),
             lsOutputChannel.object,
             instance(pathUtils),
-            instance(lsFolderService)
+            instance(lsFolderService),
         );
     });
     test('Initialize will add event handlers and will dispose them when running dispose', async () => {
@@ -212,7 +212,7 @@ suite('Language Server - Analysis Options', () => {
             { scheme: 'file', language: PYTHON_LANGUAGE },
             { scheme: 'untitled', language: PYTHON_LANGUAGE },
             { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
-            { scheme: 'vscode-notebook-cell', language: PYTHON_LANGUAGE }
+            { scheme: 'vscode-notebook-cell', language: PYTHON_LANGUAGE },
         ];
 
         const selector = analysisOptions.getDocumentFilters();
@@ -227,7 +227,7 @@ suite('Language Server - Analysis Options', () => {
             { scheme: 'file', language: PYTHON_LANGUAGE },
             { scheme: 'untitled', language: PYTHON_LANGUAGE },
             { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
-            { scheme: 'vscode-notebook-cell', language: PYTHON_LANGUAGE }
+            { scheme: 'vscode-notebook-cell', language: PYTHON_LANGUAGE },
         ];
 
         const selector = analysisOptions.getDocumentFilters(workspaceFolder);
@@ -243,7 +243,7 @@ suite('Language Server - Analysis Options', () => {
             { scheme: 'file', language: PYTHON_LANGUAGE, pattern: `${workspaceFolder1.uri.fsPath}/**/*` },
             { scheme: 'untitled', language: PYTHON_LANGUAGE },
             { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
-            { scheme: 'vscode-notebook-cell', language: PYTHON_LANGUAGE }
+            { scheme: 'vscode-notebook-cell', language: PYTHON_LANGUAGE },
         ];
 
         const selector = analysisOptions.getDocumentFilters(workspaceFolder1);

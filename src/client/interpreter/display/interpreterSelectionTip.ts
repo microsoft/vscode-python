@@ -16,7 +16,7 @@ import { EventName } from '../../telemetry/constants';
 enum NotificationType {
     Tip,
     Survey,
-    NoPrompt
+    NoPrompt,
 }
 
 @injectable()
@@ -29,7 +29,7 @@ export class InterpreterSelectionTip implements IExtensionSingleActivationServic
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IPersistentStateFactory) factory: IPersistentStateFactory,
         @inject(IExperimentService) private readonly experiments: IExperimentService,
-        @inject(IBrowserService) private browserService: IBrowserService
+        @inject(IBrowserService) private browserService: IBrowserService,
     ) {
         this.storage = factory.createGlobalPersistentState('InterpreterSelectionTip', false);
         this.notificationType = NotificationType.NoPrompt;
@@ -45,12 +45,12 @@ export class InterpreterSelectionTip implements IExtensionSingleActivationServic
         if (await this.experiments.inExperiment(SurveyAndInterpreterTipNotification.surveyExperiment)) {
             this.notificationType = NotificationType.Survey;
             this.notificationContent = await this.experiments.getExperimentValue(
-                SurveyAndInterpreterTipNotification.surveyExperiment
+                SurveyAndInterpreterTipNotification.surveyExperiment,
             );
         } else if (await this.experiments.inExperiment(SurveyAndInterpreterTipNotification.tipExperiment)) {
             this.notificationType = NotificationType.Tip;
             this.notificationContent = await this.experiments.getExperimentValue(
-                SurveyAndInterpreterTipNotification.tipExperiment
+                SurveyAndInterpreterTipNotification.tipExperiment,
             );
         }
 
@@ -71,7 +71,7 @@ export class InterpreterSelectionTip implements IExtensionSingleActivationServic
             const selection = await this.shell.showInformationMessage(
                 this.notificationContent!,
                 Common.bannerLabelYes(),
-                Common.bannerLabelNo()
+                Common.bannerLabelNo(),
             );
 
             if (selection === Common.bannerLabelYes()) {

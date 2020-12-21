@@ -45,7 +45,7 @@ suite('Nuget Azure Storage Repository', () => {
             p: string,
             // tslint:disable-next-line:no-any
             t: any,
-            cb: ErrorOrResult<BlobService.ListBlobsResult>
+            cb: ErrorOrResult<BlobService.ListBlobsResult>,
         ) {
             this.calls.push([c, p, t]);
             const result: BlobService.ListBlobsResult = { entries: this.results! };
@@ -58,7 +58,7 @@ suite('Nuget Azure Storage Repository', () => {
         ['https://az', true, 'https://az'],
         ['https://az', false, 'http://az'],
         ['http://az', true, 'http://az'],
-        ['http://az', false, 'http://az']
+        ['http://az', false, 'http://az'],
     ];
     for (const [uri, setting, expected] of tests) {
         test(`Get all packages ("${uri}" / ${setting})`, async () => {
@@ -74,7 +74,7 @@ suite('Nuget Azure Storage Repository', () => {
             blobstore.results = [
                 { name: 'Azarath' } as BlobService.BlobResult,
                 { name: 'Metrion' } as BlobService.BlobResult,
-                { name: 'Zinthos' } as BlobService.BlobResult
+                { name: 'Zinthos' } as BlobService.BlobResult,
             ];
             // tslint:enable:no-object-literal-type-assertion
             const version = new SemVer('1.1.1');
@@ -90,7 +90,7 @@ suite('Nuget Azure Storage Repository', () => {
                 async (uriArg) => {
                     actualURI = uriArg;
                     return blobstore;
-                }
+                },
             );
 
             const packages = await repo.getPackages(packageName, undefined);
@@ -98,7 +98,7 @@ suite('Nuget Azure Storage Repository', () => {
             expect(packages).to.deep.equal([
                 { package: 'Azarath', uri: 'eggs/spam/Azarath', version: version },
                 { package: 'Metrion', uri: 'eggs/spam/Metrion', version: version },
-                { package: 'Zinthos', uri: 'eggs/spam/Zinthos', version: version }
+                { package: 'Zinthos', uri: 'eggs/spam/Zinthos', version: version },
             ]);
             expect(actualURI).to.equal(expected);
             expect(blobstore.calls).to.deep.equal([['spam', packageName, undefined]], 'failed');

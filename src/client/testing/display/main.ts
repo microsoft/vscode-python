@@ -58,7 +58,7 @@ export class TestResultDisplay implements ITestResultDisplay {
         this.displayProgress(
             'Running Tests',
             'Running Tests (Click to Stop)',
-            constants.Commands.Tests_Ask_To_Stop_Test
+            constants.Commands.Tests_Ask_To_Stop_Test,
         );
         testRunResult
             .then((tests) => this.updateTestRunWithSuccess(tests, debug))
@@ -70,7 +70,7 @@ export class TestResultDisplay implements ITestResultDisplay {
         this.displayProgress(
             'Discovering Tests',
             'Discovering tests (click to stop)',
-            constants.Commands.Tests_Ask_To_Stop_Discovery
+            constants.Commands.Tests_Ask_To_Stop_Discovery,
         );
         return testDiscovery
             .then((tests) => {
@@ -161,7 +161,7 @@ export class TestResultDisplay implements ITestResultDisplay {
             'testing.promptToConfigure',
             'testing.pytestEnabled',
             'testing.unittestEnabled',
-            'testing.nosetestsEnabled'
+            'testing.nosetestsEnabled',
         ];
 
         for (const setting of settingsToDisable) {
@@ -186,7 +186,7 @@ export class TestResultDisplay implements ITestResultDisplay {
                 .showInformationMessage(
                     'No tests discovered, please check the configuration settings for the tests.',
                     Testing.disableTests(),
-                    Testing.configureTests()
+                    Testing.configureTests(),
                 )
                 .then((item) => {
                     if (item === Testing.disableTests()) {
@@ -217,7 +217,7 @@ export class TestResultDisplay implements ITestResultDisplay {
                 // TODO: show an option that will invoke a command 'python.test.configureTest' or similar.
                 // This will be hanlded by main.ts that will capture input from user and configure the tests.
                 this.appShell.showErrorMessage(
-                    'Test discovery error, please check the configuration settings for the tests.'
+                    'Test discovery error, please check the configuration settings for the tests.',
                 );
             }
         }

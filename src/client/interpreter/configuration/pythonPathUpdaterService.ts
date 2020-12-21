@@ -19,7 +19,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
     private readonly executionFactory: IPythonExecutionFactory;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.pythonPathSettingsUpdaterFactory = serviceContainer.get<IPythonPathUpdaterServiceFactory>(
-            IPythonPathUpdaterServiceFactory
+            IPythonPathUpdaterServiceFactory,
         );
         this.interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
         this.executionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
@@ -28,7 +28,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         pythonPath: string | undefined,
         configTarget: ConfigurationTarget,
         trigger: 'ui' | 'shebang' | 'load',
-        wkspace?: Uri
+        wkspace?: Uri,
     ): Promise<void> {
         const stopWatch = new StopWatch();
         const pythonPathUpdater = this.getPythonUpdaterService(configTarget, wkspace);
@@ -44,18 +44,18 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         }
         // do not wait for this to complete
         this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath).catch((ex) =>
-            traceError('Python Extension: sendTelemetry', ex)
+            traceError('Python Extension: sendTelemetry', ex),
         );
     }
     private async sendTelemetry(
         duration: number,
         failed: boolean,
         trigger: 'ui' | 'shebang' | 'load',
-        pythonPath: string | undefined
+        pythonPath: string | undefined,
     ) {
         const telemetryProperties: PythonInterpreterTelemetry = {
             failed,
-            trigger
+            trigger,
         };
         if (!failed && pythonPath) {
             const processService = await this.executionFactory.create({ pythonPath });

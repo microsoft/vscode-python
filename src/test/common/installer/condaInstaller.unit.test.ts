@@ -93,7 +93,7 @@ suite('Common - Conda Installer', () => {
         const condaPath = 'some Conda Path';
         const condaEnv: CondaEnvironmentInfo = {
             name: 'Hello',
-            path: 'Some Path'
+            path: 'Some Path',
         };
 
         when(configService.getSettings(uri)).thenReturn(instance(settings));
@@ -112,7 +112,7 @@ suite('Common - Conda Installer', () => {
         const condaPath = 'some Conda Path';
         const condaEnv: CondaEnvironmentInfo = {
             name: '',
-            path: 'Some Path'
+            path: 'Some Path',
         };
 
         when(configService.getSettings(uri)).thenReturn(instance(settings));
@@ -124,7 +124,7 @@ suite('Common - Conda Installer', () => {
 
         assert.deepEqual(execInfo, {
             args: ['install', '--prefix', condaEnv.path.fileToCommandArgument(), 'abc', '-y'],
-            execPath: condaPath
+            execPath: condaPath,
         });
     });
 });

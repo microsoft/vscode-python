@@ -31,7 +31,7 @@ const resourceSpecificCacheStores = new Map<string, Map<string, CacheData>>();
 function getCacheKey(
     resource: Resource,
     vscode: VSCodeType = require('vscode'),
-    serviceContainer: IServiceContainer | undefined
+    serviceContainer: IServiceContainer | undefined,
 ) {
     const section = vscode.workspace.getConfiguration('python', vscode.Uri.file(__filename));
     if (!section) {
@@ -78,7 +78,7 @@ function getCacheKey(
 function getCacheStore(
     resource: Resource,
     vscode: VSCodeType = require('vscode'),
-    serviceContainer: IServiceContainer | undefined
+    serviceContainer: IServiceContainer | undefined,
 ) {
     const key = getCacheKey(resource, vscode, serviceContainer);
     if (!resourceSpecificCacheStores.has(key)) {
@@ -138,7 +138,7 @@ export class InMemoryCache<T> {
     public set data(value: T | undefined) {
         this.store.set(this.cacheKey, {
             expiry: this.calculateExpiry(),
-            value
+            value,
         });
     }
     public clear() {
@@ -177,7 +177,7 @@ export class InMemoryInterpreterSpecificCache<T> extends InMemoryCache<T> {
         expiryDurationMs: number,
         args: [Uri | undefined, ...any[]],
         private readonly serviceContainer: IServiceContainer | undefined,
-        private readonly vscode: VSCodeType = require('vscode')
+        private readonly vscode: VSCodeType = require('vscode'),
     ) {
         super(expiryDurationMs, getCacheKeyFromFunctionArgs(keyPrefix, args.slice(1)));
         this.resource = args[0];

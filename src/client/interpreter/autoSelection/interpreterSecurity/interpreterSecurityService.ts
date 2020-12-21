@@ -14,7 +14,7 @@ export class InterpreterSecurityService implements IInterpreterSecurityService {
     public _didSafeInterpretersChange = new EventEmitter<void>();
     constructor(
         @inject(IInterpreterSecurityStorage) private readonly interpreterSecurityStorage: IInterpreterSecurityStorage,
-        @inject(IInterpreterEvaluation) private readonly interpreterEvaluation: IInterpreterEvaluation
+        @inject(IInterpreterEvaluation) private readonly interpreterEvaluation: IInterpreterEvaluation,
     ) {}
 
     public isSafe(interpreter: PythonEnvironment, resource?: Resource): boolean | undefined {
@@ -41,7 +41,7 @@ export class InterpreterSecurityService implements IInterpreterSecurityService {
         } else {
             await this.interpreterSecurityStorage.unsafeInterpreters.updateValue([
                 interpreter.path,
-                ...unsafeInterpreters
+                ...unsafeInterpreters,
             ]);
         }
         this._didSafeInterpretersChange.fire();

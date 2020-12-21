@@ -11,7 +11,7 @@ import { createDeferred, sleep } from '../../../../client/common/utils/async';
 import { InterpreterSecurityService } from '../../../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
 import {
     IInterpreterEvaluation,
-    IInterpreterSecurityStorage
+    IInterpreterSecurityStorage,
 } from '../../../../client/interpreter/autoSelection/types';
 
 suite('Interpreter Security service', () => {
@@ -34,7 +34,7 @@ suite('Interpreter Security service', () => {
         interpreterSecurityStorage.setup((p) => p.safeInterpreters).returns(() => safeInterpreters.object);
         interpreterSecurityService = new InterpreterSecurityService(
             interpreterSecurityStorage.object,
-            interpreterEvaluation.object
+            interpreterEvaluation.object,
         );
     });
 

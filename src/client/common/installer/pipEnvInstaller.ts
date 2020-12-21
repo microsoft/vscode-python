@@ -46,7 +46,7 @@ export class PipEnvInstaller extends ModuleInstaller {
         }
         return {
             args: args,
-            execPath: pipenvName
+            execPath: pipenvName,
         };
     }
 }

@@ -33,7 +33,7 @@ const keywordsWithSpaceBeforeBrace = [
     'return',
     'while',
     'with',
-    'yield'
+    'yield',
 ];
 
 export class LineFormatter {

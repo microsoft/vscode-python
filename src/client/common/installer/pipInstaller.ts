@@ -38,7 +38,7 @@ export class PipInstaller extends ModuleInstaller {
         }
         return {
             args: [...proxyArgs, 'install', '-U', moduleName],
-            moduleName: 'pip'
+            moduleName: 'pip',
         };
     }
     private isPipAvailable(info?: InterpreterUri): Promise<boolean> {

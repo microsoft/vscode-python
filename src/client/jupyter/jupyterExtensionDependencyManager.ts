@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import {
     IApplicationEnvironment,
     IApplicationShell,
-    IJupyterExtensionDependencyManager
+    IJupyterExtensionDependencyManager,
 } from '../common/application/types';
 import { JUPYTER_EXTENSION_ID } from '../common/constants';
 import { IExtensions } from '../common/types';
@@ -13,7 +13,7 @@ export class JupyterExtensionDependencyManager implements IJupyterExtensionDepen
     constructor(
         @inject(IExtensions) private extensions: IExtensions,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment
+        @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment,
     ) {}
 
     public get isJupyterExtensionInstalled() {

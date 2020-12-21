@@ -34,7 +34,7 @@ class ConsoleTransport extends Transport {
         [LogLevel.Warn]: console.warn,
         [LogLevel.Info]: console.info,
         [LogLevel.Debug]: console.debug,
-        [LogLevel.Trace]: console.trace
+        [LogLevel.Trace]: console.trace,
     };
     private static defaultFunc = console.log;
     // tslint:enable:no-console
@@ -45,7 +45,7 @@ class ConsoleTransport extends Transport {
     constructor(
         // tslint:disable-next-line:no-any
         options?: any,
-        private readonly levels?: winston.config.AbstractConfigSetLevels
+        private readonly levels?: winston.config.AbstractConfigSetLevels,
     ) {
         super(options);
     }
@@ -74,7 +74,7 @@ class ConsoleTransport extends Transport {
 export function getConsoleTransport(formatter: logform.Format): Transport {
     return new ConsoleTransport({
         // We minimize customization.
-        format: formatter
+        format: formatter,
     });
 }
 
@@ -97,7 +97,7 @@ class PythonOutputChannelTransport extends Transport {
 export function getPythonOutputChannelTransport(channel: OutputChannel, formatter: logform.Format) {
     return new PythonOutputChannelTransport(channel, {
         // We minimize customization.
-        format: formatter
+        format: formatter,
     });
 }
 
@@ -109,6 +109,6 @@ export function getFileTransport(logfile: string, formatter: logform.Format): Tr
     return new winston.transports.File({
         format: formatter,
         filename: logfile,
-        handleExceptions: true
+        handleExceptions: true,
     });
 }

@@ -52,7 +52,7 @@ export class ImportTracker implements IExtensionSingleActivationService {
 
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
     ) {
         this.documentManager.onDidOpenTextDocument((t) => this.onOpenedOrSavedDocument(t), this, this.disposables);
         this.documentManager.onDidSaveTextDocument((t) => this.onOpenedOrSavedDocument(t), this, this.disposables);

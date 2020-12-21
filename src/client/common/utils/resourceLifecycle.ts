@@ -30,7 +30,7 @@ export async function disposeAll(disposables: IDisposable[]): Promise<void> {
             } catch (err) {
                 logWarning(`dispose() #${index} failed (${err})`);
             }
-        })
+        }),
     );
 }
 

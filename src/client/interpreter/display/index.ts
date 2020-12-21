@@ -12,7 +12,7 @@ import {
     IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterService,
-    IInterpreterStatusbarVisibilityFilter
+    IInterpreterStatusbarVisibilityFilter,
 } from '../contracts';
 
 /**
@@ -42,7 +42,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @multiInject(IInterpreterStatusbarVisibilityFilter)
-        private readonly visibilityFilters: IInterpreterStatusbarVisibilityFilter[]
+        private readonly visibilityFilters: IInterpreterStatusbarVisibilityFilter[],
     ) {
         this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -60,7 +60,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         this.interpreterService.onDidChangeInterpreterInformation(
             this.onDidChangeInterpreterInformation,
             this,
-            disposableRegistry
+            disposableRegistry,
         );
         this.visibilityFilters
             .filter((item) => item.changed)
@@ -93,8 +93,8 @@ export class InterpreterDisplay implements IInterpreterDisplay {
                 const output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
                 output.appendLine(
                     Interpreters.pythonInterpreterPath().format(
-                        this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath)
-                    )
+                        this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath),
+                    ),
                 );
                 this.interpreterPath = interpreter.path;
             }

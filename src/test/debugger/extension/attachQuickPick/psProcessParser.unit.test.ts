@@ -26,7 +26,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'launchd',
                 id: '1',
                 processName: 'launchd',
-                commandLine: 'launchd'
+                commandLine: 'launchd',
             },
             {
                 label: 'syslogd',
@@ -34,7 +34,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'syslogd',
                 id: '41',
                 processName: 'syslogd',
-                commandLine: 'syslogd'
+                commandLine: 'syslogd',
             },
             {
                 label: 'UserEventAgent',
@@ -42,7 +42,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'UserEventAgent (System)',
                 id: '42',
                 processName: 'UserEventAgent',
-                commandLine: 'UserEventAgent (System)'
+                commandLine: 'UserEventAgent (System)',
             },
             {
                 label: 'uninstalld',
@@ -50,7 +50,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'uninstalld',
                 id: '45',
                 processName: 'uninstalld',
-                commandLine: 'uninstalld'
+                commandLine: 'uninstalld',
             },
             {
                 label: 'kextd',
@@ -58,7 +58,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'kextd',
                 id: '146',
                 processName: 'kextd',
-                commandLine: 'kextd'
+                commandLine: 'kextd',
             },
             {
                 label: 'python',
@@ -66,8 +66,8 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'python script.py',
                 id: '31896',
                 processName: 'python',
-                commandLine: 'python script.py'
-            }
+                commandLine: 'python script.py',
+            },
         ];
 
         const output = PsProcessParser.parseProcesses(input);
@@ -92,7 +92,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'launchd',
                 id: '1',
                 processName: 'launchd',
-                commandLine: 'launchd'
+                commandLine: 'launchd',
             },
             {
                 label: 'syslogd',
@@ -100,7 +100,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'syslogd',
                 id: '41',
                 processName: 'syslogd',
-                commandLine: 'syslogd'
+                commandLine: 'syslogd',
             },
             {
                 label: 'UserEventAgent',
@@ -108,7 +108,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'UserEventAgent (System)',
                 id: '42',
                 processName: 'UserEventAgent',
-                commandLine: 'UserEventAgent (System)'
+                commandLine: 'UserEventAgent (System)',
             },
             {
                 label: 'kextd',
@@ -116,7 +116,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'kextd',
                 id: '146',
                 processName: 'kextd',
-                commandLine: 'kextd'
+                commandLine: 'kextd',
             },
             {
                 label: 'python',
@@ -124,8 +124,8 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'python script.py',
                 id: '31896',
                 processName: 'python',
-                commandLine: 'python script.py'
-            }
+                commandLine: 'python script.py',
+            },
         ];
 
         const output = PsProcessParser.parseProcesses(input);
@@ -150,7 +150,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'launchd',
                 id: '1',
                 processName: 'launchd',
-                commandLine: 'launchd'
+                commandLine: 'launchd',
             },
             {
                 label: 'syslogd',
@@ -158,7 +158,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'syslogd',
                 id: '41',
                 processName: 'syslogd',
-                commandLine: 'syslogd'
+                commandLine: 'syslogd',
             },
             {
                 label: 'UserEventAgent',
@@ -166,7 +166,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'UserEventAgent (System)',
                 id: '42',
                 processName: 'UserEventAgent',
-                commandLine: 'UserEventAgent (System)'
+                commandLine: 'UserEventAgent (System)',
             },
             {
                 label: 'kextd',
@@ -174,7 +174,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'kextd',
                 id: '146',
                 processName: 'kextd',
-                commandLine: 'kextd'
+                commandLine: 'kextd',
             },
             {
                 label: 'python',
@@ -182,8 +182,8 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'python script.py',
                 id: '31896',
                 processName: 'python',
-                commandLine: 'python script.py'
-            }
+                commandLine: 'python script.py',
+            },
         ];
 
         const output = PsProcessParser.parseProcesses(input);

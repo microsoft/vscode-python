@@ -18,7 +18,7 @@ import {
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
-    TestFrameworkProductPathService
+    TestFrameworkProductPathService,
 } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
 import { IProductService } from '../../../client/common/installer/types';
@@ -31,7 +31,7 @@ import {
     IWorkspaceSymbolSettings,
     ModuleNamePurpose,
     Product,
-    ProductType
+    ProductType,
 } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IFormatterHelper } from '../../../client/formatters/types';
@@ -67,7 +67,7 @@ suite('Product Path', () => {
 
                 productInstaller = new ProductInstaller(
                     serviceContainer.object,
-                    TypeMoq.Mock.ofType<OutputChannel>().object
+                    TypeMoq.Mock.ofType<OutputChannel>().object,
                 );
                 const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
                 pythonSettings.setup((p) => p.formatting).returns(() => formattingSettings.object);
@@ -135,7 +135,7 @@ suite('Product Path', () => {
                             .returns(() => {
                                 return {
                                     pathName: 'autopep8Path',
-                                    argsName: 'autopep8Args'
+                                    argsName: 'autopep8Args',
                                 };
                             })
                             .verifiable(TypeMoq.Times.once());
@@ -183,7 +183,7 @@ suite('Product Path', () => {
                         const value = productPathService.getExecutableNameFromSettings(product.value, resource);
                         const moduleName = productInstaller.translateProductToModuleName(
                             product.value,
-                            ModuleNamePurpose.run
+                            ModuleNamePurpose.run,
                         );
                         expect(value).to.be.equal(moduleName);
                     });
@@ -222,7 +222,7 @@ suite('Product Path', () => {
                                 return {
                                     argsName: 'autoTestDiscoverOnSaveEnabled',
                                     enabledName: 'autoTestDiscoverOnSaveEnabled',
-                                    pathName: 'nosetestPath'
+                                    pathName: 'nosetestPath',
                                 };
                             })
                             .verifiable(TypeMoq.Times.once());
@@ -250,7 +250,7 @@ suite('Product Path', () => {
                                 return {
                                     argsName: 'autoTestDiscoverOnSaveEnabled',
                                     enabledName: 'autoTestDiscoverOnSaveEnabled',
-                                    pathName: undefined
+                                    pathName: undefined,
                                 };
                             })
                             .verifiable(TypeMoq.Times.once());
@@ -258,7 +258,7 @@ suite('Product Path', () => {
                         const value = productPathService.getExecutableNameFromSettings(product.value, resource);
                         const moduleName = productInstaller.translateProductToModuleName(
                             product.value,
-                            ModuleNamePurpose.run
+                            ModuleNamePurpose.run,
                         );
                         expect(value).to.be.equal(moduleName);
                         testHelper.verifyAll();

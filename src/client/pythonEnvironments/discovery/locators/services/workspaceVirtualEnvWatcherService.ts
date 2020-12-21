@@ -6,9 +6,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { clearTimeout, setTimeout } from 'timers';
-import {
-    Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri,
-} from 'vscode';
+import { Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import '../../../../common/extensions';
 import { traceDecorators, traceVerbose } from '../../../../common/logger';

@@ -25,16 +25,16 @@ suite('Code Action Provider service', async () => {
                 registerCodeActionsProvider: (
                     _selector: DocumentSelector,
                     _provider: CodeActionProvider,
-                    _metadata: CodeActionProviderMetadata
+                    _metadata: CodeActionProviderMetadata,
                 ) => {
                     selector = _selector;
                     provider = _provider;
                     metadata = _metadata;
-                }
+                },
             },
             CodeActionKind: {
-                QuickFix: 'CodeAction'
-            }
+                QuickFix: 'CodeAction',
+            },
         };
         rewiremock.enable();
         rewiremock('vscode').with(vscodeMock);
@@ -46,11 +46,11 @@ suite('Code Action Provider service', async () => {
         assert.deepEqual(selector!, {
             scheme: 'file',
             language: 'jsonc',
-            pattern: '**/launch.json'
+            pattern: '**/launch.json',
         });
         assert.deepEqual(metadata!, {
             // tslint:disable-next-line:no-any
-            providedCodeActionKinds: ['CodeAction' as any]
+            providedCodeActionKinds: ['CodeAction' as any],
         });
         expect(provider!).instanceOf(LaunchJsonCodeActionProvider);
     });

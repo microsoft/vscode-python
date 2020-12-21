@@ -31,14 +31,14 @@ export class TestManager extends BaseTestManager {
             args,
             token: this.testDiscoveryCancellationToken!,
             ignoreCache,
-            outChannel: this.outputChannel
+            outChannel: this.outputChannel,
         };
     }
     public async runTest(
         cmdSource: CommandSource,
         testsToRun?: TestsToRun,
         runFailedTests?: boolean,
-        debug?: boolean
+        debug?: boolean,
     ): Promise<Tests> {
         if (runFailedTests === true && this.tests) {
             testsToRun = { testFile: [], testFolder: [], testSuite: [], testFunction: [] };
@@ -54,7 +54,7 @@ export class TestManager extends BaseTestManager {
         tests: Tests,
         testsToRun?: TestsToRun,
         _runFailedTests?: boolean,
-        debug?: boolean
+        debug?: boolean,
     ): Promise<Tests> {
         let args: string[];
 
@@ -62,12 +62,12 @@ export class TestManager extends BaseTestManager {
         if (debug) {
             args = this.argsService.filterArguments(
                 this.settings.testing.unittestArgs,
-                runAllTests ? TestFilter.debugAll : TestFilter.debugSpecific
+                runAllTests ? TestFilter.debugAll : TestFilter.debugSpecific,
             );
         } else {
             args = this.argsService.filterArguments(
                 this.settings.testing.unittestArgs,
-                runAllTests ? TestFilter.runAll : TestFilter.runSpecific
+                runAllTests ? TestFilter.runAll : TestFilter.runSpecific,
             );
         }
 
@@ -79,7 +79,7 @@ export class TestManager extends BaseTestManager {
             testsToRun,
             debug,
             token: this.testRunnerCancellationToken!,
-            outChannel: this.outputChannel
+            outChannel: this.outputChannel,
         };
         return this.runner.runTest(this.testResultsService, options, this);
     }

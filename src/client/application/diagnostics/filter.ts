@@ -10,7 +10,7 @@ import { DiagnosticScope, IDiagnosticFilterService } from './types';
 
 export enum FilterKeys {
     GlobalDiagnosticFilter = 'GLOBAL_DIAGNOSTICS_FILTER',
-    WorkspaceDiagnosticFilter = 'WORKSPACE_DIAGNOSTICS_FILTER'
+    WorkspaceDiagnosticFilter = 'WORKSPACE_DIAGNOSTICS_FILTER',
 }
 
 @injectable()
@@ -21,7 +21,7 @@ export class DiagnosticFilterService implements IDiagnosticFilterService {
         const globalState = factory.createGlobalPersistentState<string[]>(FilterKeys.GlobalDiagnosticFilter, []);
         const workspaceState = factory.createWorkspacePersistentState<string[]>(
             FilterKeys.WorkspaceDiagnosticFilter,
-            []
+            [],
         );
         return globalState.value.indexOf(code) >= 0 || workspaceState.value.indexOf(code) >= 0;
     }

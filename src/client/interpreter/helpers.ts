@@ -13,7 +13,7 @@ import {
     getEnvironmentTypeName,
     InterpreterInformation,
     PythonEnvironment,
-    sortInterpreters
+    sortInterpreters,
 } from '../pythonEnvironments/info';
 import { IComponentAdapter, IInterpreterHelper, WorkspacePythonPath } from './contracts';
 import { IInterpreterHashProviderFactory } from './locators/types';
@@ -51,7 +51,7 @@ export class InterpreterHelper implements IInterpreterHelper {
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory,
-        @inject(IComponentAdapter) private readonly pyenvs: IComponent
+        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
     ) {
         this.persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }
@@ -95,7 +95,7 @@ export class InterpreterHelper implements IInterpreterHelper {
         const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(
             `${pythonPath}.v3`,
             undefined,
-            EXPITY_DURATION
+            EXPITY_DURATION,
         );
         if (store.value && fileHash && store.value.fileHash === fileHash) {
             return store.value;
@@ -113,7 +113,7 @@ export class InterpreterHelper implements IInterpreterHelper {
             }
             const details = {
                 ...info,
-                fileHash
+                fileHash,
             };
             await store.updateValue(details);
             return details;

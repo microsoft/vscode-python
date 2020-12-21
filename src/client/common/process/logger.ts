@@ -14,7 +14,7 @@ import { IProcessLogger, SpawnOptions } from './types';
 export class ProcessLogger implements IProcessLogger {
     constructor(
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
     ) {}
 
     public logProcess(file: string, args: string[], options?: SpawnOptions) {

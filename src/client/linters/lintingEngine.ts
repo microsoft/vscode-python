@@ -97,7 +97,7 @@ export class LintingEngine implements ILintingEngine {
                 info.product,
                 this.outputChannel,
                 this.serviceContainer,
-                document.uri
+                document.uri,
             );
             const promise = linter.lint(document, cancelToken.token);
             this.sendLinterRunTelemetry(info, document.uri, promise, stopWatch, trigger);
@@ -133,14 +133,14 @@ export class LintingEngine implements ILintingEngine {
         resource: vscode.Uri,
         promise: Promise<ILintMessage[]>,
         stopWatch: StopWatch,
-        trigger: LinterTrigger
+        trigger: LinterTrigger,
     ): void {
         const linterExecutablePathName = info.pathName(resource);
         const properties: LintingTelemetry = {
             tool: info.id,
             hasCustomArgs: info.linterArgs(resource).length > 0,
             trigger,
-            executableSpecified: linterExecutablePathName.length > 0
+            executableSpecified: linterExecutablePathName.length > 0,
         };
         sendTelemetryWhenDone(EventName.LINTING, promise, stopWatch, properties);
     }
@@ -181,7 +181,7 @@ export class LintingEngine implements ILintingEngine {
         const settings = this.configurationService.getSettings(document.uri);
         // { dot: true } is important so dirs like `.venv` will be matched by globs
         const ignoreMinmatches = settings.linting.ignorePatterns.map(
-            (pattern) => new Minimatch(pattern, { dot: true })
+            (pattern) => new Minimatch(pattern, { dot: true }),
         );
         if (ignoreMinmatches.some((matcher) => matcher.match(document.fileName) || matcher.match(relativeFileName))) {
             return false;

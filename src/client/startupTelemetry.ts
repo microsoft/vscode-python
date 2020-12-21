@@ -11,12 +11,12 @@ import {
     IExperimentsManager,
     IInterpreterPathService,
     InspectInterpreterSettingType,
-    Resource
+    Resource,
 } from './common/types';
 import {
     AutoSelectionRule,
     IInterpreterAutoSelectionRule,
-    IInterpreterAutoSelectionService
+    IInterpreterAutoSelectionService,
 } from './interpreter/autoSelection/types';
 import { ICondaService, IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
@@ -34,7 +34,7 @@ export async function sendStartupTelemetry(
     activatedPromise: Promise<any>,
     durations: Record<string, number>,
     stopWatch: IStopWatch,
-    serviceContainer: IServiceContainer
+    serviceContainer: IServiceContainer,
 ) {
     if (isTestExecution()) {
         return;
@@ -53,7 +53,7 @@ export async function sendStartupTelemetry(
 export async function sendErrorTelemetry(
     ex: Error,
     durations: Record<string, number>,
-    serviceContainer?: IServiceContainer
+    serviceContainer?: IServiceContainer,
 ) {
     try {
         // tslint:disable-next-line:no-any
@@ -101,7 +101,7 @@ export function hasUserDefinedPythonPath(resource: Resource, serviceContainer: I
 function getPreferredWorkspaceInterpreter(resource: Resource, serviceContainer: IServiceContainer) {
     const workspaceInterpreterSelector = serviceContainer.get<IInterpreterAutoSelectionRule>(
         IInterpreterAutoSelectionRule,
-        AutoSelectionRule.workspaceVirtualEnvs
+        AutoSelectionRule.workspaceVirtualEnvs,
     );
     const interpreter = workspaceInterpreterSelector.getPreviouslyAutoSelectedInterpreter(resource);
     return interpreter ? interpreter.path : undefined;
@@ -130,7 +130,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
             .then((ver) => (ver ? ver.raw : ''))
             .catch<string>(() => ''),
         interpreterService.getActiveInterpreter().catch<PythonEnvironment | undefined>(() => undefined),
-        interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonEnvironment[]>(() => [])
+        interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonEnvironment[]>(() => []),
     ]);
     const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
     const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
@@ -153,6 +153,6 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         hasPython3,
         usingUserDefinedInterpreter,
         usingAutoSelectedWorkspaceInterpreter,
-        usingGlobalInterpreter
+        usingGlobalInterpreter,
     };
 }

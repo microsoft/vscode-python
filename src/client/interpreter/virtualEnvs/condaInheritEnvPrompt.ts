@@ -25,7 +25,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @optional() public hasPromptBeenShownInCurrentSession: boolean = false
+        @optional() public hasPromptBeenShownInCurrentSession: boolean = false,
     ) {}
 
     public async activate(resource: Uri): Promise<void> {
@@ -45,7 +45,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
     public async promptAndUpdate() {
         const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(
             condaInheritEnvPromptKey,
-            true
+            true,
         );
         if (!notificationPromptEnabled.value) {
             return;
@@ -54,7 +54,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         const telemetrySelections: ['Yes', 'No', 'More Info'] = ['Yes', 'No', 'More Info'];
         const selection = await this.appShell.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts);
         sendTelemetryEvent(EventName.CONDA_INHERIT_ENV_PROMPT, undefined, {
-            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined
+            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined,
         });
         if (!selection) {
             return;
@@ -87,7 +87,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
             .inspect<boolean>('integrated.inheritEnv');
         if (!setting) {
             traceError(
-                'WorkspaceConfiguration.inspect returns `undefined` for setting `terminal.integrated.inheritEnv`'
+                'WorkspaceConfiguration.inspect returns `undefined` for setting `terminal.integrated.inheritEnv`',
             );
             return false;
         }

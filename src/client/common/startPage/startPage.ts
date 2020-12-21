@@ -15,7 +15,7 @@ import {
     ICommandManager,
     IDocumentManager,
     IWebviewPanelProvider,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../application/types';
 import { IFileSystem } from '../platform/types';
 import { IConfigurationService, IExtensionContext, Resource } from '../types';
@@ -50,7 +50,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment
+        @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment,
     ) {
         super(
             configuration,
@@ -63,7 +63,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
             [path.join(startPageDir, 'commons.initial.bundle.js'), path.join(startPageDir, 'startPage.js')],
             localize.StartPage.getStarted(),
             ViewColumn.One,
-            false
+            false,
         );
         this.timer = new StopWatch();
     }
@@ -119,7 +119,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
             case StartPageMessages.RequestShowAgainSetting:
                 const settings = this.configuration.getSettings();
                 await this.postMessage(StartPageMessages.SendSetting, {
-                    showAgainSetting: settings.showStartPage
+                    showAgainSetting: settings.showStartPage,
                 });
                 break;
             case StartPageMessages.OpenBlankNotebook:
@@ -132,7 +132,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                     await this.commandManager.executeCommand(
                         'jupyter.opennotebook',
                         undefined,
-                        CommandSource.commandPalette
+                        CommandSource.commandPalette,
                     );
                 } else {
                     this.openSampleNotebook().ignoreErrors();
@@ -144,7 +144,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
 
                 const doc = await this.documentManager.openTextDocument({
                     language: 'python',
-                    content: `print("${localize.StartPage.helloWorld()}")`
+                    content: `print("${localize.StartPage.helloWorld()}")`,
                 });
                 await this.documentManager.showTextDocument(doc, 1, true);
                 break;
@@ -154,7 +154,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
 
                 const doc2 = await this.documentManager.openTextDocument({
                     language: 'python',
-                    content: `#%%\nprint("${localize.StartPage.helloWorld()}")`
+                    content: `#%%\nprint("${localize.StartPage.helloWorld()}")`,
                 });
                 await this.documentManager.showTextDocument(doc2, 1, true);
                 await this.commandManager.executeCommand('jupyter.runallcells', Uri.parse(''));
@@ -171,7 +171,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
 
                 await this.commandManager.executeCommand(
                     'workbench.action.quickOpen',
-                    '>Create New Blank Jupyter Notebook'
+                    '>Create New Blank Jupyter Notebook',
                 );
                 break;
             case StartPageMessages.OpenSampleNotebook:
@@ -186,9 +186,9 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
 
                 const uri = await this.appShell.showOpenDialog({
                     filters: {
-                        Python: ['py', 'ipynb']
+                        Python: ['py', 'ipynb'],
                     },
-                    canSelectMany: false
+                    canSelectMany: false,
                 });
                 if (uri) {
                     const doc3 = await this.documentManager.openTextDocument(uri[0]);
@@ -285,7 +285,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
         const localizedFilePath = path.join(
             EXTENSION_ROOT_DIR,
             'pythonFiles',
-            localize.StartPage.sampleNotebook() + ipynb
+            localize.StartPage.sampleNotebook() + ipynb,
         );
         let sampleNotebookPath: string;
 
@@ -298,7 +298,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
         await this.commandManager.executeCommand(
             'jupyter.opennotebook',
             Uri.file(sampleNotebookPath),
-            CommandSource.commandPalette
+            CommandSource.commandPalette,
         );
     }
 

@@ -24,7 +24,7 @@ export class PythonPathDeprecatedDiagnostic extends BaseDiagnostic {
             message,
             DiagnosticSeverity.Information,
             DiagnosticScope.WorkspaceFolder,
-            resource
+            resource,
         );
     }
 }
@@ -39,7 +39,7 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
         @inject(IDiagnosticHandlerService)
         @named(DiagnosticCommandPromptHandlerServiceId)
         protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
         super([DiagnosticCodes.PythonPathDeprecatedDiagnostic], serviceContainer, disposableRegistry, true);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -67,7 +67,7 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
         const workspaceConfig = this.workspaceService.getConfiguration('python', resource);
         await Promise.all([
             workspaceConfig.update('pythonPath', undefined, ConfigurationTarget.Workspace),
-            workspaceConfig.update('pythonPath', undefined, ConfigurationTarget.WorkspaceFolder)
+            workspaceConfig.update('pythonPath', undefined, ConfigurationTarget.WorkspaceFolder),
         ]);
     }
 
@@ -86,13 +86,13 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
                 prompt: Common.openOutputPanel(),
                 command: {
                     diagnostic,
-                    invoke: async (): Promise<void> => this.output.show(true)
-                }
+                    invoke: async (): Promise<void> => this.output.show(true),
+                },
             },
             {
                 prompt: Common.doNotShowAgain(),
-                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global })
-            }
+                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global }),
+            },
         ];
 
         await this.messageService.handle(diagnostic, { commandPrompts: options });

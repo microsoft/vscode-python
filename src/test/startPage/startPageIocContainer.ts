@@ -18,7 +18,7 @@ import {
     FileSystemWatcher,
     Uri,
     WorkspaceFolder,
-    WorkspaceFoldersChangeEvent
+    WorkspaceFoldersChangeEvent,
 } from 'vscode';
 import { LanguageServerType } from '../../client/activation/types';
 
@@ -31,7 +31,7 @@ import {
     IDocumentManager,
     IWebviewPanelOptions,
     IWebviewPanelProvider,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../client/common/application/types';
 import { WebviewPanelProvider } from '../../client/common/application/webviewPanels/webviewPanelProvider';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -63,7 +63,7 @@ import {
     IPathUtils,
     IPythonSettings,
     IsWindows,
-    Resource
+    Resource,
 } from '../../client/common/types';
 import { sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -206,7 +206,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         } else {
             this.serviceManager.addSingletonInstance<IWebviewPanelProvider>(
                 IWebviewPanelProvider,
-                instance(this.webPanelProvider)
+                instance(this.webPanelProvider),
             );
         }
 
@@ -222,7 +222,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(this.getSettings.bind(this));
         this.serviceManager.addSingletonInstance<IConfigurationService>(
             IConfigurationService,
-            configurationService.object
+            configurationService.object,
         );
 
         // Setup our command list
@@ -289,7 +289,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
             setting = new MockPythonSettings(
                 resource,
                 new MockAutoSelectionService(),
-                this.serviceManager.get<IWorkspaceService>(IWorkspaceService)
+                this.serviceManager.get<IWorkspaceService>(IWorkspaceService),
             );
             this.settingsMap.set(key, setting);
         } else if (this.disposed) {
@@ -365,7 +365,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'startPage');
 
         when(workspaceService.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(
-            new MockFileSystemWatcher()
+            new MockFileSystemWatcher(),
         );
         when(workspaceService.createFileSystemWatcher(anything())).thenReturn(new MockFileSystemWatcher());
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
@@ -404,7 +404,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
             executeInFileDir: false,
             launchArgs: [],
             activateEnvironment: true,
-            activateEnvInCurrentTerminal: false
+            activateEnvInCurrentTerminal: false,
         };
         pythonSettings.languageServer = languageServerType;
         return pythonSettings;
@@ -425,7 +425,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
                 const output = child_process.execFileSync(
                     process.env.CI_PYTHON_PATH || 'python',
                     ['-c', 'import sys;print(sys.executable)'],
-                    { encoding: 'utf8' }
+                    { encoding: 'utf8' },
                 );
                 StartPageIocContainer.foundPythonPath = output.replace(/\r?\n/g, '');
             }

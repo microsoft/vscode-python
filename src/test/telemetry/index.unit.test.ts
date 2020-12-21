@@ -16,7 +16,7 @@ import {
     clearTelemetryReporter,
     isTelemetryDisabled,
     sendTelemetryEvent,
-    setSharedProperty
+    setSharedProperty,
 } from '../../client/telemetry';
 
 suite('Telemetry', () => {
@@ -69,13 +69,13 @@ suite('Telemetry', () => {
         {
             testName: 'Returns true when globalValue is set to false',
             settings: { globalValue: false },
-            expectedResult: true
+            expectedResult: true,
         },
         {
             testName: 'Returns false otherwise',
             settings: {},
-            expectedResult: false
-        }
+            expectedResult: false,
+        },
     ];
 
     suite('Function isTelemetryDisabled()', () => {
@@ -175,7 +175,7 @@ suite('Telemetry', () => {
             ...properties,
             errorName: error.name,
             errorMessage: error.message,
-            errorStack: error.stack
+            errorStack: error.stack,
         };
 
         expect(Reporter.eventName).to.deep.equal([eventName]);

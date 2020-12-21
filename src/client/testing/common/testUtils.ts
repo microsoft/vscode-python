@@ -21,7 +21,7 @@ import {
     TestSettingsPropertyNames,
     TestsToRun,
     TestSuite,
-    UnitTestProduct
+    UnitTestProduct,
 } from './types';
 
 export async function selectTestWorkspace(appShell: IApplicationShell): Promise<Uri | undefined> {
@@ -51,7 +51,7 @@ export class TestsHelper implements ITestsHelper {
     private readonly commandManager: ICommandManager;
     constructor(
         @inject(ITestVisitor) @named('TestFlatteningVisitor') private readonly flatteningVisitor: TestFlatteningVisitor,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
     ) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
@@ -89,20 +89,20 @@ export class TestsHelper implements ITestsHelper {
                 return {
                     argsName: 'pytestArgs' as keyof ITestingSettings,
                     pathName: 'pytestPath' as keyof ITestingSettings,
-                    enabledName: 'pytestEnabled' as keyof ITestingSettings
+                    enabledName: 'pytestEnabled' as keyof ITestingSettings,
                 };
             }
             case 'nosetest': {
                 return {
                     argsName: 'nosetestArgs' as keyof ITestingSettings,
                     pathName: 'nosetestPath' as keyof ITestingSettings,
-                    enabledName: 'nosetestsEnabled' as keyof ITestingSettings
+                    enabledName: 'nosetestsEnabled' as keyof ITestingSettings,
                 };
             }
             case 'unittest': {
                 return {
                     argsName: 'unittestArgs' as keyof ITestingSettings,
-                    enabledName: 'unittestEnabled' as keyof ITestingSettings
+                    enabledName: 'unittestEnabled' as keyof ITestingSettings,
                 };
             }
             default: {
@@ -120,7 +120,7 @@ export class TestsHelper implements ITestsHelper {
             testSuites: this.flatteningVisitor.flattenedTestSuites,
             testFolders: [],
             rootTestFolders: [],
-            summary: { passed: 0, failures: 0, errors: 0, skipped: 0 }
+            summary: { passed: 0, failures: 0, errors: 0, skipped: 0 },
         };
 
         this.placeTestFilesIntoFolders(tests, workspaceFolder);
@@ -161,7 +161,7 @@ export class TestsHelper implements ITestsHelper {
                         time: 0,
                         functionsPassed: 0,
                         functionsFailed: 0,
-                        functionsDidNotRun: 0
+                        functionsDidNotRun: 0,
                     };
                     folderMap.set(newPath, testFolder);
                     if (parentFolder) {
@@ -190,14 +190,14 @@ export class TestsHelper implements ITestsHelper {
         }
         const absolutePath = path.isAbsolute(name) ? name : path.resolve(rootDirectory, name);
         const testFolders = tests.testFolders.filter(
-            (folder) => folder.nameToRun === name || folder.name === name || folder.name === absolutePath
+            (folder) => folder.nameToRun === name || folder.name === name || folder.name === absolutePath,
         );
         if (testFolders.length > 0) {
             return { testFolder: testFolders };
         }
 
         const testFiles = tests.testFiles.filter(
-            (file) => file.nameToRun === name || file.name === name || file.fullPath === absolutePath
+            (file) => file.nameToRun === name || file.name === name || file.fullPath === absolutePath,
         );
         if (testFiles.length > 0) {
             return { testFile: testFiles };
@@ -224,9 +224,9 @@ export class TestsHelper implements ITestsHelper {
                     time: 0,
                     functionsPassed: 0,
                     functionsFailed: 0,
-                    functionsDidNotRun: 0
-                }
-            ]
+                    functionsDidNotRun: 0,
+                },
+            ],
         };
     }
     public displayTestErrorMessage(message: string) {
@@ -542,7 +542,7 @@ export function copyDesiredTestResults(source: Tests, target: Tests): void {
 function copyResultsForFolders(source: TestFolder[], target: TestFolder[]): void {
     source.forEach((sourceFolder) => {
         const targetFolder = target.find(
-            (folder) => folder.name === sourceFolder.name && folder.nameToRun === sourceFolder.nameToRun
+            (folder) => folder.name === sourceFolder.name && folder.nameToRun === sourceFolder.nameToRun,
         );
         if (!targetFolder) {
             return;
@@ -583,7 +583,7 @@ function copyResultsForSuites(source: TestSuite[], target: TestSuite[]): void {
             (suite) =>
                 suite.name === sourceSuite.name &&
                 suite.nameToRun === sourceSuite.nameToRun &&
-                suite.xmlName === sourceSuite.xmlName
+                suite.xmlName === sourceSuite.xmlName,
         );
         if (!targetSuite) {
             return;

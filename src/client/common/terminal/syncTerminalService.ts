@@ -20,7 +20,7 @@ enum State {
     notStarted = 0,
     started = 1,
     completed = 2,
-    errored = 4
+    errored = 4,
 }
 
 class ExecutionState implements Disposable {
@@ -30,7 +30,7 @@ class ExecutionState implements Disposable {
     constructor(
         public readonly lockFile: string,
         private readonly fs: IFileSystem,
-        private readonly command: string[]
+        private readonly command: string[],
     ) {
         this.registerStateUpdate();
         this._completed.promise.finally(() => this.dispose()).ignoreErrors();
@@ -56,9 +56,9 @@ class ExecutionState implements Disposable {
                 this._completed.reject(
                     new Error(
                         `Command failed with errors, check the terminal for details. Command: ${this.command.join(
-                            ' '
-                        )}\n${errorContents}`
-                    )
+                            ' ',
+                        )}\n${errorContents}`,
+                    ),
                 );
             } else if (state & State.completed) {
                 this._completed.resolve();
@@ -67,7 +67,7 @@ class ExecutionState implements Disposable {
 
         this.disposable = {
             // tslint:disable-next-line: no-any
-            dispose: () => clearInterval(timeout as any)
+            dispose: () => clearInterval(timeout as any),
         };
     }
     private async getLockFileState(file: string): Promise<State> {
@@ -108,7 +108,7 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IInterpreterService) private readonly interpreter: IInterpreterService,
         public readonly terminalService: TerminalService,
-        private readonly pythonInterpreter?: PythonEnvironment
+        private readonly pythonInterpreter?: PythonEnvironment,
     ) {}
     public dispose() {
         this.terminalService.dispose();
@@ -129,7 +129,7 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
         command: string,
         args: string[],
         cancel?: CancellationToken,
-        swallowExceptions: boolean = true
+        swallowExceptions: boolean = true,
     ): Promise<void> {
         if (!cancel) {
             return this.terminalService.sendCommand(command, args);

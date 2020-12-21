@@ -55,7 +55,7 @@ export async function openNotebookAndWaitForLS(file: string): Promise<vscode.Not
     await vscode.commands.executeCommand(
         'vscode.executeCompletionItemProvider',
         notebook.document.cells[0].uri,
-        new vscode.Position(0, 0)
+        new vscode.Position(0, 0),
     );
     // For for LS to get extracted.
     await sleep(10_000);
@@ -67,7 +67,7 @@ export async function openFileAndWaitForLS(file: string): Promise<vscode.TextDoc
         (result) => result,
         (err) => {
             assert.fail(`Something went wrong opening the text document: ${err}`);
-        }
+        },
     );
     await vscode.window.showTextDocument(textDocument).then(undefined, (err) => {
         assert.fail(`Something went wrong showing the text document: ${err}`);
@@ -80,7 +80,7 @@ export async function openFileAndWaitForLS(file: string): Promise<vscode.TextDoc
         .executeCommand<vscode.CompletionList>(
             'vscode.executeCompletionItemProvider',
             textDocument.uri,
-            new vscode.Position(0, 0)
+            new vscode.Position(0, 0),
         )
         .then(undefined, (err) => {
             assert.fail(`Something went wrong opening the file: ${err}`);

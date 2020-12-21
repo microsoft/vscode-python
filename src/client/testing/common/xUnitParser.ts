@@ -144,7 +144,7 @@ function updateSummary(summary: TestSummary, testSuiteResult: TestSuiteResult) {
 function findTestFunction(
     candidates: FlattenedTestFunction[],
     className: string,
-    funcName: string
+    funcName: string,
 ): TestFunction | undefined {
     const xmlClassName = className.replace(/\(\)/g, '').replace(/\.\./g, '.').replace(/\.\./g, '.').replace(/\.+$/, '');
     const flattened = candidates.find((fn) => fn.xmlClassName === xmlClassName && fn.testFunction.name === funcName);

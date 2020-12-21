@@ -16,7 +16,7 @@ import { IDiagnostic, IDiagnosticsService, ISourceMapSupportService } from './ty
 export class ApplicationDiagnostics implements IApplicationDiagnostics {
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
     ) {}
     public register() {
         this.serviceContainer.get<ISourceMapSupportService>(ISourceMapSupportService).register();
@@ -30,12 +30,12 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
         // Perform these validation checks in the foreground.
         await this.runDiagnostics(
             services.filter((item) => !item.runInBackground),
-            resource
+            resource,
         );
         // Perform these validation checks in the background.
         this.runDiagnostics(
             services.filter((item) => item.runInBackground),
-            resource
+            resource,
         ).ignoreErrors();
     }
     private async runDiagnostics(diagnosticServices: IDiagnosticsService[], resource: Resource): Promise<void> {
@@ -46,7 +46,7 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
                     this.log(diagnostics);
                     await diagnosticService.handle(diagnostics);
                 }
-            })
+            }),
         );
     }
     private log(diagnostics: IDiagnostic[]): void {

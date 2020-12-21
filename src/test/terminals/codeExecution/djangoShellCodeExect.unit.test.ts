@@ -39,7 +39,7 @@ suite('Terminal - Django Shell Code Execution', () => {
             .setup((c) => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
                 return {
-                    dispose: () => void 0
+                    dispose: () => void 0,
                 };
             });
         platform = TypeMoq.Mock.ofType<IPlatformService>();
@@ -55,7 +55,7 @@ suite('Terminal - Django Shell Code Execution', () => {
             platform.object,
             commandManager.object,
             fileSystem.object,
-            disposables
+            disposables,
         );
 
         terminalFactory.setup((f) => f.getTerminalService(TypeMoq.It.isAny())).returns(() => terminalService.object);
@@ -80,7 +80,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         expectedPythonPath: string,
         terminalArgs: string[],
         expectedTerminalArgs: string[],
-        resource?: Uri
+        resource?: Uri,
     ) {
         platform.setup((p) => p.isWindows).returns(() => isWindows);
         settings.setup((s) => s.pythonPath).returns(() => pythonPath);
@@ -102,7 +102,7 @@ suite('Terminal - Django Shell Code Execution', () => {
             pythonPath,
             'c:/program files/python/python.exe',
             terminalArgs,
-            expectedTerminalArgs
+            expectedTerminalArgs,
         );
     });
 
@@ -146,7 +146,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder);
         const expectedTerminalArgs = terminalArgs.concat(
             `${path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument()}`,
-            'shell'
+            'shell',
         );
 
         await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
@@ -160,7 +160,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder);
         const expectedTerminalArgs = terminalArgs.concat(
             path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument(),
-            'shell'
+            'shell',
         );
 
         await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
@@ -175,7 +175,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         workspace.setup((w) => w.workspaceFolders).returns(() => [workspaceFolder]);
         const expectedTerminalArgs = terminalArgs.concat(
             `${path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument()}`,
-            'shell'
+            'shell',
         );
 
         await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
@@ -190,7 +190,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         workspace.setup((w) => w.workspaceFolders).returns(() => [workspaceFolder]);
         const expectedTerminalArgs = terminalArgs.concat(
             path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument(),
-            'shell'
+            'shell',
         );
 
         await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
@@ -200,7 +200,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         pythonPath: string,
         terminalArgs: string[],
         condaEnv: { name: string; path: string },
-        resource?: Uri
+        resource?: Uri,
     ) {
         settings.setup((s) => s.pythonPath).returns(() => pythonPath);
         terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
@@ -217,7 +217,7 @@ suite('Terminal - Django Shell Code Execution', () => {
             execObservable: procs.execObservable,
             execModuleObservable: procs.execModuleObservable,
             exec: procs.exec,
-            execModule: procs.execModule
+            execModule: procs.execModule,
         };
         const expectedTerminalArgs = [...terminalArgs, 'manage.py', 'shell'];
         pythonExecutionFactory

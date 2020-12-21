@@ -27,7 +27,7 @@ import { DotNetLanguageServerFolderService } from './languageServer/languageServ
 import {
     BetaDotNetLanguageServerPackageRepository,
     DailyDotNetLanguageServerPackageRepository,
-    StableDotNetLanguageServerPackageRepository
+    StableDotNetLanguageServerPackageRepository,
 } from './languageServer/languageServerPackageRepository';
 import { DotNetLanguageServerPackageService } from './languageServer/languageServerPackageService';
 import { DotNetLanguageServerProxy } from './languageServer/languageServerProxy';
@@ -41,7 +41,7 @@ import { NodeLanguageServerFolderService } from './node/languageServerFolderServ
 import {
     BetaNodeLanguageServerPackageRepository,
     DailyNodeLanguageServerPackageRepository,
-    StableNodeLanguageServerPackageRepository
+    StableNodeLanguageServerPackageRepository,
 } from './node/languageServerPackageRepository';
 import { NodeLanguageServerPackageService } from './node/languageServerPackageService';
 import { NodeLanguageServerProxy } from './node/languageServerProxy';
@@ -65,7 +65,7 @@ import {
     ILanguageServerPackageService,
     ILanguageServerProxy,
     IPlatformData,
-    LanguageServerType
+    LanguageServerType,
 } from './types';
 
 // tslint:disable-next-line: max-func-body-length
@@ -78,38 +78,38 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
     serviceManager.addSingleton<IPythonExtensionBanner>(
         IPythonExtensionBanner,
         ProposePylanceBanner,
-        BANNER_NAME_PROPOSE_LS
+        BANNER_NAME_PROPOSE_LS,
     );
 
     if (languageServerType === LanguageServerType.Microsoft) {
         serviceManager.add<ILanguageServerAnalysisOptions>(
             ILanguageServerAnalysisOptions,
             DotNetLanguageServerAnalysisOptions,
-            LanguageServerType.Microsoft
+            LanguageServerType.Microsoft,
         );
         serviceManager.add<ILanguageServerActivator>(
             ILanguageServerActivator,
             DotNetLanguageServerActivator,
-            LanguageServerType.Microsoft
+            LanguageServerType.Microsoft,
         );
         serviceManager.addSingleton<INugetRepository>(
             INugetRepository,
             StableDotNetLanguageServerPackageRepository,
-            LanguageServerDownloadChannel.stable
+            LanguageServerDownloadChannel.stable,
         );
         serviceManager.addSingleton<INugetRepository>(
             INugetRepository,
             BetaDotNetLanguageServerPackageRepository,
-            LanguageServerDownloadChannel.beta
+            LanguageServerDownloadChannel.beta,
         );
         serviceManager.addSingleton<INugetRepository>(
             INugetRepository,
             DailyDotNetLanguageServerPackageRepository,
-            LanguageServerDownloadChannel.daily
+            LanguageServerDownloadChannel.daily,
         );
         serviceManager.addSingleton<ILanguageServerCompatibilityService>(
             ILanguageServerCompatibilityService,
-            LanguageServerCompatibilityService
+            LanguageServerCompatibilityService,
         );
         serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, DotNetLanguageClientFactory);
         serviceManager.addSingleton<IPlatformData>(IPlatformData, PlatformData);
@@ -117,62 +117,62 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, DotNetLanguageServerProxy);
         serviceManager.addSingleton<ILanguageServerFolderService>(
             ILanguageServerFolderService,
-            DotNetLanguageServerFolderService
+            DotNetLanguageServerFolderService,
         );
         serviceManager.addSingleton<ILanguageServerPackageService>(
             ILanguageServerPackageService,
-            DotNetLanguageServerPackageService
+            DotNetLanguageServerPackageService,
         );
         registerDotNetTypes(serviceManager);
     } else if (languageServerType === LanguageServerType.Node) {
         serviceManager.add<ILanguageServerAnalysisOptions>(
             ILanguageServerAnalysisOptions,
             NodeLanguageServerAnalysisOptions,
-            LanguageServerType.Node
+            LanguageServerType.Node,
         );
         serviceManager.add<ILanguageServerActivator>(
             ILanguageServerActivator,
             NodeLanguageServerActivator,
-            LanguageServerType.Node
+            LanguageServerType.Node,
         );
         serviceManager.addSingleton<INugetRepository>(
             INugetRepository,
             StableNodeLanguageServerPackageRepository,
-            LanguageServerDownloadChannel.stable
+            LanguageServerDownloadChannel.stable,
         );
         serviceManager.addSingleton<INugetRepository>(
             INugetRepository,
             BetaNodeLanguageServerPackageRepository,
-            LanguageServerDownloadChannel.beta
+            LanguageServerDownloadChannel.beta,
         );
         serviceManager.addSingleton<INugetRepository>(
             INugetRepository,
             DailyNodeLanguageServerPackageRepository,
-            LanguageServerDownloadChannel.daily
+            LanguageServerDownloadChannel.daily,
         );
         serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, NodeLanguageClientFactory);
         serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager);
         serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, NodeLanguageServerProxy);
         serviceManager.addSingleton<ILanguageServerFolderService>(
             ILanguageServerFolderService,
-            NodeLanguageServerFolderService
+            NodeLanguageServerFolderService,
         );
         serviceManager.addSingleton<ILanguageServerPackageService>(
             ILanguageServerPackageService,
-            NodeLanguageServerPackageService
+            NodeLanguageServerPackageService,
         );
     } else if (languageServerType === LanguageServerType.Jedi) {
         serviceManager.add<ILanguageServerActivator>(
             ILanguageServerActivator,
             MultiplexingJediLanguageServerActivator,
-            LanguageServerType.Jedi
+            LanguageServerType.Jedi,
         );
 
         // Note: These other services are required when using the Jedi LSP.
         serviceManager.add<ILanguageServerAnalysisOptions>(
             ILanguageServerAnalysisOptions,
             JediLanguageServerAnalysisOptions,
-            LanguageServerType.Jedi
+            LanguageServerType.Jedi,
         );
         serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, JediLanguageClientFactory);
         serviceManager.add<ILanguageServerManager>(ILanguageServerManager, JediLanguageServerManager);
@@ -181,34 +181,34 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         serviceManager.add<ILanguageServerActivator>(
             ILanguageServerActivator,
             NoLanguageServerExtensionActivator,
-            LanguageServerType.None
+            LanguageServerType.None,
         );
     }
 
     serviceManager.addSingleton<IDownloadChannelRule>(
         IDownloadChannelRule,
         DownloadDailyChannelRule,
-        LanguageServerDownloadChannel.daily
+        LanguageServerDownloadChannel.daily,
     );
     serviceManager.addSingleton<IDownloadChannelRule>(
         IDownloadChannelRule,
         DownloadBetaChannelRule,
-        LanguageServerDownloadChannel.beta
+        LanguageServerDownloadChannel.beta,
     );
     serviceManager.addSingleton<IDownloadChannelRule>(
         IDownloadChannelRule,
         DownloadBetaChannelRule,
-        LanguageServerDownloadChannel.stable
+        LanguageServerDownloadChannel.stable,
     );
     serviceManager.addSingleton<ILanguageServerDownloader>(ILanguageServerDownloader, LanguageServerDownloader);
 
     serviceManager.addSingleton<ILanguageServerOutputChannel>(
         ILanguageServerOutputChannel,
-        LanguageServerOutputChannel
+        LanguageServerOutputChannel,
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        ExtensionSurveyPrompt
+        ExtensionSurveyPrompt,
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, AATesting);
 }

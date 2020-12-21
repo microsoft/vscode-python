@@ -16,7 +16,7 @@ import {
     DiagnosticScope,
     IDiagnostic,
     IDiagnosticsService,
-    ISourceMapSupportService
+    ISourceMapSupportService,
 } from '../../../client/application/diagnostics/types';
 import { IApplicationDiagnostics } from '../../../client/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
@@ -105,7 +105,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
             scope: undefined,
             severity: undefined,
             resource: undefined,
-            invokeHandler: 'default'
+            invokeHandler: 'default',
         } as any;
         envHealthCheck
             .setup((e) => e.diagnose(typemoq.It.isAny()))
@@ -149,7 +149,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
                 scope: i % 2 === 0 ? DiagnosticScope.Global : DiagnosticScope.WorkspaceFolder,
                 severity: DiagnosticSeverity.Error,
                 resource: undefined,
-                invokeHandler: 'default'
+                invokeHandler: 'default',
             };
             diagnostics.push(diagnostic);
         }
@@ -160,7 +160,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
                 scope: i % 2 === 0 ? DiagnosticScope.Global : DiagnosticScope.WorkspaceFolder,
                 severity: DiagnosticSeverity.Warning,
                 resource: undefined,
-                invokeHandler: 'default'
+                invokeHandler: 'default',
             };
             diagnostics.push(diagnostic);
         }
@@ -171,7 +171,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
                 scope: i % 2 === 0 ? DiagnosticScope.Global : DiagnosticScope.WorkspaceFolder,
                 severity: DiagnosticSeverity.Information,
                 resource: undefined,
-                invokeHandler: 'default'
+                invokeHandler: 'default',
             };
             diagnostics.push(diagnostic);
         }
@@ -223,7 +223,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
 
         when(svcContainer.getAll<IDiagnosticsService>(IDiagnosticsService)).thenReturn([
             instance(foreGroundService),
-            instance(backGroundService)
+            instance(backGroundService),
         ]);
         when(foreGroundService.runInBackground).thenReturn(false);
         when(backGroundService.runInBackground).thenReturn(true);

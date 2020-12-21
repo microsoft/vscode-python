@@ -15,7 +15,7 @@ import {
     TextEditorOptions,
     Uri,
     window,
-    workspace
+    workspace,
 } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import '../../client/common/extensions';
@@ -26,7 +26,7 @@ import {
     IProcessLogger,
     IProcessServiceFactory,
     IPythonExecutionFactory,
-    IPythonExecutionService
+    IPythonExecutionService,
 } from '../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
@@ -49,7 +49,7 @@ suite('Refactor Rename', () => {
         cursorStyle: TextEditorCursorStyle.Line,
         insertSpaces: true,
         lineNumbers: TextEditorLineNumbersStyle.Off,
-        tabSize: 4
+        tabSize: 4,
     };
     let pythonSettings: typeMoq.IMock<IPythonSettings>;
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
@@ -75,7 +75,7 @@ suite('Refactor Rename', () => {
             .returns(() => Promise.resolve(undefined));
         envActivationService
             .setup((e) =>
-                e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())
+                e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()),
             )
             .returns(() => Promise.resolve(undefined));
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
@@ -104,8 +104,8 @@ suite('Refactor Rename', () => {
                         configService.object,
                         condaService.object,
                         undefined as any,
-                        instance(windowsStoreInterpreter)
-                    )
+                        instance(windowsStoreInterpreter),
+                    ),
             );
         const processLogger = typeMoq.Mock.ofType<IProcessLogger>();
         processLogger
@@ -135,12 +135,12 @@ suite('Refactor Rename', () => {
             'pythonFiles',
             'refactoring',
             'source folder',
-            'without empty line.py'
+            'without empty line.py',
         );
         const expectedDiff = `--- a/${path.basename(sourceFile)}${EOL}+++ b/${path.basename(
-            sourceFile
+            sourceFile,
         )}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`.splitLines(
-            { removeEmptyEntries: false, trim: false }
+            { removeEmptyEntries: false, trim: false },
         );
         const workspaceRoot = path.dirname(sourceFile);
 
@@ -153,11 +153,11 @@ suite('Refactor Rename', () => {
             'three',
             sourceFile,
             new Range(7, 20, 7, 23),
-            options
+            options,
         );
         expect(response.results).to.be.lengthOf(1);
         expect(response.results[0].diff.splitLines({ removeEmptyEntries: false, trim: false })).to.be.deep.equal(
-            expectedDiff
+            expectedDiff,
         );
     });
     test('Rename function in source with a trailing empty line', async () => {
@@ -168,12 +168,12 @@ suite('Refactor Rename', () => {
             'pythonFiles',
             'refactoring',
             'source folder',
-            'with empty line.py'
+            'with empty line.py',
         );
         const expectedDiff = `--- a/${path.basename(sourceFile)}${EOL}+++ b/${path.basename(
-            sourceFile
+            sourceFile,
         )}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`.splitLines(
-            { removeEmptyEntries: false, trim: false }
+            { removeEmptyEntries: false, trim: false },
         );
         const workspaceRoot = path.dirname(sourceFile);
 
@@ -186,11 +186,11 @@ suite('Refactor Rename', () => {
             'three',
             sourceFile,
             new Range(7, 20, 7, 23),
-            options
+            options,
         );
         expect(response.results).to.be.lengthOf(1);
         expect(response.results[0].diff.splitLines({ removeEmptyEntries: false, trim: false })).to.be.deep.equal(
-            expectedDiff
+            expectedDiff,
         );
     });
 });

@@ -24,7 +24,7 @@ import {
     IBufferDecoder,
     IProcessServiceFactory,
     IPythonExecutionFactory,
-    IPythonToolExecutionService
+    IPythonToolExecutionService,
 } from '../client/common/process/types';
 import { registerTypes as commonRegisterTypes } from '../client/common/serviceRegistry';
 import {
@@ -35,7 +35,7 @@ import {
     IOutputChannel,
     IPathUtils,
     IsWindows,
-    WORKSPACE_MEMENTO
+    WORKSPACE_MEMENTO,
 } from '../client/common/types';
 import { createDeferred } from '../client/common/utils/async';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
@@ -44,7 +44,7 @@ import { EnvironmentActivationService } from '../client/interpreter/activation/s
 import { IEnvironmentActivationService } from '../client/interpreter/activation/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from '../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../client/interpreter/contracts';
 import { InterpreterService } from '../client/interpreter/interpreterService';
@@ -189,7 +189,7 @@ export class IocContainer {
         this.serviceManager.addSingletonInstance<OutputChannel>(
             IOutputChannel,
             stdOutputChannel,
-            STANDARD_OUTPUT_CHANNEL
+            STANDARD_OUTPUT_CHANNEL,
         );
         const testOutputChannel = new MockOutputChannel('Python Test - UnitTests');
         this.disposables.push(testOutputChannel);
@@ -197,11 +197,11 @@ export class IocContainer {
 
         this.serviceManager.addSingleton<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
         this.serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
             IInterpreterAutoSeletionProxyService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
     }
     public async dispose(): Promise<void> {
@@ -230,7 +230,7 @@ export class IocContainer {
         this.serviceManager.addSingleton<IFileSystem>(
             IFileSystem,
             // Maybe use fake vscode.workspace.filesystem API:
-            this.useVSCodeAPI ? FileSystem : LegacyFileSystem
+            this.useVSCodeAPI ? FileSystem : LegacyFileSystem,
         );
     }
     public registerProcessTypes() {
@@ -239,11 +239,11 @@ export class IocContainer {
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
         when(
-            mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())
+            mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything()),
         ).thenResolve();
         this.serviceManager.addSingletonInstance<IEnvironmentActivationService>(
             IEnvironmentActivationService,
-            instance(mockEnvironmentActivationService)
+            instance(mockEnvironmentActivationService),
         );
     }
     public registerVariableTypes() {
@@ -273,26 +273,26 @@ export class IocContainer {
         processServiceFactory.setup((f) => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService));
         this.serviceManager.addSingletonInstance<IProcessServiceFactory>(
             IProcessServiceFactory,
-            processServiceFactory.object
+            processServiceFactory.object,
         );
         this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
         this.serviceManager.addSingleton<IPythonToolExecutionService>(
             IPythonToolExecutionService,
-            PythonToolExecutionService
+            PythonToolExecutionService,
         );
         this.serviceManager.addSingleton<IEnvironmentActivationService>(
             IEnvironmentActivationService,
-            EnvironmentActivationService
+            EnvironmentActivationService,
         );
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
         when(
-            mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())
+            mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything()),
         ).thenResolve();
         this.serviceManager.rebindInstance<IEnvironmentActivationService>(
             IEnvironmentActivationService,
-            instance(mockEnvironmentActivationService)
+            instance(mockEnvironmentActivationService),
         );
     }
 

@@ -26,7 +26,7 @@ import {
     TextDocumentContentChangeEvent,
     TextEdit,
     Uri,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 import { NotebookCell, NotebookConcatTextDocument, NotebookDocument } from 'vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
@@ -54,7 +54,7 @@ export class NotebookConverter implements Disposable {
         private api: IVSCodeNotebook,
         private fs: IFileSystem,
         private cellSelector: DocumentSelector,
-        private notebookFilter: RegExp
+        private notebookFilter: RegExp,
     ) {
         this.disposables.push(api.onDidOpenNotebookDocument(this.onDidOpenNotebook.bind(this)));
         this.disposables.push(api.onDidCloseNotebookDocument(this.onDidCloseNotebook.bind(this)));
@@ -163,7 +163,7 @@ export class NotebookConverter implements Disposable {
                     }
                     list.push({
                         ...e,
-                        range: location.range
+                        range: location.range,
                     });
                 });
             });
@@ -191,8 +191,8 @@ export class NotebookConverter implements Disposable {
         return {
             document: this.toOutgoingDocument(cellEvent.document),
             contentChanges: cellEvent.contentChanges.map(
-                this.toOutgoingContentChangeEvent.bind(this, cellEvent.document)
-            )
+                this.toOutgoingContentChangeEvent.bind(this, cellEvent.document),
+            ),
         };
     }
 
@@ -224,7 +224,7 @@ export class NotebookConverter implements Disposable {
     public toOutgoingContext(cell: TextDocument, context: CodeActionContext): CodeActionContext {
         return {
             ...context,
-            diagnostics: context.diagnostics.map(this.toOutgoingDiagnostic.bind(this, cell))
+            diagnostics: context.diagnostics.map(this.toOutgoingDiagnostic.bind(this, cell)),
         };
     }
 
@@ -232,7 +232,7 @@ export class NotebookConverter implements Disposable {
         if (hover && hover.range) {
             return {
                 ...hover,
-                range: this.toIncomingRange(cell, hover.range)
+                range: this.toIncomingRange(cell, hover.range),
             };
         }
         return hover;
@@ -240,7 +240,7 @@ export class NotebookConverter implements Disposable {
 
     public toIncomingCompletions(
         cell: TextDocument,
-        completions: CompletionItem[] | CompletionList | null | undefined
+        completions: CompletionItem[] | CompletionList | null | undefined,
     ) {
         if (completions) {
             if (Array.isArray(completions)) {
@@ -248,7 +248,7 @@ export class NotebookConverter implements Disposable {
             }
             return {
                 ...completions,
-                items: completions.items.map(this.toIncomingCompletion.bind(this, cell))
+                items: completions.items.map(this.toIncomingCompletion.bind(this, cell)),
             };
         }
         return completions;
@@ -256,7 +256,7 @@ export class NotebookConverter implements Disposable {
 
     public toIncomingLocations(
         cell: TextDocument,
-        location: Location | Location[] | LocationLink[] | null | undefined
+        location: Location | Location[] | LocationLink[] | null | undefined,
     ) {
         if (Array.isArray(location)) {
             // tslint:disable-next-line: no-any
@@ -272,7 +272,7 @@ export class NotebookConverter implements Disposable {
         if (highlight) {
             return highlight.map((h) => ({
                 ...h,
-                range: this.toIncomingRange(cell, h.range)
+                range: this.toIncomingRange(cell, h.range),
             }));
         }
         return highlight;
@@ -291,7 +291,7 @@ export class NotebookConverter implements Disposable {
     public toIncomingSymbolFromSymbolInformation(cell: TextDocument, symbol: SymbolInformation): SymbolInformation {
         return {
             ...symbol,
-            location: this.toIncomingLocation(cell, symbol.location.range)
+            location: this.toIncomingLocation(cell, symbol.location.range),
         };
     }
 
@@ -301,7 +301,7 @@ export class NotebookConverter implements Disposable {
             range: this.toIncomingRange(cell, diagnostic.range),
             relatedInformation: diagnostic.relatedInformation
                 ? diagnostic.relatedInformation.map(this.toIncomingRelatedInformation.bind(this, cell))
-                : undefined
+                : undefined,
         };
     }
 
@@ -321,7 +321,7 @@ export class NotebookConverter implements Disposable {
         if (Array.isArray(lenses)) {
             return lenses.map((c) => ({
                 ...c,
-                range: this.toIncomingRange(cell, c.range)
+                range: this.toIncomingRange(cell, c.range),
             }));
         }
         return lenses;
@@ -331,7 +331,7 @@ export class NotebookConverter implements Disposable {
         if (Array.isArray(edits)) {
             return edits.map((e) => ({
                 ...e,
-                range: this.toIncomingRange(cell, e.range)
+                range: this.toIncomingRange(cell, e.range),
             }));
         }
         return edits;
@@ -346,7 +346,7 @@ export class NotebookConverter implements Disposable {
                   placeholder: string;
               }
             | null
-            | undefined
+            | undefined,
     ) {
         if (rangeOrRename) {
             if (rangeOrRename instanceof Range) {
@@ -354,7 +354,7 @@ export class NotebookConverter implements Disposable {
             }
             return {
                 ...rangeOrRename,
-                range: this.toIncomingLocation(cell, rangeOrRename.range).range
+                range: this.toIncomingLocation(cell, rangeOrRename.range).range,
             };
         }
         return rangeOrRename;
@@ -368,7 +368,7 @@ export class NotebookConverter implements Disposable {
                 return {
                     ...l,
                     range: location.range,
-                    target: l.target ? location.uri : undefined
+                    target: l.target ? location.uri : undefined,
                 };
             });
         }
@@ -458,13 +458,13 @@ export class NotebookConverter implements Disposable {
             range: this.toOutgoingRange(cell, diagnostic.range),
             relatedInformation: diagnostic.relatedInformation
                 ? diagnostic.relatedInformation.map(this.toOutgoingRelatedInformation.bind(this, cell))
-                : undefined
+                : undefined,
         };
     }
 
     private toOutgoingRelatedInformation(
         cell: TextDocument,
-        relatedInformation: DiagnosticRelatedInformation
+        relatedInformation: DiagnosticRelatedInformation,
     ): DiagnosticRelatedInformation {
         const outgoingDoc = this.toOutgoingDocument(cell);
         return {
@@ -472,20 +472,20 @@ export class NotebookConverter implements Disposable {
             location:
                 relatedInformation.location.uri === outgoingDoc.uri
                     ? this.toOutgoingLocation(cell, relatedInformation.location)
-                    : relatedInformation.location
+                    : relatedInformation.location,
         };
     }
 
     private toOutgoingLocation(cell: TextDocument, location: Location): Location {
         return {
             uri: this.toOutgoingDocument(cell).uri,
-            range: this.toOutgoingRange(cell, location.range)
+            range: this.toOutgoingRange(cell, location.range),
         };
     }
 
     private toIncomingRelatedInformation(
         cell: TextDocument | Uri,
-        relatedInformation: DiagnosticRelatedInformation
+        relatedInformation: DiagnosticRelatedInformation,
     ): DiagnosticRelatedInformation {
         const outgoingUri = this.toOutgoingUri(cell);
         return {
@@ -493,7 +493,7 @@ export class NotebookConverter implements Disposable {
             location:
                 relatedInformation.location.uri === outgoingUri
                     ? this.toIncomingLocationFromLink(cell, relatedInformation.location)
-                    : relatedInformation.location
+                    : relatedInformation.location,
         };
     }
 
@@ -502,7 +502,7 @@ export class NotebookConverter implements Disposable {
             ...docSymbol,
             range: this.toIncomingRange(cell, docSymbol.range),
             selectionRange: this.toIncomingRange(cell, docSymbol.selectionRange),
-            children: docSymbol.children.map(this.toIncomingSymbolFromDocumentSymbol.bind(this, cell))
+            children: docSymbol.children.map(this.toIncomingSymbolFromDocumentSymbol.bind(this, cell)),
         };
     }
 
@@ -511,7 +511,7 @@ export class NotebookConverter implements Disposable {
         const locationNorm = <Location>location;
         const uri = this.toIncomingUri(
             locationLink.targetUri || locationNorm.uri,
-            locationLink.targetRange ? locationLink.targetRange : locationNorm.range
+            locationLink.targetRange ? locationLink.targetRange : locationNorm.range,
         );
         return {
             originSelectionRange: locationLink.originSelectionRange
@@ -523,7 +523,7 @@ export class NotebookConverter implements Disposable {
                 : this.toIncomingRange(uri, locationNorm.range),
             targetSelectionRange: locationLink.targetSelectionRange
                 ? this.toIncomingRange(uri, locationLink.targetSelectionRange)
-                : undefined
+                : undefined,
         };
     }
 
@@ -541,15 +541,15 @@ export class NotebookConverter implements Disposable {
             if (item.range instanceof Range) {
                 return {
                     ...item,
-                    range: this.toIncomingRange(cell, item.range)
+                    range: this.toIncomingRange(cell, item.range),
                 };
             }
             return {
                 ...item,
                 range: {
                     inserting: this.toIncomingRange(cell, item.range.inserting),
-                    replacing: this.toIncomingRange(cell, item.range.replacing)
-                }
+                    replacing: this.toIncomingRange(cell, item.range.replacing),
+                },
             };
         }
         return item;
@@ -563,12 +563,12 @@ export class NotebookConverter implements Disposable {
             const endLoc = concatDocument.locationAt(range.end);
             return {
                 uri: startLoc.uri,
-                range: new Range(startLoc.range.start, endLoc.range.end)
+                range: new Range(startLoc.range.start, endLoc.range.end),
             };
         }
         return {
             uri,
-            range
+            range,
         };
     }
 
@@ -577,7 +577,7 @@ export class NotebookConverter implements Disposable {
             range: this.toOutgoingRange(cell, ev.range),
             rangeLength: ev.rangeLength,
             rangeOffset: this.toOutgoingOffset(cell, ev.rangeOffset),
-            text: ev.text
+            text: ev.text,
         };
     }
 

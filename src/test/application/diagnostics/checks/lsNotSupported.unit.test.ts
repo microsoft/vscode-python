@@ -12,7 +12,7 @@ import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/ap
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import {
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt
+    MessageCommandPrompt,
 } from '../../../../client/application/diagnostics/promptHandler';
 import {
     DiagnosticScope,
@@ -20,7 +20,7 @@ import {
     IDiagnosticCommand,
     IDiagnosticFilterService,
     IDiagnosticHandlerService,
-    IDiagnosticsService
+    IDiagnosticsService,
 } from '../../../../client/application/diagnostics/types';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
@@ -49,8 +49,8 @@ suite('Application Diagnostics - Checks LS not supported', () => {
             .setup((s) =>
                 s.get(
                     TypeMoq.It.isValue(IDiagnosticHandlerService),
-                    TypeMoq.It.isValue(DiagnosticCommandPromptHandlerServiceId)
-                )
+                    TypeMoq.It.isValue(DiagnosticCommandPromptHandlerServiceId),
+                ),
             )
             .returns(() => messageHandler.object);
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -81,8 +81,8 @@ suite('Application Diagnostics - Checks LS not supported', () => {
             .setup((f) =>
                 f.createCommand(
                     TypeMoq.It.isAny(),
-                    TypeMoq.It.isObjectWith<CommandOption<'launch', string>>({ type: 'launch' })
-                )
+                    TypeMoq.It.isObjectWith<CommandOption<'launch', string>>({ type: 'launch' }),
+                ),
             )
             .returns(() => launchBrowserCommand.object)
             .verifiable(TypeMoq.Times.once());
@@ -93,9 +93,9 @@ suite('Application Diagnostics - Checks LS not supported', () => {
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({
                         type: 'ignore',
-                        options: DiagnosticScope.Global
-                    })
-                )
+                        options: DiagnosticScope.Global,
+                    }),
+                ),
             )
             .returns(() => alwaysIgnoreCommand.object)
             .verifiable(TypeMoq.Times.once());

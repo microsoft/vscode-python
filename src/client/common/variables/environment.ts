@@ -15,12 +15,12 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
     constructor(
         // We only use a small portion of either of these interfaces.
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
     ) {}
 
     public async parseFile(
         filePath?: string,
-        baseVars?: EnvironmentVariables
+        baseVars?: EnvironmentVariables,
     ): Promise<EnvironmentVariables | undefined> {
         if (!filePath || !(await this.fs.fileExists(filePath))) {
             return;
@@ -130,7 +130,7 @@ function substituteEnvVars(
     value: string,
     localVars: EnvironmentVariables,
     globalVars: EnvironmentVariables,
-    missing = ''
+    missing = '',
 ): string {
     // Substitution here is inspired a little by dotenv-expand:
     //   https://github.com/motdotla/dotenv-expand/blob/master/lib/main.js

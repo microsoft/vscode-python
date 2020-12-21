@@ -13,7 +13,7 @@ import { Product } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -31,7 +31,7 @@ const info: PythonEnvironment = {
     envType: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
-    sysVersion: ''
+    sysVersion: '',
 };
 
 // tslint:disable-next-line:max-func-body-length
@@ -48,15 +48,15 @@ suite('Installation - installation channels', () => {
         serviceManager.addSingletonInstance<IInterpreterLocatorService>(
             IInterpreterLocatorService,
             pipEnv.object,
-            PIPENV_SERVICE
+            PIPENV_SERVICE,
         );
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
         serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
             IInterpreterAutoSeletionProxyService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
     });
 
@@ -89,7 +89,7 @@ suite('Installation - installation channels', () => {
         const interpreter: PythonEnvironment = {
             ...info,
             path: 'pipenv',
-            envType: EnvironmentType.VirtualEnv
+            envType: EnvironmentType.VirtualEnv,
         };
         pipEnv.setup((x) => x.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([interpreter]));
 
@@ -114,7 +114,7 @@ suite('Installation - installation channels', () => {
                 items = i;
             })
             .returns(
-                () => new Promise<string | undefined>((resolve, _reject) => resolve(undefined))
+                () => new Promise<string | undefined>((resolve, _reject) => resolve(undefined)),
             );
 
         installer1.setup((x) => x.displayName).returns(() => 'Name 1');
@@ -134,7 +134,7 @@ suite('Installation - installation channels', () => {
         installer
             .setup((x) => x.isSupported(TypeMoq.It.isAny()))
             .returns(
-                () => new Promise<boolean>((resolve) => resolve(supported))
+                () => new Promise<boolean>((resolve) => resolve(supported)),
             );
         installer.setup((x) => x.priority).returns(() => (priority ? priority : 0));
         serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, installer.object, name);

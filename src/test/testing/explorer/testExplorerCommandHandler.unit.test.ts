@@ -41,13 +41,13 @@ suite('Unit Tests - Test Explorer Command Handler', () => {
         const disposable3 = typemoq.Mock.ofType<IDisposable>();
 
         when(cmdManager.registerCommand(Commands.runTestNode, anything(), commandHandler)).thenReturn(
-            disposable1.object
+            disposable1.object,
         );
         when(cmdManager.registerCommand(Commands.debugTestNode, anything(), commandHandler)).thenReturn(
-            disposable2.object
+            disposable2.object,
         );
         when(cmdManager.registerCommand(Commands.openTestNodeInEditor, anything(), commandHandler)).thenReturn(
-            disposable3.object
+            disposable3.object,
         );
 
         commandHandler.register();
@@ -59,7 +59,7 @@ suite('Unit Tests - Test Explorer Command Handler', () => {
     });
     async function testOpeningTestNode(
         data: TestFile | TestSuite | TestFunction,
-        expectedCommand: 'navigateToTestFunction' | 'navigateToTestSuite' | 'navigateToTestFile'
+        expectedCommand: 'navigateToTestFunction' | 'navigateToTestSuite' | 'navigateToTestFile',
     ) {
         const resource = Uri.file(__filename);
         when(testResourceMapper.getResource(data)).thenReturn(resource);
@@ -87,7 +87,7 @@ suite('Unit Tests - Test Explorer Command Handler', () => {
     async function testRunOrDebugTestNode(
         data: TestFile | TestSuite | TestFunction,
         expectedTestRun: TestsToRun,
-        runType: 'run' | 'debug'
+        runType: 'run' | 'debug',
     ) {
         const resource = Uri.file(__filename);
         when(testResourceMapper.getResource(data)).thenReturn(resource);
@@ -102,7 +102,7 @@ suite('Unit Tests - Test Explorer Command Handler', () => {
 
         const cmd = runType === 'run' ? Commands.Tests_Run : Commands.Tests_Debug;
         verify(
-            cmdManager.executeCommand(cmd, undefined, CommandSource.testExplorer, resource, deepEqual(expectedTestRun))
+            cmdManager.executeCommand(cmd, undefined, CommandSource.testExplorer, resource, deepEqual(expectedTestRun)),
         ).once();
     }
     test('Running a file will invoke correct command', async () => {

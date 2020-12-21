@@ -17,11 +17,11 @@ const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(
     'test',
     'pythonFiles',
     'testFiles',
-    'single'
+    'single',
 );
 const filesToDelete = [
     path.join(UNITTEST_TEST_FILES_PATH, '.noseids'),
-    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids')
+    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids'),
 ];
 
 // tslint:disable-next-line:max-func-body-length

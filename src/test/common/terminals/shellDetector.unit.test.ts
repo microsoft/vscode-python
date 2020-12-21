@@ -28,7 +28,7 @@ suite('Shell Detector', () => {
         [OSType.Linux]: TerminalShellType.bash,
         [OSType.OSX]: TerminalShellType.bash,
         [OSType.Windows]: TerminalShellType.commandPrompt,
-        [OSType.Unknown]: TerminalShellType.other
+        [OSType.Unknown]: TerminalShellType.other,
     };
     const sandbox = sinon.createSandbox();
     setup(() => (platformService = mock(PlatformService)));
@@ -65,7 +65,7 @@ suite('Shell Detector', () => {
             const userEnvDetector = new UserEnvironmentShellDetector(mock(MockProcess), instance(platformService));
             const settingsDetector = new SettingsShellDetector(
                 instance(mock(WorkspaceService)),
-                instance(platformService)
+                instance(platformService),
             );
             const detectors = [settingsDetector, userEnvDetector, nameDetector, vscEnvDetector];
             const shellDetector = new ShellDetector(instance(platformService), detectors);
@@ -131,7 +131,7 @@ suite('Shell Detector', () => {
             const shellDetector = new ShellDetector(instance(platformService), [
                 instance(detector1),
                 instance(detector2),
-                instance(detector3)
+                instance(detector3),
             ]);
 
             const shell = shellDetector.identifyTerminalShell();
@@ -160,7 +160,7 @@ suite('Shell Detector', () => {
                 instance(detector1),
                 instance(detector2),
                 instance(detector3),
-                instance(detector4)
+                instance(detector4),
             ]);
 
             const shell = shellDetector.identifyTerminalShell();
@@ -190,7 +190,7 @@ suite('Shell Detector', () => {
                 instance(detector1),
                 instance(detector2),
                 instance(detector3),
-                instance(detector4)
+                instance(detector4),
             ]);
 
             const shell = shellDetector.identifyTerminalShell();

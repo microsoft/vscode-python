@@ -36,7 +36,7 @@ suite('Unit Tests - Navigation Command Handler', () => {
             instance(fileHandler),
             instance(functionHandler),
             instance(suiteHandler),
-            instance(disposableRegistry)
+            instance(disposableRegistry),
         );
     });
     test('Ensure Navigation handlers are registered', async () => {
@@ -45,22 +45,22 @@ suite('Unit Tests - Navigation Command Handler', () => {
             cmdManager.registerCommand(
                 Commands.navigateToTestFile,
                 instance(fileHandler).navigateTo,
-                instance(fileHandler)
-            )
+                instance(fileHandler),
+            ),
         ).once();
         verify(
             cmdManager.registerCommand(
                 Commands.navigateToTestFunction,
                 instance(functionHandler).navigateTo,
-                instance(functionHandler)
-            )
+                instance(functionHandler),
+            ),
         ).once();
         verify(
             cmdManager.registerCommand(
                 Commands.navigateToTestSuite,
                 instance(suiteHandler).navigateTo,
-                instance(suiteHandler)
-            )
+                instance(suiteHandler),
+            ),
         ).once();
     });
     test('Ensure handlers are disposed', async () => {
@@ -71,22 +71,22 @@ suite('Unit Tests - Navigation Command Handler', () => {
             cmdManager.registerCommand(
                 Commands.navigateToTestFile,
                 instance(fileHandler).navigateTo,
-                instance(fileHandler)
-            )
+                instance(fileHandler),
+            ),
         ).thenReturn(disposable1.object);
         when(
             cmdManager.registerCommand(
                 Commands.navigateToTestFunction,
                 instance(functionHandler).navigateTo,
-                instance(functionHandler)
-            )
+                instance(functionHandler),
+            ),
         ).thenReturn(disposable2.object);
         when(
             cmdManager.registerCommand(
                 Commands.navigateToTestSuite,
                 instance(suiteHandler).navigateTo,
-                instance(suiteHandler)
-            )
+                instance(suiteHandler),
+            ),
         ).thenReturn(disposable3.object);
 
         commandHandler.register();

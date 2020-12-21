@@ -30,7 +30,7 @@ export class FastAPILaunchDebugConfigurationProvider implements IDebugConfigurat
             request: 'launch',
             module: 'uvicorn',
             args: ['main:app'],
-            jinja: true
+            jinja: true,
         };
 
         if (!application) {
@@ -42,8 +42,8 @@ export class FastAPILaunchDebugConfigurationProvider implements IDebugConfigurat
                     Promise.resolve(
                         value && value.trim().length > 0
                             ? undefined
-                            : DebugConfigStrings.fastapi.enterAppPathOrNamePath.invalid()
-                    )
+                            : DebugConfigStrings.fastapi.enterAppPathOrNamePath.invalid(),
+                    ),
             });
             if (selectedPath) {
                 manuallyEnteredAValue = true;
@@ -54,7 +54,7 @@ export class FastAPILaunchDebugConfigurationProvider implements IDebugConfigurat
         sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
             configurationType: DebugConfigurationType.launchFastAPI,
             autoDetectedFastAPIMainPyPath: !!application,
-            manuallyEnteredAValue
+            manuallyEnteredAValue,
         });
         Object.assign(state.config, config);
     }

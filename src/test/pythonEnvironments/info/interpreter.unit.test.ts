@@ -4,9 +4,7 @@
 import { expect } from 'chai';
 import { join as pathJoin } from 'path';
 import { SemVer } from 'semver';
-import {
-    IMock, It as TypeMoqIt, Mock, MockBehavior,
-} from 'typemoq';
+import { IMock, It as TypeMoqIt, Mock, MockBehavior } from 'typemoq';
 import { StdErrError } from '../../../client/common/process/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { buildPythonExecInfo } from '../../../client/pythonEnvironments/exec';

@@ -44,7 +44,7 @@ export class CleanupFixture {
                     // tslint:disable-next-line:no-console
                     console.error('moving on...');
                 }
-            })
+            }),
         );
     }
 }
@@ -53,7 +53,7 @@ export class PythonFixture extends CleanupFixture {
     public readonly python: string;
     constructor(
         // If not provided, we will use the global default.
-        python?: string
+        python?: string,
     ) {
         super();
         if (python) {

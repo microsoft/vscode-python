@@ -11,7 +11,7 @@ import { registerTypes as activationRegisterTypes } from './activation/serviceRe
 import {
     IExtensionActivationManager,
     IExtensionSingleActivationService,
-    ILanguageServerExtension
+    ILanguageServerExtension,
 } from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
@@ -30,7 +30,7 @@ import {
     IDisposableRegistry,
     IExperimentsManager,
     IFeatureDeprecationManager,
-    IOutputChannel
+    IOutputChannel,
 } from './common/types';
 import { OutputChannelNames } from './common/utils/localize';
 import { noop } from './common/utils/misc';
@@ -45,7 +45,7 @@ import {
     IComponentAdapter,
     IInterpreterLocatorProgressHandler,
     IInterpreterLocatorProgressService,
-    IInterpreterService
+    IInterpreterService,
 } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { getLanguageConfiguration } from './language/languageConfiguration';
@@ -77,7 +77,7 @@ import { Components } from './extensionInit';
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
     ext: ExtensionState,
-    _components: Components
+    _components: Components,
 ): Promise<ActivationResult[]> {
     // Note that each activation returns a promise that resolves
     // when that activation completes.  However, it might have started
@@ -97,7 +97,7 @@ export async function activateComponents(
         // If we need to activate, we need to use the adapter:
         // https://github.com/microsoft/vscode-python/issues/14984
         // These will go away eventually.
-        activateLegacy(ext)
+        activateLegacy(ext),
     ];
     return Promise.all(promises);
 }
@@ -236,8 +236,8 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     context.subscriptions.push(
         languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), {
-            providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports]
-        })
+            providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports],
+        }),
     );
 
     serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationService).forEach((debugConfigProvider) => {

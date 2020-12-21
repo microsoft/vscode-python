@@ -98,7 +98,7 @@ suite('Language Server - LanguageServer', () => {
             .verifiable(typemoq.Times.once());
         client
             .setup((c) =>
-                c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs))
+                c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs)),
             )
             .returns(() => Promise.resolve(undefined) as any);
 
@@ -151,7 +151,7 @@ suite('Language Server - LanguageServer', () => {
             .verifiable(typemoq.Times.once());
         client
             .setup((c) =>
-                c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs))
+                c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs)),
             )
             .returns(() => Promise.resolve(undefined) as any);
 

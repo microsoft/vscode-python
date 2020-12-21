@@ -28,7 +28,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ICurrentProcess) private process: ICurrentProcess,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @optional() private cacheDuration: number = CACHE_DURATION
+        @optional() private cacheDuration: number = CACHE_DURATION,
     ) {
         disposableRegistry.push(this);
         this.changeEventEmitter = new EventEmitter();
@@ -55,7 +55,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
             'getEnvironmentVariables',
             this.cacheDuration,
             [resource],
-            this.serviceContainer
+            this.serviceContainer,
         );
         if (cacheStore.hasData) {
             traceVerbose(`Cached data exists getEnvironmentVariables, ${resource ? resource.fsPath : '<No Resource>'}`);
@@ -125,12 +125,12 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         clearCachedResourceSpecificIngterpreterData(
             'getEnvironmentVariables',
             workspaceFolderUri,
-            this.serviceContainer
+            this.serviceContainer,
         );
         clearCachedResourceSpecificIngterpreterData(
             'CustomEnvironmentVariables',
             workspaceFolderUri,
-            this.serviceContainer
+            this.serviceContainer,
         );
         this.changeEventEmitter.fire(workspaceFolderUri);
     }

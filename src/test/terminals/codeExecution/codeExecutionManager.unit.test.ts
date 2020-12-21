@@ -28,7 +28,7 @@ suite('Terminal - Code Execution Manager', () => {
             .setup((c) => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
                 return {
-                    dispose: () => void 0
+                    dispose: () => void 0,
                 };
             });
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
@@ -39,7 +39,7 @@ suite('Terminal - Code Execution Manager', () => {
             documentManager.object,
             disposables,
             fileSystem.object,
-            serviceContainer.object
+            serviceContainer.object,
         );
     });
     teardown(() => {
@@ -70,7 +70,7 @@ suite('Terminal - Code Execution Manager', () => {
             Commands.Exec_In_Terminal,
             Commands.Exec_In_Terminal_Icon,
             Commands.Exec_Selection_In_Django_Shell,
-            Commands.Exec_Selection_In_Terminal
+            Commands.Exec_Selection_In_Terminal,
         ]);
     });
 
@@ -271,7 +271,7 @@ suite('Terminal - Code Execution Manager', () => {
         await commandHandler!();
         executionService.verify(
             async (e) => e.execute(TypeMoq.It.isValue(textSelected), TypeMoq.It.isValue(activeDocumentUri)),
-            TypeMoq.Times.once()
+            TypeMoq.Times.once(),
         );
         helper.verifyAll();
     }

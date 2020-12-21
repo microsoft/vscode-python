@@ -29,7 +29,7 @@ export class PowershellActivationNotAvailableDiagnostic extends BaseDiagnostic {
             DiagnosticSeverity.Warning,
             DiagnosticScope.Global,
             resource,
-            'always'
+            'always',
         );
     }
 }
@@ -42,17 +42,17 @@ export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsS
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
         super(
             [DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic],
             serviceContainer,
             disposableRegistry,
-            true
+            true,
         );
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
             IDiagnosticHandlerService,
-            DiagnosticCommandPromptHandlerServiceId
+            DiagnosticCommandPromptHandlerServiceId,
         );
     }
     public async diagnose(_resource: Resource): Promise<IDiagnostic[]> {
@@ -78,28 +78,28 @@ export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsS
                     diagnostic,
                     invoke: async (): Promise<void> => {
                         sendTelemetryEvent(EventName.DIAGNOSTICS_ACTION, undefined, {
-                            action: 'switchToCommandPrompt'
+                            action: 'switchToCommandPrompt',
                         });
                         useCommandPromptAsDefaultShell(currentProcess, configurationService).catch((ex) =>
-                            traceError('Use Command Prompt as default shell', ex)
+                            traceError('Use Command Prompt as default shell', ex),
                         );
-                    }
-                }
+                    },
+                },
             },
             {
-                prompt: 'Ignore'
+                prompt: 'Ignore',
             },
             {
                 prompt: 'Always Ignore',
-                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global })
+                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global }),
             },
             {
                 prompt: 'More Info',
                 command: commandFactory.createCommand(diagnostic, {
                     type: 'launch',
-                    options: 'https://aka.ms/CondaPwsh'
-                })
-            }
+                    options: 'https://aka.ms/CondaPwsh',
+                }),
+            },
         ];
 
         await this.messageService.handle(diagnostic, { commandPrompts: options });

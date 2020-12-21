@@ -286,7 +286,7 @@ namespace _symbolProvider {
 export function symbolProvider(
     filename: string,
     // If "text" is provided then it gets passed to the script as-is.
-    text?: string
+    text?: string,
 ): [string[], (out: string) => _symbolProvider.Symbols] {
     const script = path.join(SCRIPTS_DIR, 'symbolProvider.py');
     const args = maybeIsolated([script, filename]);
@@ -342,7 +342,7 @@ export function shell_exec(command: string, lockfile: string, shellArgs: string[
         // The shell args must come after the command
         // but before the lockfile.
         ...shellArgs,
-        lockfile.fileToCommandArgument()
+        lockfile.fileToCommandArgument(),
     ]);
 }
 

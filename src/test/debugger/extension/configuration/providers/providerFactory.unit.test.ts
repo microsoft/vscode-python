@@ -27,7 +27,7 @@ suite('Debugging - Configuration Provider Factory', () => {
             mappedProviders.get(DebugConfigurationType.launchFile)!,
             mappedProviders.get(DebugConfigurationType.launchPyramid)!,
             mappedProviders.get(DebugConfigurationType.remoteAttach)!,
-            mappedProviders.get(DebugConfigurationType.pidAttach)!
+            mappedProviders.get(DebugConfigurationType.pidAttach)!,
         );
     });
     getNamesAndValues<DebugConfigurationType>(DebugConfigurationType).forEach((item) => {

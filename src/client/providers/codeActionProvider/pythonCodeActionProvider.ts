@@ -11,7 +11,7 @@ export class PythonCodeActionProvider implements vscode.CodeActionProvider {
         document: vscode.TextDocument,
         _range: vscode.Range,
         _context: vscode.CodeActionContext,
-        _token: vscode.CancellationToken
+        _token: vscode.CancellationToken,
     ): vscode.ProviderResult<vscode.CodeAction[]> {
         if (isNotebookCell(document)) {
             return [];
@@ -19,7 +19,7 @@ export class PythonCodeActionProvider implements vscode.CodeActionProvider {
         const sortImports = new vscode.CodeAction('Sort imports', vscode.CodeActionKind.SourceOrganizeImports);
         sortImports.command = {
             title: 'Sort imports',
-            command: 'python.sortImports'
+            command: 'python.sortImports',
         };
 
         return [sortImports];

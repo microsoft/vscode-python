@@ -12,20 +12,20 @@ import { ConfigurationTarget, DiagnosticSeverity, Uri, WorkspaceConfiguration } 
 import { BaseDiagnostic, BaseDiagnosticsService } from '../../../../client/application/diagnostics/base';
 import {
     PythonPathDeprecatedDiagnostic,
-    PythonPathDeprecatedDiagnosticService
+    PythonPathDeprecatedDiagnosticService,
 } from '../../../../client/application/diagnostics/checks/pythonPathDeprecated';
 import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import {
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt
+    MessageCommandPrompt,
 } from '../../../../client/application/diagnostics/promptHandler';
 import {
     DiagnosticScope,
     IDiagnostic,
     IDiagnosticCommand,
     IDiagnosticFilterService,
-    IDiagnosticHandlerService
+    IDiagnosticHandlerService,
 } from '../../../../client/application/diagnostics/types';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../../client/common/constants';
@@ -57,8 +57,8 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
             .setup((s) =>
                 s.get(
                     typemoq.It.isValue(IDiagnosticHandlerService),
-                    typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId)
-                )
+                    typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId),
+                ),
             )
             .returns(() => messageHandler.object);
         commandFactory = typemoq.Mock.ofType<IDiagnosticsCommandFactory>();
@@ -104,7 +104,7 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
             const canHandle = await diagnosticService.canHandle(diagnostic.object);
             expect(canHandle).to.be.equal(
                 true,
-                `Should be able to handle ${DiagnosticCodes.PythonPathDeprecatedDiagnostic}`
+                `Should be able to handle ${DiagnosticCodes.PythonPathDeprecatedDiagnostic}`,
             );
             diagnostic.verifyAll();
         });
@@ -124,7 +124,7 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
 
             filterService
                 .setup((f) =>
-                    f.shouldIgnoreDiagnostic(typemoq.It.isValue(DiagnosticCodes.PythonPathDeprecatedDiagnostic))
+                    f.shouldIgnoreDiagnostic(typemoq.It.isValue(DiagnosticCodes.PythonPathDeprecatedDiagnostic)),
                 )
                 .returns(() => Promise.resolve(true))
                 .verifiable(typemoq.Times.once());
@@ -151,7 +151,7 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
             const ignoreCmd = ({ cmd: 'ignoreCmd' } as any) as IDiagnosticCommand;
             filterService
                 .setup((f) =>
-                    f.shouldIgnoreDiagnostic(typemoq.It.isValue(DiagnosticCodes.PythonPathDeprecatedDiagnostic))
+                    f.shouldIgnoreDiagnostic(typemoq.It.isValue(DiagnosticCodes.PythonPathDeprecatedDiagnostic)),
                 )
                 .returns(() => Promise.resolve(false));
             let messagePrompt: MessageCommandPrompt | undefined;
@@ -165,14 +165,14 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
                 .setup((f) =>
                     f.createCommand(
                         typemoq.It.isAny(),
-                        typemoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({ type: 'ignore' })
-                    )
+                        typemoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({ type: 'ignore' }),
+                    ),
                 )
                 .returns(() => ignoreCmd)
                 .verifiable(typemoq.Times.once());
             const _removePythonPathFromWorkspaceSettings = sinon.stub(
                 PythonPathDeprecatedDiagnosticService.prototype,
-                '_removePythonPathFromWorkspaceSettings'
+                '_removePythonPathFromWorkspaceSettings',
             );
             _removePythonPathFromWorkspaceSettings.resolves();
 
@@ -188,7 +188,7 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
             expect(messagePrompt!.commandPrompts[0].prompt).to.be.deep.equal(Common.openOutputPanel());
             expect(messagePrompt!.commandPrompts[1]).to.be.deep.equal({
                 prompt: Common.doNotShowAgain(),
-                command: ignoreCmd
+                command: ignoreCmd,
             });
 
             output
@@ -223,7 +223,7 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
                         message,
                         DiagnosticSeverity.Information,
                         DiagnosticScope.WorkspaceFolder,
-                        uri
+                        uri,
                     );
                 }
             })('message', undefined);
@@ -258,8 +258,8 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
                     () =>
                         ({
                             workspaceFolderValue: 'workspaceFolderValue',
-                            workspaceValue: 'workspaceValue'
-                        } as any)
+                            workspaceValue: 'workspaceValue',
+                        } as any),
                 );
 
             const diagnostics = await diagnosticService.diagnose(resource);
@@ -284,8 +284,8 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
                 .returns(
                     () =>
                         ({
-                            workspaceValue: 'workspaceValue'
-                        } as any)
+                            workspaceValue: 'workspaceValue',
+                        } as any),
                 );
 
             const diagnostics = await diagnosticService.diagnose(resource);
@@ -313,8 +313,8 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
                     () =>
                         ({
                             workspaceValue: 'workspaceValue',
-                            workspaceFolderValue: 'workspaceFolderValue'
-                        } as any)
+                            workspaceFolderValue: 'workspaceFolderValue',
+                        } as any),
                 );
 
             const diagnostics = await diagnosticService.diagnose(resource);
@@ -342,8 +342,8 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
                     () =>
                         ({
                             workspaceValue: 'workspaceValue',
-                            workspaceFolderValue: 'workspaceFolderValue'
-                        } as any)
+                            workspaceFolderValue: 'workspaceFolderValue',
+                        } as any),
                 );
 
             const diagnostics = await diagnosticService.diagnose(resource);

@@ -32,18 +32,18 @@ export class TerminalEnvironmentActivationService implements IEnvironmentActivat
     constructor(
         @inject(ITerminalServiceFactory) private readonly terminalFactory: ITerminalServiceFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider
+        @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
     ) {}
     @traceDecorators.verbose('getActivatedEnvironmentVariables', LogOptions.Arguments)
     @captureTelemetry(
         EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES,
         { failed: false, activatedInTerminal: true },
-        true
+        true,
     )
     public async getActivatedEnvironmentVariables(
         resource: Resource,
         interpreter?: PythonEnvironment | undefined,
-        _allowExceptions?: boolean | undefined
+        _allowExceptions?: boolean | undefined,
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const env = (await this.envVarsProvider.getCustomEnvironmentVariables(resource)) as
             | { [key: string]: string | null }
@@ -53,7 +53,7 @@ export class TerminalEnvironmentActivationService implements IEnvironmentActivat
             hideFromUser: true,
             interpreter,
             resource,
-            title: `${interpreter?.displayName}${new Date().getTime()}`
+            title: `${interpreter?.displayName}${new Date().getTime()}`,
         });
 
         const command = interpreter?.path || 'python';

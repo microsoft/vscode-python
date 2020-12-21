@@ -42,7 +42,7 @@ suite('Formatting - Helper', () => {
             assert.equal(
                 info.execPath,
                 execPath,
-                `Incorrect executable paths for product ${formatHelper.translateToId(formatter)}`
+                `Incorrect executable paths for product ${formatHelper.translateToId(formatter)}`,
             );
         });
     });
@@ -61,7 +61,7 @@ suite('Formatting - Helper', () => {
             assert.equal(
                 expectedArgs.endsWith(customArgs.join(',')),
                 true,
-                `Incorrect custom arguments for product ${formatHelper.translateToId(formatter)}`
+                `Incorrect custom arguments for product ${formatHelper.translateToId(formatter)}`,
             );
         });
     });
@@ -71,13 +71,13 @@ suite('Formatting - Helper', () => {
             const translatedId = formatHelper.translateToId(formatter)!;
             const settings = {
                 argsName: `${translatedId}Args` as keyof IFormattingSettings,
-                pathName: `${translatedId}Path` as keyof IFormattingSettings
+                pathName: `${translatedId}Path` as keyof IFormattingSettings,
             };
 
             assert.deepEqual(
                 formatHelper.getSettingsPropertyNames(formatter),
                 settings,
-                `Incorrect settings for product ${formatHelper.translateToId(formatter)}`
+                `Incorrect settings for product ${formatHelper.translateToId(formatter)}`,
             );
         });
     });
@@ -93,7 +93,7 @@ suite('Formatting - Helper', () => {
             assert.equal(
                 translatedId,
                 formatterMapping.get(formatter)!,
-                `Incorrect translation for product ${formatHelper.translateToId(formatter)}`
+                `Incorrect translation for product ${formatHelper.translateToId(formatter)}`,
             );
         });
     });

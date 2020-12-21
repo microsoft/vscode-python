@@ -22,7 +22,7 @@ if (!tty.getWindowSize) {
 
 let mocha = new Mocha(<any>{
     ui: 'tdd',
-    colors: true
+    colors: true,
 });
 
 export type SetupOptions = Mocha.MochaOptions & {
@@ -82,14 +82,14 @@ export async function run(): Promise<void> {
                     initializationScript()
                         .then(() =>
                             mocha.run((failures) =>
-                                failures > 0 ? reject(new Error(`${failures} total failures`)) : resolve()
-                            )
+                                failures > 0 ? reject(new Error(`${failures} total failures`)) : resolve(),
+                            ),
                         )
                         .catch(reject);
                 } catch (error) {
                     return reject(error);
                 }
-            }
+            },
         );
     });
 }

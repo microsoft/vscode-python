@@ -18,7 +18,7 @@ const config = {
     entry: entryItems,
     devtool: 'source-map',
     node: {
-        __dirname: false
+        __dirname: false,
     },
     module: {},
     externals: ['vscode', 'commonjs'],
@@ -26,17 +26,17 @@ const config = {
         ...common.getDefaultPlugins('dependencies'),
         // vsls requires our package.json to be next to node_modules. It's how they
         // 'find' the calling extension.
-        new copyWebpackPlugin([{ from: './package.json', to: '.' }])
+        new copyWebpackPlugin([{ from: './package.json', to: '.' }]),
     ],
     resolve: {
-        extensions: ['.js']
+        extensions: ['.js'],
     },
     output: {
         filename: '[name].js',
         path: path.resolve(constants.ExtensionRootDir, 'out', 'client'),
         libraryTarget: 'commonjs2',
-        devtoolModuleFilenameTemplate: '../../[resource-path]'
-    }
+        devtoolModuleFilenameTemplate: '../../[resource-path]',
+    },
 };
 // tslint:disable-next-line:no-default-export
 exports.default = config;

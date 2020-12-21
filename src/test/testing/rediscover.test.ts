@@ -66,7 +66,7 @@ suite('Unit Tests re-discovery', () => {
         const testManager = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory)(
             testProvider,
             rootWorkspaceUri!,
-            testFilesPath
+            testFilesPath,
         );
         let tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');

@@ -33,13 +33,13 @@ suite('Interpreters - Auto Selection - System Interpreters Rule', () => {
     class SystemWideInterpretersAutoSelectionRuleTest extends SystemWideInterpretersAutoSelectionRule {
         public async setGlobalInterpreter(
             interpreter?: PythonEnvironment,
-            manager?: IInterpreterAutoSelectionService
+            manager?: IInterpreterAutoSelectionService,
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
         public async onAutoSelectInterpreter(
             resource: Resource,
-            manager?: IInterpreterAutoSelectionService
+            manager?: IInterpreterAutoSelectionService,
         ): Promise<NextAction> {
             return super.onAutoSelectInterpreter(resource, manager);
         }
@@ -52,13 +52,13 @@ suite('Interpreters - Auto Selection - System Interpreters Rule', () => {
         interpreterService = mock(InterpreterService);
 
         when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
-            instance(state)
+            instance(state),
         );
         rule = new SystemWideInterpretersAutoSelectionRuleTest(
             instance(fs),
             instance(helper),
             instance(stateFactory),
-            instance(interpreterService)
+            instance(interpreterService),
         );
     });
 

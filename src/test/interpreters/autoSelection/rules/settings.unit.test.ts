@@ -19,7 +19,7 @@ import {
     IExperimentsManager,
     IInterpreterPathService,
     IPersistentStateFactory,
-    Resource
+    Resource,
 } from '../../../../client/common/types';
 import { InterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection';
 import { NextAction } from '../../../../client/interpreter/autoSelection/rules/baseRule';
@@ -38,7 +38,7 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
     class SettingsInterpretersAutoSelectionRuleTest extends SettingsInterpretersAutoSelectionRule {
         public async onAutoSelectInterpreter(
             resource: Resource,
-            manager?: IInterpreterAutoSelectionService
+            manager?: IInterpreterAutoSelectionService,
         ): Promise<NextAction> {
             return super.onAutoSelectInterpreter(resource, manager);
         }
@@ -53,14 +53,14 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
         when(experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control)).thenReturn(undefined);
 
         when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
-            instance(state)
+            instance(state),
         );
         rule = new SettingsInterpretersAutoSelectionRuleTest(
             instance(fs),
             instance(stateFactory),
             instance(workspaceService),
             instance(experimentsManager),
-            instance(interpreterPathService)
+            instance(interpreterPathService),
         );
     });
 

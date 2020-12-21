@@ -20,8 +20,8 @@ suite('Provider - Folding Provider', () => {
                 new FoldingRange(98, 146),
                 new FoldingRange(152, 153, FoldingRangeKind.Comment),
                 new FoldingRange(312, 320),
-                new FoldingRange(327, 329)
-            ]
+                new FoldingRange(327, 329),
+            ],
         },
         {
             file: path.join(pythonFilesPath, 'visualstudio_ipython_repl.py'),
@@ -34,8 +34,8 @@ suite('Provider - Folding Provider', () => {
                 new FoldingRange(139, 140, FoldingRangeKind.Comment),
                 new FoldingRange(169, 170, FoldingRangeKind.Comment),
                 new FoldingRange(275, 277, FoldingRangeKind.Comment),
-                new FoldingRange(319, 320, FoldingRangeKind.Comment)
-            ]
+                new FoldingRange(319, 320, FoldingRangeKind.Comment),
+            ],
         },
         {
             file: path.join(pythonFilesPath, 'visualstudio_py_debugger.py'),
@@ -60,13 +60,13 @@ suite('Provider - Folding Provider', () => {
                 new FoldingRange(602, 604, FoldingRangeKind.Comment),
                 new FoldingRange(608, 609, FoldingRangeKind.Comment),
                 new FoldingRange(612, 614, FoldingRangeKind.Comment),
-                new FoldingRange(637, 638, FoldingRangeKind.Comment)
-            ]
+                new FoldingRange(637, 638, FoldingRangeKind.Comment),
+            ],
         },
         {
             file: path.join(pythonFilesPath, 'visualstudio_py_repl.py'),
-            ranges: []
-        }
+            ranges: [],
+        },
     ];
 
     docStringFileAndExpectedFoldingRanges.forEach((item) => {
@@ -77,7 +77,7 @@ suite('Provider - Folding Provider', () => {
             expect(ranges).to.be.lengthOf(item.ranges.length);
             ranges!.forEach((range) => {
                 const index = item.ranges.findIndex(
-                    (searchItem) => searchItem.start === range.start && searchItem.end === range.end
+                    (searchItem) => searchItem.start === range.start && searchItem.end === range.end,
                 );
                 expect(index).to.be.greaterThan(-1, `${range.start}, ${range.end} not found`);
             });

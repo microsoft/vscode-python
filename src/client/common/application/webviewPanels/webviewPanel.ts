@@ -22,7 +22,7 @@ export class WebviewPanel extends Webview implements IWebviewPanel {
         fs: IFileSystem,
         private disposableRegistry: IDisposableRegistry,
         private panelOptions: IWebviewPanelOptions,
-        additionalRootPaths: Uri[] = []
+        additionalRootPaths: Uri[] = [],
     ) {
         super(fs, panelOptions);
 
@@ -31,8 +31,8 @@ export class WebviewPanel extends Webview implements IWebviewPanel {
             localResourceRoots: [
                 Uri.file(this.panelOptions.rootPath),
                 Uri.file(this.panelOptions.cwd),
-                ...additionalRootPaths
-            ]
+                ...additionalRootPaths,
+            ],
         };
         if (panelOptions.webViewPanel) {
             this.panel = panelOptions.webViewPanel;
@@ -45,8 +45,8 @@ export class WebviewPanel extends Webview implements IWebviewPanel {
                 {
                     retainContextWhenHidden: true,
                     enableFindWidget: true,
-                    ...webViewOptions
-                }
+                    ...webViewOptions,
+                },
             );
         }
 
@@ -106,21 +106,21 @@ export class WebviewPanel extends Webview implements IWebviewPanel {
                         this.panel.onDidDispose(() => {
                             this.panel = undefined;
                             this.panelOptions.listener.dispose().ignoreErrors();
-                        })
+                        }),
                     );
 
                     this.disposableRegistry.push(
                         this.panel.webview.onDidReceiveMessage((message) => {
                             // Pass the message onto our listener
                             this.panelOptions.listener.onMessage(message.type, message.payload);
-                        })
+                        }),
                     );
 
                     this.disposableRegistry.push(
                         this.panel.onDidChangeViewState((_e) => {
                             // Pass the state change onto our listener
                             this.panelOptions.listener.onChangeViewState(this);
-                        })
+                        }),
                     );
 
                     // Set initial state

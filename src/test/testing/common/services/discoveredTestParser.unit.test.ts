@@ -31,12 +31,12 @@ suite('Services - Discovered test parser', () => {
             testFiles: [],
             testFolders: [],
             testFunctions: [],
-            testSuites: []
+            testSuites: [],
         };
         const discoveredTests = [
             {
-                root: 'path/to/testDataRoot'
-            }
+                root: 'path/to/testDataRoot',
+            },
         ];
         const buildChildren = sinon.stub(TestDiscoveredTestParser.prototype, 'buildChildren');
         buildChildren.callsFake(() => undefined);
@@ -55,12 +55,12 @@ suite('Services - Discovered test parser', () => {
         const discoveredTests = [
             {
                 root: 'path/to/testDataRoot1',
-                rootid: 'rootId1'
+                rootid: 'rootId1',
             },
             {
                 root: 'path/to/testDataRoot2',
-                rootid: 'rootId2'
-            }
+                rootid: 'rootId2',
+            },
         ];
         const workspaceUri = Uri.file('path/to/workspace');
         const workspace = { uri: workspaceUri };
@@ -72,7 +72,7 @@ suite('Services - Discovered test parser', () => {
                     time: 0,
                     testFiles: [],
                     resource: workspaceUri,
-                    nameToRun: 'rootId1'
+                    nameToRun: 'rootId1',
                 },
                 {
                     name: 'path/to/testDataRoot2',
@@ -80,8 +80,8 @@ suite('Services - Discovered test parser', () => {
                     time: 0,
                     testFiles: [],
                     resource: workspaceUri,
-                    nameToRun: 'rootId2'
-                }
+                    nameToRun: 'rootId2',
+                },
             ],
             summary: { errors: 0, failures: 0, passed: 0, skipped: 0 },
             testFiles: [],
@@ -92,7 +92,7 @@ suite('Services - Discovered test parser', () => {
                     time: 0,
                     testFiles: [],
                     resource: workspaceUri,
-                    nameToRun: 'rootId1'
+                    nameToRun: 'rootId1',
                 },
                 {
                     name: 'path/to/testDataRoot2',
@@ -100,11 +100,11 @@ suite('Services - Discovered test parser', () => {
                     time: 0,
                     testFiles: [],
                     resource: workspaceUri,
-                    nameToRun: 'rootId2'
-                }
+                    nameToRun: 'rootId2',
+                },
             ],
             testFunctions: [],
-            testSuites: []
+            testSuites: [],
         };
         const buildChildren = sinon.stub(TestDiscoveredTestParser.prototype, 'buildChildren');
         buildChildren.callsFake(() => undefined);

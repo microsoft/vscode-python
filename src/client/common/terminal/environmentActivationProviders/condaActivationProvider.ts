@@ -25,7 +25,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
     constructor(
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IPlatformService) private platform: IPlatformService,
-        @inject(IConfigurationService) private configService: IConfigurationService
+        @inject(IConfigurationService) private configService: IConfigurationService,
     ) {}
 
     /**
@@ -40,7 +40,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
      */
     public getActivationCommands(
         resource: Uri | undefined,
-        targetShell: TerminalShellType
+        targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
         const pythonPath = this.configService.getSettings(resource).pythonPath;
         return this.getActivationCommandsForInterpreter(pythonPath, targetShell);
@@ -52,7 +52,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
      */
     public async getActivationCommandsForInterpreter(
         pythonPath: string,
-        targetShell: TerminalShellType
+        targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
         const envInfo = await this.condaService.getCondaEnvironment(pythonPath);
         if (!envInfo) {

@@ -54,7 +54,7 @@ export async function* findInterpretersInDir(
  * Looks for files in the same directory which might have version in their name.
  * @param interpreterPath
  */
-export async function getPythonVersionFromNearByFiles(interpreterPath:string): Promise<PythonVersion> {
+export async function getPythonVersionFromNearByFiles(interpreterPath: string): Promise<PythonVersion> {
     const root = path.dirname(interpreterPath);
     let version = UNKNOWN_PYTHON_VERSION;
     for await (const interpreter of findInterpretersInDir(root)) {
@@ -113,9 +113,9 @@ export function isStandardPythonBinary(executable: string): boolean {
  * environment directory.
  * @param envDir Absolute path to the environment directory
  */
-export async function getInterpreterPathFromDir(envDir: string): Promise<string|undefined> {
+export async function getInterpreterPathFromDir(envDir: string): Promise<string | undefined> {
     // Ignore any folders or files that not directly python binary related.
-    function filter(str:string):boolean {
+    function filter(str: string): boolean {
         const lower = str.toLowerCase();
         return ['bin', 'scripts'].includes(lower) || lower.search('python') >= 0;
     }
@@ -134,7 +134,7 @@ export async function getInterpreterPathFromDir(envDir: string): Promise<string|
  *  interpreter binary.
  * @param interpreterPath Absolute path to the python interpreter
  */
-export function getEnvironmentDirFromPath(interpreterPath:string): string {
+export function getEnvironmentDirFromPath(interpreterPath: string): string {
     const skipDirs = ['bin', 'scripts'];
 
     // env <--- Return this directory if it is not 'bin' or 'scripts'

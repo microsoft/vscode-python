@@ -39,7 +39,7 @@ suite('Extension version tests', () => {
 
         return expect(
             version.endsWith('-dev'),
-            'When running a pipeline in the main branch, the extension version in package.json should have the -dev suffix'
+            'When running a pipeline in the main branch, the extension version in package.json should have the -dev suffix',
         ).to.be.true;
     });
 
@@ -51,7 +51,7 @@ suite('Extension version tests', () => {
 
         return expect(
             version.endsWith('-dev'),
-            'When running a pipeline in the release branch, the extension version in package.json should not have the -dev suffix'
+            'When running a pipeline in the release branch, the extension version in package.json should not have the -dev suffix',
         ).to.be.false;
     });
 });

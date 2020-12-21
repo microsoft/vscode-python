@@ -23,7 +23,7 @@ export class TerminalNameShellDetector extends BaseShellDetector {
     }
     public identify(
         telemetryProperties: ShellIdentificationTelemetry,
-        terminal?: Terminal
+        terminal?: Terminal,
     ): TerminalShellType | undefined {
         if (!terminal) {
             return;

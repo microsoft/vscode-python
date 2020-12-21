@@ -18,7 +18,7 @@ import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
     IPythonExecutionService,
-    ObservableExecutionResult
+    ObservableExecutionResult,
 } from '../../../client/common/process/types';
 import { ExecutionInfo } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
@@ -35,10 +35,10 @@ suite('Process - Python tool execution service', () => {
         out: {} as any,
         dispose: () => {
             noop();
-        }
+        },
     };
     const executionResult: ExecutionResult<string> = {
-        stdout: 'output'
+        stdout: 'output',
     };
 
     let pythonService: IPythonExecutionService;
@@ -68,7 +68,7 @@ suite('Process - Python tool execution service', () => {
 
         const serviceContainer = mock(ServiceContainer);
         when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(
-            instance(executionFactory)
+            instance(executionFactory),
         );
         when(serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory)).thenReturn(instance(processFactory));
 
@@ -80,7 +80,7 @@ suite('Process - Python tool execution service', () => {
         const executionInfo: ExecutionInfo = {
             execPath: 'foo',
             moduleName: 'moduleOne',
-            args: ['-a', 'b', '-c']
+            args: ['-a', 'b', '-c'],
         };
 
         const promise = executionService.execObservable(executionInfo, options, resource);
@@ -93,7 +93,7 @@ suite('Process - Python tool execution service', () => {
         const executionInfo: ExecutionInfo = {
             execPath: 'foo',
             moduleName: 'moduleOne',
-            args: ['-a', 'b', '-c']
+            args: ['-a', 'b', '-c'],
         };
 
         const result = await executionService.execObservable(executionInfo, options, resource);
@@ -107,7 +107,7 @@ suite('Process - Python tool execution service', () => {
         const executionInfo: ExecutionInfo = {
             execPath: 'foo',
             moduleName: '',
-            args: ['-a', 'b', '-c']
+            args: ['-a', 'b', '-c'],
         };
 
         const result = await executionService.execObservable(executionInfo, options, resource);
@@ -120,7 +120,7 @@ suite('Process - Python tool execution service', () => {
         const options = {};
         const executionInfo: ExecutionInfo = {
             execPath: 'foo',
-            args: ['-a', 'b', '-c']
+            args: ['-a', 'b', '-c'],
         };
 
         const result = await executionService.execObservable(executionInfo, options, resource);
@@ -134,7 +134,7 @@ suite('Process - Python tool execution service', () => {
         const executionInfo: ExecutionInfo = {
             execPath: 'foo',
             moduleName: 'moduleOne',
-            args: ['-a', 'b', '-c']
+            args: ['-a', 'b', '-c'],
         };
 
         const promise = executionService.exec(executionInfo, options, resource);
@@ -147,7 +147,7 @@ suite('Process - Python tool execution service', () => {
         const executionInfo: ExecutionInfo = {
             execPath: 'foo',
             moduleName: 'moduleOne',
-            args: ['-a', 'b', '-c']
+            args: ['-a', 'b', '-c'],
         };
 
         const result = await executionService.exec(executionInfo, options, resource);
@@ -161,7 +161,7 @@ suite('Process - Python tool execution service', () => {
         const executionInfo: ExecutionInfo = {
             execPath: 'foo',
             moduleName: '',
-            args: ['-a', 'b', '-c']
+            args: ['-a', 'b', '-c'],
         };
 
         const result = await executionService.exec(executionInfo, options, resource);
@@ -174,7 +174,7 @@ suite('Process - Python tool execution service', () => {
         const options = {};
         const executionInfo: ExecutionInfo = {
             execPath: 'foo',
-            args: ['-a', 'b', '-c']
+            args: ['-a', 'b', '-c'],
         };
 
         const result = await executionService.exec(executionInfo, options, resource);

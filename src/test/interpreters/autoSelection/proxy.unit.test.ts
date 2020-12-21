@@ -23,7 +23,7 @@ suite('Interpreters - Auto Selection Proxy', () => {
         }
         public async setWorkspaceInterpreter(
             _resource: Uri,
-            _interpreter: PythonEnvironment | undefined
+            _interpreter: PythonEnvironment | undefined,
         ): Promise<void> {
             return;
         }

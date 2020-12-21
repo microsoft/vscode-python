@@ -83,7 +83,7 @@ suite('SocketStream', () => {
         const stringBuffer = new Buffer(message);
         const buffer = Buffer.concat([
             Buffer.concat([new Buffer('U'), uint64be.encode(stringBuffer.byteLength)]),
-            stringBuffer
+            stringBuffer,
         ]);
         // tslint:disable-next-line:no-any
         const stream = new SocketStream((socket as any) as net.Socket, buffer);

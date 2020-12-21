@@ -5,10 +5,7 @@ import * as vscode from 'vscode';
 import { getGlobalStorage } from '../common/persistentState';
 import { getOSType, OSType } from '../common/utils/platform';
 import { IDisposable } from '../common/utils/resourceLifecycle';
-import {
-    ActivationResult,
-    ExtensionState,
-} from '../components';
+import { ActivationResult, ExtensionState } from '../components';
 import { PythonEnvironments } from './api';
 import { getPersistentCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
@@ -44,18 +41,9 @@ export function initialize(ext: ExtensionState): PythonEnvironments {
     // Any other initialization goes here.
 
     // Deal with legacy IOC.
-    registerLegacyDiscoveryForIOC(
-        ext.legacyIOC.serviceManager,
-    );
-    initializeLegacyExternalDependencies(
-        ext.legacyIOC.serviceContainer,
-    );
-    registerNewDiscoveryForIOC(
-        ext.legacyIOC.serviceManager,
-        api,
-        environmentsSecurity,
-        ext.disposables,
-    );
+    registerLegacyDiscoveryForIOC(ext.legacyIOC.serviceManager);
+    initializeLegacyExternalDependencies(ext.legacyIOC.serviceContainer);
+    registerNewDiscoveryForIOC(ext.legacyIOC.serviceManager, api, environmentsSecurity, ext.disposables);
 
     return api;
 }
@@ -63,9 +51,7 @@ export function initialize(ext: ExtensionState): PythonEnvironments {
 /**
  * Make use of the component (e.g. register with VS Code).
  */
-export async function activate(
-    api: PythonEnvironments,
-): Promise<ActivationResult> {
+export async function activate(api: PythonEnvironments): Promise<ActivationResult> {
     // Force an initial background refresh of the environments.
     getEnvs(api.iterEnvs()).ignoreErrors();
 
@@ -81,10 +67,7 @@ export async function activate(
  */
 async function createLocators(ext: ExtensionState, environmentsSecurity: IEnvironmentsSecurity): Promise<ILocator> {
     // Create the low-level locators.
-    let locators: ILocator = new ExtensionLocators(
-        createNonWorkspaceLocators(ext),
-        createWorkspaceLocator(ext),
-    );
+    let locators: ILocator = new ExtensionLocators(createNonWorkspaceLocators(ext), createWorkspaceLocator(ext));
 
     // Create the env info service used by ResolvingLocator and CachingLocator.
     const envInfoService = new EnvironmentInfoService();
@@ -100,28 +83,17 @@ async function createLocators(ext: ExtensionState, environmentsSecurity: IEnviro
     return locators;
 }
 
-function createNonWorkspaceLocators(
-    ext: ExtensionState,
-): ILocator[] {
+function createNonWorkspaceLocators(ext: ExtensionState): ILocator[] {
     let locators: (ILocator & Partial<IDisposable>)[];
     if (getOSType() === OSType.Windows) {
         // Windows specific locators go here
-        locators = [
-            new WindowsRegistryLocator(),
-            new WindowsStoreLocator(),
-        ];
+        locators = [new WindowsRegistryLocator(), new WindowsStoreLocator()];
     } else {
         // Linux/Mac locators go here
-        locators = [
-            new PosixKnownPathsLocator(),
-        ];
+        locators = [new PosixKnownPathsLocator()];
     }
-    locators.push(
-        new GlobalVirtualEnvironmentLocator(),
-        new PyenvLocator(),
-        new CustomVirtualEnvironmentLocator(),
-    );
-    const disposables = (locators.filter((d) => d.dispose !== undefined)) as IDisposable[];
+    locators.push(new GlobalVirtualEnvironmentLocator(), new PyenvLocator(), new CustomVirtualEnvironmentLocator());
+    const disposables = locators.filter((d) => d.dispose !== undefined) as IDisposable[];
     ext.disposables.push(...disposables);
     return locators;
 }
@@ -144,16 +116,11 @@ function watchRoots(args: WatchRootsArgs): IDisposable {
     });
 }
 
-function createWorkspaceLocator(
-    ext: ExtensionState,
-): WorkspaceLocators {
-    const locators = new WorkspaceLocators(
-        watchRoots,
-        [
-            (root: vscode.Uri) => [new WorkspaceVirtualEnvironmentLocator(root.fsPath)],
-            // Add an ILocator factory func here for each kind of workspace-rooted locator.
-        ],
-    );
+function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators {
+    const locators = new WorkspaceLocators(watchRoots, [
+        (root: vscode.Uri) => [new WorkspaceVirtualEnvironmentLocator(root.fsPath)],
+        // Add an ILocator factory func here for each kind of workspace-rooted locator.
+    ]);
     ext.disposables.push(locators);
     return locators;
 }
@@ -163,10 +130,7 @@ async function createCachingLocator(
     envInfoService: EnvironmentInfoService,
     locators: ILocator,
 ): Promise<CachingLocator> {
-    const storage = getGlobalStorage<PythonEnvInfo[]>(
-        ext.context,
-        'PYTHON_ENV_INFO_CACHE',
-    );
+    const storage = getGlobalStorage<PythonEnvInfo[]>(ext.context, 'PYTHON_ENV_INFO_CACHE');
     const cache = await getPersistentCache(
         {
             load: async () => storage.get(),

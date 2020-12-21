@@ -16,7 +16,7 @@ export class WebviewPanelProvider implements IWebviewPanelProvider {
     constructor(
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
     ) {}
 
     // tslint:disable-next-line:no-any

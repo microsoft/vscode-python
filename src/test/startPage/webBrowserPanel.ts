@@ -137,12 +137,12 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
     private loadFailedEmitter = new EventEmitter<void>();
     constructor(
         private readonly disposableRegistry: IDisposableRegistry,
-        private readonly options: IWebviewPanelOptions
+        private readonly options: IWebviewPanelOptions,
     ) {
         this.disposableRegistry.push(this);
         const webViewOptions: WebviewOptions = {
             enableScripts: true,
-            localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd)]
+            localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd)],
         };
         if (options.webViewPanel) {
             this.panel = options.webViewPanel;
@@ -155,8 +155,8 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
                 {
                     retainContextWhenHidden: true,
                     enableFindWidget: true,
-                    ...webViewOptions
-                }
+                    ...webViewOptions,
+                },
             );
         }
 
@@ -166,7 +166,7 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
             this.panel.onDidDispose(() => {
                 this.panel = undefined;
                 this.options.listener.dispose().ignoreErrors();
-            })
+            }),
         );
 
         this.launchServer(this.options.cwd, this.options.rootPath)
@@ -175,7 +175,7 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
             })
             .catch((ex) =>
                 // tslint:disable-next-line: no-console
-                console.error('Failed to start Web Browser Panel', ex)
+                console.error('Failed to start Web Browser Panel', ex),
             );
     }
 

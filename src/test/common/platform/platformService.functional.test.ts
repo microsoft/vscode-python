@@ -73,7 +73,7 @@ suite('PlatformService', () => {
 
         expect(result).to.be.equal(
             hostReports64Bit,
-            `arch() reports '${arch()}', PlatformService.is64bit reports ${result}.`
+            `arch() reports '${arch()}', PlatformService.is64bit reports ${result}.`,
         );
     });
 

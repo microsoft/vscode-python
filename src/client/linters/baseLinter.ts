@@ -42,7 +42,7 @@ export function parseLine(
     line: string,
     regex: string,
     linterID: LinterId,
-    colOffset: number = 0
+    colOffset: number = 0,
 ): ILintMessage | undefined {
     const match = matchNamedRegEx(line, regex)!;
     if (!match) {
@@ -60,7 +60,7 @@ export function parseLine(
         column: isNaN(match.column) || match.column <= 0 ? 0 : match.column - colOffset,
         line: match.line,
         type: match.type,
-        provider: linterID
+        provider: linterID,
     };
 }
 
@@ -80,7 +80,7 @@ export abstract class BaseLinter implements ILinter {
         product: Product,
         protected readonly outputChannel: vscode.OutputChannel,
         protected readonly serviceContainer: IServiceContainer,
-        protected readonly columnOffset = 0
+        protected readonly columnOffset = 0,
     ) {
         this._info = serviceContainer.get<ILinterManager>(ILinterManager).getLinterInfo(product);
         this.errorHandler = new ErrorHandler(this.info.product, outputChannel, serviceContainer);
@@ -105,7 +105,7 @@ export abstract class BaseLinter implements ILinter {
     }
     protected abstract runLinter(
         document: vscode.TextDocument,
-        cancellation: vscode.CancellationToken
+        cancellation: vscode.CancellationToken,
     ): Promise<ILintMessage[]>;
 
     // tslint:disable-next-line:no-any
@@ -136,7 +136,7 @@ export abstract class BaseLinter implements ILinter {
         args: string[],
         document: vscode.TextDocument,
         cancellation: vscode.CancellationToken,
-        regEx: string = REGEX
+        regEx: string = REGEX,
     ): Promise<ILintMessage[]> {
         if (!this.info.isEnabled(document.uri)) {
             return [];
@@ -144,13 +144,13 @@ export abstract class BaseLinter implements ILinter {
         const executionInfo = this.info.getExecutionInfo(args, document.uri);
         const cwd = this.getWorkspaceRootPath(document);
         const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(
-            IPythonToolExecutionService
+            IPythonToolExecutionService,
         );
         try {
             const result = await pythonToolsExecutionService.exec(
                 executionInfo,
                 { cwd, token: cancellation, mergeStdOutErr: false },
-                document.uri
+                document.uri,
             );
             this.displayLinterResultHeader(result.stdout);
             return await this.parseMessages(result.stdout, document, cancellation, regEx);
@@ -164,7 +164,7 @@ export abstract class BaseLinter implements ILinter {
         output: string,
         _document: vscode.TextDocument,
         _token: vscode.CancellationToken,
-        regEx: string
+        regEx: string,
     ) {
         const outputLines = output.splitLines({ removeEmptyEntries: false, trim: false });
         return this.parseLines(outputLines, regEx);

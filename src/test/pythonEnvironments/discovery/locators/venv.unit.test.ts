@@ -72,7 +72,9 @@ suite('Virtual environments', () => {
         settings.setup((x) => x.venvFolders).returns(() => folders);
         virtualEnvMgr.setup((v) => v.getPyEnvRoot(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         let paths = await pathProvider.getSearchPaths();
-        let expected = ['envs', '.pyenv', '.direnv', '.virtualenvs', ...folders].map((item) => path.join(homedir, item));
+        let expected = ['envs', '.pyenv', '.direnv', '.virtualenvs', ...folders].map((item) =>
+            path.join(homedir, item),
+        );
 
         virtualEnvMgr.verifyAll();
         expect(paths).to.deep.equal(expected, 'Global search folder list is incorrect.');
@@ -104,9 +106,7 @@ suite('Virtual environments', () => {
 
         const homedir = os.homedir();
         const workonFolder = path.join('~', '.workonFolder');
-        process
-            .setup((p) => p.env)
-            .returns(() => ({ WORKON_HOME: workonFolder }));
+        process.setup((p) => p.env).returns(() => ({ WORKON_HOME: workonFolder }));
         settings.setup((x) => x.venvFolders).returns(() => []);
 
         const paths = await pathProvider.getSearchPaths();
@@ -121,9 +121,7 @@ suite('Virtual environments', () => {
 
         const homedir = os.homedir();
         const workonFolder = path.join('path', 'to', '.workonFolder');
-        process
-            .setup((p) => p.env)
-            .returns(() => ({ WORKON_HOME: workonFolder }));
+        process.setup((p) => p.env).returns(() => ({ WORKON_HOME: workonFolder }));
         settings.setup((x) => x.venvFolders).returns(() => []);
 
         const paths = await pathProvider.getSearchPaths();

@@ -11,20 +11,20 @@ import { DiagnosticSeverity, Extension, Uri, WorkspaceConfiguration } from 'vsco
 import { BaseDiagnostic, BaseDiagnosticsService } from '../../../../client/application/diagnostics/base';
 import {
     UpgradeCodeRunnerDiagnostic,
-    UpgradeCodeRunnerDiagnosticService
+    UpgradeCodeRunnerDiagnosticService,
 } from '../../../../client/application/diagnostics/checks/upgradeCodeRunner';
 import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import {
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt
+    MessageCommandPrompt,
 } from '../../../../client/application/diagnostics/promptHandler';
 import {
     DiagnosticScope,
     IDiagnostic,
     IDiagnosticCommand,
     IDiagnosticFilterService,
-    IDiagnosticHandlerService
+    IDiagnosticHandlerService,
 } from '../../../../client/application/diagnostics/types';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { CODE_RUNNER_EXTENSION_ID } from '../../../../client/common/constants';
@@ -53,8 +53,8 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
             .setup((s) =>
                 s.get(
                     typemoq.It.isValue(IDiagnosticHandlerService),
-                    typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId)
-                )
+                    typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId),
+                ),
             )
             .returns(() => messageHandler.object);
         commandFactory = typemoq.Mock.ofType<IDiagnosticsCommandFactory>();
@@ -96,7 +96,7 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
             const canHandle = await diagnosticService.canHandle(diagnostic.object);
             expect(canHandle).to.be.equal(
                 true,
-                `Should be able to handle ${DiagnosticCodes.UpgradeCodeRunnerDiagnostic}`
+                `Should be able to handle ${DiagnosticCodes.UpgradeCodeRunnerDiagnostic}`,
             );
             diagnostic.verifyAll();
         });
@@ -156,8 +156,8 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
                 .setup((f) =>
                     f.createCommand(
                         typemoq.It.isAny(),
-                        typemoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({ type: 'ignore' })
-                    )
+                        typemoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({ type: 'ignore' }),
+                    ),
                 )
                 .returns(() => ignoreCmd)
                 .verifiable(typemoq.Times.once());
@@ -170,7 +170,7 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
             expect(messagePrompt!.commandPrompts.length).to.equal(1, 'Incorrect length');
             expect(messagePrompt!.commandPrompts[0]).to.be.deep.equal({
                 prompt: Common.doNotShowAgain(),
-                command: ignoreCmd
+                command: ignoreCmd,
             });
         });
 
@@ -200,7 +200,7 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
                         message,
                         DiagnosticSeverity.Information,
                         DiagnosticScope.WorkspaceFolder,
-                        uri
+                        uri,
                     );
                 }
             })('message', undefined);
@@ -261,8 +261,8 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
                 .setup((e) => e.packageJSON)
                 .returns(() => ({
                     featureFlags: {
-                        usingNewPythonInterpreterPathApiV2: true
-                    }
+                        usingNewPythonInterpreterPathApiV2: true,
+                    },
                 }));
             workspaceService
                 .setup((w) => w.getConfiguration('code-runner', resource))

@@ -19,7 +19,7 @@ import { IAttachProcessProviderFactory } from '../../../../client/debugger/exten
 import {
     IDebugAdapterDescriptorFactory,
     IDebugSessionLoggingFactory,
-    IOutdatedDebuggerPromptFactory
+    IOutdatedDebuggerPromptFactory,
 } from '../../../../client/debugger/extension/types';
 import { clearTelemetryReporter } from '../../../../client/telemetry';
 import { noop } from '../../../core';
@@ -38,7 +38,7 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
         const configurationService = mock(ConfigurationService);
 
         when(configurationService.getSettings(undefined)).thenReturn(({
-            experiments: { enabled: true }
+            experiments: { enabled: true },
             // tslint:disable-next-line: no-any
         } as any) as IPythonSettings);
         attachFactory = mock(AttachProcessProviderFactory);
@@ -54,7 +54,7 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
             instance(loggingFactory),
             instance(debuggerPromptFactory),
             disposableRegistry,
-            instance(attachFactory)
+            instance(attachFactory),
         );
     });
 

@@ -37,14 +37,14 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         @unmanaged() private cssGenerator: ICodeCssGenerator,
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
-        @unmanaged() protected readonly useCustomEditorApi: boolean
+        @unmanaged() protected readonly useCustomEditorApi: boolean,
     ) {
         // Listen for settings changes from vscode.
         this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
 
         // Listen for settings changes
         this._disposables.push(
-            this.configService.getSettings(undefined).onDidChange(this.onSettingsChanged.bind(this))
+            this.configService.getSettings(undefined).onDidChange(this.onSettingsChanged.bind(this)),
         );
     }
 
@@ -140,7 +140,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         return this.postMessageInternal(CssMessages.GetCssResponse, {
             css,
             theme: theme,
-            knownDark: isDark
+            knownDark: isDark,
         });
     }
 

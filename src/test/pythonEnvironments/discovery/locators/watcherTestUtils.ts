@@ -119,7 +119,7 @@ export function testLocatorWatcher(
          * to verify it. Omitting that check in those cases as we can never deterministically say when it's
          * ready to check.
          */
-        kind?: PythonEnvKind
+        kind?: PythonEnvKind;
     },
 ): void {
     let locator: ILocator & IDisposable;

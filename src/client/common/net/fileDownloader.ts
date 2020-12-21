@@ -18,7 +18,7 @@ export class FileDownloader implements IFileDownloader {
     constructor(
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
     ) {}
     public async downloadFile(uri: string, options: DownloadOptions): Promise<string> {
         if (options.outputChannel) {
@@ -31,7 +31,7 @@ export class FileDownloader implements IFileDownloader {
             (ex) => {
                 tempFile.dispose();
                 return Promise.reject(ex);
-            }
+            },
         );
 
         return tempFile.filePath;
@@ -39,7 +39,7 @@ export class FileDownloader implements IFileDownloader {
     public async downloadFileWithStatusBarProgress(
         uri: string,
         progressMessage: string,
-        tmpFilePath: string
+        tmpFilePath: string,
     ): Promise<void> {
         await this.appShell.withProgressCustomIcon(Octicons.Downloading, async (progress) => {
             const req = await this.httpClient.downloadFile(uri);
@@ -53,13 +53,13 @@ export class FileDownloader implements IFileDownloader {
         progress: Progress<{ message?: string; increment?: number }>,
         request: requestTypes.Request,
         fileStream: WriteStream,
-        progressMessagePrefix: string
+        progressMessagePrefix: string,
     ): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             request.on('response', (response) => {
                 if (response.statusCode !== 200) {
                     reject(
-                        new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`)
+                        new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`),
                     );
                 }
             });
@@ -102,6 +102,6 @@ function formatProgressMessageWithState(progressMessagePrefix: string, state: Re
         progressMessagePrefix,
         received.toString(),
         total.toString(),
-        percentage.toString()
+        percentage.toString(),
     );
 }

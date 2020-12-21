@@ -29,7 +29,8 @@ export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisO
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ILanguageServerOutputChannel) lsOutputChannel: ILanguageServerOutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
+        @inject(ILanguageServerFolderService)
+        private readonly languageServerFolderService: ILanguageServerFolderService,
     ) {
         super(envVarsProvider, lsOutputChannel);
     }
@@ -104,12 +105,12 @@ export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisO
 
         return {
             interpreter: {
-                properties
+                properties,
             },
             searchPaths,
             typeStubSearchPaths: this.typeshedPaths,
             cacheFolderPath: this.getCacheFolderPath(),
-            excludeFiles: this.excludedFiles
+            excludeFiles: this.excludedFiles,
         };
     }
 

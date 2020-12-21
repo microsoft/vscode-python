@@ -33,7 +33,7 @@ export function validateConstraint(arg: any, constraint: TypeConstraint): void {
             return;
         }
         throw new Error(
-            'argument does not match one of these constraints: arg instanceof constraint, arg.constructor === constraint, nor constraint(arg) === true'
+            'argument does not match one of these constraints: arg instanceof constraint, arg.constructor === constraint, nor constraint(arg) === true',
         );
     }
 }

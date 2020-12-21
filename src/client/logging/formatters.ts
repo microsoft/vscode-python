@@ -20,7 +20,7 @@ const formattedLogLevels: { [K in LogLevel]: string } = {
     [LogLevel.Warn]: 'Warn',
     [LogLevel.Info]: 'Info',
     [LogLevel.Debug]: 'Debug',
-    [LogLevel.Trace]: 'Trace'
+    [LogLevel.Trace]: 'Trace',
 };
 
 // Return a consistent representation of the given log level.
@@ -58,8 +58,8 @@ function getMinimalFormatter() {
         format.timestamp({ format: TIMESTAMP }),
         format.printf(
             // This relies on the timestamp formatter we added above:
-            ({ level, message, timestamp }) => formatMessage(level as LogLevelName, timestamp, message)
-        )
+            ({ level, message, timestamp }) => formatMessage(level as LogLevelName, timestamp, message),
+        ),
     );
 }
 
@@ -72,8 +72,8 @@ function getLabeledFormatter(label_: string) {
         format.printf(
             // This relies on the label and timestamp formatters we added above:
             ({ level, message, label, timestamp }) =>
-                formatLabeledMessage(level as LogLevelName, timestamp, label, message)
-        )
+                formatLabeledMessage(level as LogLevelName, timestamp, label, message),
+        ),
     );
 }
 

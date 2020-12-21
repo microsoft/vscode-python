@@ -24,7 +24,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IPythonSettings,
-    ITerminalSettings
+    ITerminalSettings,
 } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { ICondaService } from '../../../client/interpreter/contracts';
@@ -101,7 +101,7 @@ suite('Terminal Environment Activation conda', () => {
             mock(CommandPromptAndPowerShell),
             mock(PyEnvActivationCommandProvider),
             mock(PipEnvActivationCommandProvider),
-            []
+            [],
         );
     });
     teardown(() => {
@@ -125,7 +125,7 @@ suite('Terminal Environment Activation conda', () => {
         const provider = new CondaActivationCommandProvider(
             condaService.object,
             platformService.object,
-            configService.object
+            configService.object,
         );
         const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.fish);
 
@@ -143,8 +143,8 @@ suite('Terminal Environment Activation conda', () => {
             .returns(() =>
                 Promise.resolve({
                     name: envName,
-                    path: path.dirname(pythonPath)
-                })
+                    path: path.dirname(pythonPath),
+                }),
             );
         condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(condaPath));
         condaService.setup((c) => c.getCondaVersion()).returns(() => Promise.resolve(parse('4.3.1', true)!));
@@ -153,7 +153,7 @@ suite('Terminal Environment Activation conda', () => {
         const provider = new CondaActivationCommandProvider(
             condaService.object,
             platformService.object,
-            configService.object
+            configService.object,
         );
         const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
 
@@ -171,8 +171,8 @@ suite('Terminal Environment Activation conda', () => {
             .returns(() =>
                 Promise.resolve({
                     name: envName,
-                    path: path.dirname(pythonPath)
-                })
+                    path: path.dirname(pythonPath),
+                }),
             );
         condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(condaPath));
         condaService.setup((c) => c.getCondaVersion()).returns(() => Promise.resolve(parse('4.4.0', true)!));
@@ -181,7 +181,7 @@ suite('Terminal Environment Activation conda', () => {
         const provider = new CondaActivationCommandProvider(
             condaService.object,
             platformService.object,
-            configService.object
+            configService.object,
         );
         const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
 
@@ -197,43 +197,43 @@ suite('Terminal Environment Activation conda', () => {
                 'Activation provides correct activation commands (windows) after 4.4.0 given interpreter path is provided, with no spaces in env name',
             envName: environmentName,
             expectedResult: ['path/to/activate', 'conda activate Env'],
-            isWindows: true
+            isWindows: true,
         },
         {
             testName:
                 'Activation provides correct activation commands (non-windows) after 4.4.0 given interpreter path is provided, with no spaces in env name',
             envName: environmentName,
             expectedResult: ['source path/to/activate', 'conda activate Env'],
-            isWindows: false
+            isWindows: false,
         },
         {
             testName:
                 'Activation provides correct activation commands (windows) after 4.4.0 given interpreter path is provided, with spaces in env name',
             envName: environmentNameHasSpaces,
             expectedResult: ['path/to/activate', 'conda activate "Env with spaces"'],
-            isWindows: true
+            isWindows: true,
         },
         {
             testName:
                 'Activation provides correct activation commands (non-windows) after 4.4.0 given interpreter path is provided, with spaces in env name',
             envName: environmentNameHasSpaces,
             expectedResult: ['source path/to/activate', 'conda activate "Env with spaces"'],
-            isWindows: false
+            isWindows: false,
         },
         {
             testName:
                 'Activation provides correct activation commands (windows) after 4.4.0 given interpreter path is provided, and no env name',
             envName: '',
             expectedResult: ['path/to/activate', `conda activate .`],
-            isWindows: true
+            isWindows: true,
         },
         {
             testName:
                 'Activation provides correct activation commands (non-windows) after 4.4.0 given interpreter path is provided, and no env name',
             envName: '',
             expectedResult: ['source path/to/activate', `conda activate .`],
-            isWindows: false
-        }
+            isWindows: false,
+        },
     ];
 
     testsForActivationUsingInterpreterPath.forEach((testParams) => {
@@ -246,8 +246,8 @@ suite('Terminal Environment Activation conda', () => {
                 .returns(() =>
                     Promise.resolve({
                         name: testParams.envName,
-                        path: path.dirname(pythonPath)
-                    })
+                        path: path.dirname(pythonPath),
+                    }),
                 );
             condaService.setup((c) => c.getCondaVersion()).returns(() => Promise.resolve(parse('4.4.0', true)!));
             condaService
@@ -257,7 +257,7 @@ suite('Terminal Environment Activation conda', () => {
             const provider = new CondaActivationCommandProvider(
                 condaService.object,
                 platformService.object,
-                configService.object
+                configService.object,
             );
             const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
 
@@ -271,7 +271,7 @@ suite('Terminal Environment Activation conda', () => {
         isLinux: boolean,
         pythonPath: string,
         shellType: TerminalShellType,
-        envName: string
+        envName: string,
     ) {
         platformService.setup((p) => p.isLinux).returns(() => isLinux);
         platformService.setup((p) => p.isWindows).returns(() => isWindows);
@@ -285,7 +285,7 @@ suite('Terminal Environment Activation conda', () => {
         const activationCommands = await new CondaActivationCommandProvider(
             condaService.object,
             platformService.object,
-            configService.object
+            configService.object,
         ).getActivationCommands(undefined, shellType);
         let expectedActivationCommand: string[] | undefined;
         const expectEnvActivatePath = path.dirname(pythonPath);
@@ -371,7 +371,7 @@ suite('Terminal Environment Activation conda', () => {
         isWindows: boolean,
         isOsx: boolean,
         isLinux: boolean,
-        pythonPath: string
+        pythonPath: string,
     ) {
         platformService.setup((p) => p.isLinux).returns(() => isLinux);
         platformService.setup((p) => p.isWindows).returns(() => isWindows);
@@ -385,7 +385,7 @@ suite('Terminal Environment Activation conda', () => {
         const expectedActivationCommand = isWindows ? ['activate EnvA'] : ['source activate EnvA'];
         const activationCommands = await terminalHelper.getEnvironmentActivationCommands(
             TerminalShellType.bash,
-            undefined
+            undefined,
         );
         expect(activationCommands).to.deep.equal(expectedActivationCommand, 'Incorrect Activation command');
     }
@@ -402,7 +402,7 @@ suite('Terminal Environment Activation conda', () => {
         const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
         fileSystem
             .setup((f) =>
-                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))
+                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta'))),
             )
             .returns(() => Promise.resolve(true));
         await expectCondaActivationCommand(false, false, true, pythonPath);
@@ -412,7 +412,7 @@ suite('Terminal Environment Activation conda', () => {
         const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
         fileSystem
             .setup((f) =>
-                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))
+                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta'))),
             )
             .returns(() => Promise.resolve(true));
         await expectCondaActivationCommand(false, true, false, pythonPath);
@@ -438,7 +438,7 @@ suite('Terminal Environment Activation conda', () => {
 
         const activationCommands = await terminalHelper.getEnvironmentActivationCommands(
             TerminalShellType.bash,
-            undefined
+            undefined,
         );
 
         expect(activationCommands).to.deep.equal(expectedActivationCommand, 'Incorrect Activation command');
@@ -447,7 +447,7 @@ suite('Terminal Environment Activation conda', () => {
         isWindows: boolean,
         isOsx: boolean,
         isLinux: boolean,
-        pythonPath: string
+        pythonPath: string,
     ) {
         platformService.setup((p) => p.isLinux).returns(() => isLinux);
         platformService.setup((p) => p.isWindows).returns(() => isWindows);
@@ -462,7 +462,7 @@ suite('Terminal Environment Activation conda', () => {
         const expectedActivationCommand = ['mock command'];
         const activationCommands = await terminalHelper.getEnvironmentActivationCommands(
             TerminalShellType.bash,
-            undefined
+            undefined,
         );
         expect(activationCommands).to.deep.equal(expectedActivationCommand, 'Incorrect Activation command');
     }
@@ -479,7 +479,7 @@ suite('Terminal Environment Activation conda', () => {
         const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'python');
         fileSystem
             .setup((f) =>
-                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))
+                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta'))),
             )
             .returns(() => Promise.resolve(true));
         await expectActivationCommandIfCondaDetectionFails(false, true, false, pythonPath);
@@ -489,7 +489,7 @@ suite('Terminal Environment Activation conda', () => {
         const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'python');
         fileSystem
             .setup((f) =>
-                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))
+                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta'))),
             )
             .returns(() => Promise.resolve(true));
         await expectActivationCommandIfCondaDetectionFails(false, false, true, pythonPath);
@@ -513,7 +513,7 @@ suite('Terminal Environment Activation conda', () => {
 
         const activationCommands = await terminalHelper.getEnvironmentActivationCommands(
             TerminalShellType.bash,
-            undefined
+            undefined,
         );
         expect(activationCommands).to.equal(undefined, 'Incorrect Activation command');
     });
@@ -537,7 +537,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'TesterEnv',
             expectedResult: ['conda activate TesterEnv'],
             expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
-            terminalKind: TerminalShellType.powershell
+            terminalKind: TerminalShellType.powershell,
         },
         {
             testName: 'Activation uses full path with spaces on windows for powershell',
@@ -545,7 +545,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'TesterEnv',
             expectedResult: ['conda activate TesterEnv'],
             expectedRawCmd: `"${path.join(windowsTestPathSpaces, 'activate')}"`,
-            terminalKind: TerminalShellType.powershell
+            terminalKind: TerminalShellType.powershell,
         },
         {
             testName: 'Activation uses full path on windows under powershell, environment name has spaces',
@@ -553,7 +553,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'The Tester Environment',
             expectedResult: ['conda activate "The Tester Environment"'],
             expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
-            terminalKind: TerminalShellType.powershell
+            terminalKind: TerminalShellType.powershell,
         },
         {
             testName: 'Activation uses full path on windows for powershell-core',
@@ -561,7 +561,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'TesterEnv',
             expectedResult: ['conda activate TesterEnv'],
             expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
-            terminalKind: TerminalShellType.powershellCore
+            terminalKind: TerminalShellType.powershellCore,
         },
         {
             testName: 'Activation uses full path with spaces on windows for powershell-core',
@@ -569,7 +569,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'TesterEnv',
             expectedResult: ['conda activate TesterEnv'],
             expectedRawCmd: `"${path.join(windowsTestPathSpaces, 'activate')}"`,
-            terminalKind: TerminalShellType.powershellCore
+            terminalKind: TerminalShellType.powershellCore,
         },
         {
             testName: 'Activation uses full path on windows for powershell-core, environment name has spaces',
@@ -577,7 +577,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'The Tester Environment',
             expectedResult: ['conda activate "The Tester Environment"'],
             expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
-            terminalKind: TerminalShellType.powershellCore
+            terminalKind: TerminalShellType.powershellCore,
         },
         {
             testName: 'Activation uses full path on windows for cmd.exe',
@@ -585,7 +585,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'TesterEnv',
             expectedResult: [`${path.join(windowsTestPath, 'activate')} TesterEnv`],
             expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
-            terminalKind: TerminalShellType.commandPrompt
+            terminalKind: TerminalShellType.commandPrompt,
         },
         {
             testName: 'Activation uses full path with spaces on windows for cmd.exe',
@@ -593,7 +593,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'TesterEnv',
             expectedResult: [`"${path.join(windowsTestPathSpaces, 'activate')}" TesterEnv`],
             expectedRawCmd: `"${path.join(windowsTestPathSpaces, 'activate')}"`,
-            terminalKind: TerminalShellType.commandPrompt
+            terminalKind: TerminalShellType.commandPrompt,
         },
         {
             testName: 'Activation uses full path on windows for cmd.exe, environment name has spaces',
@@ -601,8 +601,8 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'The Tester Environment',
             expectedResult: [`${path.join(windowsTestPath, 'activate')} "The Tester Environment"`],
             expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
-            terminalKind: TerminalShellType.commandPrompt
-        }
+            terminalKind: TerminalShellType.commandPrompt,
+        },
     ];
 
     testsForWindowsActivation.forEach((testParams: WindowsActivationTestParams) => {
@@ -623,7 +623,7 @@ suite('Terminal Environment Activation conda', () => {
             const tstCmdProvider = new CondaActivationCommandProvider(
                 condaSrv.object,
                 platformService.object,
-                configService.object
+                configService.object,
             );
 
             let result: string[] | undefined;

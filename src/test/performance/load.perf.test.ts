@@ -62,10 +62,10 @@ suite('Activation Times', () => {
             }
             const devActivationTimes = getActivationTimes(JSON.parse(process.env.ACTIVATION_TIMES_DEV_LOG_FILE_PATHS!));
             const releaseActivationTimes = getActivationTimes(
-                JSON.parse(process.env.ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS!)
+                JSON.parse(process.env.ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS!),
             );
             const languageServerActivationTimes = getActivationTimes(
-                JSON.parse(process.env.ACTIVATION_TIMES_DEV_LANGUAGE_SERVER_LOG_FILE_PATHS!)
+                JSON.parse(process.env.ACTIVATION_TIMES_DEV_LANGUAGE_SERVER_LOG_FILE_PATHS!),
             );
             const devActivationAvgTime =
                 devActivationTimes.reduce((sum, item) => sum + item, 0) / devActivationTimes.length;
@@ -81,7 +81,7 @@ suite('Activation Times', () => {
 
             expect(devActivationAvgTime - releaseActivationAvgTime).to.be.lessThan(
                 AllowedIncreaseInActivationDelayInMS,
-                'Activation times have increased above allowed threshold.'
+                'Activation times have increased above allowed threshold.',
             );
         });
     }

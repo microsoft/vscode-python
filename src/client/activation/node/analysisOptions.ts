@@ -10,14 +10,14 @@ import { ILanguageServerOutputChannel } from '../types';
 export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsBase {
     constructor(
         @inject(IEnvironmentVariablesProvider) envVarsProvider: IEnvironmentVariablesProvider,
-        @inject(ILanguageServerOutputChannel) lsOutputChannel: ILanguageServerOutputChannel
+        @inject(ILanguageServerOutputChannel) lsOutputChannel: ILanguageServerOutputChannel,
     ) {
         super(envVarsProvider, lsOutputChannel);
     }
 
     protected async getInitializationOptions() {
         return {
-            experimentationSupport: true
+            experimentationSupport: true,
         };
     }
 }

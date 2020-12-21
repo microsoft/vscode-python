@@ -9,7 +9,7 @@ import {
     Position,
     ReferenceContext,
     SignatureHelpContext,
-    TextDocument
+    TextDocument,
 } from 'vscode';
 import { ServerCapabilities } from 'vscode-languageserver-protocol';
 // tslint:disable-next-line: import-name
@@ -22,7 +22,7 @@ import {
     IConfigurationService,
     IExperimentService,
     IPythonExtensionBanner,
-    Resource
+    Resource,
 } from '../../common/types';
 import { IServiceManager } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -51,7 +51,7 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
         @inject(IExperimentService) experimentService: IExperimentService,
         @inject(IPythonExtensionBanner)
         @named(BANNER_NAME_PROPOSE_LS)
-        private proposePylancePopup: IPythonExtensionBanner
+        private proposePylancePopup: IPythonExtensionBanner,
     ) {
         // Check experiment service to see if using new Jedi LSP protocol
         this.realLanguageServerPromise = experimentService.inExperiment(JediLSP.experiment).then((inExperiment) => {
@@ -62,7 +62,7 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
                       this.manager.get<ILanguageServerManager>(ILanguageServerManager),
                       this.manager.get<IWorkspaceService>(IWorkspaceService),
                       this.manager.get<IFileSystem>(IFileSystem),
-                      this.manager.get<IConfigurationService>(IConfigurationService)
+                      this.manager.get<IConfigurationService>(IConfigurationService),
                   );
             return this.realLanguageServer;
         });
@@ -110,7 +110,7 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
         document: TextDocument,
         position: Position,
         newName: string,
-        token: CancellationToken
+        token: CancellationToken,
     ) {
         const server = await this.realLanguageServerPromise;
         return server.provideRenameEdits(document, position, newName, token);
@@ -130,7 +130,7 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
         document: TextDocument,
         position: Position,
         context: ReferenceContext,
-        token: CancellationToken
+        token: CancellationToken,
     ) {
         const server = await this.realLanguageServerPromise;
         return server.provideReferences(document, position, context, token);
@@ -140,7 +140,7 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
         document: TextDocument,
         position: Position,
         token: CancellationToken,
-        context: CompletionContext
+        context: CompletionContext,
     ) {
         const server = await this.realLanguageServerPromise;
         return server.provideCompletionItems(document, position, token, context);
@@ -160,7 +160,7 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
         document: TextDocument,
         position: Position,
         token: CancellationToken,
-        context: SignatureHelpContext
+        context: SignatureHelpContext,
     ) {
         const server = await this.realLanguageServerPromise;
         return server.provideSignatureHelp(document, position, token, context);

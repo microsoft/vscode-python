@@ -19,7 +19,7 @@ import {
     TestFunction,
     Tests,
     TestStatus,
-    TestSuite
+    TestSuite,
 } from '../../../../client/testing/common/types';
 import { TestDataItem, TestDataItemType } from '../../../../client/testing/types';
 import { createMockTestDataItem } from '../testUtils.unit.test';
@@ -74,43 +74,43 @@ suite('Unit Tests - Tests Status Updater', () => {
         suite3.functions.push(fn5);
         const flattendSuite1: FlattenedTestSuite = {
             testSuite: suite1,
-            xmlClassName: suite1.xmlName
+            xmlClassName: suite1.xmlName,
         } as any;
         const flattendSuite2: FlattenedTestSuite = {
             testSuite: suite2,
-            xmlClassName: suite2.xmlName
+            xmlClassName: suite2.xmlName,
         } as any;
         const flattendSuite3: FlattenedTestSuite = {
             testSuite: suite3,
-            xmlClassName: suite3.xmlName
+            xmlClassName: suite3.xmlName,
         } as any;
         const flattendSuite4: FlattenedTestSuite = {
             testSuite: suite4,
-            xmlClassName: suite4.xmlName
+            xmlClassName: suite4.xmlName,
         } as any;
         const flattendSuite5: FlattenedTestSuite = {
             testSuite: suite5,
-            xmlClassName: suite5.xmlName
+            xmlClassName: suite5.xmlName,
         } as any;
         const flattendFn1: FlattenedTestFunction = {
             testFunction: fn1,
-            xmlClassName: fn1.name
+            xmlClassName: fn1.name,
         } as any;
         const flattendFn2: FlattenedTestFunction = {
             testFunction: fn2,
-            xmlClassName: fn2.name
+            xmlClassName: fn2.name,
         } as any;
         const flattendFn3: FlattenedTestFunction = {
             testFunction: fn3,
-            xmlClassName: fn3.name
+            xmlClassName: fn3.name,
         } as any;
         const flattendFn4: FlattenedTestFunction = {
             testFunction: fn4,
-            xmlClassName: fn4.name
+            xmlClassName: fn4.name,
         } as any;
         const flattendFn5: FlattenedTestFunction = {
             testFunction: fn5,
-            xmlClassName: fn5.name
+            xmlClassName: fn5.name,
         } as any;
         tests = {
             rootTestFolders: [folder1],
@@ -118,7 +118,7 @@ suite('Unit Tests - Tests Status Updater', () => {
             testFiles: [file1, file2, file3, file4],
             testFolders: [folder1, folder2, folder3, folder4, folder5],
             testFunctions: [flattendFn1, flattendFn2, flattendFn3, flattendFn4, flattendFn5],
-            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5]
+            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5],
         };
         when(storage.getTests(workspaceUri)).thenReturn(tests);
     });
@@ -189,7 +189,7 @@ suite('Unit Tests - Tests Status Updater', () => {
             tests.testFunctions[2].testFunction,
             tests.testFunctions[3].testFunction,
             tests.testSuites[1].testSuite,
-            tests.testSuites[2].testSuite
+            tests.testSuites[2].testSuite,
         ];
         failedItems.forEach((failedItem) => visitRecursive(tests, failedItem, visitor));
 
@@ -241,7 +241,7 @@ suite('Unit Tests - Tests Status Updater', () => {
             ...tests.testFolders,
             ...tests.testFiles,
             ...tests.testFunctions.map((item) => item.testFunction),
-            ...tests.testSuites.map((item) => item.testSuite)
+            ...tests.testSuites.map((item) => item.testSuite),
         ];
 
         for (const item of updatedItems) {

@@ -7,12 +7,7 @@
 import { Event, Uri } from 'vscode';
 import { IAsyncIterableIterator, iterEmpty } from '../../common/utils/async';
 import { PythonEnvInfo, PythonEnvKind } from './info';
-import {
-    BasicPythonEnvsChangedEvent,
-    IPythonEnvsWatcher,
-    PythonEnvsChangedEvent,
-    PythonEnvsWatcher,
-} from './watcher';
+import { BasicPythonEnvsChangedEvent, IPythonEnvsWatcher, PythonEnvsChangedEvent, PythonEnvsWatcher } from './watcher';
 
 /**
  * A single update to a previously provided Python env object.
@@ -181,8 +176,7 @@ interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
  * should be used.  Only in low-level cases should you consider using
  * `BasicPythonEnvsChangedEvent`.
  */
-abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
-implements ILocator<E> {
+abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent> implements ILocator<E> {
     public readonly onChanged: Event<E>;
 
     protected readonly emitter: IEmitter<E>;

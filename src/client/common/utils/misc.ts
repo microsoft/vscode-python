@@ -32,7 +32,7 @@ export function using<T extends IDisposable>(disposable: T, func: (obj: T) => vo
 
 export async function usingAsync<T extends IAsyncDisposable, R>(
     disposable: T,
-    func: (obj: T) => Promise<R>
+    func: (obj: T) => Promise<R>,
 ): Promise<R> {
     try {
         return await func(disposable);
@@ -145,7 +145,7 @@ export function getURIFilter(
         checkParent?: boolean;
         checkChild?: boolean;
         checkExact?: boolean;
-    } = { checkExact: true }
+    } = { checkExact: true },
 ): (u: Uri) => boolean {
     let uriPath = uri.path;
     while (uri.path.endsWith('/')) {

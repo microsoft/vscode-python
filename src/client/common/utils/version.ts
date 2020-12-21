@@ -76,8 +76,8 @@ export const EMPTY_VERSION: RawBasicVersionInfo = {
     unnormalized: {
         major: undefined,
         minor: undefined,
-        micro: undefined
-    }
+        micro: undefined,
+    },
 };
 
 /**
@@ -213,7 +213,7 @@ export function parseBasicVersionInfo<T extends BasicVersionInfo>(verStr: string
         // This is effectively normalized.
         version: ({ major, minor, micro } as unknown) as T,
         before: before || '',
-        after: after || ''
+        after: after || '',
     };
 }
 

@@ -3,9 +3,7 @@
 
 import { traceVerbose } from '../../../../common/logger';
 import { Architecture } from '../../../../common/utils/platform';
-import {
-    PythonEnvInfo, PythonEnvKind, PythonVersion, UNKNOWN_PYTHON_VERSION,
-} from '../../../base/info';
+import { PythonEnvInfo, PythonEnvKind, PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
 import { parseVersion } from '../../../base/info/pythonVersion';
 import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getFileInfo } from '../../../common/externalDependencies';
@@ -43,7 +41,7 @@ export class WindowsRegistryLocator extends Locator {
     }
 
     private async buildEnvInfo(data: IRegistryInterpreterData): Promise<PythonEnvInfo> {
-        const versionStr = (data.versionStr ?? data.sysVersionStr) ?? data.interpreterPath;
+        const versionStr = data.versionStr ?? data.sysVersionStr ?? data.interpreterPath;
         let version: PythonVersion = UNKNOWN_PYTHON_VERSION;
 
         try {

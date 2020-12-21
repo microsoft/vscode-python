@@ -9,13 +9,13 @@ import { buildPythonExecInfo } from '../exec';
 
 export enum EnvironmentInfoServiceQueuePriority {
     Default,
-    High
+    High,
 }
 
 export interface IEnvironmentInfoService {
     getEnvironmentInfo(
         interpreterPath: string,
-        priority?: EnvironmentInfoServiceQueuePriority
+        priority?: EnvironmentInfoServiceQueuePriority,
     ): Promise<InterpreterInformation | undefined>;
     isInfoProvided(interpreterPath: string): boolean;
 }
@@ -60,9 +60,7 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
         }
 
         if (this.workerPool === undefined) {
-            this.workerPool = createRunningWorkerPool<string, InterpreterInformation | undefined>(
-                buildEnvironmentInfo,
-            );
+            this.workerPool = createRunningWorkerPool<string, InterpreterInformation | undefined>(buildEnvironmentInfo);
         }
 
         const deferred = createDeferred<InterpreterInformation>();

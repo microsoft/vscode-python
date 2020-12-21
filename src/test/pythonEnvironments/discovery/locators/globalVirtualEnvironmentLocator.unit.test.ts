@@ -7,7 +7,11 @@ import * as sinon from 'sinon';
 import * as fsWatcher from '../../../../client/common/platform/fileSystemWatcher';
 import * as platformUtils from '../../../../client/common/utils/platform';
 import {
-    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION
+    PythonEnvInfo,
+    PythonEnvKind,
+    PythonReleaseLevel,
+    PythonVersion,
+    UNKNOWN_PYTHON_VERSION,
 } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
@@ -67,9 +71,20 @@ suite('GlobalVirtualEnvironment Locator', () => {
         getOSTypeStub.returns(platformUtils.OSType.Linux);
 
         watchLocationForPatternStub = sinon.stub(fsWatcher, 'watchLocationForPattern');
-        watchLocationForPatternStub.returns({ dispose: () => { /* do nothing */ } });
+        watchLocationForPatternStub.returns({
+            dispose: () => {
+                /* do nothing */
+            },
+        });
 
-        const expectedDotProjectFile = path.join(testVirtualHomeDir, '.local', 'share', 'virtualenvs', 'project2-vnNIWe9P', '.project');
+        const expectedDotProjectFile = path.join(
+            testVirtualHomeDir,
+            '.local',
+            'share',
+            'virtualenvs',
+            'project2-vnNIWe9P',
+            '.project',
+        );
         readFileStub = sinon.stub(externalDependencies, 'readFile');
         readFileStub.withArgs(expectedDotProjectFile).returns(path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project2'));
         readFileStub.callThrough();
@@ -152,8 +167,9 @@ suite('GlobalVirtualEnvironment Locator', () => {
 
         locator = new GlobalVirtualEnvironmentLocator();
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator))
-            .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
+            a.executable.filename.localeCompare(b.executable.filename),
+        );
 
         comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);
@@ -215,8 +231,9 @@ suite('GlobalVirtualEnvironment Locator', () => {
 
         locator = new GlobalVirtualEnvironmentLocator();
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator))
-            .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
+            a.executable.filename.localeCompare(b.executable.filename),
+        );
 
         comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);
@@ -283,8 +300,9 @@ suite('GlobalVirtualEnvironment Locator', () => {
 
         locator = new GlobalVirtualEnvironmentLocator();
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator))
-            .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
+            a.executable.filename.localeCompare(b.executable.filename),
+        );
 
         comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);
@@ -317,8 +335,9 @@ suite('GlobalVirtualEnvironment Locator', () => {
 
         locator = new GlobalVirtualEnvironmentLocator(1);
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator))
-            .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
+            a.executable.filename.localeCompare(b.executable.filename),
+        );
 
         comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);
@@ -372,8 +391,9 @@ suite('GlobalVirtualEnvironment Locator', () => {
 
         locator = new GlobalVirtualEnvironmentLocator();
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator))
-            .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
+            a.executable.filename.localeCompare(b.executable.filename),
+        );
 
         comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);
@@ -400,8 +420,9 @@ suite('GlobalVirtualEnvironment Locator', () => {
 
         locator = new GlobalVirtualEnvironmentLocator();
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator))
-            .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
+            a.executable.filename.localeCompare(b.executable.filename),
+        );
 
         comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);
@@ -429,8 +450,9 @@ suite('GlobalVirtualEnvironment Locator', () => {
 
         locator = new GlobalVirtualEnvironmentLocator(2);
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator))
-            .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
+            a.executable.filename.localeCompare(b.executable.filename),
+        );
 
         comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);

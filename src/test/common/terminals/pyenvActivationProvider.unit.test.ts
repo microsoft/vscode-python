@@ -53,7 +53,7 @@ suite('Terminal Environment Activation pyenv', () => {
             sysPrefix: '',
             version: new SemVer('1.1.1-alpha'),
             sysVersion: '',
-            envType: EnvironmentType.Unknown
+            envType: EnvironmentType.Unknown,
         };
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
@@ -71,7 +71,7 @@ suite('Terminal Environment Activation pyenv', () => {
             sysPrefix: '',
             version: new SemVer('1.1.1-alpha'),
             sysVersion: '',
-            envType: EnvironmentType.Pyenv
+            envType: EnvironmentType.Pyenv,
         };
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
@@ -90,7 +90,7 @@ suite('Terminal Environment Activation pyenv', () => {
             version: new SemVer('1.1.1-alpha'),
             sysVersion: '',
             envType: EnvironmentType.Pyenv,
-            envName: 'my env name'
+            envName: 'my env name',
         };
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
@@ -100,7 +100,7 @@ suite('Terminal Environment Activation pyenv', () => {
         const activationCommands = await activationProvider.getActivationCommands(undefined, TerminalShellType.bash);
         expect(activationCommands).to.deep.equal(
             [`pyenv shell "${intepreterInfo.envName}"`],
-            'Invalid Activation command'
+            'Invalid Activation command',
         );
     });
 });

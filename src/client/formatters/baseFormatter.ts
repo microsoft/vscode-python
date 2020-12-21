@@ -28,7 +28,7 @@ export abstract class BaseFormatter {
         document: vscode.TextDocument,
         options: vscode.FormattingOptions,
         token: vscode.CancellationToken,
-        range?: vscode.Range
+        range?: vscode.Range,
     ): Thenable<vscode.TextEdit[]>;
     protected getDocumentPath(document: vscode.TextDocument, fallbackPath: string) {
         if (path.basename(document.uri.fsPath) === document.uri.fsPath) {
@@ -52,7 +52,7 @@ export abstract class BaseFormatter {
         _options: vscode.FormattingOptions,
         token: vscode.CancellationToken,
         args: string[],
-        cwd?: string
+        cwd?: string,
     ): Promise<vscode.TextEdit[]> {
         if (typeof cwd !== 'string' || cwd.length === 0) {
             cwd = this.getWorkspaceUri(document).fsPath;
@@ -71,7 +71,7 @@ export abstract class BaseFormatter {
         const executionInfo = this.helper.getExecutionInfo(this.product, args, document.uri);
         executionInfo.args.push(tempFile);
         const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(
-            IPythonToolExecutionService
+            IPythonToolExecutionService,
         );
         const promise = pythonToolsExecutionService
             .exec(executionInfo, { cwd, throwOnStdErr: false, token }, document.uri)

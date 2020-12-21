@@ -68,7 +68,7 @@ export namespace vscMockHtmlContent {
 
     export function markedStringsEquals(
         a: IMarkdownString | IMarkdownString[],
-        b: IMarkdownString | IMarkdownString[]
+        b: IMarkdownString | IMarkdownString[],
     ): boolean {
         if (!a && !b) {
             return true;

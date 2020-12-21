@@ -16,7 +16,7 @@ import {
     CancellationSenderStrategy,
     CancellationStrategy,
     Disposable,
-    MessageConnection
+    MessageConnection,
 } from 'vscode-languageclient/node';
 
 type CancellationId = string | number;

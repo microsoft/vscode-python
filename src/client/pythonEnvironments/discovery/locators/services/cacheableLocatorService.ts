@@ -6,16 +6,18 @@
 // eslint-disable-next-line max-classes-per-file
 import { injectable, unmanaged } from 'inversify';
 import * as md5 from 'md5';
-import {
-    Disposable, Event, EventEmitter, Uri,
-} from 'vscode';
+import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import '../../../../common/extensions';
 import { traceDecorators, traceVerbose } from '../../../../common/logger';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../../../common/types';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
-import { GetInterpreterLocatorOptions, IInterpreterLocatorService, IInterpreterWatcher } from '../../../../interpreter/contracts';
+import {
+    GetInterpreterLocatorOptions,
+    IInterpreterLocatorService,
+    IInterpreterWatcher,
+} from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';

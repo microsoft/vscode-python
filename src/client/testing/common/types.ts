@@ -5,7 +5,7 @@ import {
     Disposable,
     Event,
     OutputChannel,
-    Uri
+    Uri,
 } from 'vscode';
 import { ITestingSettings, Product } from '../../common/types';
 import { DebuggerTypeName } from '../../debugger/constants';
@@ -77,7 +77,7 @@ export enum TestingType {
     folder = 'folder',
     file = 'file',
     suite = 'suite',
-    function = 'function'
+    function = 'function',
 }
 
 export enum TestStatus {
@@ -88,7 +88,7 @@ export enum TestStatus {
     Fail = 'Fail',
     Error = 'Error',
     Skipped = 'Skipped',
-    Pass = 'Pass'
+    Pass = 'Pass',
 }
 
 export type TestResult = {
@@ -256,13 +256,13 @@ export interface ITestManager extends Disposable {
         ignoreCache?: boolean,
         quietMode?: boolean,
         userInitiated?: boolean,
-        clearTestStatus?: boolean
+        clearTestStatus?: boolean,
     ): Promise<Tests>;
     runTest(
         cmdSource: CommandSource,
         testsToRun?: TestsToRun,
         runFailedTests?: boolean,
-        debug?: boolean
+        debug?: boolean,
     ): Promise<Tests>;
 }
 

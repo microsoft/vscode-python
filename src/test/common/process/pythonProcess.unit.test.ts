@@ -36,7 +36,7 @@ suite('PythonProcessService', () => {
             out: {} as any,
             dispose: () => {
                 noop();
-            }
+            },
         };
         processService.setup((p) => p.execObservable(pythonPath, args, options)).returns(() => observable);
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
@@ -59,7 +59,7 @@ suite('PythonProcessService', () => {
             out: {} as any,
             dispose: () => {
                 noop();
-            }
+            },
         };
         processService.setup((p) => p.execObservable(pythonPath, expectedArgs, options)).returns(() => observable);
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);

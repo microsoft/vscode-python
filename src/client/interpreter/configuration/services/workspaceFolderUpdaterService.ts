@@ -9,7 +9,7 @@ export class WorkspaceFolderPythonPathUpdaterService implements IPythonPathUpdat
         private workspaceFolder: Uri,
         private readonly inDeprecatePythonPathExperiment: boolean,
         private readonly workspaceService: IWorkspaceService,
-        private readonly interpreterPathService: IInterpreterPathService
+        private readonly interpreterPathService: IInterpreterPathService,
     ) {}
     public async updatePythonPath(pythonPath: string | undefined): Promise<void> {
         const pythonConfig = this.workspaceService.getConfiguration('python', this.workspaceFolder);
@@ -27,7 +27,7 @@ export class WorkspaceFolderPythonPathUpdaterService implements IPythonPathUpdat
             await this.interpreterPathService.update(
                 this.workspaceFolder,
                 ConfigurationTarget.WorkspaceFolder,
-                pythonPath
+                pythonPath,
             );
         } else {
             await pythonConfig.update('pythonPath', pythonPath, ConfigurationTarget.WorkspaceFolder);

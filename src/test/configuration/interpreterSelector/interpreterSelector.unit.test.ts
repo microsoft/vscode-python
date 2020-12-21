@@ -25,7 +25,7 @@ const info: PythonEnvironment = {
     envType: EnvironmentType.Unknown,
     version: new SemVer('1.0.0-alpha'),
     sysPrefix: '',
-    sysVersion: ''
+    sysVersion: '',
 };
 
 class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
@@ -54,7 +54,7 @@ suite('Interpreters - selector', () => {
         // tslint:disable-next-line:no-unnecessary-override
         public async suggestionToQuickPickItem(
             suggestion: PythonEnvironment,
-            workspaceUri?: Uri
+            workspaceUri?: Uri,
         ): Promise<IInterpreterQuickPickItem> {
             return super.suggestionToQuickPickItem(suggestion, workspaceUri);
         }
@@ -82,7 +82,7 @@ suite('Interpreters - selector', () => {
             comparer.object,
             experimentsManager.object,
             interpreterSecurityService.object,
-            new PathUtils(false)
+            new PathUtils(false),
         );
     });
 
@@ -93,7 +93,7 @@ suite('Interpreters - selector', () => {
                 comparer.object,
                 experimentsManager.object,
                 interpreterSecurityService.object,
-                new PathUtils(isWindows)
+                new PathUtils(isWindows),
             );
 
             const initial: PythonEnvironment[] = [
@@ -102,7 +102,7 @@ suite('Interpreters - selector', () => {
                 { displayName: '2', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
                 { displayName: '2 (virtualenv)', path: 'c:/path2/path2', envType: EnvironmentType.VirtualEnv },
                 { displayName: '3', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
-                { displayName: '4', path: 'c:/path4/path4', envType: EnvironmentType.Conda }
+                { displayName: '4', path: 'c:/path4/path4', envType: EnvironmentType.Conda },
             ].map((item) => {
                 return { ...info, ...item };
             });
@@ -118,7 +118,7 @@ suite('Interpreters - selector', () => {
                 new InterpreterQuickPickItem('2', 'c:/path2/path2'),
                 new InterpreterQuickPickItem('2 (virtualenv)', 'c:/path2/path2'),
                 new InterpreterQuickPickItem('3', 'c:/path2/path2'),
-                new InterpreterQuickPickItem('4', 'c:/path4/path4')
+                new InterpreterQuickPickItem('4', 'c:/path4/path4'),
             ];
 
             assert.equal(actual.length, expected.length, 'Suggestion lengths are different.');
@@ -126,12 +126,12 @@ suite('Interpreters - selector', () => {
                 assert.equal(
                     actual[i].label,
                     expected[i].label,
-                    `Suggestion label is different at ${i}: exected '${expected[i].label}', found '${actual[i].label}'.`
+                    `Suggestion label is different at ${i}: exected '${expected[i].label}', found '${actual[i].label}'.`,
                 );
                 assert.equal(
                     actual[i].path,
                     expected[i].path,
-                    `Suggestion path is different at ${i}: exected '${expected[i].path}', found '${actual[i].path}'.`
+                    `Suggestion path is different at ${i}: exected '${expected[i].path}', found '${actual[i].path}'.`,
                 );
             }
         });

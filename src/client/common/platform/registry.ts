@@ -6,7 +6,7 @@ import { IRegistry, RegistryHive } from './types';
 
 enum RegistryArchitectures {
     x86 = 'x86',
-    x64 = 'x64'
+    x64 = 'x64',
 }
 
 @injectable()
@@ -22,7 +22,7 @@ export class RegistryImplementation implements IRegistry {
             (ex) => {
                 traceError('Fetching key value from windows registry resulted in an error', ex);
                 return undefined;
-            }
+            },
         );
     }
 }

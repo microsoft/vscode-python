@@ -14,7 +14,7 @@ import {
     ITokenizer,
     TextRange,
     TokenizerMode,
-    TokenType
+    TokenType,
 } from './types';
 
 enum QuoteType {
@@ -22,7 +22,7 @@ enum QuoteType {
     Single,
     Double,
     TripleSingle,
-    TripleDouble
+    TripleDouble,
 }
 
 class Token extends TextRange implements IToken {

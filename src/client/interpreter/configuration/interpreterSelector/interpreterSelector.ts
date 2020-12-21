@@ -21,7 +21,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         @inject(IInterpreterComparer) private readonly interpreterComparer: IInterpreterComparer,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
         @inject(IInterpreterSecurityService) private readonly interpreterSecurityService: IInterpreterSecurityService,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
     ) {}
     public dispose() {
         this.disposables.forEach((disposable) => disposable.dispose());
@@ -41,7 +41,7 @@ export class InterpreterSelector implements IInterpreterSelector {
 
     protected async suggestionToQuickPickItem(
         suggestion: PythonEnvironment,
-        workspaceUri?: Uri
+        workspaceUri?: Uri,
     ): Promise<IInterpreterQuickPickItem> {
         const detail = this.pathUtils.getDisplayName(suggestion.path, workspaceUri ? workspaceUri.fsPath : undefined);
         const cachedPrefix = suggestion.cachedEntry ? '(cached) ' : '';
@@ -50,7 +50,7 @@ export class InterpreterSelector implements IInterpreterSelector {
             label: suggestion.displayName!,
             detail: `${cachedPrefix}${detail}`,
             path: suggestion.path,
-            interpreter: suggestion
+            interpreter: suggestion,
         };
     }
 }

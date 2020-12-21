@@ -33,7 +33,7 @@ suite('Interpreters - Interpreter Selection Tip', () => {
             instance(appShell),
             instance(factory),
             instance(experimentService),
-            instance(browserService)
+            instance(browserService),
         );
     });
     test('Do not show notification if already shown', async () => {
@@ -76,7 +76,7 @@ suite('Interpreters - Interpreter Selection Tip', () => {
         when(experimentService.inExperiment(SurveyAndInterpreterTipNotification.surveyExperiment)).thenResolve(true);
         when(appShell.showInformationMessage(anything(), Common.bannerLabelYes(), Common.bannerLabelNo())).thenResolve(
             // tslint:disable-next-line: no-any
-            Common.bannerLabelYes() as any
+            Common.bannerLabelYes() as any,
         );
 
         await selectionTip.activate();

@@ -22,7 +22,7 @@ export abstract class BaseDiagnostic implements IDiagnostic {
         public readonly scope: DiagnosticScope,
         public readonly resource: Resource,
         public readonly invokeHandler: 'always' | 'default' = 'default',
-        public readonly shouldShowPrompt = true
+        public readonly shouldShowPrompt = true,
     ) {}
 }
 
@@ -34,7 +34,7 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
         @unmanaged() private readonly supportedDiagnosticCodes: string[],
         @unmanaged() protected serviceContainer: IServiceContainer,
         @unmanaged() disposableRegistry: IDisposableRegistry,
-        @unmanaged() public readonly runInBackground: boolean = false
+        @unmanaged() public readonly runInBackground: boolean = false,
     ) {
         this.filterService = serviceContainer.get<IDiagnosticFilterService>(IDiagnosticFilterService);
         disposableRegistry.push(this);

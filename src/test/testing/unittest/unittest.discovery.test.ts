@@ -60,7 +60,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
         ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(
             IInterpreterService,
-            instance(mock(InterpreterService))
+            instance(mock(InterpreterService)),
         );
         registerForIOC(ioc.serviceManager, ioc.serviceContainer);
         ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
@@ -83,7 +83,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
                         .split(/\r?\n/g)
                         .map((item) => item.trim())
                         .join(EOL),
-                    source: 'stdout'
+                    source: 'stdout',
                 });
             }
         });
@@ -106,14 +106,14 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
         assert.equal(
             tests.testFiles.some((t) => t.name === 'test_one.py' && t.nameToRun === 'test_one'),
             true,
-            'Test File not found'
+            'Test File not found',
         );
         assert.equal(
             tests.testFunctions.some(
-                (t) => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A'
+                (t) => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A',
             ),
             true,
-            'Test File not found'
+            'Test File not found',
         );
     });
 
@@ -140,30 +140,30 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
         assert.equal(
             tests.testFiles.some((t) => t.name === 'test_unittest_one.py' && t.nameToRun === 'test_unittest_one'),
             true,
-            'Test File not found'
+            'Test File not found',
         );
         assert.equal(
             tests.testFiles.some((t) => t.name === 'test_unittest_two.py' && t.nameToRun === 'test_unittest_two'),
             true,
-            'Test File not found'
+            'Test File not found',
         );
         assert.equal(
             tests.testFunctions.some(
                 (t) =>
                     t.testFunction.name === 'test_A' &&
-                    t.testFunction.nameToRun === 'test_unittest_one.Test_test1.test_A'
+                    t.testFunction.nameToRun === 'test_unittest_one.Test_test1.test_A',
             ),
             true,
-            'Test File not found'
+            'Test File not found',
         );
         assert.equal(
             tests.testFunctions.some(
                 (t) =>
                     t.testFunction.name === 'test_A2' &&
-                    t.testFunction.nameToRun === 'test_unittest_two.Test_test2.test_A2'
+                    t.testFunction.nameToRun === 'test_unittest_two.Test_test2.test_A2',
             ),
             true,
-            'Test File not found'
+            'Test File not found',
         );
     });
 
@@ -183,16 +183,16 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
         assert.equal(
             tests.testFiles.some((t) => t.name === 'unittest_three_test.py' && t.nameToRun === 'unittest_three_test'),
             true,
-            'Test File not found'
+            'Test File not found',
         );
         assert.equal(
             tests.testFunctions.some(
                 (t) =>
                     t.testFunction.name === 'test_A' &&
-                    t.testFunction.nameToRun === 'unittest_three_test.Test_test3.test_A'
+                    t.testFunction.nameToRun === 'unittest_three_test.Test_test3.test_A',
             ),
             true,
-            'Test File not found'
+            'Test File not found',
         );
     });
 

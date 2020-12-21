@@ -20,7 +20,7 @@ import {
     TestDataItem,
     TestDataItemType,
     TestWorkspaceFolder,
-    WorkspaceTestStatus
+    WorkspaceTestStatus,
 } from '../types';
 import { TestTreeItem } from './testTreeViewItem';
 
@@ -38,7 +38,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
         @inject(ITestManagementService) private testService: ITestManagementService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
 
@@ -49,7 +49,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
         this.workspace.onDidChangeWorkspaceFolders(
             () => this._onDidChangeTreeData.fire(undefined),
             this,
-            this.disposables
+            this.disposables,
         );
 
         if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
@@ -107,7 +107,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
                         Commands.Tests_Discover,
                         element,
                         CommandSource.testExplorer,
-                        undefined
+                        undefined,
                     );
                     tests = this.testStore.getTests(element.workspaceFolder.uri);
                 }
@@ -121,7 +121,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
         }
 
         sendTelemetryEvent(EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT, undefined, {
-            count: this.workspace.workspaceFolders.length
+            count: this.workspace.workspaceFolders.length,
         });
 
         // If we are in a single workspace

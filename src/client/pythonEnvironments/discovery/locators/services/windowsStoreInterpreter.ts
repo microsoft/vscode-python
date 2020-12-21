@@ -27,8 +27,8 @@ import { IServiceContainer } from '../../../../ioc/types';
 export function isRestrictedWindowsStoreInterpreterPath(pythonPath: string): boolean {
     const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
     return (
-        pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase())
-        || pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
+        pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
+        pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
     );
 }
 
@@ -66,7 +66,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IPersistentStateFactory) private readonly persistentFactory: IPersistentStateFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IComponentAdapter) private readonly pyenvs: IComponent
+        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
     ) {}
 
     /**
@@ -83,9 +83,9 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
         }
         const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
         return (
-            pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\'.toUpperCase())
-            || pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase())
-            || pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
+            pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\'.toUpperCase()) ||
+            pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
+            pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
         );
     }
 

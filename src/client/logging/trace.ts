@@ -13,7 +13,7 @@ import { argsToLogString, returnValueToLogString } from './util';
 export enum TraceOptions {
     None = 0,
     Arguments = 1,
-    ReturnValue = 2
+    ReturnValue = 2,
 }
 
 export function createTracingDecorator(loggers: ILogger[], logInfo: LogInfo) {
@@ -51,7 +51,7 @@ function formatMessages(info: LogInfo, traced: TraceInfo, call?: CallInfo): stri
     messages.push(
         `${call.kind} name = ${call.name}`.trim(),
         `completed in ${traced.elapsed}ms`,
-        `has a ${traced.returnValue ? 'truthy' : 'falsy'} return value`
+        `has a ${traced.returnValue ? 'truthy' : 'falsy'} return value`,
     );
     if ((info.opts & TraceOptions.Arguments) === TraceOptions.Arguments) {
         messages.push(argsToLogString(call.args));

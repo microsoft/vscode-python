@@ -21,7 +21,7 @@ import {
     ILanguageServerAnalysisOptions,
     ILanguageServerManager,
     ILanguageServerProxy,
-    LanguageServerType
+    LanguageServerType,
 } from '../types';
 
 @injectable()
@@ -45,18 +45,18 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         @inject(ILanguageServerAnalysisOptions)
         @named(LanguageServerType.Jedi)
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
-        @inject(ICommandManager) commandManager: ICommandManager
+        @inject(ICommandManager) commandManager: ICommandManager,
     ) {
         this.disposables.push(
             commandManager.registerCommand(Commands.RestartLS, () => {
                 this.restartLanguageServer().ignoreErrors();
-            })
+            }),
         );
     }
 
     private static versionTelemetryProps(instance: JediLanguageServerManager) {
         return {
-            lsVersion: instance.lsVersion
+            lsVersion: instance.lsVersion,
         };
     }
 
@@ -125,7 +125,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         undefined,
         true,
         undefined,
-        JediLanguageServerManager.versionTelemetryProps
+        JediLanguageServerManager.versionTelemetryProps,
     )
     @traceDecorators.verbose('Starting language server')
     protected async startLanguageServer(): Promise<void> {
@@ -136,7 +136,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
             this.serviceContainer,
             LanguageServerType.Jedi,
             () => this.languageServerProxy?.languageClient,
-            this.lsVersion
+            this.lsVersion,
         );
         options.middleware = this.middleware;
 

@@ -17,7 +17,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(ICurrentProcess) private readonly process: ICurrentProcess
+        @inject(ICurrentProcess) private readonly process: ICurrentProcess,
     ) {}
 
     public get userSettingsFile(): string | undefined {
@@ -30,7 +30,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
                     'Application Support',
                     vscodeFolderName,
                     'User',
-                    'settings.json'
+                    'settings.json',
                 );
             case OSType.Linux:
                 return path.join(this.pathUtils.home, '.config', vscodeFolderName, 'User', 'settings.json');

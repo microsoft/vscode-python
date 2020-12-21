@@ -22,7 +22,7 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(TensorBoardPrompt) private tensorBoardPrompt: TensorBoardPrompt,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IExperimentService) private experimentService: IExperimentService
+        @inject(IExperimentService) private experimentService: IExperimentService,
     ) {}
 
     public async activate(): Promise<void> {
@@ -50,7 +50,7 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
 
         // If workspace folders change, ensure we update our FileSystemWatchers
         this.disposables.push(
-            this.workspaceService.onDidChangeWorkspaceFolders((e) => this.updateFileSystemWatchers(e))
+            this.workspaceService.onDidChangeWorkspaceFolders((e) => this.updateFileSystemWatchers(e)),
         );
     }
 
@@ -65,7 +65,7 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
             }
         } catch (e) {
             traceError(
-                `Failed to prompt to launch TensorBoard session based on preexisting tfevent files in workspace: ${e}`
+                `Failed to prompt to launch TensorBoard session based on preexisting tfevent files in workspace: ${e}`,
             );
         }
     }
@@ -91,10 +91,10 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
 
             // When a file is created or changed that matches `this.globPattern`, try to show our prompt
             this.disposables.push(
-                fileSystemWatcher.onDidCreate(() => this.tensorBoardPrompt.showNativeTensorBoardPrompt())
+                fileSystemWatcher.onDidCreate(() => this.tensorBoardPrompt.showNativeTensorBoardPrompt()),
             );
             this.disposables.push(
-                fileSystemWatcher.onDidChange(() => this.tensorBoardPrompt.showNativeTensorBoardPrompt())
+                fileSystemWatcher.onDidChange(() => this.tensorBoardPrompt.showNativeTensorBoardPrompt()),
             );
             this.disposables.push(fileSystemWatcher);
             fileWatchers.push(fileSystemWatcher);

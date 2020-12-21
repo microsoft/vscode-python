@@ -14,7 +14,7 @@ export abstract class BaseErrorHandler implements IErrorHandler {
     constructor(
         protected product: Product,
         protected outputChannel: OutputChannel,
-        protected serviceContainer: IServiceContainer
+        protected serviceContainer: IServiceContainer,
     ) {
         this.installer = this.serviceContainer.get<IInstaller>(IInstaller);
     }

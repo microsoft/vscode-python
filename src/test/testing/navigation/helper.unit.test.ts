@@ -14,7 +14,7 @@ import {
     SymbolKind,
     TextDocument,
     TextEditor,
-    Uri
+    Uri,
 } from 'vscode';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { IDocumentManager } from '../../../client/common/application/types';
@@ -71,7 +71,7 @@ suite('Unit Tests - Navigation Helper', () => {
         const symbols: SymbolInformation[] = [
             { containerName: '', kind: SymbolKind.Function, name: '1', location: undefined as any },
             { containerName: '', kind: SymbolKind.Class, name: '2', location: undefined as any },
-            { containerName: '', kind: SymbolKind.File, name: '2', location: undefined as any }
+            { containerName: '', kind: SymbolKind.File, name: '2', location: undefined as any },
         ];
         const token = new CancellationTokenSource().token;
         when(symbolProvider.provideDocumentSymbols(doc.object, token)).thenResolve(symbols as any);

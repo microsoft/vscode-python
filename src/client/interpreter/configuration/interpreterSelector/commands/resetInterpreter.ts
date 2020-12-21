@@ -15,14 +15,14 @@ export class ResetInterpreterCommand extends BaseInterpreterSelectorCommand {
         @inject(IPythonPathUpdaterServiceManager) pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
     ) {
         super(pythonPathUpdaterService, commandManager, applicationShell, workspaceService);
     }
 
     public async activate() {
         this.disposables.push(
-            this.commandManager.registerCommand(Commands.ClearWorkspaceInterpreter, this.resetInterpreter.bind(this))
+            this.commandManager.registerCommand(Commands.ClearWorkspaceInterpreter, this.resetInterpreter.bind(this)),
         );
     }
 

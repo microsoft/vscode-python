@@ -7,9 +7,7 @@ import { traceVerbose } from '../../../../common/logger';
 import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
 import { InterpreterInformation } from '../../info/interpreter';
-import {
-    ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery,
-} from '../../locator';
+import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
 
 /**
@@ -47,7 +45,7 @@ export class PythonEnvsResolver implements ILocator {
         return iterator;
     }
 
-    private async* iterEnvsIterator(
+    private async *iterEnvsIterator(
         iterator: IPythonEnvsIterator,
         didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
     ): IPythonEnvsIterator {
@@ -65,8 +63,7 @@ export class PythonEnvsResolver implements ILocator {
                     listener.dispose();
                 } else if (seen[event.index] !== undefined) {
                     seen[event.index] = event.update;
-                    this.resolveInBackground(event.index, state, didUpdate, seen)
-                        .ignoreErrors();
+                    this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
                 } else {
                     // This implies a problem in a downstream locator
                     traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);

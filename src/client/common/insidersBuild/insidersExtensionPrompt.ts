@@ -22,11 +22,11 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IExtensionChannelService) private readonly insidersDownloadChannelService: IExtensionChannelService,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
-        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
+        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
     ) {
         this.hasUserBeenNotified = this.persistentStateFactory.createGlobalPersistentState(
             insidersPromptStateKey,
-            false
+            false,
         );
     }
 
@@ -35,18 +35,18 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         const prompts = [
             ExtensionChannels.yesWeekly(),
             ExtensionChannels.yesDaily(),
-            ExtensionSurveyBanner.bannerLabelNo()
+            ExtensionSurveyBanner.bannerLabelNo(),
         ];
         const telemetrySelections: ['Yes, weekly', 'Yes, daily', 'No, thanks'] = [
             'Yes, weekly',
             'Yes, daily',
-            'No, thanks'
+            'No, thanks',
         ];
         const selection = await this.appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts);
 
         await this.hasUserBeenNotified.updateValue(true);
         sendTelemetryEvent(EventName.INSIDERS_PROMPT, undefined, {
-            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined
+            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined,
         });
 
         if (!selection) {
@@ -63,10 +63,10 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
     public async promptToReload(): Promise<void> {
         const selection = await this.appShell.showInformationMessage(
             ExtensionChannels.reloadToUseInsidersMessage(),
-            Common.reload()
+            Common.reload(),
         );
         sendTelemetryEvent(EventName.INSIDERS_RELOAD_PROMPT, undefined, {
-            selection: selection ? 'Reload' : undefined
+            selection: selection ? 'Reload' : undefined,
         });
         if (selection === Common.reload()) {
             this.cmdManager.executeCommand('workbench.action.reloadWindow').then(noop);

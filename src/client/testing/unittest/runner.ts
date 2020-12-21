@@ -18,7 +18,7 @@ import {
     LaunchOptions,
     TestRunOptions,
     Tests,
-    TestStatus
+    TestStatus,
 } from '../common/types';
 import { IArgumentsHelper, ITestManagerRunner, IUnitTestHelper } from '../types';
 
@@ -60,7 +60,7 @@ export class TestManagerRunner implements ITestManagerRunner {
     public async runTest(
         testResultsService: ITestResultsService,
         options: TestRunOptions,
-        testManager: ITestManager
+        testManager: ITestManager,
     ): Promise<Tests> {
         if (this.busy && !this.busy.completed) {
             return this.busy.promise;
@@ -138,7 +138,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                     args: testArgs,
                     token: options.token,
                     outChannel: options.outChannel,
-                    testProvider: UNITTEST_PROVIDER
+                    testProvider: UNITTEST_PROVIDER,
                 };
                 return debugLauncher.launchDebugger(launchOptions);
             } else {
@@ -149,7 +149,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                     cwd: options.cwd,
                     outChannel: options.outChannel,
                     token: options.token,
-                    workspaceFolder: options.workspaceFolder
+                    workspaceFolder: options.workspaceFolder,
                 };
                 await this.testRunner.run(UNITTEST_PROVIDER, runOptions);
             }

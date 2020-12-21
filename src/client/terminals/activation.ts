@@ -20,7 +20,7 @@ export class ExtensionActivationForTerminalActivation implements IExtensionSingl
     constructor(
         @inject(ICommandManager) private commands: ICommandManager,
         @inject(IExtensions) private extensions: IExtensions,
-        @inject(IDisposableRegistry) disposables: IDisposable[]
+        @inject(IDisposableRegistry) disposables: IDisposable[],
     ) {
         disposables.push(this.extensions.onDidChange(this.activate.bind(this)));
     }
@@ -45,7 +45,7 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
         @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(ITerminalActivator) private readonly activator: ITerminalActivator,
-        @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService
+        @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
     ) {
         disposableRegistry.push(this);
     }
@@ -68,7 +68,7 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
         // If we have just one workspace, then pass that as the resource.
         // Until upstream VSC issue is resolved https://github.com/Microsoft/vscode/issues/63052.
         await this.activator.activateEnvironmentInTerminal(terminal, {
-            resource: this.activeResourceService.getActiveResource()
+            resource: this.activeResourceService.getActiveResource(),
         });
     }
 }

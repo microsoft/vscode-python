@@ -16,7 +16,7 @@ import {
     CommandSource,
     NOSETEST_PROVIDER,
     PYTEST_PROVIDER,
-    UNITTEST_PROVIDER
+    UNITTEST_PROVIDER,
 } from '../../client/testing/common/constants';
 import { TestRunner } from '../../client/testing/common/runner';
 import {
@@ -25,7 +25,7 @@ import {
     ITestMessageService,
     ITestRunner,
     IXUnitParser,
-    TestProvider
+    TestProvider,
 } from '../../client/testing/common/types';
 import { XUnitParser } from '../../client/testing/common/xUnitParser';
 import { ArgumentsService as NoseTestArgumentsService } from '../../client/testing/nosetest/services/argsService';
@@ -56,7 +56,7 @@ suite('Unit Tests - debugging', () => {
         await Promise.all([
             updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget),
             updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget),
-            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget)
+            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget),
         ]);
     });
     setup(async function () {
@@ -74,7 +74,7 @@ suite('Unit Tests - debugging', () => {
         await Promise.all([
             updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget),
             updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget),
-            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget)
+            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget),
         ]);
     });
 
@@ -115,7 +115,7 @@ suite('Unit Tests - debugging', () => {
         const testManager = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory)(
             testProvider,
             rootWorkspaceUri!,
-            testFilesPath
+            testFilesPath,
         );
         const mockDebugLauncher = ioc.serviceContainer.get<MockDebugLauncher>(ITestDebugLauncher);
         const tests = await testManager.discoverTests(CommandSource.commandPalette, true, true);
@@ -164,7 +164,7 @@ suite('Unit Tests - debugging', () => {
         const testManager = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory)(
             testProvider,
             rootWorkspaceUri!,
-            testFilesPath
+            testFilesPath,
         );
         const mockDebugLauncher = ioc.serviceContainer.get<MockDebugLauncher>(ITestDebugLauncher);
         const tests = await testManager.discoverTests(CommandSource.commandPalette, true, true);
@@ -180,12 +180,12 @@ suite('Unit Tests - debugging', () => {
         const discoveryPromise = testManager.discoverTests(CommandSource.commandPalette, true, true, true);
         await expect(runningPromise).to.be.rejectedWith(
             CANCELLATION_REASON,
-            'Incorrect reason for ending the debugger'
+            'Incorrect reason for ending the debugger',
         );
         await ioc.dispose(); // will cancel test discovery
         await expect(discoveryPromise).to.be.rejectedWith(
             CANCELLATION_REASON,
-            'Incorrect reason for ending the debugger'
+            'Incorrect reason for ending the debugger',
         );
     }
 
@@ -208,7 +208,7 @@ suite('Unit Tests - debugging', () => {
         const testManager = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory)(
             testProvider,
             rootWorkspaceUri!,
-            testFilesPath
+            testFilesPath,
         );
         const mockDebugLauncher = ioc.serviceContainer.get<MockDebugLauncher>(ITestDebugLauncher);
         const tests = await testManager.discoverTests(CommandSource.commandPalette, true, true);

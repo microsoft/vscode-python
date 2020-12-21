@@ -56,7 +56,7 @@ class TelemetryTracker implements DebugAdapterTracker {
         }
         const telemetryProps = {
             trigger: this.trigger,
-            console: this.console
+            console: this.console,
         };
         sendTelemetryEvent(eventName, this.timer.elapsedTime, telemetryProps);
     }
@@ -66,7 +66,7 @@ class TelemetryTracker implements DebugAdapterTracker {
 export class DebugSessionTelemetry implements DebugAdapterTrackerFactory, IExtensionSingleActivationService {
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(IDebugService) debugService: IDebugService
+        @inject(IDebugService) debugService: IDebugService,
     ) {
         disposableRegistry.push(debugService.registerDebugAdapterTrackerFactory('python', this));
     }

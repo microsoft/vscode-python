@@ -12,7 +12,7 @@ export class LanguageItemInfo {
     constructor(
         public tooltip: vscode.MarkdownString,
         public detail: string,
-        public signature: vscode.MarkdownString
+        public signature: vscode.MarkdownString,
     ) {}
 }
 
@@ -22,12 +22,12 @@ export interface IItemInfoSource {
         fileName: string,
         range: vscode.Range,
         sourceText: string,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<LanguageItemInfo[] | undefined>;
     getItemInfoFromDocument(
         document: vscode.TextDocument,
         position: vscode.Position,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<LanguageItemInfo[] | undefined>;
 }
 
@@ -40,7 +40,7 @@ export class ItemInfoSource implements IItemInfoSource {
         fileName: string,
         range: vscode.Range,
         sourceText: string,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<LanguageItemInfo[] | undefined> {
         const result = await this.getHoverResultFromTextRange(documentUri, fileName, range, sourceText, token);
         if (!result || !result.items.length) {
@@ -52,7 +52,7 @@ export class ItemInfoSource implements IItemInfoSource {
     public async getItemInfoFromDocument(
         document: vscode.TextDocument,
         position: vscode.Position,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<LanguageItemInfo[] | undefined> {
         const range = document.getWordRangeAtPosition(position);
         if (!range || range.isEmpty) {
@@ -69,7 +69,7 @@ export class ItemInfoSource implements IItemInfoSource {
     private async getHoverResultFromDocument(
         document: vscode.TextDocument,
         position: vscode.Position,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<proxy.IHoverResult | undefined> {
         if (position.character <= 0 || document.lineAt(position.line).text.match(/^\s*\/\//)) {
             return;
@@ -84,13 +84,13 @@ export class ItemInfoSource implements IItemInfoSource {
     private async getHoverResultFromDocumentRange(
         document: vscode.TextDocument,
         range: vscode.Range,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<proxy.IHoverResult | undefined> {
         const cmd: proxy.ICommand = {
             command: proxy.CommandType.Hover,
             fileName: document.fileName,
             columnIndex: range.end.character,
-            lineIndex: range.end.line
+            lineIndex: range.end.line,
         };
         if (document.isDirty) {
             cmd.source = document.getText();
@@ -103,14 +103,14 @@ export class ItemInfoSource implements IItemInfoSource {
         fileName: string,
         range: vscode.Range,
         sourceText: string,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<proxy.IHoverResult | undefined> {
         const cmd: proxy.ICommand = {
             command: proxy.CommandType.Hover,
             fileName: fileName,
             columnIndex: range.end.character,
             lineIndex: range.end.line,
-            source: sourceText
+            source: sourceText,
         };
         return this.jediFactory.getJediProxyHandler<proxy.IHoverResult>(documentUri).sendCommand(cmd, token);
     }

@@ -29,13 +29,13 @@ suite('Python CodeAction Provider', () => {
             document.object,
             range.object,
             context.object,
-            token.object
+            token.object,
         );
 
         assert.isArray(codeActions, 'codeActionsProvider.provideCodeActions did not return an array');
 
         const organizeImportsCodeAction = (codeActions || []).filter(
-            (codeAction) => codeAction.kind === CodeActionKind.SourceOrganizeImports
+            (codeAction) => codeAction.kind === CodeActionKind.SourceOrganizeImports,
         );
         expect(organizeImportsCodeAction).to.have.length(1);
         expect(organizeImportsCodeAction[0].kind).to.eq(CodeActionKind.SourceOrganizeImports);
@@ -46,13 +46,13 @@ suite('Python CodeAction Provider', () => {
             document.object,
             range.object,
             context.object,
-            token.object
+            token.object,
         );
 
         assert.isArray(codeActions, 'codeActionsProvider.provideCodeActions did not return an array');
 
         const organizeImportsCodeAction = (codeActions || []).filter(
-            (codeAction) => codeAction.kind === CodeActionKind.SourceOrganizeImports
+            (codeAction) => codeAction.kind === CodeActionKind.SourceOrganizeImports,
         );
         expect(organizeImportsCodeAction).to.have.length(0);
     });

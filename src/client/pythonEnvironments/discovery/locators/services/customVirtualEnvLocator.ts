@@ -11,10 +11,16 @@ import { buildEnvInfo } from '../../../base/info/env';
 import { IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import {
-    findInterpretersInDir, getEnvironmentDirFromPath, getPythonVersionFromPath, isStandardPythonBinary,
+    findInterpretersInDir,
+    getEnvironmentDirFromPath,
+    getPythonVersionFromPath,
+    isStandardPythonBinary,
 } from '../../../common/commonUtils';
 import {
-    getFileInfo, getPythonSetting, onDidChangePythonSetting, pathExists,
+    getFileInfo,
+    getPythonSetting,
+    onDidChangePythonSetting,
+    pathExists,
 } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from './pipEnvHelper';
 import {
@@ -43,9 +49,7 @@ async function getCustomVirtualEnvDirs(): Promise<string[]> {
     const venvFolders = getPythonSetting<string[]>(VENVFOLDERS_SETTING_KEY) ?? [];
     const homeDir = getUserHomeDir();
     if (homeDir && (await pathExists(homeDir))) {
-        venvFolders
-            .map((item) => path.join(homeDir, item))
-            .forEach((d) => venvDirs.push(d));
+        venvFolders.map((item) => path.join(homeDir, item)).forEach((d) => venvDirs.push(d));
     }
     return uniq(venvDirs).filter(pathExists);
 }

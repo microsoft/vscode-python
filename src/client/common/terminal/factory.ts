@@ -20,7 +20,7 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IFileSystem) private fs: IFileSystem,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService
+        @inject(IInterpreterService) private interpreterService: IInterpreterService,
     ) {
         this.terminalServices = new Map<string, TerminalService>();
     }
@@ -39,7 +39,7 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
             hideFromUser,
             interpreter,
             resource,
-            title
+            title,
         };
         const id = this.getTerminalId(terminalTitle, resource, interpreter);
         if (!this.terminalServices.has(id)) {
@@ -52,7 +52,7 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
             this.fs,
             this.interpreterService,
             this.terminalServices.get(id)!,
-            interpreter
+            interpreter,
         );
     }
     public createTerminalService(resource?: Uri, title?: string): ITerminalService {

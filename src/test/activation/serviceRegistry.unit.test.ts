@@ -18,7 +18,7 @@ import { DotNetLanguageServerFolderService } from '../../client/activation/langu
 import {
     BetaDotNetLanguageServerPackageRepository,
     DailyDotNetLanguageServerPackageRepository,
-    StableDotNetLanguageServerPackageRepository
+    StableDotNetLanguageServerPackageRepository,
 } from '../../client/activation/languageServer/languageServerPackageRepository';
 import { DotNetLanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
 import { DotNetLanguageServerProxy } from '../../client/activation/languageServer/languageServerProxy';
@@ -43,7 +43,7 @@ import {
     ILanguageServerPackageService,
     ILanguageServerProxy,
     IPlatformData,
-    LanguageServerType
+    LanguageServerType,
 } from '../../client/activation/types';
 import { INugetRepository } from '../../client/common/nuget/types';
 import { BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../../client/common/types';
@@ -67,119 +67,122 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
         verify(
             serviceManager.addSingleton<ILanguageServerCache>(
                 ILanguageServerCache,
-                LanguageServerExtensionActivationService
-            )
+                LanguageServerExtensionActivationService,
+            ),
         ).once();
         verify(
-            serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension)
+            serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension),
         ).once();
         verify(
-            serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager)
+            serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager),
         ).once();
         verify(
             serviceManager.add<ILanguageServerActivator>(
                 ILanguageServerActivator,
                 DotNetLanguageServerActivator,
-                LanguageServerType.Microsoft
-            )
+                LanguageServerType.Microsoft,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IPythonExtensionBanner>(
                 IPythonExtensionBanner,
                 ProposePylanceBanner,
-                BANNER_NAME_PROPOSE_LS
-            )
+                BANNER_NAME_PROPOSE_LS,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<ILanguageServerFolderService>(
                 ILanguageServerFolderService,
-                DotNetLanguageServerFolderService
-            )
+                DotNetLanguageServerFolderService,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<ILanguageServerPackageService>(
                 ILanguageServerPackageService,
-                DotNetLanguageServerPackageService
-            )
+                DotNetLanguageServerPackageService,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<INugetRepository>(
                 INugetRepository,
                 StableDotNetLanguageServerPackageRepository,
-                LanguageServerDownloadChannel.stable
-            )
+                LanguageServerDownloadChannel.stable,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<INugetRepository>(
                 INugetRepository,
                 BetaDotNetLanguageServerPackageRepository,
-                LanguageServerDownloadChannel.beta
-            )
+                LanguageServerDownloadChannel.beta,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<INugetRepository>(
                 INugetRepository,
                 DailyDotNetLanguageServerPackageRepository,
-                LanguageServerDownloadChannel.daily
-            )
+                LanguageServerDownloadChannel.daily,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDownloadChannelRule>(
                 IDownloadChannelRule,
                 DownloadDailyChannelRule,
-                LanguageServerDownloadChannel.daily
-            )
+                LanguageServerDownloadChannel.daily,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDownloadChannelRule>(
                 IDownloadChannelRule,
                 DownloadBetaChannelRule,
-                LanguageServerDownloadChannel.beta
-            )
+                LanguageServerDownloadChannel.beta,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDownloadChannelRule>(
                 IDownloadChannelRule,
                 DownloadBetaChannelRule,
-                LanguageServerDownloadChannel.stable
-            )
+                LanguageServerDownloadChannel.stable,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<ILanagueServerCompatibilityService>(
                 ILanagueServerCompatibilityService,
-                LanguageServerCompatibilityService
-            )
+                LanguageServerCompatibilityService,
+            ),
         ).once();
         verify(
-            serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, DotNetLanguageClientFactory)
+            serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, DotNetLanguageClientFactory),
         ).once();
         verify(
-            serviceManager.addSingleton<ILanguageServerDownloader>(ILanguageServerDownloader, LanguageServerDownloader)
+            serviceManager.addSingleton<ILanguageServerDownloader>(ILanguageServerDownloader, LanguageServerDownloader),
         ).once();
         verify(serviceManager.addSingleton<IPlatformData>(IPlatformData, PlatformData)).once();
         verify(
             serviceManager.add<ILanguageServerAnalysisOptions>(
                 ILanguageServerAnalysisOptions,
                 DotNetLanguageServerAnalysisOptions,
-                LanguageServerType.Microsoft
-            )
+                LanguageServerType.Microsoft,
+            ),
         ).once();
         verify(serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, DotNetLanguageServerProxy)).once();
         verify(serviceManager.add<ILanguageServerManager>(ILanguageServerManager, DotNetLanguageServerManager)).once();
         verify(
-            serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, AATesting)
+            serviceManager.addSingleton<IExtensionSingleActivationService>(
+                IExtensionSingleActivationService,
+                AATesting,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<ILanguageServerOutputChannel>(
                 ILanguageServerOutputChannel,
-                LanguageServerOutputChannel
-            )
+                LanguageServerOutputChannel,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
-                ExtensionSurveyPrompt
-            )
+                ExtensionSurveyPrompt,
+            ),
         ).once();
     });
 });

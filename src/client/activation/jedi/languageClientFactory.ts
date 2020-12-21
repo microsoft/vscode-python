@@ -21,7 +21,7 @@ export class JediLanguageClientFactory implements ILanguageClientFactory {
     public async createLanguageClient(
         resource: Resource,
         _interpreter: PythonEnvironment | undefined,
-        clientOptions: LanguageClientOptions
+        clientOptions: LanguageClientOptions,
     ): Promise<LanguageClient> {
         // Just run the language server using a module
         const jediServerModulePath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'runJediLanguageServer.py');
@@ -30,7 +30,7 @@ export class JediLanguageClientFactory implements ILanguageClientFactory {
         const args = [jediServerModulePath];
         const serverOptions: ServerOptions = {
             command: pythonPath,
-            args
+            args,
         };
 
         // eslint-disable-next-line global-require
@@ -39,7 +39,7 @@ export class JediLanguageClientFactory implements ILanguageClientFactory {
             PYTHON_LANGUAGE,
             languageClientName,
             serverOptions,
-            clientOptions
+            clientOptions,
         );
     }
 }

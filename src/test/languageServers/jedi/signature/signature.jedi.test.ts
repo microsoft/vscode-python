@@ -19,7 +19,7 @@ class SignatureHelpResult {
         public index: number,
         public signaturesCount: number,
         public activeParameter: number,
-        public parameterName: string | null
+        public parameterName: string | null,
     ) {}
 }
 
@@ -56,7 +56,7 @@ suite('Language Server: Signatures (Jedi)', () => {
             new SignatureHelpResult(5, 17, 0, 0, null),
             new SignatureHelpResult(5, 18, 1, 1, 'age'),
             new SignatureHelpResult(5, 19, 1, 1, 'age'),
-            new SignatureHelpResult(5, 20, 0, 0, null)
+            new SignatureHelpResult(5, 20, 0, 0, null),
         ];
 
         const document = await openDocument(path.join(autoCompPath, 'classCtor.py'));
@@ -76,7 +76,7 @@ suite('Language Server: Signatures (Jedi)', () => {
                 new SignatureHelpResult(0, 4, 0, 0, null),
                 new SignatureHelpResult(0, 5, 0, 0, null),
                 new SignatureHelpResult(0, 6, 1, 0, 'x'),
-                new SignatureHelpResult(0, 7, 1, 0, 'x')
+                new SignatureHelpResult(0, 7, 1, 0, 'x'),
             ];
         } else {
             expected = [
@@ -87,7 +87,7 @@ suite('Language Server: Signatures (Jedi)', () => {
                 new SignatureHelpResult(0, 4, 0, 0, null),
                 new SignatureHelpResult(0, 5, 0, 0, null),
                 new SignatureHelpResult(0, 6, 2, 0, 'stop'),
-                new SignatureHelpResult(0, 7, 2, 0, 'stop')
+                new SignatureHelpResult(0, 7, 2, 0, 'stop'),
                 // new SignatureHelpResult(0, 6, 1, 0, 'start'),
                 // new SignatureHelpResult(0, 7, 1, 0, 'start'),
                 // new SignatureHelpResult(0, 8, 1, 1, 'stop'),
@@ -117,7 +117,7 @@ suite('Language Server: Signatures (Jedi)', () => {
             new SignatureHelpResult(0, 9, 1, 0, 'values'),
             new SignatureHelpResult(0, 10, 1, 0, 'values'),
             new SignatureHelpResult(0, 11, 1, 0, 'values'),
-            new SignatureHelpResult(0, 12, 1, 0, 'values')
+            new SignatureHelpResult(0, 12, 1, 0, 'values'),
         ];
 
         const document = await openDocument(path.join(autoCompPath, 'ellipsis.py'));
@@ -150,18 +150,18 @@ async function checkSignature(expected: SignatureHelpResult, uri: vscode.Uri, ca
     const actual = await vscode.commands.executeCommand<vscode.SignatureHelp>(
         'vscode.executeSignatureHelpProvider',
         uri,
-        position
+        position,
     );
     assert.equal(
         actual!.signatures.length,
         expected.signaturesCount,
-        `Signature count does not match, case ${caseIndex}`
+        `Signature count does not match, case ${caseIndex}`,
     );
     if (expected.signaturesCount > 0) {
         assert.equal(
             actual!.activeParameter,
             expected.activeParameter,
-            `Parameter index does not match, case ${caseIndex}`
+            `Parameter index does not match, case ${caseIndex}`,
         );
         if (expected.parameterName) {
             const parameter = actual!.signatures[0].parameters[expected.activeParameter];

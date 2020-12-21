@@ -8,7 +8,7 @@ import {
     IExtensionTestApi,
     PYTHON_PATH,
     resetGlobalPythonPathSetting,
-    setPythonPathInWorkspaceRoot
+    setPythonPathInWorkspaceRoot,
 } from './common';
 import { IS_SMOKE_TEST, PVSC_EXTENSION_ID_FOR_TESTS } from './constants';
 import { sleep } from './core';
@@ -98,7 +98,7 @@ async function closeWindowsInteral() {
             (ex) => {
                 clearTimeout(timer);
                 reject(ex);
-            }
+            },
         );
     });
 }

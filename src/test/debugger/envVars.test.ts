@@ -11,7 +11,7 @@ import { ICurrentProcess, IPathUtils } from '../../client/common/types';
 import { IEnvironmentVariablesService } from '../../client/common/variables/types';
 import {
     DebugEnvironmentVariablesHelper,
-    IDebugEnvironmentVariablesService
+    IDebugEnvironmentVariablesService,
 } from '../../client/debugger/extension/configuration/resolvers/helper';
 import { ConsoleType, LaunchRequestArguments } from '../../client/debugger/types';
 import { isOs, OSType } from '../common';
@@ -63,7 +63,7 @@ suite('Resolving Environment Variables when Debugging', () => {
             pythonPath: '',
             args: [],
             envFile: '',
-            console
+            console,
             // tslint:disable-next-line:no-any
         } as any) as LaunchRequestArguments;
 
@@ -106,7 +106,7 @@ suite('Resolving Environment Variables when Debugging', () => {
             args: [],
             envFile: '',
             console,
-            env
+            env,
             // tslint:disable-next-line:no-any
         } as any) as LaunchRequestArguments;
 
@@ -148,7 +148,7 @@ suite('Resolving Environment Variables when Debugging', () => {
     async function testAppendingOfPaths(
         console: ConsoleType,
         expectedNumberOfVariables: number,
-        removePythonPath: boolean
+        removePythonPath: boolean,
     ) {
         if (removePythonPath && mockProcess.env.PYTHONPATH !== undefined) {
             delete mockProcess.env.PYTHONPATH;
@@ -173,7 +173,7 @@ suite('Resolving Environment Variables when Debugging', () => {
             args: [],
             envFile: '',
             console,
-            env
+            env,
         } as any) as LaunchRequestArguments;
 
         const envVars = await debugEnvParser.getEnvironmentVariables(args);
@@ -207,7 +207,7 @@ suite('Resolving Environment Variables when Debugging', () => {
             // All variables in current process must be in here
             expect(Object.keys(envVars).length).greaterThan(
                 Object.keys(mockProcess.env).length,
-                'Variables is not a subset'
+                'Variables is not a subset',
             );
             Object.keys(mockProcess.env).forEach((key) => {
                 if (key === pathVariableName || key === 'PYTHONPATH') {
@@ -215,7 +215,7 @@ suite('Resolving Environment Variables when Debugging', () => {
                 }
                 expect(mockProcess.env[key]).equal(
                     envVars[key],
-                    `Value for the environment variable '${key}' is incorrect.`
+                    `Value for the environment variable '${key}' is incorrect.`,
                 );
             });
         }

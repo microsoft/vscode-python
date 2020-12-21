@@ -47,7 +47,9 @@ suite('Interpreters - Filter', () => {
         test(`Interpreter path should NOT be hidden - ${interpreterPath}`, () => {
             const interpreter: PythonEnvironment = getInterpreterFromPath(interpreterPath);
             // tslint:disable-next-line: chai-vague-errors
-            expect(isHiddenInterpreter(interpreter), `${interpreterPath} should NOT be treated as hidden.`).to.equal(false);
+            expect(isHiddenInterpreter(interpreter), `${interpreterPath} should NOT be treated as hidden.`).to.equal(
+                false,
+            );
         });
     });
     hideThesePaths.forEach((interpreterPath) => {

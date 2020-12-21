@@ -17,11 +17,11 @@ export class SourceMapSupportService implements ISourceMapSupportService {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(IApplicationShell) private readonly shell: IApplicationShell
+        @inject(IApplicationShell) private readonly shell: IApplicationShell,
     ) {}
     public register(): void {
         this.disposables.push(
-            this.commandManager.registerCommand(Commands.Enable_SourceMap_Support, this.onEnable, this)
+            this.commandManager.registerCommand(Commands.Enable_SourceMap_Support, this.onEnable, this),
         );
     }
     public async enable(): Promise<void> {
@@ -29,7 +29,7 @@ export class SourceMapSupportService implements ISourceMapSupportService {
             'diagnostics.sourceMapsEnabled',
             true,
             undefined,
-            ConfigurationTarget.Global
+            ConfigurationTarget.Global,
         );
         await this.commandManager.executeCommand('workbench.action.reloadWindow');
     }
@@ -37,7 +37,7 @@ export class SourceMapSupportService implements ISourceMapSupportService {
         const enableSourceMapsAndReloadVSC = Diagnostics.enableSourceMapsAndReloadVSC();
         const selection = await this.shell.showWarningMessage(
             Diagnostics.warnBeforeEnablingSourceMaps(),
-            enableSourceMapsAndReloadVSC
+            enableSourceMapsAndReloadVSC,
         );
         if (selection === enableSourceMapsAndReloadVSC) {
             await this.enable();

@@ -18,7 +18,7 @@ export class TestManager extends BaseTestManager {
     constructor(
         workspaceFolder: Uri,
         rootDirectory: string,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
     ) {
         super(NOSETEST_PROVIDER, Product.nosetest, workspaceFolder, rootDirectory, serviceContainer);
         this.argsService = this.serviceContainer.get<IArgumentsService>(IArgumentsService, this.testProvider);
@@ -33,14 +33,14 @@ export class TestManager extends BaseTestManager {
             args,
             token: this.testDiscoveryCancellationToken!,
             ignoreCache,
-            outChannel: this.outputChannel
+            outChannel: this.outputChannel,
         };
     }
     public runTestImpl(
         tests: Tests,
         testsToRun?: TestsToRun,
         runFailedTests?: boolean,
-        debug?: boolean
+        debug?: boolean,
     ): Promise<Tests> {
         let args: string[];
 
@@ -48,12 +48,12 @@ export class TestManager extends BaseTestManager {
         if (debug) {
             args = this.argsService.filterArguments(
                 this.settings.testing.nosetestArgs,
-                runAllTests ? TestFilter.debugAll : TestFilter.debugSpecific
+                runAllTests ? TestFilter.debugAll : TestFilter.debugSpecific,
             );
         } else {
             args = this.argsService.filterArguments(
                 this.settings.testing.nosetestArgs,
-                runAllTests ? TestFilter.runAll : TestFilter.runSpecific
+                runAllTests ? TestFilter.runAll : TestFilter.runSpecific,
             );
         }
 
@@ -71,7 +71,7 @@ export class TestManager extends BaseTestManager {
             testsToRun,
             token: this.testRunnerCancellationToken!,
             outChannel: this.outputChannel,
-            debug
+            debug,
         };
         return this.runner.runTest(this.testResultsService, options, this);
     }

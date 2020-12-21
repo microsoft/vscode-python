@@ -12,7 +12,7 @@ import {
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
-    TestFrameworkProductPathService
+    TestFrameworkProductPathService,
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
@@ -65,27 +65,27 @@ suite('Linting Settings', () => {
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             CTagsProductPathService,
-            ProductType.WorkspaceSymbols
+            ProductType.WorkspaceSymbols,
         );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             FormatterProductPathService,
-            ProductType.Formatter
+            ProductType.Formatter,
         );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             LinterProductPathService,
-            ProductType.Linter
+            ProductType.Linter,
         );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             TestFrameworkProductPathService,
-            ProductType.TestFramework
+            ProductType.TestFramework,
         );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             RefactoringLibraryProductPathService,
-            ProductType.RefactoringLibrary
+            ProductType.RefactoringLibrary,
         );
     }
 

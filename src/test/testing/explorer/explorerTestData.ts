@@ -23,7 +23,7 @@ import {
     TestFolder,
     TestFunction,
     Tests,
-    TestSuite
+    TestSuite,
 } from '../../../client/testing/common/types';
 import { TestTreeViewProvider } from '../../../client/testing/explorer/testTreeViewProvider';
 import { ITestManagementService } from '../../../client/testing/types';
@@ -45,7 +45,7 @@ export function getMockTestFolder(folderPath: string, testFiles: TestFile[] = []
         name: folderPath,
         nameToRun: folderPath,
         testFiles: testFiles,
-        time: 0
+        time: 0,
     };
 
     return folder;
@@ -54,7 +54,7 @@ export function getMockTestFolder(folderPath: string, testFiles: TestFile[] = []
 export function getMockTestFile(
     filePath: string,
     testSuites: TestSuite[] = [],
-    testFunctions: TestFunction[] = []
+    testFunctions: TestFunction[] = [],
 ): TestFile {
     // tslint:disable-next-line:no-unnecessary-local-variable
     const testFile: TestFile = {
@@ -65,7 +65,7 @@ export function getMockTestFile(
         fullPath: join(__dirname, filePath),
         functions: testFunctions,
         suites: testSuites,
-        xmlName: filePath.replace(/\//g, '.')
+        xmlName: filePath.replace(/\//g, '.'),
     };
 
     return testFile;
@@ -76,7 +76,7 @@ export function getMockTestSuite(
     testFunctions: TestFunction[] = [],
     subSuites: TestSuite[] = [],
     instance: boolean = true,
-    unitTest: boolean = true
+    unitTest: boolean = true,
 ): TestSuite {
     const suiteNameChunks = suiteNameToRun.split('::');
     const suiteName = suiteNameChunks[suiteNameChunks.length - 1];
@@ -91,7 +91,7 @@ export function getMockTestSuite(
         nameToRun: suiteNameToRun,
         suites: subSuites,
         time: 0,
-        xmlName: suiteNameToRun.replace(/\//g, '.').replace(/\:\:/g, ':')
+        xmlName: suiteNameToRun.replace(/\//g, '.').replace(/\:\:/g, ':'),
     };
     return testSuite;
 }
@@ -105,7 +105,7 @@ export function getMockTestFunction(fnNameToRun: string): TestFunction {
         resource: Uri.file(__filename),
         name: fnName,
         nameToRun: fnNameToRun,
-        time: 0
+        time: 0,
     };
 
     return fn;
@@ -231,7 +231,7 @@ export function createMockTestExplorer(
     testsData?: Tests,
     unitTestMgmtService?: ITestManagementService,
     workspaceService?: IWorkspaceService,
-    commandManager?: ICommandManager
+    commandManager?: ICommandManager,
 ): TestTreeViewProvider {
     if (!testStore) {
         testStore = createMockTestStorageService(testsData).object;
@@ -256,6 +256,6 @@ export function createMockTestExplorer(
         unitTestMgmtService,
         workspaceService,
         commandManager,
-        dispRegMoq.object
+        dispRegMoq.object,
     );
 }

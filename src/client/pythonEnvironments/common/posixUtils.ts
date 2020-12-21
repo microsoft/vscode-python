@@ -10,7 +10,7 @@ import { getSearchPathEntries } from '../../common/utils/exec';
  * @param {string} interpreterPath : Path to python interpreter.
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
-export function isPosixPythonBin(interpreterPath:string): boolean {
+export function isPosixPythonBin(interpreterPath: string): boolean {
     /**
      * This Reg-ex matches following file names:
      * python
@@ -26,33 +26,35 @@ export function isPosixPythonBin(interpreterPath:string): boolean {
 export async function commonPosixBinPaths(): Promise<string[]> {
     const searchPaths = getSearchPathEntries();
 
-    const paths: string[] = Array.from(new Set(
-        [
-            '/bin',
-            '/etc',
-            '/lib',
-            '/lib/x86_64-linux-gnu',
-            '/lib64',
-            '/sbin',
-            '/snap/bin',
-            '/usr/bin',
-            '/usr/games',
-            '/usr/include',
-            '/usr/lib',
-            '/usr/lib/x86_64-linux-gnu',
-            '/usr/lib64',
-            '/usr/libexec',
-            '/usr/local',
-            '/usr/local/bin',
-            '/usr/local/etc',
-            '/usr/local/games',
-            '/usr/local/lib',
-            '/usr/local/sbin',
-            '/usr/sbin',
-            '/usr/share',
-            '~/.local/bin',
-        ].concat(searchPaths),
-    ));
+    const paths: string[] = Array.from(
+        new Set(
+            [
+                '/bin',
+                '/etc',
+                '/lib',
+                '/lib/x86_64-linux-gnu',
+                '/lib64',
+                '/sbin',
+                '/snap/bin',
+                '/usr/bin',
+                '/usr/games',
+                '/usr/include',
+                '/usr/lib',
+                '/usr/lib/x86_64-linux-gnu',
+                '/usr/lib64',
+                '/usr/libexec',
+                '/usr/local',
+                '/usr/local/bin',
+                '/usr/local/etc',
+                '/usr/local/games',
+                '/usr/local/lib',
+                '/usr/local/sbin',
+                '/usr/sbin',
+                '/usr/share',
+                '~/.local/bin',
+            ].concat(searchPaths),
+        ),
+    );
 
     const exists = await Promise.all(paths.map((p) => fsapi.pathExists(p)));
     return paths.filter((_, index) => exists[index]);

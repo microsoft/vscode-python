@@ -6,9 +6,7 @@
 // tslint:disable:no-any max-classes-per-file max-func-body-length
 
 import { expect } from 'chai';
-import {
-    anything, deepEqual, instance, mock, verify, when,
-} from 'ts-mockito';
+import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
@@ -48,7 +46,7 @@ suite('Interpreters - Windows Store Interpreter', () => {
             instance(serviceContainer),
             instance(persistanceStateFactory),
             instance(fs),
-            instance(pyenvs)
+            instance(pyenvs),
         );
     });
     const windowsStoreInterpreters = [

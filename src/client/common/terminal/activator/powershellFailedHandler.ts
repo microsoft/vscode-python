@@ -7,7 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import { Terminal } from 'vscode';
 import {
     PowerShellActivationHackDiagnosticsServiceId,
-    PowershellActivationNotAvailableDiagnostic
+    PowershellActivationNotAvailableDiagnostic,
 } from '../../../application/diagnostics/checks/powerShellActivation';
 import { IDiagnosticsService } from '../../../application/diagnostics/types';
 import { IPlatformService } from '../../platform/types';
@@ -21,7 +21,7 @@ export class PowershellTerminalActivationFailedHandler implements ITerminalActiv
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IDiagnosticsService)
         @named(PowerShellActivationHackDiagnosticsServiceId)
-        private readonly diagnosticService: IDiagnosticsService
+        private readonly diagnosticService: IDiagnosticsService,
     ) {}
     public async handleActivation(terminal: Terminal, resource: Resource, _preserveFocus: boolean, activated: boolean) {
         if (activated || !this.platformService.isWindows) {
@@ -34,7 +34,7 @@ export class PowershellTerminalActivationFailedHandler implements ITerminalActiv
         // Check if we can activate in Command Prompt.
         const activationCommands = await this.helper.getEnvironmentActivationCommands(
             TerminalShellType.commandPrompt,
-            resource
+            resource,
         );
         if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
             return;

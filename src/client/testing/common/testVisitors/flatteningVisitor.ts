@@ -7,7 +7,7 @@ import {
     TestFile,
     TestFolder,
     TestFunction,
-    TestSuite
+    TestSuite,
 } from '../types';
 
 @injectable()
@@ -43,7 +43,7 @@ export class TestFlatteningVisitor implements ITestVisitor {
     private visitTestFunctionOfASuite(
         testFunction: TestFunction,
         parentTestSuite: TestSuite,
-        parentTestFile: TestFile
+        parentTestFile: TestFile,
     ) {
         const key = `Function:${testFunction.name},Suite:${parentTestSuite.name},SuiteXmlName:${parentTestSuite.xmlName},ParentFile:${parentTestFile.fullPath}`;
         if (this._flattenedTestSuites.has(key)) {
@@ -53,7 +53,7 @@ export class TestFlatteningVisitor implements ITestVisitor {
             testFunction,
             xmlClassName: parentTestSuite.xmlName,
             parentTestFile,
-            parentTestSuite
+            parentTestSuite,
         };
         this._flattedTestFunctions.set(key, flattenedFunction);
     }

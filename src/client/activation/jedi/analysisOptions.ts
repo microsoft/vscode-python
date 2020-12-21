@@ -11,7 +11,7 @@ export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         @inject(IEnvironmentVariablesProvider) envVarsProvider: IEnvironmentVariablesProvider,
-        @inject(ILanguageServerOutputChannel) lsOutputChannel: ILanguageServerOutputChannel
+        @inject(ILanguageServerOutputChannel) lsOutputChannel: ILanguageServerOutputChannel,
     ) {
         super(envVarsProvider, lsOutputChannel);
     }

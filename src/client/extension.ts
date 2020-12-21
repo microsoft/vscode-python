@@ -90,7 +90,7 @@ export function deactivate(): Thenable<void> {
 async function activateUnsafe(
     context: IExtensionContext,
     startupStopWatch: StopWatch,
-    startupDurations: Record<string, number>
+    startupDurations: Record<string, number>,
 ): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
     const activationDeferred = createDeferred<void>();
     displayProgress(activationDeferred.promise);
@@ -133,7 +133,7 @@ function displayProgress(promise: Promise<any>) {
 
 async function handleError(ex: Error, startupDurations: Record<string, number>) {
     notifyUser(
-        "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information."
+        "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information.",
     );
     traceError('extension activation failed', ex);
     await sendErrorTelemetry(ex, startupDurations, activatedServiceContainer);

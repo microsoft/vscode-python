@@ -8,12 +8,8 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
-import {
-    anything, instance, mock, verify, when,
-} from 'ts-mockito';
-import {
-    Disposable, FileSystemWatcher, Uri, WorkspaceFolder,
-} from 'vscode';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { Disposable, FileSystemWatcher, Uri, WorkspaceFolder } from 'vscode';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { isUnitTestExecution } from '../../../../client/common/constants';
 import { PlatformService } from '../../../../client/common/platform/platformService';

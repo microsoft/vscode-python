@@ -45,7 +45,7 @@ suite('Debugging - Configuration Provider Django', () => {
         provider = new TestDjangoLaunchDebugConfigurationProvider(
             instance(fs),
             instance(workspaceService),
-            instance(pathUtils)
+            instance(pathUtils),
         );
     });
     test("getManagePyPath should return undefined if file doesn't exist", async () => {
@@ -140,7 +140,7 @@ suite('Debugging - Configuration Provider Django', () => {
             request: 'launch',
             program: 'xyz.py',
             args: ['runserver'],
-            django: true
+            django: true,
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -160,7 +160,7 @@ suite('Debugging - Configuration Provider Django', () => {
             request: 'launch',
             program: 'hello',
             args: ['runserver'],
-            django: true
+            django: true,
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -183,7 +183,7 @@ suite('Debugging - Configuration Provider Django', () => {
             request: 'launch',
             program: defaultProgram,
             args: ['runserver'],
-            django: true
+            django: true,
         };
 
         expect(state.config).to.be.deep.equal(config);

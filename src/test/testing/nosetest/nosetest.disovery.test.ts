@@ -28,11 +28,11 @@ const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(
     'test',
     'pythonFiles',
     'testFiles',
-    'single'
+    'single',
 );
 const filesToDelete = [
     path.join(UNITTEST_TEST_FILES_PATH, '.noseids'),
-    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids')
+    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids'),
 ];
 
 // tslint:disable-next-line:max-func-body-length
@@ -79,7 +79,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
 
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(
             IInterpreterService,
-            instance(mock(InterpreterService))
+            instance(mock(InterpreterService)),
         );
 
         registerForIOC(ioc.serviceManager, ioc.serviceContainer);
@@ -96,11 +96,11 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
                 // Value in the test files.
                 out = out.replace(
                     /\/Users\/donjayamanne\/.vscode\/extensions\/pythonVSCode\/src\/test\/pythonFiles/g,
-                    PYTHON_FILES_PATH
+                    PYTHON_FILES_PATH,
                 );
                 callback({
                     out,
-                    source: 'stdout'
+                    source: 'stdout',
                 });
             }
         });
@@ -128,7 +128,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         assert.equal(
             tests.testSuites.every((t) => t.testSuite.name === t.testSuite.nameToRun.split(':')[1]),
             true,
-            'Suite name does not match class name'
+            'Suite name does not match class name',
         );
     });
     test('Discover Tests (-m=test)', async () => {

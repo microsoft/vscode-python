@@ -24,7 +24,7 @@ export class ServiceContainer implements IServiceContainer {
     }
     public getAll<T>(
         serviceIdentifier: string | symbol | Newable<T> | Abstract<T>,
-        name?: string | number | symbol | undefined
+        name?: string | number | symbol | undefined,
     ): T[] {
         return name
             ? this.container.getAllNamed<T>(serviceIdentifier, name)
@@ -32,7 +32,7 @@ export class ServiceContainer implements IServiceContainer {
     }
     public tryGet<T>(
         serviceIdentifier: interfaces.ServiceIdentifier<T>,
-        name?: string | number | symbol | undefined
+        name?: string | number | symbol | undefined,
     ): T | undefined {
         try {
             return name

@@ -24,12 +24,12 @@ import {
     IDiagnostic,
     IDiagnosticCommand,
     IDiagnosticHandlerService,
-    IInvalidPythonPathInDebuggerService
+    IInvalidPythonPathInDebuggerService,
 } from '../types';
 
 const messages = {
     [DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic]: Diagnostics.invalidPythonPathInDebuggerSettings(),
-    [DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic]: Diagnostics.invalidPythonPathInDebuggerLaunch()
+    [DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic]: Diagnostics.invalidPythonPathInDebuggerLaunch(),
 };
 
 export class InvalidPythonPathInDebuggerDiagnostic extends BaseDiagnostic {
@@ -37,7 +37,7 @@ export class InvalidPythonPathInDebuggerDiagnostic extends BaseDiagnostic {
         code:
             | DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic
             | DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
-        resource: Resource
+        resource: Resource,
     ) {
         super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource, 'always');
     }
@@ -58,16 +58,16 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IDiagnosticHandlerService)
         @named(DiagnosticCommandPromptHandlerServiceId)
-        protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>
+        protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>,
     ) {
         super(
             [
                 DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
-                DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic
+                DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic,
             ],
             serviceContainer,
             disposableRegistry,
-            true
+            true,
         );
     }
     public async diagnose(_resource: Resource): Promise<IDiagnostic[]> {
@@ -87,8 +87,8 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
             this.handle([
                 new InvalidPythonPathInDebuggerDiagnostic(
                     DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic,
-                    resource
-                )
+                    resource,
+                ),
             ])
                 .catch((ex) => traceError('Failed to handle invalid python path in launch.json debugger', ex))
                 .ignoreErrors();
@@ -96,8 +96,8 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
             this.handle([
                 new InvalidPythonPathInDebuggerDiagnostic(
                     DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
-                    resource
-                )
+                    resource,
+                ),
             ])
                 .catch((ex) => traceError('Failed to handle invalid python path in settings.json debugger', ex))
                 .ignoreErrors();
@@ -126,9 +126,9 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
                         prompt: 'Select Python Interpreter',
                         command: this.commandFactory.createCommand(diagnostic, {
                             type: 'executeVSCCommand',
-                            options: 'python.setInterpreter'
-                        })
-                    }
+                            options: 'python.setInterpreter',
+                        }),
+                    },
                 ];
             }
             case DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic: {
@@ -141,9 +141,9 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
                                 const launchJson = this.getLaunchJsonFile(workspc.workspaceFolders![0]);
                                 const doc = await this.documentManager.openTextDocument(launchJson);
                                 await this.documentManager.showTextDocument(doc);
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 ];
             }
             default: {

@@ -103,7 +103,7 @@ suite('Common Utils - Decorators', function () {
             }
             expect(Math.abs(difference)).to.be.lessThan(
                 expectedDelay * 0.05,
-                `Actual delay  ${actualDelay}, expected delay ${expectedDelay}, not within 5% of accuracy`
+                `Actual delay  ${actualDelay}, expected delay ${expectedDelay}, not within 5% of accuracy`,
             );
         }
         // tslint:disable-next-line: max-classes-per-file

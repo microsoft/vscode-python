@@ -12,7 +12,7 @@ import {
     Position,
     ProviderResult,
     TextDocument,
-    TextEdit
+    TextEdit,
 } from 'vscode';
 import { OnTypeFormattingDispatcher } from '../../client/typeFormatters/dispatcher';
 
@@ -34,7 +34,7 @@ suite('Formatting - Dispatcher', () => {
             pos.object,
             '\n',
             opt.object,
-            token.object
+            token.object,
         );
         assert.deepStrictEqual(result, [], 'Did not return an empty list of edits');
     });
@@ -43,7 +43,7 @@ suite('Formatting - Dispatcher', () => {
         const provider = setupProvider(doc.object, pos.object, ':', opt.object, token.object, edits.object);
 
         const dispatcher = new OnTypeFormattingDispatcher({
-            ':': provider.object
+            ':': provider.object,
         });
 
         const triggers = dispatcher.getTriggerCharacters();
@@ -70,12 +70,12 @@ suite('Formatting - Dispatcher', () => {
             '\n',
             opt2.object,
             token2.object,
-            edits2.object
+            edits2.object,
         );
 
         const dispatcher = new OnTypeFormattingDispatcher({
             ':': colonProvider.object,
-            '\n': newlineProvider.object
+            '\n': newlineProvider.object,
         });
 
         const triggers = dispatcher.getTriggerCharacters();
@@ -89,7 +89,7 @@ suite('Formatting - Dispatcher', () => {
             pos2.object,
             '\n',
             opt2.object,
-            token2.object
+            token2.object,
         );
         assert.equal(result2, edits2.object, 'Did not return correct edits for newline provider');
 
@@ -103,7 +103,7 @@ suite('Formatting - Dispatcher', () => {
         ch: string,
         options: FormattingOptions,
         cancellationToken: CancellationToken,
-        result: ProviderResult<TextEdit[]>
+        result: ProviderResult<TextEdit[]>,
     ): TypeMoq.IMock<OnTypeFormattingEditProvider> {
         const provider = TypeMoq.Mock.ofType<OnTypeFormattingEditProvider>();
         provider

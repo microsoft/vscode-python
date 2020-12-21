@@ -51,7 +51,7 @@ suite('Debug - Child Process', () => {
             type: 'python',
             request: 'attach',
             port: 1234,
-            subProcessId: 2
+            subProcessId: 2,
         };
         const session: any = {};
         when(attachService.attach(body, session)).thenThrow(new Error('Kaboom'));

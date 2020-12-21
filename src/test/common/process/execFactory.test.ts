@@ -52,7 +52,7 @@ suite('PythonExecutableService', () => {
             .returns(() => Promise.resolve(undefined));
         envActivationService
             .setup((e) =>
-                e.getActivatedEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                e.getActivatedEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             )
             .returns(() => Promise.resolve(undefined));
         serviceContainer

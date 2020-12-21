@@ -24,7 +24,7 @@ import {
     ISortImportSettings,
     ITerminalSettings,
     ITestingSettings,
-    IWorkspaceSymbolSettings
+    IWorkspaceSymbolSettings,
 } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
@@ -67,7 +67,7 @@ suite('Python Settings', async () => {
             'poetryPath',
             'insidersChannel',
             'defaultInterpreterPath',
-            'jediPath'
+            'jediPath',
         ]) {
             config
                 .setup((c) => c.get<string>(name))
@@ -141,7 +141,7 @@ suite('Python Settings', async () => {
             'envFile',
             'poetryPath',
             'insidersChannel',
-            'defaultInterpreterPath'
+            'defaultInterpreterPath',
         ].forEach(async (settingName) => {
             testIfValueIsUpdated(settingName, 'stringValue');
         });
@@ -151,7 +151,7 @@ suite('Python Settings', async () => {
         ['downloadLanguageServer', 'autoUpdateLanguageServer', 'globalModuleInstallation', 'useIsolation'].forEach(
             async (settingName) => {
                 testIfValueIsUpdated(settingName, true);
-            }
+            },
         );
     });
 
@@ -222,7 +222,7 @@ suite('Python Settings', async () => {
         expected.experiments = {
             enabled,
             optInto: [],
-            optOutFrom: []
+            optOutFrom: [],
         };
         initializeConfig(expected);
         config
@@ -252,7 +252,7 @@ suite('Python Settings', async () => {
             blackPath: 'two',
             yapfArgs: ['5', '6'],
             yapfPath: 'three',
-            provider: ''
+            provider: '',
         };
         expected.formatting.blackPath = 'spam';
         initializeConfig(expected);
@@ -279,7 +279,7 @@ suite('Python Settings', async () => {
             blackPath: path.join('~', 'two'),
             yapfArgs: [],
             yapfPath: path.join('~', 'three'),
-            provider: ''
+            provider: '',
         };
         expected.formatting.blackPath = 'spam';
         initializeConfig(expected);

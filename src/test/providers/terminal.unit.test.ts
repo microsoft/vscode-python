@@ -42,7 +42,7 @@ suite('Terminal Provider', () => {
         commandManager.verify(
             (c) =>
                 c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-            TypeMoq.Times.once()
+            TypeMoq.Times.once(),
         );
     });
 
@@ -50,7 +50,7 @@ suite('Terminal Provider', () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         commandManager
             .setup((c) =>
-                c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             )
             .returns(() => disposable.object);
 
@@ -65,7 +65,7 @@ suite('Terminal Provider', () => {
         let commandHandler: undefined | (() => void);
         commandManager
             .setup((c) =>
-                c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             )
             .returns((_cmd, callback) => {
                 commandHandler = callback;
@@ -145,7 +145,7 @@ suite('Terminal Provider', () => {
 
             terminalActivator.verify(
                 (a) => a.activateEnvironmentInTerminal(terminal.object, TypeMoq.It.isAny()),
-                TypeMoq.Times.once()
+                TypeMoq.Times.once(),
             );
             configService.verifyAll();
             activeResourceService.verifyAll();
@@ -167,7 +167,7 @@ suite('Terminal Provider', () => {
 
             terminalActivator.verify(
                 (a) => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-                TypeMoq.Times.never()
+                TypeMoq.Times.never(),
             );
             activeResourceService.verifyAll();
             configService.verifyAll();
@@ -195,7 +195,7 @@ suite('Terminal Provider', () => {
 
             terminalActivator.verify(
                 (a) => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-                TypeMoq.Times.never()
+                TypeMoq.Times.never(),
             );
             activeResourceService.verifyAll();
             configService.verifyAll();
@@ -217,7 +217,7 @@ suite('Terminal Provider', () => {
 
             terminalActivator.verify(
                 (a) => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-                TypeMoq.Times.never()
+                TypeMoq.Times.never(),
             );
             activeResourceService.verifyAll();
             configService.verifyAll();

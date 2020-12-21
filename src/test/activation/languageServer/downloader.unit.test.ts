@@ -16,7 +16,7 @@ import { DotNetLanguageServerFolderService } from '../../../client/activation/la
 import {
     ILanguageServerFolderService,
     ILanguageServerOutputChannel,
-    IPlatformData
+    IPlatformData,
 } from '../../../client/activation/types';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
@@ -53,7 +53,7 @@ suite('Language Server Activation - Downloader', () => {
             undefined as any,
             undefined as any,
             workspaceService.object,
-            undefined as any
+            undefined as any,
         );
     });
 
@@ -192,7 +192,7 @@ suite('Language Server Activation - Downloader', () => {
                 instance(appShell),
                 instance(fs),
                 instance(workspaceService),
-                undefined as any
+                undefined as any,
             );
         });
 
@@ -202,7 +202,7 @@ suite('Language Server Activation - Downloader', () => {
             const expectedDownloadOptions = {
                 extension: '.nupkg',
                 outputChannel: instance(outputChannelDownload),
-                progressMessagePrefix: downloadTitle
+                progressMessagePrefix: downloadTitle,
             };
 
             const file = await lsDownloader.downloadFile(downloadUri, downloadTitle);
@@ -299,7 +299,7 @@ suite('Language Server Activation - Downloader', () => {
                 appShell.object,
                 fs.object,
                 workspaceService.object,
-                undefined as any
+                undefined as any,
             );
             languageServerExtractorTest = new LanguageServerExtractorTest(
                 lsOutputChannel.object,
@@ -308,7 +308,7 @@ suite('Language Server Activation - Downloader', () => {
                 appShell.object,
                 fs.object,
                 workspaceService.object,
-                undefined as any
+                undefined as any,
             );
             languageServerBundledTest = new LanguageServeBundledTest(
                 lsOutputChannel.object,
@@ -317,7 +317,7 @@ suite('Language Server Activation - Downloader', () => {
                 appShell.object,
                 fs.object,
                 workspaceService.object,
-                undefined as any
+                undefined as any,
             );
         });
         test('Display error message if LS downloading fails', async () => {
@@ -386,6 +386,6 @@ function makePkgInfo(name: string, uri: string, version: string = '0.0.0') {
     return {
         package: name,
         uri: uri,
-        version: new SemVer(version)
+        version: new SemVer(version),
     } as any;
 }

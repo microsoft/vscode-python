@@ -45,7 +45,7 @@ async function installJupyterExtension(vscodeExecutablePath: string) {
     // For now install Jupyter from the marketplace
     spawnSync(cliPath, ['--install-extension', JUPYTER_EXTENSION_ID], {
         encoding: 'utf-8',
-        stdio: 'inherit'
+        stdio: 'inherit',
     });
 }
 
@@ -60,7 +60,7 @@ async function installPylanceExtension(vscodeExecutablePath: string) {
     // For now install pylance from the marketplace
     spawnSync(cliPath, ['--install-extension', PYLANCE_EXTENSION_ID], {
         encoding: 'utf-8',
-        stdio: 'inherit'
+        stdio: 'inherit',
     });
 
     // Make sure to enable it by writing to our workspace path settings
@@ -96,7 +96,7 @@ async function start() {
         extensionTestsPath: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'out', 'test'),
         launchArgs,
         version: channel,
-        extensionTestsEnv: { ...process.env, UITEST_DISABLE_INSIDERS: '1' }
+        extensionTestsEnv: { ...process.env, UITEST_DISABLE_INSIDERS: '1' },
     });
 }
 start().catch((ex) => {

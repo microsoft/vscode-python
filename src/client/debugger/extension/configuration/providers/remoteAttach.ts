@@ -19,7 +19,7 @@ const defaultPort = 5678;
 export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurationProvider {
     public async buildConfiguration(
         input: MultiStepInput<DebugConfigurationState>,
-        state: DebugConfigurationState
+        state: DebugConfigurationState,
     ): Promise<InputStep<DebugConfigurationState> | void> {
         const config: Partial<AttachRequestArguments> = {
             name: DebugConfigStrings.attach.snippet.name(),
@@ -27,15 +27,15 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
             request: 'attach',
             connect: {
                 host: defaultHost,
-                port: defaultPort
+                port: defaultPort,
             },
             pathMappings: [
                 {
                     // tslint:disable-next-line:no-invalid-template-strings
                     localRoot: '${workspaceFolder}',
-                    remoteRoot: '.'
-                }
-            ]
+                    remoteRoot: '.',
+                },
+            ],
         };
 
         const connect = config.connect!;
@@ -47,8 +47,8 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
             prompt: DebugConfigStrings.attach.enterRemoteHost.prompt(),
             validate: (value) =>
                 Promise.resolve(
-                    value && value.trim().length > 0 ? undefined : DebugConfigStrings.attach.enterRemoteHost.invalid()
-                )
+                    value && value.trim().length > 0 ? undefined : DebugConfigStrings.attach.enterRemoteHost.invalid(),
+                ),
         });
         if (!connect.host) {
             connect.host = defaultHost;
@@ -56,7 +56,7 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
 
         sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
             configurationType: DebugConfigurationType.remoteAttach,
-            manuallyEnteredAValue: connect.host !== defaultHost
+            manuallyEnteredAValue: connect.host !== defaultHost,
         });
         Object.assign(state.config, config);
         return (_) => this.configurePort(input, state.config);
@@ -64,7 +64,7 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
 
     protected async configurePort(
         input: MultiStepInput<DebugConfigurationState>,
-        config: Partial<AttachRequestArguments>
+        config: Partial<AttachRequestArguments>,
     ) {
         const connect = config.connect || (config.connect = {});
         const port = await input.showInputBox({
@@ -77,8 +77,8 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
                 Promise.resolve(
                     value && /^\d+$/.test(value.trim())
                         ? undefined
-                        : DebugConfigStrings.attach.enterRemotePort.invalid()
-                )
+                        : DebugConfigStrings.attach.enterRemotePort.invalid(),
+                ),
         });
         if (port && /^\d+$/.test(port.trim())) {
             connect.port = parseInt(port, 10);
@@ -88,7 +88,7 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
         }
         sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
             configurationType: DebugConfigurationType.remoteAttach,
-            manuallyEnteredAValue: connect.port !== defaultPort
+            manuallyEnteredAValue: connect.port !== defaultPort,
         });
     }
 }

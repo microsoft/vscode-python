@@ -118,10 +118,10 @@ export enum EventName {
     HASHED_PACKAGE_NAME = 'HASHED_PACKAGE_NAME',
     HASHED_PACKAGE_PERF = 'HASHED_PACKAGE_PERF',
 
-    JEDI_MEMORY = 'JEDI_MEMORY'
+    JEDI_MEMORY = 'JEDI_MEMORY',
 }
 
 export enum PlatformErrors {
     FailedToParseVersion = 'FailedToParseVersion',
-    FailedToDetermineOS = 'FailedToDetermineOS'
+    FailedToDetermineOS = 'FailedToDetermineOS',
 }

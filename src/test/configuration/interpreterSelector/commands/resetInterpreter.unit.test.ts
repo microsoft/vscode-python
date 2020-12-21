@@ -30,7 +30,7 @@ suite('Reset Interpreter Command', () => {
             pythonPathUpdater.object,
             commandManager.object,
             appShell.object,
-            workspace.object
+            workspace.object,
         );
     });
 
@@ -45,8 +45,8 @@ suite('Reset Interpreter Command', () => {
                         TypeMoq.It.isValue(undefined),
                         TypeMoq.It.isValue(ConfigurationTarget.Global),
                         TypeMoq.It.isValue('ui'),
-                        TypeMoq.It.isValue(undefined)
-                    )
+                        TypeMoq.It.isValue(undefined),
+                    ),
                 )
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
@@ -68,8 +68,8 @@ suite('Reset Interpreter Command', () => {
                         TypeMoq.It.isValue(undefined),
                         TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder),
                         TypeMoq.It.isValue('ui'),
-                        TypeMoq.It.isValue(folder.uri)
-                    )
+                        TypeMoq.It.isValue(folder.uri),
+                    ),
                 )
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
@@ -86,17 +86,17 @@ suite('Reset Interpreter Command', () => {
                 {
                     label: 'one',
                     description: path.dirname(folder1.uri.fsPath),
-                    uri: folder1.uri
+                    uri: folder1.uri,
                 },
                 {
                     label: 'two',
                     description: path.dirname(folder2.uri.fsPath),
-                    uri: folder2.uri
+                    uri: folder2.uri,
                 },
                 {
                     label: Interpreters.entireWorkspace(),
-                    uri: folder1.uri
-                }
+                    uri: folder1.uri,
+                },
             ];
             appShell
                 .setup((s) => s.showQuickPick(TypeMoq.It.isValue(expectedItems), TypeMoq.It.isAny()))
@@ -104,8 +104,8 @@ suite('Reset Interpreter Command', () => {
                     Promise.resolve({
                         label: 'two',
                         description: path.dirname(folder2.uri.fsPath),
-                        uri: folder2.uri
-                    })
+                        uri: folder2.uri,
+                    }),
                 )
                 .verifiable(TypeMoq.Times.once());
             pythonPathUpdater
@@ -114,8 +114,8 @@ suite('Reset Interpreter Command', () => {
                         TypeMoq.It.isValue(undefined),
                         TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder),
                         TypeMoq.It.isValue('ui'),
-                        TypeMoq.It.isValue(folder2.uri)
-                    )
+                        TypeMoq.It.isValue(folder2.uri),
+                    ),
                 )
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
@@ -132,25 +132,25 @@ suite('Reset Interpreter Command', () => {
                 {
                     label: 'one',
                     description: path.dirname(folder1.uri.fsPath),
-                    uri: folder1.uri
+                    uri: folder1.uri,
                 },
                 {
                     label: 'two',
                     description: path.dirname(folder2.uri.fsPath),
-                    uri: folder2.uri
+                    uri: folder2.uri,
                 },
                 {
                     label: Interpreters.entireWorkspace(),
-                    uri: folder1.uri
-                }
+                    uri: folder1.uri,
+                },
             ];
             appShell
                 .setup((s) => s.showQuickPick(TypeMoq.It.isValue(expectedItems), TypeMoq.It.isAny()))
                 .returns(() =>
                     Promise.resolve({
                         label: Interpreters.entireWorkspace(),
-                        uri: folder1.uri
-                    })
+                        uri: folder1.uri,
+                    }),
                 )
                 .verifiable(TypeMoq.Times.once());
             pythonPathUpdater
@@ -159,8 +159,8 @@ suite('Reset Interpreter Command', () => {
                         TypeMoq.It.isValue(undefined),
                         TypeMoq.It.isValue(ConfigurationTarget.Workspace),
                         TypeMoq.It.isValue('ui'),
-                        TypeMoq.It.isValue(folder1.uri)
-                    )
+                        TypeMoq.It.isValue(folder1.uri),
+                    ),
                 )
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
@@ -178,17 +178,17 @@ suite('Reset Interpreter Command', () => {
                 {
                     label: 'one',
                     description: path.dirname(folder1.uri.fsPath),
-                    uri: folder1.uri
+                    uri: folder1.uri,
                 },
                 {
                     label: 'two',
                     description: path.dirname(folder2.uri.fsPath),
-                    uri: folder2.uri
+                    uri: folder2.uri,
                 },
                 {
                     label: Interpreters.entireWorkspace(),
-                    uri: folder1.uri
-                }
+                    uri: folder1.uri,
+                },
             ];
 
             appShell
@@ -197,7 +197,7 @@ suite('Reset Interpreter Command', () => {
                 .verifiable(TypeMoq.Times.once());
             pythonPathUpdater
                 .setup((p) =>
-                    p.updatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                    p.updatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                 )
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.never());

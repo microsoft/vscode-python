@@ -18,7 +18,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
         protected workspace: Uri,
         protected product: UnitTestProduct,
         protected readonly serviceContainer: IServiceContainer,
-        cfg?: ITestConfigSettingsService
+        cfg?: ITestConfigSettingsService,
     ) {
         this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
         this.installer = serviceContainer.get<IInstaller>(IInstaller);
@@ -32,8 +32,8 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
         // Disable other test frameworks.
         await Promise.all(
             UNIT_TEST_PRODUCTS.filter((prod) => prod !== this.product).map((prod) =>
-                this.testConfigSettingsService.disable(this.workspace, prod)
-            )
+                this.testConfigSettingsService.disable(this.workspace, prod),
+            ),
         );
         await this.testConfigSettingsService.enable(this.workspace, this.product);
     }
@@ -46,7 +46,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
             ignoreFocusOut: true,
             matchOnDescription: true,
             matchOnDetail: true,
-            placeHolder: 'Select the directory containing the tests'
+            placeHolder: 'Select the directory containing the tests',
         };
         let items: QuickPickItem[] = subDirs
             .map((dir) => {
@@ -56,7 +56,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
                 }
                 return {
                     label: dirName,
-                    description: ''
+                    description: '',
                 };
             })
             .filter((item) => item !== undefined)
@@ -83,14 +83,14 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
             ignoreFocusOut: true,
             matchOnDescription: true,
             matchOnDetail: true,
-            placeHolder: 'Select the pattern to identify test files'
+            placeHolder: 'Select the pattern to identify test files',
         };
         const items: QuickPickItem[] = [
             { label: '*test.py', description: "Python Files ending with 'test'" },
             { label: '*_test.py', description: "Python Files ending with '_test'" },
             { label: 'test*.py', description: "Python Files beginning with 'test'" },
             { label: 'test_*.py', description: "Python Files beginning with 'test_'" },
-            { label: '*test*.py', description: "Python Files containing the word 'test'" }
+            { label: '*test*.py', description: "Python Files containing the word 'test'" },
         ];
 
         const def = createDeferred<string>();

@@ -24,7 +24,7 @@ export class JediLanguageServerActivator extends LanguageServerActivatorBase {
         @inject(ILanguageServerManager) manager: ILanguageServerManager,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IFileSystem) fs: IFileSystem,
-        @inject(IConfigurationService) configurationService: IConfigurationService
+        @inject(IConfigurationService) configurationService: IConfigurationService,
     ) {
         super(manager, workspace, fs, configurationService);
     }

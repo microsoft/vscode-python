@@ -8,9 +8,7 @@ import { testLocatorWatcher } from '../../../discovery/locators/watcherTestUtils
 
 suite('WorkspaceVirtualEnvironment Locator', async () => {
     const testWorkspaceFolder = path.join(TEST_LAYOUT_ROOT, 'workspace', 'folder1');
-    testLocatorWatcher(
-        testWorkspaceFolder,
-        async (root?: string) => new WorkspaceVirtualEnvironmentLocator(root!),
-        { arg: testWorkspaceFolder },
-    );
+    testLocatorWatcher(testWorkspaceFolder, async (root?: string) => new WorkspaceVirtualEnvironmentLocator(root!), {
+        arg: testWorkspaceFolder,
+    });
 });

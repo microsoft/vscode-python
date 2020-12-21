@@ -24,7 +24,7 @@ export class UpgradeCodeRunnerDiagnostic extends BaseDiagnostic {
             message,
             DiagnosticSeverity.Information,
             DiagnosticScope.Global,
-            resource
+            resource,
         );
     }
 }
@@ -40,7 +40,7 @@ export class UpgradeCodeRunnerDiagnosticService extends BaseDiagnosticsService {
         @named(DiagnosticCommandPromptHandlerServiceId)
         protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(IExtensions) private readonly extensions: IExtensions
+        @inject(IExtensions) private readonly extensions: IExtensions,
     ) {
         super([DiagnosticCodes.UpgradeCodeRunnerDiagnostic], serviceContainer, disposableRegistry, true);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -86,8 +86,8 @@ export class UpgradeCodeRunnerDiagnosticService extends BaseDiagnosticsService {
         const options = [
             {
                 prompt: Common.doNotShowAgain(),
-                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global })
-            }
+                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global }),
+            },
         ];
 
         await this.messageService.handle(diagnostic, { commandPrompts: options });

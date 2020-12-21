@@ -16,7 +16,7 @@ export class Flake8 extends BaseLinter {
         const messages = await this.run(
             ['--format=%(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', document.uri.fsPath],
             document,
-            cancellation
+            cancellation,
         );
         messages.forEach((msg) => {
             msg.severity = this.parseMessagesSeverity(msg.type, this.pythonSettings.linting.flake8CategorySeverity);

@@ -13,7 +13,7 @@ import {
     TextEditorOptions,
     Uri,
     window,
-    workspace
+    workspace,
 } from 'vscode';
 import { getTextEditsFromPatch } from '../../client/common/editor';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
@@ -34,7 +34,7 @@ const refactorSourceFile = path.join(
     'pythonFiles',
     'refactoring',
     'standAlone',
-    'refactor.py'
+    'refactor.py',
 );
 const refactorTargetFileDir = path.join(
     __dirname,
@@ -45,7 +45,7 @@ const refactorTargetFileDir = path.join(
     'test',
     'pythonFiles',
     'refactoring',
-    'standAlone'
+    'standAlone',
 );
 
 interface RenameResponse {
@@ -59,7 +59,7 @@ suite('Variable Extraction', () => {
         cursorStyle: TextEditorCursorStyle.Line,
         insertSpaces: true,
         lineNumbers: TextEditorLineNumbersStyle.Off,
-        tabSize: 4
+        tabSize: 4,
     };
     let refactorTargetFile = '';
     let ioc: UnitTestIocContainer;
@@ -100,7 +100,7 @@ suite('Variable Extraction', () => {
     async function testingVariableExtraction(
         shouldError: boolean,
         startPos: Position,
-        endPos: Position
+        endPos: Position,
     ): Promise<void> {
         const rangeOfTextToExtract = new Range(startPos, endPos);
         const workspaceRoot = path.dirname(refactorTargetFile);
@@ -116,7 +116,7 @@ suite('Variable Extraction', () => {
                 'myNewVariable',
                 refactorTargetFile,
                 rangeOfTextToExtract,
-                options
+                options,
             );
             if (shouldError) {
                 assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
@@ -126,7 +126,7 @@ suite('Variable Extraction', () => {
             assert.equal(textEdits.length, expectedTextEdits.length, 'Invalid number of Text Edits');
             textEdits.forEach((edit) => {
                 const foundEdit = expectedTextEdits.filter(
-                    (item) => item.newText === edit.newText && item.range.isEqual(edit.range)
+                    (item) => item.newText === edit.newText && item.range.isEqual(edit.range),
                 );
                 assert.equal(foundEdit.length, 1, 'Edit not found');
             });
@@ -158,7 +158,7 @@ suite('Variable Extraction', () => {
     async function testingVariableExtractionEndToEnd(
         shouldError: boolean,
         startPos: Position,
-        endPos: Position
+        endPos: Position,
     ): Promise<void> {
         const ch = new MockOutputChannel('Python');
         const rangeOfTextToExtract = new Range(startPos, endPos);

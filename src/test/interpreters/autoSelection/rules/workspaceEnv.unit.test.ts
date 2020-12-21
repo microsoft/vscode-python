@@ -24,7 +24,7 @@ import {
     IExperimentsManager,
     IInterpreterPathService,
     IPersistentStateFactory,
-    Resource
+    Resource,
 } from '../../../../client/common/types';
 import { createDeferred } from '../../../../client/common/utils/async';
 import { OSType } from '../../../../client/common/utils/platform';
@@ -52,7 +52,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
     class WorkspaceVirtualEnvInterpretersAutoSelectionRuleTest extends WorkspaceVirtualEnvInterpretersAutoSelectionRule {
         public async setGlobalInterpreter(
             interpreter?: PythonEnvironment,
-            manager?: IInterpreterAutoSelectionService
+            manager?: IInterpreterAutoSelectionService,
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
@@ -78,7 +78,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         interpreterPathService = mock(InterpreterPathService);
 
         when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
-            instance(state)
+            instance(state),
         );
         rule = new WorkspaceVirtualEnvInterpretersAutoSelectionRuleTest(
             instance(fs),
@@ -88,7 +88,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             instance(workspaceService),
             instance(virtualEnvLocator),
             instance(experimentsManager),
-            instance(interpreterPathService)
+            instance(interpreterPathService),
         );
     });
     test('Invoke next rule if there is no workspace', async () => {
@@ -217,7 +217,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         when(virtualEnvLocator.getInterpreters(resource, deepEqual(options))).thenResolve([
             interpreter1,
             interpreter2,
-            interpreter3
+            interpreter3,
         ] as any);
         when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
         when(platform.osType).thenReturn(OSType.Windows);
@@ -254,7 +254,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             when(virtualEnvLocator.getInterpreters(resource, deepEqual(options))).thenResolve([
                 interpreter1,
                 interpreter2,
-                interpreter3
+                interpreter3,
             ] as any);
             when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
             when(platform.osType).thenReturn(osType);

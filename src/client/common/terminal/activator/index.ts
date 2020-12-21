@@ -15,13 +15,13 @@ export class TerminalActivator implements ITerminalActivator {
     constructor(
         @inject(ITerminalHelper) readonly helper: ITerminalHelper,
         @multiInject(ITerminalActivationHandler) private readonly handlers: ITerminalActivationHandler[],
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
     ) {
         this.initialize();
     }
     public async activateEnvironmentInTerminal(
         terminal: Terminal,
-        options?: TerminalActivationOptions
+        options?: TerminalActivationOptions,
     ): Promise<boolean> {
         const settings = this.configurationService.getSettings(options?.resource);
         const activateEnvironment = settings.terminal.activateEnvironment;
@@ -33,7 +33,7 @@ export class TerminalActivator implements ITerminalActivator {
         this.handlers.forEach((handler) =>
             handler
                 .handleActivation(terminal, options?.resource, options?.preserveFocus === true, activated)
-                .ignoreErrors()
+                .ignoreErrors(),
         );
         return activated;
     }

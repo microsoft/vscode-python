@@ -16,7 +16,7 @@ export enum LogLevel {
     Warn = 30,
     Info = 20,
     Debug = 10,
-    Trace = 5
+    Trace = 5,
 }
 export type LogLevelName = 'ERROR' | 'WARNING' | 'INFORMATION' | 'DEBUG' | 'DEBUG-TRACE';
 const logLevelMap: { [K in LogLevel]: LogLevelName } = {
@@ -24,7 +24,7 @@ const logLevelMap: { [K in LogLevel]: LogLevelName } = {
     [LogLevel.Warn]: 'WARNING',
     [LogLevel.Info]: 'INFORMATION',
     [LogLevel.Debug]: 'DEBUG',
-    [LogLevel.Trace]: 'DEBUG-TRACE'
+    [LogLevel.Trace]: 'DEBUG-TRACE',
 };
 // This can be used for winston.LoggerOptions.levels.
 export const configLevels: winston.config.AbstractConfigSetLevels = {
@@ -32,7 +32,7 @@ export const configLevels: winston.config.AbstractConfigSetLevels = {
     WARNING: 1,
     INFORMATION: 2,
     DEBUG: 4,
-    'DEBUG-TRACE': 5
+    'DEBUG-TRACE': 5,
 };
 
 //======================
@@ -46,7 +46,7 @@ const npmLogLevelMap: { [K in LogLevel]: NPMLogLevelName } = {
     [LogLevel.Warn]: 'warn',
     [LogLevel.Info]: 'info',
     [LogLevel.Debug]: 'debug',
-    [LogLevel.Trace]: 'silly'
+    [LogLevel.Trace]: 'silly',
 };
 
 //======================
@@ -56,7 +56,7 @@ const npmLogLevelMap: { [K in LogLevel]: NPMLogLevelName } = {
 export function resolveLevelName(
     level: LogLevel,
     // Default to configLevels.
-    levels?: winston.config.AbstractConfigSetLevels
+    levels?: winston.config.AbstractConfigSetLevels,
 ): string | undefined {
     if (levels === undefined) {
         return getLevelName(level);
@@ -76,7 +76,7 @@ export function getLevelName(level: LogLevel): LogLevelName | undefined {
 export function resolveLevel(
     levelName: string,
     // Default to configLevels.
-    levels?: winston.config.AbstractConfigSetLevels
+    levels?: winston.config.AbstractConfigSetLevels,
 ): LogLevel | undefined {
     let levelMap: { [K in LogLevel]: string };
     if (levels === undefined) {

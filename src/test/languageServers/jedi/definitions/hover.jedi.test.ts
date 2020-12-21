@@ -46,7 +46,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 return vscode.commands.executeCommand<vscode.Hover[]>(
                     'vscode.executeHoverProvider',
                     textDocument.uri,
-                    position
+                    position,
                 );
             })
             .then((result) => {
@@ -55,12 +55,12 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 assert.equal(
                     `${def[0].range!.start.line},${def[0].range!.start.character}`,
                     '30,4',
-                    'Start position is incorrect'
+                    'Start position is incorrect',
                 );
                 assert.equal(
                     `${def[0].range!.end.line},${def[0].range!.end.character}`,
                     '30,11',
-                    'End position is incorrect'
+                    'End position is incorrect',
                 );
                 assert.equal(def[0].contents.length, 1, 'Invalid content items');
                 // tslint:disable-next-line:prefer-template
@@ -68,7 +68,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
                     expectedContent,
-                    'function signature incorrect'
+                    'function signature incorrect',
                 );
             })
             .then(done, done);
@@ -95,7 +95,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 return vscode.commands.executeCommand<vscode.Hover[]>(
                     'vscode.executeHoverProvider',
                     textDocument.uri,
-                    position
+                    position,
                 );
             })
             .then((result) => {
@@ -104,18 +104,18 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 assert.equal(
                     `${def[0].range!.start.line},${def[0].range!.start.character}`,
                     '1,9',
-                    'Start position is incorrect'
+                    'Start position is incorrect',
                 );
                 assert.equal(
                     `${def[0].range!.end.line},${def[0].range!.end.character}`,
                     '1,12',
-                    'End position is incorrect'
+                    'End position is incorrect',
                 );
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
                     // tslint:disable-next-line:prefer-template
                     '```python' + EOL + 'def fun()' + EOL + '```' + EOL + 'This is fun',
-                    'Invalid contents'
+                    'Invalid contents',
                 );
             })
             .then(done, done);
@@ -135,7 +135,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 return vscode.commands.executeCommand<vscode.Hover[]>(
                     'vscode.executeHoverProvider',
                     textDocument.uri,
-                    position
+                    position,
                 );
             })
             .then((result) => {
@@ -144,12 +144,12 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 assert.equal(
                     `${def[0].range!.start.line},${def[0].range!.start.character}`,
                     '25,4',
-                    'Start position is incorrect'
+                    'Start position is incorrect',
                 );
                 assert.equal(
                     `${def[0].range!.end.line},${def[0].range!.end.character}`,
                     '25,7',
-                    'End position is incorrect'
+                    'End position is incorrect',
                 );
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
@@ -165,7 +165,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                         'delete following line, it works' +
                         EOL +
                         '如果存在需要等待审批或正在执行的任务，将不刷新页面',
-                    'Invalid contents'
+                    'Invalid contents',
                 );
             })
             .then(done, done);
@@ -192,7 +192,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 return vscode.commands.executeCommand<vscode.Hover[]>(
                     'vscode.executeHoverProvider',
                     textDocument.uri,
-                    position
+                    position,
                 );
             })
             .then((result) => {
@@ -201,12 +201,12 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 assert.equal(
                     `${def[0].range!.start.line},${def[0].range!.start.character}`,
                     '1,5',
-                    'Start position is incorrect'
+                    'Start position is incorrect',
                 );
                 assert.equal(
                     `${def[0].range!.end.line},${def[0].range!.end.character}`,
                     '1,16',
-                    'End position is incorrect'
+                    'End position is incorrect',
                 );
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
@@ -220,7 +220,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                         'Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи. ' +
                         EOL +
                         'Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.',
-                    'Invalid contents'
+                    'Invalid contents',
                 );
             })
             .then(done, done);
@@ -240,7 +240,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 return vscode.commands.executeCommand<vscode.Hover[]>(
                     'vscode.executeHoverProvider',
                     textDocument.uri,
-                    position
+                    position,
                 );
             })
             .then((def) => {
@@ -263,7 +263,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 return vscode.commands.executeCommand<vscode.Hover[]>(
                     'vscode.executeHoverProvider',
                     textDocument.uri,
-                    position
+                    position,
                 );
             })
             .then((def) => {
@@ -293,7 +293,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 return vscode.commands.executeCommand<vscode.Hover[]>(
                     'vscode.executeHoverProvider',
                     textDocument.uri,
-                    position
+                    position,
                 );
             })
             .then((result) => {
@@ -302,12 +302,12 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 assert.equal(
                     `${def[0].range!.start.line},${def[0].range!.start.character}`,
                     '11,12',
-                    'Start position is incorrect'
+                    'Start position is incorrect',
                 );
                 assert.equal(
                     `${def[0].range!.end.line},${def[0].range!.end.character}`,
                     '11,18',
-                    'End position is incorrect'
+                    'End position is incorrect',
                 );
                 const documentation =
                     // tslint:disable-next-line:prefer-template
@@ -363,7 +363,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 return vscode.commands.executeCommand<vscode.Hover[]>(
                     'vscode.executeHoverProvider',
                     textDocument.uri,
-                    position
+                    position,
                 );
             })
             .then((result) => {
@@ -372,12 +372,12 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 assert.equal(
                     `${def[0].range!.start.line},${def[0].range!.start.character}`,
                     '12,5',
-                    'Start position is incorrect'
+                    'Start position is incorrect',
                 );
                 assert.equal(
                     `${def[0].range!.end.line},${def[0].range!.end.character}`,
                     '12,12',
-                    'End position is incorrect'
+                    'End position is incorrect',
                 );
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
@@ -389,7 +389,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                         '```' +
                         EOL +
                         'Return random integer in range [a, b], including both end points.',
-                    'Invalid contents'
+                    'Invalid contents',
                 );
             })
             .then(done, done);
@@ -409,7 +409,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 return vscode.commands.executeCommand<vscode.Hover[]>(
                     'vscode.executeHoverProvider',
                     textDocument.uri,
-                    position
+                    position,
                 );
             })
             .then((result) => {
@@ -418,12 +418,12 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 assert.equal(
                     `${def[0].range!.start.line},${def[0].range!.start.character}`,
                     '8,11',
-                    'Start position is incorrect'
+                    'Start position is incorrect',
                 );
                 assert.equal(
                     `${def[0].range!.end.line},${def[0].range!.end.character}`,
                     '8,15',
-                    'End position is incorrect'
+                    'End position is incorrect',
                 );
 
                 const minExpectedContent =
@@ -461,7 +461,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 return vscode.commands.executeCommand<vscode.Hover[]>(
                     'vscode.executeHoverProvider',
                     textDocument.uri,
-                    position
+                    position,
                 );
             })
             .then((result) => {
@@ -470,12 +470,12 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 assert.equal(
                     `${def[0].range!.start.line},${def[0].range!.start.character}`,
                     '14,9',
-                    'Start position is incorrect'
+                    'Start position is incorrect',
                 );
                 assert.equal(
                     `${def[0].range!.end.line},${def[0].range!.end.character}`,
                     '14,15',
-                    'End position is incorrect'
+                    'End position is incorrect',
                 );
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
@@ -491,7 +491,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                         '' +
                         EOL +
                         'This class can be safely subclassed in a limited fashion.',
-                    'Invalid content items'
+                    'Invalid content items',
                 );
             })
             .then(done, done);
@@ -511,7 +511,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
                 return vscode.commands.executeCommand<vscode.Hover[]>(
                     'vscode.executeHoverProvider',
                     textDocument.uri,
-                    position
+                    position,
                 );
             })
             .then((result) => {
@@ -536,7 +536,7 @@ suite('Language Server: Hover Definition (Jedi)', () => {
         const def = (await vscode.commands.executeCommand<vscode.Hover[]>(
             'vscode.executeHoverProvider',
             textDocument.uri,
-            position
+            position,
         ))!;
         assert.equal(def.length, 1, 'Definition length is incorrect');
         assert.equal(def[0].contents.length, 1, 'Only expected one result');

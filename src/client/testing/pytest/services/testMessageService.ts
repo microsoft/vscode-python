@@ -44,7 +44,7 @@ export class TestMessageService implements ITestMessageService {
                     provider: provider,
                     testTime: tf.testFunction.time,
                     status: status,
-                    testFilePath: tf.parentTestFile.fullPath
+                    testFilePath: tf.parentTestFile.fullPath,
                 };
                 messages.push(msg);
             } else {
@@ -68,7 +68,7 @@ export class TestMessageService implements ITestMessageService {
                     testTime: tf.testFunction.time,
                     testFilePath: testFilePath,
                     status: status,
-                    locationStack: locationStack
+                    locationStack: locationStack,
                 };
                 messages.push(msg);
             }
@@ -84,7 +84,7 @@ export class TestMessageService implements ITestMessageService {
      */
     private async getLocationStack(
         rootDirectory: string,
-        testFunction: FlattenedTestFunction
+        testFunction: FlattenedTestFunction,
     ): Promise<ILocationStackFrameDetails[]> {
         const locationStack: ILocationStackFrameDetails[] = [];
         if (testFunction.testFunction.traceback) {
@@ -102,12 +102,12 @@ export class TestMessageService implements ITestMessageService {
                     fileUri,
                     new Range(
                         new Position(fileLineNum - 1, line.firstNonWhitespaceCharacterIndex),
-                        new Position(fileLineNum - 1, line.text.length)
-                    )
+                        new Position(fileLineNum - 1, line.text.length),
+                    ),
                 );
                 const stackFrame: ILocationStackFrameDetails = {
                     location: location,
-                    lineText: file.getText(location.range)
+                    lineText: file.getText(location.range),
                 };
                 locationStack.push(stackFrame);
             }
@@ -161,7 +161,7 @@ export class TestMessageService implements ITestMessageService {
             if (
                 !fs.arePathsSame(
                     Uri.file(testFunction.parentTestFile.fullPath).fsPath,
-                    locationStack[0].location.uri.fsPath
+                    locationStack[0].location.uri.fsPath,
                 )
             ) {
                 // test method was imported, so reference class declaration line.

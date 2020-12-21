@@ -12,7 +12,7 @@ export class DummyFormatter extends BaseFormatter {
         _document: vscode.TextDocument,
         _options: vscode.FormattingOptions,
         _token: vscode.CancellationToken,
-        _range?: vscode.Range
+        _range?: vscode.Range,
     ): Thenable<vscode.TextEdit[]> {
         return Promise.resolve([]);
     }

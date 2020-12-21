@@ -28,7 +28,7 @@ suite('TensorBoard code action provider', () => {
         const codeActions = codeActionProvider.provideCodeActions(document, selection.object);
         assert.ok(
             codeActions.length > 0,
-            'Failed to provide code action for Python file containing tensorboard import'
+            'Failed to provide code action for Python file containing tensorboard import',
         );
     });
     test('Provides code action for Python ipynbs', () => {
@@ -38,7 +38,7 @@ suite('TensorBoard code action provider', () => {
         const codeActions = codeActionProvider.provideCodeActions(document, selection.object);
         assert.ok(
             codeActions.length > 0,
-            'Failed to provide code action for Python ipynb containing tensorboard import'
+            'Failed to provide code action for Python ipynb containing tensorboard import',
         );
     });
     test('Does not provide code action if no matching import', () => {
@@ -55,7 +55,7 @@ suite('TensorBoard code action provider', () => {
         const codeActions = codeActionProvider.provideCodeActions(document, selection.object);
         assert.ok(
             codeActions.length === 0,
-            'Provided code action for file even though cursor was not on line containing import'
+            'Provided code action for file even though cursor was not on line containing import',
         );
     });
 });

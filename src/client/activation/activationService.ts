@@ -11,7 +11,7 @@ import {
     IApplicationEnvironment,
     IApplicationShell,
     ICommandManager,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { traceError } from '../common/logger';
@@ -22,7 +22,7 @@ import {
     IOutputChannel,
     IPersistentStateFactory,
     IPythonSettings,
-    Resource
+    Resource,
 } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { LanguageService } from '../common/utils/localize';
@@ -39,7 +39,7 @@ import {
     IExtensionActivationService,
     ILanguageServerActivator,
     ILanguageServerCache,
-    LanguageServerType
+    LanguageServerType,
 } from './types';
 
 const languageServerSetting: keyof IPythonSettings = 'languageServer';
@@ -64,7 +64,7 @@ export class LanguageServerExtensionActivationService
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory
+        @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
     ) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -77,7 +77,7 @@ export class LanguageServerExtensionActivationService
         disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
         disposables.push(this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this)));
         disposables.push(
-            commandManager.registerCommand(Commands.ClearAnalyisCache, this.onClearAnalysisCaches.bind(this))
+            commandManager.registerCommand(Commands.ClearAnalyisCache, this.onClearAnalysisCaches.bind(this)),
         );
 
         this.languageServerChangeHandler = new LanguageServerChangeHandler(
@@ -85,7 +85,7 @@ export class LanguageServerExtensionActivationService
             this.serviceContainer.get<IExtensions>(IExtensions),
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment),
-            this.serviceContainer.get<ICommandManager>(ICommandManager)
+            this.serviceContainer.get<ICommandManager>(ICommandManager),
         );
         disposables.push(this.languageServerChangeHandler);
     }
@@ -148,7 +148,7 @@ export class LanguageServerExtensionActivationService
     public async sendTelemetryForChosenLanguageServer(languageServer: LanguageServerType): Promise<void> {
         const state = this.stateFactory.createGlobalPersistentState<LanguageServerType | undefined>(
             'SWITCH_LS',
-            undefined
+            undefined,
         );
         if (typeof state.value !== 'string') {
             await state.updateValue(languageServer);
@@ -156,11 +156,11 @@ export class LanguageServerExtensionActivationService
         if (state.value !== languageServer) {
             await state.updateValue(languageServer);
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
-                switchTo: languageServer
+                switchTo: languageServer,
             });
         } else {
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
-                lsStartup: languageServer
+                lsStartup: languageServer,
             });
         }
     }
@@ -188,7 +188,7 @@ export class LanguageServerExtensionActivationService
     protected async onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, dispose its activator
         const workspaceKeys = await Promise.all(
-            this.workspaceService.workspaceFolders!.map((workspaceFolder) => this.getKey(workspaceFolder.uri))
+            this.workspaceService.workspaceFolders!.map((workspaceFolder) => this.getKey(workspaceFolder.uri)),
         );
         const activatedWkspcKeys = Array.from(this.cache.keys());
         const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter((item) => workspaceKeys.indexOf(item) < 0);
@@ -213,19 +213,19 @@ export class LanguageServerExtensionActivationService
     private async createRefCountedServer(
         resource: Resource,
         interpreter: PythonEnvironment | undefined,
-        key: string
+        key: string,
     ): Promise<RefCountedLanguageServer> {
         let serverType = this.getCurrentLanguageServerType();
         if (serverType === LanguageServerType.Microsoft) {
             const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
                 IDiagnosticsService,
-                LSNotSupportedDiagnosticServiceId
+                LSNotSupportedDiagnosticServiceId,
             );
             const diagnostic = await lsNotSupportedDiagnosticService.diagnose(undefined);
             lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
             if (diagnostic.length) {
                 sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, {
-                    supported: false
+                    supported: false,
                 });
                 serverType = LanguageServerType.Jedi;
             }
@@ -302,7 +302,7 @@ export class LanguageServerExtensionActivationService
 
         const resourcePortion = this.workspaceService.getWorkspaceFolderIdentifier(
             resource,
-            workspacePathNameForGlobalWorkspaces
+            workspacePathNameForGlobalWorkspaces,
         );
         interpreter = interpreter ? interpreter : await this.interpreterService.getActiveInterpreter(resource);
         const interperterPortion = interpreter ? `${interpreter.path}-${interpreter.envName}` : '';

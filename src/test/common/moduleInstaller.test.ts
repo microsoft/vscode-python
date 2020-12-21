@@ -29,7 +29,7 @@ import {
     IDebugService,
     IDocumentManager,
     IJupyterExtensionDependencyManager,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
@@ -42,7 +42,7 @@ import { FeatureDeprecationManager } from '../../client/common/featureDeprecatio
 import {
     ExtensionInsidersDailyChannelRule,
     ExtensionInsidersOffChannelRule,
-    ExtensionInsidersWeeklyChannelRule
+    ExtensionInsidersWeeklyChannelRule,
 } from '../../client/common/insidersBuild/downloadChannelRules';
 import { ExtensionChannelService } from '../../client/common/insidersBuild/downloadChannelService';
 import { InsidersExtensionPrompt } from '../../client/common/insidersBuild/insidersExtensionPrompt';
@@ -51,7 +51,7 @@ import {
     ExtensionChannel,
     IExtensionChannelRule,
     IExtensionChannelService,
-    IInsiderExtensionPrompt
+    IInsiderExtensionPrompt,
 } from '../../client/common/insidersBuild/types';
 import { CondaInstaller } from '../../client/common/installer/condaInstaller';
 import { PipEnvInstaller } from '../../client/common/installer/pipEnvInstaller';
@@ -92,7 +92,7 @@ import {
     ITerminalHelper,
     ITerminalService,
     ITerminalServiceFactory,
-    TerminalActivationProviders
+    TerminalActivationProviders,
 } from '../../client/common/terminal/types';
 import {
     IAsyncDisposableRegistry,
@@ -113,7 +113,7 @@ import {
     IPersistentStateFactory,
     IPythonSettings,
     IRandom,
-    IsWindows
+    IsWindows,
 } from '../../client/common/types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { Architecture } from '../../client/common/utils/platform';
@@ -123,7 +123,7 @@ import {
     IInterpreterLocatorService,
     IInterpreterService,
     INTERPRETER_LOCATOR_SERVICE,
-    PIPENV_SERVICE
+    PIPENV_SERVICE,
 } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { JupyterExtensionDependencyManager } from '../../client/jupyter/jupyterExtensionDependencyManager';
@@ -150,7 +150,7 @@ const info: PythonEnvironment = {
     envType: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
-    sysVersion: ''
+    sysVersion: '',
 };
 
 suite('Module Installer', () => {
@@ -202,7 +202,7 @@ suite('Module Installer', () => {
                 .returns(() => mockTerminalService.object);
             ioc.serviceManager.addSingletonInstance<ITerminalServiceFactory>(
                 ITerminalServiceFactory,
-                mockTerminalFactory.object
+                mockTerminalFactory.object,
             );
 
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
@@ -238,7 +238,7 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
             ioc.serviceManager.addSingleton<IJupyterExtensionDependencyManager>(
                 IJupyterExtensionDependencyManager,
-                JupyterExtensionDependencyManager
+                JupyterExtensionDependencyManager,
             );
             ioc.serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
             ioc.serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
@@ -248,7 +248,7 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<ITerminalActivator>(ITerminalActivator, TerminalActivator);
             ioc.serviceManager.addSingleton<ITerminalActivationHandler>(
                 ITerminalActivationHandler,
-                PowershellTerminalActivationFailedHandler
+                PowershellTerminalActivationFailedHandler,
             );
             ioc.serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
             ioc.serviceManager.addSingleton<IExperimentsManager>(IExperimentsManager, ExperimentsManager);
@@ -257,36 +257,36 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
                 ITerminalActivationCommandProvider,
                 Bash,
-                TerminalActivationProviders.bashCShellFish
+                TerminalActivationProviders.bashCShellFish,
             );
             ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
                 ITerminalActivationCommandProvider,
                 CommandPromptAndPowerShell,
-                TerminalActivationProviders.commandPromptAndPowerShell
+                TerminalActivationProviders.commandPromptAndPowerShell,
             );
             ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
                 ITerminalActivationCommandProvider,
                 PyEnvActivationCommandProvider,
-                TerminalActivationProviders.pyenv
+                TerminalActivationProviders.pyenv,
             );
             ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
                 ITerminalActivationCommandProvider,
                 CondaActivationCommandProvider,
-                TerminalActivationProviders.conda
+                TerminalActivationProviders.conda,
             );
             ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
                 ITerminalActivationCommandProvider,
                 PipEnvActivationCommandProvider,
-                TerminalActivationProviders.pipenv
+                TerminalActivationProviders.pipenv,
             );
             ioc.serviceManager.addSingleton<IFeatureDeprecationManager>(
                 IFeatureDeprecationManager,
-                FeatureDeprecationManager
+                FeatureDeprecationManager,
             );
 
             ioc.serviceManager.addSingleton<IAsyncDisposableRegistry>(
                 IAsyncDisposableRegistry,
-                AsyncDisposableRegistry
+                AsyncDisposableRegistry,
             );
             ioc.serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
             ioc.serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
@@ -298,34 +298,34 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<IInsiderExtensionPrompt>(IInsiderExtensionPrompt, InsidersExtensionPrompt);
             ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
-                InsidersExtensionService
+                InsidersExtensionService,
             );
             ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
-                ReloadVSCodeCommandHandler
+                ReloadVSCodeCommandHandler,
             );
             ioc.serviceManager.addSingleton<IExtensionChannelService>(
                 IExtensionChannelService,
-                ExtensionChannelService
+                ExtensionChannelService,
             );
             ioc.serviceManager.addSingleton<IExtensionChannelRule>(
                 IExtensionChannelRule,
                 ExtensionInsidersOffChannelRule,
-                ExtensionChannel.off
+                ExtensionChannel.off,
             );
             ioc.serviceManager.addSingleton<IExtensionChannelRule>(
                 IExtensionChannelRule,
                 ExtensionInsidersDailyChannelRule,
-                ExtensionChannel.daily
+                ExtensionChannel.daily,
             );
             ioc.serviceManager.addSingleton<IExtensionChannelRule>(
                 IExtensionChannelRule,
                 ExtensionInsidersWeeklyChannelRule,
-                ExtensionChannel.weekly
+                ExtensionChannel.weekly,
             );
             ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
-                DebugSessionTelemetry
+                DebugSessionTelemetry,
             );
             ioc.serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
         }
@@ -335,7 +335,7 @@ suite('Module Installer', () => {
                 'linting.pylintEnabled',
                 true,
                 rootWorkspaceUri,
-                ConfigurationTarget.Workspace
+                ConfigurationTarget.Workspace,
             );
         }
         async function getCurrentPythonPath(): Promise<string> {
@@ -352,7 +352,7 @@ suite('Module Installer', () => {
         test('Ensure pip is supported and conda is not', async () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
                 IModuleInstaller,
-                new MockModuleInstaller('mock', true)
+                new MockModuleInstaller('mock', true),
             );
             const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
             mockInterpreterLocator
@@ -361,12 +361,12 @@ suite('Module Installer', () => {
             ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 mockInterpreterLocator.object,
-                INTERPRETER_LOCATOR_SERVICE
+                INTERPRETER_LOCATOR_SERVICE,
             );
             ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 TypeMoq.Mock.ofType<IInterpreterLocatorService>().object,
-                PIPENV_SERVICE
+                PIPENV_SERVICE,
             );
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
 
@@ -400,7 +400,7 @@ suite('Module Installer', () => {
         test('Ensure pip is supported', async () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
                 IModuleInstaller,
-                new MockModuleInstaller('mock', true)
+                new MockModuleInstaller('mock', true),
             );
             const pythonPath = await getCurrentPythonPath();
             const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
@@ -416,19 +416,19 @@ suite('Module Installer', () => {
                             envName: '',
                             path: pythonPath,
                             envType: EnvironmentType.Conda,
-                            version: new SemVer('1.0.0')
-                        }
-                    ])
+                            version: new SemVer('1.0.0'),
+                        },
+                    ]),
                 );
             ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 mockInterpreterLocator.object,
-                INTERPRETER_LOCATOR_SERVICE
+                INTERPRETER_LOCATOR_SERVICE,
             );
             ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 TypeMoq.Mock.ofType<IInterpreterLocatorService>().object,
-                PIPENV_SERVICE
+                PIPENV_SERVICE,
             );
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
 
@@ -501,18 +501,18 @@ suite('Module Installer', () => {
             ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 mockInterpreterLocator.object,
-                INTERPRETER_LOCATOR_SERVICE
+                INTERPRETER_LOCATOR_SERVICE,
             );
             ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 TypeMoq.Mock.ofType<IInterpreterLocatorService>().object,
-                PIPENV_SERVICE
+                PIPENV_SERVICE,
             );
 
             const interpreter: PythonEnvironment = {
                 ...info,
                 envType: EnvironmentType.Unknown,
-                path: PYTHON_PATH
+                path: PYTHON_PATH,
             };
             interpreterService
                 .setup((x) => x.getActiveInterpreter(TypeMoq.It.isAny()))
@@ -542,7 +542,7 @@ suite('Module Installer', () => {
             mockTerminalFactory.verifyAll();
             expect(argsSent.join(' ')).equal(
                 `${isolated} pip install -U ${moduleName} --user`,
-                'Invalid command sent to terminal for installation.'
+                'Invalid command sent to terminal for installation.',
             );
         });
 
@@ -555,12 +555,12 @@ suite('Module Installer', () => {
             ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 mockInterpreterLocator.object,
-                INTERPRETER_LOCATOR_SERVICE
+                INTERPRETER_LOCATOR_SERVICE,
             );
             ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 TypeMoq.Mock.ofType<IInterpreterLocatorService>().object,
-                PIPENV_SERVICE
+                PIPENV_SERVICE,
             );
 
             const moduleName = 'xyz';
@@ -583,7 +583,7 @@ suite('Module Installer', () => {
             mockTerminalFactory.verifyAll();
             expect(argsSent.join(' ')).equal(
                 `${isolated} pip install -U ${moduleName}`,
-                'Invalid command sent to terminal for installation.'
+                'Invalid command sent to terminal for installation.',
             );
         });
 
@@ -592,12 +592,12 @@ suite('Module Installer', () => {
             mockInterpreterLocator
                 .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
                 .returns(() =>
-                    Promise.resolve([{ ...info, path: 'interpreterPath', envType: EnvironmentType.VirtualEnv }])
+                    Promise.resolve([{ ...info, path: 'interpreterPath', envType: EnvironmentType.VirtualEnv }]),
                 );
             ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 mockInterpreterLocator.object,
-                PIPENV_SERVICE
+                PIPENV_SERVICE,
             );
 
             const moduleName = 'xyz';
@@ -622,7 +622,7 @@ suite('Module Installer', () => {
             expect(command!).equal('pipenv', 'Invalid command sent to terminal for installation.');
             expect(argsSent.join(' ')).equal(
                 `install ${moduleName} --dev`,
-                'Invalid command arguments sent to terminal for installation.'
+                'Invalid command arguments sent to terminal for installation.',
             );
         });
     });

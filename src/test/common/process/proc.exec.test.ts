@@ -65,7 +65,7 @@ suite('ProcessService Observable', () => {
             'print("2")',
             'sys.stdout.flush()',
             'time.sleep(1)',
-            'print("3")'
+            'print("3")',
         ];
         const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
@@ -92,7 +92,7 @@ suite('ProcessService Observable', () => {
             'sys.stdout.write("2")',
             'sys.stdout.flush()',
             'time.sleep(1)',
-            'sys.stdout.write("3")'
+            'sys.stdout.write("3")',
         ];
         const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['123'];
@@ -117,13 +117,13 @@ suite('ProcessService Observable', () => {
             'sys.stdout.flush()',
             'time.sleep(10)',
             'print("2")',
-            'sys.stdout.flush()'
+            'sys.stdout.flush()',
         ];
         const cancellationToken = new CancellationTokenSource();
         setTimeout(() => cancellationToken.cancel(), 3000);
 
         const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')], {
-            token: cancellationToken.token
+            token: cancellationToken.token,
         });
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
@@ -158,7 +158,7 @@ suite('ProcessService Observable', () => {
             'sys.stdout.flush()',
             'time.sleep(1)',
             'sys.stderr.write("c")',
-            'sys.stderr.flush()'
+            'sys.stderr.flush()',
         ];
         const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')]);
         const expectedStdout = ['1', '2', '3'];
@@ -200,7 +200,7 @@ suite('ProcessService Observable', () => {
             'sys.stdout.flush()',
             'time.sleep(1)',
             'sys.stderr.write("c")',
-            'sys.stderr.flush()'
+            'sys.stderr.flush()',
         ];
         const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')], { mergeStdOutErr: true });
         const expectedOutput = ['1a2b3c'];
@@ -252,7 +252,7 @@ suite('ProcessService Observable', () => {
     test('variables can be changed after the fact', async () => {
         const procService = new ProcessService(new BufferDecoder(), process.env);
         let result = await procService.exec(pythonPath, ['-c', `import os;print(os.environ.get("MY_TEST_VARIABLE"))`], {
-            extraVariables: { MY_TEST_VARIABLE: 'foo' }
+            extraVariables: { MY_TEST_VARIABLE: 'foo' },
         });
 
         expect(result).not.to.be.an('undefined', 'result is undefined');

@@ -13,7 +13,7 @@ import {
     flaggedWorkspacesKeysStorageKey,
     safeInterpretersKey,
     unsafeInterpreterPromptKey,
-    unsafeInterpretersKey
+    unsafeInterpretersKey,
 } from '../../../../client/interpreter/autoSelection/constants';
 import { InterpreterSecurityStorage } from '../../../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage';
 
@@ -53,7 +53,7 @@ suite('Interpreter Security Storage', () => {
             persistentStateFactory.object,
             workspaceService.object,
             commandManager.object,
-            []
+            [],
         );
     });
 
@@ -135,8 +135,8 @@ suite('Interpreter Security Storage', () => {
             .setup((p) =>
                 p.createGlobalPersistentState<boolean | undefined>(
                     `ARE_INTERPRETERS_SAFE_FOR_WS_${resource.fsPath}`,
-                    undefined
-                )
+                    undefined,
+                ),
             )
             .returns(() => areInterpretersInWorkspaceSafe.object);
         const result = interpreterSecurityStorage.hasUserApprovedWorkspaceInterpreters(resource);

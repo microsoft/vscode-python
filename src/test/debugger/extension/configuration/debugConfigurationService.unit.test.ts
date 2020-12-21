@@ -28,7 +28,7 @@ suite('Debugging - Configuration Service', () => {
         // tslint:disable-next-line:no-unnecessary-override
         public async pickDebugConfiguration(
             input: IMultiStepInput<DebugConfigurationState>,
-            state: DebugConfigurationState
+            state: DebugConfigurationState,
         ) {
             return super.pickDebugConfiguration(input, state);
         }
@@ -42,19 +42,19 @@ suite('Debugging - Configuration Service', () => {
             attachResolver.object,
             launchResolver.object,
             instance(providerFactory),
-            multiStepFactory.object
+            multiStepFactory.object,
         );
     });
     test('Should use attach resolver when passing attach config', async () => {
         const config = ({
-            request: 'attach'
+            request: 'attach',
         } as any) as AttachRequestArguments;
         const folder = { name: '1', index: 0, uri: Uri.parse('1234') };
         const expectedConfig = { yay: 1 };
 
         attachResolver
             .setup((a) =>
-                a.resolveDebugConfiguration(typemoq.It.isValue(folder), typemoq.It.isValue(config), typemoq.It.isAny())
+                a.resolveDebugConfiguration(typemoq.It.isValue(folder), typemoq.It.isValue(config), typemoq.It.isAny()),
             )
             .returns(() => Promise.resolve(expectedConfig as any))
             .verifiable(typemoq.Times.once());
@@ -78,8 +78,8 @@ suite('Debugging - Configuration Service', () => {
                     a.resolveDebugConfiguration(
                         typemoq.It.isValue(folder),
                         typemoq.It.isValue((config as any) as LaunchRequestArguments),
-                        typemoq.It.isAny()
-                    )
+                        typemoq.It.isAny(),
+                    ),
                 )
                 .returns(() => Promise.resolve(expectedConfig as any))
                 .verifiable(typemoq.Times.once());
@@ -127,7 +127,7 @@ suite('Debugging - Configuration Service', () => {
             run: (_: any, state: any) => {
                 Object.assign(state.config, expectedConfig);
                 return Promise.resolve();
-            }
+            },
         };
         multiStepFactory
             .setup((f) => f.create())
@@ -144,7 +144,7 @@ suite('Debugging - Configuration Service', () => {
     });
     test('Ensure `undefined` is returned if QuickPick is cancelled', async () => {
         const multiStepInput = {
-            run: () => Promise.resolve()
+            run: () => Promise.resolve(),
         };
         const folder = { name: '1', index: 0, uri: Uri.parse('1234') };
         multiStepFactory

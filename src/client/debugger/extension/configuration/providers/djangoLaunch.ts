@@ -26,7 +26,7 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
     constructor(
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IPathUtils) private pathUtils: IPathUtils
+        @inject(IPathUtils) private pathUtils: IPathUtils,
     ) {}
     public async buildConfiguration(input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
         const program = await this.getManagePyPath(state.folder);
@@ -38,14 +38,14 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
             request: 'launch',
             program: program || defaultProgram,
             args: ['runserver'],
-            django: true
+            django: true,
         };
         if (!program) {
             const selectedProgram = await input.showInputBox({
                 title: DebugConfigStrings.django.enterManagePyPath.title(),
                 value: defaultProgram,
                 prompt: DebugConfigStrings.django.enterManagePyPath.prompt(),
-                validate: (value) => this.validateManagePy(state.folder, defaultProgram, value)
+                validate: (value) => this.validateManagePy(state.folder, defaultProgram, value),
             });
             if (selectedProgram) {
                 manuallyEnteredAValue = true;
@@ -56,14 +56,14 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
         sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
             configurationType: DebugConfigurationType.launchDjango,
             autoDetectedDjangoManagePyPath: !!program,
-            manuallyEnteredAValue
+            manuallyEnteredAValue,
         });
         Object.assign(state.config, config);
     }
     public async validateManagePy(
         folder: WorkspaceFolder | undefined,
         defaultValue: string,
-        selected?: string
+        selected?: string,
     ): Promise<string | undefined> {
         const error = DebugConfigStrings.django.enterManagePyPath.invalid();
         if (!selected || selected.trim().length === 0) {

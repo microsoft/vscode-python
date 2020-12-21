@@ -33,7 +33,7 @@ function getServiceContainerMockForLinterManagerTests(): TypeMoq.IMock<IServiceC
 
     const pythonConfig = {
         // tslint:disable-next-line:no-empty
-        inspect: () => {}
+        inspect: () => {},
     };
     workspaceService
         .setup((x) => x.getConfiguration('python', TypeMoq.It.isAny()))

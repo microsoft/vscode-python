@@ -33,13 +33,13 @@ suite('Interpreters - Auto Selection - Current Path Rule', () => {
     class CurrentPathInterpretersAutoSelectionRuleTest extends CurrentPathInterpretersAutoSelectionRule {
         public async setGlobalInterpreter(
             interpreter?: PythonEnvironment,
-            manager?: IInterpreterAutoSelectionService
+            manager?: IInterpreterAutoSelectionService,
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
         public async onAutoSelectInterpreter(
             resource: Resource,
-            manager?: IInterpreterAutoSelectionService
+            manager?: IInterpreterAutoSelectionService,
         ): Promise<NextAction> {
             return super.onAutoSelectInterpreter(resource, manager);
         }
@@ -52,13 +52,13 @@ suite('Interpreters - Auto Selection - Current Path Rule', () => {
         locator = mock(KnownPathsService);
 
         when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
-            instance(state)
+            instance(state),
         );
         rule = new CurrentPathInterpretersAutoSelectionRuleTest(
             instance(fs),
             instance(helper),
             instance(stateFactory),
-            instance(locator)
+            instance(locator),
         );
     });
 

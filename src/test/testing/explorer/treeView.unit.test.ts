@@ -31,7 +31,7 @@ suite('Unit Tests Test Explorer Tree View', () => {
             instance(treeViewProvider),
             [],
             instance(appShell),
-            instance(commandManager)
+            instance(commandManager),
         );
     });
 
@@ -40,8 +40,8 @@ suite('Unit Tests Test Explorer Tree View', () => {
         verify(
             appShell.createTreeView(
                 'python_tests',
-                deepEqual({ showCollapseAll: true, treeDataProvider: instance(treeViewProvider) })
-            )
+                deepEqual({ showCollapseAll: true, treeDataProvider: instance(treeViewProvider) }),
+            ),
         ).once();
     });
     test('Activation will add command handlers', async () => {
@@ -50,8 +50,8 @@ suite('Unit Tests Test Explorer Tree View', () => {
             commandManager.registerCommand(
                 Commands.Test_Reveal_Test_Item,
                 treeViewService.onRevealTestItem,
-                treeViewService
-            )
+                treeViewService,
+            ),
         ).once();
     });
     test('Invoking the command handler will reveal the node in the tree', async () => {

@@ -54,8 +54,8 @@ suite('Language Server Output Channel', () => {
                 c.executeCommand(
                     TypeMoq.It.isValue('setContext'),
                     TypeMoq.It.isValue('python.hasLanguageServerOutputChannel'),
-                    TypeMoq.It.isValue(true)
-                )
+                    TypeMoq.It.isValue(true),
+                ),
             )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
@@ -85,8 +85,8 @@ suite('Language Server Output Channel', () => {
                 c.executeCommand(
                     TypeMoq.It.isValue('setContext'),
                     TypeMoq.It.isValue('python.hasLanguageServerOutputChannel'),
-                    TypeMoq.It.isValue(true)
-                )
+                    TypeMoq.It.isValue(true),
+                ),
             )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());

@@ -4,7 +4,11 @@
 import { isCondaEnvironment } from '../discovery/locators/services/condaLocator';
 import { isPipenvEnvironment } from '../discovery/locators/services/pipEnvHelper';
 import { isPyenvEnvironment } from '../discovery/locators/services/pyenvLocator';
-import { isVenvEnvironment, isVirtualenvEnvironment, isVirtualenvwrapperEnvironment } from '../discovery/locators/services/virtualEnvironmentIdentifier';
+import {
+    isVenvEnvironment,
+    isVirtualenvEnvironment,
+    isVirtualenvwrapperEnvironment,
+} from '../discovery/locators/services/virtualEnvironmentIdentifier';
 import { isWindowsStoreEnvironment } from '../discovery/locators/services/windowsStoreLocator';
 import { EnvironmentType } from '../info';
 
@@ -75,7 +79,7 @@ export async function identifyEnvironment(interpreterPath: string): Promise<Envi
     const prioritizedEnvTypes = getPrioritizedEnvironmentType();
     for (const e of prioritizedEnvTypes) {
         const identifier = identifiers.get(e);
-        if (identifier && await identifier(interpreterPath)) {
+        if (identifier && (await identifier(interpreterPath))) {
             return e;
         }
     }

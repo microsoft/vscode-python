@@ -41,12 +41,12 @@ suite('Shebang detection', () => {
             instance(factory),
             instance(configurationService),
             platformService.object,
-            instance(workspaceService)
+            instance(workspaceService),
         );
     });
     function createDocument(
         firstLine: string,
-        uri = Uri.parse('xyz.py')
+        uri = Uri.parse('xyz.py'),
     ): [typemoq.IMock<TextDocument>, typemoq.IMock<TextLine>] {
         const doc = typemoq.Mock.ofType<TextDocument>();
         const line = typemoq.Mock.ofType<TextLine>();

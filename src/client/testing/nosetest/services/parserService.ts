@@ -13,7 +13,7 @@ import {
     TestFile,
     TestFunction,
     Tests,
-    TestSuite
+    TestSuite,
 } from '../../common/types';
 
 const NOSE_WANT_FILE_PREFIX = 'nose.selector: DEBUG: wantFile ';
@@ -105,7 +105,7 @@ export class TestsParser implements ITestsParser {
                     time: 0,
                     functionsFailed: 0,
                     functionsPassed: 0,
-                    fullPath: fullyQualifiedName
+                    fullPath: fullyQualifiedName,
                 };
                 testFiles.push(testFile);
                 return;
@@ -125,7 +125,7 @@ export class TestsParser implements ITestsParser {
                     isUnitTest: false,
                     isInstance: false,
                     functionsFailed: 0,
-                    functionsPassed: 0
+                    functionsPassed: 0,
                 };
                 testFile.suites.push(testSuite);
                 return;
@@ -143,7 +143,7 @@ export class TestsParser implements ITestsParser {
                     isUnitTest: false,
                     isInstance: false,
                     functionsFailed: 0,
-                    functionsPassed: 0
+                    functionsPassed: 0,
                 };
                 testFile.suites.push(testSuite);
                 return;
@@ -152,7 +152,7 @@ export class TestsParser implements ITestsParser {
                 const name = extractBetweenDelimiters(
                     line,
                     'nose.selector: DEBUG: wantMethod <unbound method ',
-                    '>? True'
+                    '>? True',
                 );
                 const fnName = path.extname(name).substring(1);
                 const clsName = path.basename(name, path.extname(name));
@@ -162,7 +162,7 @@ export class TestsParser implements ITestsParser {
                     nameToRun: `${fileName}:${clsName}.${fnName}`,
                     time: 0,
                     functionsFailed: 0,
-                    functionsPassed: 0
+                    functionsPassed: 0,
                 };
 
                 const cls = testFile.suites.find((suite) => suite.name === clsName);
@@ -179,7 +179,7 @@ export class TestsParser implements ITestsParser {
                     nameToRun: `${fileName}:${name}`,
                     time: 0,
                     functionsFailed: 0,
-                    functionsPassed: 0
+                    functionsPassed: 0,
                 };
                 testFile.functions.push(fn);
                 return;

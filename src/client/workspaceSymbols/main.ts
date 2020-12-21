@@ -37,7 +37,7 @@ export class WorkspaceSymbols implements Disposable {
         this.registerCommands();
         this.initializeGenerators();
         languages.registerWorkspaceSymbolProvider(
-            new WorkspaceSymbolProvider(this.fs, this.commandMgr, this.generators)
+            new WorkspaceSymbolProvider(this.fs, this.commandMgr, this.generators),
         );
         this.disposables.push(this.workspace.onDidChangeWorkspaceFolders(() => this.initializeGenerators()));
         this.disposables.push(this.documents.onDidSaveTextDocument((e) => this.onDocumentSaved(e)));
@@ -61,8 +61,8 @@ export class WorkspaceSymbols implements Disposable {
                         this.appShell,
                         this.fs,
                         this.processFactory,
-                        this.configurationService
-                    )
+                        this.configurationService,
+                    ),
                 );
             });
         }
@@ -87,8 +87,8 @@ export class WorkspaceSymbols implements Disposable {
                 async (rebuild: boolean = true, token?: CancellationToken) => {
                     const promises = this.buildWorkspaceSymbols(rebuild, token);
                     return Promise.all(promises);
-                }
-            )
+                },
+            ),
         );
     }
 

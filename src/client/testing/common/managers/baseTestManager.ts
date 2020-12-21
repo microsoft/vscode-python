@@ -9,7 +9,7 @@ import {
     EventEmitter,
     languages,
     OutputChannel,
-    Uri
+    Uri,
 } from 'vscode';
 import { ICommandManager, IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
@@ -22,7 +22,7 @@ import {
     IInstaller,
     IOutputChannel,
     IPythonSettings,
-    Product
+    Product,
 } from '../../../common/types';
 import { getNamesAndValues } from '../../../common/utils/enum';
 import { noop } from '../../../common/utils/misc';
@@ -44,12 +44,12 @@ import {
     TestProvider,
     Tests,
     TestStatus,
-    TestsToRun
+    TestsToRun,
 } from './../types';
 
 enum CancellationTokenType {
     testDiscovery,
-    testRunner
+    testRunner,
 }
 
 // tslint:disable: member-ordering max-func-body-length
@@ -89,7 +89,7 @@ export abstract class BaseTestManager implements ITestManager {
         private readonly product: Product,
         public readonly workspaceFolder: Uri,
         protected rootDirectory: string,
-        protected serviceContainer: IServiceContainer
+        protected serviceContainer: IServiceContainer,
     ) {
         this.updateStatus(TestStatus.Unknown);
         const configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -97,7 +97,7 @@ export abstract class BaseTestManager implements ITestManager {
         const disposables = serviceContainer.get<Disposable[]>(IDisposableRegistry);
         this._outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
         this.testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(
-            ITestCollectionStorageService
+            ITestCollectionStorageService,
         );
         this._testResultsService = this.serviceContainer.get<ITestResultsService>(ITestResultsService);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -151,7 +151,7 @@ export abstract class BaseTestManager implements ITestManager {
         ignoreCache: boolean = false,
         quietMode: boolean = false,
         userInitiated: boolean = false,
-        clearTestStatus: boolean = false
+        clearTestStatus: boolean = false,
     ): Promise<Tests> {
         if (this.discoverTestsPromise) {
             return this.discoverTestsPromise;
@@ -161,7 +161,7 @@ export abstract class BaseTestManager implements ITestManager {
             ignoreCache,
             quietMode,
             userInitiated,
-            clearTestStatus
+            clearTestStatus,
         );
         this.discoverTestsPromise
             .catch(noop)
@@ -174,7 +174,7 @@ export abstract class BaseTestManager implements ITestManager {
         ignoreCache: boolean = false,
         quietMode: boolean = false,
         userInitiated: boolean = false,
-        clearTestStatus: boolean = false
+        clearTestStatus: boolean = false,
     ): Promise<Tests> {
         if (!ignoreCache && this.tests! && this.tests!.testFunctions.length > 0) {
             this.updateStatus(TestStatus.Idle);
@@ -193,14 +193,14 @@ export abstract class BaseTestManager implements ITestManager {
             tool: this.testProvider,
             // tslint:disable-next-line:no-any prefer-type-cast
             trigger: cmdSource as any,
-            failed: false
+            failed: false,
         };
         this.commandManager.executeCommand('setContext', 'testsDiscovered', true).then(noop, noop);
         this.createCancellationToken(CancellationTokenType.testDiscovery);
         const discoveryOptions = this.getDiscoveryOptions(ignoreCache);
         const discoveryService = this.serviceContainer.get<ITestDiscoveryService>(
             ITestDiscoveryService,
-            this.testProvider
+            this.testProvider,
         );
         return discoveryService
             .discoverTests(discoveryOptions)
@@ -276,14 +276,14 @@ export abstract class BaseTestManager implements ITestManager {
         cmdSource: CommandSource,
         testsToRun?: TestsToRun,
         runFailedTests?: boolean,
-        debug?: boolean
+        debug?: boolean,
     ): Promise<Tests> {
         const moreInfo = {
             Test_Provider: this.testProvider,
             Run_Failed_Tests: 'false',
             Run_Specific_File: 'false',
             Run_Specific_Class: 'false',
-            Run_Specific_Function: 'false'
+            Run_Specific_Function: 'false',
         };
         //Ensure valid values are sent.
         const validCmdSourceValues = getNamesAndValues<CommandSource>(CommandSource).map((item) => item.value);
@@ -292,7 +292,7 @@ export abstract class BaseTestManager implements ITestManager {
             scope: 'all',
             debugging: debug === true,
             triggerSource: validCmdSourceValues.indexOf(cmdSource) === -1 ? 'commandpalette' : cmdSource,
-            failed: false
+            failed: false,
         };
 
         if (!runFailedTests && !testsToRun) {
@@ -325,7 +325,7 @@ export abstract class BaseTestManager implements ITestManager {
             this.testsStatusUpdaterService.updateStatusAsRunningSpecificTests(
                 this.workspaceFolder,
                 testsToRun,
-                this.tests
+                this.tests,
             );
         }
 
@@ -356,7 +356,7 @@ export abstract class BaseTestManager implements ITestManager {
                     testFolders: [],
                     testFunctions: [],
                     testSuites: [],
-                    summary: { errors: 0, failures: 0, passed: 0, skipped: 0 }
+                    summary: { errors: 0, failures: 0, passed: 0, skipped: 0 },
                 };
             })
             .then((tests) => {
@@ -430,7 +430,7 @@ export abstract class BaseTestManager implements ITestManager {
         tests: Tests,
         testsToRun?: TestsToRun,
         runFailedTests?: boolean,
-        debug?: boolean
+        debug?: boolean,
     ): Promise<Tests>;
     protected abstract getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions;
     private updateStatus(status: TestStatus): void {
@@ -480,7 +480,7 @@ export abstract class BaseTestManager implements ITestManager {
                 if (matchingMsg === undefined) {
                     // No matching message was found, so this test was not included in the test run.
                     const matchingTest = tests.testFunctions.find(
-                        (tf) => tf.testFunction.nameToRun === diagnostic.code
+                        (tf) => tf.testFunction.nameToRun === diagnostic.code,
                     );
                     if (matchingTest !== undefined) {
                         // Matching test was found, so the diagnostic is still relevant.
@@ -501,7 +501,7 @@ export abstract class BaseTestManager implements ITestManager {
         const diagnostic = new Diagnostic(
             stackStart.location.range,
             `${diagPrefix ? `${diagPrefix}: ` : 'Ok'}${diagMsg}`,
-            severity
+            severity,
         );
         diagnostic.code = message.code;
         diagnostic.source = message.provider;

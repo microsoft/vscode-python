@@ -16,7 +16,7 @@ import {
     Output,
     ShellOptions,
     SpawnOptions,
-    StdErrError
+    StdErrError,
 } from './types';
 
 // tslint:disable:no-any
@@ -70,7 +70,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
                 if (proc) {
                     proc.unref();
                 }
-            }
+            },
         };
         this.processesToKill.add(disposable);
 
@@ -89,7 +89,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
                             proc.kill();
                             procExited = true;
                         }
-                    })
+                    }),
                 );
             }
 
@@ -127,7 +127,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
         return {
             proc,
             out: output,
-            dispose: disposable.dispose
+            dispose: disposable.dispose,
         };
     }
     public exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
@@ -140,7 +140,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
                 if (!proc.killed && !deferred.completed) {
                     proc.kill();
                 }
-            }
+            },
         };
         this.processesToKill.add(disposable);
         const disposables: IDisposable[] = [];
@@ -209,7 +209,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
                     if (!proc.killed) {
                         proc.kill();
                     }
-                }
+                },
             };
             this.processesToKill.add(disposable);
         });

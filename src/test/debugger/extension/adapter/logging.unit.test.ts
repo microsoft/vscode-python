@@ -42,13 +42,13 @@ suite('Debugging - Session Logging', () => {
             configuration: {
                 name: '',
                 request: 'launch',
-                type: 'python'
+                type: 'python',
             },
             id: id,
             name: 'python',
             type: 'python',
             workspaceFolder,
-            customRequest: () => Promise.resolve()
+            customRequest: () => Promise.resolve(),
         };
     }
 

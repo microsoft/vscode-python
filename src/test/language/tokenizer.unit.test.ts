@@ -400,7 +400,7 @@ suite('Language.Tokenizer', () => {
             2,
             1,
             2,
-            2
+            2,
         ];
         assert.equal(tokens.count, lengths.length);
         for (let i = 0; i < tokens.count; i += 1) {
@@ -409,7 +409,7 @@ suite('Language.Tokenizer', () => {
             assert.equal(
                 t.length,
                 lengths[i],
-                `Length ${t.length} at ${i} (text ${text.substr(t.start, t.length)}), expected ${lengths[i]}`
+                `Length ${t.length} at ${i} (text ${text.substr(t.start, t.length)}), expected ${lengths[i]}`,
             );
         }
     });
@@ -438,7 +438,7 @@ suite('Language.Tokenizer', () => {
         [',', TokenType.Comma],
         [':', TokenType.Colon],
         [';', TokenType.Semicolon],
-        ['.', TokenType.Operator]
+        ['.', TokenType.Operator],
     ].forEach((pair) => {
         const text: string = pair[0] as string;
         const expected = pair[1];
@@ -461,7 +461,7 @@ suite('Language.Tokenizer', () => {
         ['-0b1', TokenType.Number],
         ['-0B1', TokenType.Number],
         ['-0o1', TokenType.Number],
-        ['-0O1', TokenType.Number]
+        ['-0O1', TokenType.Number],
     ].forEach((pair) => {
         const text: string = pair[0] as string;
         const expected = pair[1];
@@ -477,7 +477,7 @@ suite('Language.Tokenizer', () => {
         [',-1', TokenType.Number],
         [':+1', TokenType.Number],
         [';+1', TokenType.Number],
-        ['=+1', TokenType.Number]
+        ['=+1', TokenType.Number],
     ].forEach((pair) => {
         const text: string = pair[0] as string;
         const expected = pair[1];

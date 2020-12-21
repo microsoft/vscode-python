@@ -57,14 +57,14 @@ suite('Language Server - Change Handler', () => {
         test(`Handler should prompt for reload when language server type changes to ${t}, Pylance is installed ans user clicks Reload`, async () => {
             when(extensions.getExtension(PYLANCE_EXTENSION_ID)).thenReturn(instance(pylanceExtension));
             when(
-                appShell.showInformationMessage(LanguageService.reloadAfterLanguageServerChange(), Common.reload())
+                appShell.showInformationMessage(LanguageService.reloadAfterLanguageServerChange(), Common.reload()),
             ).thenReturn(Promise.resolve(Common.reload()));
 
             handler = makeHandler(undefined);
             await handler.handleLanguageServerChange(t);
 
             verify(
-                appShell.showInformationMessage(LanguageService.reloadAfterLanguageServerChange(), Common.reload())
+                appShell.showInformationMessage(LanguageService.reloadAfterLanguageServerChange(), Common.reload()),
             ).once();
             verify(commands.executeCommand('workbench.action.reloadWindow')).once();
         });
@@ -74,14 +74,14 @@ suite('Language Server - Change Handler', () => {
         test(`Handler should not prompt for reload when language server type changes to ${t}, Pylance is installed ans user does not clicks Reload`, async () => {
             when(extensions.getExtension(PYLANCE_EXTENSION_ID)).thenReturn(instance(pylanceExtension));
             when(
-                appShell.showInformationMessage(LanguageService.reloadAfterLanguageServerChange(), Common.reload())
+                appShell.showInformationMessage(LanguageService.reloadAfterLanguageServerChange(), Common.reload()),
             ).thenReturn(Promise.resolve(undefined));
 
             handler = makeHandler(undefined);
             await handler.handleLanguageServerChange(t);
 
             verify(
-                appShell.showInformationMessage(LanguageService.reloadAfterLanguageServerChange(), Common.reload())
+                appShell.showInformationMessage(LanguageService.reloadAfterLanguageServerChange(), Common.reload()),
             ).once();
             verify(commands.executeCommand('workbench.action.reloadWindow')).never();
         });
@@ -92,22 +92,22 @@ suite('Language Server - Change Handler', () => {
             appShell.showWarningMessage(
                 Pylance.installPylanceMessage(),
                 Common.bannerLabelYes(),
-                Common.bannerLabelNo()
-            )
+                Common.bannerLabelNo(),
+            ),
         ).thenReturn(Promise.resolve(undefined));
 
         handler = makeHandler(undefined);
         await handler.handleLanguageServerChange(LanguageServerType.Node);
 
         verify(
-            appShell.showInformationMessage(LanguageService.reloadAfterLanguageServerChange(), Common.reload())
+            appShell.showInformationMessage(LanguageService.reloadAfterLanguageServerChange(), Common.reload()),
         ).never();
         verify(
             appShell.showWarningMessage(
                 Pylance.installPylanceMessage(),
                 Common.bannerLabelYes(),
-                Common.bannerLabelNo()
-            )
+                Common.bannerLabelNo(),
+            ),
         ).once();
     });
 
@@ -116,8 +116,8 @@ suite('Language Server - Change Handler', () => {
             appShell.showWarningMessage(
                 Pylance.installPylanceMessage(),
                 Common.bannerLabelYes(),
-                Common.bannerLabelNo()
-            )
+                Common.bannerLabelNo(),
+            ),
         ).thenReturn(Promise.resolve(Common.bannerLabelYes()));
 
         handler = makeHandler(undefined);
@@ -132,8 +132,8 @@ suite('Language Server - Change Handler', () => {
             appShell.showWarningMessage(
                 Pylance.installPylanceMessage(),
                 Common.bannerLabelYes(),
-                Common.bannerLabelNo()
-            )
+                Common.bannerLabelNo(),
+            ),
         ).thenReturn(Promise.resolve(Common.bannerLabelNo()));
 
         handler = makeHandler(undefined);
@@ -148,8 +148,8 @@ suite('Language Server - Change Handler', () => {
             appShell.showWarningMessage(
                 Pylance.pylanceInstalledReloadPromptMessage(),
                 Common.bannerLabelYes(),
-                Common.bannerLabelNo()
-            )
+                Common.bannerLabelNo(),
+            ),
         ).thenReturn(Promise.resolve(Common.bannerLabelYes()));
         handler = makeHandler(LanguageServerType.Node);
 
@@ -165,8 +165,8 @@ suite('Language Server - Change Handler', () => {
             appShell.showWarningMessage(
                 Pylance.pylanceInstalledReloadPromptMessage(),
                 Common.bannerLabelYes(),
-                Common.bannerLabelNo()
-            )
+                Common.bannerLabelNo(),
+            ),
         ).thenReturn(Promise.resolve(Common.bannerLabelNo()));
         handler = makeHandler(LanguageServerType.Node);
 
@@ -183,7 +183,7 @@ suite('Language Server - Change Handler', () => {
             instance(extensions),
             instance(appShell),
             instance(appEnv),
-            instance(commands)
+            instance(commands),
         );
     }
 });

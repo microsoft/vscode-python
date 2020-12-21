@@ -14,14 +14,14 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
     ) {
         // tslint:disable-next-line:no-any
         this.onDidChangeCodeLenses = (workspaceService.onDidChangeConfiguration as any) as Event<void>;
     }
     public async detectShebang(
         document: TextDocument,
-        resolveShebangAsInterpreter: boolean = false
+        resolveShebangAsInterpreter: boolean = false,
     ): Promise<string | undefined> {
         const firstLine = document.lineAt(0);
         if (firstLine.isEmptyOrWhitespace) {
@@ -78,7 +78,7 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
 
         const cmd: Command = {
             command: 'python.setShebangInterpreter',
-            title: 'Set as interpreter'
+            title: 'Set as interpreter',
         };
 
         return [new CodeLens(shebangRange, cmd)];

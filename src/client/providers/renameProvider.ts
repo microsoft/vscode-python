@@ -8,7 +8,7 @@ import {
     Uri,
     window,
     workspace,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { getWorkspaceEditsFromPatch } from '../common/editor';
@@ -35,7 +35,7 @@ export class PythonRenameProvider implements RenameProvider {
         document: TextDocument,
         position: Position,
         newName: string,
-        _token: CancellationToken
+        _token: CancellationToken,
     ): ProviderResult<WorkspaceEdit> {
         return workspace.saveAll(false).then(() => {
             return this.doRename(document, position, newName);

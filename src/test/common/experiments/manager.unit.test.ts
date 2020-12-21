@@ -20,7 +20,7 @@ import {
     ExperimentsManager,
     experimentStorageKey,
     isDownloadedStorageValidKey,
-    oldExperimentSalts
+    oldExperimentSalts,
 } from '../../../client/common/experiments/manager';
 import { HttpClient } from '../../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
@@ -32,7 +32,7 @@ import {
     IHttpClient,
     IOutputChannel,
     IPersistentState,
-    IPersistentStateFactory
+    IPersistentStateFactory,
 } from '../../../client/common/types';
 import { createDeferred, createDeferredFromPromise } from '../../../client/common/utils/async';
 import { sleep } from '../../common';
@@ -71,13 +71,13 @@ suite('A/B experiments', () => {
         when(configurationService.getSettings(undefined)).thenReturn(instance(settings));
         fs = mock(FileSystem);
         when(
-            persistentStateFactory.createGlobalPersistentState(isDownloadedStorageValidKey, false, anything())
+            persistentStateFactory.createGlobalPersistentState(isDownloadedStorageValidKey, false, anything()),
         ).thenReturn(isDownloadedStorageValid.object);
         when(persistentStateFactory.createGlobalPersistentState(experimentStorageKey, undefined as any)).thenReturn(
-            experimentStorage.object
+            experimentStorage.object,
         );
         when(
-            persistentStateFactory.createGlobalPersistentState(downloadedExperimentStorageKey, undefined as any)
+            persistentStateFactory.createGlobalPersistentState(downloadedExperimentStorageKey, undefined as any),
         ).thenReturn(downloadedExperimentsStorage.object);
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
@@ -86,7 +86,7 @@ suite('A/B experiments', () => {
             instance(appEnvironment),
             output.object,
             instance(fs),
-            instance(configurationService)
+            instance(configurationService),
         );
     });
 
@@ -96,7 +96,7 @@ suite('A/B experiments', () => {
 
     async function testInitialization(
         downloadError: boolean = false,
-        experimentsDownloaded: any = [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]
+        experimentsDownloaded: any = [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }],
     ) {
         if (downloadError) {
             when(httpClient.getJSON(configUri, false)).thenReject(new Error('Kaboom'));
@@ -202,7 +202,7 @@ suite('A/B experiments', () => {
             instance(appEnvironment),
             output.object,
             instance(fs),
-            instance(configurationService)
+            instance(configurationService),
         );
         await expManager.activate();
 
@@ -228,7 +228,7 @@ suite('A/B experiments', () => {
             instance(appEnvironment),
             output.object,
             instance(fs),
-            instance(configurationService)
+            instance(configurationService),
         );
 
         expManager._enabled = enabled;
@@ -261,7 +261,7 @@ suite('A/B experiments', () => {
             instance(appEnvironment),
             output.object,
             instance(fs),
-            instance(configurationService)
+            instance(configurationService),
         );
 
         assert.isFalse(expManager._activated());
@@ -286,7 +286,7 @@ suite('A/B experiments', () => {
             instance(appEnvironment),
             output.object,
             instance(fs),
-            instance(configurationService)
+            instance(configurationService),
         );
 
         const promise = expManager.activate();
@@ -325,7 +325,7 @@ suite('A/B experiments', () => {
     test('When latest experiments are not available, but experiment storage contains experiments, then experiment storage is not updated', async () => {
         const doBestEffortToPopulateExperiments = sinon.stub(
             ExperimentsManager.prototype,
-            'doBestEffortToPopulateExperiments'
+            'doBestEffortToPopulateExperiments',
         );
         doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(false));
         expManager = new ExperimentsManager(
@@ -335,7 +335,7 @@ suite('A/B experiments', () => {
             instance(appEnvironment),
             output.object,
             instance(fs),
-            instance(configurationService)
+            instance(configurationService),
         );
 
         downloadedExperimentsStorage
@@ -366,7 +366,7 @@ suite('A/B experiments', () => {
     test('When best effort to populate experiments succeeds, function updateStorage() returns', async () => {
         const doBestEffortToPopulateExperiments = sinon.stub(
             ExperimentsManager.prototype,
-            'doBestEffortToPopulateExperiments'
+            'doBestEffortToPopulateExperiments',
         );
         doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(true));
         expManager = new ExperimentsManager(
@@ -376,7 +376,7 @@ suite('A/B experiments', () => {
             instance(appEnvironment),
             output.object,
             instance(fs),
-            instance(configurationService)
+            instance(configurationService),
         );
 
         downloadedExperimentsStorage
@@ -403,7 +403,7 @@ suite('A/B experiments', () => {
     test('When latest experiments are not available, experiment storage is empty, but if local experiments file is not valid, experiment storage is not updated', async () => {
         const doBestEffortToPopulateExperiments = sinon.stub(
             ExperimentsManager.prototype,
-            'doBestEffortToPopulateExperiments'
+            'doBestEffortToPopulateExperiments',
         );
         doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(false));
         expManager = new ExperimentsManager(
@@ -413,7 +413,7 @@ suite('A/B experiments', () => {
             instance(appEnvironment),
             output.object,
             instance(fs),
-            instance(configurationService)
+            instance(configurationService),
         );
         downloadedExperimentsStorage
             .setup((n) => n.value)
@@ -454,7 +454,7 @@ suite('A/B experiments', () => {
     test('When latest experiments are not available, and experiment storage is empty, then experiment storage is updated using local experiments file given experiments are valid', async () => {
         const doBestEffortToPopulateExperiments = sinon.stub(
             ExperimentsManager.prototype,
-            'doBestEffortToPopulateExperiments'
+            'doBestEffortToPopulateExperiments',
         );
         doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(false));
         expManager = new ExperimentsManager(
@@ -464,7 +464,7 @@ suite('A/B experiments', () => {
             instance(appEnvironment),
             output.object,
             instance(fs),
-            instance(configurationService)
+            instance(configurationService),
         );
         downloadedExperimentsStorage
             .setup((n) => n.value)
@@ -508,7 +508,7 @@ suite('A/B experiments', () => {
             setup(() => {
                 const doBestEffortToPopulateExperiments = sinon.stub(
                     ExperimentsManager.prototype,
-                    'doBestEffortToPopulateExperiments'
+                    'doBestEffortToPopulateExperiments',
                 );
                 doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(false));
                 expManager = new ExperimentsManager(
@@ -518,7 +518,7 @@ suite('A/B experiments', () => {
                     instance(appEnvironment),
                     output.object,
                     instance(fs),
-                    instance(configurationService)
+                    instance(configurationService),
                 );
             });
             test('If checking the existence of config file fails', async () => {
@@ -649,7 +649,7 @@ suite('A/B experiments', () => {
                 experimentStorage.verifyAll();
                 downloadedExperimentsStorage.verifyAll();
             });
-        }
+        },
     );
 
     const testsForInExperiment = [
@@ -658,9 +658,9 @@ suite('A/B experiments', () => {
             experimentName: 'imaginary experiment',
             userExperiments: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName:
@@ -668,10 +668,10 @@ suite('A/B experiments', () => {
             experimentName: 'experiment1',
             userExperiments: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
-            expectedResult: true
-        }
+            expectedResult: true,
+        },
     ];
 
     testsForInExperiment.forEach((testParams) => {
@@ -679,7 +679,7 @@ suite('A/B experiments', () => {
             expManager.userExperiments = testParams.userExperiments;
             expect(expManager.inExperiment(testParams.experimentName)).to.equal(
                 testParams.expectedResult,
-                'Incorrectly identified'
+                'Incorrectly identified',
             );
         });
     });
@@ -689,30 +689,30 @@ suite('A/B experiments', () => {
         {
             testName: 'Returns true if hash modulo output is in range',
             hash: 1181,
-            expectedResult: true
+            expectedResult: true,
         },
         {
             testName: 'Returns false if hash modulo is less than min',
             hash: 967,
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'Returns false if hash modulo is more than max',
             hash: 3297,
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'If checking if user is in range fails with error, throw error',
             hash: 3297,
             error: true,
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'If machine ID is bogus, throw error',
             hash: 3297,
             machineIdError: true,
-            expectedResult: false
-        }
+            expectedResult: false,
+        },
     ];
 
     suite('Function IsUserInRange()', () => {
@@ -730,7 +730,7 @@ suite('A/B experiments', () => {
                     when(crypto.createHash(anything(), 'number', anything())).thenReturn(testParams.hash);
                     expect(expManager.isUserInRange(79, 94, 'salt')).to.equal(
                         testParams.expectedResult,
-                        'Incorrectly identified'
+                        'Incorrectly identified',
                     );
                 }
             });
@@ -757,7 +757,7 @@ suite('A/B experiments', () => {
                 'ShowExtensionSurveyPrompt',
                 'ShowPlayIcon',
                 'AlwaysDisplayTestExplorer',
-                'LS'
+                'LS',
             ];
             assert.deepEqual(expectedOldExperimentSalts, oldExperimentSalts);
         });
@@ -767,37 +767,37 @@ suite('A/B experiments', () => {
         {
             testName: 'User experiments list is empty if experiment storage value is not an array',
             experimentStorageValue: undefined,
-            expectedResult: []
+            expectedResult: [],
         },
         {
             testName: 'User experiments list is empty if experiment storage value is an empty array',
             experimentStorageValue: [],
-            expectedResult: []
+            expectedResult: [],
         },
         {
             testName:
                 'User experiments list does not contain any experiments if user has requested to opt out of all experiments',
             experimentStorageValue: [
                 { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 }
+                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 },
             ],
             hash: 8187,
             experimentsOptedOutFrom: ['All'],
-            expectedResult: []
+            expectedResult: [],
         },
         {
             testName:
                 'User experiments list contains all experiments if user has requested to opt into all experiments',
             experimentStorageValue: [
                 { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 }
+                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 },
             ],
             hash: 8187,
             experimentsOptedInto: ['All'],
             expectedResult: [
                 { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 }
-            ]
+                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 },
+            ],
         },
         {
             testName:
@@ -805,73 +805,73 @@ suite('A/B experiments', () => {
             experimentStorageValue: [{ name: 'experiment2 - control', salt: 'salt', min: 19, max: 30 }],
             hash: 8187,
             experimentsOptedInto: ['experiment2 - control'],
-            expectedResult: []
+            expectedResult: [],
         },
         {
             testName:
                 'User experiments list contains the experiment if user has requested to opt out of a control group but user is in experiment range',
             experimentStorageValue: [
                 { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2 - control', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2 - control', salt: 'salt', min: 19, max: 30 },
             ],
             hash: 8187,
             experimentsOptedOutFrom: ['experiment1 - control'],
-            expectedResult: [{ name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 }]
+            expectedResult: [{ name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 }],
         },
         {
             testName:
                 'User experiments list does not contains the experiment if user has opted out of experiment even though user is in experiment range',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
             hash: 8187,
             experimentsOptedOutFrom: ['experiment1'],
-            expectedResult: []
+            expectedResult: [],
         },
         {
             testName:
                 'User experiments list contains the experiment if user has opted into the experiment even though user is not in experiment range',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
             hash: 8187,
             experimentsOptedInto: ['experiment1'],
-            expectedResult: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]
+            expectedResult: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }],
         },
         {
             testName:
                 'User experiments list contains the experiment user has opened into and not the control experiment even if user is in the control experiment range',
             experimentStorageValue: [
                 { name: 'control', salt: 'salt', min: 0, max: 100 },
-                { name: 'experiment', salt: 'salt', min: 0, max: 0 }
+                { name: 'experiment', salt: 'salt', min: 0, max: 0 },
             ],
             hash: 8187,
             experimentsOptedInto: ['experiment'],
-            expectedResult: [{ name: 'experiment', salt: 'salt', min: 0, max: 0 }]
+            expectedResult: [{ name: 'experiment', salt: 'salt', min: 0, max: 0 }],
         },
         {
             testName:
                 'User experiments list does not contain the experiment if user has both opted in and out of an experiment',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
             hash: 8187,
             experimentsOptedInto: ['experiment1'],
             experimentsOptedOutFrom: ['experiment1'],
-            expectedResult: []
+            expectedResult: [],
         },
         {
             testName: 'Otherwise user experiments list contains the experiment if user is in experiment range',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
             hash: 8187,
-            expectedResult: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]
-        }
+            expectedResult: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }],
+        },
     ];
 
     suite('Function populateUserExperiments', async () => {
@@ -898,55 +898,55 @@ suite('A/B experiments', () => {
         {
             testName: 'If experiments are not an array, return false',
             experiments: undefined,
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'If any experiment have `min` field missing, return false',
             experiments: [
                 { name: 'experiment1', salt: 'salt', max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'If any experiment have `max` field missing, return false',
             experiments: [
                 { name: 'experiment1', salt: 'salt', min: 79 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'If any experiment have `salt` field missing, return false',
             experiments: [
                 { name: 'experiment1', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'If any experiment have `name` field missing, return false',
             experiments: [
                 { salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'If all experiments contain all the fields in type `ABExperiment`, return true',
             experiments: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
-            expectedResult: true
-        }
+            expectedResult: true,
+        },
     ];
 
     suite('Function areExperimentsValid()', () => {
         testsForAreExperimentsValid.forEach((testParams) => {
             test(testParams.testName, () => {
                 expect(expManager.areExperimentsValid(testParams.experiments as any)).to.equal(
-                    testParams.expectedResult
+                    testParams.expectedResult,
                 );
             });
         });
@@ -968,7 +968,7 @@ suite('A/B experiments', () => {
                 output.object,
                 instance(fs),
                 instance(configurationService),
-                timeout
+                timeout,
             );
 
             // Download set to complete in 50 ms, timeout is of 150 ms, i.e download will complete within timeout
@@ -992,7 +992,7 @@ suite('A/B experiments', () => {
                 output.object,
                 instance(fs),
                 instance(configurationService),
-                timeout
+                timeout,
             );
 
             // Download set to complete in 200 ms, timeout is of 100 ms, i.e download will complete within timeout
@@ -1013,7 +1013,7 @@ suite('A/B experiments', () => {
                 instance(appEnvironment),
                 output.object,
                 instance(fs),
-                instance(configurationService)
+                instance(configurationService),
             );
 
             const result = await expManager.doBestEffortToPopulateExperiments();
@@ -1036,7 +1036,7 @@ suite('A/B experiments', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         when(httpClient.getJSON(configUri, false)).thenResolve([
-            { name: 'experiment1', salt: 'salt', min: 90, max: 100 }
+            { name: 'experiment1', salt: 'salt', min: 90, max: 100 },
         ]);
 
         await expManager.downloadAndStoreExperiments(experimentStorage.object);

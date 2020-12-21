@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    HKCU, HKLM, Options, REG_SZ, Registry, RegistryItem,
-} from 'winreg';
+import { HKCU, HKLM, Options, REG_SZ, Registry, RegistryItem } from 'winreg';
 import { createDeferred } from '../../common/utils/async';
 
 export { HKCU, HKLM, REG_SZ, Options };

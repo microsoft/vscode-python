@@ -6,7 +6,7 @@ import { PythonSettings } from '../../client/common/configSettings';
 import { IExperimentsManager, IInterpreterPathService, Resource } from '../../client/common/types';
 import {
     IInterpreterAutoSeletionProxyService,
-    IInterpreterSecurityService
+    IInterpreterSecurityService,
 } from '../../client/interpreter/autoSelection/types';
 
 export class MockPythonSettings extends PythonSettings {
@@ -16,7 +16,7 @@ export class MockPythonSettings extends PythonSettings {
         workspace?: IWorkspaceService,
         experimentsManager?: IExperimentsManager,
         interpreterPathService?: IInterpreterPathService,
-        interpreterSecurityService?: IInterpreterSecurityService
+        interpreterSecurityService?: IInterpreterSecurityService,
     ) {
         super(
             workspaceFolder,
@@ -24,7 +24,7 @@ export class MockPythonSettings extends PythonSettings {
             workspace,
             experimentsManager,
             interpreterPathService,
-            interpreterSecurityService
+            interpreterSecurityService,
         );
     }
 

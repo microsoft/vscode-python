@@ -18,13 +18,13 @@ export class SettingsInterpretersAutoSelectionRule extends BaseRuleService {
         @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
-        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService
+        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
     ) {
         super(AutoSelectionRule.settings, fs, stateFactory);
     }
     protected async onAutoSelectInterpreter(
         _resource: Resource,
-        _manager?: IInterpreterAutoSelectionService
+        _manager?: IInterpreterAutoSelectionService,
     ): Promise<NextAction> {
         // tslint:disable-next-line:no-any
         const pythonConfig = this.workspaceService.getConfiguration('python', null as any)!;

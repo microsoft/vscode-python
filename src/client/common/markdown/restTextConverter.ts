@@ -9,7 +9,7 @@ import { isDecimal, isWhiteSpace } from '../../language/characters';
 enum State {
     Default,
     Preformatted,
-    Code
+    Code,
 }
 
 export class RestTextConverter {

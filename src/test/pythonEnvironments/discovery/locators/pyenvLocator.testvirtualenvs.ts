@@ -15,11 +15,7 @@ suite('Pyenv Locator', async () => {
         pyenvRootOldValue = process.env.PYENV_ROOT;
         process.env.PYENV_ROOT = testPyenvRoot;
     });
-    testLocatorWatcher(
-        testPyenvVersionsDir,
-        async () => new PyenvLocator(),
-        { kind: PythonEnvKind.Pyenv },
-    );
+    testLocatorWatcher(testPyenvVersionsDir, async () => new PyenvLocator(), { kind: PythonEnvKind.Pyenv });
     suiteTeardown(() => {
         process.env.PYENV_ROOT = pyenvRootOldValue;
     });

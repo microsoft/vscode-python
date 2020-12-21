@@ -52,8 +52,8 @@ export class Webview implements IWebview {
         const fontAwesomePath = webview
             .asWebviewUri(
                 Uri.file(
-                    path.join(this.options.rootPath, 'node_modules', 'font-awesome', 'css', 'font-awesome.min.css')
-                )
+                    path.join(this.options.rootPath, 'node_modules', 'font-awesome', 'css', 'font-awesome.min.css'),
+                ),
             )
             .toString();
         return `<!doctype html>

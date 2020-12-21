@@ -55,7 +55,7 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
         };
         const failedItems = [
             ...tests.testFunctions.map((f) => f.testFunction).filter(predicate),
-            ...tests.testSuites.map((f) => f.testSuite).filter(predicate)
+            ...tests.testSuites.map((f) => f.testSuite).filter(predicate),
         ];
         failedItems.forEach((failedItem) => visitRecursive(tests, failedItem, visitor));
     }
@@ -66,7 +66,7 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
         const itemsRunning = [
             ...(testsToRun.testFile || []),
             ...(testsToRun.testSuite || []),
-            ...(testsToRun.testFunction || [])
+            ...(testsToRun.testFunction || []),
         ];
         const visitor = (item: TestDataItem) => {
             item.status = TestStatus.Running;

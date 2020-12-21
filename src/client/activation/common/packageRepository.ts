@@ -13,7 +13,7 @@ export const azureCDNBlobStorageAccount = 'https://pvsc.azureedge.net';
 export enum LanguageServerDownloadChannel {
     stable = 'stable',
     beta = 'beta',
-    daily = 'daily'
+    daily = 'daily',
 }
 
 @injectable()
@@ -23,7 +23,7 @@ export abstract class StableLanguageServerPackageRepository extends AzureBlobSto
             serviceContainer,
             azureBlobStorageAccount,
             `${packageName}-${LanguageServerDownloadChannel.stable}`,
-            azureCDNBlobStorageAccount
+            azureCDNBlobStorageAccount,
         );
     }
 }
@@ -35,7 +35,7 @@ export abstract class BetaLanguageServerPackageRepository extends AzureBlobStore
             serviceContainer,
             azureBlobStorageAccount,
             `${packageName}-${LanguageServerDownloadChannel.beta}`,
-            azureCDNBlobStorageAccount
+            azureCDNBlobStorageAccount,
         );
     }
 }
@@ -47,7 +47,7 @@ export abstract class DailyLanguageServerPackageRepository extends AzureBlobStor
             serviceContainer,
             azureBlobStorageAccount,
             `${packageName}-${LanguageServerDownloadChannel.daily}`,
-            azureCDNBlobStorageAccount
+            azureCDNBlobStorageAccount,
         );
     }
 }

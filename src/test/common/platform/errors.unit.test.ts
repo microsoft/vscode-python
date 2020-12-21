@@ -10,7 +10,7 @@ import {
     isFileIsDirError,
     isFileNotFoundError,
     isNoPermissionsError,
-    isNotDirError
+    isNotDirError,
 } from '../../../client/common/platform/errors';
 import { SystemError } from './utils';
 
@@ -23,7 +23,7 @@ suite('FileSystem - errors', () => {
             [vscode.FileSystemError.FileExists(filename), false],
             [new SystemError('ENOENT', 'stat', '<msg>'), true],
             [new SystemError('EEXIST', '???', '<msg>'), false],
-            [new Error(filename), undefined]
+            [new Error(filename), undefined],
         ];
         tests.map(([err, expected]) => {
             test(`${err} -> ${expected}`, () => {
@@ -40,7 +40,7 @@ suite('FileSystem - errors', () => {
             [vscode.FileSystemError.FileNotFound(filename), false],
             [new SystemError('EEXIST', '???', '<msg>'), true],
             [new SystemError('ENOENT', 'stat', '<msg>'), false],
-            [new Error(filename), undefined]
+            [new Error(filename), undefined],
         ];
         tests.map(([err, expected]) => {
             test(`${err} -> ${expected}`, () => {
@@ -57,7 +57,7 @@ suite('FileSystem - errors', () => {
             [vscode.FileSystemError.FileNotFound(filename), false],
             [new SystemError('EISDIR', '???', '<msg>'), true],
             [new SystemError('ENOENT', 'stat', '<msg>'), false],
-            [new Error(filename), undefined]
+            [new Error(filename), undefined],
         ];
         tests.map(([err, expected]) => {
             test(`${err} -> ${expected}`, () => {
@@ -74,7 +74,7 @@ suite('FileSystem - errors', () => {
             [vscode.FileSystemError.FileNotFound(filename), false],
             [new SystemError('ENOTDIR', '???', '<msg>'), true],
             [new SystemError('ENOENT', 'stat', '<msg>'), false],
-            [new Error(filename), undefined]
+            [new Error(filename), undefined],
         ];
         tests.map(([err, expected]) => {
             test(`${err} -> ${expected}`, () => {
@@ -91,7 +91,7 @@ suite('FileSystem - errors', () => {
             [vscode.FileSystemError.FileNotFound(filename), false],
             [new SystemError('EACCES', '???', '<msg>'), true],
             [new SystemError('ENOENT', 'stat', '<msg>'), false],
-            [new Error(filename), undefined]
+            [new Error(filename), undefined],
         ];
         tests.map(([err, expected]) => {
             test(`${err} -> ${expected}`, () => {

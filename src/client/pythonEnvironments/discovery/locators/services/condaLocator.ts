@@ -6,7 +6,7 @@ import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
 import { parseVersion } from '../../../base/info/pythonVersion';
 import { pathExists, readFile } from '../../../common/externalDependencies';
 
-function getCondaMetaPaths(interpreterPath:string): string[] {
+function getCondaMetaPaths(interpreterPath: string): string[] {
     const condaMetaDir = 'conda-meta';
 
     // Check if the conda-meta directory is in the same directory as the interpreter.
@@ -77,7 +77,7 @@ export async function isCondaEnvironment(interpreterPath: string): Promise<boole
  * Reads the `conda-meta/history` and finds the line that contains 'python-3.9.0`. Gets the
  * version string from that lines and parses it.
  */
-export async function getPythonVersionFromConda(interpreterPath:string): Promise<PythonVersion> {
+export async function getPythonVersionFromConda(interpreterPath: string): Promise<PythonVersion> {
     const configPaths = getCondaMetaPaths(interpreterPath).map((p) => path.join(p, 'history'));
     const pattern = /\:python-(([\d\.a-z]?)+)/;
 
@@ -105,7 +105,8 @@ export async function getPythonVersionFromConda(interpreterPath:string): Promise
 
                         // we only need the second one
                         return matches ? matches[1] : '';
-                    }).filter((v) => v.length > 0);
+                    })
+                    .filter((v) => v.length > 0);
 
                 if (pythonVersionStrings.length > 0) {
                     const last = pythonVersionStrings.length - 1;

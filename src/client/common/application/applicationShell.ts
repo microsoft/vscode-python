@@ -31,7 +31,7 @@ import {
     window,
     WindowState,
     WorkspaceFolder,
-    WorkspaceFolderPickOptions
+    WorkspaceFolderPickOptions,
 } from 'vscode';
 import { IApplicationShell } from './types';
 
@@ -79,12 +79,12 @@ export class ApplicationShell implements IApplicationShell {
     public showQuickPick(
         items: string[] | Thenable<string[]>,
         options?: QuickPickOptions,
-        token?: CancellationToken
+        token?: CancellationToken,
     ): Thenable<string>;
     public showQuickPick<T extends QuickPickItem>(
         items: T[] | Thenable<T[]>,
         options?: QuickPickOptions,
-        token?: CancellationToken
+        token?: CancellationToken,
     ): Thenable<T>;
     public showQuickPick(items: any, options?: any, token?: any): Thenable<any> {
         return window.showQuickPick(items, options, token);
@@ -118,20 +118,20 @@ export class ApplicationShell implements IApplicationShell {
     }
     public withProgress<R>(
         options: ProgressOptions,
-        task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>
+        task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>,
     ): Thenable<R> {
         return window.withProgress<R>(options, task);
     }
     public withProgressCustomIcon<R>(
         icon: string,
-        task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>
+        task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>,
     ): Thenable<R> {
         const token = new CancellationTokenSource().token;
         const statusBarProgress = this.createStatusBarItem(StatusBarAlignment.Left);
         const progress = {
             report: (value: { message?: string; increment?: number }) => {
                 statusBarProgress.text = `${icon} ${value.message}`;
-            }
+            },
         };
         statusBarProgress.show();
         return task(progress, token).then((result) => {

@@ -36,7 +36,7 @@ class Base64Visitor {
             'data-uri',
             [new Base64MimeTypeNode(), URLNode.value],
             URLNode.index || 0,
-            URLNode.currentFileInfo
+            URLNode.currentFileInfo,
         );
     }
 }

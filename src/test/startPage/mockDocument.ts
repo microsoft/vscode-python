@@ -58,7 +58,7 @@ export class MockDocument implements TextDocument {
         contents: string,
         fileName: string,
         onSave: (doc: TextDocument) => Promise<boolean>,
-        language?: string
+        language?: string,
     ) {
         this._uri = Uri.file(fileName);
         this._contents = contents;
@@ -179,7 +179,7 @@ export class MockDocument implements TextDocument {
         return new MockLine(
             line,
             index,
-            prevLine ? prevLine.offset + prevLine.rangeIncludingLineBreak.end.character : 0
+            prevLine ? prevLine.offset + prevLine.rangeIncludingLineBreak.end.character : 0,
         );
     }
 

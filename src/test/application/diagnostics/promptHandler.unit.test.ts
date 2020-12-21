@@ -10,13 +10,13 @@ import * as typemoq from 'typemoq';
 import { DiagnosticSeverity } from 'vscode';
 import {
     DiagnosticCommandPromptHandlerService,
-    MessageCommandPrompt
+    MessageCommandPrompt,
 } from '../../../client/application/diagnostics/promptHandler';
 import {
     DiagnosticScope,
     IDiagnostic,
     IDiagnosticCommand,
-    IDiagnosticHandlerService
+    IDiagnosticHandlerService,
 } from '../../../client/application/diagnostics/types';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
@@ -44,7 +44,7 @@ suite('Application Diagnostics - PromptHandler', () => {
                 scope: DiagnosticScope.Global,
                 severity: severity.value,
                 resource: undefined,
-                invokeHandler: 'default'
+                invokeHandler: 'default',
             };
             switch (severity.value) {
                 case DiagnosticSeverity.Error: {
@@ -77,7 +77,7 @@ suite('Application Diagnostics - PromptHandler', () => {
                 scope: DiagnosticScope.Global,
                 severity: severity.value,
                 resource: undefined,
-                invokeHandler: 'default'
+                invokeHandler: 'default',
             };
             let onCloseHandlerInvoked = false;
             const options: MessageCommandPrompt = {
@@ -85,7 +85,7 @@ suite('Application Diagnostics - PromptHandler', () => {
                 message: 'Custom Message',
                 onClose: () => {
                     onCloseHandlerInvoked = true;
-                }
+                },
             };
 
             switch (severity.value) {
@@ -95,8 +95,8 @@ suite('Application Diagnostics - PromptHandler', () => {
                             a.showErrorMessage(
                                 typemoq.It.isValue(options.message!),
                                 typemoq.It.isValue('Yes'),
-                                typemoq.It.isValue('No')
-                            )
+                                typemoq.It.isValue('No'),
+                            ),
                         )
                         .returns(() => Promise.resolve('Yes'))
                         .verifiable(typemoq.Times.once());
@@ -108,8 +108,8 @@ suite('Application Diagnostics - PromptHandler', () => {
                             a.showWarningMessage(
                                 typemoq.It.isValue(options.message!),
                                 typemoq.It.isValue('Yes'),
-                                typemoq.It.isValue('No')
-                            )
+                                typemoq.It.isValue('No'),
+                            ),
                         )
                         .returns(() => Promise.resolve('Yes'))
                         .verifiable(typemoq.Times.once());
@@ -121,8 +121,8 @@ suite('Application Diagnostics - PromptHandler', () => {
                             a.showInformationMessage(
                                 typemoq.It.isValue(options.message!),
                                 typemoq.It.isValue('Yes'),
-                                typemoq.It.isValue('No')
-                            )
+                                typemoq.It.isValue('No'),
+                            ),
                         )
                         .returns(() => Promise.resolve('Yes'))
                         .verifiable(typemoq.Times.once());
@@ -141,11 +141,11 @@ suite('Application Diagnostics - PromptHandler', () => {
                 scope: DiagnosticScope.Global,
                 severity: severity.value,
                 resource: undefined,
-                invokeHandler: 'default'
+                invokeHandler: 'default',
             };
             const options: MessageCommandPrompt = {
                 commandPrompts: [{ prompt: 'Yes' }, { prompt: 'No' }],
-                message: 'Custom Message'
+                message: 'Custom Message',
             };
 
             switch (severity.value) {
@@ -155,8 +155,8 @@ suite('Application Diagnostics - PromptHandler', () => {
                             a.showErrorMessage(
                                 typemoq.It.isValue(options.message!),
                                 typemoq.It.isValue('Yes'),
-                                typemoq.It.isValue('No')
-                            )
+                                typemoq.It.isValue('No'),
+                            ),
                         )
                         .verifiable(typemoq.Times.once());
                     break;
@@ -167,8 +167,8 @@ suite('Application Diagnostics - PromptHandler', () => {
                             a.showWarningMessage(
                                 typemoq.It.isValue(options.message!),
                                 typemoq.It.isValue('Yes'),
-                                typemoq.It.isValue('No')
-                            )
+                                typemoq.It.isValue('No'),
+                            ),
                         )
                         .verifiable(typemoq.Times.once());
                     break;
@@ -179,8 +179,8 @@ suite('Application Diagnostics - PromptHandler', () => {
                             a.showInformationMessage(
                                 typemoq.It.isValue(options.message!),
                                 typemoq.It.isValue('Yes'),
-                                typemoq.It.isValue('No')
-                            )
+                                typemoq.It.isValue('No'),
+                            ),
                         )
                         .verifiable(typemoq.Times.once());
                     break;
@@ -197,15 +197,15 @@ suite('Application Diagnostics - PromptHandler', () => {
                 scope: DiagnosticScope.Global,
                 severity: severity.value,
                 resource: undefined,
-                invokeHandler: 'default'
+                invokeHandler: 'default',
             };
             const command = typemoq.Mock.ofType<IDiagnosticCommand>();
             const options: MessageCommandPrompt = {
                 commandPrompts: [
                     { prompt: 'Yes', command: command.object },
-                    { prompt: 'No', command: command.object }
+                    { prompt: 'No', command: command.object },
                 ],
-                message: 'Custom Message'
+                message: 'Custom Message',
             };
             command.setup((c) => c.invoke()).verifiable(typemoq.Times.once());
 
@@ -216,8 +216,8 @@ suite('Application Diagnostics - PromptHandler', () => {
                             a.showErrorMessage(
                                 typemoq.It.isValue(options.message!),
                                 typemoq.It.isValue('Yes'),
-                                typemoq.It.isValue('No')
-                            )
+                                typemoq.It.isValue('No'),
+                            ),
                         )
                         .returns(() => Promise.resolve('Yes'))
                         .verifiable(typemoq.Times.once());
@@ -229,8 +229,8 @@ suite('Application Diagnostics - PromptHandler', () => {
                             a.showWarningMessage(
                                 typemoq.It.isValue(options.message!),
                                 typemoq.It.isValue('Yes'),
-                                typemoq.It.isValue('No')
-                            )
+                                typemoq.It.isValue('No'),
+                            ),
                         )
                         .returns(() => Promise.resolve('Yes'))
                         .verifiable(typemoq.Times.once());
@@ -242,8 +242,8 @@ suite('Application Diagnostics - PromptHandler', () => {
                             a.showInformationMessage(
                                 typemoq.It.isValue(options.message!),
                                 typemoq.It.isValue('Yes'),
-                                typemoq.It.isValue('No')
-                            )
+                                typemoq.It.isValue('No'),
+                            ),
                         )
                         .returns(() => Promise.resolve('Yes'))
                         .verifiable(typemoq.Times.once());

@@ -46,7 +46,7 @@ declare interface String {
  */
 String.prototype.splitLines = function (
     this: string,
-    splitOptions: { trim: boolean; removeEmptyEntries: boolean } = { removeEmptyEntries: true, trim: true }
+    splitOptions: { trim: boolean; removeEmptyEntries: boolean } = { removeEmptyEntries: true, trim: true },
 ): string[] {
     let lines = this.split(/\r?\n/g);
     if (splitOptions && splitOptions.trim) {

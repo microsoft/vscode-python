@@ -22,14 +22,14 @@ export class MockCommandManager implements ICommandManager {
         return {
             dispose: () => {
                 noop();
-            }
+            },
         };
     }
 
     public registerTextEditorCommand(
         _command: string,
         _callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void,
-        _thisArg?: any
+        _thisArg?: any,
     ): Disposable {
         throw new Error('Method not implemented.');
     }

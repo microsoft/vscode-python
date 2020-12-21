@@ -44,8 +44,8 @@ suite('Experimentation service', () => {
             experiments: {
                 enabled,
                 optInto,
-                optOutFrom
-            }
+                optOutFrom,
+            },
             // tslint:disable-next-line: no-any
         } as any);
     }
@@ -68,7 +68,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
             );
 
             sinon.assert.calledWithExactly(
@@ -77,7 +77,7 @@ suite('Experimentation service', () => {
                 extensionVersion,
                 tasClient.TargetPopulation.Public,
                 sinon.match.any,
-                globalMemento
+                globalMemento,
             );
         });
 
@@ -92,7 +92,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
             );
 
             sinon.assert.calledWithExactly(
@@ -101,7 +101,7 @@ suite('Experimentation service', () => {
                 extensionVersion,
                 tasClient.TargetPopulation.Insiders,
                 sinon.match.any,
-                globalMemento
+                globalMemento,
             );
         });
 
@@ -115,7 +115,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
             );
 
             assert.deepEqual(experimentService._optInto, ['Foo - experiment']);
@@ -130,7 +130,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
             );
 
             assert.deepEqual(experimentService._optOutFrom, ['Foo - experiment']);
@@ -149,7 +149,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 instance(globalMemento),
-                outputChannel
+                outputChannel,
             );
             const output = `${Experiments.inGroup().format('pythonExperiment')}\n`;
 
@@ -173,7 +173,7 @@ suite('Experimentation service', () => {
 
             isCachedFlightEnabledStub = sinon.stub().returns(Promise.resolve(true));
             sinon.stub(tasClient, 'getExperimentationService').returns({
-                isCachedFlightEnabled: isCachedFlightEnabledStub
+                isCachedFlightEnabled: isCachedFlightEnabledStub,
                 // tslint:disable-next-line: no-any
             } as any);
 
@@ -191,7 +191,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -207,7 +207,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -223,7 +223,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -231,7 +231,7 @@ suite('Experimentation service', () => {
             assert.equal(telemetryEvents.length, 1);
             assert.deepEqual(telemetryEvents[0], {
                 eventName: EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT,
-                properties: { expNameOptedInto: experiment }
+                properties: { expNameOptedInto: experiment },
             });
             sinon.assert.notCalled(isCachedFlightEnabledStub);
         });
@@ -243,7 +243,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -251,7 +251,7 @@ suite('Experimentation service', () => {
             assert.equal(telemetryEvents.length, 1);
             assert.deepEqual(telemetryEvents[0], {
                 eventName: EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT,
-                properties: { expNameOptedInto: experiment }
+                properties: { expNameOptedInto: experiment },
             });
             sinon.assert.notCalled(isCachedFlightEnabledStub);
         });
@@ -263,7 +263,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -271,7 +271,7 @@ suite('Experimentation service', () => {
             assert.equal(telemetryEvents.length, 1);
             assert.deepEqual(telemetryEvents[0], {
                 eventName: EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT,
-                properties: { expNameOptedOutOf: experiment }
+                properties: { expNameOptedOutOf: experiment },
             });
             sinon.assert.notCalled(isCachedFlightEnabledStub);
         });
@@ -283,7 +283,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -291,7 +291,7 @@ suite('Experimentation service', () => {
             assert.equal(telemetryEvents.length, 1);
             assert.deepEqual(telemetryEvents[0], {
                 eventName: EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT,
-                properties: { expNameOptedOutOf: experiment }
+                properties: { expNameOptedOutOf: experiment },
             });
             sinon.assert.notCalled(isCachedFlightEnabledStub);
         });
@@ -304,7 +304,7 @@ suite('Experimentation service', () => {
         setup(() => {
             getTreatmentVariableAsyncStub = sinon.stub().returns(Promise.resolve('value'));
             sinon.stub(tasClient, 'getExperimentationService').returns({
-                getTreatmentVariableAsync: getTreatmentVariableAsyncStub
+                getTreatmentVariableAsync: getTreatmentVariableAsyncStub,
                 // tslint:disable-next-line: no-any
             } as any);
 
@@ -318,7 +318,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -333,7 +333,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -348,7 +348,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -363,7 +363,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel
+                outputChannel,
             );
             const result = await experimentService.getExperimentValue(experiment);
 

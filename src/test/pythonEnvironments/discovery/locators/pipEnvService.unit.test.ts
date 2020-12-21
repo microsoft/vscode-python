@@ -10,9 +10,7 @@ import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import * as sinon from 'sinon';
-import {
-    anything, instance, mock, when,
-} from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../../client/common/application/types';
@@ -38,7 +36,7 @@ import { EventName } from '../../../../client/telemetry/constants';
 enum OS {
     Mac,
     Windows,
-    Linux
+    Linux,
 }
 
 suite('Interpreters - PipEnv', () => {
@@ -174,12 +172,15 @@ suite('Interpreters - PipEnv', () => {
                     const env = {};
                     currentProcess.setup((c) => c.env).returns(() => env);
                     processService
-                        .setup((p) => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
+                        .setup((p) =>
+                            p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()),
+                        )
                         .returns(() => Promise.reject(new Error()));
                     fileSystem
                         .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
                         .returns(() => Promise.resolve(true));
-                    const warningMessage = "Workspace contains Pipfile but 'pipenv' was not found. Make sure 'pipenv' is on the PATH.";
+                    const warningMessage =
+                        "Workspace contains Pipfile but 'pipenv' was not found. Make sure 'pipenv' is on the PATH.";
                     appShell
                         .setup((a) => a.showWarningMessage(warningMessage))
                         .returns(() => Promise.resolve(''))
@@ -193,15 +194,20 @@ suite('Interpreters - PipEnv', () => {
                     const env = {};
                     currentProcess.setup((c) => c.env).returns(() => env);
                     processService
-                        .setup((p) => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
+                        .setup((p) =>
+                            p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()),
+                        )
                         .returns(() => Promise.resolve({ stderr: '', stdout: 'pipenv, version 2018.11.26' }));
                     processService
-                        .setup((p) => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--venv']), TypeMoq.It.isAny()))
+                        .setup((p) =>
+                            p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--venv']), TypeMoq.It.isAny()),
+                        )
                         .returns(() => Promise.resolve({ stderr: 'Aborted!', stdout: '' }));
                     fileSystem
                         .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
                         .returns(() => Promise.resolve(true));
-                    const warningMessage = 'Workspace contains Pipfile but the associated virtual environment has not been setup. Setup the virtual environment manually if needed.';
+                    const warningMessage =
+                        'Workspace contains Pipfile but the associated virtual environment has not been setup. Setup the virtual environment manually if needed.';
                     appShell
                         .setup((a) => a.showWarningMessage(warningMessage))
                         .returns(() => Promise.resolve(''))

@@ -17,7 +17,7 @@ import {
     ITestsParser,
     Options,
     TestDiscoveryOptions,
-    Tests
+    Tests,
 } from '../../../client/testing/common/types';
 import { TestDiscoveryService } from '../../../client/testing/nosetest/services/discoveryService';
 import { IArgumentsService, TestFilter } from '../../../client/testing/types';
@@ -54,7 +54,7 @@ suite('Unit Tests - nose - Discovery', () => {
             testFunctions: [],
             testSuites: [],
             rootTestFolders: [],
-            testFolders: []
+            testFolders: [],
         };
         argsService
             .setup((a) => a.filterArguments(typeMoq.It.isValue(args), typeMoq.It.isValue(TestFilter.discovery)))
@@ -95,7 +95,7 @@ suite('Unit Tests - nose - Discovery', () => {
             testFunctions: [],
             testSuites: [],
             rootTestFolders: [],
-            testFolders: []
+            testFolders: [],
         };
         argsService
             .setup((a) => a.filterArguments(typeMoq.It.isValue(args), typeMoq.It.isValue(TestFilter.discovery)))

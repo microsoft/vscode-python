@@ -17,7 +17,7 @@ import {
     SymbolInformation,
     SymbolKind,
     TextDocument,
-    Uri
+    Uri,
 } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient/node';
 import { IFileSystem } from '../../../client/common/platform/types';
@@ -55,7 +55,7 @@ suite('Jedi Symbol Provider', () => {
         fileName: string,
         expectedSize: number,
         token?: CancellationToken,
-        isUntitled = false
+        isUntitled = false,
     ) {
         fileSystem.setup((fs) => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
         token = token ? token : new CancellationTokenSource().token;
@@ -69,8 +69,8 @@ suite('Jedi Symbol Provider', () => {
                 range: { endColumn: 0, endLine: 0, startColumn: 0, startLine: 0 },
                 rawType: '',
                 text: '',
-                type: CompletionItemKind.Class
-            }
+                type: CompletionItemKind.Class,
+            },
         ];
 
         uri = Uri.file(fileName);
@@ -123,7 +123,7 @@ suite('Jedi Symbol Provider', () => {
         await Promise.all([
             testDocumentation(1, __filename, 0),
             testDocumentation(2, __filename, 0),
-            testDocumentation(3, __filename, 1)
+            testDocumentation(3, __filename, 1),
         ]);
     });
     test('Ensure symbols are returned for all the requests when the doc is untitled', async () => {
@@ -131,7 +131,7 @@ suite('Jedi Symbol Provider', () => {
         await Promise.all([
             testDocumentation(1, __filename, 1, undefined, true),
             testDocumentation(2, __filename, 1, undefined, true),
-            testDocumentation(3, __filename, 1, undefined, true)
+            testDocumentation(3, __filename, 1, undefined, true),
         ]);
     });
     test('Ensure symbols are returned for multiple documents', async () => {
@@ -142,7 +142,7 @@ suite('Jedi Symbol Provider', () => {
         provider = new JediSymbolProvider(serviceContainer.object, jediFactory.object, 0);
         await Promise.all([
             testDocumentation(1, 'file1', 1, undefined, true),
-            testDocumentation(2, 'file2', 1, undefined, true)
+            testDocumentation(2, 'file2', 1, undefined, true),
         ]);
     });
     test('Ensure symbols are returned for multiple documents with a debounce of 100ms', async () => {
@@ -153,7 +153,7 @@ suite('Jedi Symbol Provider', () => {
         provider = new JediSymbolProvider(serviceContainer.object, jediFactory.object, 100);
         await Promise.all([
             testDocumentation(1, 'file1', 1, undefined, true),
-            testDocumentation(2, 'file2', 1, undefined, true)
+            testDocumentation(2, 'file2', 1, undefined, true),
         ]);
     });
     test('Ensure IFileSystem.arePathsSame is used', async () => {
@@ -207,8 +207,8 @@ suite('Language Server Symbol Provider', () => {
                     l.sendRequest(
                         TypeMoq.It.isValue('textDocument/documentSymbol'),
                         TypeMoq.It.isValue(doc),
-                        TypeMoq.It.isValue(token)
-                    )
+                        TypeMoq.It.isValue(token),
+                    ),
                 )
                 .returns(() => Promise.resolve(symbols))
                 .verifiable(TypeMoq.Times.once());
@@ -219,8 +219,8 @@ suite('Language Server Symbol Provider', () => {
     function getRawDoc(uri: Uri) {
         return {
             textDocument: {
-                uri: uri.toString()
-            }
+                uri: uri.toString(),
+            },
         };
     }
 
@@ -231,10 +231,10 @@ suite('Language Server Symbol Provider', () => {
                 kind: SymbolKind.Array + 1,
                 range: {
                     start: { line: 0, character: 0 },
-                    end: { line: 0, character: 0 }
+                    end: { line: 0, character: 0 },
                 },
-                children: []
-            }
+                children: [],
+            },
         ];
         const uri = Uri.file(__filename);
         const expected = createSymbols(uri, [['spam', SymbolKind.Array, 0]]);
@@ -259,7 +259,7 @@ suite('Language Server Symbol Provider', () => {
                 kind: 5,
                 range: {
                     start: { line: 2, character: 6 },
-                    end: { line: 2, character: 15 }
+                    end: { line: 2, character: 15 },
                 },
                 children: [
                     {
@@ -267,7 +267,7 @@ suite('Language Server Symbol Provider', () => {
                         kind: 12,
                         range: {
                             start: { line: 3, character: 8 },
-                            end: { line: 3, character: 16 }
+                            end: { line: 3, character: 16 },
                         },
                         children: [
                             {
@@ -275,23 +275,23 @@ suite('Language Server Symbol Provider', () => {
                                 kind: 13,
                                 range: {
                                     start: { line: 3, character: 17 },
-                                    end: { line: 3, character: 21 }
+                                    end: { line: 3, character: 21 },
                                 },
-                                children: []
-                            }
-                        ]
+                                children: [],
+                            },
+                        ],
                     },
                     {
                         name: 'assertTrue',
                         kind: 13,
                         range: {
                             start: { line: 0, character: 0 },
-                            end: { line: 0, character: 0 }
+                            end: { line: 0, character: 0 },
                         },
-                        children: []
-                    }
-                ]
-            }
+                        children: [],
+                    },
+                ],
+            },
         ];
         const expected = [
             new SymbolInformation('SpamTests', SymbolKind.Class, '', new Location(uri, new Range(2, 6, 2, 15))),
@@ -299,15 +299,15 @@ suite('Language Server Symbol Provider', () => {
                 'test_all',
                 SymbolKind.Function,
                 'SpamTests',
-                new Location(uri, new Range(3, 8, 3, 16))
+                new Location(uri, new Range(3, 8, 3, 16)),
             ),
             new SymbolInformation('self', SymbolKind.Variable, 'test_all', new Location(uri, new Range(3, 17, 3, 21))),
             new SymbolInformation(
                 'assertTrue',
                 SymbolKind.Variable,
                 'SpamTests',
-                new Location(uri, new Range(0, 0, 0, 0))
-            )
+                new Location(uri, new Range(0, 0, 0, 0)),
+            ),
         ];
 
         const doc = createDoc(uri);
@@ -338,7 +338,7 @@ suite('Language Server Symbol Provider', () => {
         //  * https://github.com/Microsoft/python-language-server/issues/1
         //  * https://github.com/Microsoft/python-language-server/issues/2
         const raw = JSON.parse(
-            '[{"name":"SpamTests","detail":"SpamTests","kind":5,"deprecated":false,"range":{"start":{"line":2,"character":6},"end":{"line":2,"character":15}},"selectionRange":{"start":{"line":2,"character":6},"end":{"line":2,"character":15}},"children":[{"name":"test_all","detail":"test_all","kind":12,"deprecated":false,"range":{"start":{"line":3,"character":4},"end":{"line":4,"character":30}},"selectionRange":{"start":{"line":3,"character":4},"end":{"line":4,"character":30}},"children":[{"name":"self","detail":"self","kind":13,"deprecated":false,"range":{"start":{"line":3,"character":17},"end":{"line":3,"character":21}},"selectionRange":{"start":{"line":3,"character":17},"end":{"line":3,"character":21}},"children":[],"_functionKind":""}],"_functionKind":"function"},{"name":"assertTrue","detail":"assertTrue","kind":13,"deprecated":false,"range":{"start":{"line":0,"character":0},"end":{"line":0,"character":0}},"selectionRange":{"start":{"line":0,"character":0},"end":{"line":0,"character":0}},"children":[],"_functionKind":""}],"_functionKind":"class"}]'
+            '[{"name":"SpamTests","detail":"SpamTests","kind":5,"deprecated":false,"range":{"start":{"line":2,"character":6},"end":{"line":2,"character":15}},"selectionRange":{"start":{"line":2,"character":6},"end":{"line":2,"character":15}},"children":[{"name":"test_all","detail":"test_all","kind":12,"deprecated":false,"range":{"start":{"line":3,"character":4},"end":{"line":4,"character":30}},"selectionRange":{"start":{"line":3,"character":4},"end":{"line":4,"character":30}},"children":[{"name":"self","detail":"self","kind":13,"deprecated":false,"range":{"start":{"line":3,"character":17},"end":{"line":3,"character":21}},"selectionRange":{"start":{"line":3,"character":17},"end":{"line":3,"character":21}},"children":[],"_functionKind":""}],"_functionKind":"function"},{"name":"assertTrue","detail":"assertTrue","kind":13,"deprecated":false,"range":{"start":{"line":0,"character":0},"end":{"line":0,"character":0}},"selectionRange":{"start":{"line":0,"character":0},"end":{"line":0,"character":0}},"children":[],"_functionKind":""}],"_functionKind":"class"}]',
         );
         raw[0].children[0].range.start.character = 8;
         raw[0].children[0].range.end.line = 3;
@@ -348,7 +348,7 @@ suite('Language Server Symbol Provider', () => {
         // for which the raw data above was generated.
         // See: JediSymbolProvider.provideDocumentSymbols()
         const expectedRaw = JSON.parse(
-            '[{"name":"unittest","kind":1,"location":{"uri":{"$mid":1,"path":"<some file>","scheme":"file"},"range":[{"line":0,"character":7},{"line":0,"character":15}]},"containerName":""},{"name":"SpamTests","kind":4,"location":{"uri":{"$mid":1,"path":"<some file>","scheme":"file"},"range":[{"line":2,"character":0},{"line":4,"character":29}]},"containerName":""},{"name":"test_all","kind":11,"location":{"uri":{"$mid":1,"path":"<some file>","scheme":"file"},"range":[{"line":3,"character":4},{"line":4,"character":29}]},"containerName":"SpamTests"},{"name":"self","kind":12,"location":{"uri":{"$mid":1,"path":"<some file>","scheme":"file"},"range":[{"line":3,"character":17},{"line":3,"character":21}]},"containerName":"test_all"}]'
+            '[{"name":"unittest","kind":1,"location":{"uri":{"$mid":1,"path":"<some file>","scheme":"file"},"range":[{"line":0,"character":7},{"line":0,"character":15}]},"containerName":""},{"name":"SpamTests","kind":4,"location":{"uri":{"$mid":1,"path":"<some file>","scheme":"file"},"range":[{"line":2,"character":0},{"line":4,"character":29}]},"containerName":""},{"name":"test_all","kind":11,"location":{"uri":{"$mid":1,"path":"<some file>","scheme":"file"},"range":[{"line":3,"character":4},{"line":4,"character":29}]},"containerName":"SpamTests"},{"name":"self","kind":12,"location":{"uri":{"$mid":1,"path":"<some file>","scheme":"file"},"range":[{"line":3,"character":17},{"line":3,"character":21}]},"containerName":"test_all"}]',
         );
         expectedRaw[1].location.range[0].character = 6;
         expectedRaw[1].location.range[1].line = 2;
@@ -363,8 +363,8 @@ suite('Language Server Symbol Provider', () => {
                 'assertTrue',
                 SymbolKind.Variable,
                 'SpamTests',
-                new Location(uri, new Range(0, 0, 0, 0))
-            )
+                new Location(uri, new Range(0, 0, 0, 0)),
+            ),
         );
 
         const doc = createDoc(uri);
@@ -429,9 +429,9 @@ function normalizeSymbols(uri: Uri, raw: any[]): SymbolInformation[] {
                     item.location.range[0].line,
                     item.location.range[0].character,
                     item.location.range[1].line,
-                    item.location.range[1].character
-                )
-            )
+                    item.location.range[1].character,
+                ),
+            ),
         );
         symbols.push(symbol);
     }

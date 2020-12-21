@@ -10,7 +10,7 @@ import * as internalScripts from '../../../common/process/internal/scripts';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
-    SpawnOptions
+    SpawnOptions,
 } from '../../../common/process/types';
 import { IOutputChannel } from '../../../common/types';
 import { captureTelemetry } from '../../../telemetry';
@@ -24,7 +24,7 @@ export class TestsDiscoveryService implements ITestDiscoveryService {
     constructor(
         @inject(IPythonExecutionFactory) private readonly execFactory: IPythonExecutionFactory,
         @inject(ITestDiscoveredTestParser) private readonly parser: ITestDiscoveredTestParser,
-        @inject(IOutputChannel) @named(TEST_OUTPUT_CHANNEL) private readonly outChannel: OutputChannel
+        @inject(IOutputChannel) @named(TEST_OUTPUT_CHANNEL) private readonly outChannel: OutputChannel,
     ) {}
     @captureTelemetry(EventName.UNITTEST_DISCOVER_WITH_PYCODE, undefined, true)
     public async discoverTests(options: TestDiscoveryOptions): Promise<Tests> {
@@ -43,13 +43,13 @@ export class TestsDiscoveryService implements ITestDiscoveryService {
         const [args, parse] = internalScripts.testing_tools.run_adapter(options.args);
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
-            resource: options.workspaceFolder
+            resource: options.workspaceFolder,
         };
         const execService = await this.execFactory.createActivatedEnvironment(creationOptions);
         const spawnOptions: SpawnOptions = {
             token: options.token,
             cwd: options.cwd,
-            throwOnStdErr: true
+            throwOnStdErr: true,
         };
         this.outChannel.appendLine(`python ${args.join(' ')}`);
         const proc = await execService.exec(args, spawnOptions);

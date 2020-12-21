@@ -10,7 +10,7 @@ import {
     ParseResult,
     parseVersionInfo,
     validateVersionInfo,
-    VersionInfo
+    VersionInfo,
 } from '../../../client/common/utils/version';
 
 const NOT_USED = {};
@@ -27,7 +27,7 @@ function ver(
     minor: any = NOT_USED,
     micro: any = NOT_USED,
     // tslint:enable:no-any
-    unnormalized?: Unnormalized
+    unnormalized?: Unnormalized,
 ): VersionInfo {
     if (minor === NOT_USED) {
         minor = -1;
@@ -39,7 +39,7 @@ function ver(
         major: (major as unknown) as number,
         minor: (minor as unknown) as number,
         micro: (micro as unknown) as number,
-        raw: undefined
+        raw: undefined,
     };
     if (unnormalized !== undefined) {
         // tslint:disable-next-line:no-any
@@ -59,12 +59,12 @@ function res(
     micro: number,
     // These are the remainder of the ParseResult:
     before: string,
-    after: string
+    after: string,
 ): ParseResult<VersionInfo> {
     return {
         before,
         after,
-        version: ver(major, minor, micro)
+        version: ver(major, minor, micro),
     };
 }
 
@@ -75,13 +75,13 @@ const VERSIONS: [VersionInfo, string][] = [
     [ver(-1, -1, -1), ''],
     [ver(2, 7, 11), '2.7.11'],
     [ver(3, 11, 1), '3.11.1'],
-    [ver(0, 0, 0), '0.0.0']
+    [ver(0, 0, 0), '0.0.0'],
 ];
 const INVALID: VersionInfo[] = [
     ver(undefined, undefined, undefined),
     ver(null, null, null),
     ver({}, {}, {}),
-    ver('x', 'y', 'z')
+    ver('x', 'y', 'z'),
 ];
 
 suite('common utils - getVersionString', () => {
@@ -101,7 +101,7 @@ suite('common utils - isVersionEmpty', () => {
         // normalization failed:
         ver(-1, -1, -1, unnorm('oops', 'uh-oh', "I've got a bad feeling about this")),
         // not normalized by still empty
-        ver(-10, -10, -10)
+        ver(-10, -10, -10),
     ].forEach((data: VersionInfo) => {
         const info = data;
         test(`empty: ${info}`, () => {
@@ -119,7 +119,7 @@ suite('common utils - isVersionEmpty', () => {
         // 0 is not empty:
         ver(0, 0, 0),
         ver(0, 0, -1),
-        ver(0, -1, -1)
+        ver(0, -1, -1),
     ].forEach((data: VersionInfo) => {
         const info = data;
         test(`not empty: ${info.major}.${info.minor}.${info.micro}`, () => {
@@ -186,7 +186,7 @@ suite('common utils - normalizeVersionInfo', () => {
             [ver(3, 4, '1'), ver(3, 4, 1)],
             [ver(3, 4, '0'), ver(3, 4, 0)],
             [ver(3, 4, '-1'), ver(3, 4, -1)],
-            [ver(3, 4, '-5'), ver(3, 4, -1)]
+            [ver(3, 4, '-5'), ver(3, 4, -1)],
         ].forEach((data) => {
             const [info, expected] = data;
             // tslint:disable-next-line:no-any
@@ -209,7 +209,7 @@ suite('common utils - normalizeVersionInfo', () => {
             [ver(3, 4, ' '), unnorm('', '', 'string not numeric')],
             [ver(3, 4, 'foo'), unnorm('', '', 'string not numeric')],
             [ver(3, 4, {}), unnorm('', '', 'unsupported type')],
-            [ver(3, 4, []), unnorm('', '', 'unsupported type')]
+            [ver(3, 4, []), unnorm('', '', 'unsupported type')],
         ] as [VersionInfo, Unnormalized][]).forEach((data) => {
             const [info, unnormalized] = data;
             const expected = { ...info };
@@ -239,7 +239,7 @@ suite('common utils - validateVersionInfo', () => {
             ver(3, 4, -1),
             ver(3, -1, -1),
             // unnormalized but still valid:
-            ver(3, -7, -11)
+            ver(3, -7, -11),
         ].forEach((info) => {
             test(`as-is: [${info.major}, ${info.minor}, ${info.micro}]`, () => {
                 validateVersionInfo(info);
@@ -262,7 +262,7 @@ suite('common utils - validateVersionInfo', () => {
             ver(-1, 4, -1),
             ver(-1, 4, 5),
             // missing minor:
-            ver(3, -1, 5)
+            ver(3, -1, 5),
         ].forEach((info) => {
             test(`missing parts: [${info.major}.${info.minor}.${info.micro}]`, () => {
                 assert.throws(() => validateVersionInfo(info));
@@ -274,7 +274,7 @@ suite('common utils - validateVersionInfo', () => {
             'string not numeric',
             'missing',
             'unsupported type',
-            'oops!'
+            'oops!',
         ].forEach((errMsg) => {
             const raw = unnorm('', '', errMsg);
             const info = ver(3, 4, -1, raw);
@@ -300,7 +300,7 @@ suite('common utils - parseVersionInfo', () => {
             '2.b7',
             '2-b.7',
             '2.7rc1',
-            ''
+            '',
         ];
         for (const verStr of BOGUS) {
             test(`invalid - '${verStr}'`, () => {
@@ -327,12 +327,12 @@ suite('common utils - parseVersionInfo', () => {
             ['3.8.1-alpha2', res(3, 8, 1, '', '-alpha2')],
             [
                 '3.7.5 (default, Nov  7 2019, 10:50:52) \\n[GCC 8.3.0]',
-                res(3, 7, 5, '', ' (default, Nov  7 2019, 10:50:52) \\n[GCC 8.3.0]')
+                res(3, 7, 5, '', ' (default, Nov  7 2019, 10:50:52) \\n[GCC 8.3.0]'),
             ],
             ['python2', res(2, -1, -1, 'python', '')],
             // without the "before" the following won't match.
             ['python2.a', res(2, -1, -1, 'python', '.a')],
-            ['python2.b7', res(2, -1, -1, 'python', '.b7')]
+            ['python2.b7', res(2, -1, -1, 'python', '.b7')],
         ] as [string, ParseResult<VersionInfo>][]).forEach((data) => {
             const [verStr, result] = data;
             if (verStr === '') {

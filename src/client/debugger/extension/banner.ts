@@ -19,7 +19,7 @@ export enum PersistentStateKeys {
     ShowBanner = 'ShowBanner',
     DebuggerLaunchCounter = 'DebuggerLaunchCounter',
     DebuggerLaunchThresholdCounter = 'DebuggerLaunchThresholdCounter',
-    UserSelected = 'DebuggerUserSelected'
+    UserSelected = 'DebuggerUserSelected',
 }
 
 @injectable()
@@ -128,7 +128,7 @@ export class DebuggerBanner implements IDebuggerBanner {
     private async passedThreshold(): Promise<boolean> {
         const [threshold, debuggerCounter] = await Promise.all([
             this.getDebuggerLaunchThresholdCounter(),
-            this.getGetDebuggerLaunchCounter()
+            this.getGetDebuggerLaunchCounter(),
         ]);
         return debuggerCounter >= threshold;
     }

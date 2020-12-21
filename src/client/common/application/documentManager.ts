@@ -16,7 +16,7 @@ import {
     ViewColumn,
     window,
     workspace,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 
 import { IDocumentManager } from './types';

@@ -67,29 +67,22 @@ import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services
 import { EnvironmentType, PythonEnvironment } from './info';
 import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
 
-const convertedKinds = new Map(Object.entries({
-    [PythonEnvKind.System]: EnvironmentType.System,
-    [PythonEnvKind.MacDefault]: EnvironmentType.System,
-    [PythonEnvKind.WindowsStore]: EnvironmentType.WindowsStore,
-    [PythonEnvKind.Pyenv]: EnvironmentType.Pyenv,
-    [PythonEnvKind.Conda]: EnvironmentType.Conda,
-    [PythonEnvKind.CondaBase]: EnvironmentType.Conda,
-    [PythonEnvKind.VirtualEnv]: EnvironmentType.VirtualEnv,
-    [PythonEnvKind.Pipenv]: EnvironmentType.Pipenv,
-    [PythonEnvKind.Venv]: EnvironmentType.Venv,
-}));
+const convertedKinds = new Map(
+    Object.entries({
+        [PythonEnvKind.System]: EnvironmentType.System,
+        [PythonEnvKind.MacDefault]: EnvironmentType.System,
+        [PythonEnvKind.WindowsStore]: EnvironmentType.WindowsStore,
+        [PythonEnvKind.Pyenv]: EnvironmentType.Pyenv,
+        [PythonEnvKind.Conda]: EnvironmentType.Conda,
+        [PythonEnvKind.CondaBase]: EnvironmentType.Conda,
+        [PythonEnvKind.VirtualEnv]: EnvironmentType.VirtualEnv,
+        [PythonEnvKind.Pipenv]: EnvironmentType.Pipenv,
+        [PythonEnvKind.Venv]: EnvironmentType.Venv,
+    }),
+);
 
 function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
-    const {
-        name,
-        location,
-        executable,
-        arch,
-        kind,
-        searchLocation,
-        version,
-        distro,
-    } = info;
+    const { name, location, executable, arch, kind, searchLocation, version, distro } = info;
     const { filename, sysPrefix } = executable;
     const env: PythonEnvironment = {
         sysPrefix,
@@ -120,9 +113,7 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
             env.sysVersion = '';
         } else {
             const { level, serial } = release;
-            const releaseStr = level === PythonReleaseLevel.Final
-                ? 'final'
-                : `${level}${serial}`;
+            const releaseStr = level === PythonReleaseLevel.Final ? 'final' : `${level}${serial}`;
             const versionStr = `${getVersionString(version)}-${releaseStr}`;
             env.version = parseVersion(versionStr);
             env.sysVersion = sysVersion;
@@ -157,20 +148,22 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     ) {}
 
     public async activate(): Promise<void> {
-        this.enabled = (await Promise.all(
-            [
+        this.enabled = (
+            await Promise.all([
                 inExperiment(DiscoveryVariants.discoverWithFileWatching),
                 inExperiment(DiscoveryVariants.discoveryWithoutFileWatching),
-            ],
-        )).includes(true);
-        this.disposables.push(this.api.onChanged((e) => {
-            const query = {
-                kinds: e.kind ? [e.kind] : undefined,
-                searchLocations: e.searchLocation ? { roots: [e.searchLocation] } : undefined
-            };
-            // Trigger a background refresh of the environments.
-            getEnvs(this.api.iterEnvs(query)).ignoreErrors();
-        }));
+            ])
+        ).includes(true);
+        this.disposables.push(
+            this.api.onChanged((e) => {
+                const query = {
+                    kinds: e.kind ? [e.kind] : undefined,
+                    searchLocations: e.searchLocation ? { roots: [e.searchLocation] } : undefined,
+                };
+                // Trigger a background refresh of the environments.
+                getEnvs(this.api.iterEnvs(query)).ignoreErrors();
+            }),
+        );
     }
 
     // IInterpreterLocatorProgressHandler
@@ -330,9 +323,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     }
 }
 
-export function registerLegacyDiscoveryForIOC(
-    serviceManager: IServiceManager,
-): void {
+export function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
@@ -419,7 +410,7 @@ export function registerNewDiscoveryForIOC(
     serviceManager: IServiceManager,
     api: IPythonEnvironments,
     environmentsSecurity: EnvironmentsSecurity,
-    disposables: IDisposableRegistry
+    disposables: IDisposableRegistry,
 ): void {
     serviceManager.addSingletonInstance<IComponentAdapter>(
         IComponentAdapter,

@@ -15,7 +15,7 @@ import {
     TextDocument,
     TextEditor,
     TextEditorRevealType,
-    Uri
+    Uri,
 } from 'vscode';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { IDocumentManager } from '../../../client/common/application/types';
@@ -76,7 +76,7 @@ suite('Unit Tests - Navigation Suite', () => {
             containerName: '',
             kind: SymbolKind.Class,
             name: 'suite_name',
-            location: new Location(Uri.file(__filename), range)
+            location: new Location(Uri.file(__filename), range),
         };
         when(helper.findSymbol(doc.object, anything(), anything())).thenResolve(symbol);
 
@@ -87,7 +87,7 @@ suite('Unit Tests - Navigation Suite', () => {
         expect(capture(helper.openFile).first()[0]!.fsPath).to.equal(filePath.fsPath);
         if (focusCode) {
             verify(
-                docManager.showTextDocument(doc.object, deepEqual({ preserveFocus: false, selection: range }))
+                docManager.showTextDocument(doc.object, deepEqual({ preserveFocus: false, selection: range })),
             ).once();
         } else {
             editor.verify((e) => e.revealRange(range, TextEditorRevealType.Default), typemoq.Times.once());
@@ -114,7 +114,7 @@ suite('Unit Tests - Navigation Suite', () => {
         expect(capture(helper.openFile).first()[0]!.fsPath).to.equal(filePath.fsPath);
         if (focusCode) {
             verify(
-                docManager.showTextDocument(doc.object, deepEqual({ preserveFocus: false, selection: range }))
+                docManager.showTextDocument(doc.object, deepEqual({ preserveFocus: false, selection: range })),
             ).once();
         } else {
             editor.verify((e) => e.revealRange(range, TextEditorRevealType.Default), typemoq.Times.once());

@@ -67,9 +67,9 @@ export class CurrentPathService extends CacheableLocatorService {
             pythonPaths
                 .then((interpreters) => interpreters.filter((item) => item.length > 0))
                 // tslint:disable-next-line:promise-function-async
-                .then((interpreters) => Promise.all(
-                    interpreters.map((interpreter) => this.getInterpreterDetails(interpreter)),
-                ))
+                .then((interpreters) =>
+                    Promise.all(interpreters.map((interpreter) => this.getInterpreterDetails(interpreter))),
+                )
                 .then((interpreters) => interpreters.filter((item) => !!item).map((item) => item!))
         );
     }
@@ -139,8 +139,6 @@ export class PythonInPathCommandProvider implements IPythonInPathCommandProvider
         }
 
         const versions = ['3.7', '3.6', '3', '2'];
-        return paths.concat(
-            versions.map((version) => ({ command: 'py', args: [`-${version}`] })),
-        );
+        return paths.concat(versions.map((version) => ({ command: 'py', args: [`-${version}`] })));
     }
 }

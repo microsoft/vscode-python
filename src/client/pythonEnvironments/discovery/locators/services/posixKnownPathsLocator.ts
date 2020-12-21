@@ -6,9 +6,7 @@ import * as path from 'path';
 import { traceError, traceInfo } from '../../../../common/logger';
 
 import { Architecture } from '../../../../common/utils/platform';
-import {
-    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion,
-} from '../../../base/info';
+import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion } from '../../../base/info';
 import { parseVersion } from '../../../base/info/pythonVersion';
 import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getFileInfo, resolveSymbolicLink } from '../../../common/externalDependencies';
@@ -16,10 +14,10 @@ import { commonPosixBinPaths, isPosixPythonBin } from '../../../common/posixUtil
 
 async function getPythonBinFromKnownPaths(): Promise<string[]> {
     const knownPaths = await commonPosixBinPaths();
-    const pythonBins:Set<string> = new Set();
+    const pythonBins: Set<string> = new Set();
     for (const knownPath of knownPaths) {
         const files = (await fsapi.readdir(knownPath))
-            .map((filename:string) => path.join(knownPath, filename))
+            .map((filename: string) => path.join(knownPath, filename))
             .filter(isPosixPythonBin);
 
         for (const file of files) {
@@ -42,7 +40,7 @@ export class PosixKnownPathsLocator extends Locator {
     private kind: PythonEnvKind = PythonEnvKind.OtherGlobal;
 
     public iterEnvs(): IPythonEnvsIterator {
-        const buildEnvInfo = (bin:string) => this.buildEnvInfo(bin);
+        const buildEnvInfo = (bin: string) => this.buildEnvInfo(bin);
         const iterator = async function* () {
             const exes = await getPythonBinFromKnownPaths();
             yield* exes.map(buildEnvInfo);
@@ -55,8 +53,8 @@ export class PosixKnownPathsLocator extends Locator {
         return this.buildEnvInfo(executablePath);
     }
 
-    private async buildEnvInfo(bin:string): Promise<PythonEnvInfo> {
-        let version:PythonVersion;
+    private async buildEnvInfo(bin: string): Promise<PythonEnvInfo> {
+        let version: PythonVersion;
         try {
             version = parseVersion(path.basename(bin));
         } catch (ex) {

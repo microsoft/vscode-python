@@ -28,7 +28,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
         this.pipEnvService = serviceContainer.get<IInterpreterLocatorService>(
             IInterpreterLocatorService,
-            PIPENV_SERVICE
+            PIPENV_SERVICE,
         ) as IPipEnvService;
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
@@ -39,7 +39,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
             path.dirname,
             path.basename,
             // We use a closure on "this".
-            (d: string, p: string) => this.pipEnvService.isRelatedPipEnvironment(d, p)
+            (d: string, p: string) => this.pipEnvService.isRelatedPipEnvironment(d, p),
         );
         return (await subenvs.getName(pythonPath, finders)) || '';
     }
@@ -64,7 +64,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
             async (c: string, a: string[]) => {
                 const processService = await this.processServiceFactory.create(resource);
                 return processService.exec(c, a);
-            }
+            },
         );
         return (await subenvs.getType(pythonPath, finders)) || EnvironmentType.Unknown;
     }
@@ -74,7 +74,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
             path.dirname,
             path.join,
             // We use a closure on "this".
-            (n: string) => this.fs.fileExists(n)
+            (n: string) => this.fs.fileExists(n),
         );
         return (await find(pythonPath)) === EnvironmentType.Venv;
     }
@@ -92,7 +92,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
             async (c: string, a: string[]) => {
                 const processService = await this.processServiceFactory.create(resource);
                 return processService.exec(c, a);
-            }
+            },
         );
         return (await find(pythonPath)) === EnvironmentType.Pyenv;
     }
@@ -101,7 +101,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         const find = subenvs.getPipenvTypeFinder(
             () => this.getWorkspaceRoot(resource),
             // We use a closure on "this".
-            (d: string, p: string) => this.pipEnvService.isRelatedPipEnvironment(d, p)
+            (d: string, p: string) => this.pipEnvService.isRelatedPipEnvironment(d, p),
         );
         return (await find(pythonPath)) === EnvironmentType.Pipenv;
     }
@@ -118,7 +118,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
             async (c: string, a: string[]) => {
                 const processService = await this.processServiceFactory.create(resource);
                 return processService.exec(c, a);
-            }
+            },
         );
         return find();
     }
@@ -131,7 +131,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
             path.dirname,
             path.join,
             // We use a closure on "this".
-            (n: string) => this.fs.fileExists(n)
+            (n: string) => this.fs.fileExists(n),
         );
         return (await find(pythonPath)) === EnvironmentType.VirtualEnv;
     }

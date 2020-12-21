@@ -34,7 +34,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
         const stateFactory = mock(PersistentStateFactory);
 
         when(stateFactory.createGlobalPersistentState('python.unitTest.Settings', anything())).thenReturn(
-            instance(storage)
+            instance(storage),
         );
 
         diagnosticService = new UpdateTestSettingService(instance(fs), instance(appEnv), instance(workspace));
@@ -133,23 +133,23 @@ suite('Application Diagnostics - Check Test Settings', () => {
         {
             testTitle: 'Should fix file if contents contains python.unitTest.',
             expectedValue: true,
-            contents: '{"python.pythonPath":"1234", "python.unitTest.unitTestArgs":[]}'
+            contents: '{"python.pythonPath":"1234", "python.unitTest.unitTestArgs":[]}',
         },
         {
             testTitle: 'Should fix file if contents contains python.pyTest.',
             expectedValue: true,
-            contents: '{"python.pythonPath":"1234", "python.pyTestArgs":[]}'
+            contents: '{"python.pythonPath":"1234", "python.pyTestArgs":[]}',
         },
         {
             testTitle: 'Should fix file if contents contains python.pyTest. & python.unitTest.',
             expectedValue: true,
-            contents: '{"python.pythonPath":"1234", "python.testing.pyTestArgs":[], "python.unitTest.unitTestArgs":[]}'
+            contents: '{"python.pythonPath":"1234", "python.testing.pyTestArgs":[], "python.unitTest.unitTestArgs":[]}',
         },
         {
             testTitle: 'Should not fix file if contents does not contain python.unitTest. and python.pyTest',
             expectedValue: false,
-            contents: '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[]}'
-        }
+            contents: '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[]}',
+        },
     ].forEach((item) => {
         test(item.testTitle, async () => {
             when(fs.readFile(__filename)).thenResolve(item.contents);
@@ -179,29 +179,29 @@ suite('Application Diagnostics - Check Test Settings', () => {
         {
             testTitle: 'Should replace python.unitTest.',
             contents: '{"python.pythonPath":"1234", "python.unitTest.unitTestArgs":[]}',
-            expectedContents: '{"python.pythonPath":"1234", "python.testing.unitTestArgs":[]}'
+            expectedContents: '{"python.pythonPath":"1234", "python.testing.unitTestArgs":[]}',
         },
         {
             testTitle: 'Should replace python.unitTest.pyTest.',
             contents:
                 '{"python.pythonPath":"1234", "python.unitTest.pyTestArgs":[], "python.unitTest.pyTestArgs":[], "python.unitTest.pyTestPath":[]}',
             expectedContents:
-                '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
+                '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
         },
         {
             testTitle: 'Should replace python.testing.pyTest.',
             contents:
                 '{"python.pythonPath":"1234", "python.testing.pyTestArgs":[], "python.testing.pyTestArgs":[], "python.testing.pyTestPath":[]}',
             expectedContents:
-                '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
+                '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
         },
         {
             testTitle: 'Should not make any changes to the file',
             contents:
                 '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.unitTest.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
             expectedContents:
-                '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
-        }
+                '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
+        },
     ].forEach((item) => {
         test(item.testTitle, async () => {
             when(fs.readFile(__filename)).thenResolve(item.contents);
@@ -219,48 +219,48 @@ suite('Application Diagnostics - Check Test Settings', () => {
         {
             testTitle: 'No jediEnabled setting',
             contents: '{}',
-            expectedContent: '{}'
+            expectedContent: '{}',
         },
         {
             testTitle: 'jediEnabled setting in comment',
             contents: '{\n // "python.jediEnabled": true\n }',
-            expectedContent: '{\n // "python.jediEnabled": true\n }'
+            expectedContent: '{\n // "python.jediEnabled": true\n }',
         },
         {
             testTitle: 'jediEnabled: true, no languageServer setting',
             contents: '{ "python.jediEnabled": true }',
-            expectedContent: '{ "python.jediEnabled": true, "python.languageServer": "Jedi"}'
+            expectedContent: '{ "python.jediEnabled": true, "python.languageServer": "Jedi"}',
         },
         {
             testTitle: 'jediEnabled: true, languageServer setting present',
             contents: '{ "python.jediEnabled": true }',
-            expectedContent: '{ "python.jediEnabled": true, "python.languageServer": "Jedi"}'
+            expectedContent: '{ "python.jediEnabled": true, "python.languageServer": "Jedi"}',
         },
         {
             testTitle: 'jediEnabled: false, no languageServer setting',
             contents: '{ "python.jediEnabled": false }',
-            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft"}'
+            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft"}',
         },
         {
             testTitle: 'jediEnabled: false, languageServer is Microsoft',
             contents: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft" }',
-            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft"}'
+            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft"}',
         },
         {
             testTitle: 'jediEnabled: false, languageServer is None',
             contents: '{ "python.jediEnabled": false, "python.languageServer": "None" }',
-            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "None"}'
+            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "None"}',
         },
         {
             testTitle: 'jediEnabled: false, languageServer is Jedi',
             contents: '{ "python.jediEnabled": false, "python.languageServer": "Jedi" }',
-            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Jedi"}'
+            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Jedi"}',
         },
         {
             testTitle: 'jediEnabled not present, languageServer is Microsoft',
             contents: '{ "python.languageServer": "Microsoft" }',
-            expectedContent: '{ "python.languageServer": "Microsoft" }'
-        }
+            expectedContent: '{ "python.languageServer": "Microsoft" }',
+        },
     ].forEach((item) => {
         test(item.testTitle, async () => {
             when(fs.readFile(__filename)).thenResolve(item.contents);

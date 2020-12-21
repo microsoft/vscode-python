@@ -69,7 +69,7 @@ suite('Terminal Service Factory', () => {
         const defaultInstance = factory.getTerminalService();
         expect(defaultInstance instanceof SynchronousTerminalService).to.equal(
             true,
-            'Not an instance of Terminal service'
+            'Not an instance of Terminal service',
         );
 
         const notSameAsDefaultInstance = factory.getTerminalService(undefined, 'New Title') === defaultInstance;
@@ -134,7 +134,7 @@ suite('Terminal Service Factory', () => {
             terminalForFile1A.terminalService === terminalForFileB.terminalService;
         expect(terminalsForWorkspaceABAreDifferent).to.equal(
             false,
-            'Instances should be different for different workspaces'
+            'Instances should be different for different workspaces',
         );
     });
 });

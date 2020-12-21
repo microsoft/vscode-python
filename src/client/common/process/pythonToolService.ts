@@ -11,7 +11,7 @@ import {
     IPythonExecutionFactory,
     IPythonToolExecutionService,
     ObservableExecutionResult,
-    SpawnOptions
+    SpawnOptions,
 } from './types';
 
 @injectable()
@@ -20,7 +20,7 @@ export class PythonToolExecutionService implements IPythonToolExecutionService {
     public async execObservable(
         executionInfo: ExecutionInfo,
         options: SpawnOptions,
-        resource: Uri
+        resource: Uri,
     ): Promise<ObservableExecutionResult<string>> {
         if (options.env) {
             throw new Error('Environment variables are not supported');
@@ -40,7 +40,7 @@ export class PythonToolExecutionService implements IPythonToolExecutionService {
     public async exec(
         executionInfo: ExecutionInfo,
         options: SpawnOptions,
-        resource: Uri
+        resource: Uri,
     ): Promise<ExecutionResult<string>> {
         if (options.env) {
             throw new Error('Environment variables are not supported');

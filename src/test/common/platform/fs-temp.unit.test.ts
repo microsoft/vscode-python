@@ -12,7 +12,7 @@ interface IDeps {
     file(
         config: { postfix?: string; mode?: number },
         // tslint:disable-next-line:no-any
-        callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void
+        callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void,
     ): void;
 }
 

@@ -198,7 +198,8 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
                 LC_ALL: currentProc.env.LC_ALL,
                 LANG: currentProc.env.LANG,
             };
-            enviromentVariableValues[platformService.pathVariableName] = currentProc.env[platformService.pathVariableName];
+            enviromentVariableValues[platformService.pathVariableName] =
+                currentProc.env[platformService.pathVariableName];
 
             traceWarning('Error in invoking PipEnv', error);
             traceWarning(`Relevant Environment Variables ${JSON.stringify(enviromentVariableValues, undefined, 4)}`);

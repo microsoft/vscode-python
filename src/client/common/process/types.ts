@@ -82,7 +82,7 @@ export interface IPythonExecutionFactory {
     createCondaExecutionService(
         pythonPath: string,
         processService?: IProcessService,
-        resource?: Uri
+        resource?: Uri,
     ): Promise<IPythonExecutionService | undefined>;
 }
 export const IPythonExecutionService = Symbol('IPythonExecutionService');
@@ -116,7 +116,7 @@ export interface IPythonToolExecutionService {
     execObservable(
         executionInfo: ExecutionInfo,
         options: SpawnOptions,
-        resource: Uri
+        resource: Uri,
     ): Promise<ObservableExecutionResult<string>>;
     exec(executionInfo: ExecutionInfo, options: SpawnOptions, resource: Uri): Promise<ExecutionResult<string>>;
 }

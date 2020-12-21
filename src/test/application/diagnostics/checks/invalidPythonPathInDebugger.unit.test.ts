@@ -15,13 +15,13 @@ import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/ap
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import {
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt
+    MessageCommandPrompt,
 } from '../../../../client/application/diagnostics/promptHandler';
 import {
     IDiagnostic,
     IDiagnosticCommand,
     IDiagnosticHandlerService,
-    IInvalidPythonPathInDebuggerService
+    IInvalidPythonPathInDebuggerService,
 } from '../../../../client/application/diagnostics/types';
 import { CommandsWithoutArgs } from '../../../../client/common/application/commands';
 import { IDocumentManager, IWorkspaceService } from '../../../../client/common/application/types';
@@ -45,8 +45,8 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .setup((s) =>
                 s.get(
                     typemoq.It.isValue(IDiagnosticHandlerService),
-                    typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId)
-                )
+                    typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId),
+                ),
             )
             .returns(() => messageHandler.object);
         commandFactory = typemoq.Mock.ofType<IDiagnosticsCommandFactory>();
@@ -79,7 +79,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             docMgr.object,
             configService.object,
             [],
-            messageHandler.object
+            messageHandler.object,
         );
         (diagnosticService as any)._clear();
     });
@@ -87,7 +87,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
     test('Can handle InvalidPythonPathInDebugger diagnostics', async () => {
         for (const code of [
             DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
-            DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic
+            DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic,
         ]) {
             const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
             diagnostic
@@ -127,9 +127,9 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
                 f.createCommand(
                     typemoq.It.isAny(),
                     typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                        type: 'executeVSCCommand'
-                    })
-                )
+                        type: 'executeVSCCommand',
+                    }),
+                ),
             )
             .returns(() => interpreterSelectionCommand.object)
             .verifiable(typemoq.Times.once());
@@ -157,9 +157,9 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
                 f.createCommand(
                     typemoq.It.isAny(),
                     typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                        type: 'executeVSCCommand'
-                    })
-                )
+                        type: 'executeVSCCommand',
+                    }),
+                ),
             )
             .returns(() => interpreterSelectionCommand.object)
             .verifiable(typemoq.Times.exactly(1));
@@ -190,9 +190,9 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
                 f.createCommand(
                     typemoq.It.isAny(),
                     typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                        type: 'executeVSCCommand'
-                    })
-                )
+                        type: 'executeVSCCommand',
+                    }),
+                ),
             )
             .returns(() => interpreterSelectionCommand.object)
             .verifiable(typemoq.Times.exactly(2));
@@ -286,7 +286,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         const valid = await diagnosticService.validatePythonPath(
             pythonPath,
             PythonPathSource.settingsJson,
-            Uri.parse('something')
+            Uri.parse('something'),
         );
 
         configService.verifyAll();

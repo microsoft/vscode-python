@@ -27,7 +27,7 @@ export class WorkspaceVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
         @inject(IVirtualEnvironmentsSearchPathProvider)
         @named('workspace')
-            workspaceVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
+        workspaceVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IInterpreterWatcherBuilder) private readonly builder: IInterpreterWatcherBuilder,
     ) {

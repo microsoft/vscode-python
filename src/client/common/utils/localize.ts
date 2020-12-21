@@ -11,58 +11,58 @@ import { FileSystem } from '../platform/fileSystem';
 export namespace Diagnostics {
     export const warnSourceMaps = localize(
         'diagnostics.warnSourceMaps',
-        'Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.'
+        'Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.',
     );
     export const disableSourceMaps = localize('diagnostics.disableSourceMaps', 'Disable Source Map Support');
     export const warnBeforeEnablingSourceMaps = localize(
         'diagnostics.warnBeforeEnablingSourceMaps',
-        'Enabling source map support in the Python Extension will adversely impact performance of the extension.'
+        'Enabling source map support in the Python Extension will adversely impact performance of the extension.',
     );
     export const enableSourceMapsAndReloadVSC = localize(
         'diagnostics.enableSourceMapsAndReloadVSC',
-        'Enable and reload Window.'
+        'Enable and reload Window.',
     );
     export const lsNotSupported = localize(
         'diagnostics.lsNotSupported',
-        'Your operating system does not meet the minimum requirements of the Python Language Server. Reverting to the alternative autocompletion provider, Jedi.'
+        'Your operating system does not meet the minimum requirements of the Python Language Server. Reverting to the alternative autocompletion provider, Jedi.',
     );
     export const upgradeCodeRunner = localize(
         'diagnostics.upgradeCodeRunner',
-        'Please update the Code Runner extension for it to be compatible with the Python extension.'
+        'Please update the Code Runner extension for it to be compatible with the Python extension.',
     );
     export const removedPythonPathFromSettings = localize(
         'diagnostics.removedPythonPathFromSettings',
-        'We removed the "python.pythonPath" setting from your settings.json file as the setting is no longer used by the Python extension. You can get the path of your selected interpreter in the Python output channel. [Learn more](https://aka.ms/AA7jfor).'
+        'We removed the "python.pythonPath" setting from your settings.json file as the setting is no longer used by the Python extension. You can get the path of your selected interpreter in the Python output channel. [Learn more](https://aka.ms/AA7jfor).',
     );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',
-        'You need to select a Python interpreter before you start debugging.\n\nTip: click on "Select Python Interpreter" in the status bar.'
+        'You need to select a Python interpreter before you start debugging.\n\nTip: click on "Select Python Interpreter" in the status bar.',
     );
     export const invalidPythonPathInDebuggerLaunch = localize(
         'diagnostics.invalidPythonPathInDebuggerLaunch',
-        'The Python path in your debug configuration is invalid.'
+        'The Python path in your debug configuration is invalid.',
     );
     export const invalidDebuggerTypeDiagnostic = localize(
         'diagnostics.invalidDebuggerTypeDiagnostic',
-        'Your launch.json file needs to be updated to change the "pythonExperimental" debug configurations to use the "python" debugger type, otherwise Python debugging may not work. Would you like to automatically update your launch.json file now?'
+        'Your launch.json file needs to be updated to change the "pythonExperimental" debug configurations to use the "python" debugger type, otherwise Python debugging may not work. Would you like to automatically update your launch.json file now?',
     );
     export const consoleTypeDiagnostic = localize(
         'diagnostics.consoleTypeDiagnostic',
-        'Your launch.json file needs to be updated to change the console type string from "none" to "internalConsole", otherwise Python debugging may not work. Would you like to automatically update your launch.json file now?'
+        'Your launch.json file needs to be updated to change the console type string from "none" to "internalConsole", otherwise Python debugging may not work. Would you like to automatically update your launch.json file now?',
     );
     export const justMyCodeDiagnostic = localize(
         'diagnostics.justMyCodeDiagnostic',
-        'Configuration "debugStdLib" in launch.json is no longer supported. It\'s recommended to replace it with "justMyCode", which is the exact opposite of using "debugStdLib". Would you like to automatically update your launch.json file to do that?'
+        'Configuration "debugStdLib" in launch.json is no longer supported. It\'s recommended to replace it with "justMyCode", which is the exact opposite of using "debugStdLib". Would you like to automatically update your launch.json file to do that?',
     );
     export const yesUpdateLaunch = localize('diagnostics.yesUpdateLaunch', 'Yes, update launch.json');
     export const invalidTestSettings = localize(
         'diagnostics.invalidTestSettings',
-        'Your settings needs to be updated to change the setting "python.unitTest." to "python.testing.", otherwise testing Python code using the extension may not work. Would you like to automatically update your settings now?'
+        'Your settings needs to be updated to change the setting "python.unitTest." to "python.testing.", otherwise testing Python code using the extension may not work. Would you like to automatically update your settings now?',
     );
     export const updateSettings = localize('diagnostics.updateSettings', 'Yes, update settings');
     export const checkIsort5UpgradeGuide = localize(
         'diagnostics.checkIsort5UpgradeGuide',
-        'We found outdated configuration for sorting imports in this workspace. Check the [isort upgrade guide](https://aka.ms/AA9j5x4) to update your settings.'
+        'We found outdated configuration for sorting imports in this workspace. Check the [isort upgrade guide](https://aka.ms/AA9j5x4) to update your settings.',
     );
 }
 
@@ -98,7 +98,7 @@ export namespace AttachProcess {
     export const attachTitle = localize('AttachProcess.attachTitle', 'Attach to process');
     export const selectProcessPlaceholder = localize(
         'AttachProcess.selectProcessPlaceholder',
-        'Select the process to attach to'
+        'Select the process to attach to',
     );
     export const noProcessSelected = localize('AttachProcess.noProcessSelected', 'No process selected');
     export const refreshList = localize('AttachProcess.refreshList', 'Refresh process list');
@@ -107,76 +107,76 @@ export namespace AttachProcess {
 export namespace Pylance {
     export const proposePylanceMessage = localize(
         'Pylance.proposePylanceMessage',
-        'Try out a new faster, feature-rich language server for Python by Microsoft, Pylance! Install the extension now.'
+        'Try out a new faster, feature-rich language server for Python by Microsoft, Pylance! Install the extension now.',
     );
     export const tryItNow = localize('Pylance.tryItNow', 'Try it now');
     export const remindMeLater = localize('Pylance.remindMeLater', 'Remind me later');
 
     export const installPylanceMessage = localize(
         'Pylance.installPylanceMessage',
-        'Pylance extension is not installed. Click Yes to open Pylance installation page.'
+        'Pylance extension is not installed. Click Yes to open Pylance installation page.',
     );
     export const pylanceNotInstalledMessage = localize(
         'Pylance.pylanceNotInstalledMessage',
-        'Pylance extension is not installed.'
+        'Pylance extension is not installed.',
     );
     export const pylanceInstalledReloadPromptMessage = localize(
         'Pylance.pylanceInstalledReloadPromptMessage',
-        'Pylance extension is now installed. Reload window to activate?'
+        'Pylance extension is now installed. Reload window to activate?',
     );
 }
 
 export namespace Jupyter {
     export const jupyterExtensionRequired = localize(
         'Jupyter.extensionRequired',
-        'The Jupyter extension is required to perform that task. Click Yes to open the Jupyter extension installation page.'
+        'The Jupyter extension is required to perform that task. Click Yes to open the Jupyter extension installation page.',
     );
 }
 
 export namespace TensorBoard {
     export const useCurrentWorkingDirectoryDetail = localize(
         'TensorBoard.useCurrentWorkingDirectoryDetail',
-        'TensorBoard will search for tfevent files in all subdirectories of the current working directory'
+        'TensorBoard will search for tfevent files in all subdirectories of the current working directory',
     );
     export const useCurrentWorkingDirectory = localize(
         'TensorBoard.useCurrentWorkingDirectory',
-        'Use current working directory'
+        'Use current working directory',
     );
     export const currentDirectory = localize('TensorBoard.currentDirectory', 'Current: {0}');
     export const logDirectoryPrompt = localize(
         'TensorBoard.logDirectoryPrompt',
-        'Select a log directory to start TensorBoard with'
+        'Select a log directory to start TensorBoard with',
     );
     export const progressMessage = localize('TensorBoard.progressMessage', 'Starting TensorBoard session...');
     export const failedToStartSessionError = localize(
         'TensorBoard.failedToStartSessionError',
-        'We failed to start a TensorBoard session due to the following error: {0}'
+        'We failed to start a TensorBoard session due to the following error: {0}',
     );
     export const nativeTensorBoardPrompt = localize(
         'TensorBoard.nativeTensorBoardPrompt',
-        'VS Code now has integrated TensorBoard support. Would you like to launch TensorBoard?  (Tip: Launch TensorBoard anytime by opening the command palette and searching for "Launch TensorBoard".)'
+        'VS Code now has integrated TensorBoard support. Would you like to launch TensorBoard?  (Tip: Launch TensorBoard anytime by opening the command palette and searching for "Launch TensorBoard".)',
     );
     export const selectAFolder = localize('TensorBoard.selectAFolder', 'Select a folder');
     export const selectAFolderDetail = localize(
         'TensorBoard.selectAFolderDetail',
-        'Select a log directory containing tfevent files'
+        'Select a log directory containing tfevent files',
     );
     export const selectAnotherFolder = localize('TensorBoard.selectAnotherFolder', 'Select another folder');
     export const selectAnotherFolderDetail = localize(
         'TensorBoard.selectAnotherFolderDetail',
-        'Use the file explorer to select another folder'
+        'Use the file explorer to select another folder',
     );
     export const installPrompt = localize(
         'TensorBoard.installPrompt',
-        'The package TensorBoard is required to launch a TensorBoard session. Would you like to install it?'
+        'The package TensorBoard is required to launch a TensorBoard session. Would you like to install it?',
     );
     export const launchNativeTensorBoardSessionCodeLens = localize(
         'TensorBoard.launchNativeTensorBoardSessionCodeLens',
-        '▶ Launch TensorBoard Session'
+        '▶ Launch TensorBoard Session',
     );
     export const launchNativeTensorBoardSessionCodeAction = localize(
         'TensorBoard.launchNativeTensorBoardSessionCodeAction',
-        'Launch TensorBoard session'
+        'Launch TensorBoard session',
     );
 }
 
@@ -184,47 +184,47 @@ export namespace LanguageService {
     export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi Python language engine.');
     export const startingMicrosoft = localize(
         'LanguageService.startingMicrosoft',
-        'Starting Microsoft Python language server.'
+        'Starting Microsoft Python language server.',
     );
     export const startingPylance = localize('LanguageService.startingPylance', 'Starting Pylance language server.');
     export const startingNone = localize(
         'LanguageService.startingNone',
-        'Editor support is inactive since language server is set to None.'
+        'Editor support is inactive since language server is set to None.',
     );
 
     export const reloadAfterLanguageServerChange = localize(
         'LanguageService.reloadAfterLanguageServerChange',
-        'Please reload the window switching between language servers.'
+        'Please reload the window switching between language servers.',
     );
 
     export const lsFailedToStart = localize(
         'LanguageService.lsFailedToStart',
-        'We encountered an issue starting the language server. Reverting to Jedi language engine. Check the Python output panel for details.'
+        'We encountered an issue starting the language server. Reverting to Jedi language engine. Check the Python output panel for details.',
     );
     export const lsFailedToDownload = localize(
         'LanguageService.lsFailedToDownload',
-        'We encountered an issue downloading the language server. Reverting to Jedi language engine. Check the Python output panel for details.'
+        'We encountered an issue downloading the language server. Reverting to Jedi language engine. Check the Python output panel for details.',
     );
     export const lsFailedToExtract = localize(
         'LanguageService.lsFailedToExtract',
-        'We encountered an issue extracting the language server. Reverting to Jedi language engine. Check the Python output panel for details.'
+        'We encountered an issue extracting the language server. Reverting to Jedi language engine. Check the Python output panel for details.',
     );
     export const downloadFailedOutputMessage = localize(
         'LanguageService.downloadFailedOutputMessage',
-        'Language server download failed.'
+        'Language server download failed.',
     );
     export const extractionFailedOutputMessage = localize(
         'LanguageService.extractionFailedOutputMessage',
-        'Language server extraction failed.'
+        'Language server extraction failed.',
     );
     export const extractionCompletedOutputMessage = localize(
         'LanguageService.extractionCompletedOutputMessage',
-        'Language server download complete.'
+        'Language server download complete.',
     );
     export const extractionDoneOutputMessage = localize('LanguageService.extractionDoneOutputMessage', 'done.');
     export const reloadVSCodeIfSeachPathHasChanged = localize(
         'LanguageService.reloadVSCodeIfSeachPathHasChanged',
-        'Search paths have changed for this Python interpreter. Please reload the extension to ensure that the IntelliSense works correctly.'
+        'Search paths have changed for this Python interpreter. Please reload the extension to ensure that the IntelliSense works correctly.',
     );
 }
 
@@ -240,20 +240,20 @@ export namespace Interpreters {
     export const refreshing = localize('Interpreters.RefreshingInterpreters', 'Refreshing Python Interpreters');
     export const condaInheritEnvMessage = localize(
         'Interpreters.condaInheritEnvMessage',
-        'We noticed you\'re using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we recommend that you let the Python extension change "terminal.integrated.inheritEnv" to false in your user settings.'
+        'We noticed you\'re using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we recommend that you let the Python extension change "terminal.integrated.inheritEnv" to false in your user settings.',
     );
     export const unsafeInterpreterMessage = localize(
         'Interpreters.unsafeInterpreterMessage',
-        'We found a Python environment in this workspace. Do you want to select it to start up the features in the Python extension? Only accept if you trust this environment.'
+        'We found a Python environment in this workspace. Do you want to select it to start up the features in the Python extension? Only accept if you trust this environment.',
     );
     export const environmentPromptMessage = localize(
         'Interpreters.environmentPromptMessage',
-        'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?'
+        'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?',
     );
     export const entireWorkspace = localize('Interpreters.entireWorkspace', 'Entire workspace');
     export const selectInterpreterTip = localize(
         'Interpreters.selectInterpreterTip',
-        'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar'
+        'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar',
     );
     export const pythonInterpreterPath = localize('Interpreters.pythonInterpreterPath', 'Python interpreter path: {0}');
 }
@@ -261,21 +261,21 @@ export namespace Interpreters {
 export namespace InterpreterQuickPickList {
     export const quickPickListPlaceholder = localize(
         'InterpreterQuickPickList.quickPickListPlaceholder',
-        'Current: {0}'
+        'Current: {0}',
     );
     export const enterPath = {
         detail: localize('InterpreterQuickPickList.enterPath.detail', 'Enter path or find an existing interpreter'),
         label: localize('InterpreterQuickPickList.enterPath.label', 'Enter interpreter path...'),
-        placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python interpreter.')
+        placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python interpreter.'),
     };
     export const browsePath = {
         label: localize('InterpreterQuickPickList.browsePath.label', 'Find...'),
         detail: localize(
             'InterpreterQuickPickList.browsePath.detail',
-            'Browse your file system to find a Python interpreter.'
+            'Browse your file system to find a Python interpreter.',
         ),
         openButtonLabel: localize('python.command.python.setInterpreter.title', 'Select Interpreter'),
-        title: localize('InterpreterQuickPickList.browsePath.title', 'Select Python interpreter')
+        title: localize('InterpreterQuickPickList.browsePath.title', 'Select Python interpreter'),
     };
 }
 export namespace ExtensionChannels {
@@ -283,31 +283,31 @@ export namespace ExtensionChannels {
     export const yesDaily = localize('ExtensionChannels.yesDaily', 'Yes, daily');
     export const promptMessage = localize(
         'ExtensionChannels.promptMessage',
-        'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?'
+        'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?',
     );
     export const reloadToUseInsidersMessage = localize(
         'ExtensionChannels.reloadToUseInsidersMessage',
-        'Please reload Visual Studio Code to use the insiders build of the Python extension.'
+        'Please reload Visual Studio Code to use the insiders build of the Python extension.',
     );
     export const downloadCompletedOutputMessage = localize(
         'ExtensionChannels.downloadCompletedOutputMessage',
-        'Insiders build download complete.'
+        'Insiders build download complete.',
     );
     export const startingDownloadOutputMessage = localize(
         'ExtensionChannels.startingDownloadOutputMessage',
-        'Starting download for Insiders build.'
+        'Starting download for Insiders build.',
     );
     export const downloadingInsidersMessage = localize(
         'ExtensionChannels.downloadingInsidersMessage',
-        'Downloading Insiders Extension... '
+        'Downloading Insiders Extension... ',
     );
     export const installingInsidersMessage = localize(
         'ExtensionChannels.installingInsidersMessage',
-        'Installing Insiders build of extension... '
+        'Installing Insiders build of extension... ',
     );
     export const installingStableMessage = localize(
         'ExtensionChannels.installingStableMessage',
-        'Installing Stable build of extension... '
+        'Installing Stable build of extension... ',
     );
     export const installationCompleteMessage = localize('ExtensionChannels.installationCompleteMessage', 'complete.');
 }
@@ -325,11 +325,11 @@ export namespace Linters {
     export const enableLinter = localize('Linter.enableLinter', 'Enable {0}');
     export const enablePylint = localize(
         'Linter.enablePylint',
-        'You have a pylintrc file in your workspace. Do you want to enable pylint?'
+        'You have a pylintrc file in your workspace. Do you want to enable pylint?',
     );
     export const replaceWithSelectedLinter = localize(
         'Linter.replaceWithSelectedLinter',
-        "Multiple linters are enabled in settings. Replace with '{0}'?"
+        "Multiple linters are enabled in settings. Replace with '{0}'?",
     );
 
     export const installMessage = localize('Linter.install', 'Install a linter to get error reporting.');
@@ -341,27 +341,27 @@ export namespace Linters {
 export namespace Installer {
     export const noCondaOrPipInstaller = localize(
         'Installer.noCondaOrPipInstaller',
-        'There is no Conda or Pip installer available in the selected environment.'
+        'There is no Conda or Pip installer available in the selected environment.',
     );
     export const noPipInstaller = localize(
         'Installer.noPipInstaller',
-        'There is no Pip installer available in the selected environment.'
+        'There is no Pip installer available in the selected environment.',
     );
     export const searchForHelp = localize('Installer.searchForHelp', 'Search for help');
     export const couldNotInstallLibrary = localize(
         'Installer.couldNotInstallLibrary',
-        'Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.'
+        'Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.',
     );
     export const dataScienceInstallPrompt = localize(
         'Installer.dataScienceInstallPrompt',
-        'Data Science library {0} is not installed. Install?'
+        'Data Science library {0} is not installed. Install?',
     );
 }
 
 export namespace ExtensionSurveyBanner {
     export const bannerMessage = localize(
         'ExtensionSurveyBanner.bannerMessage',
-        'Can you please take 2 minutes to tell us how the Python extension is working for you?'
+        'Can you please take 2 minutes to tell us how the Python extension is working for you?',
     );
     export const bannerLabelYes = localize('ExtensionSurveyBanner.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('ExtensionSurveyBanner.bannerLabelNo', 'No, thanks');
@@ -378,29 +378,29 @@ export namespace StartPage {
     export const createJupyterNotebook = localize('StartPage.createJupyterNotebook', 'Create a Jupyter Notebook');
     export const notebookDescription = localize(
         'StartPage.notebookDescription',
-        '- Run "<div class="link italics" role="button" onclick={0}>Create New Blank Jupyter Notebook</div>" in the Command Palette (<div class="italics">Shift + Command + P</div>)<br />- Explore our <div class="link" role="button" onclick={1}>sample notebook</div> to learn about notebook features'
+        '- Run "<div class="link italics" role="button" onclick={0}>Create New Blank Jupyter Notebook</div>" in the Command Palette (<div class="italics">Shift + Command + P</div>)<br />- Explore our <div class="link" role="button" onclick={1}>sample notebook</div> to learn about notebook features',
     );
     export const createAPythonFile = localize('StartPage.createAPythonFile', 'Create a Python File');
     export const pythonFileDescription = localize(
         'StartPage.pythonFileDescription',
-        '- Create a <div class="link" role="button" onclick={0}>new file</div> with a .py extension'
+        '- Create a <div class="link" role="button" onclick={0}>new file</div> with a .py extension',
     );
     export const openInteractiveWindow = localize(
         'StartPage.openInteractiveWindow',
-        'Use the Interactive Window to develop Python Scripts'
+        'Use the Interactive Window to develop Python Scripts',
     );
     export const interactiveWindowDesc = localize(
         'StartPage.interactiveWindowDesc',
-        '- You can create cells on a Python file by typing "#%%" <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window'
+        '- You can create cells on a Python file by typing "#%%" <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window',
     );
 
     export const releaseNotes = localize(
         'StartPage.releaseNotes',
-        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features.'
+        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features.',
     );
     export const tutorialAndDoc = localize(
         'StartPage.tutorialAndDoc',
-        'Explore more features in our <a class="link" href={0}>Tutorials</a> or check <a class="link" href={1}>Documentation</a> for tips and troubleshooting.'
+        'Explore more features in our <a class="link" href={0}>Tutorials</a> or check <a class="link" href={1}>Documentation</a> for tips and troubleshooting.',
     );
     export const dontShowAgain = localize('StartPage.dontShowAgain', "Don't show this page again");
     export const helloWorld = localize('StartPage.helloWorld', 'Hello world');
@@ -410,139 +410,139 @@ export namespace StartPage {
     export const openFolder = localize('StartPage.openFolder', 'Open a Folder or Workspace');
     export const folderDesc = localize(
         'StartPage.folderDesc',
-        '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a <div class="link" role="button" onclick={1}>Workspace</div>'
+        '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a <div class="link" role="button" onclick={1}>Workspace</div>',
     );
     export const badWebPanelFormatString = localize(
         'StartPage.badWebPanelFormatString',
-        '<html><body><h1>{0} is not a valid file name</h1></body></html>'
+        '<html><body><h1>{0} is not a valid file name</h1></body></html>',
     );
 }
 
 export namespace DebugConfigStrings {
     export const selectConfiguration = {
         title: localize('debug.selectConfigurationTitle'),
-        placeholder: localize('debug.selectConfigurationPlaceholder')
+        placeholder: localize('debug.selectConfigurationPlaceholder'),
     };
     export const launchJsonCompletions = {
         label: localize('debug.launchJsonConfigurationsCompletionLabel'),
-        description: localize('debug.launchJsonConfigurationsCompletionDescription')
+        description: localize('debug.launchJsonConfigurationsCompletionDescription'),
     };
 
     export namespace file {
         export const snippet = {
-            name: localize('python.snippet.launch.standard.label')
+            name: localize('python.snippet.launch.standard.label'),
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
             label: localize('debug.debugFileConfigurationLabel'),
-            description: localize('debug.debugFileConfigurationDescription')
+            description: localize('debug.debugFileConfigurationDescription'),
         };
     }
     export namespace module {
         export const snippet = {
             name: localize('python.snippet.launch.module.label'),
-            default: localize('python.snippet.launch.module.default')
+            default: localize('python.snippet.launch.module.default'),
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
             label: localize('debug.debugModuleConfigurationLabel'),
-            description: localize('debug.debugModuleConfigurationDescription')
+            description: localize('debug.debugModuleConfigurationDescription'),
         };
         export const enterModule = {
             title: localize('debug.moduleEnterModuleTitle'),
             prompt: localize('debug.moduleEnterModulePrompt'),
             default: localize('debug.moduleEnterModuleDefault'),
-            invalid: localize('debug.moduleEnterModuleInvalidNameError')
+            invalid: localize('debug.moduleEnterModuleInvalidNameError'),
         };
     }
     export namespace attach {
         export const snippet = {
-            name: localize('python.snippet.launch.attach.label')
+            name: localize('python.snippet.launch.attach.label'),
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
             label: localize('debug.remoteAttachConfigurationLabel'),
-            description: localize('debug.remoteAttachConfigurationDescription')
+            description: localize('debug.remoteAttachConfigurationDescription'),
         };
         export const enterRemoteHost = {
             title: localize('debug.attachRemoteHostTitle'),
             prompt: localize('debug.attachRemoteHostPrompt'),
-            invalid: localize('debug.attachRemoteHostValidationError')
+            invalid: localize('debug.attachRemoteHostValidationError'),
         };
         export const enterRemotePort = {
             title: localize('debug.attachRemotePortTitle'),
             prompt: localize('debug.attachRemotePortPrompt'),
-            invalid: localize('debug.attachRemotePortValidationError')
+            invalid: localize('debug.attachRemotePortValidationError'),
         };
     }
     export namespace attachPid {
         export const snippet = {
-            name: localize('python.snippet.launch.attachpid.label')
+            name: localize('python.snippet.launch.attachpid.label'),
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
             label: localize('debug.attachPidConfigurationLabel'),
-            description: localize('debug.attachPidConfigurationDescription')
+            description: localize('debug.attachPidConfigurationDescription'),
         };
     }
     export namespace django {
         export const snippet = {
-            name: localize('python.snippet.launch.django.label')
+            name: localize('python.snippet.launch.django.label'),
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
             label: localize('debug.debugDjangoConfigurationLabel'),
-            description: localize('debug.debugDjangoConfigurationDescription')
+            description: localize('debug.debugDjangoConfigurationDescription'),
         };
         export const enterManagePyPath = {
             title: localize('debug.djangoEnterManagePyPathTitle'),
             prompt: localize('debug.djangoEnterManagePyPathPrompt'),
-            invalid: localize('debug.djangoEnterManagePyPathInvalidFilePathError')
+            invalid: localize('debug.djangoEnterManagePyPathInvalidFilePathError'),
         };
     }
     export namespace fastapi {
         export const snippet = {
-            name: localize('python.snippet.launch.fastapi.label')
+            name: localize('python.snippet.launch.fastapi.label'),
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
             label: localize('debug.debugFastAPIConfigurationLabel'),
-            description: localize('debug.debugFastAPIConfigurationDescription')
+            description: localize('debug.debugFastAPIConfigurationDescription'),
         };
         export const enterAppPathOrNamePath = {
             title: localize('debug.fastapiEnterAppPathOrNamePathTitle'),
             prompt: localize('debug.fastapiEnterAppPathOrNamePathPrompt'),
-            invalid: localize('debug.fastapiEnterAppPathOrNamePathInvalidNameError')
+            invalid: localize('debug.fastapiEnterAppPathOrNamePathInvalidNameError'),
         };
     }
     export namespace flask {
         export const snippet = {
-            name: localize('python.snippet.launch.flask.label')
+            name: localize('python.snippet.launch.flask.label'),
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
             label: localize('debug.debugFlaskConfigurationLabel'),
-            description: localize('debug.debugFlaskConfigurationDescription')
+            description: localize('debug.debugFlaskConfigurationDescription'),
         };
         export const enterAppPathOrNamePath = {
             title: localize('debug.flaskEnterAppPathOrNamePathTitle'),
             prompt: localize('debug.flaskEnterAppPathOrNamePathPrompt'),
-            invalid: localize('debug.flaskEnterAppPathOrNamePathInvalidNameError')
+            invalid: localize('debug.flaskEnterAppPathOrNamePathInvalidNameError'),
         };
     }
     export namespace pyramid {
         export const snippet = {
-            name: localize('python.snippet.launch.pyramid.label')
+            name: localize('python.snippet.launch.pyramid.label'),
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
             label: localize('debug.debugPyramidConfigurationLabel'),
-            description: localize('debug.debugPyramidConfigurationDescription')
+            description: localize('debug.debugPyramidConfigurationDescription'),
         };
         export const enterDevelopmentIniPath = {
             title: localize('debug.pyramidEnterDevelopmentIniPathTitle'),
             prompt: localize('debug.pyramidEnterDevelopmentIniPathPrompt'),
-            invalid: localize('debug.pyramidEnterDevelopmentIniPathInvalidFilePathError')
+            invalid: localize('debug.pyramidEnterDevelopmentIniPathInvalidFilePathError'),
         };
     }
 }
@@ -558,7 +558,7 @@ export namespace Testing {
 export namespace OutdatedDebugger {
     export const outdatedDebuggerMessage = localize(
         'OutdatedDebugger.updateDebuggerMessage',
-        'We noticed you are attaching to ptvsd (Python debugger), which was deprecated on May 1st, 2020. Please switch to [debugpy](https://aka.ms/migrateToDebugpy).'
+        'We noticed you are attaching to ptvsd (Python debugger), which was deprecated on May 1st, 2020. Please switch to [debugpy](https://aka.ms/migrateToDebugpy).',
     );
 }
 

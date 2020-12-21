@@ -7,9 +7,7 @@
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import {
-    instance, mock, verify, when,
-} from 'ts-mockito';
+import { instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
 import { IConfigurationService } from '../../../../client/common/types';

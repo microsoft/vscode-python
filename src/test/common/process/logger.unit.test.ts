@@ -55,7 +55,7 @@ suite('ProcessLogger suite', () => {
 
         const expectedResult = `> test --foo --bar "import test"\n${Logging.currentWorkingDirectory()} ${path.join(
             'debug',
-            'path'
+            'path',
         )}\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
     });
@@ -67,7 +67,7 @@ suite('ProcessLogger suite', () => {
 
         const expectedResult = `> test --foo --bar \'import test\'\n${Logging.currentWorkingDirectory()} ${path.join(
             'debug',
-            'path'
+            'path',
         )}\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
     });
@@ -80,7 +80,7 @@ suite('ProcessLogger suite', () => {
         const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${path.join(
             '~',
             'debug',
-            'path'
+            'path',
         )}\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
     });
@@ -103,7 +103,7 @@ suite('ProcessLogger suite', () => {
         const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n`;
         expect(outputResult).to.equal(
             expectedResult,
-            'Output string is incorrect: Working directory line should not be displayed'
+            'Output string is incorrect: Working directory line should not be displayed',
         );
     });
 
@@ -115,7 +115,7 @@ suite('ProcessLogger suite', () => {
         const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n`;
         expect(outputResult).to.equal(
             expectedResult,
-            'Output string is incorrect: Working directory line should not be displayed'
+            'Output string is incorrect: Working directory line should not be displayed',
         );
     });
 });

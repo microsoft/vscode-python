@@ -62,7 +62,7 @@ suite('Debugging - Configuration Provider FastAPI', () => {
             request: 'launch',
             module: 'uvicorn',
             args: ['main:app'],
-            jinja: true
+            jinja: true,
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -82,7 +82,7 @@ suite('Debugging - Configuration Provider FastAPI', () => {
             request: 'launch',
             module: 'uvicorn',
             args: ['main:app'],
-            jinja: true
+            jinja: true,
         };
 
         expect(state.config).to.be.deep.equal(config);

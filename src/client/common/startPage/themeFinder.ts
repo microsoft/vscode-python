@@ -31,7 +31,7 @@ export class ThemeFinder implements IThemeFinder {
     constructor(
         @inject(IExtensions) private extensions: IExtensions,
         @inject(ICurrentProcess) private currentProcess: ICurrentProcess,
-        @inject(IFileSystem) private fs: IFileSystem
+        @inject(IFileSystem) private fs: IFileSystem,
     ) {}
 
     public async findThemeRootJson(themeName: string): Promise<string | undefined> {
@@ -62,35 +62,35 @@ export class ThemeFinder implements IThemeFinder {
             const config: unknown = {
                 comments: {
                     lineComment: '#',
-                    blockComment: ['"""', '"""']
+                    blockComment: ['"""', '"""'],
                 },
                 brackets: [
                     ['{', '}'],
                     ['[', ']'],
-                    ['(', ')']
+                    ['(', ')'],
                 ],
                 autoClosingPairs: [
                     { open: '{', close: '}' },
                     { open: '[', close: ']' },
                     { open: '(', close: ')' },
                     { open: '"', close: '"', notIn: ['string'] },
-                    { open: "'", close: "'", notIn: ['string', 'comment'] }
+                    { open: "'", close: "'", notIn: ['string', 'comment'] },
                 ],
                 surroundingPairs: [
                     { open: '{', close: '}' },
                     { open: '[', close: ']' },
                     { open: '(', close: ')' },
                     { open: '"', close: '"' },
-                    { open: "'", close: "'" }
+                    { open: "'", close: "'" },
                 ],
                 folding: {
                     offSide: true,
                     markers: {
                         start: new RegExp('^\\s*#region\\b'),
-                        end: new RegExp('^\\s*#endregion\\b')
-                    }
+                        end: new RegExp('^\\s*#endregion\\b'),
+                    },
                 },
-                ...getLanguageConfiguration()
+                ...getLanguageConfiguration(),
             };
 
             return config as LanguageConfiguration;

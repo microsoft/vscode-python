@@ -12,13 +12,13 @@ import { LanguageServerType } from '../types';
 
 export async function promptForPylanceInstall(
     appShell: IApplicationShell,
-    appEnv: IApplicationEnvironment
+    appEnv: IApplicationEnvironment,
 ): Promise<void> {
     // If not installed, point user to Pylance at the store.
     const response = await appShell.showWarningMessage(
         Pylance.installPylanceMessage(),
         Common.bannerLabelYes(),
-        Common.bannerLabelNo()
+        Common.bannerLabelNo(),
     );
 
     if (response === Common.bannerLabelYes()) {
@@ -38,13 +38,13 @@ export class LanguageServerChangeHandler implements Disposable {
         private readonly extensions: IExtensions,
         private readonly appShell: IApplicationShell,
         private readonly appEnv: IApplicationEnvironment,
-        private readonly commands: ICommandManager
+        private readonly commands: ICommandManager,
     ) {
         this.pylanceInstalled = this.isPylanceInstalled();
         this.disposables.push(
             extensions.onDidChange(async () => {
                 await this.extensionsChangeHandler();
-            })
+            }),
         );
     }
 
@@ -78,7 +78,7 @@ export class LanguageServerChangeHandler implements Disposable {
         } else {
             response = await this.appShell.showInformationMessage(
                 LanguageService.reloadAfterLanguageServerChange(),
-                Common.reload()
+                Common.reload(),
             );
             if (response === Common.reload()) {
                 this.commands.executeCommand('workbench.action.reloadWindow');
@@ -99,7 +99,7 @@ export class LanguageServerChangeHandler implements Disposable {
         const response = await this.appShell.showWarningMessage(
             Pylance.pylanceInstalledReloadPromptMessage(),
             Common.bannerLabelYes(),
-            Common.bannerLabelNo()
+            Common.bannerLabelNo(),
         );
 
         this.pylanceInstallCompletedDeferred.resolve();

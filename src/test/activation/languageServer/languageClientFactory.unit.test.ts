@@ -15,7 +15,7 @@ import { LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node
 import {
     DotNetDownloadedLanguageClientFactory,
     DotNetLanguageClientFactory,
-    DotNetSimpleLanguageClientFactory
+    DotNetSimpleLanguageClientFactory,
 } from '../../../client/activation/languageServer/languageClientFactory';
 import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { PlatformData } from '../../../client/activation/languageServer/platformData';
@@ -53,7 +53,7 @@ suite('Language Server - LanguageClient Factory', () => {
             undefined as any,
             undefined as any,
             instance(downloadFactory),
-            instance(simpleFactory)
+            instance(simpleFactory),
         );
         const uri = Uri.file(__filename);
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
@@ -80,7 +80,7 @@ suite('Language Server - LanguageClient Factory', () => {
             undefined as any,
             undefined as any,
             instance(downloadFactory),
-            instance(simpleFactory)
+            instance(simpleFactory),
         );
         const uri = Uri.file(__filename);
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
@@ -109,7 +109,7 @@ suite('Language Server - LanguageClient Factory', () => {
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, engineDllName);
         const expectedServerOptions = {
             run: { command: serverModule, args: [], options: { stdio: 'pipe', env: { FOO: 'bar' } } },
-            debug: { command: serverModule, args: ['--debug'], options: { stdio: 'pipe', env: { FOO: 'bar' } } }
+            debug: { command: serverModule, args: ['--debug'], options: { stdio: 'pipe', env: { FOO: 'bar' } } },
         };
         rewiremock.enable();
 
@@ -118,7 +118,7 @@ suite('Language Server - LanguageClient Factory', () => {
                 language: string,
                 name: string,
                 serverOptions: ServerOptions,
-                clientOptions: LanguageClientOptions
+                clientOptions: LanguageClientOptions,
             ) {
                 expect(language).to.be.equal('python');
                 expect(name).to.be.equal(languageClientName);
@@ -153,8 +153,8 @@ suite('Language Server - LanguageClient Factory', () => {
             debug: {
                 command: dotNetCommand,
                 args: [serverModule, '--debug'],
-                options: { stdio: 'pipe', env: { FOO: 'bar' } }
-            }
+                options: { stdio: 'pipe', env: { FOO: 'bar' } },
+            },
         };
         rewiremock.enable();
 
@@ -163,7 +163,7 @@ suite('Language Server - LanguageClient Factory', () => {
                 language: string,
                 name: string,
                 serverOptions: ServerOptions,
-                clientOptions: LanguageClientOptions
+                clientOptions: LanguageClientOptions,
             ) {
                 expect(language).to.be.equal('python');
                 expect(name).to.be.equal(languageClientName);

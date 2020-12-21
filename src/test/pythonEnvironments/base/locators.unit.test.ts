@@ -8,9 +8,7 @@ import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments
 import { PythonLocatorQuery } from '../../../client/pythonEnvironments/base/locator';
 import { Locators } from '../../../client/pythonEnvironments/base/locators';
 import { PythonEnvsChangedEvent } from '../../../client/pythonEnvironments/base/watcher';
-import {
-    createLocatedEnv, createNamedEnv, getEnvs, SimpleLocator,
-} from './common';
+import { createLocatedEnv, createNamedEnv, getEnvs, SimpleLocator } from './common';
 
 suite('Python envs locators - Locators', () => {
     suite('onChanged consolidates', () => {

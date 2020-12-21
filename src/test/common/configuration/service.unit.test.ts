@@ -13,7 +13,7 @@ import { DeprecatePythonPath } from '../../../client/common/experiments/groups';
 import { IExperimentsManager, IInterpreterPathService } from '../../../client/common/types';
 import {
     IInterpreterAutoSeletionProxyService,
-    IInterpreterSecurityService
+    IInterpreterSecurityService,
 } from '../../../client/interpreter/autoSelection/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -33,7 +33,7 @@ suite('Configuration Service', () => {
             .returns(() => ({
                 uri: resource,
                 index: 0,
-                name: '0'
+                name: '0',
             }));
         interpreterPathService = TypeMoq.Mock.ofType<IInterpreterPathService>();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -145,7 +145,7 @@ suite('Configuration Service', () => {
             'setting',
             'workspaceFolderValue',
             resource,
-            ConfigurationTarget.WorkspaceFolder
+            ConfigurationTarget.WorkspaceFolder,
         );
 
         workspaceConfig.verifyAll();
@@ -167,7 +167,7 @@ suite('Configuration Service', () => {
             'setting',
             'newWorkspaceFolderValue',
             resource,
-            ConfigurationTarget.WorkspaceFolder
+            ConfigurationTarget.WorkspaceFolder,
         );
 
         workspaceConfig.verifyAll();
@@ -188,7 +188,7 @@ suite('Configuration Service', () => {
             'pythonPath',
             'newWorkspaceFolderValue',
             resource,
-            ConfigurationTarget.WorkspaceFolder
+            ConfigurationTarget.WorkspaceFolder,
         );
 
         interpreterPathService.verifyAll();

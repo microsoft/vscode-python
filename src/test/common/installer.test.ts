@@ -21,7 +21,7 @@ import {
     ICustomEditorService,
     IDebugService,
     IDocumentManager,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
@@ -34,7 +34,7 @@ import { FeatureDeprecationManager } from '../../client/common/featureDeprecatio
 import {
     ExtensionInsidersDailyChannelRule,
     ExtensionInsidersOffChannelRule,
-    ExtensionInsidersWeeklyChannelRule
+    ExtensionInsidersWeeklyChannelRule,
 } from '../../client/common/insidersBuild/downloadChannelRules';
 import { ExtensionChannelService } from '../../client/common/insidersBuild/downloadChannelService';
 import { InsidersExtensionPrompt } from '../../client/common/insidersBuild/insidersExtensionPrompt';
@@ -43,7 +43,7 @@ import {
     ExtensionChannel,
     IExtensionChannelRule,
     IExtensionChannelService,
-    IInsiderExtensionPrompt
+    IInsiderExtensionPrompt,
 } from '../../client/common/insidersBuild/types';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
@@ -53,14 +53,14 @@ import {
     LinterProductPathService,
     RefactoringLibraryProductPathService,
     TensorBoardProductPathService,
-    TestFrameworkProductPathService
+    TestFrameworkProductPathService,
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import {
     IInstallationChannelManager,
     IModuleInstaller,
     IProductPathService,
-    IProductService
+    IProductService,
 } from '../../client/common/installer/types';
 import { InterpreterPathService } from '../../client/common/interpreterPathService';
 import { BrowserService } from '../../client/common/net/browser';
@@ -93,7 +93,7 @@ import {
     ITerminalActivator,
     ITerminalHelper,
     ITerminalServiceFactory,
-    TerminalActivationProviders
+    TerminalActivationProviders,
 } from '../../client/common/terminal/types';
 import {
     IAsyncDisposableRegistry,
@@ -116,7 +116,7 @@ import {
     IsWindows,
     ModuleNamePurpose,
     Product,
-    ProductType
+    ProductType,
 } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { getNamesAndValues } from '../../client/common/utils/enum';
@@ -166,16 +166,16 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
         ioc.serviceManager.addSingleton<IInstallationChannelManager>(
             IInstallationChannelManager,
-            InstallationChannelManager
+            InstallationChannelManager,
         );
         ioc.serviceManager.addSingletonInstance<ICommandManager>(
             ICommandManager,
-            TypeMoq.Mock.ofType<ICommandManager>().object
+            TypeMoq.Mock.ofType<ICommandManager>().object,
         );
 
         ioc.serviceManager.addSingletonInstance<IApplicationShell>(
             IApplicationShell,
-            TypeMoq.Mock.ofType<IApplicationShell>().object
+            TypeMoq.Mock.ofType<IApplicationShell>().object,
         );
         ioc.serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
         ioc.serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
@@ -187,32 +187,32 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             CTagsProductPathService,
-            ProductType.WorkspaceSymbols
+            ProductType.WorkspaceSymbols,
         );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             FormatterProductPathService,
-            ProductType.Formatter
+            ProductType.Formatter,
         );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             LinterProductPathService,
-            ProductType.Linter
+            ProductType.Linter,
         );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             TestFrameworkProductPathService,
-            ProductType.TestFramework
+            ProductType.TestFramework,
         );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             RefactoringLibraryProductPathService,
-            ProductType.RefactoringLibrary
+            ProductType.RefactoringLibrary,
         );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             TensorBoardProductPathService,
-            ProductType.TensorBoard
+            ProductType.TensorBoard,
         );
 
         ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
@@ -232,7 +232,7 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<ITerminalActivator>(ITerminalActivator, TerminalActivator);
         ioc.serviceManager.addSingleton<ITerminalActivationHandler>(
             ITerminalActivationHandler,
-            PowershellTerminalActivationFailedHandler
+            PowershellTerminalActivationFailedHandler,
         );
         ioc.serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
         ioc.serviceManager.addSingleton<IExperimentsManager>(IExperimentsManager, ExperimentsManager);
@@ -242,31 +242,31 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
             ITerminalActivationCommandProvider,
             Bash,
-            TerminalActivationProviders.bashCShellFish
+            TerminalActivationProviders.bashCShellFish,
         );
         ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
             ITerminalActivationCommandProvider,
             CommandPromptAndPowerShell,
-            TerminalActivationProviders.commandPromptAndPowerShell
+            TerminalActivationProviders.commandPromptAndPowerShell,
         );
         ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
             ITerminalActivationCommandProvider,
             PyEnvActivationCommandProvider,
-            TerminalActivationProviders.pyenv
+            TerminalActivationProviders.pyenv,
         );
         ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
             ITerminalActivationCommandProvider,
             CondaActivationCommandProvider,
-            TerminalActivationProviders.conda
+            TerminalActivationProviders.conda,
         );
         ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
             ITerminalActivationCommandProvider,
             PipEnvActivationCommandProvider,
-            TerminalActivationProviders.pipenv
+            TerminalActivationProviders.pipenv,
         );
         ioc.serviceManager.addSingleton<IFeatureDeprecationManager>(
             IFeatureDeprecationManager,
-            FeatureDeprecationManager
+            FeatureDeprecationManager,
         );
 
         ioc.serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
@@ -280,31 +280,31 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<IInsiderExtensionPrompt>(IInsiderExtensionPrompt, InsidersExtensionPrompt);
         ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
             IExtensionSingleActivationService,
-            InsidersExtensionService
+            InsidersExtensionService,
         );
         ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
             IExtensionSingleActivationService,
-            ReloadVSCodeCommandHandler
+            ReloadVSCodeCommandHandler,
         );
         ioc.serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
         ioc.serviceManager.addSingleton<IExtensionChannelRule>(
             IExtensionChannelRule,
             ExtensionInsidersOffChannelRule,
-            ExtensionChannel.off
+            ExtensionChannel.off,
         );
         ioc.serviceManager.addSingleton<IExtensionChannelRule>(
             IExtensionChannelRule,
             ExtensionInsidersDailyChannelRule,
-            ExtensionChannel.daily
+            ExtensionChannel.daily,
         );
         ioc.serviceManager.addSingleton<IExtensionChannelRule>(
             IExtensionChannelRule,
             ExtensionInsidersWeeklyChannelRule,
-            ExtensionChannel.weekly
+            ExtensionChannel.weekly,
         );
         ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
             IExtensionSingleActivationService,
-            DebugSessionTelemetry
+            DebugSessionTelemetry,
         );
         ioc.serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
     }
@@ -337,11 +337,11 @@ suite('Installer', () => {
             }
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
                 IModuleInstaller,
-                new MockModuleInstaller('one', false)
+                new MockModuleInstaller('one', false),
             );
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
                 IModuleInstaller,
-                new MockModuleInstaller('two', true)
+                new MockModuleInstaller('two', true),
             );
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
             if (prod.value === Product.ctags || prod.value === Product.unittest || prod.value === Product.isort) {
@@ -375,11 +375,11 @@ suite('Installer', () => {
             }
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
                 IModuleInstaller,
-                new MockModuleInstaller('one', false)
+                new MockModuleInstaller('one', false),
             );
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
                 IModuleInstaller,
-                new MockModuleInstaller('two', true)
+                new MockModuleInstaller('two', true),
             );
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
             if (prod.value === Product.unittest || prod.value === Product.ctags || prod.value === Product.isort) {

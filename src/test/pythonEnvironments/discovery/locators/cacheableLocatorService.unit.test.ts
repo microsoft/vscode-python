@@ -8,9 +8,7 @@
 
 import { expect } from 'chai';
 import * as md5 from 'md5';
-import {
-    anything, instance, mock, verify, when,
-} from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';

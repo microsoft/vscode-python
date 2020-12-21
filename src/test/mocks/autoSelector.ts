@@ -8,7 +8,7 @@ import { Event, EventEmitter } from 'vscode';
 import { Resource } from '../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 

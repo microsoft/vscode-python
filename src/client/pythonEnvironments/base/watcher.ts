@@ -61,7 +61,8 @@ export interface IPythonEnvsWatcher<E extends BasicPythonEnvsChangedEvent = Pyth
  * should be used.  Only in low-level cases should you consider using
  * `BasicPythonEnvsChangedEvent`.
  */
-export class PythonEnvsWatcher<T extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent> implements IPythonEnvsWatcher<T> {
+export class PythonEnvsWatcher<T extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
+    implements IPythonEnvsWatcher<T> {
     /**
      * The hook for registering event listeners (callbacks).
      */

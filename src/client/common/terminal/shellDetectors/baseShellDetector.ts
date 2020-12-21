@@ -53,7 +53,7 @@ export abstract class BaseShellDetector implements IShellDetector {
     constructor(@unmanaged() public readonly priority: number) {}
     public abstract identify(
         telemetryProperties: ShellIdentificationTelemetry,
-        terminal?: Terminal
+        terminal?: Terminal,
     ): TerminalShellType | undefined;
     public identifyShellFromShellPath(shellPath: string): TerminalShellType {
         const shell = Array.from(detectableShells.keys()).reduce((matchedShell, shellToDetect) => {

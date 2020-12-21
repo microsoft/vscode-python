@@ -14,7 +14,7 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import {
     ExtensionChannelService,
-    insidersChannelSetting
+    insidersChannelSetting,
 } from '../../../client/common/insidersBuild/downloadChannelService';
 import { ExtensionChannels } from '../../../client/common/insidersBuild/types';
 import { IConfigurationService } from '../../../client/common/types';
@@ -43,22 +43,22 @@ suite('Download channel service', () => {
         {
             testName: "Get channel returns 'off' if settings value is set to 'off'",
             settings: 'off',
-            expectedResult: 'off'
+            expectedResult: 'off',
         },
         {
             testName: "Get channel returns 'weekly' if settings value is set to 'weekly'",
             settings: 'weekly',
-            expectedResult: 'weekly'
+            expectedResult: 'weekly',
         },
         {
             testName: "Get channel returns 'daily' if settings value is set to 'daily'",
             settings: 'daily',
-            expectedResult: 'daily'
-        }
+            expectedResult: 'daily',
+        },
     ].forEach((testParams) => {
         test(testParams.testName, async () => {
             when(configService.getSettings()).thenReturn({
-                insidersChannel: testParams.settings as ExtensionChannels
+                insidersChannel: testParams.settings as ExtensionChannels,
             } as any);
             const result = channelService.getChannel();
             expect(result).to.equal(testParams.expectedResult);
@@ -108,18 +108,18 @@ suite('Download channel service', () => {
     test('Update channel updates configuration settings', async () => {
         const value = 'Random';
         when(
-            configService.updateSetting(insidersChannelSetting, value, undefined, ConfigurationTarget.Global)
+            configService.updateSetting(insidersChannelSetting, value, undefined, ConfigurationTarget.Global),
         ).thenResolve(undefined);
         await channelService.updateChannel(value as any);
         verify(
-            configService.updateSetting(insidersChannelSetting, value, undefined, ConfigurationTarget.Global)
+            configService.updateSetting(insidersChannelSetting, value, undefined, ConfigurationTarget.Global),
         ).once();
     });
 
     test('Update channel throws error when updates configuration settings fails', async () => {
         const value = 'Random';
         when(
-            configService.updateSetting(insidersChannelSetting, value, undefined, ConfigurationTarget.Global)
+            configService.updateSetting(insidersChannelSetting, value, undefined, ConfigurationTarget.Global),
         ).thenThrow(new Error('Kaboom'));
         const promise = channelService.updateChannel(value as any);
         await expect(promise).to.eventually.be.rejectedWith('Kaboom');

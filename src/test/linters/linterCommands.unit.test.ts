@@ -60,7 +60,7 @@ suite('Linting - Linter Commands', () => {
         const expectedQuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
-            placeHolder: `current: ${currentState ? 'on' : 'off'}`
+            placeHolder: `current: ${currentState ? 'on' : 'off'}`,
         };
         when(shell.showQuickPick(anything(), anything())).thenResolve(selectedState as any);
 
@@ -101,7 +101,7 @@ suite('Linting - Linter Commands', () => {
         const expectedQuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
-            placeHolder: 'current: none'
+            placeHolder: 'current: none',
         };
 
         await linterCommands.setLinterAsync();
@@ -119,7 +119,7 @@ suite('Linting - Linter Commands', () => {
         const expectedQuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
-            placeHolder: `current: ${linterId}`
+            placeHolder: `current: ${linterId}`,
         };
 
         await linterCommands.setLinterAsync();
@@ -136,7 +136,7 @@ suite('Linting - Linter Commands', () => {
         const expectedQuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
-            placeHolder: 'current: multiple selected'
+            placeHolder: 'current: multiple selected',
         };
 
         await linterCommands.setLinterAsync();
@@ -155,7 +155,7 @@ suite('Linting - Linter Commands', () => {
         const expectedQuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
-            placeHolder: 'current: multiple selected'
+            placeHolder: 'current: multiple selected',
         };
 
         await linterCommands.setLinterAsync();

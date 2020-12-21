@@ -18,7 +18,7 @@ import {
     FSFixture,
     SUPPORTS_SOCKETS,
     SUPPORTS_SYMLINKS,
-    WINDOWS
+    WINDOWS,
 } from './utils';
 
 // tslint:disable:no-require-imports no-var-requires
@@ -410,7 +410,7 @@ suite('FileSystem - utils', () => {
                 await fix.createFile('x/y/z/spam.py'),
                 await fix.createFile('x/y/z/spam.pyc'),
                 await fix.createFile('x/y/z/spam.so'),
-                await fix.createDirectory('x/y/z/spam.data')
+                await fix.createDirectory('x/y/z/spam.data'),
             ];
             // non-matches
             await fix.createFile('x/spam.py');
@@ -689,7 +689,7 @@ suite('FileSystem', () => {
                     await fix.createFile('x/y/z/spam.py'),
                     await fix.createFile('x/y/z/spam.pyc'),
                     await fix.createFile('x/y/z/spam.so'),
-                    await fix.createDirectory('x/y/z/spam.data')
+                    await fix.createDirectory('x/y/z/spam.data'),
                 ];
                 // non-matches
                 await fix.createFile('x/spam.py');
@@ -709,7 +709,7 @@ suite('FileSystem', () => {
                 const dir = await fix.resolve(`x/y/z`);
                 const expected: string[] = [
                     await fix.createFile('x/y/z/spam.py'),
-                    await fix.createFile('x/y/z/.net.py')
+                    await fix.createFile('x/y/z/.net.py'),
                 ];
                 // non-matches
                 await fix.createFile('x/spam.py');

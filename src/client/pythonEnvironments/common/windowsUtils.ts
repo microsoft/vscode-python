@@ -4,7 +4,15 @@
 import { uniqBy } from 'lodash';
 import * as path from 'path';
 import { traceError, traceVerbose } from '../../common/logger';
-import { HKCU, HKLM, IRegistryKey, IRegistryValue, readRegistryKeys, readRegistryValues, REG_SZ } from './windowsRegistry';
+import {
+    HKCU,
+    HKLM,
+    IRegistryKey,
+    IRegistryValue,
+    readRegistryKeys,
+    readRegistryValues,
+    REG_SZ,
+} from './windowsRegistry';
 
 // tslint:disable-next-line: no-single-line-block-comment
 /* eslint-disable global-require */

@@ -32,7 +32,7 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IPythonExtensionBanner)
         @named(BANNER_NAME_PROPOSE_LS)
-        private proposePylancePopup: IPythonExtensionBanner
+        private proposePylancePopup: IPythonExtensionBanner,
     ) {
         super(manager, workspace, fs, configurationService);
     }
@@ -54,7 +54,7 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
     public async prepareLanguageServerForNoICU(languageServerFolderPath: string): Promise<void> {
         const targetJsonFile = path.join(
             languageServerFolderPath,
-            'Microsoft.Python.LanguageServer.runtimeconfig.json'
+            'Microsoft.Python.LanguageServer.runtimeconfig.json',
         );
         // tslint:disable-next-line:no-any
         let content: any = {};
@@ -80,7 +80,7 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
 
     private async ensureLanguageServerFileIsAvailable(
         resource: Resource,
-        fileName: string
+        fileName: string,
     ): Promise<string | undefined> {
         const settings = this.configurationService.getSettings(resource);
         if (settings.downloadLanguageServer === false) {

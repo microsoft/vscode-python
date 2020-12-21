@@ -23,7 +23,7 @@ import {
     IOutputChannel,
     IPersistentState,
     IPersistentStateFactory,
-    IPythonSettings
+    IPythonSettings,
 } from '../types';
 import { sleep } from '../utils/async';
 import { swallowExceptions } from '../utils/decorators';
@@ -97,16 +97,16 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @optional() private experimentEffortTimeout: number = EXPERIMENTS_EFFORT_TIMEOUT_MS
+        @optional() private experimentEffortTimeout: number = EXPERIMENTS_EFFORT_TIMEOUT_MS,
     ) {
         this.isDownloadedStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(
             isDownloadedStorageValidKey,
             false,
-            EXPIRY_DURATION_MS
+            EXPIRY_DURATION_MS,
         );
         this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(
             experimentStorageKey,
-            undefined
+            undefined,
         );
         this.downloadedExperimentsStorage = this.persistentStateFactory.createGlobalPersistentState<
             ABExperiments | undefined
@@ -162,7 +162,7 @@ export class ExperimentsManager implements IExperimentsManager {
                         this._experimentsOptedOutFrom.includes(experiment.name)
                     ) {
                         sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, {
-                            expNameOptedOutOf: experiment.name
+                            expNameOptedOutOf: experiment.name,
                         });
                         continue;
                     }
@@ -171,7 +171,7 @@ export class ExperimentsManager implements IExperimentsManager {
                         this._experimentsOptedInto.includes(experiment.name)
                     ) {
                         sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, {
-                            expNameOptedInto: experiment.name
+                            expNameOptedInto: experiment.name,
                         });
                         this.userExperiments.push(experiment);
                     } else {
@@ -214,7 +214,7 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     @traceDecorators.error('Failed to download and store experiments')
     public async downloadAndStoreExperiments(
-        storage: IPersistentState<ABExperiments | undefined> = this.downloadedExperimentsStorage
+        storage: IPersistentState<ABExperiments | undefined> = this.downloadedExperimentsStorage,
     ): Promise<void> {
         const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false);
         if (!this.areExperimentsValid(downloadedExperiments)) {
@@ -317,7 +317,7 @@ export class ExperimentsManager implements IExperimentsManager {
             const success = await Promise.race([
                 // Download and store experiments in the storage for the current session
                 this.downloadAndStoreExperiments(this.experimentStorage).then(() => true),
-                sleep(this.experimentEffortTimeout).then(() => false)
+                sleep(this.experimentEffortTimeout).then(() => false),
             ]);
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success });
             return success;
@@ -326,7 +326,7 @@ export class ExperimentsManager implements IExperimentsManager {
                 EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE,
                 undefined,
                 { success: false, error: 'Downloading experiments failed with error' },
-                ex
+                ex,
             );
             traceError('Effort to download experiments within timeout failed with error', ex);
             return false;

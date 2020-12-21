@@ -4,9 +4,7 @@
 import { Event } from 'vscode';
 import { IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { PythonEnvInfo } from '../../info';
-import {
-    ILocator, IPythonEnvsIterator, PythonLocatorQuery,
-} from '../../locator';
+import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { LazyResourceBasedLocator } from './resourceBasedLocator';
 
@@ -24,14 +22,12 @@ export class LazyWrappingLocator extends LazyResourceBasedLocator {
 
     private wrapped?: ILocator;
 
-    constructor(
-        private readonly getLocator: GetLocatorFunc,
-    ) {
+    constructor(private readonly getLocator: GetLocatorFunc) {
         super();
         this.onChanged = this.watcher.onChanged;
     }
 
-    protected async* doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+    protected async *doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         yield* this.wrapped!.iterEnvs(query);
     }
 

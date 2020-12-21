@@ -12,7 +12,7 @@ import { ICommandManager, IJupyterExtensionDependencyManager } from './types';
 export class CommandManager implements ICommandManager {
     constructor(
         @inject(IJupyterExtensionDependencyManager)
-        private jupyterExtensionDependencyManager: IJupyterExtensionDependencyManager
+        private jupyterExtensionDependencyManager: IJupyterExtensionDependencyManager,
     ) {}
 
     /**
@@ -51,7 +51,7 @@ export class CommandManager implements ICommandManager {
     public registerTextEditorCommand(
         command: string,
         callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void,
-        thisArg?: any
+        thisArg?: any,
     ): Disposable {
         return commands.registerTextEditorCommand(command, callback, thisArg);
     }

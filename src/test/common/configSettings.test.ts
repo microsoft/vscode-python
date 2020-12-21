@@ -32,7 +32,7 @@ suite('Configuration Settings', () => {
                 assert.equal(
                     settingValue.toUpperCase(),
                     pythonSettingValue.toUpperCase(),
-                    `Setting ${key} not the same`
+                    `Setting ${key} not the same`,
                 );
             } else if (key === 'workspaceSymbols' && IS_WINDOWS) {
                 const workspaceSettings = (pythonSettingValue as {}) as IWorkspaceSymbolSettings;
@@ -40,7 +40,7 @@ suite('Configuration Settings', () => {
                 assert.equal(
                     workspaceSettings.tagFilePath.toUpperCase(),
                     workspaceSttings.tagFilePath.toUpperCase(),
-                    `Setting ${key} not the same`
+                    `Setting ${key} not the same`,
                 );
 
                 const workspaceSettingsWithoutPath = { ...workspaceSettings };
@@ -50,7 +50,7 @@ suite('Configuration Settings', () => {
                 assert.deepEqual(
                     workspaceSettingsWithoutPath,
                     pythonSettingValueWithoutPath,
-                    `Setting ${key} not the same`
+                    `Setting ${key} not the same`,
                 );
             }
         });

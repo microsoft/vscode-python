@@ -15,7 +15,7 @@ import {
     SymbolInformation,
     SymbolKind,
     TextDocument,
-    Uri
+    Uri,
 } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
@@ -28,7 +28,7 @@ import {
     TestFunction,
     TestStatus,
     TestsToRun,
-    TestSuite
+    TestSuite,
 } from '../common/types';
 
 type FunctionsAndSuites = {
@@ -44,7 +44,7 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
         private _onDidChange: EventEmitter<void>,
         private symbolProvider: DocumentSymbolProvider,
         private testCollectionStorage: ITestCollectionStorageService,
-        serviceContainer: IServiceContainer
+        serviceContainer: IServiceContainer,
     ) {
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
@@ -100,7 +100,7 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
     private async getCodeLenses(
         document: TextDocument,
         token: CancellationToken,
-        symbolProvider: DocumentSymbolProvider
+        symbolProvider: DocumentSymbolProvider,
     ) {
         const file = this.getTestFileWhichNeedsCodeLens(document);
         if (!file) {
@@ -118,14 +118,14 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
                     (symbol) =>
                         symbol.kind === SymbolKind.Function ||
                         symbol.kind === SymbolKind.Method ||
-                        symbol.kind === SymbolKind.Class
+                        symbol.kind === SymbolKind.Class,
                 )
                 .map((symbol) => {
                     // This is crucial, if the start and end columns are the same then vscode bugs out
                     // whenever you edit a line (start scrolling magically).
                     const range = new Range(
                         symbol.location.range.start,
-                        new Position(symbol.location.range.end.line, symbol.location.range.end.character + 1)
+                        new Position(symbol.location.range.end.line, symbol.location.range.end.character + 1),
                     );
 
                     return this.getCodeLens(
@@ -134,7 +134,7 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
                         range,
                         symbol.name,
                         symbol.kind,
-                        symbol.containerName
+                        symbol.containerName,
                     );
                 })
                 .reduce((previous, current) => previous.concat(current), [])
@@ -153,7 +153,7 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
         range: Range,
         symbolName: string,
         symbolKind: SymbolKind,
-        symbolContainer: string
+        symbolContainer: string,
     ): CodeLens[] {
         switch (symbolKind) {
             case SymbolKind.Function:
@@ -169,13 +169,13 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
                     new CodeLens(range, {
                         title: getTestStatusIcon(cls.status) + constants.Text.CodeLensRunUnitTest,
                         command: constants.Commands.Tests_Run,
-                        arguments: [undefined, CommandSource.codelens, file, <TestsToRun>{ testSuite: [cls] }]
+                        arguments: [undefined, CommandSource.codelens, file, <TestsToRun>{ testSuite: [cls] }],
                     }),
                     new CodeLens(range, {
                         title: getTestStatusIcon(cls.status) + constants.Text.CodeLensDebugUnitTest,
                         command: constants.Commands.Tests_Debug,
-                        arguments: [undefined, CommandSource.codelens, file, <TestsToRun>{ testSuite: [cls] }]
-                    })
+                        arguments: [undefined, CommandSource.codelens, file, <TestsToRun>{ testSuite: [cls] }],
+                    }),
                 ];
             }
             default: {
@@ -231,7 +231,7 @@ function getFunctionCodeLens(
     functionsAndSuites: FunctionsAndSuites,
     symbolName: string,
     range: Range,
-    symbolContainer: string
+    symbolContainer: string,
 ): CodeLens[] {
     let fn: TestFunction | undefined;
     if (symbolContainer.length === 0) {
@@ -253,20 +253,20 @@ function getFunctionCodeLens(
             new CodeLens(range, {
                 title: getTestStatusIcon(fn.status) + constants.Text.CodeLensRunUnitTest,
                 command: constants.Commands.Tests_Run,
-                arguments: [undefined, CommandSource.codelens, file, <TestsToRun>{ testFunction: [fn] }]
+                arguments: [undefined, CommandSource.codelens, file, <TestsToRun>{ testFunction: [fn] }],
             }),
             new CodeLens(range, {
                 title: getTestStatusIcon(fn.status) + constants.Text.CodeLensDebugUnitTest,
                 command: constants.Commands.Tests_Debug,
-                arguments: [undefined, CommandSource.codelens, file, <TestsToRun>{ testFunction: [fn] }]
-            })
+                arguments: [undefined, CommandSource.codelens, file, <TestsToRun>{ testFunction: [fn] }],
+            }),
         ];
     }
 
     // Ok, possible we're dealing with parameterized unit tests.
     // If we have [ in the name, then this is a parameterized function.
     const functions = functionsAndSuites.functions.filter(
-        (func) => func.name.startsWith(`${symbolName}[`) && func.name.endsWith(']')
+        (func) => func.name.startsWith(`${symbolName}[`) && func.name.endsWith(']'),
     );
     if (functions.length === 0) {
         return [];
@@ -277,13 +277,13 @@ function getFunctionCodeLens(
         new CodeLens(range, {
             title: `${getTestStatusIcons(functions)} ${constants.Text.CodeLensRunUnitTest} (Multiple)`,
             command: constants.Commands.Tests_Picker_UI,
-            arguments: [undefined, CommandSource.codelens, file, functions]
+            arguments: [undefined, CommandSource.codelens, file, functions],
         }),
         new CodeLens(range, {
             title: `${getTestStatusIcons(functions)} ${constants.Text.CodeLensDebugUnitTest} (Multiple)`,
             command: constants.Commands.Tests_Picker_UI_Debug,
-            arguments: [undefined, CommandSource.codelens, file, functions]
-        })
+            arguments: [undefined, CommandSource.codelens, file, functions],
+        }),
     ];
 }
 

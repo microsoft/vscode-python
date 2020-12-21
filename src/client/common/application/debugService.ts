@@ -15,7 +15,7 @@ import {
     DebugSessionCustomEvent,
     Disposable,
     Event,
-    WorkspaceFolder
+    WorkspaceFolder,
 } from 'vscode';
 import { IDebugService } from './types';
 
@@ -57,7 +57,7 @@ export class DebugService implements IDebugService {
     public startDebugging(
         folder: WorkspaceFolder | undefined,
         nameOrConfiguration: string | DebugConfiguration,
-        parentSession?: DebugSession
+        parentSession?: DebugSession,
     ): Thenable<boolean> {
         return debug.startDebugging(folder, nameOrConfiguration, parentSession);
     }
@@ -69,7 +69,7 @@ export class DebugService implements IDebugService {
     }
     public registerDebugAdapterDescriptorFactory(
         debugType: string,
-        factory: DebugAdapterDescriptorFactory
+        factory: DebugAdapterDescriptorFactory,
     ): Disposable {
         return debug.registerDebugAdapterDescriptorFactory(debugType, factory);
     }

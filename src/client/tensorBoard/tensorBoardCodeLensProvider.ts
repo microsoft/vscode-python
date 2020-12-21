@@ -14,7 +14,7 @@ import { containsTensorBoardImport } from './helpers';
 export class TensorBoardCodeLensProvider implements IExtensionSingleActivationService {
     constructor(
         @inject(IExperimentService) private experimentService: IExperimentService,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
     ) {}
 
     public async activate(): Promise<void> {
@@ -25,7 +25,7 @@ export class TensorBoardCodeLensProvider implements IExtensionSingleActivationSe
     public provideCodeLenses(document: TextDocument): CodeLens[] {
         const command: Command = {
             title: TensorBoard.launchNativeTensorBoardSessionCodeLens(),
-            command: Commands.LaunchTensorBoard
+            command: Commands.LaunchTensorBoard,
         };
         const codelenses: CodeLens[] = [];
         for (let index = 0; index < document.lineCount; index += 1) {

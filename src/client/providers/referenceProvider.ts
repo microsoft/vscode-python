@@ -43,7 +43,7 @@ export class PythonReferenceProvider implements vscode.ReferenceProvider {
         document: vscode.TextDocument,
         position: vscode.Position,
         _context: vscode.ReferenceContext,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<vscode.Location[] | undefined> {
         const filename = document.fileName;
         if (document.lineAt(position.line).text.match(/^\s*\/\//)) {
@@ -62,7 +62,7 @@ export class PythonReferenceProvider implements vscode.ReferenceProvider {
             command: proxy.CommandType.Usages,
             fileName: filename,
             columnIndex: columnIndex,
-            lineIndex: position.line
+            lineIndex: position.line,
         };
 
         if (document.isDirty) {

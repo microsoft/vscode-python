@@ -9,29 +9,29 @@ import { IApplicationDiagnostics } from '../types';
 import { ApplicationDiagnostics } from './applicationDiagnostics';
 import {
     EnvironmentPathVariableDiagnosticsService,
-    EnvironmentPathVariableDiagnosticsServiceId
+    EnvironmentPathVariableDiagnosticsServiceId,
 } from './checks/envPathVariable';
 import {
     InvalidLaunchJsonDebuggerService,
-    InvalidLaunchJsonDebuggerServiceId
+    InvalidLaunchJsonDebuggerServiceId,
 } from './checks/invalidLaunchJsonDebugger';
 import {
     InvalidPythonPathInDebuggerService,
-    InvalidPythonPathInDebuggerServiceId
+    InvalidPythonPathInDebuggerServiceId,
 } from './checks/invalidPythonPathInDebugger';
 import { LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId } from './checks/lsNotSupported';
 import {
     InvalidMacPythonInterpreterService,
-    InvalidMacPythonInterpreterServiceId
+    InvalidMacPythonInterpreterServiceId,
 } from './checks/macPythonInterpreter';
 import {
     PowerShellActivationHackDiagnosticsService,
-    PowerShellActivationHackDiagnosticsServiceId
+    PowerShellActivationHackDiagnosticsServiceId,
 } from './checks/powerShellActivation';
 import { InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId } from './checks/pythonInterpreter';
 import {
     PythonPathDeprecatedDiagnosticService,
-    PythonPathDeprecatedDiagnosticServiceId
+    PythonPathDeprecatedDiagnosticServiceId,
 } from './checks/pythonPathDeprecated';
 import { UpgradeCodeRunnerDiagnosticService, UpgradeCodeRunnerDiagnosticServiceId } from './checks/upgradeCodeRunner';
 import { DiagnosticsCommandFactory } from './commands/factory';
@@ -40,7 +40,7 @@ import { DiagnosticFilterService } from './filter';
 import {
     DiagnosticCommandPromptHandlerService,
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt
+    MessageCommandPrompt,
 } from './promptHandler';
 import { IDiagnosticFilterService, IDiagnosticHandlerService, IDiagnosticsService } from './types';
 
@@ -49,48 +49,48 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
     serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(
         IDiagnosticHandlerService,
         DiagnosticCommandPromptHandlerService,
-        DiagnosticCommandPromptHandlerServiceId
+        DiagnosticCommandPromptHandlerServiceId,
     );
     serviceManager.addSingleton<IDiagnosticsService>(
         IDiagnosticsService,
         EnvironmentPathVariableDiagnosticsService,
-        EnvironmentPathVariableDiagnosticsServiceId
+        EnvironmentPathVariableDiagnosticsServiceId,
     );
     serviceManager.addSingleton<IDiagnosticsService>(
         IDiagnosticsService,
         InvalidLaunchJsonDebuggerService,
-        InvalidLaunchJsonDebuggerServiceId
+        InvalidLaunchJsonDebuggerServiceId,
     );
     serviceManager.addSingleton<IDiagnosticsService>(
         IDiagnosticsService,
         InvalidPythonInterpreterService,
-        InvalidPythonInterpreterServiceId
+        InvalidPythonInterpreterServiceId,
     );
     serviceManager.addSingleton<IDiagnosticsService>(
         IDiagnosticsService,
         InvalidPythonPathInDebuggerService,
-        InvalidPythonPathInDebuggerServiceId
+        InvalidPythonPathInDebuggerServiceId,
     );
     serviceManager.addSingleton<IDiagnosticsService>(
         IDiagnosticsService,
         PowerShellActivationHackDiagnosticsService,
-        PowerShellActivationHackDiagnosticsServiceId
+        PowerShellActivationHackDiagnosticsServiceId,
     );
     serviceManager.addSingleton<IDiagnosticsService>(
         IDiagnosticsService,
         InvalidMacPythonInterpreterService,
-        InvalidMacPythonInterpreterServiceId
+        InvalidMacPythonInterpreterServiceId,
     );
     serviceManager.addSingleton<IDiagnosticsService>(
         IDiagnosticsService,
         PythonPathDeprecatedDiagnosticService,
-        PythonPathDeprecatedDiagnosticServiceId
+        PythonPathDeprecatedDiagnosticServiceId,
     );
 
     serviceManager.addSingleton<IDiagnosticsService>(
         IDiagnosticsService,
         UpgradeCodeRunnerDiagnosticService,
-        UpgradeCodeRunnerDiagnosticServiceId
+        UpgradeCodeRunnerDiagnosticServiceId,
     );
     serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory);
     serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics);
@@ -99,7 +99,7 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         serviceManager.addSingleton<IDiagnosticsService>(
             IDiagnosticsService,
             LSNotSupportedDiagnosticService,
-            LSNotSupportedDiagnosticServiceId
+            LSNotSupportedDiagnosticServiceId,
         );
     }
 }

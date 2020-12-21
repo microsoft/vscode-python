@@ -18,7 +18,7 @@ import {
     Tests,
     TestStatus,
     TestSuite,
-    TestSummary
+    TestSummary,
 } from '../../client/testing/common/types';
 import { fixPath, getDedentedLines, getIndent, RESOURCE } from './helper';
 
@@ -39,13 +39,13 @@ export function createEmptyResults(): Tests {
             passed: 0,
             failures: 0,
             errors: 0,
-            skipped: 0
+            skipped: 0,
         },
         testFiles: [],
         testFunctions: [],
         testSuites: [],
         testFolders: [],
-        rootTestFolders: []
+        rootTestFolders: [],
     };
 }
 
@@ -105,7 +105,7 @@ export function flattenSuite(node: TestSuite, parents: TestNode[]): FlattenedTes
     return {
         testSuite: node,
         parentTestFile: parentFile,
-        xmlClassName: node.xmlName
+        xmlClassName: node.xmlName,
     };
 }
 
@@ -121,7 +121,7 @@ export function flattenFunction(node: TestFunction, parents: TestNode[]): Flatte
         testFunction: node,
         parentTestFile: parentFile,
         parentTestSuite: parentSuite,
-        xmlClassName: parentSuite ? parentSuite.xmlName : ''
+        xmlClassName: parentSuite ? parentSuite.xmlName : '',
     };
 }
 
@@ -147,7 +147,7 @@ export namespace nodes {
             testType: TestingType.folder,
             // result
             time: 0,
-            status: TestStatus.Unknown
+            status: TestStatus.Unknown,
         };
     }
 
@@ -155,7 +155,7 @@ export namespace nodes {
         filename: string,
         nameToRun?: string,
         xmlName?: string,
-        resource: Uri = RESOURCE
+        resource: Uri = RESOURCE,
     ): TestNode {
         filename = fixPath(filename);
         if (!xmlName) {
@@ -175,7 +175,7 @@ export namespace nodes {
             testType: TestingType.file,
             // result
             time: 0,
-            status: TestStatus.Unknown
+            status: TestStatus.Unknown,
         };
     }
 
@@ -185,7 +185,7 @@ export namespace nodes {
         xmlName?: string,
         provider: TestProvider = 'pytest',
         isInstance: boolean = false,
-        resource: Uri = RESOURCE
+        resource: Uri = RESOURCE,
     ): TestNode {
         return {
             resource: resource,
@@ -199,7 +199,7 @@ export namespace nodes {
             testType: TestingType.suite,
             // result
             time: 0,
-            status: TestStatus.Unknown
+            status: TestStatus.Unknown,
         };
     }
 
@@ -207,7 +207,7 @@ export namespace nodes {
         name: string,
         nameToRun?: string,
         subtestParent?: SubtestParent,
-        resource: Uri = RESOURCE
+        resource: Uri = RESOURCE,
     ): TestNode {
         return {
             resource: resource,
@@ -217,7 +217,7 @@ export namespace nodes {
             testType: TestingType.function,
             // result
             time: 0,
-            status: TestStatus.Unknown
+            status: TestStatus.Unknown,
         };
     }
 
@@ -228,7 +228,7 @@ export namespace nodes {
         parent: TestFolder,
         basename: string,
         nameToRun?: string,
-        resource?: Uri
+        resource?: Uri,
     ): TestNode {
         const dirname = path.join(parent.name, fixPath(basename));
         const subFolder = createFolderResults(dirname, nameToRun, resource || parent.resource || RESOURCE);
@@ -241,7 +241,7 @@ export namespace nodes {
         basename: string,
         nameToRun?: string,
         xmlName?: string,
-        resource?: Uri
+        resource?: Uri,
     ): TestNode {
         const filename = path.join(parent.name, fixPath(basename));
         const file = createFileResults(filename, nameToRun, xmlName, resource || parent.resource || RESOURCE);
@@ -256,7 +256,7 @@ export namespace nodes {
         xmlName?: string,
         provider: TestProvider = 'pytest',
         isInstance?: boolean,
-        resource?: Uri
+        resource?: Uri,
     ): TestNode {
         if (!nameToRun) {
             const sep = provider === 'pytest' ? '::' : '.';
@@ -268,7 +268,7 @@ export namespace nodes {
             xmlName || `${parent.xmlName}.${name}`,
             provider,
             isInstance,
-            resource || parent.resource || RESOURCE
+            resource || parent.resource || RESOURCE,
         );
         parent.suites.push(suite as TestSuite);
         return suite;
@@ -279,7 +279,7 @@ export namespace nodes {
         name: string,
         nameToRun?: string,
         provider: TestProvider = 'pytest',
-        resource?: Uri
+        resource?: Uri,
     ): TestNode {
         if (!nameToRun) {
             const sep = provider === 'pytest' ? '::' : '.';
@@ -295,7 +295,7 @@ export namespace nodes {
         name: string,
         nameToRun?: string,
         provider: TestProvider = 'pytest',
-        resource?: Uri
+        resource?: Uri,
     ): TestNode {
         const subtest = createTestResults(
             name,
@@ -309,11 +309,11 @@ export namespace nodes {
                     '',
                     provider,
                     false,
-                    parent.resource
+                    parent.resource,
                 ) as TestSuite,
-                time: 0
+                time: 0,
             },
-            resource || parent.resource || RESOURCE
+            resource || parent.resource || RESOURCE,
         );
         (subtest as TestFunction).subtestParent!.asSuite.functions.push(subtest);
         parent.subtests.push(subtest as TestFunction);
@@ -425,7 +425,7 @@ namespace declarative {
 
         // Parse the results.
         const result: TestResult = {
-            time: 0
+            time: 0,
         };
         if (parts.length !== 0 && testType !== TestingType.function) {
             throw Error('non-test nodes do not have results');
@@ -471,7 +471,7 @@ namespace declarative {
             indent: indent,
             name: name,
             testType: testType,
-            result: result
+            result: result,
         };
     }
 
@@ -511,7 +511,7 @@ namespace declarative {
         name: string,
         testType: TestingType,
         provider: TestProvider,
-        resource?: Uri
+        resource?: Uri,
     ): TestNode {
         switch (testType) {
             case TestingType.folder:

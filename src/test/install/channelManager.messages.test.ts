@@ -13,7 +13,7 @@ import { Product } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -31,7 +31,7 @@ const info: PythonEnvironment = {
     envType: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
-    sysVersion: ''
+    sysVersion: '',
 };
 
 // tslint:disable-next-line:max-func-body-length
@@ -59,11 +59,11 @@ suite('Installation - channel messages', () => {
         serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, moduleInstaller.object);
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
         serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
             IInterpreterAutoSeletionProxyService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
     });
 
@@ -129,7 +129,7 @@ suite('Installation - channel messages', () => {
                 verifyMessage(message, ['Pip'], ['Conda']);
                 verifyUrl(url, ['Windows', 'Pip']);
             },
-            'getInstallationChannel'
+            'getInstallationChannel',
         );
     });
 
@@ -152,17 +152,17 @@ suite('Installation - channel messages', () => {
     async function testInstallerMissingMessage(
         interpreterType: EnvironmentType,
         verify: (m: string, u: string) => Promise<void>,
-        methodType: 'showNoInstallersMessage' | 'getInstallationChannel' = 'showNoInstallersMessage'
+        methodType: 'showNoInstallersMessage' | 'getInstallationChannel' = 'showNoInstallersMessage',
     ): Promise<void> {
         const activeInterpreter: PythonEnvironment = {
             ...info,
             envType: interpreterType,
-            path: ''
+            path: '',
         };
         interpreters
             .setup((x) => x.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(
-                () => new Promise<PythonEnvironment>((resolve, _reject) => resolve(activeInterpreter))
+                () => new Promise<PythonEnvironment>((resolve, _reject) => resolve(activeInterpreter)),
             );
         const channels = new InstallationChannelManager(serviceContainer);
 
@@ -176,7 +176,7 @@ suite('Installation - channel messages', () => {
                 search = s;
             })
             .returns(
-                () => new Promise<string>((resolve, _reject) => resolve(search))
+                () => new Promise<string>((resolve, _reject) => resolve(search)),
             );
         appShell
             .setup((x) => x.openUrl(TypeMoq.It.isAnyString()))

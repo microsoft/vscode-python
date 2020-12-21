@@ -1,20 +1,19 @@
-import {
-    inject, injectable, named, optional,
-} from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 import * as path from 'path';
 import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../../../common/application/types';
-import {
-    traceDecorators, traceError, traceVerbose, traceWarning,
-} from '../../../../common/logger';
+import { traceDecorators, traceError, traceVerbose, traceWarning } from '../../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
 import {
-    IComponentAdapter, ICondaService, IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE,
+    IComponentAdapter,
+    ICondaService,
+    IInterpreterLocatorService,
+    WINDOWS_REGISTRY_SERVICE,
 } from '../../../../interpreter/contracts';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { CondaEnvironmentInfo, CondaInfo } from './conda';
@@ -108,10 +107,10 @@ export class CondaService implements ICondaService {
      */
     private static detectCondaEnvironment(env: PythonEnvironment): boolean {
         return (
-            env.envType === EnvironmentType.Conda
-            || (env.displayName ? env.displayName : '').toUpperCase().includes('ANACONDA')
-            || (env.companyDisplayName ? env.companyDisplayName : '').toUpperCase().includes('ANACONDA')
-            || (env.companyDisplayName ? env.companyDisplayName : '').toUpperCase().includes('CONTINUUM')
+            env.envType === EnvironmentType.Conda ||
+            (env.displayName ? env.displayName : '').toUpperCase().includes('ANACONDA') ||
+            (env.companyDisplayName ? env.companyDisplayName : '').toUpperCase().includes('ANACONDA') ||
+            (env.companyDisplayName ? env.companyDisplayName : '').toUpperCase().includes('CONTINUUM')
         );
     }
 
@@ -121,7 +120,7 @@ export class CondaService implements ICondaService {
      * Called by VS Code to indicate it is done with the resource.
      */
     // tslint:disable-next-line:no-empty
-    public dispose(): void {}  // eslint-disable-line
+    public dispose(): void {} // eslint-disable-line
 
     /**
      * Return the path to the "conda file".

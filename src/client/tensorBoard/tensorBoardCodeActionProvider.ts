@@ -14,7 +14,7 @@ import { containsTensorBoardImport } from './helpers';
 export class TensorBoardCodeActionProvider implements CodeActionProvider, IExtensionSingleActivationService {
     constructor(
         @inject(IExperimentService) private experimentService: IExperimentService,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
     ) {}
 
     public async activate(): Promise<void> {
@@ -31,7 +31,7 @@ export class TensorBoardCodeActionProvider implements CodeActionProvider, IExten
             const nativeTensorBoardSession = new CodeAction(title, CodeActionKind.QuickFix);
             nativeTensorBoardSession.command = {
                 title,
-                command: Commands.LaunchTensorBoard
+                command: Commands.LaunchTensorBoard,
             };
             return [nativeTensorBoardSession];
         }
@@ -45,8 +45,8 @@ export class TensorBoardCodeActionProvider implements CodeActionProvider, IExten
         ) {
             this.disposables.push(
                 languages.registerCodeActionsProvider(PYTHON, this, {
-                    providedCodeActionKinds: [CodeActionKind.QuickFix]
-                })
+                    providedCodeActionKinds: [CodeActionKind.QuickFix],
+                }),
             );
         }
     }

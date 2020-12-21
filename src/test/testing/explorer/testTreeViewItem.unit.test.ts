@@ -51,7 +51,7 @@ suite('Unit Tests Test Explorer View Items', () => {
     test('Test subtest parent created into test view item', () => {
         const subtestParent = createSubtestParent([
             createMockTestDataItem<TestFunction>(TestDataItemType.function, 'test_x'),
-            createMockTestDataItem<TestFunction>(TestDataItemType.function, 'test_y')
+            createMockTestDataItem<TestFunction>(TestDataItemType.function, 'test_y'),
         ]);
 
         const viewItem = new TestTreeItem(resource, subtestParent.asSuite);

@@ -425,7 +425,10 @@ suite('Interpreters from Windows Registry (unit)', () => {
                 values: ['\\Software\\Python\\Company Three\\6.0.0'],
             },
             {
-                key: '\\Software\\Python', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['7.0.0'],
+                key: '\\Software\\Python',
+                hive: RegistryHive.HKLM,
+                arch: Architecture.x86,
+                values: ['7.0.0'],
             },
             {
                 key: '\\Software\\Python\\Company A',
@@ -627,7 +630,10 @@ suite('Interpreters from Windows Registry (unit)', () => {
                 values: ['\\Software\\Python\\Company Five\\8.0.0'],
             },
             {
-                key: '\\Software\\Python', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['9.0.0'],
+                key: '\\Software\\Python',
+                hive: RegistryHive.HKLM,
+                arch: Architecture.x86,
+                values: ['9.0.0'],
             },
             {
                 key: '\\Software\\Python\\Company A',
@@ -843,7 +849,10 @@ suite('Interpreters from Windows Registry (unit)', () => {
                 values: ['\\Software\\Python\\Company Five\\Five !'],
             },
             {
-                key: '\\Software\\Python', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['A'],
+                key: '\\Software\\Python',
+                hive: RegistryHive.HKLM,
+                arch: Architecture.x86,
+                values: ['A'],
             },
             {
                 key: '\\Software\\Python\\Company A',

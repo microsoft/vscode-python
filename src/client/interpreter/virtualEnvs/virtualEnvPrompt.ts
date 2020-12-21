@@ -17,7 +17,7 @@ import {
     IInterpreterHelper,
     IInterpreterLocatorService,
     IInterpreterWatcherBuilder,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../contracts';
 
 const doNotDisplayPromptStateKey = 'MESSAGE_KEY_FOR_VIRTUAL_ENV';
@@ -33,7 +33,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         @named(WORKSPACE_VIRTUAL_ENV_SERVICE)
         private readonly locator: IInterpreterLocatorService,
         @inject(IDisposableRegistry) private readonly disposableRegistry: Disposable[],
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
     ) {}
 
     public async activate(resource: Uri): Promise<void> {
@@ -43,7 +43,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
                 this.handleNewEnvironment(resource).ignoreErrors();
             },
             this,
-            this.disposableRegistry
+            this.disposableRegistry,
         );
     }
 
@@ -61,7 +61,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
     protected async notifyUser(interpreter: PythonEnvironment, resource: Uri): Promise<void> {
         const notificationPromptEnabled = this.persistentStateFactory.createWorkspacePersistentState(
             doNotDisplayPromptStateKey,
-            true
+            true,
         );
         if (!notificationPromptEnabled.value) {
             return;
@@ -70,10 +70,10 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         const telemetrySelections: ['Yes', 'No', 'Ignore'] = ['Yes', 'No', 'Ignore'];
         const selection = await this.appShell.showInformationMessage(
             Interpreters.environmentPromptMessage(),
-            ...prompts
+            ...prompts,
         );
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT, undefined, {
-            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined
+            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined,
         });
         if (!selection) {
             return;
@@ -83,7 +83,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
                 interpreter.path,
                 ConfigurationTarget.WorkspaceFolder,
                 'ui',
-                resource
+                resource,
             );
         } else if (selection === prompts[2]) {
             await notificationPromptEnabled.updateValue(false);

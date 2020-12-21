@@ -59,7 +59,7 @@ class DelayedReadMemoryStream extends Readable {
     constructor(
         private readonly totalKb: number,
         private readonly delayMs: number,
-        private readonly kbPerIteration: number
+        private readonly kbPerIteration: number,
     ) {
         super();
     }
@@ -133,7 +133,7 @@ suite('File Downloader', () => {
             const promise = fileDownloader.downloadFileWithStatusBarProgress(uri, 'hello', tmpFilePath.filePath);
 
             await expect(promise).to.eventually.be.rejectedWith(
-                'Failed with status 500, null, Uri https://python.extension/package.json'
+                'Failed with status 500, null, Uri https://python.extension/package.json',
             );
         });
         test('Error is throw if unable to write to the file stream', async () => {
@@ -185,7 +185,7 @@ suite('File Downloader', () => {
                 .reply(200, () => [
                     200,
                     new DelayedReadMemoryStream(1024 * totalKb, 5, 1024 * 10),
-                    { 'content-length': 1024 * totalKb }
+                    { 'content-length': 1024 * totalKb },
                 ]);
             const progressReportStub = sinon.stub();
             const progressReporter: Progress<ProgressReporterData> = { report: progressReportStub };
@@ -216,7 +216,7 @@ suite('File Downloader', () => {
                     'Downloading-something',
                     downloadedKb.toFixed(),
                     totalKb.toFixed(),
-                    percentage.toString()
+                    percentage.toString(),
                 );
             }
         });
@@ -252,7 +252,7 @@ suite('File Downloader', () => {
             await fileDownloader.downloadFile('file to download', {
                 progressMessagePrefix: '',
                 extension: '.pdf',
-                outputChannel: outputChannel
+                outputChannel: outputChannel,
             });
 
             verify(outputChannel.appendLine(Http.downloadingFile().format('file to download')));

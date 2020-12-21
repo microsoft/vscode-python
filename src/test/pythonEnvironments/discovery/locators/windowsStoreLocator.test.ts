@@ -65,13 +65,10 @@ suite('Windows Store Locator', async () => {
     const localAppDataOldValue = process.env.LOCALAPPDATA;
 
     async function waitForChangeToBeDetected(deferred: Deferred<void>) {
-        const timeout = setTimeout(
-            () => {
-                clearTimeout(timeout);
-                deferred.reject(new Error('Environment not detected'));
-            },
-            TEST_TIMEOUT,
-        );
+        const timeout = setTimeout(() => {
+            clearTimeout(timeout);
+            deferred.reject(new Error('Environment not detected'));
+        }, TEST_TIMEOUT);
         await deferred.promise;
     }
 

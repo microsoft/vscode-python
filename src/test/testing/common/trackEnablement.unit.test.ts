@@ -73,7 +73,7 @@ suite('Unit Tests - Track Enablement', () => {
         const expectedSettingsChecked = [
             'python.testing.nosetestEnabled',
             'python.testing.unittestEnabled',
-            'python.testing.pytestEnabled'
+            'python.testing.pytestEnabled',
         ];
 
         const telemetryReporter = sandbox.stub(EnablementTracker.prototype, 'sendTelemetry');
@@ -93,7 +93,7 @@ suite('Unit Tests - Track Enablement', () => {
         const settingsChecked = [
             affectsConfiguration.args[0][0],
             affectsConfiguration.args[1][0],
-            affectsConfiguration.args[2][0]
+            affectsConfiguration.args[2][0],
         ];
         assert.deepEqual(settingsChecked.sort(), expectedSettingsChecked.sort());
     });
@@ -101,12 +101,12 @@ suite('Unit Tests - Track Enablement', () => {
         const expectedSettingsChecked = [
             'python.testing.nosetestEnabled',
             'python.testing.unittestEnabled',
-            'python.testing.pytestEnabled'
+            'python.testing.pytestEnabled',
         ];
         const expectedSettingsRetrieved = [
             'testing.nosetestEnabled',
             'testing.unittestEnabled',
-            'testing.pytestEnabled'
+            'testing.pytestEnabled',
         ];
 
         const telemetryReporter = sandbox.stub(EnablementTracker.prototype, 'sendTelemetry');
@@ -130,14 +130,14 @@ suite('Unit Tests - Track Enablement', () => {
         const settingsChecked = [
             affectsConfiguration.args[0][0],
             affectsConfiguration.args[1][0],
-            affectsConfiguration.args[2][0]
+            affectsConfiguration.args[2][0],
         ];
         assert.deepEqual(settingsChecked.sort(), expectedSettingsChecked.sort());
 
         const settingsRetrieved = [
             getConfigSettings.args[0][0],
             getConfigSettings.args[1][0],
-            getConfigSettings.args[2][0]
+            getConfigSettings.args[2][0],
         ];
         assert.deepEqual(settingsRetrieved.sort(), expectedSettingsRetrieved.sort());
     });
@@ -145,12 +145,12 @@ suite('Unit Tests - Track Enablement', () => {
         const expectedSettingsChecked = [
             'python.testing.nosetestEnabled',
             'python.testing.unittestEnabled',
-            'python.testing.pytestEnabled'
+            'python.testing.pytestEnabled',
         ];
         const expectedSettingsRetrieved = [
             'testing.nosetestEnabled',
             'testing.unittestEnabled',
-            'testing.pytestEnabled'
+            'testing.pytestEnabled',
         ];
 
         const telemetryReporter = sandbox.stub(EnablementTracker.prototype, 'sendTelemetry');
@@ -177,14 +177,14 @@ suite('Unit Tests - Track Enablement', () => {
         const settingsChecked = [
             affectsConfiguration.args[0][0],
             affectsConfiguration.args[1][0],
-            affectsConfiguration.args[2][0]
+            affectsConfiguration.args[2][0],
         ];
         assert.deepEqual(settingsChecked.sort(), expectedSettingsChecked.sort());
 
         const settingsRetrieved = [
             getConfigSettings.args[0][0],
             getConfigSettings.args[1][0],
-            getConfigSettings.args[2][0]
+            getConfigSettings.args[2][0],
         ];
         assert.deepEqual(settingsRetrieved.sort(), expectedSettingsRetrieved.sort());
     }

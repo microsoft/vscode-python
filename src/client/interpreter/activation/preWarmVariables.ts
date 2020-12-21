@@ -13,11 +13,11 @@ import { IEnvironmentActivationService } from './types';
 export class PreWarmActivatedEnvironmentVariables implements IExtensionSingleActivationService {
     constructor(
         @inject(IEnvironmentActivationService) private readonly activationService: IEnvironmentActivationService,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
     ) {}
     public async activate(): Promise<void> {
         this.interpreterService.onDidChangeInterpreter(() =>
-            this.activationService.getActivatedEnvironmentVariables(undefined).ignoreErrors()
+            this.activationService.getActivatedEnvironmentVariables(undefined).ignoreErrors(),
         );
         this.activationService.getActivatedEnvironmentVariables(undefined).ignoreErrors();
     }

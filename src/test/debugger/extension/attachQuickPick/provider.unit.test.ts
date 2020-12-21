@@ -49,7 +49,7 @@ suite('Attach to process - process provider', () => {
                 detail: 'launchd',
                 id: '1',
                 processName: 'launchd',
-                commandLine: 'launchd'
+                commandLine: 'launchd',
             },
             {
                 label: 'syslogd',
@@ -57,7 +57,7 @@ suite('Attach to process - process provider', () => {
                 detail: 'syslogd',
                 id: '41',
                 processName: 'syslogd',
-                commandLine: 'syslogd'
+                commandLine: 'syslogd',
             },
             {
                 label: 'kextd',
@@ -65,17 +65,21 @@ suite('Attach to process - process provider', () => {
                 detail: 'kextd',
                 id: '146',
                 processName: 'kextd',
-                commandLine: 'kextd'
-            }
+                commandLine: 'kextd',
+            },
         ];
         when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({
-            stdout: psOutput
+            stdout: psOutput,
         });
 
         const attachItems = await provider._getInternalProcessEntries();
 
         verify(
-            processService.exec(PsProcessParser.psLinuxCommand.command, PsProcessParser.psLinuxCommand.args, anything())
+            processService.exec(
+                PsProcessParser.psLinuxCommand.command,
+                PsProcessParser.psLinuxCommand.args,
+                anything(),
+            ),
         ).once();
         assert.deepEqual(attachItems, expectedOutput);
     });
@@ -94,7 +98,7 @@ suite('Attach to process - process provider', () => {
                 detail: 'launchd',
                 id: '1',
                 processName: 'launchd',
-                commandLine: 'launchd'
+                commandLine: 'launchd',
             },
             {
                 label: 'syslogd',
@@ -102,7 +106,7 @@ suite('Attach to process - process provider', () => {
                 detail: 'syslogd',
                 id: '41',
                 processName: 'syslogd',
-                commandLine: 'syslogd'
+                commandLine: 'syslogd',
             },
             {
                 label: 'kextd',
@@ -110,11 +114,11 @@ suite('Attach to process - process provider', () => {
                 detail: 'kextd',
                 id: '146',
                 processName: 'kextd',
-                commandLine: 'kextd'
-            }
+                commandLine: 'kextd',
+            },
         ];
         when(processService.exec(PsProcessParser.psDarwinCommand.command, anything(), anything())).thenResolve({
-            stdout: psOutput
+            stdout: psOutput,
         });
 
         const attachItems = await provider._getInternalProcessEntries();
@@ -123,8 +127,8 @@ suite('Attach to process - process provider', () => {
             processService.exec(
                 PsProcessParser.psDarwinCommand.command,
                 PsProcessParser.psDarwinCommand.args,
-                anything()
-            )
+                anything(),
+            ),
         ).once();
         assert.deepEqual(attachItems, expectedOutput);
     });
@@ -151,7 +155,7 @@ ProcessId=5912\r
                 detail: '',
                 id: '4',
                 processName: 'System',
-                commandLine: ''
+                commandLine: '',
             },
             {
                 label: 'sihost.exe',
@@ -159,7 +163,7 @@ ProcessId=5912\r
                 detail: 'sihost.exe',
                 id: '5728',
                 processName: 'sihost.exe',
-                commandLine: 'sihost.exe'
+                commandLine: 'sihost.exe',
             },
             {
                 label: 'svchost.exe',
@@ -167,20 +171,20 @@ ProcessId=5912\r
                 detail: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
                 id: '5912',
                 processName: 'svchost.exe',
-                commandLine: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc'
-            }
+                commandLine: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
+            },
         ];
         when(platformService.isMac).thenReturn(false);
         when(platformService.isLinux).thenReturn(false);
         when(platformService.isWindows).thenReturn(true);
         when(processService.exec(WmicProcessParser.wmicCommand.command, anything(), anything())).thenResolve({
-            stdout: windowsOutput
+            stdout: windowsOutput,
         });
 
         const attachItems = await provider._getInternalProcessEntries();
 
         verify(
-            processService.exec(WmicProcessParser.wmicCommand.command, WmicProcessParser.wmicCommand.args, anything())
+            processService.exec(WmicProcessParser.wmicCommand.command, WmicProcessParser.wmicCommand.args, anything()),
         ).once();
         assert.deepEqual(attachItems, expectedOutput);
     });
@@ -216,7 +220,7 @@ ProcessId=5912\r
                     detail: 'kextd',
                     id: '146',
                     processName: 'kextd',
-                    commandLine: 'kextd'
+                    commandLine: 'kextd',
                 },
                 {
                     label: 'launchd',
@@ -224,7 +228,7 @@ ProcessId=5912\r
                     detail: 'launchd',
                     id: '1',
                     processName: 'launchd',
-                    commandLine: 'launchd'
+                    commandLine: 'launchd',
                 },
                 {
                     label: 'syslogd',
@@ -232,11 +236,11 @@ ProcessId=5912\r
                     detail: 'syslogd',
                     id: '41',
                     processName: 'syslogd',
-                    commandLine: 'syslogd'
-                }
+                    commandLine: 'syslogd',
+                },
             ];
             when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({
-                stdout: psOutput
+                stdout: psOutput,
             });
 
             const output = await provider.getAttachItems();
@@ -259,7 +263,7 @@ ProcessId=5912\r
                     detail: 'python',
                     id: '96',
                     processName: 'python',
-                    commandLine: 'python'
+                    commandLine: 'python',
                 },
                 {
                     label: 'python',
@@ -267,7 +271,7 @@ ProcessId=5912\r
                     detail: 'python script.py',
                     id: '31896',
                     processName: 'python',
-                    commandLine: 'python script.py'
+                    commandLine: 'python script.py',
                 },
                 {
                     label: 'kextd',
@@ -275,7 +279,7 @@ ProcessId=5912\r
                     detail: 'kextd',
                     id: '146',
                     processName: 'kextd',
-                    commandLine: 'kextd'
+                    commandLine: 'kextd',
                 },
                 {
                     label: 'launchd',
@@ -283,7 +287,7 @@ ProcessId=5912\r
                     detail: 'launchd',
                     id: '1',
                     processName: 'launchd',
-                    commandLine: 'launchd'
+                    commandLine: 'launchd',
                 },
                 {
                     label: 'syslogd',
@@ -291,11 +295,11 @@ ProcessId=5912\r
                     detail: 'syslogd',
                     id: '41',
                     processName: 'syslogd',
-                    commandLine: 'syslogd'
-                }
+                    commandLine: 'syslogd',
+                },
             ];
             when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({
-                stdout: psOutput
+                stdout: psOutput,
             });
 
             const output = await provider.getAttachItems();
@@ -334,7 +338,7 @@ ProcessId=5728\r
                     detail: 'sihost.exe',
                     id: '5728',
                     processName: 'sihost.exe',
-                    commandLine: 'sihost.exe'
+                    commandLine: 'sihost.exe',
                 },
                 {
                     label: 'svchost.exe',
@@ -342,7 +346,7 @@ ProcessId=5728\r
                     detail: '',
                     id: '5372',
                     processName: 'svchost.exe',
-                    commandLine: ''
+                    commandLine: '',
                 },
                 {
                     label: 'System',
@@ -350,11 +354,11 @@ ProcessId=5728\r
                     detail: '',
                     id: '4',
                     processName: 'System',
-                    commandLine: ''
-                }
+                    commandLine: '',
+                },
             ];
             when(processService.exec(WmicProcessParser.wmicCommand.command, anything(), anything())).thenResolve({
-                stdout: windowsOutput
+                stdout: windowsOutput,
             });
 
             const output = await provider.getAttachItems();
@@ -401,7 +405,7 @@ ProcessId=8026\r
                     id: '8026',
                     processName: 'python.exe',
                     commandLine:
-                        'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/foo_bar.py'
+                        'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/foo_bar.py',
                 },
                 {
                     label: 'python.exe',
@@ -411,7 +415,7 @@ ProcessId=8026\r
                     id: '6028',
                     processName: 'python.exe',
                     commandLine:
-                        'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py'
+                        'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
                 },
                 {
                     label: 'sihost.exe',
@@ -419,7 +423,7 @@ ProcessId=8026\r
                     detail: 'sihost.exe',
                     id: '5728',
                     processName: 'sihost.exe',
-                    commandLine: 'sihost.exe'
+                    commandLine: 'sihost.exe',
                 },
                 {
                     label: 'svchost.exe',
@@ -427,7 +431,7 @@ ProcessId=8026\r
                     detail: '',
                     id: '5372',
                     processName: 'svchost.exe',
-                    commandLine: ''
+                    commandLine: '',
                 },
                 {
                     label: 'svchost.exe',
@@ -435,7 +439,7 @@ ProcessId=8026\r
                     detail: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
                     id: '5912',
                     processName: 'svchost.exe',
-                    commandLine: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc'
+                    commandLine: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
                 },
                 {
                     label: 'System',
@@ -443,11 +447,11 @@ ProcessId=8026\r
                     detail: '',
                     id: '4',
                     processName: 'System',
-                    commandLine: ''
-                }
+                    commandLine: '',
+                },
             ];
             when(processService.exec(WmicProcessParser.wmicCommand.command, anything(), anything())).thenResolve({
-                stdout: windowsOutput
+                stdout: windowsOutput,
             });
 
             const output = await provider.getAttachItems();

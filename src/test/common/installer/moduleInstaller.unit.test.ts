@@ -18,7 +18,7 @@ import {
     OutputChannel,
     ProgressLocation,
     Uri,
-    WorkspaceConfiguration
+    WorkspaceConfiguration,
 } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
@@ -37,7 +37,7 @@ import {
     IOutputChannel,
     IPythonSettings,
     ModuleNamePurpose,
-    Product
+    Product,
 } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Products } from '../../../client/common/utils/localize';
@@ -111,7 +111,7 @@ suite('Module Installer', () => {
         test('Show error message if sudo exec fails with error', async () => {
             const error = 'Error message';
             const sudoPromptMock = {
-                exec: (_command: any, _options: any, callBackFn: Function) => callBackFn(error, 'stdout', 'stderr')
+                exec: (_command: any, _options: any, callBackFn: Function) => callBackFn(error, 'stdout', 'stderr'),
             };
             rewiremock.enable();
             rewiremock('sudo-prompt').with(sudoPromptMock);
@@ -132,7 +132,7 @@ suite('Module Installer', () => {
         test('Show stdout if sudo exec succeeds', async () => {
             const stdout = 'stdout';
             const sudoPromptMock = {
-                exec: (_command: any, _options: any, callBackFn: Function) => callBackFn(undefined, stdout, undefined)
+                exec: (_command: any, _options: any, callBackFn: Function) => callBackFn(undefined, stdout, undefined),
             };
             rewiremock.enable();
             rewiremock('sudo-prompt').with(sudoPromptMock);
@@ -156,7 +156,7 @@ suite('Module Installer', () => {
         test('Show stderr if sudo exec gives a warning with stderr', async () => {
             const stderr = 'stderr';
             const sudoPromptMock = {
-                exec: (_command: any, _options: any, callBackFn: Function) => callBackFn(undefined, undefined, stderr)
+                exec: (_command: any, _options: any, callBackFn: Function) => callBackFn(undefined, undefined, stderr),
             };
             rewiremock.enable();
             rewiremock('sudo-prompt').with(sudoPromptMock);
@@ -191,7 +191,7 @@ suite('Module Installer', () => {
                               { name: 'My-Env01', path: '' },
                               { name: '', path: path.join('conda', 'path') },
                               { name: 'My-Env01 With Spaces', path: '' },
-                              { name: '', path: path.join('conda with spaces', 'path') }
+                              { name: '', path: path.join('conda with spaces', 'path') },
                           ]
                         : [];
                 [undefined, ...condaEnvs].forEach((condaEnvInfo) => {
@@ -233,7 +233,7 @@ suite('Module Installer', () => {
                             installationChannel = TypeMoq.Mock.ofType<IInstallationChannelManager>();
                             serviceContainer
                                 .setup((c) =>
-                                    c.get(TypeMoq.It.isValue(IInstallationChannelManager), TypeMoq.It.isAny())
+                                    c.get(TypeMoq.It.isValue(IInstallationChannelManager), TypeMoq.It.isAny()),
                                 )
                                 .returns(() => installationChannel.object);
 
@@ -276,7 +276,7 @@ suite('Module Installer', () => {
                                 .returns(() => workspaceService.object);
                             const http = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
                             http.setup((h) => h.get(TypeMoq.It.isValue('proxy'), TypeMoq.It.isAny())).returns(
-                                () => proxyServer
+                                () => proxyServer,
                             );
                             workspaceService
                                 .setup((w) => w.getConfiguration(TypeMoq.It.isValue('http')))
@@ -306,8 +306,8 @@ suite('Module Installer', () => {
                                         t.sendCommand(
                                             TypeMoq.It.isValue(command),
                                             TypeMoq.It.isValue(expectedArgs),
-                                            TypeMoq.It.isValue(undefined)
-                                        )
+                                            TypeMoq.It.isValue(undefined),
+                                        ),
                                     )
                                     .returns(() => Promise.resolve())
                                     .verifiable(TypeMoq.Times.once());
@@ -335,7 +335,7 @@ suite('Module Installer', () => {
                                                     ...proxyArgs,
                                                     'install',
                                                     '-U',
-                                                    '"pylint<2.0.0"'
+                                                    '"pylint<2.0.0"',
                                                 ];
                                                 await installModuleAndVerifyCommand(pythonPath, expectedArgs);
                                             });
@@ -378,7 +378,7 @@ suite('Module Installer', () => {
                                                     ...proxyArgs,
                                                     'install',
                                                     '-U',
-                                                    'pylint'
+                                                    'pylint',
                                                 ];
                                                 await installModuleAndVerifyCommand(pythonPath, expectedArgs);
                                             });
@@ -422,11 +422,11 @@ suite('Module Installer', () => {
                                         pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
                                         const elevatedInstall = sinon.stub(
                                             TestModuleInstaller.prototype,
-                                            'elevatedInstall'
+                                            'elevatedInstall',
                                         );
                                         elevatedInstall.returns();
                                         fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
-                                            Promise.resolve(true)
+                                            Promise.resolve(true),
                                         );
                                         try {
                                             await installer.installModule(product.name, resource);
@@ -445,7 +445,7 @@ suite('Module Installer', () => {
                                         setActiveInterpreter(info.object);
                                         pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
                                         fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
-                                            Promise.resolve(false)
+                                            Promise.resolve(false),
                                         );
                                         const args = [isolated, 'executionInfo'];
                                         terminalService
@@ -489,12 +489,12 @@ suite('Module Installer', () => {
                                         pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
                                         const elevatedInstall = sinon.stub(
                                             TestModuleInstaller.prototype,
-                                            'elevatedInstall'
+                                            'elevatedInstall',
                                         );
                                         elevatedInstall.returns();
                                         const err = new Error('oops!');
                                         fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
-                                            Promise.reject(err)
+                                            Promise.reject(err),
                                         );
 
                                         try {
@@ -510,7 +510,7 @@ suite('Module Installer', () => {
                                         const options = {
                                             location: ProgressLocation.Notification,
                                             cancellable: true,
-                                            title: Products.installingModule().format(product.name)
+                                            title: Products.installingModule().format(product.name),
                                         };
                                         appShell
                                             .setup((a) => a.withProgress(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -521,7 +521,7 @@ suite('Module Installer', () => {
                                             await installer.installModule(
                                                 product.name,
                                                 resource,
-                                                new CancellationTokenSource().token
+                                                new CancellationTokenSource().token,
                                             );
                                         } catch (ex) {
                                             noop();
@@ -588,7 +588,7 @@ suite('Module Installer', () => {
 
 function generatePythonInterpreterVersions() {
     const versions: SemVer[] = ['2.7.0-final', '3.4.0-final', '3.5.0-final', '3.6.0-final', '3.7.0-final'].map(
-        (ver) => new SemVer(ver)
+        (ver) => new SemVer(ver),
     );
     return versions.map((version) => {
         const info = TypeMoq.Mock.ofType<PythonEnvironment>();

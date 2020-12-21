@@ -97,7 +97,7 @@ suite('Terminal Service', () => {
         terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(2));
         terminal.verify(
             (t) => t.sendText(TypeMoq.It.isValue(commandToExpect), TypeMoq.It.isValue(true)),
-            TypeMoq.Times.exactly(1)
+            TypeMoq.Times.exactly(1),
         );
     });
 

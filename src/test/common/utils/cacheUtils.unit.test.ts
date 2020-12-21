@@ -17,16 +17,16 @@ type CacheUtilsTestScenario = {
 const scenariosToTest: CacheUtilsTestScenario[] = [
     {
         scenarioDesc: 'simple string',
-        dataToStore: 'hello'
+        dataToStore: 'hello',
     },
     {
         scenarioDesc: 'undefined',
-        dataToStore: undefined
+        dataToStore: undefined,
     },
     {
         scenarioDesc: 'object',
-        dataToStore: { date: new Date(), hello: 1234 }
-    }
+        dataToStore: { date: new Date(), hello: 1234 },
+    },
 ];
 
 class TestInMemoryInterpreterSpecificCache extends InMemoryInterpreterSpecificCache<
@@ -108,14 +108,14 @@ suite('Common Utils - CacheUtils', () => {
                             },
                             inspect: () => {
                                 return { globalValue: pythonPath };
-                            }
+                            },
                         };
                     },
                     getWorkspaceFolder: () => {
                         return;
-                    }
+                    },
                 },
-                Uri: Uri
+                Uri: Uri,
             } as any;
         }
         scenariosToTest.forEach((scenario: CacheUtilsTestScenario) => {
@@ -181,21 +181,21 @@ suite('Common Utils - CacheUtils', () => {
                 expect(cache.hasData).to.be.equal(true, 'Must have data after waiting for 10ms');
                 expect(cache.data).to.be.deep.equal(
                     scenario.dataToStore,
-                    'Data should be intact and unchanged in cache after 10ms'
+                    'Data should be intact and unchanged in cache after 10ms',
                 );
 
                 cache.simulatedElapsedMs = 50;
                 expect(cache.hasData).to.be.equal(true, 'Must have data after waiting 50ms');
                 expect(cache.data).to.be.deep.equal(
                     scenario.dataToStore,
-                    'Data should be intact and unchanged in cache after 50ms'
+                    'Data should be intact and unchanged in cache after 50ms',
                 );
 
                 cache.simulatedElapsedMs = 110;
                 expect(cache.hasData).to.be.equal(false, 'Must not have data after waiting 110ms');
                 expect(cache.data).to.be.deep.equal(
                     undefined,
-                    'Must not have data stored after 100ms timeout expires.'
+                    'Must not have data stored after 100ms timeout expires.',
                 );
             });
             test(`Data is stored in cache (with workspaces): ${scenario.scenarioDesc}`, () => {
@@ -224,7 +224,7 @@ suite('Common Utils - CacheUtils', () => {
                     10000,
                     [anotherResource],
                     undefined,
-                    vsc
+                    vsc,
                 );
 
                 expect(cache.hasData).to.be.equal(false, 'Must not have any data');
@@ -250,7 +250,7 @@ suite('Common Utils - CacheUtils', () => {
                     10000,
                     [anotherResource],
                     undefined,
-                    vsc
+                    vsc,
                 );
 
                 expect(cache.hasData).to.be.equal(false, 'Must not have any data');
@@ -270,7 +270,7 @@ suite('Common Utils - CacheUtils', () => {
                 const anotherResource = Uri.parse('b');
                 (vsc.workspace as any).workspaceFolders = [
                     { index: 0, name: '1', uri: Uri.parse('wkfolder1') },
-                    { index: 1, name: '2', uri: Uri.parse('wkfolder2') }
+                    { index: 1, name: '2', uri: Uri.parse('wkfolder2') },
                 ];
                 vsc.workspace.getWorkspaceFolder = (res) => {
                     const index = res.fsPath === resource.fsPath ? 0 : 1;
@@ -282,7 +282,7 @@ suite('Common Utils - CacheUtils', () => {
                     10000,
                     [anotherResource],
                     undefined,
-                    vsc
+                    vsc,
                 );
 
                 expect(cache.hasData).to.be.equal(false, 'Must not have any data');

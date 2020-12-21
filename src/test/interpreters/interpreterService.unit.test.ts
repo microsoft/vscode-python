@@ -27,14 +27,14 @@ import {
     InterpreterConfigurationScope,
     IPersistentState,
     IPersistentStateFactory,
-    IPythonSettings
+    IPythonSettings,
 } from '../../client/common/types';
 import * as EnumEx from '../../client/common/utils/enum';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import {
@@ -42,7 +42,7 @@ import {
     IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterLocatorService,
-    INTERPRETER_LOCATOR_SERVICE
+    INTERPRETER_LOCATOR_SERVICE,
 } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { IInterpreterHashProvider, IInterpreterHashProviderFactory } from '../../client/interpreter/locators/types';
@@ -114,7 +114,7 @@ suite('Interpreters service', () => {
             .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
                 const state = {
-                    updateValue: () => Promise.resolve()
+                    updateValue: () => Promise.resolve(),
                 };
                 return state as any;
             });
@@ -123,45 +123,45 @@ suite('Interpreters service', () => {
         serviceManager.addSingletonInstance<IInterpreterHelper>(IInterpreterHelper, helper.object);
         serviceManager.addSingletonInstance<IPythonPathUpdaterServiceManager>(
             IPythonPathUpdaterServiceManager,
-            updater.object
+            updater.object,
         );
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
         serviceManager.addSingletonInstance<IInterpreterLocatorService>(
             IInterpreterLocatorService,
             locator.object,
-            INTERPRETER_LOCATOR_SERVICE
+            INTERPRETER_LOCATOR_SERVICE,
         );
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fileSystem.object);
         serviceManager.addSingletonInstance<IExperimentsManager>(IExperimentsManager, experimentsManager.object);
         serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, experimentService.object);
         serviceManager.addSingletonInstance<IInterpreterPathService>(
             IInterpreterPathService,
-            interpreterPathService.object
+            interpreterPathService.object,
         );
         serviceManager.addSingletonInstance<IInterpreterDisplay>(IInterpreterDisplay, interpreterDisplay.object);
         serviceManager.addSingletonInstance<IVirtualEnvironmentManager>(
             IVirtualEnvironmentManager,
-            virtualEnvMgr.object
+            virtualEnvMgr.object,
         );
         serviceManager.addSingletonInstance<IPersistentStateFactory>(
             IPersistentStateFactory,
-            persistentStateFactory.object
+            persistentStateFactory.object,
         );
         serviceManager.addSingletonInstance<IPythonExecutionFactory>(
             IPythonExecutionFactory,
-            pythonExecutionFactory.object
+            pythonExecutionFactory.object,
         );
         serviceManager.addSingletonInstance<IPythonExecutionService>(
             IPythonExecutionService,
-            pythonExecutionService.object
+            pythonExecutionService.object,
         );
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
         serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
             IInterpreterAutoSeletionProxyService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService.object);
     }
@@ -270,7 +270,7 @@ suite('Interpreters service', () => {
                 });
             const i: InterpreterConfigurationScope = {
                 uri: Uri.parse('a'),
-                configTarget: ConfigurationTarget.Workspace
+                configTarget: ConfigurationTarget.Workspace,
             };
             configService.reset();
             configService
@@ -395,7 +395,7 @@ suite('Interpreters service', () => {
                 .returns(() => {
                     const state = {
                         updateValue: () => Promise.resolve(),
-                        value: { hash, displayName: expectedDisplayName }
+                        value: { hash, displayName: expectedDisplayName },
                     };
                     return state as any;
                 })
@@ -427,7 +427,7 @@ suite('Interpreters service', () => {
                 .returns(() => {
                     const state = {
                         updateValue: () => Promise.resolve(),
-                        value: { fileHash: 'something else', displayName: expectedDisplayName }
+                        value: { fileHash: 'something else', displayName: expectedDisplayName },
                     };
                     return state as any;
                 })
@@ -477,7 +477,7 @@ suite('Interpreters service', () => {
                                                         : 'without interpreter type'
                                                 }`,
                                                 `${envName ? 'with' : 'without'} environment name`,
-                                                `${pipEnvName ? 'with' : 'without'} pip environment`
+                                                `${pipEnvName ? 'with' : 'without'} pip environment`,
                                             ].join(', ');
 
                                             test(testName, async () => {
@@ -486,7 +486,7 @@ suite('Interpreters service', () => {
                                                     architecture: arch ? arch.value : undefined,
                                                     envName,
                                                     envType: interpreterType ? interpreterType.value : undefined,
-                                                    path: pythonPath
+                                                    path: pythonPath,
                                                 };
 
                                                 if (
@@ -498,8 +498,8 @@ suite('Interpreters service', () => {
                                                         .setup((v) =>
                                                             v.getEnvironmentName(
                                                                 TypeMoq.It.isValue(interpreterInfo.path!),
-                                                                TypeMoq.It.isAny()
-                                                            )
+                                                                TypeMoq.It.isAny(),
+                                                            ),
                                                         )
                                                         .returns(() => Promise.resolve(pipEnvName));
                                                 }
@@ -507,8 +507,8 @@ suite('Interpreters service', () => {
                                                     helper
                                                         .setup((h) =>
                                                             h.getInterpreterTypeDisplayName(
-                                                                TypeMoq.It.isValue(interpreterType.value)
-                                                            )
+                                                                TypeMoq.It.isValue(interpreterType.value),
+                                                            ),
                                                         )
                                                         .returns(() => `${interpreterType!.name}_display`);
                                                 }
@@ -516,13 +516,13 @@ suite('Interpreters service', () => {
                                                 const service = new InterpreterService(
                                                     serviceContainer,
                                                     hashProviderFactory.object,
-                                                    pyenvs.object
+                                                    pyenvs.object,
                                                 );
                                                 const expectedDisplayName = buildDisplayName(interpreterInfo);
 
                                                 const displayName = await service.getDisplayName(
                                                     interpreterInfo,
-                                                    resource
+                                                    resource,
                                                 );
                                                 expect(displayName).to.equal(expectedDisplayName);
                                             });
@@ -533,12 +533,12 @@ suite('Interpreters service', () => {
 
                                                 if (interpreterInfo.version) {
                                                     displayNameParts.push(
-                                                        `${interpreterInfo.version.major}.${interpreterInfo.version.minor}.${interpreterInfo.version.patch}`
+                                                        `${interpreterInfo.version.major}.${interpreterInfo.version.minor}.${interpreterInfo.version.patch}`,
                                                     );
                                                 }
                                                 if (interpreterInfo.architecture) {
                                                     displayNameParts.push(
-                                                        getArchitectureDisplayName(interpreterInfo.architecture)
+                                                        getArchitectureDisplayName(interpreterInfo.architecture),
                                                     );
                                                 }
                                                 if (
@@ -600,7 +600,7 @@ suite('Interpreters service', () => {
                 .returns(() => {
                     return {
                         fileHash,
-                        info: info as any
+                        info: info as any,
                     };
                 })
                 .verifiable(TypeMoq.Times.atLeastOnce());
@@ -645,7 +645,7 @@ suite('Interpreters service', () => {
                 .returns(() => {
                     return {
                         fileHash,
-                        info: info as any
+                        info: info as any,
                     };
                 })
                 .verifiable(TypeMoq.Times.atLeastOnce());

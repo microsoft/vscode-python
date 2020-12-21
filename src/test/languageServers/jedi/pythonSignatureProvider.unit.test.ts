@@ -37,12 +37,12 @@ suite('Signature Provider unit tests', () => {
                             description: 'Some parameter',
                             docstring: 'gimme docs',
                             name: 'param',
-                            value: 'blah'
-                        }
-                    ]
-                }
+                            value: 'blah',
+                        },
+                    ],
+                },
             ],
-            requestId: 1
+            requestId: 1,
         };
     });
 
@@ -93,7 +93,7 @@ suite('Signature Provider unit tests', () => {
         const sigHelp: SignatureHelp = await testSignatureReturns(source, 27);
         expect(sigHelp).to.not.be.equal(
             undefined,
-            'Expected to get a blank signature item back - did the pattern change here?'
+            'Expected to get a blank signature item back - did the pattern change here?',
         );
         expect(sigHelp.signatures.length).to.equal(0, 'Signature provided for symbols within a string?');
     });
@@ -102,7 +102,7 @@ suite('Signature Provider unit tests', () => {
         const sigHelp: SignatureHelp = await testSignatureReturns(source, 28);
         expect(sigHelp).to.not.be.equal(
             undefined,
-            'Expected to get a blank signature item back - did the pattern change here?'
+            'Expected to get a blank signature item back - did the pattern change here?',
         );
         expect(sigHelp.signatures.length).to.equal(0, 'Signature provided for symbols within a full-line comment?');
     });
@@ -111,7 +111,7 @@ suite('Signature Provider unit tests', () => {
         const sigHelp: SignatureHelp = await testSignatureReturns(source, 38);
         expect(sigHelp).to.not.be.equal(
             undefined,
-            'Expected to get a blank signature item back - did the pattern change here?'
+            'Expected to get a blank signature item back - did the pattern change here?',
         );
         expect(sigHelp.signatures.length).to.equal(0, 'Signature provided for symbols within a trailing comment?');
     });
@@ -122,25 +122,25 @@ suite('Signature Provider unit tests', () => {
             sigHelp = await testSignatureReturns(source, 18);
             expect(sigHelp).to.not.equal(
                 undefined,
-                'Expected to get a blank signature item back - did the pattern change here?'
+                'Expected to get a blank signature item back - did the pattern change here?',
             );
             expect(sigHelp.signatures.length).to.not.equal(
                 0,
-                'Expected dummy argresult back from testing our print signature.'
+                'Expected dummy argresult back from testing our print signature.',
             );
             expect(sigHelp.activeParameter).to.be.equal(
                 0,
-                "Parameter for print should be the first member of the test argresult's params object."
+                "Parameter for print should be the first member of the test argresult's params object.",
             );
             expect(sigHelp.activeSignature).to.be.equal(
                 0,
-                'The signature for print should be the first member of the test argresult.'
+                'The signature for print should be the first member of the test argresult.',
             );
             expect(sigHelp.signatures[sigHelp.activeSignature].label).to.be.equal(
                 'print(param)',
                 `Expected arg result calls for specific returned signature of \'print(param)\' but we got ${
                     sigHelp.signatures[sigHelp.activeSignature].label
-                }`
+                }`,
             );
         } catch (error) {
             assert(false, `Caught exception ${error}`);
@@ -154,8 +154,8 @@ suite('Signature Provider unit tests', () => {
         expect(isInsideStrComment).to.not.be.equal(
             true,
             [`Position set to the end of ${sourceLine} but `, 'is reported as being within a string or comment.'].join(
-                ''
-            )
+                '',
+            ),
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected at end of source.', () => {
@@ -166,8 +166,8 @@ suite('Signature Provider unit tests', () => {
         expect(isInsideStrComment).to.not.be.equal(
             true,
             [`Position set to the end of ${sourceLine} but `, 'is reported as being within a string or comment.'].join(
-                ''
-            )
+                '',
+            ),
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected at beginning of source.', () => {
@@ -179,8 +179,8 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set to the beginning of ${sourceLine} but `,
-                'is reported as being within a string or comment.'
-            ].join('')
+                'is reported as being within a string or comment.',
+            ].join(''),
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected within a string.', () => {
@@ -192,8 +192,8 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within the string in ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.'
-            ].join('')
+                'is reported as NOT being within a string or comment.',
+            ].join(''),
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected immediately before a string.', () => {
@@ -205,8 +205,8 @@ suite('Signature Provider unit tests', () => {
             false,
             [
                 `Position set to just before the string in ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as being within a string or comment.'
-            ].join('')
+                'is reported as being within a string or comment.',
+            ].join(''),
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected immediately in a string.', () => {
@@ -218,8 +218,8 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set to the start of the string in ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as being within a string or comment.'
-            ].join('')
+                'is reported as being within a string or comment.',
+            ].join(''),
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected within a comment.', () => {
@@ -231,8 +231,8 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a full line comment ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.'
-            ].join('')
+                'is reported as NOT being within a string or comment.',
+            ].join(''),
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected within a trailing comment.', () => {
@@ -244,8 +244,8 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a trailing line comment ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.'
-            ].join('')
+                'is reported as NOT being within a string or comment.',
+            ].join(''),
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected at the very end of a trailing comment.', () => {
@@ -257,8 +257,8 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a trailing line comment ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.'
-            ].join('')
+                'is reported as NOT being within a string or comment.',
+            ].join(''),
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected within a multiline string.', () => {
@@ -271,8 +271,8 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.'
-            ].join('')
+                'is reported as NOT being within a string or comment.',
+            ].join(''),
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected at the very last quote on a multiline string.', () => {
@@ -285,8 +285,8 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.'
-            ].join('')
+                'is reported as NOT being within a string or comment.',
+            ].join(''),
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected within a multiline string (double-quoted).', () => {
@@ -299,8 +299,8 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.'
-            ].join('')
+                'is reported as NOT being within a string or comment.',
+            ].join(''),
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected at the very last quote on a multiline string (double-quoted).', () => {
@@ -313,8 +313,8 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.'
-            ].join('')
+                'is reported as NOT being within a string or comment.',
+            ].join(''),
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected during construction of a multiline string (double-quoted).', () => {
@@ -326,8 +326,8 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.'
-            ].join('')
+                'is reported as NOT being within a string or comment.',
+            ].join(''),
         );
     });
 });

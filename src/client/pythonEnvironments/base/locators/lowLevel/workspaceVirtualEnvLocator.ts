@@ -5,13 +5,17 @@ import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import {
-    findInterpretersInDir, getEnvironmentDirFromPath, getPythonVersionFromPath, isStandardPythonBinary,
+    findInterpretersInDir,
+    getEnvironmentDirFromPath,
+    getPythonVersionFromPath,
+    isStandardPythonBinary,
 } from '../../../common/commonUtils';
-import {
-    getFileInfo, isParentPath, pathExists,
-} from '../../../common/externalDependencies';
+import { getFileInfo, isParentPath, pathExists } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from '../../../discovery/locators/services/pipEnvHelper';
-import { isVenvEnvironment, isVirtualenvEnvironment } from '../../../discovery/locators/services/virtualEnvironmentIdentifier';
+import {
+    isVenvEnvironment,
+    isVirtualenvEnvironment,
+} from '../../../discovery/locators/services/virtualEnvironmentIdentifier';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { buildEnvInfo } from '../../info/env';
 import { IPythonEnvsIterator } from '../../locator';
@@ -118,7 +122,7 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
     // eslint-disable-next-line class-methods-use-this
     protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
-        if (isParentPath(executablePath, this.root) && await pathExists(executablePath)) {
+        if (isParentPath(executablePath, this.root) && (await pathExists(executablePath))) {
             // We should extract the kind here to avoid doing is*Environment()
             // check multiple times. Those checks are file system heavy and
             // we can use the kind to determine this anyway.

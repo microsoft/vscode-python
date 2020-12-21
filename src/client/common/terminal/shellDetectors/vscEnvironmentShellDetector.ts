@@ -23,7 +23,7 @@ export class VSCEnvironmentShellDetector extends BaseShellDetector {
     }
     public identify(
         telemetryProperties: ShellIdentificationTelemetry,
-        _terminal?: Terminal
+        _terminal?: Terminal,
     ): TerminalShellType | undefined {
         if (!this.appEnv.shell) {
             return;

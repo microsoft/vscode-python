@@ -101,7 +101,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     eventName: E,
     durationMs?: Record<string, number> | number,
     properties?: P[E],
-    ex?: Error
+    ex?: Error,
 ) {
     if (isTestExecution() || !isTelemetrySupported()) {
         return;
@@ -139,7 +139,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         const errorProps = {
             errorName: ex.name,
             errorMessage: ex.message,
-            errorStack: ex.stack ?? ''
+            errorStack: ex.stack ?? '',
         };
         Object.assign(customProperties, errorProps);
 
@@ -153,8 +153,8 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
         traceInfo(
             `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
-                customProperties
-            )} `
+                customProperties,
+            )} `,
         );
     }
 }
@@ -163,7 +163,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 type TypedMethodDescriptor<T> = (
     target: Object,
     propertyKey: string | symbol,
-    descriptor: TypedPropertyDescriptor<T>
+    descriptor: TypedPropertyDescriptor<T>,
 ) => TypedPropertyDescriptor<T> | void;
 
 /**
@@ -181,13 +181,13 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
     properties?: P[E],
     captureDuration: boolean = true,
     failureEventName?: E,
-    lazyProperties?: (obj: This) => P[E]
+    lazyProperties?: (obj: This) => P[E],
 ): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
     // tslint:disable-next-line:no-function-expression no-any
     return function (
         _target: Object,
         _propertyKey: string | symbol,
-        descriptor: TypedPropertyDescriptor<(this: This, ...args: any[]) => any>
+        descriptor: TypedPropertyDescriptor<(this: This, ...args: any[]) => any>,
     ) {
         const originalMethod = descriptor.value!;
         // tslint:disable-next-line:no-function-expression no-any
@@ -230,7 +230,7 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
                             failureEventName ? failureEventName : eventName,
                             stopWatch?.elapsedTime,
                             failedProps,
-                            ex
+                            ex,
                         );
                     });
             } else {
@@ -249,7 +249,7 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
     eventName: E,
     promise: Promise<any> | Thenable<any>,
     stopWatch?: StopWatch,
-    properties?: P[E]
+    properties?: P[E],
 ) {
     stopWatch = stopWatch ? stopWatch : new StopWatch();
     if (typeof promise.then === 'function') {
@@ -265,7 +265,7 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
                 // tslint:disable-next-line:no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties, ex);
                 return Promise.reject(ex);
-            }
+            },
         );
     } else {
         throw new Error('Method is neither a Promise nor a Theneable');

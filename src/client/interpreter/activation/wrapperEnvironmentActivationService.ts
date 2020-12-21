@@ -14,7 +14,7 @@ import {
     IDisposableRegistry,
     IExperimentsManager,
     IExtensionContext,
-    Resource
+    Resource,
 } from '../../common/types';
 import { createDeferredFromPromise } from '../../common/utils/async';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
@@ -48,36 +48,36 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
 
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
     ) {
         // Environment variables rely on custom variables defined by the user in `.env` files.
         disposables.push(
-            envVarsProvider.onDidEnvironmentVariablesChange(() => this.cachePerResourceAndInterpreter.clear())
+            envVarsProvider.onDidEnvironmentVariablesChange(() => this.cachePerResourceAndInterpreter.clear()),
         );
     }
     @captureTelemetry(
         EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES,
         { failed: false, activatedByWrapper: true },
-        true
+        true,
     )
     public async getActivatedEnvironmentVariables(
         resource: Resource,
         interpreter?: PythonEnvironment | undefined,
-        allowExceptions?: boolean | undefined
+        allowExceptions?: boolean | undefined,
     ): Promise<NodeJS.ProcessEnv | undefined> {
         let key: string;
         [key, interpreter] = await Promise.all([
             this.getCacheKey(resource, interpreter),
-            interpreter || (await this.interpreterService.getActiveInterpreter(undefined))
+            interpreter || (await this.interpreterService.getActiveInterpreter(undefined)),
         ]);
 
         const procCacheKey = `Process${key}`;
         const terminalCacheKey = `Terminal${key}`;
         const procEnvVarsPromise = this.cacheCallback(procCacheKey, () =>
-            this.getActivatedEnvVarsFromProc(resource, interpreter, allowExceptions)
+            this.getActivatedEnvVarsFromProc(resource, interpreter, allowExceptions),
         );
         const terminalEnvVarsPromise = this.cacheCallback(terminalCacheKey, () =>
-            this.getActivatedEnvVarsFromTerminal(procEnvVarsPromise, resource, interpreter, allowExceptions)
+            this.getActivatedEnvVarsFromTerminal(procEnvVarsPromise, resource, interpreter, allowExceptions),
         );
 
         const procEnvVars = createDeferredFromPromise(procEnvVarsPromise);
@@ -102,7 +102,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
      */
     private async cacheCallback(
         cacheKey: string,
-        implementation: () => Promise<NodeJS.ProcessEnv | undefined>
+        implementation: () => Promise<NodeJS.ProcessEnv | undefined>,
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const contents = await this.getDataCachedInFile(cacheKey);
         if (contents) {
@@ -160,7 +160,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
     private async getActivatedEnvVarsFromProc(
         resource: Resource,
         interpreter?: PythonEnvironment,
-        allowExceptions?: boolean
+        allowExceptions?: boolean,
     ): Promise<NodeJS.ProcessEnv | undefined> {
         return this.procActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions);
     }
@@ -172,7 +172,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
         fallback: Promise<NodeJS.ProcessEnv | undefined>,
         resource: Resource,
         interpreter?: PythonEnvironment,
-        allowExceptions?: boolean
+        allowExceptions?: boolean,
     ): Promise<NodeJS.ProcessEnv | undefined> {
         if (!this.experiment.inExperiment(UseTerminalToGetActivatedEnvVars.experiment)) {
             return fallback;
@@ -208,7 +208,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
         return this.crypto.createHash(
             `${customEnvVariables}${interpreter?.path}${interpreter?.version?.raw}`,
             'string',
-            'SHA256'
+            'SHA256',
         );
     }
 }

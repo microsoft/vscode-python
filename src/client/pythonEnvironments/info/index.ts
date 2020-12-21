@@ -23,7 +23,7 @@ export enum EnvironmentType {
     Poetry = 'Poetry',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
     Global = 'Global',
-    System = 'System'
+    System = 'System',
 }
 
 type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';

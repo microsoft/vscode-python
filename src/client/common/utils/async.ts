@@ -155,7 +155,7 @@ export const NEVER: Promise<unknown> = new Promise(() => {});
  */
 export async function* chain<T>(
     iterators: AsyncIterator<T, T | void>[],
-    onError?: (err: Error, index: number) => Promise<void>
+    onError?: (err: Error, index: number) => Promise<void>,
     // Ultimately we may also want to support cancellation.
 ): IAsyncIterableIterator<T> {
     const promises = iterators.map(getNext);
@@ -196,7 +196,7 @@ export async function* chain<T>(
 export async function* mapToIterator<T, R = T>(
     items: T[],
     func: (item: T) => Promise<R>,
-    race = true
+    race = true,
 ): IAsyncIterableIterator<R> {
     if (race) {
         const iterators = items.map((item) => {

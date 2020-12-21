@@ -422,5 +422,5 @@ export const enum CharCode {
      * Unicode Character 'ZERO WIDTH NO-BREAK SPACE' (U+FEFF)
      * http://www.fileformat.info/info/unicode/char/feff/index.htm
      */
-    UTF8_BOM = 65279
+    UTF8_BOM = 65279,
 }

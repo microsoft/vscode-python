@@ -38,7 +38,7 @@ suite('Terminal', () => {
                 instance(manager),
                 [],
                 instance(activator),
-                instance(resourceService)
+                instance(resourceService),
             );
 
             terminal = {
@@ -49,7 +49,7 @@ suite('Terminal', () => {
                 processId: Promise.resolve(0),
                 sendText: noop,
                 show: noop,
-                exitStatus: { code: 0 }
+                exitStatus: { code: 0 },
             };
             nonActivatedTerminal = {
                 dispose: noop,
@@ -59,7 +59,7 @@ suite('Terminal', () => {
                 processId: Promise.resolve(0),
                 sendText: noop,
                 show: noop,
-                exitStatus: { code: 0 }
+                exitStatus: { code: 0 },
             };
             autoActivation.register();
         });

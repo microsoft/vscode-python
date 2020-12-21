@@ -14,7 +14,7 @@ import { ITestNavigatorHelper, SymbolSearch } from './types';
 export class TestNavigatorHelper implements ITestNavigatorHelper {
     constructor(
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
-        @inject(IDocumentSymbolProvider) @named('test') private readonly symbolProvider: IDocumentSymbolProvider
+        @inject(IDocumentSymbolProvider) @named('test') private readonly symbolProvider: IDocumentSymbolProvider,
     ) {}
     public async openFile(file?: Uri): Promise<[TextDocument, TextEditor]> {
         if (!file) {
@@ -27,7 +27,7 @@ export class TestNavigatorHelper implements ITestNavigatorHelper {
     public async findSymbol(
         doc: TextDocument,
         search: SymbolSearch,
-        token: CancellationToken
+        token: CancellationToken,
     ): Promise<SymbolInformation | undefined> {
         const symbols = (await this.symbolProvider.provideDocumentSymbols(doc, token)) as SymbolInformation[];
         if (!Array.isArray(symbols) || symbols.length === 0) {

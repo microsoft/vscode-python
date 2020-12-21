@@ -32,12 +32,12 @@ const defaultShells = {
     [OSType.Windows]: { shell: 'cmd', shellType: TerminalShellType.commandPrompt },
     [OSType.OSX]: { shell: 'bash', shellType: TerminalShellType.bash },
     [OSType.Linux]: { shell: 'bash', shellType: TerminalShellType.bash },
-    [OSType.Unknown]: undefined
+    [OSType.Unknown]: undefined,
 };
 
 const condaRetryMessages = [
     'The process cannot access the file because it is being used by another process',
-    'The directory is not empty'
+    'The directory is not empty',
 ];
 
 /**
@@ -99,18 +99,18 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(ICurrentProcess) private currentProcess: ICurrentProcess,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider
+        @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider,
     ) {
         this.envVarsService.onDidEnvironmentVariablesChange(
             () => this.activatedEnvVariablesCache.clear(),
             this,
-            this.disposables
+            this.disposables,
         );
 
         this.interpreterService.onDidChangeInterpreter(
             () => this.activatedEnvVariablesCache.clear(),
             this,
-            this.disposables
+            this.disposables,
         );
     }
 
@@ -122,7 +122,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     public async getActivatedEnvironmentVariables(
         resource: Resource,
         interpreter?: PythonEnvironment,
-        allowExceptions?: boolean
+        allowExceptions?: boolean,
     ): Promise<NodeJS.ProcessEnv | undefined> {
         // Cache key = resource + interpreter.
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
@@ -145,7 +145,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     public async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
         interpreter?: PythonEnvironment,
-        allowExceptions?: boolean
+        allowExceptions?: boolean,
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const shellInfo = defaultShells[this.platform.osType];
         if (!shellInfo) {
@@ -156,7 +156,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             const activationCommands = await this.helper.getEnvironmentActivationShellCommands(
                 resource,
                 shellInfo.shellType,
-                interpreter
+                interpreter,
             );
             traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
             if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
@@ -202,7 +202,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                         shell: shellInfo.shell,
                         timeout: getEnvironmentTimeout,
                         maxBuffer: 1000 * 1000,
-                        throwOnStdErr: false
+                        throwOnStdErr: false,
                     });
                     if (result.stderr && result.stderr.length > 0) {
                         throw new Error(`StdErr from ShellExec, ${result.stderr} for ${command}`);
@@ -234,7 +234,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             traceError('getActivatedEnvironmentVariables', e);
             sendTelemetryEvent(EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED, undefined, {
                 isPossiblyCondaEnv,
-                terminal: shellInfo.shellType
+                terminal: shellInfo.shellType,
             });
 
             // Some callers want this to bubble out, others don't

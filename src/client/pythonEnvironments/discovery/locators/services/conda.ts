@@ -1,9 +1,7 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
-import {
-    getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
-} from '../../../../common/utils/platform';
+import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
 import { exec } from '../../../common/externalDependencies';
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
@@ -34,8 +32,8 @@ export type CondaInfo = {
 };
 
 export type CondaEnvInfo = {
-    prefix: string,
-    name?: string,
+    prefix: string;
+    name?: string;
 };
 
 /**
@@ -76,9 +74,9 @@ export async function parseCondaInfo(
 
     return (
         Promise.all(promises)
-            .then((interpreters) => interpreters.filter(
-                (interpreter) => interpreter !== null && interpreter !== undefined,
-            ))
+            .then((interpreters) =>
+                interpreters.filter((interpreter) => interpreter !== null && interpreter !== undefined),
+            )
             // tslint:disable-next-line:no-non-null-assertion
             .then((interpreters) => interpreters.map((interpreter) => interpreter!))
     );
@@ -93,8 +91,7 @@ export class Conda {
      * @param command - Command used to spawn conda. This has the same meaning as the
      * first argument of spawn() - i.e. it can be a full path, or just a binary name.
      */
-    constructor(readonly command: string) {
-    }
+    constructor(readonly command: string) {}
 
     /**
      * Locates the preferred "conda" utility on this system by considering user settings,
@@ -241,7 +238,7 @@ export class Conda {
 
         return envs.map((prefix) => ({
             prefix,
-            name: getName(prefix)
+            name: getName(prefix),
         }));
     }
 }

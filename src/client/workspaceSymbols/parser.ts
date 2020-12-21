@@ -108,7 +108,7 @@ export function parseTags(
     tagFile: string,
     query: string,
     token: vscode.CancellationToken,
-    fs: IFileSystem
+    fs: IFileSystem,
 ): Promise<ITag[]> {
     return fs.fileExists(tagFile).then((exists) => {
         if (!exists) {
@@ -167,6 +167,6 @@ function parseTagsLine(workspaceFolder: string, line: string, searchPattern: str
         code: match.code,
         position: new vscode.Position(Number(match.line) - 1, 0),
         symbolName: match.name,
-        symbolKind: symbolKind
+        symbolKind: symbolKind,
     };
 }

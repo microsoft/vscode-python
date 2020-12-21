@@ -31,7 +31,7 @@ import {
     TextDocumentWillSaveEvent,
     TextEdit,
     Uri,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 import {
     DidChangeTextDocumentNotification,
@@ -56,7 +56,7 @@ import {
     ProvideWorkspaceSymbolsSignature,
     ResolveCodeLensSignature,
     ResolveCompletionItemSignature,
-    ResolveDocumentLinkSignature
+    ResolveDocumentLinkSignature,
 } from 'vscode-languageclient/node';
 
 import { ProvideDeclarationSignature } from 'vscode-languageclient/lib/common/declaration';
@@ -81,7 +81,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         private readonly getClient: () => LanguageClient | undefined,
         fs: IFileSystem,
         cellSelector: DocumentSelector,
-        notebookFileRegex: RegExp
+        notebookFileRegex: RegExp,
     ) {
         this.converter = new NotebookConverter(notebookApi, fs, cellSelector, notebookFileRegex);
     }
@@ -156,7 +156,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
     // eslint-disable-next-line class-methods-use-this
     public willSaveWaitUntil(
         event: TextDocumentWillSaveEvent,
-        next: (ev: TextDocumentWillSaveEvent) => Thenable<TextEdit[]>
+        next: (ev: TextDocumentWillSaveEvent) => Thenable<TextEdit[]>,
     ) {
         return next(event);
     }
@@ -166,7 +166,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         position: Position,
         context: CompletionContext,
         token: CancellationToken,
-        next: ProvideCompletionItemsSignature
+        next: ProvideCompletionItemsSignature,
     ) {
         if (isNotebookCell(document.uri)) {
             const newDoc = this.converter.toOutgoingDocument(document);
@@ -184,7 +184,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         document: TextDocument,
         position: Position,
         token: CancellationToken,
-        next: ProvideHoverSignature
+        next: ProvideHoverSignature,
     ) {
         if (isNotebookCell(document.uri)) {
             const newDoc = this.converter.toOutgoingDocument(document);
@@ -202,7 +202,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
     public resolveCompletionItem(
         item: CompletionItem,
         token: CancellationToken,
-        next: ResolveCompletionItemSignature
+        next: ResolveCompletionItemSignature,
     ): ProviderResult<CompletionItem> {
         // Range should have already been remapped.
         // tslint:disable-next-line: no-suspicious-comment
@@ -216,7 +216,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         position: Position,
         context: SignatureHelpContext,
         token: CancellationToken,
-        next: ProvideSignatureHelpSignature
+        next: ProvideSignatureHelpSignature,
     ): ProviderResult<SignatureHelp> {
         if (isNotebookCell(document.uri)) {
             const newDoc = this.converter.toOutgoingDocument(document);
@@ -230,7 +230,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         document: TextDocument,
         position: Position,
         token: CancellationToken,
-        next: ProvideDefinitionSignature
+        next: ProvideDefinitionSignature,
     ): ProviderResult<Definition | DefinitionLink[]> {
         if (isNotebookCell(document.uri)) {
             const newDoc = this.converter.toOutgoingDocument(document);
@@ -251,7 +251,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
             includeDeclaration: boolean;
         },
         token: CancellationToken,
-        next: ProvideReferencesSignature
+        next: ProvideReferencesSignature,
     ): ProviderResult<Location[]> {
         if (isNotebookCell(document.uri)) {
             const newDoc = this.converter.toOutgoingDocument(document);
@@ -269,7 +269,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         document: TextDocument,
         position: Position,
         token: CancellationToken,
-        next: ProvideDocumentHighlightsSignature
+        next: ProvideDocumentHighlightsSignature,
     ): ProviderResult<DocumentHighlight[]> {
         if (isNotebookCell(document.uri)) {
             const newDoc = this.converter.toOutgoingDocument(document);
@@ -286,7 +286,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
     public provideDocumentSymbols(
         document: TextDocument,
         token: CancellationToken,
-        next: ProvideDocumentSymbolsSignature
+        next: ProvideDocumentSymbolsSignature,
     ): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
         if (isNotebookCell(document.uri)) {
             const newDoc = this.converter.toOutgoingDocument(document);
@@ -302,7 +302,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
     public provideWorkspaceSymbols(
         query: string,
         token: CancellationToken,
-        next: ProvideWorkspaceSymbolsSignature
+        next: ProvideWorkspaceSymbolsSignature,
     ): ProviderResult<SymbolInformation[]> {
         const result = next(query, token);
         if (isThenable(result)) {
@@ -317,7 +317,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         range: Range,
         context: CodeActionContext,
         token: CancellationToken,
-        next: ProvideCodeActionsSignature
+        next: ProvideCodeActionsSignature,
     ): ProviderResult<(Command | CodeAction)[]> {
         if (isNotebookCell(document.uri)) {
             traceInfo('provideCodeActions not currently supported for notebooks');
@@ -330,7 +330,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
     public provideCodeLenses(
         document: TextDocument,
         token: CancellationToken,
-        next: ProvideCodeLensesSignature
+        next: ProvideCodeLensesSignature,
     ): ProviderResult<CodeLens[]> {
         if (isNotebookCell(document.uri)) {
             traceInfo('provideCodeLenses not currently supported for notebooks');
@@ -343,7 +343,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
     public resolveCodeLens(
         codeLens: CodeLens,
         token: CancellationToken,
-        next: ResolveCodeLensSignature
+        next: ResolveCodeLensSignature,
     ): ProviderResult<CodeLens> {
         // Range should have already been remapped.
         // tslint:disable-next-line: no-suspicious-comment
@@ -357,7 +357,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         document: TextDocument,
         options: FormattingOptions,
         token: CancellationToken,
-        next: ProvideDocumentFormattingEditsSignature
+        next: ProvideDocumentFormattingEditsSignature,
     ): ProviderResult<TextEdit[]> {
         if (isNotebookCell(document.uri)) {
             traceInfo('provideDocumentFormattingEdits not currently supported for notebooks');
@@ -372,7 +372,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         range: Range,
         options: FormattingOptions,
         token: CancellationToken,
-        next: ProvideDocumentRangeFormattingEditsSignature
+        next: ProvideDocumentRangeFormattingEditsSignature,
     ): ProviderResult<TextEdit[]> {
         if (isNotebookCell(document.uri)) {
             traceInfo('provideDocumentRangeFormattingEdits not currently supported for notebooks');
@@ -388,7 +388,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         ch: string,
         options: FormattingOptions,
         token: CancellationToken,
-        next: ProvideOnTypeFormattingEditsSignature
+        next: ProvideOnTypeFormattingEditsSignature,
     ): ProviderResult<TextEdit[]> {
         if (isNotebookCell(document.uri)) {
             traceInfo('provideOnTypeFormattingEdits not currently supported for notebooks');
@@ -403,7 +403,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         position: Position,
         newName: string,
         token: CancellationToken,
-        next: ProvideRenameEditsSignature
+        next: ProvideRenameEditsSignature,
     ): ProviderResult<WorkspaceEdit> {
         if (isNotebookCell(document.uri)) {
             traceInfo('provideRenameEdits not currently supported for notebooks');
@@ -417,7 +417,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         document: TextDocument,
         position: Position,
         token: CancellationToken,
-        next: PrepareRenameSignature
+        next: PrepareRenameSignature,
     ): ProviderResult<
         | Range
         | {
@@ -436,7 +436,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
     public provideDocumentLinks(
         document: TextDocument,
         token: CancellationToken,
-        next: ProvideDocumentLinksSignature
+        next: ProvideDocumentLinksSignature,
     ): ProviderResult<DocumentLink[]> {
         if (isNotebookCell(document.uri)) {
             traceInfo('provideDocumentLinks not currently supported for notebooks');
@@ -449,7 +449,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
     public resolveDocumentLink(
         link: DocumentLink,
         token: CancellationToken,
-        next: ResolveDocumentLinkSignature
+        next: ResolveDocumentLinkSignature,
     ): ProviderResult<DocumentLink> {
         // Range should have already been remapped.
         // tslint:disable-next-line: no-suspicious-comment
@@ -463,7 +463,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         document: TextDocument,
         position: VPosition,
         token: CancellationToken,
-        next: ProvideDeclarationSignature
+        next: ProvideDeclarationSignature,
     ): ProviderResult<VDeclaration> {
         if (isNotebookCell(document.uri)) {
             traceInfo('provideDeclaration not currently supported for notebooks');

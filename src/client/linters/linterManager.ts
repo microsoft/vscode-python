@@ -38,7 +38,7 @@ export class LinterManager implements ILinterManager {
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
     ) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         // Note that we use unit tests to ensure all the linters are here.
@@ -50,7 +50,7 @@ export class LinterManager implements ILinterManager {
             new LinterInfo(Product.pycodestyle, LinterId.PyCodeStyle, this.configService),
             new LinterInfo(Product.prospector, LinterId.Prospector, this.configService),
             new LinterInfo(Product.pydocstyle, LinterId.PyDocStyle, this.configService),
-            new LinterInfo(Product.pylama, LinterId.PyLama, this.configService)
+            new LinterInfo(Product.pylama, LinterId.PyLama, this.configService),
         ];
     }
 
@@ -111,7 +111,7 @@ export class LinterManager implements ILinterManager {
         product: Product,
         outputChannel: OutputChannel,
         serviceContainer: IServiceContainer,
-        resource?: Uri
+        resource?: Uri,
     ): Promise<ILinter> {
         if (!(await this.isLintingEnabled(true, resource))) {
             return new DisabledLinter(this.configService);

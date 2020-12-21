@@ -9,13 +9,16 @@ const allEnvsComplete = () => true;
 
 const envInfoArray = [
     {
-        kind: PythonEnvKind.Conda, executable: { filename: 'my-conda-env' },
+        kind: PythonEnvKind.Conda,
+        executable: { filename: 'my-conda-env' },
     },
     {
-        kind: PythonEnvKind.Venv, executable: { filename: 'my-venv-env' },
+        kind: PythonEnvKind.Venv,
+        executable: { filename: 'my-venv-env' },
     },
     {
-        kind: PythonEnvKind.Pyenv, executable: { filename: 'my-pyenv-env' },
+        kind: PythonEnvKind.Pyenv,
+        executable: { filename: 'my-pyenv-env' },
     },
 ] as PythonEnvInfo[];
 
@@ -88,21 +91,25 @@ suite('Environment Info cache', () => {
     });
 
     test('`filterEnvs` should return environments that match its argument using areSameEnvironmnet', async () => {
-        const env:PythonEnvInfo = { executable: { filename: 'my-venv-env' } } as unknown as PythonEnvInfo;
+        const env: PythonEnvInfo = ({ executable: { filename: 'my-venv-env' } } as unknown) as PythonEnvInfo;
         const envsCache = await getPersistentCache(getGlobalPersistentStore(), allEnvsComplete);
 
         const result = envsCache.filterEnvs(env);
 
-        assert.deepStrictEqual(result, [{
-            kind: PythonEnvKind.Venv, executable: { filename: 'my-venv-env' },
-        }]);
+        assert.deepStrictEqual(result, [
+            {
+                kind: PythonEnvKind.Venv,
+                executable: { filename: 'my-venv-env' },
+            },
+        ]);
     });
 
     test('`filterEnvs` should return a deep copy of the matched environments', () => {
-        const envToFind = {
-            kind: PythonEnvKind.System, executable: { filename: 'my-system-env' },
-        } as unknown as PythonEnvInfo;
-        const env:PythonEnvInfo = { executable: { filename: 'my-system-env' } } as unknown as PythonEnvInfo;
+        const envToFind = ({
+            kind: PythonEnvKind.System,
+            executable: { filename: 'my-system-env' },
+        } as unknown) as PythonEnvInfo;
+        const env: PythonEnvInfo = ({ executable: { filename: 'my-system-env' } } as unknown) as PythonEnvInfo;
         const envsCache = new PythonEnvInfoCache(getGlobalPersistentStore(), allEnvsComplete);
 
         envsCache.setAllEnvs([...envInfoArray, envToFind]);
@@ -114,7 +121,7 @@ suite('Environment Info cache', () => {
     });
 
     test('`filterEnvs` should return an empty array if no environment matches the properties of its argument', async () => {
-        const env:PythonEnvInfo = { executable: { filename: 'my-nonexistent-env' } } as unknown as PythonEnvInfo;
+        const env: PythonEnvInfo = ({ executable: { filename: 'my-nonexistent-env' } } as unknown) as PythonEnvInfo;
         const envsCache = await getPersistentCache(getGlobalPersistentStore(), allEnvsComplete);
 
         const result = envsCache.filterEnvs(env);
@@ -122,8 +129,8 @@ suite('Environment Info cache', () => {
         assert.deepStrictEqual(result, []);
     });
 
-    test('`filterEnvs` should return undefined if the cache hasn\'t been activated', () => {
-        const env:PythonEnvInfo = { executable: { filename: 'my-nonexistent-env' } } as unknown as PythonEnvInfo;
+    test("`filterEnvs` should return undefined if the cache hasn't been activated", () => {
+        const env: PythonEnvInfo = ({ executable: { filename: 'my-nonexistent-env' } } as unknown) as PythonEnvInfo;
         const envsCache = new PythonEnvInfoCache(getGlobalPersistentStore(), allEnvsComplete);
 
         const result = envsCache.filterEnvs(env);
@@ -138,11 +145,10 @@ suite('Environment Info cache', () => {
             defaultDisplayName: 'other-env',
         };
         const updatedEnvInfoArray = [
-            otherEnv, { kind: PythonEnvKind.System, executable: { filename: 'my-system-env' } },
-        ] as PythonEnvInfo[];
-        const expected = [
             otherEnv,
-        ];
+            { kind: PythonEnvKind.System, executable: { filename: 'my-system-env' } },
+        ] as PythonEnvInfo[];
+        const expected = [otherEnv];
         const envsCache = await getPersistentCache(
             getGlobalPersistentStore(),
             (env) => env.defaultDisplayName !== undefined,

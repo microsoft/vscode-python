@@ -78,7 +78,7 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
                 }
                 const lengthOfMessage = parseInt(
                     dataStr.slice(dataStr.indexOf(':') + 1, dataStr.indexOf('{')).trim(),
-                    10
+                    10,
                 );
                 if (dataStr.length < startIndex + lengthOfMessage) {
                     return;

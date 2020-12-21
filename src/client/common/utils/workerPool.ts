@@ -27,7 +27,7 @@ interface IWorkItem<T> {
 
 export enum QueuePosition {
     Back,
-    Front
+    Front,
 }
 
 export interface IWorkerPool<T, R> extends IWorker {
@@ -47,7 +47,7 @@ class Worker<T, R> implements IWorker {
         private readonly next: NextFunc<T>,
         private readonly workFunc: WorkFunc<T, R>,
         private readonly postResult: PostResult<T, R>,
-        private readonly name: string
+        private readonly name: string,
     ) {}
     public stop() {
         this.stopProcessing = true;
@@ -139,7 +139,7 @@ class WorkerPool<T, R> implements IWorkerPool<T, R> {
     public constructor(
         private readonly workerFunc: WorkFunc<T, R>,
         private readonly numWorkers: number = 2,
-        private readonly name: string = 'Worker'
+        private readonly name: string = 'Worker',
     ) {}
 
     public addToQueue(item: T, position?: QueuePosition): Promise<R> {
@@ -179,8 +179,8 @@ class WorkerPool<T, R> implements IWorkerPool<T, R> {
                     (workItem: IWorkItem<T>) => this.workerFunc(workItem.item),
                     (workItem: IWorkItem<T>, result?: R, error?: Error) =>
                         this.queue.completed(workItem, result, error),
-                    `${this.name} ${num}`
-                )
+                    `${this.name} ${num}`,
+                ),
             );
             num = num - 1;
         }
@@ -233,7 +233,7 @@ class WorkerPool<T, R> implements IWorkerPool<T, R> {
                 },
                 stop: () => {
                     reject();
-                }
+                },
             });
         });
     }
@@ -242,7 +242,7 @@ class WorkerPool<T, R> implements IWorkerPool<T, R> {
 export function createRunningWorkerPool<T, R>(
     workerFunc: WorkFunc<T, R>,
     numWorkers?: number,
-    name?: string
+    name?: string,
 ): WorkerPool<T, R> {
     const pool = new WorkerPool<T, R>(workerFunc, numWorkers, name);
     pool.start();

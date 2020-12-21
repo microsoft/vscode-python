@@ -23,6 +23,6 @@ export function createPythonInterpreter(info?: Partial<PythonEnvironment>): Pyth
         sysPrefix: `someSysPrefix${rnd}`,
         sysVersion: `1.1.1`,
         envType: EnvironmentType.Unknown,
-        ...(info || {})
+        ...(info || {}),
     };
 }

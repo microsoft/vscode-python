@@ -14,7 +14,7 @@ import {
     TestDiscoveryOptions,
     TestProvider,
     Tests,
-    TestsToRun
+    TestsToRun,
 } from '../../client/testing/common/types';
 
 @injectable()
@@ -74,7 +74,7 @@ export class MockTestManagerWithRunningTests extends BaseTestManager {
         product: Product,
         workspaceFolder: Uri,
         rootDirectory: string,
-        serviceContainer: IServiceContainer
+        serviceContainer: IServiceContainer,
     ) {
         super(testProvider, product, workspaceFolder, rootDirectory, serviceContainer);
     }
@@ -87,7 +87,7 @@ export class MockTestManagerWithRunningTests extends BaseTestManager {
         _tests: Tests,
         _testsToRun?: TestsToRun,
         _runFailedTests?: boolean,
-        _debug?: boolean
+        _debug?: boolean,
     ): Promise<Tests> {
         // tslint:disable-next-line:no-non-null-assertion
         this.testRunnerCancellationToken!.onCancellationRequested(() => {

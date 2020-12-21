@@ -33,7 +33,7 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
         return this.values.has(section);
     }
     public inspect<T>(
-        section: string
+        section: string,
     ):
         | {
               key: string;
@@ -48,7 +48,7 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
     public update(
         section: string,
         value: any,
-        _configurationTarget?: boolean | ConfigurationTarget | undefined
+        _configurationTarget?: boolean | ConfigurationTarget | undefined,
     ): Promise<void> {
         this.values.set(section, value);
         return Promise.resolve();

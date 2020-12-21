@@ -14,7 +14,7 @@ import { isNotebookCell } from './utils/misc';
 enum EditAction {
     Delete,
     Insert,
-    Replace
+    Replace,
 }
 
 const NEW_LINE_LENGTH = EOL.length;
@@ -86,7 +86,7 @@ export function getTextEditsFromPatch(before: string, patch: string): TextEdit[]
 export function getWorkspaceEditsFromPatch(
     filePatches: string[],
     workspaceRoot: string | undefined,
-    fs: IFileSystem
+    fs: IFileSystem,
 ): WorkspaceEdit {
     const workspaceEdit = new WorkspaceEdit();
     filePatches.forEach((patch) => {

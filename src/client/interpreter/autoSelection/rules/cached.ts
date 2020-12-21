@@ -26,14 +26,14 @@ export class CachedInterpretersAutoSelectionRule extends BaseRuleService {
         currentPathInterpreter: IInterpreterAutoSelectionRule,
         @inject(IInterpreterAutoSelectionRule)
         @named(AutoSelectionRule.windowsRegistry)
-        winRegInterpreter: IInterpreterAutoSelectionRule
+        winRegInterpreter: IInterpreterAutoSelectionRule,
     ) {
         super(AutoSelectionRule.cachedInterpreters, fs, stateFactory);
         this.rules = [systemInterpreter, currentPathInterpreter, winRegInterpreter];
     }
     protected async onAutoSelectInterpreter(
         resource: Resource,
-        manager?: IInterpreterAutoSelectionService
+        manager?: IInterpreterAutoSelectionService,
     ): Promise<NextAction> {
         const cachedInterpreters = this.rules
             .map((item) => item.getPreviouslyAutoSelectedInterpreter(resource))
@@ -43,7 +43,7 @@ export class CachedInterpretersAutoSelectionRule extends BaseRuleService {
         traceVerbose(
             `Selected Interpreter from ${this.ruleName}, ${
                 bestInterpreter ? JSON.stringify(bestInterpreter) : 'Nothing Selected'
-            }`
+            }`,
         );
         return (await this.setGlobalInterpreter(bestInterpreter, manager)) ? NextAction.exit : NextAction.runNextRule;
     }

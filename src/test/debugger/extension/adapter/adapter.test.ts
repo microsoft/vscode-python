@@ -58,7 +58,7 @@ suite('Debugger Integration', () => {
         'launch': ['launch a file', [...defaultScriptArgs, outFile]],
         // prettier-ignore
         'attach': ['attach to a local port', defaultScriptArgs],
-        'attach to PID': ['attach to a local PID', defaultScriptArgs]
+        'attach to PID': ['attach to a local PID', defaultScriptArgs],
         // For now we do not worry about "test" debugging.
     };
 

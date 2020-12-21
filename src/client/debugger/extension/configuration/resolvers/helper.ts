@@ -18,7 +18,7 @@ export class DebugEnvironmentVariablesHelper implements IDebugEnvironmentVariabl
     constructor(
         @inject(IEnvironmentVariablesService) private envParser: IEnvironmentVariablesService,
         @inject(IPathUtils) private pathUtils: IPathUtils,
-        @inject(ICurrentProcess) private process: ICurrentProcess
+        @inject(ICurrentProcess) private process: ICurrentProcess,
     ) {}
     public async getEnvironmentVariables(args: LaunchRequestArguments): Promise<EnvironmentVariables> {
         const pathVariableName = this.pathUtils.getPathVariableName();

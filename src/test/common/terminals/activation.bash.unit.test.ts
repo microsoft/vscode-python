@@ -18,7 +18,7 @@ suite('Terminal Environment Activation (bash)', () => {
     [
         'usr/bin/python',
         'usr/bin/env with spaces/env more/python',
-        'c:\\users\\windows paths\\conda\\python.exe'
+        'c:\\users\\windows paths\\conda\\python.exe',
     ].forEach((pythonPath) => {
         const hasSpaces = pythonPath.indexOf(' ') > 0;
         const suiteTitle = hasSpaces
@@ -89,14 +89,14 @@ suite('Terminal Environment Activation (bash)', () => {
                                     case TerminalShellType.fish: {
                                         expect(supported).to.be.equal(
                                             true,
-                                            `${shellType.name} shell not supported (it should be)`
+                                            `${shellType.name} shell not supported (it should be)`,
                                         );
                                         break;
                                     }
                                     default: {
                                         expect(supported).to.be.equal(
                                             false,
-                                            `${shellType.name} incorrectly supported (should not be)`
+                                            `${shellType.name} incorrectly supported (should not be)`,
                                         );
                                         // No point proceeding with other tests.
                                         return;
@@ -117,7 +117,7 @@ suite('Terminal Environment Activation (bash)', () => {
 
                                     expect(command).to.be.deep.equal(
                                         [`source ${pathToScriptFile.fileToCommandArgument()}`.trim()],
-                                        'Invalid command'
+                                        'Invalid command',
                                     );
                                 } else {
                                     expect(command).to.be.equal(undefined, 'Command should be undefined');
@@ -125,7 +125,7 @@ suite('Terminal Environment Activation (bash)', () => {
                             });
                         });
                     });
-                }
+                },
             );
         });
     });

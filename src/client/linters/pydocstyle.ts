@@ -70,7 +70,7 @@ export class PyDocStyle extends BaseLinter {
                             column: sourceStart,
                             line: lineNumber,
                             type: '',
-                            provider: this.info.id
+                            provider: this.info.id,
                         } as ILintMessage;
                     } catch (ex) {
                         traceError(`Failed to parse pydocstyle line '${line}'`, ex);

@@ -55,11 +55,11 @@ suite('Multiroot Environment Variables Provider', () => {
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
         when(
-            mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())
+            mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything()),
         ).thenResolve();
         ioc.serviceManager.rebindInstance<IEnvironmentActivationService>(
             IEnvironmentActivationService,
-            instance(mockEnvironmentActivationService)
+            instance(mockEnvironmentActivationService),
         );
         clearCache();
         return initializeTest();
@@ -90,7 +90,7 @@ suite('Multiroot Environment Variables Provider', () => {
             workspaceService,
             cfgService,
             mockProcess,
-            ioc.serviceContainer
+            ioc.serviceContainer,
         );
     }
 
@@ -135,7 +135,7 @@ suite('Multiroot Environment Variables Provider', () => {
             // On CI, it was seen that processVariable[variable] can contain spaces at the end, which causes tests to fail. So trim the strings before comparing.
             expect(vars[variable]?.trim()).to.equal(
                 processVariables[variable]?.trim(),
-                'Value of the variable is incorrect'
+                'Value of the variable is incorrect',
             );
         });
     });

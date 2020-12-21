@@ -19,7 +19,7 @@ import {
     IMemento,
     InstallerResponse,
     Product,
-    Resource
+    Resource,
 } from '../common/types';
 import { isResource } from '../common/utils/misc';
 import { getDebugpyPackagePath } from '../debugger/extension/adapter/remoteLaunchers';
@@ -46,7 +46,7 @@ enum JupyterProductToInstall {
     notebook = 'notebook',
     kernelspec = 'kernelspec',
     nbconvert = 'nbconvert',
-    pandas = 'pandas'
+    pandas = 'pandas',
 }
 
 const ProductMapping: { [key in JupyterProductToInstall]: Product } = {
@@ -55,7 +55,7 @@ const ProductMapping: { [key in JupyterProductToInstall]: Product } = {
     [JupyterProductToInstall.kernelspec]: Product.kernelspec,
     [JupyterProductToInstall.nbconvert]: Product.nbconvert,
     [JupyterProductToInstall.notebook]: Product.notebook,
-    [JupyterProductToInstall.pandas]: Product.pandas
+    [JupyterProductToInstall.pandas]: Product.pandas,
 };
 
 type PythonApiForJupyterExtension = {
@@ -82,7 +82,7 @@ type PythonApiForJupyterExtension = {
     getActivatedEnvironmentVariables(
         resource: Resource,
         interpreter?: PythonEnvironment,
-        allowExceptions?: boolean
+        allowExceptions?: boolean,
     ): Promise<NodeJS.ProcessEnv | undefined>;
     isWindowsStoreInterpreter(pythonPath: string): Promise<boolean>;
     /**
@@ -95,7 +95,7 @@ type PythonApiForJupyterExtension = {
     install(
         product: JupyterProductToInstall,
         resource?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
     ): Promise<InstallerResponse>;
     /**
      * Returns path to where `debugpy` is. In python extension this is `/pythonFiles/lib/python`.
@@ -143,7 +143,7 @@ export class JupyterExtensionIntegration {
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IEnvironmentActivationService) private readonly envActivation: IEnvironmentActivationService,
         @inject(ILanguageServerCache) private readonly languageServerCache: ILanguageServerCache,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
     ) {}
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi) {
@@ -157,7 +157,7 @@ export class JupyterExtensionIntegration {
             getActivatedEnvironmentVariables: async (
                 resource: Resource,
                 interpreter?: PythonEnvironment,
-                allowExceptions?: boolean
+                allowExceptions?: boolean,
             ) => this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions),
             isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> =>
                 this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath),
@@ -166,7 +166,7 @@ export class JupyterExtensionIntegration {
             install: async (
                 product: JupyterProductToInstall,
                 resource?: InterpreterUri,
-                cancel?: CancellationToken
+                cancel?: CancellationToken,
             ): Promise<InstallerResponse> => this.installer.install(ProductMapping[product], resource, cancel),
             getDebuggerPath: async () => dirname(getDebugpyPackagePath()),
             getInterpreterPathSelectedForJupyterServer: () =>
@@ -181,11 +181,11 @@ export class JupyterExtensionIntegration {
                     return {
                         connection: client.connection,
                         capabilities: client.capabilities,
-                        dispose: client.dispose
+                        dispose: client.dispose,
                     };
                 }
                 return undefined;
-            }
+            },
         });
     }
 

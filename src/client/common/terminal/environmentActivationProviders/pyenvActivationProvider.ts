@@ -31,7 +31,7 @@ export class PyEnvActivationCommandProvider implements ITerminalActivationComman
 
     public async getActivationCommandsForInterpreter(
         pythonPath: string,
-        _targetShell: TerminalShellType
+        _targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
         const interpreter = await this.serviceContainer
             .get<IInterpreterService>(IInterpreterService)

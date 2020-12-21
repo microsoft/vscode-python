@@ -40,7 +40,7 @@ suite('Code lenses - Test files', () => {
             onDidChange,
             symbolProvider,
             testCollectionStorage.object,
-            serviceContainer.object
+            serviceContainer.object,
         );
     });
 
@@ -50,7 +50,7 @@ suite('Code lenses - Test files', () => {
 
     test('Function getTestFileWhichNeedsCodeLens() returns `undefined` if there are no workspace corresponding to document', async () => {
         const document = {
-            uri: Uri.file('path/to/document')
+            uri: Uri.file('path/to/document'),
         };
         workspaceService
             .setup((w) => w.getWorkspaceFolder(document.uri))
@@ -68,7 +68,7 @@ suite('Code lenses - Test files', () => {
 
     test('Function getTestFileWhichNeedsCodeLens() returns `undefined` if test storage is empty', async () => {
         const document = {
-            uri: Uri.file('path/to/document')
+            uri: Uri.file('path/to/document'),
         };
         const workspaceUri = Uri.file('path/to/workspace');
         const workspace = { uri: workspaceUri };
@@ -88,19 +88,19 @@ suite('Code lenses - Test files', () => {
 
     test('Function getTestFileWhichNeedsCodeLens() returns `undefined` if tests returned from storage does not contain document', async () => {
         const document = {
-            uri: Uri.file('path/to/document5')
+            uri: Uri.file('path/to/document5'),
         };
         const workspaceUri = Uri.file('path/to/workspace');
         const workspace = { uri: workspaceUri };
         const tests = {
             testFiles: [
                 {
-                    fullPath: 'path/to/document1'
+                    fullPath: 'path/to/document1',
                 },
                 {
-                    fullPath: 'path/to/document2'
-                }
-            ]
+                    fullPath: 'path/to/document2',
+                },
+            ],
         };
         workspaceService
             .setup((w) => w.getWorkspaceFolder(document.uri))
@@ -120,20 +120,20 @@ suite('Code lenses - Test files', () => {
 
     test('Function getTestFileWhichNeedsCodeLens() returns test file if tests returned from storage contains document', async () => {
         const document = {
-            uri: Uri.file('path/to/document2')
+            uri: Uri.file('path/to/document2'),
         };
         const workspaceUri = Uri.file('path/to/workspace');
         const workspace = { uri: workspaceUri };
         const testFile2 = {
-            fullPath: Uri.file('path/to/document2').fsPath
+            fullPath: Uri.file('path/to/document2').fsPath,
         };
         const tests = {
             testFiles: [
                 {
-                    fullPath: Uri.file('path/to/document1').fsPath
+                    fullPath: Uri.file('path/to/document1').fsPath,
                 },
-                testFile2
-            ]
+                testFile2,
+            ],
         };
         workspaceService
             .setup((w) => w.getWorkspaceFolder(typemoq.It.isValue(document.uri)))

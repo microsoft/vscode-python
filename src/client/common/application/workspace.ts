@@ -13,7 +13,7 @@ import {
     workspace,
     WorkspaceConfiguration,
     WorkspaceFolder,
-    WorkspaceFoldersChangeEvent
+    WorkspaceFoldersChangeEvent,
 } from 'vscode';
 import { Resource } from '../types';
 import { getOSType, OSType } from '../utils/platform';
@@ -54,20 +54,20 @@ export class WorkspaceService implements IWorkspaceService {
         globPattern: GlobPattern,
         ignoreCreateEvents?: boolean,
         ignoreChangeEvents?: boolean,
-        ignoreDeleteEvents?: boolean
+        ignoreDeleteEvents?: boolean,
     ): FileSystemWatcher {
         return workspace.createFileSystemWatcher(
             globPattern,
             ignoreCreateEvents,
             ignoreChangeEvents,
-            ignoreDeleteEvents
+            ignoreDeleteEvents,
         );
     }
     public findFiles(
         include: GlobPattern,
         exclude?: GlobPattern,
         maxResults?: number,
-        token?: CancellationToken
+        token?: CancellationToken,
     ): Thenable<Uri[]> {
         const excludePattern = exclude === undefined ? this.searchExcludes : exclude;
         return workspace.findFiles(include, excludePattern, maxResults, token);
@@ -76,7 +76,9 @@ export class WorkspaceService implements IWorkspaceService {
         const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
         return workspaceFolder
             ? path.normalize(
-                  getOSType() === OSType.Windows ? workspaceFolder.uri.fsPath.toUpperCase() : workspaceFolder.uri.fsPath
+                  getOSType() === OSType.Windows
+                      ? workspaceFolder.uri.fsPath.toUpperCase()
+                      : workspaceFolder.uri.fsPath,
               )
             : defaultValue;
     }

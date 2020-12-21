@@ -10,7 +10,7 @@ import {
     IInterpreterLocatorService,
     IInterpreterService,
     IPipEnvService,
-    PIPENV_SERVICE
+    PIPENV_SERVICE,
 } from '../../../interpreter/contracts';
 import { EnvironmentType } from '../../../pythonEnvironments/info';
 import { IWorkspaceService } from '../../application/types';
@@ -25,7 +25,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         @named(PIPENV_SERVICE)
         private readonly pipenvService: IPipEnvService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
     ) {}
 
     public isShellSupported(_targetShell: TerminalShellType): boolean {
@@ -52,7 +52,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
 
     public async getActivationCommandsForInterpreter(
         pythonPath: string,
-        _targetShell: TerminalShellType
+        _targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
         const interpreter = await this.interpreterService.getInterpreterDetails(pythonPath);
         if (!interpreter || interpreter.envType !== EnvironmentType.Pipenv) {

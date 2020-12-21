@@ -68,7 +68,7 @@ export class HttpClient implements IHttpClient {
                 }
                 if (response.statusCode !== 200) {
                     return reject(
-                        new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`)
+                        new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`),
                     );
                 }
                 resolve(body);

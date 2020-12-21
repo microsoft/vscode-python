@@ -61,7 +61,7 @@ export function getPreDefinedConfiguration(): LoggerConfig {
     }
     if (process.env.VSC_PYTHON_LOG_FILE) {
         config.file = {
-            logfile: process.env.VSC_PYTHON_LOG_FILE
+            logfile: process.env.VSC_PYTHON_LOG_FILE,
         };
     }
     return config;

@@ -77,7 +77,7 @@ export function makeDebounceDecorator(wait?: number) {
                 return originalMethod.apply(this, arguments as any);
             },
             wait,
-            options
+            options,
         );
         (descriptor as any).value = debounced;
     };
@@ -133,7 +133,7 @@ export function clearCachedResourceSpecificIngterpreterData(
     key: string,
     resource: Resource,
     serviceContainer: IServiceContainer,
-    vscode: VSCodeType = require('vscode')
+    vscode: VSCodeType = require('vscode'),
 ) {
     const cacheStore = new InMemoryInterpreterSpecificCache(key, 0, [resource], serviceContainer, vscode);
     cacheStore.clear();
@@ -145,7 +145,7 @@ export function cache(expiryDurationMs: number) {
     return function (
         target: Object,
         propertyName: string,
-        descriptor: TypedPropertyDescriptor<PromiseFunctionWithAnyArgs>
+        descriptor: TypedPropertyDescriptor<PromiseFunctionWithAnyArgs>,
     ) {
         const originalMethod = descriptor.value!;
         const className = 'constructor' in target && target.constructor.name ? target.constructor.name : '';
@@ -163,7 +163,7 @@ export function cache(expiryDurationMs: number) {
             const promise = originalMethod.apply(this, args) as Promise<any>;
             promise
                 .then((result) =>
-                    cacheStoreForMethods.set(key, { data: result, expiry: Date.now() + expiryDurationMs })
+                    cacheStoreForMethods.set(key, { data: result, expiry: Date.now() + expiryDurationMs }),
                 )
                 .ignoreErrors();
             return promise;
@@ -245,7 +245,7 @@ export function trace(log: (c: CallInfo, t: TraceInfo) => void) {
             const call = {
                 kind: 'Class',
                 name: _ && _.constructor ? _.constructor.name : '',
-                args
+                args,
             };
             // tslint:disable-next-line:no-this-assignment no-invalid-this
             const scope = this;
@@ -253,7 +253,7 @@ export function trace(log: (c: CallInfo, t: TraceInfo) => void) {
                 // "log()"
                 (t) => log(call, t),
                 // "run()"
-                () => originalMethod.apply(scope, args)
+                () => originalMethod.apply(scope, args),
             );
         };
 

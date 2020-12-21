@@ -2,7 +2,10 @@
 // Licensed under the MIT License.
 
 import { PythonExecutableInfo, PythonVersion } from '.';
-import { interpreterInfo as getInterpreterInfoCommand, InterpreterInfoJson } from '../../../common/process/internal/scripts';
+import {
+    interpreterInfo as getInterpreterInfoCommand,
+    InterpreterInfoJson,
+} from '../../../common/process/internal/scripts';
 import { Architecture } from '../../../common/utils/platform';
 import { copyPythonExecInfo, PythonExecInfo } from '../../exec';
 import { parseVersion } from './pythonVersion';

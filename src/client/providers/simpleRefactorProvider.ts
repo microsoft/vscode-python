@@ -19,7 +19,7 @@ let installer: IInstaller;
 export function activateSimplePythonRefactorProvider(
     context: vscode.ExtensionContext,
     outputChannel: vscode.OutputChannel,
-    serviceContainer: IServiceContainer
+    serviceContainer: IServiceContainer,
 ) {
     installer = serviceContainer.get<IInstaller>(IInstaller);
     let disposable = vscode.commands.registerCommand(Commands.Refactor_Extract_Variable, () => {
@@ -28,7 +28,7 @@ export function activateSimplePythonRefactorProvider(
             vscode.window.activeTextEditor!,
             vscode.window.activeTextEditor!.selection,
             outputChannel,
-            serviceContainer
+            serviceContainer,
             // tslint:disable-next-line:no-empty
         ).catch(() => {});
         sendTelemetryWhenDone(EventName.REFACTOR_EXTRACT_VAR, promise, stopWatch);
@@ -41,7 +41,7 @@ export function activateSimplePythonRefactorProvider(
             vscode.window.activeTextEditor!,
             vscode.window.activeTextEditor!.selection,
             outputChannel,
-            serviceContainer
+            serviceContainer,
             // tslint:disable-next-line:no-empty
         ).catch(() => {});
         sendTelemetryWhenDone(EventName.REFACTOR_EXTRACT_FUNCTION, promise, stopWatch);
@@ -54,7 +54,7 @@ export function extractVariable(
     textEditor: vscode.TextEditor,
     range: vscode.Range,
     outputChannel: vscode.OutputChannel,
-    serviceContainer: IServiceContainer
+    serviceContainer: IServiceContainer,
     // tslint:disable-next-line:no-any
 ): Promise<any> {
     let workspaceFolder = vscode.workspace.getWorkspaceFolder(textEditor.document.uri);
@@ -79,7 +79,7 @@ export function extractVariable(
                 newName,
                 textEditor.document.uri.fsPath,
                 range,
-                textEditor.options
+                textEditor.options,
             )
             .then((response) => {
                 return response.results[0].diff;
@@ -94,7 +94,7 @@ export function extractMethod(
     textEditor: vscode.TextEditor,
     range: vscode.Range,
     outputChannel: vscode.OutputChannel,
-    serviceContainer: IServiceContainer
+    serviceContainer: IServiceContainer,
     // tslint:disable-next-line:no-any
 ): Promise<any> {
     let workspaceFolder = vscode.workspace.getWorkspaceFolder(textEditor.document.uri);
@@ -119,7 +119,7 @@ export function extractMethod(
                 newName,
                 textEditor.document.uri.fsPath,
                 range,
-                textEditor.options
+                textEditor.options,
             )
             .then((response) => {
                 return response.results[0].diff;
@@ -151,7 +151,7 @@ function extractName(
     textEditor: vscode.TextEditor,
     newName: string,
     renameResponse: Promise<string>,
-    outputChannel: vscode.OutputChannel
+    outputChannel: vscode.OutputChannel,
     // tslint:disable-next-line:no-any
 ): Promise<any> {
     let changeStartsAtLine = -1;
@@ -188,12 +188,12 @@ function extractName(
                     textEditor.selections = [
                         new vscode.Selection(
                             newWordPosition,
-                            new vscode.Position(newWordPosition.line, newWordPosition.character + newName.length)
-                        )
+                            new vscode.Position(newWordPosition.line, newWordPosition.character + newName.length),
+                        ),
                     ];
                     textEditor.revealRange(
                         new vscode.Range(textEditor.selection.start, textEditor.selection.end),
-                        vscode.TextEditorRevealType.Default
+                        vscode.TextEditorRevealType.Default,
                     );
                 }
                 return newWordPosition;

@@ -21,7 +21,7 @@ export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExt
 
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
     ) {}
 
     // Fires when the active text editor contains a tensorboard import.
@@ -48,7 +48,7 @@ export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExt
         this.documentManager.onDidChangeActiveTextEditor(
             (e) => this.onChangedActiveTextEditor(e),
             this,
-            this.disposables
+            this.disposables,
         );
     }
 

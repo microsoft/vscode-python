@@ -111,7 +111,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
         const selection = {
             label: 'some label',
             description: '',
-            installer: moduleInstaller2.object
+            installer: moduleInstaller2.object,
         };
         appShell
             .setup((a) => a.showQuickPick<typeof selection>(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -218,7 +218,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
 
     test('If active interpreter is Conda, show conda prompt', async () => {
         const activeInterpreter = {
-            envType: EnvironmentType.Conda
+            envType: EnvironmentType.Conda,
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         serviceContainer
@@ -243,7 +243,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
 
     test('If active interpreter is not Conda, show pip prompt', async () => {
         const activeInterpreter = {
-            envType: EnvironmentType.Pipenv
+            envType: EnvironmentType.Pipenv,
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         serviceContainer
@@ -271,18 +271,18 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
             {
                 osName: 'Windows',
                 isWindows: true,
-                isMac: false
+                isMac: false,
             },
             {
                 osName: 'Linux',
                 isWindows: false,
-                isMac: false
+                isMac: false,
             },
             {
                 osName: 'MacOS',
                 isWindows: false,
-                isMac: true
-            }
+                isMac: true,
+            },
         ].forEach((testParams) => {
             const expectedURL = `https://www.bing.com/search?q=Install Pip ${testParams.osName} ${
                 interpreterType === EnvironmentType.Conda ? 'Conda' : ''
@@ -293,7 +293,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
                 interpreterType === EnvironmentType.Conda ? 'Conda' : 'not Conda'
             }`, async () => {
                 const activeInterpreter = {
-                    envType: interpreterType
+                    envType: interpreterType,
                 };
                 const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
                 const platformService = TypeMoq.Mock.ofType<IPlatformService>();
@@ -331,7 +331,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
     });
     test("If 'Search for help' is not selected in error prompt, don't open URL", async () => {
         const activeInterpreter = {
-            envType: EnvironmentType.Conda
+            envType: EnvironmentType.Conda,
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         const platformService = TypeMoq.Mock.ofType<IPlatformService>();

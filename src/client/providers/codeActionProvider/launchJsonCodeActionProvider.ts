@@ -9,7 +9,7 @@ import {
     Diagnostic,
     Range,
     TextDocument,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 
 /**

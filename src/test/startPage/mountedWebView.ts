@@ -7,7 +7,7 @@ import {
     IWebviewPanel,
     IWebviewPanelMessageListener,
     IWebviewPanelOptions,
-    WebviewMessage
+    WebviewMessage,
 } from '../../client/common/application/types';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IDisposable } from '../../client/common/types';
@@ -74,7 +74,7 @@ export class MountedWebView implements IMountedWebView, IDisposable {
                 // tslint:disable-next-line:no-any no-empty
                 getState: () => {
                     return {};
-                }
+                },
             };
         };
         // tslint:disable-next-line:no-string-literal
@@ -113,7 +113,7 @@ export class MountedWebView implements IMountedWebView, IDisposable {
             // handle some messages during the ctor.
             setTimeout(() => {
                 this.missedMessages.forEach((m) =>
-                    this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop()
+                    this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop(),
                 );
                 this.missedMessages = [];
             }, 0);

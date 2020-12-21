@@ -13,7 +13,7 @@ import { IApplicationShell, ICommandManager } from '../../../client/common/appli
 import { ExtensionChannelService } from '../../../client/common/insidersBuild/downloadChannelService';
 import {
     InsidersExtensionPrompt,
-    insidersPromptStateKey
+    insidersPromptStateKey,
 } from '../../../client/common/insidersBuild/insidersExtensionPrompt';
 import { ExtensionChannel, IExtensionChannelService } from '../../../client/common/insidersBuild/types';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
@@ -35,13 +35,13 @@ suite('Insiders Extension prompt', () => {
         cmdManager = mock(CommandManager);
         hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(persistentState.createGlobalPersistentState(insidersPromptStateKey, false)).thenReturn(
-            hasUserBeenNotifiedState.object
+            hasUserBeenNotifiedState.object,
         );
         insidersPrompt = new InsidersExtensionPrompt(
             instance(appShell),
             instance(extensionChannelService),
             instance(cmdManager),
-            instance(persistentState)
+            instance(persistentState),
         );
     });
 
@@ -49,10 +49,10 @@ suite('Insiders Extension prompt', () => {
         const prompts = [
             ExtensionChannels.yesWeekly(),
             ExtensionChannels.yesDaily(),
-            ExtensionSurveyBanner.bannerLabelNo()
+            ExtensionSurveyBanner.bannerLabelNo(),
         ];
         when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
-            ExtensionChannels.yesDaily() as any
+            ExtensionChannels.yesDaily() as any,
         );
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(ExtensionChannel.daily)).thenResolve();
@@ -71,10 +71,10 @@ suite('Insiders Extension prompt', () => {
         const prompts = [
             ExtensionChannels.yesWeekly(),
             ExtensionChannels.yesDaily(),
-            ExtensionSurveyBanner.bannerLabelNo()
+            ExtensionSurveyBanner.bannerLabelNo(),
         ];
         when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
-            ExtensionChannels.yesWeekly() as any
+            ExtensionChannels.yesWeekly() as any,
         );
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(ExtensionChannel.weekly)).thenResolve();
@@ -93,10 +93,10 @@ suite('Insiders Extension prompt', () => {
         const prompts = [
             ExtensionChannels.yesWeekly(),
             ExtensionChannels.yesDaily(),
-            ExtensionSurveyBanner.bannerLabelNo()
+            ExtensionSurveyBanner.bannerLabelNo(),
         ];
         when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
-            ExtensionSurveyBanner.bannerLabelNo() as any
+            ExtensionSurveyBanner.bannerLabelNo() as any,
         );
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(anything())).thenResolve();
@@ -115,10 +115,10 @@ suite('Insiders Extension prompt', () => {
         const prompts = [
             ExtensionChannels.yesWeekly(),
             ExtensionChannels.yesDaily(),
-            ExtensionSurveyBanner.bannerLabelNo()
+            ExtensionSurveyBanner.bannerLabelNo(),
         ];
         when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
-            undefined as any
+            undefined as any,
         );
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(anything())).thenResolve();
@@ -135,7 +135,7 @@ suite('Insiders Extension prompt', () => {
 
     test('Do not do anything if no option is selected in the reload prompt', async () => {
         when(
-            appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload())
+            appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload()),
         ).thenResolve(undefined);
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         await insidersPrompt.promptToReload();
@@ -145,7 +145,7 @@ suite('Insiders Extension prompt', () => {
 
     test("Reload windows if 'Reload' option is selected in the reload prompt", async () => {
         when(
-            appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload())
+            appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload()),
         ).thenResolve(Common.reload() as any);
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         await insidersPrompt.promptToReload();

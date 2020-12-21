@@ -17,7 +17,7 @@ import {
     FSFixture,
     SUPPORTS_SOCKETS,
     SUPPORTS_SYMLINKS,
-    WINDOWS
+    WINDOWS,
 } from './utils';
 
 // Note: all functional tests that do not trigger the VS Code "fs" API
@@ -490,21 +490,21 @@ suite('FileSystem - raw', () => {
                 [script, FileType.File],
                 [file3, FileType.File],
                 [file2, FileType.File],
-                [subdir, FileType.Directory]
+                [subdir, FileType.Directory],
             ];
             if (SUPPORTS_SYMLINKS) {
                 // a symlink to a file (source not directly in listed dir)
                 const symlink1 = await fix.createSymlink(
                     'x/y/z/info.py',
                     // Link to an ignored file.
-                    await fix.createFile('x/_info.py', '<info here>') // source
+                    await fix.createFile('x/_info.py', '<info here>'), // source
                 );
                 expected.push([symlink1, FileType.SymbolicLink | FileType.File]);
 
                 // a symlink to a directory (source not directly in listed dir)
                 const symlink4 = await fix.createSymlink(
                     'x/y/z/static_files',
-                    await fix.resolve('x/y/z/w/data') // source
+                    await fix.resolve('x/y/z/w/data'), // source
                 );
                 expected.push([symlink4, FileType.SymbolicLink | FileType.Directory]);
 
@@ -526,12 +526,12 @@ suite('FileSystem - raw', () => {
                     // a symlink to a socket
                     const symlink3 = await fix.createSymlink(
                         'x/y/z/ipc.sck',
-                        sock // source
+                        sock, // source
                     );
                     expected.push(
                         // TODO (https://github.com/microsoft/vscode/issues/90032):
                         //   VS Code gets symlinks to "unknown" files wrong:
-                        [symlink3, FileType.SymbolicLink | FileType.File]
+                        [symlink3, FileType.SymbolicLink | FileType.File],
                         //[symlink3, FileType.SymbolicLink]
                     );
                 }
@@ -547,20 +547,20 @@ suite('FileSystem - raw', () => {
                 //   VS Code ignores broken symlinks currently...
                 await fix.createSymlink(
                     'x/y/z/broken',
-                    DOES_NOT_EXIST // source
+                    DOES_NOT_EXIST, // source
                 );
 
                 // a symlink outside the listed dir (to a file inside the dir)
                 await fix.createSymlink(
                     'my-script.py',
                     // Link to a listed file.
-                    script // source (__main__.py)
+                    script, // source (__main__.py)
                 );
 
                 // a symlink in a subdir (to a file outside the dir)
                 await fix.createSymlink(
                     'x/y/z/w/__init__.py',
-                    await fix.createFile('x/__init__.py', '') // source
+                    await fix.createFile('x/__init__.py', ''), // source
                 );
             }
 
@@ -864,7 +864,7 @@ suite('FileSystem - utils', () => {
 
                 expect(entries.sort()).to.deep.equal([
                     [file, FileType.File],
-                    [subdir, FileType.Directory]
+                    [subdir, FileType.Directory],
                 ]);
             });
         });
@@ -1037,7 +1037,7 @@ suite('FileSystem', () => {
 
                     expect(entries.sort()).to.deep.equal([
                         [file, FileType.File],
-                        [subdir, FileType.Directory]
+                        [subdir, FileType.Directory],
                     ]);
                 });
             });
@@ -1202,7 +1202,7 @@ suite('FileSystem', () => {
                 const dirname = await fix.createDirectory('x/y/z/scripts');
                 const expected = [
                     await fix.createDirectory('x/y/z/scripts/w'), // subdir1
-                    await fix.createDirectory('x/y/z/scripts/v') // subdir2
+                    await fix.createDirectory('x/y/z/scripts/v'), // subdir2
                 ];
                 if (SUPPORTS_SYMLINKS) {
                     // a symlink to a directory (source is outside listed dir)
@@ -1243,7 +1243,7 @@ suite('FileSystem', () => {
                 const expected = [
                     await fix.createFile('x/y/z/scripts/spam.py'), // file1
                     await fix.createFile('x/y/z/scripts/eggs.py'), // file2
-                    await fix.createFile('x/y/z/scripts/data.json') // file3
+                    await fix.createFile('x/y/z/scripts/data.json'), // file3
                 ];
                 if (SUPPORTS_SYMLINKS) {
                     const symlinkFileSource = await fix.createFile('x/info.py');

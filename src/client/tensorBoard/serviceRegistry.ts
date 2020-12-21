@@ -14,21 +14,21 @@ import { ITensorBoardImportTracker } from './types';
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        TensorBoardSessionProvider
+        TensorBoardSessionProvider,
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        TensorBoardFileWatcher
+        TensorBoardFileWatcher,
     );
     serviceManager.addSingleton<TensorBoardPrompt>(TensorBoardPrompt, TensorBoardPrompt);
     serviceManager.addSingleton<ITensorBoardImportTracker>(ITensorBoardImportTracker, TensorBoardImportTracker);
     serviceManager.addBinding(ITensorBoardImportTracker, IExtensionSingleActivationService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        TensorBoardCodeLensProvider
+        TensorBoardCodeLensProvider,
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        TensorBoardCodeActionProvider
+        TensorBoardCodeActionProvider,
     );
 }

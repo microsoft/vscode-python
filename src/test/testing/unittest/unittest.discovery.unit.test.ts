@@ -21,7 +21,7 @@ import {
     Options,
     TestDiscoveryOptions,
     Tests,
-    UnitTestParserOptions
+    UnitTestParserOptions,
 } from '../../../client/testing/common/types';
 import { IArgumentsHelper } from '../../../client/testing/types';
 import { TestDiscoveryService } from '../../../client/testing/unittest/services/discoveryService';
@@ -61,7 +61,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
             testFunctions: [],
             testSuites: [],
             rootTestFolders: [],
-            testFolders: []
+            testFolders: [],
         };
         argsHelper
             .setup((a) => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('-s')))
@@ -103,7 +103,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
             testFunctions: [],
             testSuites: [],
             rootTestFolders: [],
-            testFolders: []
+            testFolders: [],
         };
         argsHelper
             .setup((a) => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('-s')))
@@ -149,7 +149,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
             testFunctions: [],
             testSuites: [],
             rootTestFolders: [],
-            testFolders: []
+            testFolders: [],
         };
         argsHelper
             .setup((a) => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('-s')))
@@ -195,7 +195,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
             testFunctions: [],
             testSuites: [],
             rootTestFolders: [],
-            testFolders: []
+            testFolders: [],
         };
         argsHelper
             .setup((a) => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('-p')))
@@ -237,7 +237,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
             testFunctions: [],
             testSuites: [],
             rootTestFolders: [],
-            testFolders: []
+            testFolders: [],
         };
         argsHelper
             .setup((a) => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('-p')))
@@ -283,7 +283,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
             testFunctions: [],
             testSuites: [],
             rootTestFolders: [],
-            testFolders: []
+            testFolders: [],
         };
         argsHelper
             .setup((a) => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('-p')))
@@ -329,7 +329,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
             testFunctions: [],
             testSuites: [],
             rootTestFolders: [],
-            testFolders: []
+            testFolders: [],
         };
         argsHelper
             .setup((a) => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('-p')))
@@ -383,7 +383,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
             'apptests.debug.first.class_name.FirstLevelClassName.test_first_other',
             'apptests.debug.first.second.class_name.SecondLevelClassName.test_second',
             'apptests.debug.first.second.class_name.SecondLevelClassName.test_second_other',
-            ''
+            '',
         ].join('\n');
 
         const tests: Tests = testsParser.parse(discoveryOutput, opts.object);
@@ -402,8 +402,8 @@ suite('Unit Tests - Unittest - Discovery', () => {
                     [
                         `function ${fn.testFunction.name} has a parent suite ${fn.parentTestSuite.name}, `,
                         `but the parent suite 'nameToRun' (${fn.parentTestSuite.nameToRun}) isn't the `,
-                        `prefix to the functions 'nameToRun' (${fn.testFunction.nameToRun})`
-                    ].join('')
+                        `prefix to the functions 'nameToRun' (${fn.testFunction.nameToRun})`,
+                    ].join(''),
                 );
             }
         });
@@ -430,7 +430,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
             'apptests.debug.first.class_name.FirstLevelClassName.test_first_other',
             'apptests.debug.first.second.class_name.SecondLevelClassName.test_second',
             'apptests.debug.first.second.class_name.SecondLevelClassName.test_second_other',
-            ''
+            '',
         ].join('\n');
 
         const tests: Tests = testsParser.parse(discoveryOutput, opts.object);
@@ -449,8 +449,8 @@ suite('Unit Tests - Unittest - Discovery', () => {
                     [
                         `function ${fn.testFunction.name} was found in file ${fn.parentTestFile.name}, `,
                         `but the parent file 'nameToRun' (${fn.parentTestFile.nameToRun}) isn't the `,
-                        `prefix to the functions 'nameToRun' (${fn.testFunction.nameToRun})`
-                    ].join('')
+                        `prefix to the functions 'nameToRun' (${fn.testFunction.nameToRun})`,
+                    ].join(''),
                 );
             }
         });
@@ -477,7 +477,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
             'apptests.debug.first.class_name.FirstLevelClassName.test_first_other',
             'apptests.debug.first.second.class_name.SecondLevelClassName.test_second',
             'apptests.debug.first.second.class_name.SecondLevelClassName.test_second_other',
-            ''
+            '',
         ].join('\n');
 
         const tests: Tests = testsParser.parse(discoveryOutput, opts.object);
@@ -496,8 +496,8 @@ suite('Unit Tests - Unittest - Discovery', () => {
                     [
                         `function ${fn.testFunction.name} has a parent suite ${fn.parentTestSuite.name}, `,
                         `but the parent suite 'nameToRun' (${fn.parentTestSuite.nameToRun}) isn't the `,
-                        `prefix to the functions 'nameToRun' (${fn.testFunction.nameToRun})`
-                    ].join('')
+                        `prefix to the functions 'nameToRun' (${fn.testFunction.nameToRun})`,
+                    ].join(''),
                 );
             }
         });
@@ -524,7 +524,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
             'apptests.debug.first.class_name.FirstLevelClassName.test_first_other',
             'apptests.debug.first.second.class_name.SecondLevelClassName.test_second',
             'apptests.debug.first.second.class_name.SecondLevelClassName.test_second_other',
-            ''
+            '',
         ].join('\n');
 
         const tests: Tests = testsParser.parse(discoveryOutput, opts.object);
@@ -543,8 +543,8 @@ suite('Unit Tests - Unittest - Discovery', () => {
                     [
                         `function ${fn.testFunction.name} has a parent suite ${fn.parentTestSuite.name}, `,
                         `but the parent suite 'nameToRun' (${fn.parentTestSuite.nameToRun}) isn't the `,
-                        `prefix to the functions 'nameToRun' (${fn.testFunction.nameToRun})`
-                    ].join('')
+                        `prefix to the functions 'nameToRun' (${fn.testFunction.nameToRun})`,
+                    ].join(''),
                 );
             }
         });
@@ -589,7 +589,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
             'allikbrilkpdbfkdfbalk;nfm',
             '',
             ';;h,spmn,nlikmslkjls.bmnl;klkjna;jdfngad,lmvnjkldfhb',
-            ''
+            '',
         ].join('\n');
 
         const tests: Tests = testsParser.parse(discoveryOutput, opts.object);

@@ -22,13 +22,13 @@ const EmptyTests = {
         passed: 0,
         failures: 0,
         errors: 0,
-        skipped: 0
+        skipped: 0,
     },
     testFiles: [],
     testFunctions: [],
     testSuites: [],
     testFolders: [],
-    rootTestFolders: []
+    rootTestFolders: [],
 };
 
 // tslint:disable-next-line:max-func-body-length
@@ -63,12 +63,12 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
             Product.unittest,
             Uri.file(testFilesPath),
             testFilesPath,
-            ioc.serviceContainer
+            ioc.serviceContainer,
         );
         ioc.serviceManager.addSingletonInstance<ITestDiscoveryService>(
             ITestDiscoveryService,
             new MockDiscoveryService(mockTestManager.discoveryDeferred.promise),
-            UNITTEST_PROVIDER
+            UNITTEST_PROVIDER,
         );
 
         const discoveryPromise = mockTestManager.discoverTests(CommandSource.auto);
@@ -100,12 +100,12 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
             Product.unittest,
             Uri.file(testFilesPath),
             testFilesPath,
-            ioc.serviceContainer
+            ioc.serviceContainer,
         );
         ioc.serviceManager.addSingletonInstance<ITestDiscoveryService>(
             ITestDiscoveryService,
             new MockDiscoveryService(mockTestManager.discoveryDeferred.promise),
-            UNITTEST_PROVIDER
+            UNITTEST_PROVIDER,
         );
         mockTestManager.discoveryDeferred.resolve(EmptyTests);
         await mockTestManager.discoverTests(CommandSource.auto);

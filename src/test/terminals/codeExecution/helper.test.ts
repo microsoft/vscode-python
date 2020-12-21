@@ -19,7 +19,7 @@ import { ProcessService } from '../../../client/common/process/proc';
 import {
     IProcessService,
     IProcessServiceFactory,
-    ObservableExecutionResult
+    ObservableExecutionResult,
 } from '../../../client/common/process/types';
 import { IExperimentService } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
@@ -50,7 +50,7 @@ suite('Terminal - Code Execution Helper', () => {
         sysPrefix: 'Python',
         displayName: 'Python',
         envType: EnvironmentType.Unknown,
-        architecture: Architecture.x64
+        architecture: Architecture.x64,
     };
 
     setup(() => {
@@ -139,7 +139,7 @@ suite('Terminal - Code Execution Helper', () => {
         processService
             .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((file, args, options) =>
-                actualProcessService.execObservable.apply(actualProcessService, [file, args, options])
+                actualProcessService.execObservable.apply(actualProcessService, [file, args, options]),
             );
         const normalizedCode = await helper.normalizeLines(source);
         const normalizedExpected = expectedSource.replace(/\r\n/g, '\n');
@@ -165,7 +165,7 @@ suite('Terminal - Code Execution Helper', () => {
                 '',
                 '',
                 'print(1)',
-                'print(2)'
+                'print(2)',
             ];
             const expectedCode = code.filter((line) => line.trim().length > 0).join(EOL);
             await ensureCodeIsNormalized(code.join(EOL), expectedCode);
@@ -182,7 +182,7 @@ suite('Terminal - Code Execution Helper', () => {
                 '',
                 '',
                 'print(1)',
-                'print(2)'
+                'print(2)',
             ];
             const actualProcessService = new ProcessService(new BufferDecoder());
             processService
@@ -194,7 +194,7 @@ suite('Terminal - Code Execution Helper', () => {
             const doubleCrIndex = normalizedCode.indexOf('\r\r');
             expect(doubleCrIndex).to.be.equal(
                 -1,
-                'Double CR (CRCRLF) line endings detected in normalized code snippet.'
+                'Double CR (CRCRLF) line endings detected in normalized code snippet.',
             );
         });
         ['', '1', '2', '3', '4', '5', '6', '7', '8'].forEach((fileNameSuffix) => {
@@ -202,7 +202,7 @@ suite('Terminal - Code Execution Helper', () => {
                 const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
                 const expectedCode = await fs.readFile(
                     path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`),
-                    'utf8'
+                    'utf8',
                 );
                 await ensureCodeIsNormalized(code, expectedCode);
             });
@@ -210,7 +210,7 @@ suite('Terminal - Code Execution Helper', () => {
                 const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
                 const expectedCode = await fs.readFile(
                     path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`),
-                    'utf8'
+                    'utf8',
                 );
                 await ensureCodeIsNormalized(code + EOL, expectedCode + EOL);
             });
@@ -218,7 +218,7 @@ suite('Terminal - Code Execution Helper', () => {
                 const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
                 const expectedCode = await fs.readFile(
                     path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`),
-                    'utf8'
+                    'utf8',
                 );
                 await ensureCodeIsNormalized(code + EOL + EOL + EOL + EOL, expectedCode + EOL);
             });
@@ -237,7 +237,7 @@ suite('Terminal - Code Execution Helper', () => {
                 const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
                 const expectedCode = await fs.readFile(
                     path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized_selection.py`),
-                    'utf8'
+                    'utf8',
                 );
 
                 await ensureCodeIsNormalized(code, expectedCode);
@@ -416,12 +416,12 @@ suite('Terminal - Code Execution Helper', () => {
             .returns(() => 'if (m == 0):\n        return n');
         document
             .setup((d) =>
-                d.getText(new Range(new Position(selection.start.line, 4), new Position(selection.start.line, 16)))
+                d.getText(new Range(new Position(selection.start.line, 4), new Position(selection.start.line, 16))),
             )
             .returns(() => 'if (m == 0):');
         document
             .setup((d) =>
-                d.getText(new Range(new Position(selection.start.line, 0), new Position(selection.end.line, 20)))
+                d.getText(new Range(new Position(selection.start.line, 0), new Position(selection.end.line, 20))),
             )
             .returns(() => '    if (m == 0):\n        return n + 1');
 
@@ -453,12 +453,12 @@ suite('Terminal - Code Execution Helper', () => {
             .returns(() => '(m > 0\n        and n == 0)');
         document
             .setup((d) =>
-                d.getText(new Range(new Position(selection.start.line, 7), new Position(selection.start.line, 13)))
+                d.getText(new Range(new Position(selection.start.line, 7), new Position(selection.start.line, 13))),
             )
             .returns(() => '(m > 0');
         document
             .setup((d) =>
-                d.getText(new Range(new Position(selection.start.line, 0), new Position(selection.end.line, 19)))
+                d.getText(new Range(new Position(selection.start.line, 0), new Position(selection.end.line, 19))),
             )
             .returns(() => '    if (m > 0\n        and n == 0)');
 

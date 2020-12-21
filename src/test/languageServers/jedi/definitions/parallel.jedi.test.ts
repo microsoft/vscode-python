@@ -27,18 +27,18 @@ suite('Language Server: Code, Hover Definition and Intellisense (Jedi)', () => {
         const hoverDef = await vscode.commands.executeCommand<vscode.Hover[]>(
             'vscode.executeHoverProvider',
             textDocument.uri,
-            position
+            position,
         );
         const codeDef = await vscode.commands.executeCommand<vscode.Location[]>(
             'vscode.executeDefinitionProvider',
             textDocument.uri,
-            position
+            position,
         );
         position = new vscode.Position(3, 10);
         const list = await vscode.commands.executeCommand<vscode.CompletionList>(
             'vscode.executeCompletionItemProvider',
             textDocument.uri,
-            position
+            position,
         );
 
         assert.equal(list!.items.filter((item) => item.label === 'api_version').length, 1, 'api_version not found');
@@ -50,24 +50,24 @@ suite('Language Server: Code, Hover Definition and Intellisense (Jedi)', () => {
         assert.equal(
             `${codeDef![0].range!.start.line},${codeDef![0].range!.start.character}`,
             '17,4',
-            'Start position is incorrect'
+            'Start position is incorrect',
         );
         assert.equal(
             `${codeDef![0].range!.end.line},${codeDef![0].range!.end.character}`,
             '21,11',
-            'End position is incorrect'
+            'End position is incorrect',
         );
 
         assert.equal(hoverDef!.length, 1, 'Definition length is incorrect');
         assert.equal(
             `${hoverDef![0].range!.start.line},${hoverDef![0].range!.start.character}`,
             '30,4',
-            'Start position is incorrect'
+            'Start position is incorrect',
         );
         assert.equal(
             `${hoverDef![0].range!.end.line},${hoverDef![0].range!.end.character}`,
             '30,11',
-            'End position is incorrect'
+            'End position is incorrect',
         );
         assert.equal(hoverDef![0].contents.length, 1, 'Invalid content items');
         // tslint:disable-next-line:prefer-template

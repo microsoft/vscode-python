@@ -8,7 +8,7 @@ import { IInterpreterVersionService } from '../../client/interpreter/contracts';
 export class MockRegistry implements IRegistry {
     constructor(
         private keys: { key: string; hive: RegistryHive; arch?: Architecture; values: string[] }[],
-        private values: { key: string; hive: RegistryHive; arch?: Architecture; value: string; name?: string }[]
+        private values: { key: string; hive: RegistryHive; arch?: Architecture; value: string; name?: string }[],
     ) {}
     public async getKeys(key: string, hive: RegistryHive, arch?: Architecture): Promise<string[]> {
         const items = this.keys.find((item) => {
@@ -24,7 +24,7 @@ export class MockRegistry implements IRegistry {
         key: string,
         hive: RegistryHive,
         arch?: Architecture,
-        name?: string
+        name?: string,
     ): Promise<string | undefined | null> {
         const items = this.values.find((item) => {
             if (item.key !== key || item.hive !== hive) {
@@ -49,7 +49,7 @@ export class MockInterpreterVersionProvider implements IInterpreterVersionServic
     constructor(
         private displayName: string,
         private useDefaultDisplayName: boolean = false,
-        private pipVersionPromise?: Promise<string>
+        private pipVersionPromise?: Promise<string>,
     ) {}
     public async getVersion(_pythonPath: string, defaultDisplayName: string): Promise<string> {
         return this.useDefaultDisplayName ? Promise.resolve(defaultDisplayName) : Promise.resolve(this.displayName);

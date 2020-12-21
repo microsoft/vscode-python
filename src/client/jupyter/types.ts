@@ -39,7 +39,7 @@ export interface IDataViewerDataProvider {
 export enum ColumnType {
     String = 'string',
     Number = 'number',
-    Bool = 'bool'
+    Bool = 'bool',
 }
 
 // tslint:disable-next-line: no-any

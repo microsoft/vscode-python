@@ -17,7 +17,7 @@ export class InterpreterAutoSeletionProxyService implements IInterpreterAutoSele
     public registerInstance(instance: IInterpreterAutoSeletionProxyService): void {
         this.instance = instance;
         this.disposables.push(
-            this.instance.onDidChangeAutoSelectedInterpreter(() => this.didAutoSelectedInterpreterEmitter.fire())
+            this.instance.onDidChangeAutoSelectedInterpreter(() => this.didAutoSelectedInterpreterEmitter.fire()),
         );
     }
     public get onDidChangeAutoSelectedInterpreter(): Event<void> {

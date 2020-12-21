@@ -26,8 +26,8 @@ suite('Active resource service', () => {
         const activeTextEditor = {
             document: {
                 isUntitled: false,
-                uri: Uri.parse('a')
-            }
+                uri: Uri.parse('a'),
+            },
         };
         // tslint:disable-next-line:no-any
         when(documentManager.activeTextEditor).thenReturn(activeTextEditor as any);
@@ -43,8 +43,8 @@ suite('Active resource service', () => {
         const activeTextEditor = {
             document: {
                 isUntitled: true,
-                uri: Uri.parse('a')
-            }
+                uri: Uri.parse('a'),
+            },
         };
         // tslint:disable-next-line:no-any
         when(documentManager.activeTextEditor).thenReturn(activeTextEditor as any);
@@ -60,11 +60,11 @@ suite('Active resource service', () => {
     test('If no document is currently opened & the workspace opened contains workspace folders, return the uri of the first workspace folder', async () => {
         const workspaceFolders = [
             {
-                uri: Uri.parse('a')
+                uri: Uri.parse('a'),
             },
             {
-                uri: Uri.parse('b')
-            }
+                uri: Uri.parse('b'),
+            },
         ];
         when(documentManager.activeTextEditor).thenReturn(undefined);
         // tslint:disable-next-line:no-any

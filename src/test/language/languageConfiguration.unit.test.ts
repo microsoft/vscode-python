@@ -13,7 +13,7 @@ const NEEDS_INDENT = [
     /^break$/,
     /^continue$/,
     /^raise$/, // only re-raise
-    /^return\b/
+    /^return\b/,
 ];
 const INDENT_ON_ENTER = [
     // block-beginning statements
@@ -30,7 +30,7 @@ const INDENT_ON_ENTER = [
     /^for\b/,
     /^if\b/,
     /^elif\b/,
-    /^else\b/
+    /^else\b/,
 ];
 const DEDENT_ON_ENTER = [
     // block-ending statements
@@ -40,7 +40,7 @@ const DEDENT_ON_ENTER = [
     /^break$/,
     /^continue$/,
     /^raise\b/,
-    /^pass\b/
+    /^pass\b/,
 ];
 
 function isMember(line: string, regexes: RegExp[]): boolean {
@@ -57,7 +57,7 @@ function resolveExample(
     leading: string,
     postKeyword: string,
     preColon: string,
-    trailing: string
+    trailing: string,
 ): [string | undefined, string | undefined, boolean] {
     let invalid: string | undefined;
     if (base.trim() === '') {
@@ -129,7 +129,7 @@ suite('Language Configuration', () => {
             const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = "test"');
             expect(result).to.be.equal(
                 false,
-                'Multiline separator indent regex for regular strings should not have matches'
+                'Multiline separator indent regex for regular strings should not have matches',
             );
         });
 
@@ -137,7 +137,7 @@ suite('Language Configuration', () => {
             const result = MULTILINE_SEPARATOR_INDENT_REGEX.test("a = 'hello \\n'");
             expect(result).to.be.equal(
                 false,
-                'Multiline separator indent regex for strings with escaped characters should not have matches'
+                'Multiline separator indent regex for strings with escaped characters should not have matches',
             );
         });
 
@@ -145,7 +145,7 @@ suite('Language Configuration', () => {
             const result = MULTILINE_SEPARATOR_INDENT_REGEX.test("a = 'multiline \\");
             expect(result).to.be.equal(
                 true,
-                'Multiline separator indent regex for strings with newline separator should have matches'
+                'Multiline separator indent regex for strings with newline separator should have matches',
             );
         });
 
@@ -198,7 +198,7 @@ suite('Language Configuration', () => {
             // bogus
             '',
             ' ',
-            '  '
+            '  ',
         ].forEach((base) => {
             [
                 ['', '', '', ''],
@@ -215,7 +215,7 @@ suite('Language Configuration', () => {
                 // trailing
                 ['', '', '', ' '],
                 ['', '', '', '# a comment'],
-                ['', '', '', ' # ...']
+                ['', '', '', ' # ...'],
             ].forEach((whitespace) => {
                 const [leading, postKeyword, preColon, trailing] = whitespace;
                 const [_example, invalid, ignored] = resolveExample(base, leading, postKeyword, preColon, trailing);

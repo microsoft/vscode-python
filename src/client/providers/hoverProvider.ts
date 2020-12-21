@@ -17,7 +17,7 @@ export class PythonHoverProvider implements vscode.HoverProvider {
     public async provideHover(
         document: vscode.TextDocument,
         position: vscode.Position,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<vscode.Hover | undefined> {
         const itemInfos = await this.itemInfoSource.getItemInfoFromDocument(document, position, token);
         if (itemInfos) {

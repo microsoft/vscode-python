@@ -35,7 +35,7 @@ suite('Pip installer', async () => {
     test('If InterpreterUri is Python interpreter, Python execution factory is called with the correct arguments', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const interpreter = {
-            path: 'pythonPath'
+            path: 'pythonPath',
         };
         pythonExecutionFactory
             .setup((p) => p.create(TypeMoq.It.isAny()))

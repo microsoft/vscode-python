@@ -12,7 +12,7 @@ import {
     SymbolInformation,
     SymbolKind,
     TextDocument,
-    Uri
+    Uri,
 } from 'vscode';
 import { traceError } from '../../common/logger';
 import * as internalScripts from '../../common/process/internal/scripts';
@@ -30,7 +30,7 @@ export class TestFileSymbolProvider implements DocumentSymbolProvider {
     constructor(@inject(IPythonExecutionFactory) private readonly pythonServiceFactory: IPythonExecutionFactory) {}
     public async provideDocumentSymbols(
         document: TextDocument,
-        token: CancellationToken
+        token: CancellationToken,
     ): Promise<SymbolInformation[]> {
         const rawSymbols = await this.getSymbols(document, token);
         if (!rawSymbols) {
@@ -39,7 +39,7 @@ export class TestFileSymbolProvider implements DocumentSymbolProvider {
         return [
             ...rawSymbols.classes.map((item) => this.parseRawSymbol(document.uri, item, SymbolKind.Class)),
             ...rawSymbols.methods.map((item) => this.parseRawSymbol(document.uri, item, SymbolKind.Method)),
-            ...rawSymbols.functions.map((item) => this.parseRawSymbol(document.uri, item, SymbolKind.Function))
+            ...rawSymbols.functions.map((item) => this.parseRawSymbol(document.uri, item, SymbolKind.Function)),
         ];
     }
     private parseRawSymbol(uri: Uri, symbol: RawSymbol, kind: SymbolKind): SymbolInformation {
@@ -47,13 +47,13 @@ export class TestFileSymbolProvider implements DocumentSymbolProvider {
             symbol.range.start.line,
             symbol.range.start.character,
             symbol.range.end.line,
-            symbol.range.end.character
+            symbol.range.end.character,
         );
         return {
             containerName: symbol.namespace,
             kind,
             name: symbol.name,
-            location: new Location(uri, range)
+            location: new Location(uri, range),
         };
     }
     private async getSymbols(document: TextDocument, token: CancellationToken): Promise<Symbols | undefined> {
@@ -63,7 +63,7 @@ export class TestFileSymbolProvider implements DocumentSymbolProvider {
             }
             const [args, parse] = internalScripts.symbolProvider(
                 document.uri.fsPath,
-                document.isDirty ? document.getText() : undefined
+                document.isDirty ? document.getText() : undefined,
             );
             const pythonService = await this.pythonServiceFactory.create({ resource: document.uri });
             const proc = await pythonService.exec(args, { throwOnStdErr: true, token });

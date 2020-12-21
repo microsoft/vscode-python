@@ -14,7 +14,7 @@ import {
     IExperimentService,
     IExtensions,
     IPersistentStateFactory,
-    IPythonExtensionBanner
+    IPythonExtensionBanner,
 } from '../common/types';
 import { Common, Pylance } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
@@ -26,7 +26,7 @@ export function getPylanceExtensionUri(appEnv: IApplicationEnvironment): string 
 
 // persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
-    ShowBanner = 'TryPylanceBanner'
+    ShowBanner = 'TryPylanceBanner',
 }
 
 /*
@@ -46,7 +46,7 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IExperimentService) private experiments: IExperimentService,
-        @inject(IExtensions) readonly extensions: IExtensions
+        @inject(IExtensions) readonly extensions: IExtensions,
     ) {}
 
     public get enabled(): boolean {
@@ -67,7 +67,7 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
             message,
             Pylance.tryItNow(),
             Common.bannerLabelNo(),
-            Pylance.remindMeLater()
+            Pylance.remindMeLater(),
         );
 
         let userAction: string;

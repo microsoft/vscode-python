@@ -24,7 +24,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         @inject(IConfigurationService) protected readonly configurationService: IConfigurationService,
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) protected readonly disposables: Disposable[],
-        @inject(IPlatformService) protected readonly platformService: IPlatformService
+        @inject(IPlatformService) protected readonly platformService: IPlatformService,
     ) {}
 
     public async executeFile(file: Uri) {
@@ -77,7 +77,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             this.disposables.push(
                 this._terminalService.onDidCloseTerminal(() => {
                     this.replActive = undefined;
-                })
+                }),
             );
         }
         return this._terminalService;

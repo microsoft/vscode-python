@@ -27,36 +27,36 @@ suite('Common Dotnet Service Registry', () => {
         verify(
             serviceManager.addSingleton<IDotNetCompatibilityService>(
                 IDotNetCompatibilityService,
-                DotNetCompatibilityService
-            )
+                DotNetCompatibilityService,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IOSDotNetCompatibilityService>(
                 IOSDotNetCompatibilityService,
                 MacDotNetCompatibilityService,
-                OSType.OSX
-            )
+                OSType.OSX,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IOSDotNetCompatibilityService>(
                 IOSDotNetCompatibilityService,
                 WindowsDotNetCompatibilityService,
-                OSType.Windows
-            )
+                OSType.Windows,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IOSDotNetCompatibilityService>(
                 IOSDotNetCompatibilityService,
                 LinuxDotNetCompatibilityService,
-                OSType.Linux
-            )
+                OSType.Linux,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IOSDotNetCompatibilityService>(
                 IOSDotNetCompatibilityService,
                 UnknownOSDotNetCompatibilityService,
-                OSType.Unknown
-            )
+                OSType.Unknown,
+            ),
         ).once();
     });
 });

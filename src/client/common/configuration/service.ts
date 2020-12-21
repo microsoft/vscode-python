@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import {
     IInterpreterAutoSeletionProxyService,
-    IInterpreterSecurityService
+    IInterpreterSecurityService,
 } from '../../interpreter/autoSelection/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
@@ -22,12 +22,12 @@ export class ConfigurationService implements IConfigurationService {
     }
     public getSettings(resource?: Uri): IPythonSettings {
         const InterpreterAutoSelectionService = this.serviceContainer.get<IInterpreterAutoSeletionProxyService>(
-            IInterpreterAutoSeletionProxyService
+            IInterpreterAutoSeletionProxyService,
         );
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
         const interpreterSecurityService = this.serviceContainer.get<IInterpreterSecurityService>(
-            IInterpreterSecurityService
+            IInterpreterSecurityService,
         );
         return PythonSettings.getInstance(
             resource,
@@ -35,7 +35,7 @@ export class ConfigurationService implements IConfigurationService {
             this.workspaceService,
             experiments,
             interpreterPathService,
-            interpreterSecurityService
+            interpreterSecurityService,
         );
     }
 
@@ -44,7 +44,7 @@ export class ConfigurationService implements IConfigurationService {
         setting: string,
         value?: {},
         resource?: Uri,
-        configTarget?: ConfigurationTarget
+        configTarget?: ConfigurationTarget,
     ): Promise<void> {
         const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
@@ -52,7 +52,7 @@ export class ConfigurationService implements IConfigurationService {
         experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         const defaultSetting = {
             uri: resource,
-            target: configTarget || ConfigurationTarget.WorkspaceFolder
+            target: configTarget || ConfigurationTarget.WorkspaceFolder,
         };
         let settingsInfo = defaultSetting;
         if (section === 'python' && configTarget !== ConfigurationTarget.Global) {
@@ -89,7 +89,7 @@ export class ConfigurationService implements IConfigurationService {
         setting: string,
         value?: {},
         resource?: Uri,
-        configTarget?: ConfigurationTarget
+        configTarget?: ConfigurationTarget,
     ): Promise<void> {
         return this.updateSectionSetting('python', setting, value, resource, configTarget);
     }
@@ -102,7 +102,7 @@ export class ConfigurationService implements IConfigurationService {
         configSection: WorkspaceConfiguration,
         target: ConfigurationTarget,
         settingName: string,
-        value?: {}
+        value?: {},
     ): Promise<void> {
         if (this.isTestExecution() && !isUnitTestExecution()) {
             let retries = 0;

@@ -20,7 +20,7 @@ import { CachedInterpretersAutoSelectionRule } from '../../../../client/interpre
 import { SystemWideInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/system';
 import {
     IInterpreterAutoSelectionRule,
-    IInterpreterAutoSelectionService
+    IInterpreterAutoSelectionService,
 } from '../../../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
@@ -39,13 +39,13 @@ suite('Interpreters - Auto Selection - Cached Rule', () => {
         public readonly rules!: IInterpreterAutoSelectionRule[];
         public async setGlobalInterpreter(
             interpreter?: PythonEnvironment,
-            manager?: IInterpreterAutoSelectionService
+            manager?: IInterpreterAutoSelectionService,
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
         public async onAutoSelectInterpreter(
             resource: Resource,
-            manager?: IInterpreterAutoSelectionService
+            manager?: IInterpreterAutoSelectionService,
         ): Promise<NextAction> {
             return super.onAutoSelectInterpreter(resource, manager);
         }
@@ -60,7 +60,7 @@ suite('Interpreters - Auto Selection - Cached Rule', () => {
         winRegInterpreter = mock(SystemWideInterpretersAutoSelectionRule);
 
         when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
-            instance(state)
+            instance(state),
         );
         rule = new CachedInterpretersAutoSelectionRuleTest(
             instance(fs),
@@ -68,7 +68,7 @@ suite('Interpreters - Auto Selection - Cached Rule', () => {
             instance(stateFactory),
             instance(systemInterpreter),
             instance(currentPathInterpreter),
-            instance(winRegInterpreter)
+            instance(winRegInterpreter),
         );
     });
 

@@ -23,7 +23,7 @@ import {
     CTagsInstaller,
     FormatterInstaller,
     LinterInstaller,
-    ProductInstaller
+    ProductInstaller,
 } from '../../../client/common/installer/productInstaller';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { LinterProductPathService } from '../../../client/common/installer/productPath';
@@ -32,7 +32,7 @@ import {
     IInstallationChannelManager,
     IModuleInstaller,
     IProductPathService,
-    IProductService
+    IProductService,
 } from '../../../client/common/installer/types';
 import { IPlatformService } from '../../../client/common/platform/types';
 import {
@@ -40,7 +40,7 @@ import {
     IProcessService,
     IProcessServiceFactory,
     IPythonExecutionFactory,
-    IPythonExecutionService
+    IPythonExecutionService,
 } from '../../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import {
@@ -53,7 +53,7 @@ import {
     IPersistentStateFactory,
     ModuleNamePurpose,
     Product,
-    ProductType
+    ProductType,
 } from '../../../client/common/types';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
@@ -176,7 +176,7 @@ suite('Module Installer only', () => {
                             resource ? 'With a resource' : 'without a resource'
                         })`, async () => {
                             app.setup((a) =>
-                                a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                                a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                             ).verifiable(TypeMoq.Times.never());
                             const getProductType = sinon.stub(ProductService.prototype, 'getProductType');
                             // tslint:disable-next-line: no-any
@@ -204,8 +204,8 @@ suite('Module Installer only', () => {
                             outputChannel
                                 .setup((o) =>
                                     o.appendLine(
-                                        'Install Universal Ctags Win32 to enable support for Workspace Symbols'
-                                    )
+                                        'Install Universal Ctags Win32 to enable support for Workspace Symbols',
+                                    ),
                                 )
                                 .returns(() => undefined)
                                 .verifiable(TypeMoq.Times.once());
@@ -271,7 +271,7 @@ suite('Module Installer only', () => {
                             resource ? 'With a resource' : 'without a resource'
                         }), install module and return response`, async () => {
                             app.setup((a) =>
-                                a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                                a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                             )
                                 .returns(() => Promise.resolve('Yes'))
                                 .verifiable(TypeMoq.Times.once());
@@ -286,7 +286,7 @@ suite('Module Installer only', () => {
                             resource ? 'With a resource' : 'without a resource'
                         }), return ignore response`, async () => {
                             app.setup((a) =>
-                                a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                                a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                             )
                                 .returns(() => Promise.resolve('No'))
                                 .verifiable(TypeMoq.Times.once());
@@ -333,8 +333,8 @@ suite('Module Installer only', () => {
                                         TypeMoq.It.isAny(),
                                         TypeMoq.It.isAny(),
                                         TypeMoq.It.isAny(),
-                                        TypeMoq.It.isAny()
-                                    )
+                                        TypeMoq.It.isAny(),
+                                    ),
                                 )
                                     .returns(() => {
                                         return promptDeferred!.promise;
@@ -347,8 +347,8 @@ suite('Module Installer only', () => {
                                     .setup((ps) =>
                                         ps.createGlobalPersistentState<boolean>(
                                             TypeMoq.It.isAnyString(),
-                                            TypeMoq.It.isValue(undefined)
-                                        )
+                                            TypeMoq.It.isValue(undefined),
+                                        ),
                                     )
                                     .returns(() => persistVal.object);
 
@@ -385,8 +385,8 @@ suite('Module Installer only', () => {
                                         TypeMoq.It.isAny(),
                                         TypeMoq.It.isAny(),
                                         TypeMoq.It.isAny(),
-                                        TypeMoq.It.isAny()
-                                    )
+                                        TypeMoq.It.isAny(),
+                                    ),
                                 )
                                     .returns(() => Promise.resolve(undefined))
                                     .verifiable(TypeMoq.Times.exactly(3));
@@ -397,8 +397,8 @@ suite('Module Installer only', () => {
                                     .setup((ps) =>
                                         ps.createGlobalPersistentState<boolean>(
                                             TypeMoq.It.isAnyString(),
-                                            TypeMoq.It.isValue(undefined)
-                                        )
+                                            TypeMoq.It.isValue(undefined),
+                                        ),
                                     )
                                     .returns(() => persistVal.object);
 
@@ -423,8 +423,8 @@ suite('Module Installer only', () => {
                                             TypeMoq.It.isAnyString(),
                                             TypeMoq.It.isValue('Install'),
                                             TypeMoq.It.isValue('Select Linter'),
-                                            TypeMoq.It.isValue('Do not show again')
-                                        )
+                                            TypeMoq.It.isValue('Do not show again'),
+                                        ),
                                     )
                                         .returns(async () => {
                                             return 'Do not show again';
@@ -448,8 +448,8 @@ suite('Module Installer only', () => {
                                         .setup((ps) =>
                                             ps.createGlobalPersistentState<boolean>(
                                                 TypeMoq.It.isAnyString(),
-                                                TypeMoq.It.isValue(undefined)
-                                            )
+                                                TypeMoq.It.isValue(undefined),
+                                            ),
                                         )
                                         .returns(() => {
                                             return persistVal.object;
@@ -481,8 +481,8 @@ suite('Module Installer only', () => {
                                         a.showErrorMessage(
                                             TypeMoq.It.isAnyString(),
                                             TypeMoq.It.isValue('Install'),
-                                            TypeMoq.It.isValue('Select Linter')
-                                        )
+                                            TypeMoq.It.isValue('Select Linter'),
+                                        ),
                                     )
                                         .returns(async () => {
                                             return undefined;
@@ -493,8 +493,8 @@ suite('Module Installer only', () => {
                                             TypeMoq.It.isAnyString(),
                                             TypeMoq.It.isValue('Install'),
                                             TypeMoq.It.isValue('Select Linter'),
-                                            TypeMoq.It.isValue('Do not show again')
-                                        )
+                                            TypeMoq.It.isValue('Do not show again'),
+                                        ),
                                     )
                                         .returns(async () => {
                                             return undefined;
@@ -517,8 +517,8 @@ suite('Module Installer only', () => {
                                         .setup((ps) =>
                                             ps.createGlobalPersistentState<boolean>(
                                                 TypeMoq.It.isAnyString(),
-                                                TypeMoq.It.isValue(undefined)
-                                            )
+                                                TypeMoq.It.isValue(undefined),
+                                            ),
                                         )
                                         .returns(() => {
                                             return persistVal.object;
@@ -538,7 +538,7 @@ suite('Module Installer only', () => {
                         })`, async () => {
                             const moduleName = installer.translateProductToModuleName(
                                 product.value,
-                                ModuleNamePurpose.install
+                                ModuleNamePurpose.install,
                             );
 
                             moduleInstaller
@@ -546,8 +546,8 @@ suite('Module Installer only', () => {
                                     m.installModule(
                                         TypeMoq.It.isValue(moduleName),
                                         TypeMoq.It.isValue(resource),
-                                        TypeMoq.It.isValue(undefined)
-                                    )
+                                        TypeMoq.It.isValue(undefined),
+                                    ),
                                 )
                                 .returns(() => Promise.reject(new Error('UnitTesting')));
 
@@ -559,9 +559,9 @@ suite('Module Installer only', () => {
                                         m.installModule(
                                             TypeMoq.It.isValue(moduleName),
                                             TypeMoq.It.isValue(resource),
-                                            TypeMoq.It.isValue(undefined)
+                                            TypeMoq.It.isValue(undefined),
                                         ),
-                                    TypeMoq.Times.once()
+                                    TypeMoq.Times.once(),
                                 );
                             }
                         });
@@ -571,7 +571,7 @@ suite('Module Installer only', () => {
                         }) if installation channel is not defined`, async () => {
                             const moduleName = installer.translateProductToModuleName(
                                 product.value,
-                                ModuleNamePurpose.install
+                                ModuleNamePurpose.install,
                             );
 
                             moduleInstaller
@@ -579,8 +579,8 @@ suite('Module Installer only', () => {
                                     m.installModule(
                                         TypeMoq.It.isValue(moduleName),
                                         TypeMoq.It.isValue(resource),
-                                        TypeMoq.It.isValue(undefined)
-                                    )
+                                        TypeMoq.It.isValue(undefined),
+                                    ),
                                 )
                                 .returns(() => Promise.reject(new Error('UnitTesting')));
                             installationChannel.reset();
@@ -599,7 +599,7 @@ suite('Module Installer only', () => {
                         } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                             const moduleName = installer.translateProductToModuleName(
                                 product.value,
-                                ModuleNamePurpose.install
+                                ModuleNamePurpose.install,
                             );
 
                             moduleInstaller
@@ -607,8 +607,8 @@ suite('Module Installer only', () => {
                                     m.installModule(
                                         TypeMoq.It.isValue(moduleName),
                                         TypeMoq.It.isValue(resource),
-                                        TypeMoq.It.isValue(undefined)
-                                    )
+                                        TypeMoq.It.isValue(undefined),
+                                    ),
                                 )
                                 .returns(() => Promise.reject(new Error('UnitTesting')));
 
@@ -620,9 +620,9 @@ suite('Module Installer only', () => {
                                         m.installModule(
                                             TypeMoq.It.isValue(moduleName),
                                             TypeMoq.It.isValue(resource),
-                                            TypeMoq.It.isValue(undefined)
+                                            TypeMoq.It.isValue(undefined),
                                         ),
-                                    TypeMoq.Times.once()
+                                    TypeMoq.Times.once(),
                                 );
                             }
                         });
@@ -701,7 +701,7 @@ suite('Module Installer only', () => {
                             .setup((p) => (p as any).then)
                             .returns(() => undefined);
                         const executionResult: ExecutionResult<string> = {
-                            stdout: 'output'
+                            stdout: 'output',
                         };
                         processService
                             .setup((p) => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -767,8 +767,8 @@ suite('Module Installer only', () => {
                             TypeMoq.It.isAny(),
                             TypeMoq.It.isAny(),
                             TypeMoq.It.isAny(),
-                            TypeMoq.It.isAny()
-                        )
+                            TypeMoq.It.isAny(),
+                        ),
                     )
                         .returns(() => Promise.resolve(undefined))
                         .verifiable(TypeMoq.Times.never());
@@ -779,8 +779,8 @@ suite('Module Installer only', () => {
                         .setup((ps) =>
                             ps.createGlobalPersistentState<boolean>(
                                 TypeMoq.It.isAnyString(),
-                                TypeMoq.It.isValue(undefined)
-                            )
+                                TypeMoq.It.isValue(undefined),
+                            ),
                         )
                         .returns(() => persistVal.object);
 
@@ -827,7 +827,7 @@ suite('Module Installer only', () => {
 
                 when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
                 when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
-                    instance(configService)
+                    instance(configService),
                 );
                 when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
                 when(serviceContainer.get<IProductService>(IProductService)).thenReturn(instance(productService));
@@ -847,8 +847,8 @@ suite('Module Installer only', () => {
                         `Formatter autopep8 is not installed. Install?`,
                         'Yes',
                         'Use black',
-                        'Use yapf'
-                    )
+                        'Use yapf',
+                    ),
                     // tslint:disable-next-line: no-any
                 ).thenReturn(undefined as any);
 
@@ -859,8 +859,8 @@ suite('Module Installer only', () => {
                         `Formatter autopep8 is not installed. Install?`,
                         'Yes',
                         'Use black',
-                        'Use yapf'
-                    )
+                        'Use yapf',
+                    ),
                 ).once();
                 expect(response).to.equal(InstallerResponse.Ignore);
             });
@@ -875,8 +875,8 @@ suite('Module Installer only', () => {
                         `Formatter autopep8 is not installed. Install?`,
                         'Yes',
                         'Use black',
-                        'Use yapf'
-                    )
+                        'Use yapf',
+                    ),
                     // tslint:disable-next-line: no-any
                 ).thenReturn('Yes' as any);
                 const response = await installer.promptToInstallImplementation(product, resource);
@@ -886,8 +886,8 @@ suite('Module Installer only', () => {
                         `Formatter autopep8 is not installed. Install?`,
                         'Yes',
                         'Use black',
-                        'Use yapf'
-                    )
+                        'Use yapf',
+                    ),
                 ).once();
                 expect(response).to.equal(InstallerResponse.Installed);
                 assert.ok(install.calledOnceWith(product, resource, undefined));
@@ -903,8 +903,8 @@ suite('Module Installer only', () => {
                         `Formatter autopep8 is not installed. Install?`,
                         'Yes',
                         'Use black',
-                        'Use yapf'
-                    )
+                        'Use yapf',
+                    ),
                     // tslint:disable-next-line: no-any
                 ).thenReturn('Use black' as any);
                 when(configService.updateSetting('formatting.provider', 'black', resource)).thenResolve();
@@ -916,8 +916,8 @@ suite('Module Installer only', () => {
                         `Formatter autopep8 is not installed. Install?`,
                         'Yes',
                         'Use black',
-                        'Use yapf'
-                    )
+                        'Use yapf',
+                    ),
                 ).once();
                 expect(response).to.equal(InstallerResponse.Installed);
                 verify(configService.updateSetting('formatting.provider', 'black', resource)).once();
@@ -934,8 +934,8 @@ suite('Module Installer only', () => {
                         `Formatter autopep8 is not installed. Install?`,
                         'Yes',
                         'Use black',
-                        'Use yapf'
-                    )
+                        'Use yapf',
+                    ),
                     // tslint:disable-next-line: no-any
                 ).thenReturn('Use yapf' as any);
                 when(configService.updateSetting('formatting.provider', 'yapf', resource)).thenResolve();
@@ -947,8 +947,8 @@ suite('Module Installer only', () => {
                         `Formatter autopep8 is not installed. Install?`,
                         'Yes',
                         'Use black',
-                        'Use yapf'
-                    )
+                        'Use yapf',
+                    ),
                 ).once();
                 expect(response).to.equal(InstallerResponse.Installed);
                 verify(configService.updateSetting('formatting.provider', 'yapf', resource)).once();
@@ -999,7 +999,7 @@ suite('Module Installer only', () => {
 
             when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
             when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
-                instance(configService)
+                instance(configService),
             );
             when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
             when(serviceContainer.get<IProductService>(IProductService)).thenReturn(instance(productService));
@@ -1011,7 +1011,7 @@ suite('Module Installer only', () => {
 
             when(serviceContainer.get<ILinterManager>(ILinterManager)).thenReturn(instance(linterManager));
             when(serviceContainer.get<IProductPathService>(IProductPathService, ProductType.Linter)).thenReturn(
-                instance(productPathService)
+                instance(productPathService),
             );
 
             installer = new LinterInstallerTest(instance(serviceContainer), outputChannel.object);
@@ -1030,7 +1030,7 @@ suite('Module Installer only', () => {
             await installer.promptToInstallImplementation(product, resource);
 
             verify(
-                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])
+                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
             ).once();
         });
         test('Ensure select linter command is invoked', async () => {
@@ -1038,7 +1038,7 @@ suite('Module Installer only', () => {
             const options = ['Select Linter', 'Do not show again'];
             const productName = ProductNames.get(product)!;
             when(
-                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])
+                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
                 // tslint:disable-next-line:no-any
             ).thenResolve('Select Linter' as any);
             when(cmdManager.executeCommand(Commands.Set_Linter)).thenResolve(undefined);
@@ -1046,7 +1046,7 @@ suite('Module Installer only', () => {
             const response = await installer.promptToInstallImplementation(product, resource);
 
             verify(
-                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])
+                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
             ).once();
             verify(cmdManager.executeCommand(Commands.Set_Linter)).once();
             expect(response).to.be.equal(InstallerResponse.Ignore);
@@ -1056,7 +1056,7 @@ suite('Module Installer only', () => {
             const options = ['Select Linter', 'Do not show again'];
             const productName = ProductNames.get(product)!;
             when(
-                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])
+                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
                 // tslint:disable-next-line:no-any
             ).thenResolve('Install' as any);
             when(cmdManager.executeCommand(Commands.Set_Linter)).thenResolve(undefined);
@@ -1073,9 +1073,9 @@ suite('Module Installer only', () => {
             when(workspaceService.getConfiguration('python')).thenReturn(
                 new MockWorkspaceConfiguration({
                     'linting.pylintEnabled': {
-                        globalValue: true
-                    }
-                })
+                        globalValue: true,
+                    },
+                }),
             );
 
             const product = Product.pylint;
@@ -1086,7 +1086,7 @@ suite('Module Installer only', () => {
 
             verify(experimentsService.inExperiment(LinterInstallationPromptVariants.noPrompt)).never();
             verify(
-                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])
+                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
             ).once();
         });
 
@@ -1094,13 +1094,13 @@ suite('Module Installer only', () => {
             when(workspaceService.getConfiguration('python')).thenReturn(
                 new MockWorkspaceConfiguration({
                     'linting.pylintPath': {
-                        globalValue: 'path/to/something'
-                    }
-                })
+                        globalValue: 'path/to/something',
+                    },
+                }),
             );
             when(productService.getProductType(Product.pylint)).thenReturn(ProductType.Linter);
             when(productPathService.getExecutableNameFromSettings(Product.pylint, resource)).thenReturn(
-                'path/to/something'
+                'path/to/something',
             );
             when(experimentsService.inExperiment(LinterInstallationPromptVariants.flake8First)).thenResolve(true);
             installer.isModuleExecutable = false;
@@ -1115,18 +1115,18 @@ suite('Module Installer only', () => {
                     Linters.installMessage(),
                     Linters.installPylint(),
                     Linters.installFlake8(),
-                    Common.doNotShowAgain()
-                )
+                    Common.doNotShowAgain(),
+                ),
             ).never();
             verify(
-                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])
+                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
             ).never();
             verify(
                 appShell.showErrorMessage(
                     `Path to the ${productName} linter is invalid (path/to/something)`,
                     options[0],
-                    options[1]
-                )
+                    options[1],
+                ),
             ).once();
         });
 
@@ -1140,7 +1140,7 @@ suite('Module Installer only', () => {
 
             verify(experimentsService.inExperiment(LinterInstallationPromptVariants.noPrompt)).once();
             verify(
-                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])
+                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
             ).never();
             expect(response).to.be.equal(InstallerResponse.Ignore);
         });
@@ -1157,8 +1157,8 @@ suite('Module Installer only', () => {
                     Linters.installMessage(),
                     Linters.installPylint(),
                     Linters.installFlake8(),
-                    Common.doNotShowAgain()
-                )
+                    Common.doNotShowAgain(),
+                ),
             ).once();
         });
 
@@ -1174,8 +1174,8 @@ suite('Module Installer only', () => {
                     Linters.installMessage(),
                     Linters.installFlake8(),
                     Linters.installPylint(),
-                    Common.doNotShowAgain()
-                )
+                    Common.doNotShowAgain(),
+                ),
             ).once();
         });
     });

@@ -26,7 +26,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         private readonly invalidPythonPathInDebuggerService: IInvalidPythonPathInDebuggerService,
         @inject(IPlatformService) platformService: IPlatformService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
-        @inject(IDebugEnvironmentVariablesService) private readonly debugEnvHelper: IDebugEnvironmentVariablesService
+        @inject(IDebugEnvironmentVariablesService) private readonly debugEnvHelper: IDebugEnvironmentVariablesService,
     ) {
         super(workspaceService, documentManager, platformService, configurationService);
     }
@@ -34,7 +34,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
     public async resolveDebugConfiguration(
         folder: WorkspaceFolder | undefined,
         debugConfiguration: LaunchRequestArguments,
-        _token?: CancellationToken
+        _token?: CancellationToken,
     ): Promise<LaunchRequestArguments | undefined> {
         if (
             debugConfiguration.name === undefined &&
@@ -59,7 +59,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
     public async resolveDebugConfigurationWithSubstitutedVariables(
         folder: WorkspaceFolder | undefined,
         debugConfiguration: LaunchRequestArguments,
-        _token?: CancellationToken
+        _token?: CancellationToken,
     ): Promise<LaunchRequestArguments | undefined> {
         const workspaceFolder = this.getWorkspaceFolder(folder);
         await this.provideLaunchDefaults(workspaceFolder, debugConfiguration);
@@ -71,7 +71,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
 
         if (Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = debugConfiguration.debugOptions!.filter(
-                (item, pos) => debugConfiguration.debugOptions!.indexOf(item) === pos
+                (item, pos) => debugConfiguration.debugOptions!.indexOf(item) === pos,
             );
         }
         return debugConfiguration;
@@ -80,7 +80,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
     // tslint:disable-next-line:cyclomatic-complexity
     protected async provideLaunchDefaults(
         workspaceFolder: Uri | undefined,
-        debugConfiguration: LaunchRequestArguments
+        debugConfiguration: LaunchRequestArguments,
     ): Promise<void> {
         if (debugConfiguration.python === undefined) {
             debugConfiguration.python = debugConfiguration.pythonPath;
@@ -171,7 +171,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             if (pathMappings.length > 0) {
                 pathMappings = this.fixUpPathMappings(
                     pathMappings || [],
-                    workspaceFolder ? workspaceFolder.fsPath : ''
+                    workspaceFolder ? workspaceFolder.fsPath : '',
                 );
             }
             debugConfiguration.pathMappings = pathMappings.length > 0 ? pathMappings : undefined;
@@ -181,13 +181,13 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
 
     protected async validateLaunchConfiguration(
         folder: WorkspaceFolder | undefined,
-        debugConfiguration: LaunchRequestArguments
+        debugConfiguration: LaunchRequestArguments,
     ): Promise<boolean> {
         const diagnosticService = this.invalidPythonPathInDebuggerService;
         for (const executable of [
             debugConfiguration.python,
             debugConfiguration.debugAdapterPython,
-            debugConfiguration.debugLauncherPython
+            debugConfiguration.debugLauncherPython,
         ]) {
             const source =
                 executable === debugConfiguration.pythonPath ? this.pythonPathSource : PythonPathSource.launchJson;

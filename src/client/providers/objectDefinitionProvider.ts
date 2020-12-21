@@ -39,7 +39,7 @@ export class PythonObjectDefinitionProvider {
             },
             getWordRangeAtPosition: (_position: vscode.Position) => range,
             isDirty: true,
-            getText: () => source
+            getText: () => source,
         });
 
         const tokenSource = new vscode.CancellationTokenSource();

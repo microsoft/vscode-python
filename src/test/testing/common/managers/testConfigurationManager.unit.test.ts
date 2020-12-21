@@ -48,7 +48,7 @@ suite('Unit Test Configuration Manager (unit)', () => {
                 manager = new MockTestConfigurationManager(
                     workspaceUri,
                     product as UnitTestProduct,
-                    serviceContainer.object
+                    serviceContainer.object,
                 );
             });
 

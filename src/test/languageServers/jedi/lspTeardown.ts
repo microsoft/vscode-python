@@ -15,5 +15,5 @@ const settingsJsonPath = path.join(__dirname, '..', '..', '..', '..', 'src', 'te
 const settingsJsonPromise = import('../../.vscode/settings.json');
 // tslint:disable-next-line: no-floating-promises
 settingsJsonPromise.then((settingsJson) =>
-    fs.writeFile(settingsJsonPath, JSON.stringify(settingsJson, undefined, ' '))
+    fs.writeFile(settingsJsonPath, JSON.stringify(settingsJson, undefined, ' ')),
 );

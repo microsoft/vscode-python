@@ -10,7 +10,7 @@ import {
     DebugAdapterExecutable,
     DebugAdapterServer,
     DebugSession,
-    WorkspaceFolder
+    WorkspaceFolder,
 } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { traceVerbose } from '../../../common/logger';
@@ -25,12 +25,12 @@ import { IDebugAdapterDescriptorFactory } from '../types';
 export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFactory {
     constructor(
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
     ) {}
 
     public async createDebugAdapterDescriptor(
         session: DebugSession,
-        _executable: DebugAdapterExecutable | undefined
+        _executable: DebugAdapterExecutable | undefined,
     ): Promise<DebugAdapterDescriptor> {
         const configuration = session.configuration as LaunchRequestArguments | AttachRequestArguments;
 
@@ -75,7 +75,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                 'lib',
                 'python',
                 'debugpy',
-                'adapter'
+                'adapter',
             );
 
             sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
@@ -99,7 +99,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
      */
     private async getDebugAdapterPython(
         configuration: LaunchRequestArguments | AttachRequestArguments,
-        workspaceFolder?: WorkspaceFolder
+        workspaceFolder?: WorkspaceFolder,
     ): Promise<string> {
         if (configuration.debugAdapterPython !== undefined) {
             return configuration.debugAdapterPython;
@@ -135,7 +135,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
     private async notifySelectInterpreter() {
         await this.appShell.showErrorMessage(
             // tslint:disable-next-line: messages-must-be-localized
-            'Please install Python or select a Python Interpreter to use the debugger.'
+            'Please install Python or select a Python Interpreter to use the debugger.',
         );
     }
 }

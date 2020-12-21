@@ -9,7 +9,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../../../common/application/types';
 import { Commands } from '../../../../common/constants';
 import { IShebangCodeLensProvider } from '../../../contracts';
@@ -24,21 +24,21 @@ export class SetShebangInterpreterCommand extends BaseInterpreterSelectorCommand
         @inject(IPythonPathUpdaterServiceManager) pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
         @inject(IShebangCodeLensProvider) private readonly shebangCodeLensProvider: IShebangCodeLensProvider,
         @inject(ICommandManager) commandManager: ICommandManager,
-        @inject(ICommandManager) applicationShell: IApplicationShell
+        @inject(ICommandManager) applicationShell: IApplicationShell,
     ) {
         super(pythonPathUpdaterService, commandManager, applicationShell, workspaceService);
     }
 
     public async activate() {
         this.disposables.push(
-            this.commandManager.registerCommand(Commands.Set_ShebangInterpreter, this.setShebangInterpreter.bind(this))
+            this.commandManager.registerCommand(Commands.Set_ShebangInterpreter, this.setShebangInterpreter.bind(this)),
         );
     }
 
     protected async setShebangInterpreter(): Promise<void> {
         const shebang = await this.shebangCodeLensProvider.detectShebang(
             this.documentManager.activeTextEditor!.document,
-            true
+            true,
         );
         if (!shebang) {
             return;
@@ -48,7 +48,7 @@ export class SetShebangInterpreterCommand extends BaseInterpreterSelectorCommand
             !Array.isArray(this.workspaceService.workspaceFolders) ||
             this.workspaceService.workspaceFolders.length === 0;
         const workspaceFolder = this.workspaceService.getWorkspaceFolder(
-            this.documentManager.activeTextEditor!.document.uri
+            this.documentManager.activeTextEditor!.document.uri,
         );
         const isWorkspaceChange =
             Array.isArray(this.workspaceService.workspaceFolders) &&
@@ -64,7 +64,7 @@ export class SetShebangInterpreterCommand extends BaseInterpreterSelectorCommand
                 shebang,
                 ConfigurationTarget.Workspace,
                 'shebang',
-                this.workspaceService.workspaceFolders![0].uri
+                this.workspaceService.workspaceFolders![0].uri,
             );
             return;
         }
@@ -73,7 +73,7 @@ export class SetShebangInterpreterCommand extends BaseInterpreterSelectorCommand
             shebang,
             ConfigurationTarget.WorkspaceFolder,
             'shebang',
-            workspaceFolder.uri
+            workspaceFolder.uri,
         );
     }
 }

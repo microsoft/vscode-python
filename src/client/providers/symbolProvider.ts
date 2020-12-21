@@ -10,7 +10,7 @@ import {
     SymbolInformation,
     SymbolKind,
     TextDocument,
-    Uri
+    Uri,
 } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient/node';
 import { IFileSystem } from '../common/platform/types';
@@ -28,7 +28,7 @@ function flattenSymbolTree(tree: DocumentSymbol, uri: Uri, containerName: string
         tree.range.start.line,
         tree.range.start.character,
         tree.range.end.line,
-        tree.range.end.character
+        tree.range.end.character,
     );
     // For whatever reason, the values of VS Code's SymbolKind enum
     // are off-by-one relative to the LSP:
@@ -41,7 +41,7 @@ function flattenSymbolTree(tree: DocumentSymbol, uri: Uri, containerName: string
         // tslint:disable-next-line:no-any
         (SymbolKind as any)[(SymbolKind as any)[kind]],
         containerName,
-        new Location(uri, range)
+        new Location(uri, range),
     );
     flattened.push(info);
 
@@ -69,7 +69,7 @@ export class LanguageServerSymbolProvider implements DocumentSymbolProvider {
 
     public async provideDocumentSymbols(
         document: TextDocument,
-        token: CancellationToken
+        token: CancellationToken,
     ): Promise<SymbolInformation[]> {
         const uri = document.uri;
         const args = { textDocument: { uri: uri.toString() } };
@@ -96,7 +96,7 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
     public constructor(
         serviceContainer: IServiceContainer,
         private jediFactory: JediFactory,
-        private readonly debounceTimeoutMs = 500
+        private readonly debounceTimeoutMs = 500,
     ) {
         this.debounceRequest = new Map<string, { timer: NodeJS.Timer; deferred: Deferred<SymbolInformation[]> }>();
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
@@ -109,7 +109,7 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
 
     private provideDocumentSymbolsThrottled(
         document: TextDocument,
-        token: CancellationToken
+        token: CancellationToken,
     ): Thenable<SymbolInformation[]> {
         const key = `${document.uri.fsPath}`;
         if (this.debounceRequest.has(key)) {
@@ -130,7 +130,7 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
                 command: proxy.CommandType.Symbols,
                 fileName: filename,
                 columnIndex: 0,
-                lineIndex: 0
+                lineIndex: 0,
             };
 
             if (document.isDirty) {
@@ -168,7 +168,7 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
                     sym.range.startLine,
                     sym.range.startColumn,
                     sym.range.endLine,
-                    sym.range.endColumn
+                    sym.range.endColumn,
                 );
                 const uri = Uri.file(sym.fileName);
                 const location = new Location(uri, range);

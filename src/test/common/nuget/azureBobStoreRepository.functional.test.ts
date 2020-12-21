@@ -46,7 +46,7 @@ suite('Nuget Azure Storage Repository', () => {
             serviceContainer.object,
             azureBlobStorageAccount,
             defaultStorageChannel,
-            azureCDNBlobStorageAccount
+            azureCDNBlobStorageAccount,
         );
     });
 
@@ -60,7 +60,7 @@ suite('Nuget Azure Storage Repository', () => {
         const lsPackageService = new DotNetLanguageServerPackageService(
             serviceContainer.object,
             appEnv.object,
-            platformService
+            platformService,
         );
         const packageName = lsPackageService.getNugetPackageName();
         const packages = await repo.getPackages(packageName, undefined);

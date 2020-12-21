@@ -21,7 +21,10 @@ suite('Environment Info Service', () => {
 
     function createExpectedEnvInfo(executable: string): InterpreterInformation {
         return {
-            version: { ...parseVersion('3.8.3-final'), sysVersion: '3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]' },
+            version: {
+                ...parseVersion('3.8.3-final'),
+                sysVersion: '3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]',
+            },
             arch: Architecture.x64,
             executable: {
                 filename: executable,

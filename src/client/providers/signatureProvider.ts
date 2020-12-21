@@ -8,7 +8,7 @@ import {
     SignatureHelp,
     SignatureHelpProvider,
     SignatureInformation,
-    TextDocument
+    TextDocument,
 } from 'vscode';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
@@ -19,7 +19,7 @@ import { isPositionInsideStringOrComment } from './providerUtilities';
 const DOCSTRING_PARAM_PATTERNS = [
     '\\s*:type\\s*PARAMNAME:\\s*([^\\n, ]+)', // Sphinx
     '\\s*:param\\s*(\\w?)\\s*PARAMNAME:[^\\n]+', // Sphinx param with type
-    '\\s*@type\\s*PARAMNAME:\\s*([^\\n, ]+)' // Epydoc
+    '\\s*@type\\s*PARAMNAME:\\s*([^\\n, ]+)', // Epydoc
 ];
 
 /**
@@ -89,7 +89,7 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
                 const sig = <SignatureInformation>{
                     label,
                     documentation,
-                    parameters: []
+                    parameters: [],
                 };
 
                 if (def.params && def.params.length) {
@@ -100,7 +100,7 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
                         // tslint:disable-next-line:no-object-literal-type-assertion
                         return <ParameterInformation>{
                             documentation: arg.docstring.length > 0 ? arg.docstring : arg.description,
-                            label: arg.name.trim()
+                            label: arg.name.trim(),
                         };
                     });
                 }
@@ -115,7 +115,7 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
     public provideSignatureHelp(
         document: TextDocument,
         position: Position,
-        token: CancellationToken
+        token: CancellationToken,
     ): Thenable<SignatureHelp> {
         // early exit if we're in a string or comment (or in an undefined position)
         if (position.character <= 0 || isPositionInsideStringOrComment(document, position)) {
@@ -127,7 +127,7 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
             fileName: document.fileName,
             columnIndex: position.character,
             lineIndex: position.line,
-            source: document.getText()
+            source: document.getText(),
         };
         return this.jediFactory
             .getJediProxyHandler<proxy.IArgumentsResult>(document.uri)

@@ -22,7 +22,7 @@ export class GlobalVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
         @inject(IVirtualEnvironmentsSearchPathProvider)
         @named('global')
-            globalVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
+        globalVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
     ) {
         super(globalVirtualEnvPathProvider, serviceContainer, 'VirtualEnvService');

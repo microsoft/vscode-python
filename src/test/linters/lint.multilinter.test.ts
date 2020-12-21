@@ -32,7 +32,7 @@ class MockPythonToolExecService extends PythonToolExecutionService {
     public async exec(
         executionInfo: ExecutionInfo,
         _options: SpawnOptions,
-        _resource: Uri
+        _resource: Uri,
     ): Promise<ExecutionResult<string>> {
         let msg = this.flake8Msg;
         if (executionInfo.moduleName === 'pylint') {
@@ -98,7 +98,7 @@ suite('Linting - Multiple Linters Enabled Test', () => {
             'languageServer',
             LanguageServerType.Jedi,
             undefined,
-            ConfigurationTarget.Workspace
+            ConfigurationTarget.Workspace,
         );
         await configService.updateSetting('linting.enabled', true, workspaceUri);
         await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);

@@ -79,7 +79,7 @@ export class CondaInstaller extends ModuleInstaller {
         args.push('-y');
         return {
             args,
-            execPath: condaFile
+            execPath: condaFile,
         };
     }
 

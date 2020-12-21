@@ -47,7 +47,7 @@ suite('Language Server: Autocomplete PEP 526', () => {
         const list = await vscode.commands.executeCommand<vscode.CompletionList>(
             'vscode.executeCompletionItemProvider',
             textDocument.uri,
-            position
+            position,
         );
         assert.notEqual(list!.items.filter((item) => item.label === 'capitalize').length, 0, 'capitalize not found');
         assert.notEqual(list!.items.filter((item) => item.label === 'upper').length, 0, 'upper not found');
@@ -62,7 +62,7 @@ suite('Language Server: Autocomplete PEP 526', () => {
         const list = await vscode.commands.executeCommand<vscode.CompletionList>(
             'vscode.executeCompletionItemProvider',
             textDocument.uri,
-            position
+            position,
         );
         assert.notEqual(list!.items.filter((item) => item.label === 'capitalize').length, 0, 'capitalize not found');
         assert.notEqual(list!.items.filter((item) => item.label === 'upper').length, 0, 'upper not found');
@@ -77,7 +77,7 @@ suite('Language Server: Autocomplete PEP 526', () => {
         const list = await vscode.commands.executeCommand<vscode.CompletionList>(
             'vscode.executeCompletionItemProvider',
             textDocument.uri,
-            position
+            position,
         );
         assert.notEqual(list!.items.filter((item) => item.label === 'capitalize').length, 0, 'capitalize not found');
         assert.notEqual(list!.items.filter((item) => item.label === 'upper').length, 0, 'upper not found');
@@ -92,7 +92,7 @@ suite('Language Server: Autocomplete PEP 526', () => {
         let list = await vscode.commands.executeCommand<vscode.CompletionList>(
             'vscode.executeCompletionItemProvider',
             textDocument.uri,
-            position
+            position,
         );
         assert.notEqual(list!.items.filter((item) => item.label === 'a').length, 0, 'method a not found');
 
@@ -100,7 +100,7 @@ suite('Language Server: Autocomplete PEP 526', () => {
         list = await vscode.commands.executeCommand<vscode.CompletionList>(
             'vscode.executeCompletionItemProvider',
             textDocument.uri,
-            position
+            position,
         );
         assert.notEqual(list!.items.filter((item) => item.label === 'b').length, 0, 'method b not found');
     });
@@ -113,7 +113,7 @@ suite('Language Server: Autocomplete PEP 526', () => {
         const list = await vscode.commands.executeCommand<vscode.CompletionList>(
             'vscode.executeCompletionItemProvider',
             textDocument.uri,
-            position
+            position,
         );
         assert.notEqual(list!.items.filter((item) => item.label === 'bit_length').length, 0, 'bit_length not found');
     });

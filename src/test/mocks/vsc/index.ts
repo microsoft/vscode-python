@@ -28,7 +28,7 @@ export namespace vscMock {
         /**
          * Extension runs where the remote extension host runs.
          */
-        Workspace = 2
+        Workspace = 2,
     }
 
     export class Disposable {
@@ -61,7 +61,7 @@ export namespace vscMock {
             return ({
                 dispose: () => {
                     this.emitter.removeListener('evt', bound);
-                }
+                },
             } as any) as Disposable;
         };
     }
@@ -133,7 +133,7 @@ export namespace vscMock {
         Operator = 23,
         TypeParameter = 24,
         User = 25,
-        Issue = 26
+        Issue = 26,
     }
     export enum SymbolKind {
         File = 0,
@@ -161,19 +161,19 @@ export namespace vscMock {
         Struct = 22,
         Event = 23,
         Operator = 24,
-        TypeParameter = 25
+        TypeParameter = 25,
     }
     export enum IndentAction {
         None = 0,
         Indent = 1,
         IndentOutdent = 2,
-        Outdent = 3
+        Outdent = 3,
     }
 
     export enum CompletionTriggerKind {
         Invoke = 0,
         TriggerCharacter = 1,
-        TriggerForIncompleteCompletions = 2
+        TriggerForIncompleteCompletions = 2,
     }
 
     export class MarkdownString {
@@ -226,7 +226,7 @@ export namespace vscMock {
 
         constructor(
             contents: vscode.MarkdownString | vscode.MarkedString | vscode.MarkdownString[] | vscode.MarkedString[],
-            range?: vscode.Range
+            range?: vscode.Range,
         ) {
             if (!contents) {
                 throw new Error('Illegal argument, contents must be defined');
@@ -288,7 +288,7 @@ export namespace vscMock {
         constructor(
             public readonly command: string,
             public readonly args: string[] = [],
-            public readonly options?: DebugAdapterExecutableOptions
+            public readonly options?: DebugAdapterExecutableOptions,
         ) {}
     }
 
@@ -296,6 +296,6 @@ export namespace vscMock {
         Unknown = 0,
         File = 1,
         Directory = 2,
-        SymbolicLink = 64
+        SymbolicLink = 64,
     }
 }

@@ -27,7 +27,7 @@ suite('StartPage tests', () => {
         // Setup our webview panel
         const wrapper = ioc.createWebView(
             () => mount(<StartPage skipDefault={true} baseTheme={'vscode-light'} testMode={true} />),
-            'default'
+            'default',
         );
 
         // Make sure the plot viewer provider and execution factory in the container is created (the extension does this on startup in the extension)
@@ -39,7 +39,7 @@ suite('StartPage tests', () => {
     // tslint:disable:no-any
     function runMountedTest(
         name: string,
-        testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>
+        testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
     ) {
         test(name, async () => {
             const wrapper = mountWebView();

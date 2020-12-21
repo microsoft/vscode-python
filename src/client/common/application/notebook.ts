@@ -13,7 +13,7 @@ import type {
     NotebookDocumentFilter,
     NotebookEditor,
     NotebookKernel,
-    NotebookKernelProvider
+    NotebookKernelProvider,
 } from 'vscode-proposed';
 import { UseProposedApi } from '../constants';
 import { IDisposableRegistry } from '../types';
@@ -84,7 +84,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     constructor(
         @inject(UseProposedApi) private readonly useProposedApi: boolean,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IApplicationEnvironment) readonly env: IApplicationEnvironment
+        @inject(IApplicationEnvironment) readonly env: IApplicationEnvironment,
     ) {
         if (this.useProposedApi && this.env.channel === 'insiders') {
             this.addEventHandlers();
@@ -104,13 +104,13 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         options?: {
             transientOutputs: boolean;
             transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
-        }
+        },
     ): Disposable {
         return this.notebook.registerNotebookContentProvider(notebookType, provider, options);
     }
     public registerNotebookKernelProvider(
         selector: NotebookDocumentFilter,
-        provider: NotebookKernelProvider
+        provider: NotebookKernelProvider,
     ): Disposable {
         return this.notebook.registerNotebookKernelProvider(selector, provider);
     }
@@ -122,16 +122,16 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         this.disposables.push(
             ...[
                 this.notebook.onDidChangeCellLanguage((e) =>
-                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellLanguage' })
+                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellLanguage' }),
                 ),
                 this.notebook.onDidChangeCellMetadata((e) =>
-                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellMetadata' })
+                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellMetadata' }),
                 ),
                 this.notebook.onDidChangeNotebookDocumentMetadata((e) =>
-                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeNotebookMetadata' })
+                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeNotebookMetadata' }),
                 ),
                 this.notebook.onDidChangeCellOutputs((e) =>
-                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellOutputs' })
+                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellOutputs' }),
                 ),
                 this.notebook.onDidChangeNotebookCells((e) => {
                     if (this.handledCellChanges.has(e)) {
@@ -139,8 +139,8 @@ export class VSCodeNotebook implements IVSCodeNotebook {
                     }
                     this.handledCellChanges.add(e);
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCells' });
-                })
-            ]
+                }),
+            ],
         );
     }
 }

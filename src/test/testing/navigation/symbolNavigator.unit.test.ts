@@ -13,12 +13,12 @@ import {
     SymbolInformation,
     SymbolKind,
     TextDocument,
-    Uri
+    Uri,
 } from 'vscode';
 import {
     ExecutionResult,
     IPythonExecutionFactory,
-    IPythonExecutionService
+    IPythonExecutionService,
 } from '../../../client/common/process/types';
 import { IDocumentSymbolProvider } from '../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
@@ -89,10 +89,10 @@ suite('Unit Tests - Navigation Command Handler', () => {
         const args = [
             path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py'),
             path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'symbolProvider.py'),
-            docUri.fsPath
+            docUri.fsPath,
         ];
         const proc: ExecutionResult<string> = {
-            stdout: JSON.stringify({ classes: [], methods: [], functions: [] })
+            stdout: JSON.stringify({ classes: [], methods: [], functions: [] }),
         };
         doc.setup((d) => d.isUntitled)
             .returns(() => false)
@@ -121,7 +121,7 @@ suite('Unit Tests - Navigation Command Handler', () => {
         const args = [
             path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py'),
             path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'symbolProvider.py'),
-            docUri.fsPath
+            docUri.fsPath,
         ];
         const proc: ExecutionResult<string> = {
             stdout: JSON.stringify({
@@ -130,26 +130,26 @@ suite('Unit Tests - Navigation Command Handler', () => {
                         namespace: '1',
                         name: 'one',
                         kind: SymbolKind.Class,
-                        range: { start: { line: 1, character: 2 }, end: { line: 3, character: 4 } }
-                    }
+                        range: { start: { line: 1, character: 2 }, end: { line: 3, character: 4 } },
+                    },
                 ],
                 methods: [
                     {
                         namespace: '2',
                         name: 'two',
                         kind: SymbolKind.Class,
-                        range: { start: { line: 5, character: 6 }, end: { line: 7, character: 8 } }
-                    }
+                        range: { start: { line: 5, character: 6 }, end: { line: 7, character: 8 } },
+                    },
                 ],
                 functions: [
                     {
                         namespace: '3',
                         name: 'three',
                         kind: SymbolKind.Class,
-                        range: { start: { line: 9, character: 10 }, end: { line: 11, character: 12 } }
-                    }
-                ]
-            })
+                        range: { start: { line: 9, character: 10 }, end: { line: 11, character: 12 } },
+                    },
+                ],
+            }),
         };
         doc.setup((d) => d.isUntitled)
             .returns(() => false)

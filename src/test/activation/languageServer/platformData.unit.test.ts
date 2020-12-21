@@ -12,7 +12,7 @@ import { IPlatformService } from '../../../client/common/platform/types';
 const testDataWinMac = [
     { isWindows: true, is64Bit: true, expectedName: 'win-x64' },
     { isWindows: true, is64Bit: false, expectedName: 'win-x86' },
-    { isWindows: false, is64Bit: true, expectedName: 'osx-x64' }
+    { isWindows: false, is64Bit: true, expectedName: 'osx-x64' },
 ];
 
 const testDataLinux = [
@@ -22,13 +22,13 @@ const testDataLinux = [
     { name: 'ol', expectedName: 'linux-x64' },
     { name: 'opensuse', expectedName: 'linux-x64' },
     { name: 'rhel', expectedName: 'linux-x64' },
-    { name: 'ubuntu', expectedName: 'linux-x64' }
+    { name: 'ubuntu', expectedName: 'linux-x64' },
 ];
 
 const testDataModuleName = [
     { isWindows: true, isMac: false, isLinux: false, expectedName: PlatformLSExecutables.Windows },
     { isWindows: false, isMac: true, isLinux: false, expectedName: PlatformLSExecutables.MacOS },
-    { isWindows: false, isMac: false, isLinux: true, expectedName: PlatformLSExecutables.Linux }
+    { isWindows: false, isMac: false, isLinux: true, expectedName: PlatformLSExecutables.Linux },
 ];
 
 // tslint:disable-next-line:max-func-body-length

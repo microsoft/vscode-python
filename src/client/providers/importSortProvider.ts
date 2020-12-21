@@ -12,7 +12,7 @@ import {
     IDisposableRegistry,
     IEditorUtils,
     IOutputChannel,
-    IPersistentStateFactory
+    IPersistentStateFactory,
 } from '../common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../common/utils/async';
 import { Common, Diagnostics } from '../common/utils/localize';
@@ -69,7 +69,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
 
     public async _provideDocumentSortImportsEdits(
         uri: Uri,
-        token?: CancellationToken
+        token?: CancellationToken,
     ): Promise<WorkspaceEdit | undefined> {
         const document = await this.documentManager.openTextDocument(uri);
         if (!document) {
@@ -138,7 +138,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     public async _showWarningAndOptionallyShowOutput() {
         const neverShowAgain = this.persistentStateFactory.createGlobalPersistentState(
             doNotDisplayPromptStateKey,
-            false
+            false,
         );
         if (neverShowAgain.value) {
             return;
@@ -146,7 +146,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         const selection = await this.shell.showWarningMessage(
             Diagnostics.checkIsort5UpgradeGuide(),
             Common.openOutputPanel(),
-            Common.doNotShowAgain()
+            Common.doNotShowAgain(),
         );
         if (selection === Common.openOutputPanel()) {
             this.output.show(true);
@@ -158,7 +158,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     private async getExecIsort(
         document: TextDocument,
         uri: Uri,
-        token?: CancellationToken
+        token?: CancellationToken,
     ): Promise<(documentText: string) => Promise<string>> {
         const settings = this.configurationService.getSettings(uri);
         const _isort = settings.sortImports.path;
@@ -174,7 +174,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
 
         const spawnOptions = {
             token,
-            cwd: path.dirname(uri.fsPath)
+            cwd: path.dirname(uri.fsPath),
         };
 
         if (isort) {
@@ -197,7 +197,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
 
     private async communicateWithIsortProcess(
         observableResult: ObservableExecutionResult<string>,
-        inputText: string
+        inputText: string,
     ): Promise<string> {
         // Configure our listening to the output from isort ...
         let outputBuffer = '';
@@ -219,7 +219,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             },
             complete: () => {
                 isortOutput.resolve(outputBuffer);
-            }
+            },
         });
 
         // ... then send isort the document content ...

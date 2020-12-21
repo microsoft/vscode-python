@@ -17,7 +17,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(IPlatformService) platformService: IPlatformService,
-        @inject(IConfigurationService) configurationService: IConfigurationService
+        @inject(IConfigurationService) configurationService: IConfigurationService,
     ) {
         super(workspaceService, documentManager, platformService, configurationService);
     }
@@ -25,7 +25,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
     public async resolveDebugConfigurationWithSubstitutedVariables(
         folder: WorkspaceFolder | undefined,
         debugConfiguration: AttachRequestArguments,
-        _token?: CancellationToken
+        _token?: CancellationToken,
     ): Promise<AttachRequestArguments | undefined> {
         const workspaceFolder = this.getWorkspaceFolder(folder);
 
@@ -34,7 +34,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         const dbgConfig = debugConfiguration;
         if (Array.isArray(dbgConfig.debugOptions)) {
             dbgConfig.debugOptions = dbgConfig.debugOptions!.filter(
-                (item, pos) => dbgConfig.debugOptions!.indexOf(item) === pos
+                (item, pos) => dbgConfig.debugOptions!.indexOf(item) === pos,
             );
         }
         return debugConfiguration;
@@ -43,7 +43,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
     // tslint:disable-next-line:cyclomatic-complexity
     protected async provideAttachDefaults(
         workspaceFolder: Uri | undefined,
-        debugConfiguration: AttachRequestArguments
+        debugConfiguration: AttachRequestArguments,
     ): Promise<void> {
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
@@ -103,7 +103,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
             debugConfiguration.host,
             debugConfiguration.localRoot,
             debugConfiguration.remoteRoot,
-            workspaceFolder
+            workspaceFolder,
         );
         this.sendTelemetry('attach', debugConfiguration);
     }
@@ -113,13 +113,13 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         host?: string,
         localRoot?: string,
         remoteRoot?: string,
-        workspaceFolder?: Uri
+        workspaceFolder?: Uri,
     ) {
         // This is for backwards compatibility.
         if (localRoot && remoteRoot) {
             pathMappings.push({
                 localRoot: localRoot,
-                remoteRoot: remoteRoot
+                remoteRoot: remoteRoot,
             });
         }
         // If attaching to local host, then always map local root and remote roots.

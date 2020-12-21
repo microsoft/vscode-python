@@ -57,7 +57,7 @@ suite('Formatting - OnEnter provider', () => {
             new Position(line, character),
             '\n',
             { insertSpaces: true, tabSize: 2 },
-            token
+            token,
         );
         expect(edits).to.be.lengthOf(1);
         expect(edits[0].newText).to.be.equal(expectedFormattedString);
@@ -69,7 +69,7 @@ suite('Formatting - OnEnter provider', () => {
             new Position(line, character),
             '\n',
             { insertSpaces: true, tabSize: 2 },
-            token
+            token,
         );
         expect(edits).to.be.lengthOf(0);
     }

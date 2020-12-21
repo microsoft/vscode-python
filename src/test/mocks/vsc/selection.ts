@@ -41,7 +41,7 @@ export namespace vscMockSelection {
         /**
          * The selection starts below where it ends.
          */
-        RTL
+        RTL,
     }
 
     /**
@@ -70,7 +70,7 @@ export namespace vscMockSelection {
             selectionStartLineNumber: number,
             selectionStartColumn: number,
             positionLineNumber: number,
-            positionColumn: number
+            positionColumn: number,
         ) {
             super(selectionStartLineNumber, selectionStartColumn, positionLineNumber, positionColumn);
             this.selectionStartLineNumber = selectionStartLineNumber;
@@ -87,7 +87,7 @@ export namespace vscMockSelection {
                 this.selectionStartLineNumber,
                 this.selectionStartColumn,
                 this.positionLineNumber,
-                this.positionColumn
+                this.positionColumn,
             );
         }
 
@@ -174,7 +174,7 @@ export namespace vscMockSelection {
          */
         public static fromPositions(
             start: vscMockPosition.IPosition,
-            end: vscMockPosition.IPosition = start
+            end: vscMockPosition.IPosition = start,
         ): Selection {
             return new Selection(start.lineNumber, start.column, end.lineNumber, end.column);
         }
@@ -187,7 +187,7 @@ export namespace vscMockSelection {
                 sel.selectionStartLineNumber,
                 sel.selectionStartColumn,
                 sel.positionLineNumber,
-                sel.positionColumn
+                sel.positionColumn,
             );
         }
 
@@ -233,7 +233,7 @@ export namespace vscMockSelection {
             startColumn: number,
             endLineNumber: number,
             endColumn: number,
-            direction: SelectionDirection
+            direction: SelectionDirection,
         ): Selection {
             if (direction === SelectionDirection.LTR) {
                 return new Selection(startLineNumber, startColumn, endLineNumber, endColumn);

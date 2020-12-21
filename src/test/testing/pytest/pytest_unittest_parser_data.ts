@@ -10,7 +10,7 @@
 
 export enum PytestDataPlatformType {
     NonWindows = 'non-windows',
-    Windows = 'windows'
+    Windows = 'windows',
 }
 
 export type PytestDiscoveryScenario = {
@@ -33,7 +33,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         rootdir: '/home/user/test/pytest_scenario',
         test_functions: [
             'src/test_things.py::test_things_major',
-            'test/this/is/deep/testing/test_very_deeply.py::test_math_works'
+            'test/this/is/deep/testing/test_very_deeply.py::test_math_works',
         ],
         functionCount: 9,
         stdout: [
@@ -58,8 +58,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "<Module 'test/this/is/deep/testing/test_very_deeply.py'>",
             "  <Function 'test_math_works'>",
             '',
-            '========================= no tests ran in 0.02 seconds ========================='
-        ]
+            '========================= no tests ran in 0.02 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -69,7 +69,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         rootdir: '/home/user/test/pytest_scenario',
         test_functions: [
             'src/test_things.py::test_things_major',
-            'test/this/is/deep/testing/test_very_deeply.py::test_math_works'
+            'test/this/is/deep/testing/test_very_deeply.py::test_math_works',
         ],
         functionCount: 9,
         stdout: [
@@ -94,8 +94,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "<Module 'test/this/is/deep/testing/test_very_deeply.py'>",
             "  <Function 'test_math_works'>",
             '',
-            '========================= no tests ran in 0.18 seconds ========================='
-        ]
+            '========================= no tests ran in 0.18 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -105,7 +105,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         rootdir: '/home/user/test/pytest_scenario',
         test_functions: [
             'src/test_things.py::test_things_major',
-            'test/this/is/deep/testing/test_very_deeply.py::test_math_works'
+            'test/this/is/deep/testing/test_very_deeply.py::test_math_works',
         ],
         functionCount: 9,
         stdout: [
@@ -130,8 +130,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '<Module test/this/is/deep/testing/test_very_deeply.py>',
             '  <Function test_math_works>',
             '',
-            '========================= no tests ran in 0.18 seconds ========================='
-        ]
+            '========================= no tests ran in 0.18 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -155,8 +155,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "<Module 'src/under/test_stuff.py'>",
             "  <Function 'test_platform'>",
             '',
-            '========================= no tests ran in 0.05 seconds ========================='
-        ]
+            '========================= no tests ran in 0.05 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -180,8 +180,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "<Module 'src/under/test_stuff.py'>",
             "  <Function 'test_platform'>",
             '',
-            '========================= no tests ran in 0.03 seconds ========================='
-        ]
+            '========================= no tests ran in 0.03 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -205,8 +205,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '<Module src/under/test_stuff.py>',
             '  <Function test_platform>',
             '',
-            '========================= no tests ran in 0.03 seconds ========================='
-        ]
+            '========================= no tests ran in 0.03 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -230,8 +230,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "<Module 'under/test_stuff.py'>",
             "  <Function 'test_platform'>",
             '',
-            '========================= no tests ran in 0.12 seconds ========================='
-        ]
+            '========================= no tests ran in 0.12 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -255,8 +255,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "<Module 'under/test_stuff.py'>",
             "  <Function 'test_platform'>",
             '',
-            '========================= no tests ran in 0.12 seconds ========================='
-        ]
+            '========================= no tests ran in 0.12 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -280,8 +280,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '<Module under/test_stuff.py>',
             '  <Function test_platform>',
             '',
-            '========================= no tests ran in 0.12 seconds ========================='
-        ]
+            '========================= no tests ran in 0.12 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -300,8 +300,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "<Module 'under/test_stuff.py'>",
             "  <Function 'test_platform'>",
             '',
-            '========================= no tests ran in 0.06 seconds ========================='
-        ]
+            '========================= no tests ran in 0.06 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -320,8 +320,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "<Module 'under/test_stuff.py'>",
             "  <Function 'test_platform'>",
             '',
-            '========================= no tests ran in 0.05 seconds ========================='
-        ]
+            '========================= no tests ran in 0.05 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -340,8 +340,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '<Module under/test_stuff.py>',
             '  <Function test_platform>',
             '',
-            '========================= no tests ran in 0.05 seconds ========================='
-        ]
+            '========================= no tests ran in 0.05 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -360,8 +360,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "<Module 'test_stuff.py'>",
             "  <Function 'test_platform'>",
             '',
-            '========================= no tests ran in 0.05 seconds ========================='
-        ]
+            '========================= no tests ran in 0.05 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -380,8 +380,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "<Module 'test_stuff.py'>",
             "  <Function 'test_platform'>",
             '',
-            '========================= no tests ran in 0.05 seconds ========================='
-        ]
+            '========================= no tests ran in 0.05 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -400,8 +400,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '<Module test_stuff.py>',
             '  <Function test_platform>',
             '',
-            '========================= no tests ran in 0.05 seconds ========================='
-        ]
+            '========================= no tests ran in 0.05 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -412,7 +412,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         test_functions: [
             'test_basic_root.py::test_basic_major',
             'test/test_other_basic.py::test_basic_major_minor_internal',
-            'test/subdir/under/another/subdir/test_other_basic_sub.py::test_basic_major_minor'
+            'test/subdir/under/another/subdir/test_other_basic_sub.py::test_basic_major_minor',
         ],
         functionCount: 16,
         stdout: [
@@ -445,8 +445,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_basic_major_minor_uneven'>",
             "  <Function 'test_basic_major_minor_internal_uneven'>",
             '',
-            '========================= no tests ran in 0.07 seconds ========================='
-        ]
+            '========================= no tests ran in 0.07 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -458,7 +458,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'test_basic_root.py::test_basic_major',
             'test/test_other_basic.py::test_basic_major_minor_internal',
             'test/subdir/under/another/subdir/test_other_basic_sub.py::test_basic_major_minor',
-            'test/uneven/folders/test_other_basic_uneven.py::test_basic_major_minor_internal_uneven'
+            'test/uneven/folders/test_other_basic_uneven.py::test_basic_major_minor_internal_uneven',
         ],
         functionCount: 16,
         stdout: [
@@ -499,8 +499,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "          <Function 'test_basic_major_minor_uneven'>",
             "          <Function 'test_basic_major_minor_internal_uneven'>",
             '',
-            '========================= no tests ran in 0.13 seconds ========================='
-        ]
+            '========================= no tests ran in 0.13 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -512,7 +512,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'test_basic_root.py::test_basic_major',
             'test/test_other_basic.py::test_basic_major_minor_internal',
             'test/subdir/under/another/subdir/test_other_basic_sub.py::test_basic_major_minor',
-            'test/uneven/folders/test_other_basic_uneven.py::test_basic_major_minor_internal_uneven'
+            'test/uneven/folders/test_other_basic_uneven.py::test_basic_major_minor_internal_uneven',
         ],
         functionCount: 16,
         stdout: [
@@ -553,8 +553,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '          <Function test_basic_major_minor_uneven>',
             '          <Function test_basic_major_minor_internal_uneven>',
             '',
-            '========================= no tests ran in 0.13 seconds ========================='
-        ]
+            '========================= no tests ran in 0.13 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -564,7 +564,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         rootdir: '/home/user/test/pytest_scenario',
         test_functions: [
             'test/test_other_basic.py::test_basic_major_minor_internal',
-            'test/subdir/test_other_basic_sub.py::test_basic_major_minor'
+            'test/subdir/test_other_basic_sub.py::test_basic_major_minor',
         ],
         functionCount: 12,
         stdout: [
@@ -591,8 +591,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_basic_major_minor'>",
             "  <Function 'test_basic_major_minor_internal'>",
             '',
-            '========================= no tests ran in 0.18 seconds ========================='
-        ]
+            '========================= no tests ran in 0.18 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -602,7 +602,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         rootdir: '/home/user/test/pytest_scenario',
         test_functions: [
             'test/test_other_basic.py::test_basic_major_minor_internal',
-            'test/subdir/test_other_basic_sub.py::test_basic_major_minor'
+            'test/subdir/test_other_basic_sub.py::test_basic_major_minor',
         ],
         functionCount: 12,
         stdout: [
@@ -632,8 +632,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "        <Function 'test_basic_major_minor'>",
             "        <Function 'test_basic_major_minor_internal'>",
             '',
-            '========================= no tests ran in 0.07 seconds ========================='
-        ]
+            '========================= no tests ran in 0.07 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -643,7 +643,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         rootdir: '/home/user/test/pytest_scenario',
         test_functions: [
             'test/test_other_basic.py::test_basic_major_minor_internal',
-            'test/subdir/test_other_basic_sub.py::test_basic_major_minor'
+            'test/subdir/test_other_basic_sub.py::test_basic_major_minor',
         ],
         functionCount: 12,
         stdout: [
@@ -673,8 +673,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '        <Function test_basic_major_minor>',
             '        <Function test_basic_major_minor_internal>',
             '',
-            '========================= no tests ran in 0.07 seconds ========================='
-        ]
+            '========================= no tests ran in 0.07 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -683,7 +683,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         rootdir: '/home/user/test/pytest_scenario',
         test_functions: [
             'test_other_basic_root.py::test_basic_major_minor_internal',
-            'test/test_other_basic_sub.py::test_basic_major_minor'
+            'test/test_other_basic_sub.py::test_basic_major_minor',
         ],
         functionCount: 12,
         stdout: [
@@ -710,8 +710,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_basic_major_minor'>",
             "  <Function 'test_basic_major_minor_internal'>",
             '',
-            '========================= no tests ran in 0.18 seconds ========================='
-        ]
+            '========================= no tests ran in 0.18 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -721,7 +721,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         test_functions: [
             'test_other_basic_root.py::test_basic_major_minor_internal',
             'test/test_basic_sub.py::test_basic_major',
-            'test/test_basic_sub.py::test_basic_minor'
+            'test/test_basic_sub.py::test_basic_minor',
         ],
         functionCount: 12,
         stdout: [
@@ -750,8 +750,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "      <Function 'test_basic_major_minor'>",
             "      <Function 'test_basic_major_minor_internal'>",
             '',
-            '========================= no tests ran in 0.22 seconds ========================='
-        ]
+            '========================= no tests ran in 0.22 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -761,7 +761,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         test_functions: [
             'test_other_basic_root.py::test_basic_major_minor_internal',
             'test/test_basic_sub.py::test_basic_major',
-            'test/test_basic_sub.py::test_basic_minor'
+            'test/test_basic_sub.py::test_basic_minor',
         ],
         functionCount: 12,
         stdout: [
@@ -790,8 +790,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '      <Function test_basic_major_minor>',
             '      <Function test_basic_major_minor_internal>',
             '',
-            '========================= no tests ran in 0.22 seconds ========================='
-        ]
+            '========================= no tests ran in 0.22 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -802,7 +802,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'test/test_basic.py::test_basic_minor',
             'test/test_other_basic.py::test_basic_major_minor',
             'test/test_other_basic_root.py::test_basic_major_minor',
-            'test/test_other_basic_sub.py::test_basic_major_minor_internal'
+            'test/test_other_basic_sub.py::test_basic_major_minor_internal',
         ],
         functionCount: 12,
         stdout: [
@@ -829,8 +829,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_basic_major_minor'>",
             "  <Function 'test_basic_major_minor_internal'>",
             '',
-            '========================= no tests ran in 0.15 seconds ========================='
-        ]
+            '========================= no tests ran in 0.15 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -841,7 +841,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'test/test_basic.py::test_basic_minor',
             'test/test_other_basic.py::test_basic_major_minor',
             'test/test_other_basic_root.py::test_basic_major_minor',
-            'test/test_other_basic_sub.py::test_basic_major_minor_internal'
+            'test/test_other_basic_sub.py::test_basic_major_minor_internal',
         ],
         functionCount: 12,
         stdout: [
@@ -870,8 +870,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "      <Function 'test_basic_major_minor'>",
             "      <Function 'test_basic_major_minor_internal'>",
             '',
-            '========================= no tests ran in 0.15 seconds ========================='
-        ]
+            '========================= no tests ran in 0.15 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -882,7 +882,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'test/test_basic.py::test_basic_minor',
             'test/test_other_basic.py::test_basic_major_minor',
             'test/test_other_basic_root.py::test_basic_major_minor',
-            'test/test_other_basic_sub.py::test_basic_major_minor_internal'
+            'test/test_other_basic_sub.py::test_basic_major_minor_internal',
         ],
         functionCount: 12,
         stdout: [
@@ -911,8 +911,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '      <Function test_basic_major_minor>',
             '      <Function test_basic_major_minor_internal>',
             '',
-            '========================= no tests ran in 0.15 seconds ========================='
-        ]
+            '========================= no tests ran in 0.15 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -923,7 +923,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'test_basic.py::test_basic_major',
             'test_basic_root.py::test_basic_major',
             'test_other_basic_root.py::test_basic_major_minor',
-            'test_other_basic_sub.py::test_basic_major_minor_internal'
+            'test_other_basic_sub.py::test_basic_major_minor_internal',
         ],
         functionCount: 12,
         stdout: [
@@ -950,8 +950,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_basic_major_minor'>",
             "  <Function 'test_basic_major_minor_internal'>",
             '',
-            '========================= no tests ran in 0.23 seconds ========================='
-        ]
+            '========================= no tests ran in 0.23 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -962,7 +962,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'test_basic.py::test_basic_major',
             'test_basic_root.py::test_basic_major',
             'test_other_basic_root.py::test_basic_major_minor',
-            'test_other_basic_sub.py::test_basic_major_minor_internal'
+            'test_other_basic_sub.py::test_basic_major_minor_internal',
         ],
         functionCount: 12,
         stdout: [
@@ -990,8 +990,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "    <Function 'test_basic_major_minor'>",
             "    <Function 'test_basic_major_minor_internal'>",
             '',
-            '========================= no tests ran in 0.16 seconds ========================='
-        ]
+            '========================= no tests ran in 0.16 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -1002,7 +1002,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'test_basic.py::test_basic_major',
             'test_basic_root.py::test_basic_major',
             'test_other_basic_root.py::test_basic_major_minor',
-            'test_other_basic_sub.py::test_basic_major_minor_internal'
+            'test_other_basic_sub.py::test_basic_major_minor_internal',
         ],
         functionCount: 12,
         stdout: [
@@ -1030,8 +1030,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '    <Function test_basic_major_minor>',
             '    <Function test_basic_major_minor_internal>',
             '',
-            '========================= no tests ran in 0.16 seconds ========================='
-        ]
+            '========================= no tests ran in 0.16 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -1046,7 +1046,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/further_tests/test_multiply.py::test_times_10',
             'tests/further_tests/test_multiply.py::test_times_2',
             'tests/further_tests/deeper/test_more_multiply.py::test_times_100',
-            'tests/further_tests/deeper/test_more_multiply.py::test_times_negative_1'
+            'tests/further_tests/deeper/test_more_multiply.py::test_times_negative_1',
         ],
         functionCount: 7,
         stdout: [
@@ -1066,8 +1066,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_times_100'>",
             "  <Function 'test_times_negative_1'>",
             '',
-            '======================== no tests ran in 0.30 seconds ========================='
-        ]
+            '======================== no tests ran in 0.30 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -1082,7 +1082,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/further_tests/test_multiply.py::test_times_10',
             'tests/further_tests/test_multiply.py::test_times_2',
             'tests/further_tests/deeper/test_more_multiply.py::test_times_100',
-            'tests/further_tests/deeper/test_more_multiply.py::test_times_negative_1'
+            'tests/further_tests/deeper/test_more_multiply.py::test_times_negative_1',
         ],
         functionCount: 7,
         stdout: [
@@ -1107,8 +1107,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "          <Function 'test_times_100'>",
             "          <Function 'test_times_negative_1'>",
             '',
-            '======================== no tests ran in 0.42 seconds ========================='
-        ]
+            '======================== no tests ran in 0.42 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -1123,7 +1123,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/further_tests/test_multiply.py::test_times_10',
             'tests/further_tests/test_multiply.py::test_times_2',
             'tests/further_tests/deeper/test_more_multiply.py::test_times_100',
-            'tests/further_tests/deeper/test_more_multiply.py::test_times_negative_1'
+            'tests/further_tests/deeper/test_more_multiply.py::test_times_negative_1',
         ],
         functionCount: 7,
         stdout: [
@@ -1148,8 +1148,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '          <Function test_times_100>',
             '          <Function test_times_negative_1>',
             '',
-            '======================== no tests ran in 0.42 seconds ========================='
-        ]
+            '======================== no tests ran in 0.42 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -1164,7 +1164,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/further_tests/test_multiply.py::test_times_10',
             'tests/further_tests/test_multiply.py::test_times_2',
             'tests/further_tests/deeper/test_more_multiply.py::test_times_100',
-            'tests/further_tests/deeper/test_more_multiply.py::test_times_negative_1'
+            'tests/further_tests/deeper/test_more_multiply.py::test_times_negative_1',
         ],
         functionCount: 7,
         stdout: [
@@ -1184,8 +1184,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_times_100'>",
             "  <Function 'test_times_negative_1'>",
             '',
-            '======================== no tests ran in 0.11 seconds ========================='
-        ]
+            '======================== no tests ran in 0.11 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -1200,7 +1200,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/further_tests/test_multiply.py::test_times_10',
             'tests/further_tests/test_multiply.py::test_times_2',
             'tests/further_tests/deeper/test_more_multiply.py::test_times_100',
-            'tests/further_tests/deeper/test_more_multiply.py::test_times_negative_1'
+            'tests/further_tests/deeper/test_more_multiply.py::test_times_negative_1',
         ],
         functionCount: 7,
         stdout: [
@@ -1220,8 +1220,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_times_100'>",
             "  <Function 'test_times_negative_1'>",
             '',
-            '======================== no tests ran in 0.17 seconds ========================='
-        ]
+            '======================== no tests ran in 0.17 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -1236,7 +1236,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/further_tests/test_multiply.py::test_times_10',
             'tests/further_tests/test_multiply.py::test_times_2',
             'tests/further_tests/deeper/test_more_multiply.py::test_times_100',
-            'tests/further_tests/deeper/test_more_multiply.py::test_times_negative_1'
+            'tests/further_tests/deeper/test_more_multiply.py::test_times_negative_1',
         ],
         functionCount: 7,
         stdout: [
@@ -1256,8 +1256,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '  <Function test_times_100>',
             '  <Function test_times_negative_1>',
             '',
-            '======================== no tests ran in 0.17 seconds ========================='
-        ]
+            '======================== no tests ran in 0.17 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -1272,7 +1272,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/further_tests/test_more_multiply.py::test_times_100',
             'tests/further_tests/test_more_multiply.py::test_times_negative_1',
             'tests/further_tests/test_multiply.py::test_times_10',
-            'tests/further_tests/test_multiply.py::test_times_2'
+            'tests/further_tests/test_multiply.py::test_times_2',
         ],
         functionCount: 7,
         stdout: [
@@ -1292,8 +1292,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_times_10'>",
             "  <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.26 seconds ========================='
-        ]
+            '======================== no tests ran in 0.26 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -1308,7 +1308,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/further_tests/test_more_multiply.py::test_times_100',
             'tests/further_tests/test_more_multiply.py::test_times_negative_1',
             'tests/further_tests/test_multiply.py::test_times_10',
-            'tests/further_tests/test_multiply.py::test_times_2'
+            'tests/further_tests/test_multiply.py::test_times_2',
         ],
         functionCount: 7,
         stdout: [
@@ -1331,8 +1331,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "        <Function 'test_times_10'>",
             "        <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.38 seconds ========================='
-        ]
+            '======================== no tests ran in 0.38 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -1347,7 +1347,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/further_tests/test_more_multiply.py::test_times_100',
             'tests/further_tests/test_more_multiply.py::test_times_negative_1',
             'tests/further_tests/test_multiply.py::test_times_10',
-            'tests/further_tests/test_multiply.py::test_times_2'
+            'tests/further_tests/test_multiply.py::test_times_2',
         ],
         functionCount: 7,
         stdout: [
@@ -1370,8 +1370,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '        <Function test_times_10>',
             '        <Function test_times_2>',
             '',
-            '======================== no tests ran in 0.38 seconds ========================='
-        ]
+            '======================== no tests ran in 0.38 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -1385,7 +1385,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/further_tests/test_more_multiply.py::test_times_100',
             'tests/further_tests/test_more_multiply.py::test_times_negative_1',
             'tests/further_tests/test_multiply.py::test_times_10',
-            'tests/further_tests/test_multiply.py::test_times_2'
+            'tests/further_tests/test_multiply.py::test_times_2',
         ],
         functionCount: 7,
         stdout: [
@@ -1405,8 +1405,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_times_10'>",
             "  <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.17 seconds ========================='
-        ]
+            '======================== no tests ran in 0.17 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -1420,7 +1420,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/further_tests/test_more_multiply.py::test_times_100',
             'tests/further_tests/test_more_multiply.py::test_times_negative_1',
             'tests/further_tests/test_multiply.py::test_times_10',
-            'tests/further_tests/test_multiply.py::test_times_2'
+            'tests/further_tests/test_multiply.py::test_times_2',
         ],
         functionCount: 7,
         stdout: [
@@ -1440,8 +1440,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_times_10'>",
             "  <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.20 seconds ========================='
-        ]
+            '======================== no tests ran in 0.20 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -1455,7 +1455,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/further_tests/test_more_multiply.py::test_times_100',
             'tests/further_tests/test_more_multiply.py::test_times_negative_1',
             'tests/further_tests/test_multiply.py::test_times_10',
-            'tests/further_tests/test_multiply.py::test_times_2'
+            'tests/further_tests/test_multiply.py::test_times_2',
         ],
         functionCount: 7,
         stdout: [
@@ -1475,8 +1475,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '  <Function test_times_10>',
             '  <Function test_times_2>',
             '',
-            '======================== no tests ran in 0.20 seconds ========================='
-        ]
+            '======================== no tests ran in 0.20 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -1489,7 +1489,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/test_multiply.py::test_times_10',
             'tests/test_multiply.py::test_times_2',
             'tests/test_more_multiply.py::test_times_100',
-            'tests/test_more_multiply.py::test_times_negative_1'
+            'tests/test_more_multiply.py::test_times_negative_1',
         ],
         functionCount: 7,
         stdout: [
@@ -1509,8 +1509,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_times_10'>",
             "  <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.26 seconds ========================='
-        ]
+            '======================== no tests ran in 0.26 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -1523,7 +1523,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/test_multiply.py::test_times_10',
             'tests/test_multiply.py::test_times_2',
             'tests/test_more_multiply.py::test_times_100',
-            'tests/test_more_multiply.py::test_times_negative_1'
+            'tests/test_more_multiply.py::test_times_negative_1',
         ],
         functionCount: 7,
         stdout: [
@@ -1545,8 +1545,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "      <Function 'test_times_10'>",
             "      <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.66 seconds ========================='
-        ]
+            '======================== no tests ran in 0.66 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -1559,7 +1559,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/test_multiply.py::test_times_10',
             'tests/test_multiply.py::test_times_2',
             'tests/test_more_multiply.py::test_times_100',
-            'tests/test_more_multiply.py::test_times_negative_1'
+            'tests/test_more_multiply.py::test_times_negative_1',
         ],
         functionCount: 7,
         stdout: [
@@ -1581,8 +1581,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '      <Function test_times_10>',
             '      <Function test_times_2>',
             '',
-            '======================== no tests ran in 0.66 seconds ========================='
-        ]
+            '======================== no tests ran in 0.66 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -1595,7 +1595,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/test_multiply.py::test_times_10',
             'tests/test_multiply.py::test_times_2',
             'tests/test_more_multiply.py::test_times_100',
-            'tests/test_more_multiply.py::test_times_negative_1'
+            'tests/test_more_multiply.py::test_times_negative_1',
         ],
         functionCount: 7,
         stdout: [
@@ -1615,8 +1615,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_times_10'>",
             "  <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.11 seconds ========================='
-        ]
+            '======================== no tests ran in 0.11 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -1629,7 +1629,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/test_multiply.py::test_times_10',
             'tests/test_multiply.py::test_times_2',
             'tests/test_more_multiply.py::test_times_100',
-            'tests/test_more_multiply.py::test_times_negative_1'
+            'tests/test_more_multiply.py::test_times_negative_1',
         ],
         functionCount: 7,
         stdout: [
@@ -1649,8 +1649,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_times_10'>",
             "  <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.41 seconds ========================='
-        ]
+            '======================== no tests ran in 0.41 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -1663,7 +1663,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/test_multiply.py::test_times_10',
             'tests/test_multiply.py::test_times_2',
             'tests/test_more_multiply.py::test_times_100',
-            'tests/test_more_multiply.py::test_times_negative_1'
+            'tests/test_more_multiply.py::test_times_negative_1',
         ],
         functionCount: 7,
         stdout: [
@@ -1683,8 +1683,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '  <Function test_times_10>',
             '  <Function test_times_2>',
             '',
-            '======================== no tests ran in 0.41 seconds ========================='
-        ]
+            '======================== no tests ran in 0.41 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -1698,7 +1698,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/test_more_multiply.py::test_times_100',
             'tests/test_more_multiply.py::test_times_negative_1',
             'tests/test_multiply.py::test_times_10',
-            'tests/test_multiply.py::test_times_2'
+            'tests/test_multiply.py::test_times_2',
         ],
         functionCount: 7,
         stdout: [
@@ -1718,8 +1718,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_times_10'>",
             "  <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.20 seconds ========================='
-        ]
+            '======================== no tests ran in 0.20 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -1733,7 +1733,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/test_more_multiply.py::test_times_100',
             'tests/test_more_multiply.py::test_times_negative_1',
             'tests/test_multiply.py::test_times_10',
-            'tests/test_multiply.py::test_times_2'
+            'tests/test_multiply.py::test_times_2',
         ],
         functionCount: 7,
         stdout: [
@@ -1755,8 +1755,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "      <Function 'test_times_10'>",
             "      <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.26 seconds ========================='
-        ]
+            '======================== no tests ran in 0.26 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -1770,7 +1770,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/test_more_multiply.py::test_times_100',
             'tests/test_more_multiply.py::test_times_negative_1',
             'tests/test_multiply.py::test_times_10',
-            'tests/test_multiply.py::test_times_2'
+            'tests/test_multiply.py::test_times_2',
         ],
         functionCount: 7,
         stdout: [
@@ -1792,8 +1792,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '      <Function test_times_10>',
             '      <Function test_times_2>',
             '',
-            '======================== no tests ran in 0.26 seconds ========================='
-        ]
+            '======================== no tests ran in 0.26 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -1807,7 +1807,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/test_more_multiply.py::test_times_100',
             'tests/test_more_multiply.py::test_times_negative_1',
             'tests/test_multiply.py::test_times_10',
-            'tests/test_multiply.py::test_times_2'
+            'tests/test_multiply.py::test_times_2',
         ],
         functionCount: 7,
         stdout: [
@@ -1827,8 +1827,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_times_10'>",
             "  <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.26 seconds ========================='
-        ]
+            '======================== no tests ran in 0.26 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -1842,7 +1842,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/test_more_multiply.py::test_times_100',
             'tests/test_more_multiply.py::test_times_negative_1',
             'tests/test_multiply.py::test_times_10',
-            'tests/test_multiply.py::test_times_2'
+            'tests/test_multiply.py::test_times_2',
         ],
         functionCount: 7,
         stdout: [
@@ -1862,8 +1862,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_times_10'>",
             "  <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.26 seconds ========================='
-        ]
+            '======================== no tests ran in 0.26 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -1877,7 +1877,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'tests/test_more_multiply.py::test_times_100',
             'tests/test_more_multiply.py::test_times_negative_1',
             'tests/test_multiply.py::test_times_10',
-            'tests/test_multiply.py::test_times_2'
+            'tests/test_multiply.py::test_times_2',
         ],
         functionCount: 7,
         stdout: [
@@ -1897,8 +1897,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '  <Function test_times_10>',
             '  <Function test_times_2>',
             '',
-            '======================== no tests ran in 0.26 seconds ========================='
-        ]
+            '======================== no tests ran in 0.26 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -1909,7 +1909,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'test_base_stuff.py::test_do_test',
             'test_base_stuff.py::test_do_other_test',
             'test_multiply.py::test_times_10',
-            'test_multiply.py::test_times_2'
+            'test_multiply.py::test_times_2',
         ],
         functionCount: 4,
         stdout: [
@@ -1924,8 +1924,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_times_10'>",
             "  <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.17 seconds ========================='
-        ]
+            '======================== no tests ran in 0.17 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -1936,7 +1936,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'test_base_stuff.py::test_do_test',
             'test_base_stuff.py::test_do_other_test',
             'test_multiply.py::test_times_10',
-            'test_multiply.py::test_times_2'
+            'test_multiply.py::test_times_2',
         ],
         functionCount: 4,
         stdout: [
@@ -1952,8 +1952,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "    <Function 'test_times_10'>",
             "    <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.37 seconds ========================='
-        ]
+            '======================== no tests ran in 0.37 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -1964,7 +1964,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'test_base_stuff.py::test_do_test',
             'test_base_stuff.py::test_do_other_test',
             'test_multiply.py::test_times_10',
-            'test_multiply.py::test_times_2'
+            'test_multiply.py::test_times_2',
         ],
         functionCount: 4,
         stdout: [
@@ -1980,8 +1980,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '    <Function test_times_10>',
             '    <Function test_times_2>',
             '',
-            '======================== no tests ran in 0.37 seconds ========================='
-        ]
+            '======================== no tests ran in 0.37 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '< 3.7',
@@ -1992,7 +1992,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'test_base_stuff.py::test_do_test',
             'test_base_stuff.py::test_do_other_test',
             'test_multiply.py::test_times_10',
-            'test_multiply.py::test_times_2'
+            'test_multiply.py::test_times_2',
         ],
         functionCount: 4,
         stdout: [
@@ -2007,8 +2007,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_times_10'>",
             "  <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.18 seconds ========================='
-        ]
+            '======================== no tests ran in 0.18 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 3.7 < 4.1',
@@ -2019,7 +2019,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'test_base_stuff.py::test_do_test',
             'test_base_stuff.py::test_do_other_test',
             'test_multiply.py::test_times_10',
-            'test_multiply.py::test_times_2'
+            'test_multiply.py::test_times_2',
         ],
         functionCount: 4,
         stdout: [
@@ -2034,8 +2034,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             "  <Function 'test_times_10'>",
             "  <Function 'test_times_2'>",
             '',
-            '======================== no tests ran in 0.36 seconds ========================='
-        ]
+            '======================== no tests ran in 0.36 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -2046,7 +2046,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             'test_base_stuff.py::test_do_test',
             'test_base_stuff.py::test_do_other_test',
             'test_multiply.py::test_times_10',
-            'test_multiply.py::test_times_2'
+            'test_multiply.py::test_times_2',
         ],
         functionCount: 4,
         stdout: [
@@ -2061,8 +2061,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '  <Function test_times_10>',
             '  <Function test_times_2>',
             '',
-            '======================== no tests ran in 0.36 seconds ========================='
-        ]
+            '======================== no tests ran in 0.36 seconds =========================',
+        ],
     },
     {
         pytest_version_spec: '>= 4.1',
@@ -2081,7 +2081,7 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
             '    <Function test_with_subtests[1-2]>',
             '    <Function test_with_subtests[3-4]>',
             '',
-            '========================= no tests ran in 0.02 seconds ========================='
-        ]
-    }
+            '========================= no tests ran in 0.02 seconds =========================',
+        ],
+    },
 ];

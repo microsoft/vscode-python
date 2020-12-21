@@ -38,7 +38,7 @@ suite('Attach to process - attach process provider factory', () => {
             instance(commandManager),
             instance(platformService),
             instance(processServiceFactory),
-            disposableRegistry
+            disposableRegistry,
         );
     });
 

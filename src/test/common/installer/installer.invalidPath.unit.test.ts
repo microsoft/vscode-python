@@ -95,7 +95,7 @@ suite('Module Installer - Invalid Paths', () => {
 
                             productPathService
                                 .setup((p) =>
-                                    p.getExecutableNameFromSettings(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource))
+                                    p.getExecutableNameFromSettings(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)),
                                 )
                                 .returns(() => pathToExecutable)
                                 .verifiable(TypeMoq.Times.atLeast(isExecutableAModule ? 0 : 1));
@@ -119,8 +119,8 @@ suite('Module Installer - Invalid Paths', () => {
                                 .setup((ps) =>
                                     ps.createGlobalPersistentState<boolean>(
                                         TypeMoq.It.isAnyString(),
-                                        TypeMoq.It.isValue(undefined)
-                                    )
+                                        TypeMoq.It.isValue(undefined),
+                                    ),
                                 )
                                 .returns(() => persistValue.object);
                             await installer.promptToInstall(product.value, resource);

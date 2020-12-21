@@ -27,7 +27,7 @@ export class InvalidEnvironmentPathVariableDiagnostic extends BaseDiagnostic {
             message,
             DiagnosticSeverity.Warning,
             DiagnosticScope.Global,
-            resource
+            resource,
         );
     }
 }
@@ -40,13 +40,13 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
     private readonly platform: IPlatformService;
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
         super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer, disposableRegistry, true);
         this.platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
             IDiagnosticHandlerService,
-            DiagnosticCommandPromptHandlerServiceId
+            DiagnosticCommandPromptHandlerServiceId,
         );
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
@@ -70,16 +70,16 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
         const options = [
             {
-                prompt: 'Ignore'
+                prompt: 'Ignore',
             },
             {
                 prompt: 'Always Ignore',
-                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global })
+                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global }),
             },
             {
                 prompt: 'More Info',
-                command: commandFactory.createCommand(diagnostic, { type: 'launch', options: 'https://aka.ms/Niq35h' })
-            }
+                command: commandFactory.createCommand(diagnostic, { type: 'launch', options: 'https://aka.ms/Niq35h' }),
+            },
         ];
 
         await this.messageService.handle(diagnostic, { commandPrompts: options });

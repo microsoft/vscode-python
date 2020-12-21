@@ -11,7 +11,7 @@ export class JediFactory implements Disposable {
     constructor(
         private interpreter: PythonEnvironment | undefined,
         // This is passed through to JediProxy().
-        private serviceContainer: IServiceContainer
+        private serviceContainer: IServiceContainer,
     ) {
         this.disposables = [];
         this.jediProxyHandlers = new Map<string, JediProxyHandler<ICommandResult>>();

@@ -56,7 +56,7 @@ suite('Process Queue', () => {
         assert.deepEqual(reasons, [
             Error('Queue stopped processing'),
             Error('Queue stopped processing'),
-            Error('Queue stopped processing')
+            Error('Queue stopped processing'),
         ]);
     });
 

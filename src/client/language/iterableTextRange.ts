@@ -15,16 +15,16 @@ export class IterableTextRange<T extends ITextRange> implements Iterable<T> {
                 if (index < this.textRangeCollection.count - 1) {
                     return {
                         done: false,
-                        value: this.textRangeCollection.getItemAt((index += 1))
+                        value: this.textRangeCollection.getItemAt((index += 1)),
                     };
                 } else {
                     return {
                         done: true,
                         // tslint:disable-next-line:no-any
-                        value: undefined as any
+                        value: undefined as any,
                     };
                 }
-            }
+            },
         };
     }
 }

@@ -10,7 +10,7 @@ import { TerminalActivator } from '../../../../client/common/terminal/activator'
 import {
     ITerminalActivationHandler,
     ITerminalActivator,
-    ITerminalHelper
+    ITerminalHelper,
 } from '../../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../../client/common/types';
 
@@ -31,7 +31,7 @@ suite('Terminal Activator', () => {
             .setup((c) => c.getSettings(TypeMoq.It.isAny()))
             .returns(() => {
                 return ({
-                    terminal: terminalSettings.object
+                    terminal: terminalSettings.object,
                 } as unknown) as IPythonSettings;
             });
         activator = new (class extends TerminalActivator {
@@ -43,7 +43,7 @@ suite('Terminal Activator', () => {
     async function testActivationAndHandlers(
         activationSuccessful: boolean,
         activateEnvironmentSetting: boolean,
-        hidden: boolean = false
+        hidden: boolean = false,
     ) {
         terminalSettings
             .setup((b) => b.activateEnvironment)
@@ -59,8 +59,8 @@ suite('Terminal Activator', () => {
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny(),
-                    TypeMoq.It.isValue(activationSuccessful)
-                )
+                    TypeMoq.It.isValue(activationSuccessful),
+                ),
             )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.exactly(activationSuccessful ? 1 : 0));
@@ -70,8 +70,8 @@ suite('Terminal Activator', () => {
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny(),
-                    TypeMoq.It.isValue(activationSuccessful)
-                )
+                    TypeMoq.It.isValue(activationSuccessful),
+                ),
             )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.exactly(activationSuccessful ? 1 : 0));
@@ -79,7 +79,7 @@ suite('Terminal Activator', () => {
         const terminal = TypeMoq.Mock.ofType<Terminal>();
         const activated = await activator.activateEnvironmentInTerminal(terminal.object, {
             preserveFocus: activationSuccessful,
-            hideFromUser: hidden
+            hideFromUser: hidden,
         });
 
         assert.equal(activated, activationSuccessful);

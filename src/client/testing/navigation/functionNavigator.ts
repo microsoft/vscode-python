@@ -19,7 +19,7 @@ export class TestFunctionCodeNavigator implements ITestCodeNavigator {
     constructor(
         @inject(ITestNavigatorHelper) private readonly helper: ITestNavigatorHelper,
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
-        @inject(ITestCollectionStorageService) private readonly storage: ITestCollectionStorageService
+        @inject(ITestCollectionStorageService) private readonly storage: ITestCollectionStorageService,
     ) {}
     @swallowExceptions('Navigate to test function')
     @captureTelemetry(EventName.UNITTEST_NAVIGATE, { byFunction: true }, true) // To measure execution time.

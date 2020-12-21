@@ -323,7 +323,7 @@ export namespace vscMockArrays {
     export function commonPrefixLength<T>(
         one: T[],
         other: T[],
-        equals: (a: T, b: T) => boolean = (a, b) => a === b
+        equals: (a: T, b: T) => boolean = (a, b) => a === b,
     ): number {
         let result = 0;
 
@@ -379,7 +379,7 @@ export namespace vscMockArrays {
     export function index<T, R>(
         array: T[],
         indexer: (t: T) => string,
-        merger: (t: T, r: R) => R = (t) => t as any
+        merger: (t: T, r: R) => R = (t) => t as any,
     ): Record<string, R> {
         return array.reduce((r, t) => {
             const key = indexer(t);

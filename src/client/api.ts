@@ -65,7 +65,7 @@ export interface IExtensionApi {
          * @returns {({ execCommand: string[] | undefined })}
          */
         getExecutionDetails(
-            resource?: Resource
+            resource?: Resource,
         ): {
             /**
              * E.g of execution commands returned could be,
@@ -100,7 +100,7 @@ export function buildApi(
     // tslint:disable-next-line:no-any
     ready: Promise<any>,
     serviceManager: IServiceManager,
-    serviceContainer: IServiceContainer
+    serviceContainer: IServiceContainer,
 ): IExtensionApi {
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -113,23 +113,23 @@ export function buildApi(
             return Promise.reject(ex);
         }),
         jupyter: {
-            registerHooks: () => jupyterIntegration.integrateWithJupyterExtension()
+            registerHooks: () => jupyterIntegration.integrateWithJupyterExtension(),
         },
         debug: {
             async getRemoteLauncherCommand(
                 host: string,
                 port: number,
-                waitUntilDebuggerAttaches: boolean = true
+                waitUntilDebuggerAttaches: boolean = true,
             ): Promise<string[]> {
                 return getDebugpyLauncherArgs({
                     host,
                     port,
-                    waitUntilDebuggerAttaches
+                    waitUntilDebuggerAttaches,
                 });
             },
             async getDebuggerPackagePath(): Promise<string | undefined> {
                 return getDebugpyPackagePath();
-            }
+            },
         },
         settings: {
             onDidChangeExecutionDetails: interpreterService.onDidChangeInterpreterConfiguration,
@@ -137,7 +137,7 @@ export function buildApi(
                 const pythonPath = configurationService.getSettings(resource).pythonPath;
                 // If pythonPath equals an empty string, no interpreter is set.
                 return { execCommand: pythonPath === '' ? undefined : [pythonPath] };
-            }
+            },
         },
         // These are for backwards compatibility. Other extensions are using these APIs and we don't want
         // to force them to move to the jupyter extension ... yet.
@@ -148,8 +148,8 @@ export function buildApi(
                 : (noop as any),
             showDataViewer: jupyterIntegration
                 ? jupyterIntegration.showDataViewer.bind(jupyterIntegration)
-                : (noop as any)
-        }
+                : (noop as any),
+        },
     };
 
     // In test environment return the DI Container.

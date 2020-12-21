@@ -11,11 +11,7 @@ import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnviro
 import { CachingLocator } from '../../../../../client/pythonEnvironments/base/locators/composite/cachingLocator';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
-import {
-    createLocatedEnv,
-    createNamedEnv,
-    SimpleLocator,
-} from '../../common';
+import { createLocatedEnv, createNamedEnv, SimpleLocator } from '../../common';
 
 const env1 = createNamedEnv('env1', '2.7.11', PythonEnvKind.System, '/usr/bin/python');
 const env2 = createNamedEnv('env2', '3.8.1', PythonEnvKind.System, '/usr/bin/python3');
@@ -91,10 +87,7 @@ suite('Python envs locator - CachingLocator', () => {
             const expected = [env1, env2, env4, env5];
             const [, locator] = await getInitializedLocator(envs);
             const query = {
-                kinds: [
-                    PythonEnvKind.Venv,
-                    PythonEnvKind.System,
-                ],
+                kinds: [PythonEnvKind.Venv, PythonEnvKind.System],
             };
 
             const iterator = locator.iterEnvs(query);

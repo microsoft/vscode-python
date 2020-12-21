@@ -22,7 +22,7 @@ import {
     IDisposableRegistry,
     IFormattingSettings,
     IOutputChannel,
-    IPythonSettings
+    IPythonSettings,
 } from '../../client/common/types';
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { BaseFormatter } from '../../client/formatters/baseFormatter';
@@ -53,7 +53,7 @@ suite('Formatting - Test Arguments', () => {
         blackPath: path.join('a', 'exe'),
         provider: '',
         yapfArgs: ['1', '2'],
-        yapfPath: path.join('a', 'exe')
+        yapfPath: path.join('a', 'exe'),
     };
 
     const formattingSettingsWithModuleName: IFormattingSettings = {
@@ -63,7 +63,7 @@ suite('Formatting - Test Arguments', () => {
         blackPath: 'module_name',
         provider: '',
         yapfArgs: ['1', '2'],
-        yapfPath: 'module_name'
+        yapfPath: 'module_name',
     };
 
     setup(() => {
@@ -87,21 +87,21 @@ suite('Formatting - Test Arguments', () => {
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(workspace.getWorkspaceFolder(anything())).thenReturn({ name: '', index: 0, uri: workspaceUri });
         when(container.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL)).thenReturn(
-            instance(outputChannel)
+            instance(outputChannel),
         );
         when(container.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
         when(container.get<IFormatterHelper>(IFormatterHelper)).thenReturn(formatterHelper);
         when(container.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspace));
         when(container.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         when(container.get<IPythonToolExecutionService>(IPythonToolExecutionService)).thenReturn(
-            instance(pythonToolExecutionService)
+            instance(pythonToolExecutionService),
         );
         when(container.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
     });
 
     async function setupFormatter(
         formatter: BaseFormatter,
-        formattingSettings: IFormattingSettings
+        formattingSettings: IFormattingSettings,
     ): Promise<ExecutionInfo> {
         const token = new CancellationTokenSource().token;
         when(settings.formatting).thenReturn(formattingSettings);
@@ -121,7 +121,7 @@ suite('Formatting - Test Arguments', () => {
         assert.equal(execInfo.moduleName, undefined);
         assert.deepEqual(
             execInfo.args,
-            formattingSettingsWithPath.blackArgs.concat(['--diff', '--quiet', docUri.fsPath])
+            formattingSettingsWithPath.blackArgs.concat(['--diff', '--quiet', docUri.fsPath]),
         );
     });
     test('Ensure black modulename and args used to launch the formatter', async () => {
@@ -133,7 +133,7 @@ suite('Formatting - Test Arguments', () => {
         assert.equal(execInfo.moduleName, formattingSettingsWithModuleName.blackPath);
         assert.deepEqual(
             execInfo.args,
-            formattingSettingsWithPath.blackArgs.concat(['--diff', '--quiet', docUri.fsPath])
+            formattingSettingsWithPath.blackArgs.concat(['--diff', '--quiet', docUri.fsPath]),
         );
     });
     test('Ensure autopep8path and args used to launch the formatter', async () => {

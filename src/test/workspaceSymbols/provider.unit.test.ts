@@ -108,12 +108,12 @@ suite('Workspace Symbols Provider', () => {
         assert.notEqual(
             symbols.findIndex((sym) => sym.location.uri.fsPath.endsWith('childFile.py')),
             -1,
-            'File with symbol not found in child workspace folder'
+            'File with symbol not found in child workspace folder',
         );
         assert.notEqual(
             symbols.findIndex((sym) => sym.location.uri.fsPath.endsWith('workspace2File.py')),
             -1,
-            'File with symbol not found in child workspace folder'
+            'File with symbol not found in child workspace folder',
         );
 
         const symbolsForMeth = await provider.provideWorkspaceSymbols('meth', new CancellationTokenSource().token);
@@ -121,17 +121,17 @@ suite('Workspace Symbols Provider', () => {
         assert.notEqual(
             symbolsForMeth.findIndex((sym) => sym.location.uri.fsPath.endsWith('childFile.py')),
             -1,
-            'Symbols not returned for childFile.py'
+            'Symbols not returned for childFile.py',
         );
         assert.notEqual(
             symbolsForMeth.findIndex((sym) => sym.location.uri.fsPath.endsWith('workspace2File.py')),
             -1,
-            'Symbols not returned for workspace2File.py'
+            'Symbols not returned for workspace2File.py',
         );
         assert.notEqual(
             symbolsForMeth.findIndex((sym) => sym.location.uri.fsPath.endsWith('file.py')),
             -1,
-            'Symbols not returned for file.py'
+            'Symbols not returned for file.py',
         );
     });
 });

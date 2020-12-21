@@ -325,16 +325,16 @@ suite('Pylint - Function runLinter()', () => {
             ',E1101,E1102,E1111,E1120,E1121,E1123,E1124,E1125,E1126,E1127' +
             ',E1128,E1129,E1130,E1131,E1132,E1133,E1134,E1135,E1136,E1137' +
             ',E1138,E1139,E1200,E1201,E1205,E1206,E1300,E1301,E1302,E1303' +
-            ',E1304,E1305,E1306,E1310,E1700,E1701'
+            ',E1304,E1305,E1306,E1310,E1700,E1701',
     ];
     const doc = {
-        uri: vscode.Uri.file('path/to/doc')
+        uri: vscode.Uri.file('path/to/doc'),
     };
     const args = [
         "--msg-template='{line},{column},{category},{symbol}:{msg}'",
         '--reports=n',
         '--output-format=text',
-        doc.uri.fsPath
+        doc.uri.fsPath,
     ];
     const original_hasConfigurationFileInWorkspace = Pylint.hasConfigurationFileInWorkspace;
     const original_hasConfigurationFile = Pylint.hasConfigurationFile;
@@ -344,7 +344,7 @@ suite('Pylint - Function runLinter()', () => {
             _args: string[],
             _document: vscode.TextDocument,
             _cancellation: vscode.CancellationToken,
-            _regEx: string
+            _regEx: string,
         ): Promise<ILintMessage[]> {
             return [];
         }
@@ -357,7 +357,7 @@ suite('Pylint - Function runLinter()', () => {
         // tslint:disable-next-line: no-unnecessary-override
         public async runLinter(
             document: vscode.TextDocument,
-            cancellation: vscode.CancellationToken
+            cancellation: vscode.CancellationToken,
         ): Promise<ILintMessage[]> {
             return super.runLinter(document, cancellation);
         }
@@ -401,8 +401,8 @@ suite('Pylint - Function runLinter()', () => {
     test('Use minimal checkers if a) setting to use minimal checkers is true, b) there are no custom arguments and c) there is no pylintrc file next to the file or at the workspace root and above', async () => {
         const settings = {
             linting: {
-                pylintUseMinimalCheckers: true
-            }
+                pylintUseMinimalCheckers: true,
+            },
         };
         configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
         _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
@@ -422,8 +422,8 @@ suite('Pylint - Function runLinter()', () => {
     test('Do not use minimal checkers if setting to use minimal checkers is false', async () => {
         const settings = {
             linting: {
-                pylintUseMinimalCheckers: false
-            }
+                pylintUseMinimalCheckers: false,
+            },
         };
         configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
         _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
@@ -443,8 +443,8 @@ suite('Pylint - Function runLinter()', () => {
     test('Do not use minimal checkers if there are custom arguments', async () => {
         const settings = {
             linting: {
-                pylintUseMinimalCheckers: true
-            }
+                pylintUseMinimalCheckers: true,
+            },
         };
         configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
         _info.setup((info) => info.linterArgs(doc.uri)).returns(() => ['customArg1', 'customArg2']);
@@ -464,8 +464,8 @@ suite('Pylint - Function runLinter()', () => {
     test('Do not use minimal checkers if there is a pylintrc file in the current working directory or when traversing the workspace up to its root (hasConfigurationFileInWorkspace() returns true)', async () => {
         const settings = {
             linting: {
-                pylintUseMinimalCheckers: true
-            }
+                pylintUseMinimalCheckers: true,
+            },
         };
         configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
         _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
@@ -485,8 +485,8 @@ suite('Pylint - Function runLinter()', () => {
     test('Do not use minimal checkers if a pylintrc file exists in the process, in the current working directory or up in the hierarchy tree (hasConfigurationFile() returns true)', async () => {
         const settings = {
             linting: {
-                pylintUseMinimalCheckers: true
-            }
+                pylintUseMinimalCheckers: true,
+            },
         };
         configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
         _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
@@ -506,19 +506,19 @@ suite('Pylint - Function runLinter()', () => {
     test('Message returned by runLinter() is as expected', async () => {
         const message = [
             {
-                type: 'messageType'
-            }
+                type: 'messageType',
+            },
         ];
         const expectedResult = [
             {
                 type: 'messageType',
-                severity: 'LintMessageSeverity'
-            }
+                severity: 'LintMessageSeverity',
+            },
         ];
         const settings = {
             linting: {
-                pylintUseMinimalCheckers: true
-            }
+                pylintUseMinimalCheckers: true,
+            },
         };
         configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
         _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);

@@ -12,7 +12,7 @@ const _typeof = {
     string: 'string',
     undefined: 'undefined',
     object: 'object',
-    function: 'function'
+    function: 'function',
 };
 
 /**

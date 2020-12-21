@@ -16,13 +16,13 @@ import {
     IExtensions,
     IPersistentState,
     IPersistentStateFactory,
-    IPythonSettings
+    IPythonSettings,
 } from '../../../client/common/types';
 import { Common, Pylance } from '../../../client/common/utils/localize';
 import {
     getPylanceExtensionUri,
     ProposeLSStateKeys,
-    ProposePylanceBanner
+    ProposePylanceBanner,
 } from '../../../client/languageServices/proposeLanguageServerBanner';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
@@ -51,13 +51,13 @@ const testData: IExperimentLsCombination[] = [
     { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.None, shouldShowBanner: false },
     { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.Microsoft, shouldShowBanner: false },
     { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.Node, shouldShowBanner: false },
-    { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.Jedi, shouldShowBanner: true }
+    { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.Jedi, shouldShowBanner: true },
 ];
 
 const expectedMessages = {
     [TryPylance.experiment]: Pylance.proposePylanceMessage(),
     [TryPylance.jediPrompt1]: 'Message for jediPrompt1',
-    [TryPylance.jediPrompt2]: 'Message for jediPrompt2'
+    [TryPylance.jediPrompt2]: 'Message for jediPrompt2',
 };
 
 suite('Propose Pylance Banner', () => {
@@ -85,7 +85,7 @@ suite('Propose Pylance Banner', () => {
             .callsFake((eventName: EventName, _, properties: { userAction: string }) => {
                 telemetryEvent = {
                     eventName,
-                    properties
+                    properties,
                 };
             });
     });
@@ -106,7 +106,7 @@ suite('Propose Pylance Banner', () => {
             if (t.experiment) {
                 expect(message).to.be.equal(
                     t.shouldShowBanner ? expectedMessages[t.experiment] : undefined,
-                    `getPromptMessage() returned ${message}`
+                    `getPromptMessage() returned ${message}`,
                 );
             } else {
                 expect(message).to.be.equal(undefined, `message should be undefined`);
@@ -129,8 +129,8 @@ suite('Propose Pylance Banner', () => {
                     typemoq.It.isValue(expectedMessages[TryPylance.experiment]),
                     typemoq.It.isValue(yes),
                     typemoq.It.isValue(no),
-                    typemoq.It.isValue(later)
-                )
+                    typemoq.It.isValue(later),
+                ),
             )
             .verifiable(typemoq.Times.never());
         const testBanner = preparePopup(
@@ -139,7 +139,7 @@ suite('Propose Pylance Banner', () => {
             appEnv.object,
             config.object,
             TryPylance.experiment,
-            false
+            false,
         );
         await testBanner.showBanner();
         appShell.verifyAll();
@@ -152,8 +152,8 @@ suite('Propose Pylance Banner', () => {
                     typemoq.It.isValue(expectedMessages[TryPylance.experiment]),
                     typemoq.It.isValue(yes),
                     typemoq.It.isValue(no),
-                    typemoq.It.isValue(later)
-                )
+                    typemoq.It.isValue(later),
+                ),
             )
             .returns(async () => no)
             .verifiable(typemoq.Times.once());
@@ -165,7 +165,7 @@ suite('Propose Pylance Banner', () => {
             appEnv.object,
             config.object,
             TryPylance.experiment,
-            false
+            false,
         );
         await testBanner.showBanner();
 
@@ -175,7 +175,7 @@ suite('Propose Pylance Banner', () => {
         sinon.assert.calledOnce(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, {
             eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
-            properties: { userAction: 'no' }
+            properties: { userAction: 'no' },
         });
     });
     test('Clicking Later should disable banner in session', async () => {
@@ -186,8 +186,8 @@ suite('Propose Pylance Banner', () => {
                     typemoq.It.isValue(expectedMessages[TryPylance.experiment]),
                     typemoq.It.isValue(yes),
                     typemoq.It.isValue(no),
-                    typemoq.It.isValue(later)
-                )
+                    typemoq.It.isValue(later),
+                ),
             )
             .returns(async () => later)
             .verifiable(typemoq.Times.once());
@@ -199,13 +199,13 @@ suite('Propose Pylance Banner', () => {
             appEnv.object,
             config.object,
             TryPylance.experiment,
-            false
+            false,
         );
         await testBanner.showBanner();
 
         expect(testBanner.enabled).to.be.equal(
             true,
-            'Banner should not be permanently disabled when user clicked Later'
+            'Banner should not be permanently disabled when user clicked Later',
         );
         appShell.verifyAll();
 
@@ -213,8 +213,8 @@ suite('Propose Pylance Banner', () => {
         assert.deepEqual(telemetryEvent, {
             eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
             properties: {
-                userAction: 'later'
-            }
+                userAction: 'later',
+            },
         });
     });
     test('Clicking Yes opens the extension marketplace entry', async () => {
@@ -225,8 +225,8 @@ suite('Propose Pylance Banner', () => {
                     typemoq.It.isValue(expectedMessages[TryPylance.experiment]),
                     typemoq.It.isValue(yes),
                     typemoq.It.isValue(no),
-                    typemoq.It.isValue(later)
-                )
+                    typemoq.It.isValue(later),
+                ),
             )
             .returns(async () => yes)
             .verifiable(typemoq.Times.once());
@@ -238,7 +238,7 @@ suite('Propose Pylance Banner', () => {
             appEnv.object,
             config.object,
             TryPylance.experiment,
-            false
+            false,
         );
         await testBanner.showBanner();
 
@@ -249,8 +249,8 @@ suite('Propose Pylance Banner', () => {
         assert.deepEqual(telemetryEvent, {
             eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
             properties: {
-                userAction: 'yes'
-            }
+                userAction: 'yes',
+            },
         });
     });
 });
@@ -261,7 +261,7 @@ function preparePopup(
     appEnv: IApplicationEnvironment,
     config: IConfigurationService,
     experiment: TryPylance | undefined,
-    pylanceInstalled: boolean
+    pylanceInstalled: boolean,
 ): ProposePylanceBanner {
     const myfactory = typemoq.Mock.ofType<IPersistentStateFactory>();
     const val = typemoq.Mock.ofType<IPersistentState<boolean>>();
@@ -278,14 +278,14 @@ function preparePopup(
     });
     myfactory
         .setup((a) =>
-            a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner), typemoq.It.isValue(true))
+            a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner), typemoq.It.isValue(true)),
         )
         .returns(() => {
             return val.object;
         });
     myfactory
         .setup((a) =>
-            a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner), typemoq.It.isValue(false))
+            a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner), typemoq.It.isValue(false)),
         )
         .returns(() => {
             return val.object;

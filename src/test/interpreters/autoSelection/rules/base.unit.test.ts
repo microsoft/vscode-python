@@ -19,7 +19,7 @@ import { BaseRuleService, NextAction } from '../../../../client/interpreter/auto
 import { CurrentPathInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/currentPath';
 import {
     AutoSelectionRule,
-    IInterpreterAutoSelectionService
+    IInterpreterAutoSelectionService,
 } from '../../../../client/interpreter/autoSelection/types';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
@@ -37,13 +37,13 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
         }
         public async setGlobalInterpreter(
             interpreter?: PythonEnvironment,
-            manager?: IInterpreterAutoSelectionService
+            manager?: IInterpreterAutoSelectionService,
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
         protected async onAutoSelectInterpreter(
             _resource: Uri,
-            _manager?: IInterpreterAutoSelectionService
+            _manager?: IInterpreterAutoSelectionService,
         ): Promise<NextAction> {
             return NextAction.runNextRule;
         }
@@ -53,7 +53,7 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
         state = mock(PersistentState);
         fs = mock(FileSystem);
         when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
-            instance(state)
+            instance(state),
         );
         rule = new BaseRuleServiceTest(AutoSelectionRule.cachedInterpreters, instance(fs), instance(stateFactory));
     });
@@ -62,8 +62,8 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
         verify(
             stateFactory.createGlobalPersistentState(
                 `InterpreterAutoSeletionRule-${AutoSelectionRule.cachedInterpreters}`,
-                undefined
-            )
+                undefined,
+            ),
         ).once();
     });
     test('Next rule should be invoked', async () => {
@@ -77,8 +77,8 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
         verify(
             stateFactory.createGlobalPersistentState(
                 `InterpreterAutoSeletionRule-${AutoSelectionRule.cachedInterpreters}`,
-                undefined
-            )
+                undefined,
+            ),
         ).once();
         verify(nextRule.autoSelectInterpreter(resource, manager)).once();
     });
@@ -92,8 +92,8 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
         verify(
             stateFactory.createGlobalPersistentState(
                 `InterpreterAutoSeletionRule-${AutoSelectionRule.cachedInterpreters}`,
-                undefined
-            )
+                undefined,
+            ),
         ).once();
         verify(nextRule.autoSelectInterpreter(anything(), anything())).never();
     });

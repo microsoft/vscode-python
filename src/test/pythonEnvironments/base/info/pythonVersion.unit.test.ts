@@ -4,10 +4,7 @@
 import * as assert from 'assert';
 
 import { PythonReleaseLevel, PythonVersion } from '../../../../client/pythonEnvironments/base/info';
-import {
-    getEmptyVersion,
-    parseVersion,
-} from '../../../../client/pythonEnvironments/base/info/pythonVersion';
+import { getEmptyVersion, parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
 
 export function ver(
     major: number,

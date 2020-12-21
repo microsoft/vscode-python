@@ -39,7 +39,7 @@ export function open(opts: any): Promise<childProcess.ChildProcess> {
             '-e',
             'do script "' + sudoPrefix + [opts.app].concat(appArgs).join(' ') + '"',
             '-e',
-            'end tell'
+            'end tell',
         ];
     } else if (process.platform === 'win32') {
         cmd = 'cmd';

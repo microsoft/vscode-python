@@ -37,7 +37,7 @@ suite('ProcessService', () => {
             'time.sleep(2)',
             'print("3")',
             'sys.stdout.flush()',
-            'time.sleep(2)'
+            'time.sleep(2)',
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
@@ -58,7 +58,7 @@ suite('ProcessService', () => {
                 }
             },
             done,
-            done
+            done,
         );
     });
 
@@ -82,7 +82,7 @@ suite('ProcessService', () => {
             'time.sleep(2)',
             'sys.stdout.write("3")',
             'sys.stdout.flush()',
-            'time.sleep(2)'
+            'time.sleep(2)',
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
@@ -103,7 +103,7 @@ suite('ProcessService', () => {
                 }
             },
             done,
-            done
+            done,
         );
     });
 
@@ -119,11 +119,11 @@ suite('ProcessService', () => {
             'time.sleep(10)',
             'print("2")',
             'sys.stdout.flush()',
-            'time.sleep(2)'
+            'time.sleep(2)',
         ];
         const cancellationToken = new CancellationTokenSource();
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], {
-            token: cancellationToken.token
+            token: cancellationToken.token,
         });
 
         const def = createDeferred();
@@ -150,7 +150,7 @@ suite('ProcessService', () => {
                 } else {
                     def.reject('Program terminated even before cancelling it.');
                 }
-            }
+            },
         );
     });
 
@@ -166,11 +166,11 @@ suite('ProcessService', () => {
             'time.sleep(10)',
             'print("2")',
             'sys.stdout.flush()',
-            'time.sleep(2)'
+            'time.sleep(2)',
         ];
         const cancellationToken = new CancellationTokenSource();
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], {
-            token: cancellationToken.token
+            token: cancellationToken.token,
         });
         let procKilled = false;
 
@@ -195,7 +195,7 @@ suite('ProcessService', () => {
             () => {
                 const errorMsg = procKilled ? undefined : 'Program terminated even before killing it.';
                 done(errorMsg);
-            }
+            },
         );
     });
 
@@ -223,7 +223,7 @@ suite('ProcessService', () => {
             'time.sleep(2)',
             'sys.stderr.write("c")',
             'sys.stderr.flush()',
-            'time.sleep(2)'
+            'time.sleep(2)',
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = [
@@ -232,7 +232,7 @@ suite('ProcessService', () => {
             { out: '2', source: 'stdout' },
             { out: 'b', source: 'stderr' },
             { out: '3', source: 'stdout' },
-            { out: 'c', source: 'stderr' }
+            { out: 'c', source: 'stderr' },
         ];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
@@ -249,7 +249,7 @@ suite('ProcessService', () => {
                 expect(output.source).to.be.equal(expectedOutput.source, 'Expected sopurce is incorrect');
             },
             done,
-            done
+            done,
         );
     });
 
@@ -277,7 +277,7 @@ suite('ProcessService', () => {
             },
             () => {
                 done("Completed, when we're expecting an error to be thrown.");
-            }
+            },
         );
     });
 
@@ -296,7 +296,7 @@ suite('ProcessService', () => {
             },
             () => {
                 done("Completed, when we're expecting an error to be thrown.");
-            }
+            },
         );
     });
 
@@ -310,7 +310,7 @@ suite('ProcessService', () => {
                 done(`Output received, when we\'re not expecting any, ${JSON.stringify(output)}`);
             },
             done,
-            done
+            done,
         );
     });
 });

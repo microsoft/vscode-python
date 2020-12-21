@@ -42,7 +42,7 @@ ProcessId=6028\r\n\
                 detail: '',
                 id: '4',
                 processName: 'System',
-                commandLine: ''
+                commandLine: '',
             },
             {
                 label: 'svchost.exe',
@@ -50,7 +50,7 @@ ProcessId=6028\r\n\
                 detail: '',
                 id: '5372',
                 processName: 'svchost.exe',
-                commandLine: ''
+                commandLine: '',
             },
             {
                 label: 'sihost.exe',
@@ -58,7 +58,7 @@ ProcessId=6028\r\n\
                 detail: 'sihost.exe',
                 id: '5728',
                 processName: 'sihost.exe',
-                commandLine: 'sihost.exe'
+                commandLine: 'sihost.exe',
             },
             {
                 label: 'svchost.exe',
@@ -66,7 +66,7 @@ ProcessId=6028\r\n\
                 detail: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
                 id: '5912',
                 processName: 'svchost.exe',
-                commandLine: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc'
+                commandLine: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
             },
             {
                 label: 'python.exe',
@@ -76,8 +76,8 @@ ProcessId=6028\r\n\
                 id: '6028',
                 processName: 'python.exe',
                 commandLine:
-                    'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py'
-            }
+                    'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
+            },
         ];
 
         const output = WmicProcessParser.parseProcesses(input);
@@ -120,7 +120,7 @@ ProcessId=6028\r\n\
                 detail: '',
                 id: '4',
                 processName: 'System',
-                commandLine: ''
+                commandLine: '',
             },
             {
                 label: 'svchost.exe',
@@ -128,7 +128,7 @@ ProcessId=6028\r\n\
                 detail: '',
                 id: '5372',
                 processName: 'svchost.exe',
-                commandLine: ''
+                commandLine: '',
             },
             {
                 label: 'sihost.exe',
@@ -136,7 +136,7 @@ ProcessId=6028\r\n\
                 detail: 'sihost.exe',
                 id: '5728',
                 processName: 'sihost.exe',
-                commandLine: 'sihost.exe'
+                commandLine: 'sihost.exe',
             },
             {
                 label: 'svchost.exe',
@@ -144,7 +144,7 @@ ProcessId=6028\r\n\
                 detail: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
                 id: '5912',
                 processName: 'svchost.exe',
-                commandLine: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc'
+                commandLine: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
             },
             {
                 label: 'python.exe',
@@ -154,8 +154,8 @@ ProcessId=6028\r\n\
                 id: '6028',
                 processName: 'python.exe',
                 commandLine:
-                    'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py'
-            }
+                    'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
+            },
         ];
 
         const output = WmicProcessParser.parseProcesses(input);
@@ -187,7 +187,7 @@ ProcessId=6028\r\n\
                 detail: '',
                 id: '4',
                 processName: 'System',
-                commandLine: ''
+                commandLine: '',
             },
             {
                 label: 'conhost.exe',
@@ -195,7 +195,7 @@ ProcessId=6028\r\n\
                 detail: 'C:\\WINDOWS\\system32\\conhost.exe',
                 id: '5912',
                 processName: 'conhost.exe',
-                commandLine: 'C:\\WINDOWS\\system32\\conhost.exe'
+                commandLine: 'C:\\WINDOWS\\system32\\conhost.exe',
             },
             {
                 label: 'python.exe',
@@ -205,8 +205,8 @@ ProcessId=6028\r\n\
                 id: '6028',
                 processName: 'python.exe',
                 commandLine:
-                    'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py'
-            }
+                    'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
+            },
         ];
 
         const output = WmicProcessParser.parseProcesses(input);

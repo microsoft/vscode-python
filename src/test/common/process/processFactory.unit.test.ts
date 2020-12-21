@@ -31,14 +31,14 @@ suite('Process - ProcessServiceFactory', () => {
         when(
             processService.on('exec', () => {
                 return;
-            })
+            }),
         ).thenReturn(processService);
         disposableRegistry = [];
         factory = new ProcessServiceFactory(
             instance(envVariablesProvider),
             instance(processLogger),
             instance(bufferDecoder),
-            disposableRegistry
+            disposableRegistry,
         );
     });
 

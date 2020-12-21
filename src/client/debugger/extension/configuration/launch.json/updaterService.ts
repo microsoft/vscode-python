@@ -22,13 +22,13 @@ export class LaunchJsonUpdaterServiceHelper {
         private readonly commandManager: ICommandManager,
         private readonly workspace: IWorkspaceService,
         private readonly documentManager: IDocumentManager,
-        private readonly configurationProvider: IDebugConfigurationService
+        private readonly configurationProvider: IDebugConfigurationService,
     ) {}
     @captureTelemetry(EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON)
     public async selectAndInsertDebugConfig(
         document: TextDocument,
         position: Position,
-        token: CancellationToken
+        token: CancellationToken,
     ): Promise<void> {
         if (this.documentManager.activeTextEditor && this.documentManager.activeTextEditor.document === document) {
             const folder = this.workspace.getWorkspaceFolder(document.uri);
@@ -52,7 +52,7 @@ export class LaunchJsonUpdaterServiceHelper {
     public async insertDebugConfiguration(
         document: TextDocument,
         position: Position,
-        config: DebugConfiguration
+        config: DebugConfiguration,
     ): Promise<void> {
         const cursorPosition = this.getCursorPositionInConfigurationsArray(document, position);
         if (!cursorPosition) {
@@ -77,7 +77,7 @@ export class LaunchJsonUpdaterServiceHelper {
     public getTextForInsertion(
         config: DebugConfiguration,
         cursorPosition: PositionOfCursor,
-        commaPosition?: PositionOfComma
+        commaPosition?: PositionOfComma,
     ) {
         const json = JSON.stringify(config);
         if (cursorPosition === 'AfterItem') {
@@ -91,7 +91,7 @@ export class LaunchJsonUpdaterServiceHelper {
     }
     public getCursorPositionInConfigurationsArray(
         document: TextDocument,
-        position: Position
+        position: Position,
     ): PositionOfCursor | undefined {
         if (this.isConfigurationArrayEmpty(document)) {
             return 'InsideEmptyArray';
@@ -151,21 +151,21 @@ export class LaunchJsonUpdaterService implements IExtensionSingleActivationServi
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
-        @inject(IDebugConfigurationService) private readonly configurationProvider: IDebugConfigurationService
+        @inject(IDebugConfigurationService) private readonly configurationProvider: IDebugConfigurationService,
     ) {}
     public async activate(): Promise<void> {
         const handler = new LaunchJsonUpdaterServiceHelper(
             this.commandManager,
             this.workspace,
             this.documentManager,
-            this.configurationProvider
+            this.configurationProvider,
         );
         this.disposableRegistry.push(
             this.commandManager.registerCommand(
                 'python.SelectAndInsertDebugConfiguration',
                 handler.selectAndInsertDebugConfig,
-                handler
-            )
+                handler,
+            ),
         );
     }
 }

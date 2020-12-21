@@ -29,7 +29,7 @@ export function sendFileCreationTelemetry() {
 export async function sendActivationTelemetry(
     fileSystem: IFileSystem,
     workspaceService: IWorkspaceService,
-    resource: Resource
+    resource: Resource,
 ) {
     if (shouldSendTelemetry()) {
         const systemVariables = new SystemVariables(resource, undefined, workspaceService);

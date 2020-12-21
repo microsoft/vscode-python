@@ -71,9 +71,7 @@ export function isForbiddenStorePath(interpreterPath: string): boolean {
  */
 export async function isWindowsStoreEnvironment(interpreterPath: string): Promise<boolean> {
     const pythonPathToCompare = path.normalize(interpreterPath).toUpperCase();
-    const localAppDataStorePath = path
-        .normalize(getWindowsStoreAppsRoot())
-        .toUpperCase();
+    const localAppDataStorePath = path.normalize(getWindowsStoreAppsRoot()).toUpperCase();
     if (pythonPathToCompare.includes(localAppDataStorePath)) {
         return true;
     }
@@ -100,7 +98,7 @@ export async function isWindowsStoreEnvironment(interpreterPath: string): Promis
  * Note chokidar fails to match multiple digits using +([0-9]), even though the underlying glob pattern matcher
  * they use (picomatch), or any other glob matcher does. Hence why we had to use {[0-9],[0-9][0-9]} instead.
  */
-const pythonExeGlob = 'python3\.{[0-9],[0-9][0-9]}\.exe';
+const pythonExeGlob = 'python3.{[0-9],[0-9][0-9]}.exe';
 
 /**
  * Checks if a given path ends with python3.*.exe. Not all python executables are matched as
@@ -133,33 +131,29 @@ export async function getWindowsStorePythonExes(): Promise<string[]> {
 
     // Collect python*.exe directly under %LOCALAPPDATA%/Microsoft/WindowsApps
     const files = await fsapi.readdir(windowsAppsRoot);
-    return files
-        .map((filename: string) => path.join(windowsAppsRoot, filename))
-        .filter(isWindowsStorePythonExe);
+    return files.map((filename: string) => path.join(windowsAppsRoot, filename)).filter(isWindowsStorePythonExe);
 }
 
 export class WindowsStoreLocator extends FSWatchingLocator {
     private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
 
     constructor() {
-        super(
-            getWindowsStoreAppsRoot,
-            async () => this.kind,
-            { executableBaseGlob: pythonExeGlob },
-        );
+        super(getWindowsStoreAppsRoot, async () => this.kind, { executableBaseGlob: pythonExeGlob });
     }
 
     protected doIterEnvs(): IPythonEnvsIterator {
         const iterator = async function* (kind: PythonEnvKind) {
             const exes = await getWindowsStorePythonExes();
-            yield* exes.map(async (executable: string) => buildEnvInfo({
-                kind,
-                executable,
-                version: getPythonVersionFromPath(executable),
-                org: 'Microsoft',
-                arch: Architecture.x64,
-                fileInfo: await getFileInfo(executable),
-            }));
+            yield* exes.map(async (executable: string) =>
+                buildEnvInfo({
+                    kind,
+                    executable,
+                    version: getPythonVersionFromPath(executable),
+                    org: 'Microsoft',
+                    arch: Architecture.x64,
+                    fileInfo: await getFileInfo(executable),
+                }),
+            );
         };
         return iterator(this.kind);
     }

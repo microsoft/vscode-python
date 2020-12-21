@@ -42,14 +42,14 @@ export class PythonFormattingEditProvider
         this.config = serviceContainer.get<IConfigurationService>(IConfigurationService);
         const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.disposables.push(
-            this.documentManager.onDidSaveTextDocument(async (document) => this.onSaveDocument(document))
+            this.documentManager.onDidSaveTextDocument(async (document) => this.onSaveDocument(document)),
         );
         this.disposables.push(
             interpreterService.onDidChangeInterpreter(async () => {
                 if (this.documentManager.activeTextEditor) {
                     return this.onSaveDocument(this.documentManager.activeTextEditor.document);
                 }
-            })
+            }),
         );
     }
 
@@ -60,7 +60,7 @@ export class PythonFormattingEditProvider
     public provideDocumentFormattingEdits(
         document: vscode.TextDocument,
         options: vscode.FormattingOptions,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<vscode.TextEdit[]> {
         return this.provideDocumentRangeFormattingEdits(document, undefined, options, token);
     }
@@ -69,7 +69,7 @@ export class PythonFormattingEditProvider
         document: vscode.TextDocument,
         range: vscode.Range | undefined,
         options: vscode.FormattingOptions,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<vscode.TextEdit[]> {
         // Workaround for https://github.com/Microsoft/vscode/issues/41194
         // VSC rejects 'format on save' promise in 750 ms. Python formatting may take quite a bit longer.

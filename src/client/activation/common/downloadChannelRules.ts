@@ -32,7 +32,7 @@ export class DownloadBetaChannelRule implements IDownloadChannelRule {
         const globalState = stateFactory.createGlobalPersistentState<boolean>(
             lastCheckedForLSDateTimeCacheKey,
             true,
-            frequencyForBetalLSDownloadCheck
+            frequencyForBetalLSDownloadCheck,
         );
 
         // If we have checked it in the last 24 hours, then ensure we don't do it again.

@@ -10,7 +10,7 @@ import {
     StatusBarAlignment,
     StatusBarItem,
     Uri,
-    WorkspaceFolder
+    WorkspaceFolder,
 } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
@@ -21,7 +21,7 @@ import {
     IOutputChannel,
     IPathUtils,
     IPythonSettings,
-    ReadWrite
+    ReadWrite,
 } from '../../client/common/types';
 import { Interpreters } from '../../client/common/utils/localize';
 import { Architecture } from '../../client/common/utils/platform';
@@ -31,7 +31,7 @@ import {
     IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterService,
-    IInterpreterStatusbarVisibilityFilter
+    IInterpreterStatusbarVisibilityFilter,
 } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
@@ -49,7 +49,7 @@ const info: PythonEnvironment = {
     envType: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
-    sysVersion: ''
+    sysVersion: '',
 };
 
 suite('Interpreters Display', () => {
@@ -144,7 +144,7 @@ suite('Interpreters Display', () => {
             ...info,
             displayName: 'Dummy_Display_Name',
             envType: EnvironmentType.Unknown,
-            path: path.join('user', 'development', 'env', 'bin', 'python')
+            path: path.join('user', 'development', 'env', 'bin', 'python'),
         };
         setupWorkspaceFolder(resource, workspaceFolder);
         when(autoSelection.autoSelectInterpreter(anything())).thenResolve();
@@ -168,7 +168,7 @@ suite('Interpreters Display', () => {
             ...info,
             displayName: 'Dummy_Display_Name',
             envType: EnvironmentType.Unknown,
-            path: path.join('user', 'development', 'env', 'bin', 'python')
+            path: path.join('user', 'development', 'env', 'bin', 'python'),
         };
         pathUtils
             .setup((p) => p.getDisplayName(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -199,7 +199,7 @@ suite('Interpreters Display', () => {
         setupWorkspaceFolder(resource, workspaceFolder);
         const pythonInterpreter: PythonEnvironment = ({
             displayName,
-            path: pythonPath
+            path: pythonPath,
         } as any) as PythonEnvironment;
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
@@ -237,7 +237,7 @@ suite('Interpreters Display', () => {
         statusBar.verify((s) => (s.color = TypeMoq.It.isValue('')), TypeMoq.Times.once());
         statusBar.verify(
             (s) => (s.text = TypeMoq.It.isValue('$(alert) Select Python Interpreter')),
-            TypeMoq.Times.once()
+            TypeMoq.Times.once(),
         );
     });
     test('Ensure we try to identify the active workspace when a resource is not provided ', async () => {
@@ -249,7 +249,7 @@ suite('Interpreters Display', () => {
             displayName: 'Dummy_Display_Name',
             envType: EnvironmentType.Unknown,
             companyDisplayName: 'Company Name',
-            path: pythonPath
+            path: pythonPath,
         };
         fileSystem.setup((fs) => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
         virtualEnvMgr
@@ -281,7 +281,7 @@ suite('Interpreters Display', () => {
                 ...info,
                 displayName: 'Dummy_Display_Name',
                 envType: EnvironmentType.Unknown,
-                path: path.join('user', 'development', 'env', 'bin', 'python')
+                path: path.join('user', 'development', 'env', 'bin', 'python'),
             };
             setupWorkspaceFolder(resource, workspaceFolder);
             when(autoSelection.autoSelectInterpreter(anything())).thenResolve();

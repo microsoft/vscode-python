@@ -21,7 +21,7 @@ import {
     ILanguageServerDownloader,
     ILanguageServerFolderService,
     ILanguageServerOutputChannel,
-    IPlatformData
+    IPlatformData,
 } from '../types';
 
 // tslint:disable:no-require-imports no-any
@@ -38,7 +38,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IServiceContainer) private readonly services: IServiceContainer
+        @inject(IServiceContainer) private readonly services: IServiceContainer,
     ) {
         this.output = this.lsOutputChannel.channel;
     }
@@ -73,7 +73,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         try {
             localTempFilePath = await this.downloadFile(
                 downloadUri,
-                'Downloading Microsoft Python Language Server... '
+                'Downloading Microsoft Python Language Server... ',
             );
         } catch (err) {
             this.output.appendLine(LanguageService.downloadFailedOutputMessage());
@@ -84,7 +84,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
                 EventName.PYTHON_LANGUAGE_SERVER_ERROR,
                 undefined,
                 { error: 'Failed to download (platform)' },
-                err
+                err,
             );
             throw new Error(err);
         } finally {
@@ -93,7 +93,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
                 success,
                 lsVersion,
                 usedSSL,
-                lsName
+                lsName,
             });
         }
 
@@ -109,14 +109,14 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
                 EventName.PYTHON_LANGUAGE_SERVER_ERROR,
                 undefined,
                 { error: 'Failed to extract (platform)' },
-                err
+                err,
             );
             throw new Error(err);
         } finally {
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED, timer.elapsedTime, {
                 success,
                 lsVersion,
-                lsName
+                lsName,
             });
             await this.fs.deleteFile(localTempFilePath);
         }
@@ -134,7 +134,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         const downloadOptions = {
             extension: downloadFileExtension,
             outputChannel: this.output,
-            progressMessagePrefix: title
+            progressMessagePrefix: title,
         };
         return this.fileDownloader.downloadFile(uri, downloadOptions).then((file) => {
             this.output.appendLine(LanguageService.extractionCompletedOutputMessage());
@@ -150,14 +150,14 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         const title = 'Extracting files... ';
         await window.withProgress(
             {
-                location: ProgressLocation.Window
+                location: ProgressLocation.Window,
             },
             (progress) => {
                 // tslint:disable-next-line:no-require-imports no-var-requires
                 const StreamZip = require('node-stream-zip');
                 const zip = new StreamZip({
                     file: tempFilePath,
-                    storeEntries: true
+                    storeEntries: true,
                 });
 
                 let totalFiles = 0;
@@ -184,7 +184,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
                         deferred.reject(e);
                     });
                 return deferred.promise;
-            }
+            },
         );
 
         // Set file to executable (nothing happens in Windows, as chmod has no definition there)

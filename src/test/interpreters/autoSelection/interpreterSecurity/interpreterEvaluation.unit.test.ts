@@ -43,7 +43,7 @@ suite('Interpreter Evaluation', () => {
             applicationShell.object,
             browserService.object,
             interpreterHelper.object,
-            interpreterSecurityStorage.object
+            interpreterSecurityStorage.object,
         );
     });
 
@@ -64,9 +64,9 @@ suite('Interpreter Evaluation', () => {
                 .returns(
                     () =>
                         ({
-                            folderUri: resource
+                            folderUri: resource,
                             // tslint:disable-next-line: no-any
-                        } as any)
+                        } as any),
                 );
             // tslint:disable-next-line: no-any
             interpreterEvaluation.inferValueUsingCurrentState = () => 'storageValue' as any;
@@ -82,9 +82,9 @@ suite('Interpreter Evaluation', () => {
                 .returns(
                     () =>
                         ({
-                            folderUri: resource
+                            folderUri: resource,
                             // tslint:disable-next-line: no-any
-                        } as any)
+                        } as any),
                 );
             interpreterEvaluation.inferValueUsingCurrentState = () => undefined;
             // tslint:disable-next-line: no-any
@@ -111,9 +111,9 @@ suite('Interpreter Evaluation', () => {
                 .returns(
                     () =>
                         ({
-                            folderUri: resource
+                            folderUri: resource,
                             // tslint:disable-next-line: no-any
-                        } as any)
+                        } as any),
                 );
             const isSafe = interpreterEvaluation.inferValueUsingCurrentState(interpreter, resource);
             expect(isSafe).to.equal(true, 'Should be true');
@@ -127,9 +127,9 @@ suite('Interpreter Evaluation', () => {
                 .returns(
                     () =>
                         ({
-                            folderUri: resource
+                            folderUri: resource,
                             // tslint:disable-next-line: no-any
-                        } as any)
+                        } as any),
                 );
             areInterpretersInWorkspaceSafe
                 .setup((i) => i.value)
@@ -147,9 +147,9 @@ suite('Interpreter Evaluation', () => {
                 .returns(
                     () =>
                         ({
-                            folderUri: resource
+                            folderUri: resource,
                             // tslint:disable-next-line: no-any
-                        } as any)
+                        } as any),
                 );
             areInterpretersInWorkspaceSafe.setup((i) => i.value).returns(() => undefined);
             unsafeInterpreterPromptEnabled.setup((s) => s.value).returns(() => false);
@@ -165,9 +165,9 @@ suite('Interpreter Evaluation', () => {
                 .returns(
                     () =>
                         ({
-                            folderUri: resource
+                            folderUri: resource,
                             // tslint:disable-next-line: no-any
-                        } as any)
+                        } as any),
                 );
             areInterpretersInWorkspaceSafe.setup((i) => i.value).returns(() => undefined);
             unsafeInterpreterPromptEnabled.setup((s) => s.value).returns(() => true);

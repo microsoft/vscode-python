@@ -19,7 +19,7 @@ export class LinterInfo implements ILinterInfo {
         product: Product,
         id: LinterId,
         protected configService: IConfigurationService,
-        configFileNames: string[] = []
+        configFileNames: string[] = [],
     ) {
         this._product = product;
         this._id = id;
@@ -81,7 +81,7 @@ export class PylintLinterInfo extends LinterInfo {
     constructor(
         configService: IConfigurationService,
         private readonly workspaceService: IWorkspaceService,
-        configFileNames: string[] = []
+        configFileNames: string[] = [],
     ) {
         super(Product.pylint, LinterId.PyLint, configService, configFileNames);
     }

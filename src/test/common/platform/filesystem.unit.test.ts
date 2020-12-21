@@ -16,7 +16,7 @@ import {
     IRawFileSystem,
     ITempFileSystem,
     ReadStream,
-    WriteStream
+    WriteStream,
 } from '../../../client/common/platform/types';
 
 // tslint:disable:max-func-body-length chai-vague-errors
@@ -79,7 +79,7 @@ suite('Raw FileSystem', () => {
             // Since it's a mock we can just use it for all 3 values.
             raw.object,
             raw.object,
-            raw.object
+            raw.object,
         );
     });
     function verifyAll() {
@@ -166,7 +166,7 @@ suite('Raw FileSystem', () => {
             { kind: 'file', filetype: FileType.File },
             { kind: 'dir', filetype: FileType.Directory },
             { kind: 'symlink', filetype: FileType.SymbolicLink },
-            { kind: 'unknown', filetype: FileType.Unknown }
+            { kind: 'unknown', filetype: FileType.Unknown },
         ].forEach((testData) => {
             test(`wraps the low-level function (filetype: ${testData.kind}`, async () => {
                 const filename = 'x/y/z/spam.py';
@@ -174,7 +174,7 @@ suite('Raw FileSystem', () => {
                     type: testData.filetype,
                     size: 10,
                     ctime: 101,
-                    mtime: 102
+                    mtime: 102,
                     //tslint:disable-next-line:no-any
                 } as any;
                 const old = createMockLegacyStat();
@@ -317,7 +317,7 @@ suite('Raw FileSystem', () => {
                 .returns(() => Promise.reject(err));
             raw.setup((r) => r.stat(Uri(tgt))) // It's a symlink.
                 .returns(() =>
-                    Promise.resolve(({ type: FileType.SymbolicLink | FileType.Directory } as unknown) as FileStat)
+                    Promise.resolve(({ type: FileType.SymbolicLink | FileType.Directory } as unknown) as FileStat),
                 );
             raw.setup((r) => r.rename(Uri(src), Uri(tgt), { overwrite: true })) // expect the specific filename
                 .returns(() => Promise.resolve());
@@ -499,7 +499,7 @@ suite('Raw FileSystem', () => {
     suite('rmFile', () => {
         const opts = {
             recursive: false,
-            useTrash: false
+            useTrash: false,
         };
 
         test('wraps the low-level function', async () => {
@@ -548,7 +548,7 @@ suite('Raw FileSystem', () => {
     suite('rmdir', () => {
         const opts = {
             recursive: true,
-            useTrash: false
+            useTrash: false,
         };
 
         test('directory is empty', async () => {
@@ -578,7 +578,7 @@ suite('Raw FileSystem', () => {
                 ['dev1', FileType.Unknown],
                 ['w', FileType.Directory],
                 ['spam.py', FileType.File],
-                ['other', FileType.SymbolicLink | FileType.File]
+                ['other', FileType.SymbolicLink | FileType.File],
             ];
             raw.setup((r) => r.readDirectory(TypeMoq.It.isAny())) // The dir is not empty.
                 .returns(() => Promise.resolve(entries));
@@ -605,7 +605,7 @@ suite('Raw FileSystem', () => {
     suite('rmtree', () => {
         const opts = {
             recursive: true,
-            useTrash: false
+            useTrash: false,
         };
 
         test('wraps the low-level function', async () => {
@@ -640,7 +640,7 @@ suite('Raw FileSystem', () => {
                 ['dev1', FileType.Unknown],
                 ['w', FileType.Directory],
                 ['spam.py', FileType.File],
-                ['other', FileType.SymbolicLink | FileType.File]
+                ['other', FileType.SymbolicLink | FileType.File],
             ];
             const expected = actual.map(([basename, filetype]) => {
                 const filename = `x/y/z/spam/${basename}`;
@@ -687,7 +687,7 @@ suite('Raw FileSystem', () => {
                 type: FileType.Unknown,
                 size: 10,
                 ctime: 101,
-                mtime: 102
+                mtime: 102,
                 //tslint:disable-next-line:no-any
             } as any;
             const lstat = createMockLegacyStat();
@@ -704,7 +704,7 @@ suite('Raw FileSystem', () => {
 
         [
             { kind: 'file', filetype: FileType.File },
-            { kind: 'dir', filetype: FileType.Directory }
+            { kind: 'dir', filetype: FileType.Directory },
         ].forEach((testData) => {
             test(`wraps the low-level function (filetype: ${testData.kind})`, async () => {
                 const filename = 'x/y/z/spam.py';
@@ -712,7 +712,7 @@ suite('Raw FileSystem', () => {
                     type: testData.filetype,
                     size: 10,
                     ctime: 101,
-                    mtime: 102
+                    mtime: 102,
                     //tslint:disable-next-line:no-any
                 } as any;
                 const lstat = createMockLegacyStat();
@@ -734,7 +734,7 @@ suite('Raw FileSystem', () => {
         [
             { kind: 'file', filetype: FileType.File },
             { kind: 'dir', filetype: FileType.Directory },
-            { kind: 'unknown', filetype: FileType.Unknown }
+            { kind: 'unknown', filetype: FileType.Unknown },
         ].forEach((testData) => {
             test(`wraps the low-level function (filetype: ${testData.kind} symlink)`, async () => {
                 const filename = 'x/y/z/spam.py';
@@ -742,7 +742,7 @@ suite('Raw FileSystem', () => {
                     type: testData.filetype | FileType.SymbolicLink,
                     size: 10,
                     ctime: 101,
-                    mtime: 102
+                    mtime: 102,
                     //tslint:disable-next-line:no-any
                 } as any;
                 const lstat = createMockLegacyStat();
@@ -868,7 +868,7 @@ suite('FileSystemUtils', () => {
             deps.object, // paths
             deps.object, // tempFS
             (data: string) => deps.object.getHash(data),
-            (pat: string, options?: { cwd: string }) => deps.object.globFile(pat, options)
+            (pat: string, options?: { cwd: string }) => deps.object.globFile(pat, options),
         );
     });
     function verifyAll() {
@@ -1217,7 +1217,7 @@ suite('FileSystemUtils', () => {
                 ['x/y/z/spam/dev1', FileType.Unknown],
                 ['x/y/z/spam/w', FileType.Directory],
                 ['x/y/z/spam/spam.py', FileType.File],
-                ['x/y/z/spam/other', FileType.SymbolicLink | FileType.File]
+                ['x/y/z/spam/other', FileType.SymbolicLink | FileType.File],
             ];
             deps.setup((d) => d.listdir(dirname)) // Full results get returned from RawFileSystem.listdir().
                 .returns(() => Promise.resolve(expected));
@@ -1297,13 +1297,13 @@ suite('FileSystemUtils', () => {
                 ['x/y/z/spam/v', FileType.Directory],
                 ['x/y/z/spam/eggs.py', FileType.File],
                 ['x/y/z/spam/other1', FileType.SymbolicLink | FileType.File],
-                ['x/y/z/spam/other2', FileType.SymbolicLink | FileType.Directory]
+                ['x/y/z/spam/other2', FileType.SymbolicLink | FileType.Directory],
             ];
             const expected = [
                 // only entries with FileType.Directory
                 'x/y/z/spam/w',
                 'x/y/z/spam/v',
-                'x/y/z/spam/other2'
+                'x/y/z/spam/other2',
             ];
             deps.setup((d) => d.listdir(dirname)) // Full results get returned from RawFileSystem.listdir().
                 .returns(() => Promise.resolve(entries));
@@ -1325,13 +1325,13 @@ suite('FileSystemUtils', () => {
                 ['x/y/z/spam/v', FileType.Directory],
                 ['x/y/z/spam/eggs.py', FileType.File],
                 ['x/y/z/spam/other1', FileType.SymbolicLink | FileType.File],
-                ['x/y/z/spam/other2', FileType.SymbolicLink | FileType.Directory]
+                ['x/y/z/spam/other2', FileType.SymbolicLink | FileType.Directory],
             ];
             const expected = [
                 // only entries with FileType.File
                 'x/y/z/spam/spam.py',
                 'x/y/z/spam/eggs.py',
-                'x/y/z/spam/other1'
+                'x/y/z/spam/other1',
             ];
             deps.setup((d) => d.listdir(filename)) // Full results get returned from RawFileSystem.listdir().
                 .returns(() => Promise.resolve(entries));
@@ -1438,7 +1438,7 @@ suite('FileSystemUtils', () => {
                 'x/y/z/spam.py',
                 'x/y/z/spam.pyc',
                 'x/y/z/spam.so',
-                'x/y/z/spam.data'
+                'x/y/z/spam.data',
             ];
             deps.setup((d) => d.globFile(pattern, undefined)) // found some
                 .returns(() => Promise.resolve(expected));
@@ -1458,7 +1458,7 @@ suite('FileSystemUtils', () => {
                 'x/y/z/spam.py',
                 'x/y/z/spam.pyc',
                 'x/y/z/spam.so',
-                'x/y/z/spam.data'
+                'x/y/z/spam.data',
             ];
             deps.setup((d) => d.globFile(pattern, { cwd: cwd })) // found some
                 .returns(() => Promise.resolve(expected));

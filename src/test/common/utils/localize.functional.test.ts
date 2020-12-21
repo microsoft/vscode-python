@@ -55,7 +55,7 @@ suite('Localization', () => {
         assert.equal(
             val,
             'Can you please take 2 minutes to tell us how the Python extension is working for you?',
-            'LanguageService string doesnt match'
+            'LanguageService string doesnt match',
         );
         done();
     });
@@ -72,7 +72,7 @@ suite('Localization', () => {
     test('key found for locale', (done) => {
         addLocale('spam', {
             'debug.selectConfigurationTitle': '???',
-            'Common.gotIt': '!!!'
+            'Common.gotIt': '!!!',
         });
         setLocale('spam');
 
@@ -86,7 +86,7 @@ suite('Localization', () => {
 
     test('key not found for locale (default used)', (done) => {
         addLocale('spam', {
-            'debug.selectConfigurationTitle': '???'
+            'debug.selectConfigurationTitle': '???',
         });
         setLocale('spam');
 

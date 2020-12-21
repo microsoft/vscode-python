@@ -15,7 +15,7 @@ import {
     ILanguageServerAnalysisOptions,
     ILanguageServerExtension,
     ILanguageServerFolderService,
-    ILanguageServerProxy
+    ILanguageServerProxy,
 } from '../../../client/activation/types';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { ICommandManager } from '../../../client/common/application/types';
@@ -53,7 +53,7 @@ suite('Language Server - Manager', () => {
             instance(analysisOptions),
             instance(lsExtension),
             instance(folderService),
-            instance(commandManager)
+            instance(commandManager),
         );
     });
 
@@ -97,7 +97,7 @@ suite('Language Server - Manager', () => {
             await startLanguageServer();
 
             await expect(manager.start(resource, undefined)).to.eventually.be.rejectedWith(
-                'Language server already started'
+                'Language server already started',
             );
         });
         test('Changes in analysis options must restart LS', async () => {
@@ -123,7 +123,7 @@ suite('Language Server - Manager', () => {
                 onChangeAnalysisHandler.call(manager),
                 onChangeAnalysisHandler.call(manager),
                 onChangeAnalysisHandler.call(manager),
-                onChangeAnalysisHandler.call(manager)
+                onChangeAnalysisHandler.call(manager),
             ]);
             await sleep(1);
 
@@ -144,7 +144,7 @@ suite('Language Server - Manager', () => {
                 onChangeAnalysisHandler.call(manager),
                 onChangeAnalysisHandler.call(manager),
                 onChangeAnalysisHandler.call(manager),
-                onChangeAnalysisHandler.call(manager)
+                onChangeAnalysisHandler.call(manager),
             ]);
             await sleep(1);
 
@@ -162,7 +162,7 @@ suite('Language Server - Manager', () => {
                 onChangeAnalysisHandler.call(manager),
                 onChangeAnalysisHandler.call(manager),
                 onChangeAnalysisHandler.call(manager),
-                onChangeAnalysisHandler.call(manager)
+                onChangeAnalysisHandler.call(manager),
             ]);
             await sleep(1);
 

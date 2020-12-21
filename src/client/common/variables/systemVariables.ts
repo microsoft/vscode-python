@@ -59,7 +59,7 @@ abstract class AbstractSystemVariables implements ISystemVariables {
     }
 
     private __resolveLiteral(
-        values: IStringDictionary<string | IStringDictionary<string> | string[]>
+        values: IStringDictionary<string | IStringDictionary<string> | string[]>,
     ): IStringDictionary<string | IStringDictionary<string> | string[]> {
         const result: IStringDictionary<string | IStringDictionary<string> | string[]> = Object.create(null);
         Object.keys(values).forEach((key) => {
@@ -105,7 +105,7 @@ export class SystemVariables extends AbstractSystemVariables {
         file: Uri | undefined,
         rootFolder: string | undefined,
         workspace?: IWorkspaceService,
-        documentManager?: IDocumentManager
+        documentManager?: IDocumentManager,
     ) {
         super();
         const workspaceFolder = workspace && file ? workspace.getWorkspaceFolder(file) : undefined;
@@ -117,8 +117,8 @@ export class SystemVariables extends AbstractSystemVariables {
             this._selectedText = documentManager.activeTextEditor.document.getText(
                 new Range(
                     documentManager.activeTextEditor.selection.start,
-                    documentManager.activeTextEditor.selection.end
-                )
+                    documentManager.activeTextEditor.selection.end,
+                ),
             );
         }
         this._execPath = process.execPath;

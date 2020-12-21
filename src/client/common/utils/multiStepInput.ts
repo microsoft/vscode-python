@@ -61,7 +61,7 @@ export interface IMultiStepInput<S> {
         activeItem,
         placeholder,
         buttons,
-        shouldResume
+        shouldResume,
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>>;
     showInputBox<P extends InputBoxParameters>({
         title,
@@ -71,7 +71,7 @@ export interface IMultiStepInput<S> {
         prompt,
         validate,
         buttons,
-        shouldResume
+        shouldResume,
     }: P): Promise<MultiStepInputInputBoxResponseType<P>>;
 }
 
@@ -94,7 +94,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         shouldResume,
         matchOnDescription,
         matchOnDetail,
-        acceptFilterBoxTextAsSelection
+        acceptFilterBoxTextAsSelection,
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>> {
         const disposables: Disposable[] = [];
         try {
@@ -126,16 +126,18 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     input.onDidHide(() => {
                         (async () => {
                             reject(
-                                shouldResume && (await shouldResume()) ? InputFlowAction.resume : InputFlowAction.cancel
+                                shouldResume && (await shouldResume())
+                                    ? InputFlowAction.resume
+                                    : InputFlowAction.cancel,
                             );
                         })().catch(reject);
-                    })
+                    }),
                 );
                 if (acceptFilterBoxTextAsSelection) {
                     disposables.push(
                         input.onDidAccept(() => {
                             resolve(<any>input.value);
-                        })
+                        }),
                     );
                 }
                 if (this.current) {
@@ -158,7 +160,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         validate,
         password,
         buttons,
-        shouldResume
+        shouldResume,
     }: P): Promise<MultiStepInputInputBoxResponseType<P>> {
         const disposables: Disposable[] = [];
         try {
@@ -202,10 +204,12 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     input.onDidHide(() => {
                         (async () => {
                             reject(
-                                shouldResume && (await shouldResume()) ? InputFlowAction.resume : InputFlowAction.cancel
+                                shouldResume && (await shouldResume())
+                                    ? InputFlowAction.resume
+                                    : InputFlowAction.cancel,
                             );
                         })().catch(reject);
-                    })
+                    }),
                 );
                 if (this.current) {
                     this.current.dispose();

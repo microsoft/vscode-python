@@ -24,7 +24,7 @@ class PythonEnvironment {
             // from ProcessService:
             exec(file: string, args: string[]): Promise<ExecutionResult<string>>;
             shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
-        }
+        },
     ) {}
 
     public getExecutionInfo(pythonArgs: string[] = []): PythonExecInfo {
@@ -81,14 +81,14 @@ function createDeps(
     observablePythonArgv: string[] | undefined,
     // from ProcessService:
     exec: (file: string, args: string[], options?: SpawnOptions) => Promise<ExecutionResult<string>>,
-    shellExec: (command: string, options?: ShellOptions) => Promise<ExecutionResult<string>>
+    shellExec: (command: string, options?: ShellOptions) => Promise<ExecutionResult<string>>,
 ) {
     return {
         getPythonArgv: (python: string) => pythonArgv || [python],
         getObservablePythonArgv: (python: string) => observablePythonArgv || [python],
         isValidExecutable,
         exec: async (cmd: string, args: string[]) => exec(cmd, args, { throwOnStdErr: true }),
-        shellExec: async (text: string, timeout: number) => shellExec(text, { timeout })
+        shellExec: async (text: string, timeout: number) => shellExec(text, { timeout }),
     };
 }
 
@@ -96,7 +96,7 @@ export function createPythonEnv(
     pythonPath: string,
     // These are used to generate the deps.
     procs: IProcessService,
-    fs: IFileSystem
+    fs: IFileSystem,
 ): PythonEnvironment {
     const deps = createDeps(
         async (filename) => fs.fileExists(filename),
@@ -104,7 +104,7 @@ export function createPythonEnv(
         undefined,
         undefined,
         (file, args, opts) => procs.exec(file, args, opts),
-        (command, opts) => procs.shellExec(command, opts)
+        (command, opts) => procs.shellExec(command, opts),
     );
     return new PythonEnvironment(pythonPath, deps);
 }
@@ -115,7 +115,7 @@ export function createCondaEnv(
     pythonPath: string,
     // These are used to generate the deps.
     procs: IProcessService,
-    fs: IFileSystem
+    fs: IFileSystem,
 ): PythonEnvironment {
     const runArgs = ['run'];
     if (condaInfo.name === '') {
@@ -133,7 +133,7 @@ export function createCondaEnv(
         // See https://github.com/microsoft/vscode-python/issues/8473.
         undefined,
         (file, args, opts) => procs.exec(file, args, opts),
-        (command, opts) => procs.shellExec(command, opts)
+        (command, opts) => procs.shellExec(command, opts),
     );
     return new PythonEnvironment(pythonPath, deps);
 }
@@ -141,7 +141,7 @@ export function createCondaEnv(
 export function createWindowsStoreEnv(
     pythonPath: string,
     // These are used to generate the deps.
-    procs: IProcessService
+    procs: IProcessService,
 ): PythonEnvironment {
     const deps = createDeps(
         /**
@@ -157,7 +157,7 @@ export function createWindowsStoreEnv(
         undefined,
         undefined,
         (file, args, opts) => procs.exec(file, args, opts),
-        (command, opts) => procs.shellExec(command, opts)
+        (command, opts) => procs.shellExec(command, opts),
     );
     return new PythonEnvironment(pythonPath, deps);
 }

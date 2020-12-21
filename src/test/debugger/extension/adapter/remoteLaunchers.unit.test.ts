@@ -14,13 +14,13 @@ suite('External debugpy Debugger Launcher', () => {
         {
             testName: 'When path to debugpy does not contains spaces',
             path: path.join('path', 'to', 'debugpy'),
-            expectedPath: 'path/to/debugpy'
+            expectedPath: 'path/to/debugpy',
         },
         {
             testName: 'When path to debugpy contains spaces',
             path: path.join('path', 'to', 'debugpy', 'with spaces'),
-            expectedPath: '"path/to/debugpy/with spaces"'
-        }
+            expectedPath: '"path/to/debugpy/with spaces"',
+        },
     ].forEach((testParams) => {
         suite(testParams.testName, async () => {
             test('Test remote debug launcher args (and do not wait for debugger to attach)', async () => {
@@ -28,9 +28,9 @@ suite('External debugpy Debugger Launcher', () => {
                     {
                         host: 'something',
                         port: 1234,
-                        waitUntilDebuggerAttaches: false
+                        waitUntilDebuggerAttaches: false,
                     },
-                    testParams.path
+                    testParams.path,
                 );
                 const expectedArgs = [testParams.expectedPath, '--listen', 'something:1234'];
                 expect(args).to.be.deep.equal(expectedArgs);
@@ -40,9 +40,9 @@ suite('External debugpy Debugger Launcher', () => {
                     {
                         host: 'something',
                         port: 1234,
-                        waitUntilDebuggerAttaches: true
+                        waitUntilDebuggerAttaches: true,
                     },
-                    testParams.path
+                    testParams.path,
                 );
                 const expectedArgs = [testParams.expectedPath, '--listen', 'something:1234', '--wait-for-client'];
                 expect(args).to.be.deep.equal(expectedArgs);

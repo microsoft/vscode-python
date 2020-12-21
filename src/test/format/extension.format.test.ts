@@ -98,7 +98,7 @@ suite('Formatting - General', () => {
             if (args.indexOf('--diff') >= 0) {
                 callback({
                     out: fs.readFileSync(path.join(formatFilesPath, outputFileName), 'utf8'),
-                    source: 'stdout'
+                    source: 'stdout',
                 });
             }
         });
@@ -108,13 +108,13 @@ suite('Formatting - General', () => {
         formatter: AutoPep8Formatter | BlackFormatter | YapfFormatter,
         formattedContents: string,
         fileToFormat: string,
-        outputFileName: string
+        outputFileName: string,
     ) {
         const textDocument = await workspace.openTextDocument(fileToFormat);
         const textEditor = await window.showTextDocument(textDocument);
         const options = {
             insertSpaces: textEditor.options.insertSpaces! as boolean,
-            tabSize: textEditor.options.tabSize! as number
+            tabSize: textEditor.options.tabSize! as number,
         };
 
         await injectFormatOutput(outputFileName);
@@ -134,7 +134,7 @@ suite('Formatting - General', () => {
             new AutoPep8Formatter(ioc.serviceContainer),
             formattedAutoPep8,
             autoPep8FileToFormat,
-            'autopep8.output'
+            'autopep8.output',
         );
     });
     // tslint:disable-next-line:no-function-expression
@@ -151,7 +151,7 @@ suite('Formatting - General', () => {
             new BlackFormatter(ioc.serviceContainer),
             formattedBlack,
             blackFileToFormat,
-            'black.output'
+            'black.output',
         );
     });
     test('Yapf', async () =>

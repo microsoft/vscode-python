@@ -10,12 +10,12 @@ import { DiagnosticCodes } from './constants';
 
 export enum DiagnosticScope {
     Global = 'Global',
-    WorkspaceFolder = 'WorkspaceFolder'
+    WorkspaceFolder = 'WorkspaceFolder',
 }
 
 export enum DiagnosticIgnoreScope {
     always = 'always',
-    session = 'session'
+    session = 'session',
 }
 
 export interface IDiagnostic {

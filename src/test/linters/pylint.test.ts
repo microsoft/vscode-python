@@ -13,7 +13,7 @@ import {
     TextDocument,
     Uri,
     WorkspaceConfiguration,
-    WorkspaceFolder
+    WorkspaceFolder,
 } from 'vscode';
 import { LanguageServerType } from '../../client/activation/types';
 import { IWorkspaceService } from '../../client/common/application/types';
@@ -22,7 +22,7 @@ import { IPythonToolExecutionService } from '../../client/common/process/types';
 import { ExecutionInfo, IConfigurationService, IInstaller, IPythonSettings } from '../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -67,16 +67,16 @@ suite('Linting - Pylint', () => {
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
         serviceManager.addSingletonInstance<IPythonToolExecutionService>(
             IPythonToolExecutionService,
-            execService.object
+            execService.object,
         );
         serviceManager.addSingletonInstance<IPlatformService>(IPlatformService, platformService.object);
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
         serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
             IInterpreterAutoSeletionProxyService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
 
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
@@ -224,7 +224,7 @@ suite('Linting - Pylint', () => {
         await pylinter.lint(document.object, new CancellationTokenSource().token);
         expect(
             execInfo!.args.findIndex((x) => x.indexOf('--disable=all') >= 0),
-            'Minimal args passed to pylint while pylintrc exists.'
+            'Minimal args passed to pylint while pylintrc exists.',
         ).to.be.eq(expectedMinArgs ? 0 : -1);
     }
     test('Negative column numbers should be treated 0', async () => {
@@ -244,7 +244,7 @@ suite('Linting - Pylint', () => {
             'No config file found, using default configuration',
             '************* Module test',
             '1,1,convention,C0111:Missing module docstring',
-            '3,-1,error,E1305:Too many arguments for format string'
+            '3,-1,error,E1305:Too many arguments for format string',
         ].join(os.EOL);
         execService
             .setup((x) => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -260,7 +260,7 @@ suite('Linting - Pylint', () => {
             error: DiagnosticSeverity.Error,
             fatal: DiagnosticSeverity.Error,
             refactor: DiagnosticSeverity.Hint,
-            warning: DiagnosticSeverity.Warning
+            warning: DiagnosticSeverity.Warning,
         };
 
         const settings = TypeMoq.Mock.ofType<IPythonSettings>();

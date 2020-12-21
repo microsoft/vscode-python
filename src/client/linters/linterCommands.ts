@@ -54,7 +54,7 @@ export class LinterCommands implements IDisposable {
         const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
-            placeHolder: `current: ${current}`
+            placeHolder: `current: ${current}`,
         };
 
         const selection = await this.appShell.showQuickPick(linterList, quickPickOptions);
@@ -68,7 +68,7 @@ export class LinterCommands implements IDisposable {
                     const response = await this.appShell.showWarningMessage(
                         Linters.replaceWithSelectedLinter().format(selection),
                         'Yes',
-                        'No'
+                        'No',
                     );
                     if (response !== 'Yes') {
                         return;
@@ -87,7 +87,7 @@ export class LinterCommands implements IDisposable {
         const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
-            placeHolder: `current: ${current}`
+            placeHolder: `current: ${current}`,
         };
 
         const selection = await this.appShell.showQuickPick(options, quickPickOptions);
