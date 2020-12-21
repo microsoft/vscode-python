@@ -80,7 +80,7 @@ jobs:
 
       # TODO: Uncomment once we are ready to rely on eslint.
       # - name: Run linting on TypeScript code
-      #   run: npx eslint --ext .ts,.tsx src
+      #   run: npm run lint
 
       - name: Run prettier on TypeScript code
         run: npx prettier 'src/**/*.ts*' --check
