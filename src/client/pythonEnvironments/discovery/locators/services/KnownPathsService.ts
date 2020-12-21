@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 // tslint:disable:no-require-imports no-var-requires no-unnecessary-callback-wrapper
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -10,6 +11,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
+// eslint-disable-next-line global-require
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 /**
@@ -70,7 +72,7 @@ export class KnownPathsService extends CacheableLocatorService {
     private async getInterpreterDetails(interpreter: string) {
         const details = await this.helper.getInterpreterInformation(interpreter);
         if (!details) {
-            return;
+            return undefined;
         }
         this._hasInterpreters.resolve(true);
         return {

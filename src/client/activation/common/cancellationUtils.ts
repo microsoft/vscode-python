@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 /*
  * cancellationUtils.ts
  * Copyright (c) Microsoft Corporation.

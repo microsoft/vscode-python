@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 // tslint:disable:no-require-imports no-var-requires underscore-consistent-invocation no-unnecessary-callback-wrapper
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
