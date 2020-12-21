@@ -58,7 +58,6 @@ const tslintFilter = [
     '!.vscode/**/*',
     '!pythonFiles/**/*',
     '!resources/**/*',
-    '!snippets/**/*',
     '!syntaxes/**/*',
     '!**/typings/**/*',
     '!**/*.d.ts',
@@ -143,7 +142,7 @@ async function addExtensionDependencies() {
     // extension dependencies need not be installed during development
     const packageJsonContents = await fsExtra.readFile('package.json', 'utf-8');
     const packageJson = JSON.parse(packageJsonContents);
-    packageJson.extensionDependencies = ["ms-toolsai.jupyter"].concat(packageJson.extensionDependencies ? packageJson.extensionDependencies : []);
+    packageJson.extensionDependencies = ['ms-toolsai.jupyter'].concat(packageJson.extensionDependencies ? packageJson.extensionDependencies : []);
     await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
 }
 

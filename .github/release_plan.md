@@ -65,16 +65,14 @@
 
 ## Release
 
--   [ ] Publish the release via Azure DevOps
-    -   [ ] Make sure [CI](https://github.com/Microsoft/vscode-python/blob/main/CONTRIBUTING.md) is passing. Try a re-run on any failing CI test stages. If tests still won't pass contact the owning team.
-    -   [ ] On Azure DevOps on the page for the CI run after it succeeds there will now be a "Releases" tab which is populated with a release entry. Click that entry to go to the release page, which shows the "Upload" and "Publish" stages
-    -   [ ] Click the deploy button on the "Upload" stage and make sure that it succeeds
-    -   [ ] Make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
-    -   [ ] Click the deploy button on the "Publish" stage, this will push out the release to the public
-    -   [ ] From a VSCode instance uninstall the python extension. After the publish see if the new version is available from the extensions tab. Download it and quick sanity check to make sure the extension loads.
--   [ ] Create a [GitHub release](https://github.com/microsoft/vscode-python/releases)
-    -   [ ] The previous publish step should have created a release here, but it needs to be edited
-    -   [ ] Edit the tag to match the version of the released extension
+-   [ ] Publish the release (🤖)
+    -   [ ] Make sure [CI](https://github.com/microsoft/vscode-python/actions?query=workflow%3A%22Insiders+Build%22) is passing
+    -   [ ] Download the artifact containing the VSIX and make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
+    -   [ ] [Update the Marketplace](https://marketplace.visualstudio.com/manage/publishers/ms-python)
+    -   [ ] From a VS Code instance uninstall the python extension. After the publish see if the new version is available from the extensions tab. Download it and quick sanity check to make sure the extension loads.
+-   [ ] Create a [GitHub release](https://github.com/microsoft/vscode-python/releases) (🤖)
+    -   [ ] Start creating a new release
+    -   [ ] Make the tag match the version of the released extension
     -   [ ] Copy the changelog entry into the release as the description
 -   [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
 -   [ ] Publish the [blog](http://aka.ms/pythonblog) post

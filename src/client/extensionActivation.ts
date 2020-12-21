@@ -69,7 +69,7 @@ import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from '.
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
 
 // components
-import * as pythonEnvironments from './pythonEnvironments';
+// import * as pythonEnvironments from './pythonEnvironments';
 
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
@@ -77,7 +77,7 @@ import { Components } from './extensionInit';
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
     ext: ExtensionState,
-    components: Components
+    _components: Components
 ): Promise<ActivationResult[]> {
     // Note that each activation returns a promise that resolves
     // when that activation completes.  However, it might have started
@@ -89,7 +89,13 @@ export async function activateComponents(
     // activation resolves `ActivationResult`, which can safely wrap
     // the "inner" promise.
     const promises: Promise<ActivationResult>[] = [
-        pythonEnvironments.activate(components.pythonEnvs),
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: For now the extension should only interact with the component via the component adapter,
+        // which takes care of putting the component behind the experiment flag. It already activates the
+        // component among other things, hence the following is not needed.
+        // pythonEnvironments.activate(components.pythonEnvs),
+        // If we need to activate, we need to use the adapter:
+        // https://github.com/microsoft/vscode-python/issues/14984
         // These will go away eventually.
         activateLegacy(ext)
     ];

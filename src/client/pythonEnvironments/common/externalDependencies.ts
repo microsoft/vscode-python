@@ -8,7 +8,6 @@ import * as vscode from 'vscode';
 import { ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../../common/process/types';
 import { IExperimentService } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
-import { normalizeFilename } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IDisposable } from '../../common/utils/resourceLifecycle';
 import { IServiceContainer } from '../../ioc/types';
@@ -17,8 +16,6 @@ let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
     internalServiceContainer = serviceContainer;
 }
-
-// processes
 
 function getProcessFactory(): IProcessServiceFactory {
     return internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
@@ -34,10 +31,12 @@ export async function exec(file: string, args: string[], options: SpawnOptions =
     return proc.exec(file, args, options);
 }
 
-// filesystem
-
 export function pathExists(absPath: string): Promise<boolean> {
     return fsapi.pathExists(absPath);
+}
+
+export function listDir(dirname: string): Promise<fs.Dirent[]> {
+    return fs.promises.readdir(dirname, { withFileTypes: true });
 }
 
 export function readFile(filePath: string): Promise<string> {
@@ -51,19 +50,6 @@ export function readFile(filePath: string): Promise<string> {
  */
 export function isParentPath(filePath: string, parentPath: string): boolean {
     return normCasePath(filePath).startsWith(normCasePath(parentPath));
-}
-
-export function listDir(dirname: string): Promise<fs.Dirent[]> {
-    return fs.promises.readdir(dirname, { withFileTypes: true });
-}
-
-export async function isDirectory(filename: string): Promise<boolean> {
-    const stat = await fsapi.lstat(filename);
-    return stat.isDirectory();
-}
-
-export function normalizePath(filename: string): string {
-    return normalizeFilename(filename);
 }
 
 export function normCasePath(filePath: string): string {

@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Dirent } from 'fs';
+import * as fsapi from 'fs-extra';
 import * as path from 'path';
+import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
 import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from '../discovery/locators/services/condaLocator';
 import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/virtualEnvironmentIdentifier';
-import { listDir } from './externalDependencies';
 import { isPosixPythonBin } from './posixUtils';
 import { isWindowsPythonExe } from './windowsUtils';
 
@@ -28,37 +28,26 @@ export async function* findInterpretersInDir(
     const checkBin = os === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
     const itemFilter = filter ?? (() => true);
 
-    let entries: Dirent[];
-    try {
-        entries = await listDir(root);
-    } catch (err) {
-        // Treat a missing directory as empty.
-        if (err.code === 'ENOENT') {
-            return;
-        }
-        throw err; // re-throw
-    }
+    const dirContents = (await fsapi.readdir(root)).filter(itemFilter);
 
-    for (const entry of entries) {
-        const filename = path.join(root, entry.name);
-        if (itemFilter && !itemFilter(filename)) {
-            // eslint-disable-next-line no-continue
-            continue;
-        }
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO: If the "withFileTypes" option doesn't help us on Windows
-        // then we will need to check manually (using `stat()`)..
-        if (entry.isDirectory()) {
-            if (recurseLevels && recurseLevels > 0) {
-                yield* findInterpretersInDir(filename, recurseLevels - 1, filter);
-            }
-        } else if (entry.isFile()) {
-            if (checkBin(filename)) {
-                yield filename;
+    const generators = dirContents.map((item) => {
+        async function* generator() {
+            const fullPath = path.join(root, item);
+            const stat = await fsapi.lstat(fullPath);
+
+            if (stat.isDirectory()) {
+                if (recurseLevels && recurseLevels > 0) {
+                    yield* findInterpretersInDir(fullPath, recurseLevels - 1);
+                }
+            } else if (checkBin(fullPath)) {
+                yield fullPath;
             }
         }
-        // We ignore all other file types, including symlinks.
-    }
+
+        return generator();
+    });
+
+    yield* iterable(chain(generators));
 }
 
 /**

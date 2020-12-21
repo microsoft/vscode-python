@@ -258,20 +258,44 @@ export class TensorBoardSession {
         if (this.webviewPanel) {
             this.webviewPanel.webview.html = `<!DOCTYPE html>
             <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'; frame-src ${this.url};">
-                <iframe
-                    width="100%"
-                    height="800"
-                    sandbox="allow-scripts allow-forms allow-same-origin allow-pointer-lock"
-                    src="${this.url}"
-                    frameborder="0"
-                    allowfullscreen
-                ></iframe>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>TensorBoard</title>
-            </head>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'; frame-src ${this.url};">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>TensorBoard</title>
+                </head>
+                <body>
+                    <script type="text/javascript">
+                        function resizeFrame() {
+                            var f = window.document.getElementById('vscode-tensorboard-iframe');
+                            if (f) {
+                                f.style.height = window.innerHeight / 0.7 + "px";
+                                f.style.width = window.innerWidth / 0.7 + "px";
+                            }
+                        }
+                        window.addEventListener('resize', resizeFrame);
+                    </script>
+                    <iframe
+                        id="vscode-tensorboard-iframe"
+                        class="responsive-iframe"
+                        sandbox="allow-scripts allow-forms allow-same-origin allow-pointer-lock"
+                        src="${this.url}"
+                        frameborder="0"
+                        border="0"
+                        allowfullscreen
+                    ></iframe>
+                    <style>
+                        .responsive-iframe {
+                            transform: scale(0.7);
+                            transform-origin: 0 0;
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            overflow: hidden;
+                            display: block;
+                        }
+                    </style>
+                </body>
             </html>`;
         }
     }
