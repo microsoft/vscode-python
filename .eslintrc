@@ -11,7 +11,8 @@
         "plugin:@typescript-eslint/recommended",
         "plugin:import/errors",
         "plugin:import/warnings",
-        "plugin:import/typescript"
+        "plugin:import/typescript",
+        "prettier"
     ],
     "rules": {
         // Overriding ESLint rules with Typescript-specific ones
@@ -40,14 +41,7 @@
         "no-useless-constructor": "off",
         "@typescript-eslint/no-useless-constructor": "error",
         "@typescript-eslint/no-var-requires": "off",
-        // Overriding formatting rules to let Prettier handle them
-        "comma-dangle": "off",
-        "function-paren-newline": "off",
-        "implicit-arrow-linebreak": "off",
-        "indent": "off",
-        "max-len": "off",
-        "object-curly-newline": ["error", {"ImportDeclaration": {"consistent": true}}],
-        "operator-linebreak": "off",
+
         // Other rules
         "class-methods-use-this": ["error", {"exceptMethods": ["dispose"]}],
         "func-names": "off",
@@ -63,12 +57,6 @@
         "import/prefer-default-export": "off",
         "linebreak-style": "off",
         "no-await-in-loop": "off",
-        "no-confusing-arrow": [
-            "error",
-            {
-                "allowParens": true
-            }
-        ],
         "no-console": "off",
         "no-control-regex": "off",
         "no-extend-native": "off",
