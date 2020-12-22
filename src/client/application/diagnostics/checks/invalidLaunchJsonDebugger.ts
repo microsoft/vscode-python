@@ -134,6 +134,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         }
         if (!diagnostic.shouldShowPrompt) {
             await this.fixLaunchJson(diagnostic.code);
+            return;
         }
         const commandPrompts = [
             {
