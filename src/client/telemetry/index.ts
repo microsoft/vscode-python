@@ -9,7 +9,7 @@ import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceInfo } from '../common/logger';
 import { Telemetry } from '../common/startPage/constants';
-import { TerminalShellType } from '../common/terminal/types';
+import type { TerminalShellType } from '../common/terminal/types';
 import { Architecture } from '../common/utils/platform';
 import { StopWatch } from '../common/utils/stopWatch';
 import { DebugConfigurationType } from '../debugger/extension/types';
@@ -19,7 +19,7 @@ import { LinterId } from '../linters/types';
 import { EnvironmentType } from '../pythonEnvironments/info';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
-import { LinterTrigger, TestTool } from './types';
+import type { LinterTrigger, TestTool } from './types';
 
 /**
  * Checks whether telemetry is supported.

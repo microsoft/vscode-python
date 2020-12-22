@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
-import { IEventNamePropertyMapping } from '../telemetry/index';
+import type { IEventNamePropertyMapping } from './index';
 import { EventName } from './constants';
 
 export type EditorLoadTelemetry = IEventNamePropertyMapping[EventName.EDITOR_LOAD];
