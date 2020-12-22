@@ -16,7 +16,7 @@ export type CodeExecutionTelemetry = IEventNamePropertyMapping[EventName.EXECUTI
 export type DebuggerTelemetry = IEventNamePropertyMapping[EventName.DEBUGGER];
 export type TestTool = 'nosetest' | 'pytest' | 'unittest';
 export type TestRunTelemetry = IEventNamePropertyMapping[EventName.UNITTEST_RUN];
-export type TestDiscoverytTelemetry = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVER];
+export type TestDiscoveryTelemetry = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVER];
 export type TestConfiguringTelemetry = IEventNamePropertyMapping[EventName.UNITTEST_CONFIGURING];
 export type ImportNotebook = {
     scope: 'command';

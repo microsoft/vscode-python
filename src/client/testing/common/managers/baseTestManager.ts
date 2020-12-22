@@ -29,7 +29,7 @@ import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { EventName } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry/index';
-import { TestDiscoverytTelemetry, TestRunTelemetry } from '../../../telemetry/types';
+import { TestDiscoveryTelemetry, TestRunTelemetry } from '../../../telemetry/types';
 import { IPythonTestMessage, ITestDiagnosticService, WorkspaceTestStatus } from '../../types';
 import { copyDesiredTestResults } from '../testUtils';
 import { CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL } from './../constants';
@@ -187,7 +187,7 @@ export abstract class BaseTestManager implements ITestManager {
         if (userInitiated) {
             this.stop();
         }
-        const telementryProperties: TestDiscoverytTelemetry = {
+        const telementryProperties: TestDiscoveryTelemetry = {
             tool: this.testProvider,
 
             trigger: cmdSource as any,
