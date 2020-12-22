@@ -85,7 +85,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         diagnostics.forEach((diagnostic) => this.handleDiagnostic(diagnostic));
     }
 
-    protected async fixLaunchJson(code: DiagnosticCodes) {
+    protected async fixLaunchJson(code: DiagnosticCodes): Promise<void> {
         if (!this.workspaceService.hasWorkspaceFolders) {
             return;
         }
@@ -133,7 +133,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
             return;
         }
         if (!diagnostic.shouldShowPrompt) {
-            return this.fixLaunchJson(diagnostic.code);
+            await this.fixLaunchJson(diagnostic.code);
         }
         const commandPrompts = [
             {
@@ -196,11 +196,13 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         await this.fs.writeFile(launchJson, fileContents);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private findAndReplace(fileContents: string, search: string, replace: string) {
         const searchRegex = new RegExp(search, 'g');
         return fileContents.replace(searchRegex, replace);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private getLaunchJsonFile(workspaceFolder: WorkspaceFolder) {
         return path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
     }
