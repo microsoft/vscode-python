@@ -49,7 +49,7 @@ export const InvalidMacPythonInterpreterServiceId = 'InvalidMacPythonInterpreter
 export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
     protected changeThrottleTimeout = 1000;
 
-    private timeOut?: NodeJS.Timer;
+    private timeOut?: NodeJS.Timer | number;
 
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
@@ -71,7 +71,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
     }
 
     public dispose(): void {
-        if (this.timeOut) {
+        if (this.timeOut && typeof this.timeOut !== 'number') {
             clearTimeout(this.timeOut);
             this.timeOut = undefined;
         }
@@ -181,7 +181,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
             );
         }
         // Lets wait, for more changes, dirty simple throttling.
-        if (this.timeOut) {
+        if (this.timeOut && typeof this.timeOut !== 'number') {
             clearTimeout(this.timeOut);
             this.timeOut = undefined;
         }
