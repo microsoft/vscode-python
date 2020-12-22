@@ -86,11 +86,11 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         this.converter = new NotebookConverter(notebookApi, fs, cellSelector, notebookFileRegex);
     }
 
-    public dispose() {
+    public dispose(): void {
         this.converter.dispose();
     }
 
-    public didChange(event: TextDocumentChangeEvent, next: (ev: TextDocumentChangeEvent) => void) {
+    public didChange(event: TextDocumentChangeEvent, next: (ev: TextDocumentChangeEvent) => void): void {
         // We need to talk directly to the language client here.
         const client = this.getClient();
 
@@ -107,13 +107,13 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         }
     }
 
-    public didOpen(document: TextDocument, next: (ev: TextDocument) => void) {
+    public didOpen(document: TextDocument, next: (ev: TextDocument) => void): () => void {
         // If this is a notebook cell, change this into a concat document if this is the first time.
         if (isNotebookCell(document.uri)) {
             if (!this.converter.hasFiredOpen(document)) {
                 this.converter.firedOpen(document);
                 const newDoc = this.converter.toOutgoingDocument(document);
-                return next(newDoc);
+                next(newDoc);
             }
         } else {
             next(document);
@@ -124,7 +124,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         };
     }
 
-    public didClose(document: TextDocument, next: (ev: TextDocument) => void) {
+    public didClose(document: TextDocument, next: (ev: TextDocument) => void): () => void {
         // If this is a notebook cell, change this into a concat document if this is the first time.
         if (isNotebookCell(document.uri)) {
             // Cell delete causes this callback, but won't fire the close event because it's not
@@ -132,7 +132,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
             if (this.converter.hasCell(document) && !this.converter.hasFiredClose(document)) {
                 this.converter.firedClose(document);
                 const newDoc = this.converter.toOutgoingDocument(document);
-                return next(newDoc);
+                next(newDoc);
             }
         } else {
             next(document);
@@ -144,12 +144,12 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public didSave(event: TextDocument, next: (ev: TextDocument) => void) {
+    public didSave(event: TextDocument, next: (ev: TextDocument) => void): void {
         return next(event);
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public willSave(event: TextDocumentWillSaveEvent, next: (ev: TextDocumentWillSaveEvent) => void) {
+    public willSave(event: TextDocumentWillSaveEvent, next: (ev: TextDocumentWillSaveEvent) => void): void {
         return next(event);
     }
 
@@ -157,10 +157,11 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
     public willSaveWaitUntil(
         event: TextDocumentWillSaveEvent,
         next: (ev: TextDocumentWillSaveEvent) => Thenable<TextEdit[]>,
-    ) {
+    ): Thenable<TextEdit[]> {
         return next(event);
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public provideCompletionItem(
         document: TextDocument,
         position: Position,
@@ -180,6 +181,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         return next(document, position, context, token);
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public provideHover(
         document: TextDocument,
         position: Position,
@@ -472,7 +474,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         return next(document, position, token);
     }
 
-    public handleDiagnostics(uri: Uri, diagnostics: Diagnostic[], next: HandleDiagnosticsSignature) {
+    public handleDiagnostics(uri: Uri, diagnostics: Diagnostic[], next: HandleDiagnosticsSignature): void {
         // Remap any wrapped documents so that diagnostics appear in the cells. Note that if we
         // get a diagnostics list for our concated document, we have to tell VS code about EVERY cell.
         // Otherwise old messages for cells that didn't change this time won't go away.

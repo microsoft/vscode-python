@@ -145,7 +145,7 @@ export class JupyterExtensionIntegration {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
     ) {}
 
-    public registerApi(jupyterExtensionApi: JupyterExtensionApi) {
+    public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
         // Forward python parts
         jupyterExtensionApi.registerPythonApi({
             onDidChangeInterpreter: this.interpreterService.onDidChangeInterpreter,
@@ -186,6 +186,7 @@ export class JupyterExtensionIntegration {
                 return undefined;
             },
         });
+        return undefined;
     }
 
     public async integrateWithJupyterExtension(): Promise<void> {

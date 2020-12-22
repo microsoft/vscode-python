@@ -38,6 +38,7 @@ export type CondaEnvInfo = {
 /**
  * Return the list of conda env interpreters.
  */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export async function parseCondaInfo(
     info: CondaInfo,
     getPythonPath: (condaEnv: string) => string,

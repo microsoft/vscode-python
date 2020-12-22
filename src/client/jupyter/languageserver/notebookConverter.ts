@@ -71,16 +71,16 @@ export class NotebookConverter implements Disposable {
         return uri.fsPath;
     }
 
-    public dispose() {
+    public dispose(): void {
         this.disposables.forEach((d) => d.dispose());
     }
 
-    public hasCell(cell: TextDocument) {
+    public hasCell(cell: TextDocument): boolean {
         const concat = this.getConcatDocument(cell);
-        return concat && concat.contains(cell.uri);
+        return concat?.contains(cell.uri) ?? false;
     }
 
-    public hasFiredOpen(cell: TextDocument) {
+    public hasFiredOpen(cell: TextDocument): boolean | undefined {
         const wrapper = this.getTextDocumentWrapper(cell);
         if (wrapper) {
             return wrapper.firedOpen;
@@ -88,14 +88,14 @@ export class NotebookConverter implements Disposable {
         return undefined;
     }
 
-    public firedOpen(cell: TextDocument) {
+    public firedOpen(cell: TextDocument): void {
         const wrapper = this.getTextDocumentWrapper(cell);
         if (wrapper) {
             wrapper.firedOpen = true;
         }
     }
 
-    public hasFiredClose(cell: TextDocument) {
+    public hasFiredClose(cell: TextDocument): boolean | undefined {
         const wrapper = this.getTextDocumentWrapper(cell);
         if (wrapper) {
             return wrapper.firedClose;
@@ -103,7 +103,7 @@ export class NotebookConverter implements Disposable {
         return undefined;
     }
 
-    public firedClose(cell: TextDocument) {
+    public firedClose(cell: TextDocument): void {
         const wrapper = this.getTextDocumentWrapper(cell);
         if (wrapper) {
             wrapper.firedClose = true;
@@ -139,14 +139,15 @@ export class NotebookConverter implements Disposable {
         return result;
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public toIncomingWorkspaceSymbols(symbols: SymbolInformation[] | null | undefined) {
         if (Array.isArray(symbols)) {
             return symbols.map(this.toIncomingWorkspaceSymbol.bind(this));
         }
-        return symbols;
+        return symbols ?? undefined;
     }
 
-    public toIncomingWorkspaceEdit(workspaceEdit: WorkspaceEdit | null | undefined) {
+    public toIncomingWorkspaceEdit(workspaceEdit: WorkspaceEdit | null | undefined): WorkspaceEdit | undefined {
         if (workspaceEdit) {
             // Translate all of the text edits into a URI map
             const translated = new Map<Uri, TextEdit[]>();
@@ -173,7 +174,7 @@ export class NotebookConverter implements Disposable {
             translated.forEach((v, k) => newWorkspaceEdit.set(k, v));
             return newWorkspaceEdit;
         }
-        return workspaceEdit;
+        return workspaceEdit ?? undefined;
     }
 
     public toOutgoingDocument(cell: TextDocument): TextDocument {
@@ -187,6 +188,7 @@ export class NotebookConverter implements Disposable {
         return result ? result.uri : uri;
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public toOutgoingChangeEvent(cellEvent: TextDocumentChangeEvent) {
         return {
             document: this.toOutgoingDocument(cellEvent.document),
@@ -196,7 +198,7 @@ export class NotebookConverter implements Disposable {
         };
     }
 
-    public toOutgoingPosition(cell: TextDocument, position: Position) {
+    public toOutgoingPosition(cell: TextDocument, position: Position): Position {
         const concat = this.getConcatDocument(cell);
         return concat ? concat.positionAt(new Location(cell.uri, position)) : position;
     }
@@ -211,7 +213,7 @@ export class NotebookConverter implements Disposable {
         return cellRange;
     }
 
-    public toOutgoingOffset(cell: TextDocument, offset: number) {
+    public toOutgoingOffset(cell: TextDocument, offset: number): number {
         const concat = this.getConcatDocument(cell);
         if (concat) {
             const position = cell.positionAt(offset);
@@ -228,16 +230,17 @@ export class NotebookConverter implements Disposable {
         };
     }
 
-    public toIncomingHover(cell: TextDocument, hover: Hover | null | undefined) {
+    public toIncomingHover(cell: TextDocument, hover: Hover | null | undefined): Hover | undefined {
         if (hover && hover.range) {
             return {
                 ...hover,
                 range: this.toIncomingRange(cell, hover.range),
             };
         }
-        return hover;
+        return hover ?? undefined;
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public toIncomingCompletions(
         cell: TextDocument,
         completions: CompletionItem[] | CompletionList | null | undefined,
@@ -254,6 +257,7 @@ export class NotebookConverter implements Disposable {
         return completions;
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public toIncomingLocations(
         cell: TextDocument,
         location: Location | Location[] | LocationLink[] | null | undefined,
@@ -268,16 +272,20 @@ export class NotebookConverter implements Disposable {
         return location;
     }
 
-    public toIncomingHighlight(cell: TextDocument, highlight: DocumentHighlight[] | null | undefined) {
+    public toIncomingHighlight(
+        cell: TextDocument,
+        highlight: DocumentHighlight[] | null | undefined,
+    ): DocumentHighlight[] | undefined {
         if (highlight) {
             return highlight.map((h) => ({
                 ...h,
                 range: this.toIncomingRange(cell, h.range),
             }));
         }
-        return highlight;
+        return highlight ?? undefined;
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public toIncomingSymbols(cell: TextDocument, symbols: SymbolInformation[] | DocumentSymbol[] | null | undefined) {
         if (symbols && Array.isArray(symbols) && symbols.length) {
             if (symbols[0] instanceof DocumentSymbol) {
@@ -285,7 +293,7 @@ export class NotebookConverter implements Disposable {
             }
             return (<SymbolInformation[]>symbols).map(this.toIncomingSymbolFromSymbolInformation.bind(this, cell));
         }
-        return symbols;
+        return symbols ?? undefined;
     }
 
     public toIncomingSymbolFromSymbolInformation(cell: TextDocument, symbol: SymbolInformation): SymbolInformation {
@@ -306,7 +314,7 @@ export class NotebookConverter implements Disposable {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public toIncomingActions(_cell: TextDocument, actions: (Command | CodeAction)[] | null | undefined) {
+    public toIncomingActions(_cell: TextDocument, actions: (Command | CodeAction)[] | null | undefined): undefined {
         if (Array.isArray(actions)) {
             // Disable for now because actions are handled directly by the LS sometimes (at least in pylance)
             // If we translate or use them they will either
@@ -314,27 +322,27 @@ export class NotebookConverter implements Disposable {
             // 2) Crash (pylance is doing this now)
             return undefined;
         }
-        return actions;
+        return actions ?? undefined;
     }
 
-    public toIncomingCodeLenses(cell: TextDocument, lenses: CodeLens[] | null | undefined) {
+    public toIncomingCodeLenses(cell: TextDocument, lenses: CodeLens[] | null | undefined): CodeLens[] | undefined {
         if (Array.isArray(lenses)) {
             return lenses.map((c) => ({
                 ...c,
                 range: this.toIncomingRange(cell, c.range),
             }));
         }
-        return lenses;
+        return lenses ?? undefined;
     }
 
-    public toIncomingEdits(cell: TextDocument, edits: TextEdit[] | null | undefined) {
+    public toIncomingEdits(cell: TextDocument, edits: TextEdit[] | null | undefined): TextEdit[] | undefined {
         if (Array.isArray(edits)) {
             return edits.map((e) => ({
                 ...e,
                 range: this.toIncomingRange(cell, e.range),
             }));
         }
-        return edits;
+        return edits ?? undefined;
     }
 
     public toIncomingRename(
@@ -347,7 +355,13 @@ export class NotebookConverter implements Disposable {
               }
             | null
             | undefined,
-    ) {
+    ):
+        | Range
+        | {
+              range: Range;
+              placeholder: string;
+          }
+        | undefined {
         if (rangeOrRename) {
             if (rangeOrRename instanceof Range) {
                 return this.toIncomingLocation(cell, rangeOrRename).range;
@@ -357,10 +371,13 @@ export class NotebookConverter implements Disposable {
                 range: this.toIncomingLocation(cell, rangeOrRename.range).range,
             };
         }
-        return rangeOrRename;
+        return rangeOrRename ?? undefined;
     }
 
-    public toIncomingDocumentLinks(cell: TextDocument, links: DocumentLink[] | null | undefined) {
+    public toIncomingDocumentLinks(
+        cell: TextDocument,
+        links: DocumentLink[] | null | undefined,
+    ): DocumentLink[] | undefined {
         if (links && Array.isArray(links)) {
             return links.map((l) => {
                 const uri = l.target ? l.target : cell.uri;
@@ -372,15 +389,15 @@ export class NotebookConverter implements Disposable {
                 };
             });
         }
-        return links;
+        return links ?? undefined;
     }
 
-    public toIncomingRange(cell: TextDocument | Uri, range: Range) {
+    public toIncomingRange(cell: TextDocument | Uri, range: Range): Range {
         // This is dangerous as the URI is not remapped (location uri may be different)
         return this.toIncomingLocation(cell, range).range;
     }
 
-    public toIncomingPosition(cell: TextDocument | Uri, position: Position) {
+    public toIncomingPosition(cell: TextDocument | Uri, position: Position): Position {
         // This is dangerous as the URI is not remapped (location uri may be different)
         return this.toIncomingLocation(cell, new Range(position, position)).range.start;
     }

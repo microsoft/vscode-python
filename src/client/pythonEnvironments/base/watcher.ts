@@ -75,7 +75,7 @@ export class PythonEnvsWatcher<T extends BasicPythonEnvsChangedEvent = PythonEnv
     /**
      * Send the event to all registered listeners.
      */
-    public fire(event: T) {
+    public fire(event: T): void {
         this.didChange.fire(event);
     }
 }

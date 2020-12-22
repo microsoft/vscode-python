@@ -27,7 +27,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
     ) {}
 
-    public async activate() {
+    public async activate(): Promise<void> {
         this.activateInternal().ignoreErrors();
     }
 

@@ -8,7 +8,7 @@ import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import '../../../../common/extensions';
 import { traceDecorators, traceVerbose } from '../../../../common/logger';
-import { IDisposableRegistry, IPersistentStateFactory } from '../../../../common/types';
+import { IDisposableRegistry, IPersistentState, IPersistentStateFactory } from '../../../../common/types';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
 import {
@@ -34,11 +34,11 @@ export class CacheableLocatorPromiseCache {
 
     private normalMap = new Map<string, Deferred<PythonEnvironment[]>>();
 
-    public static forceUseStatic() {
+    public static forceUseStatic(): void {
         CacheableLocatorPromiseCache.useStatic = true;
     }
 
-    public static forceUseNormal() {
+    public static forceUseNormal(): void {
         CacheableLocatorPromiseCache.useStatic = false;
     }
 
@@ -49,7 +49,7 @@ export class CacheableLocatorPromiseCache {
         return this.normalMap.get(key);
     }
 
-    public set(key: string, value: Deferred<PythonEnvironment[]>) {
+    public set(key: string, value: Deferred<PythonEnvironment[]>): void {
         if (CacheableLocatorPromiseCache.useStatic) {
             CacheableLocatorPromiseCache.staticMap.set(key, value);
         } else {
@@ -57,7 +57,7 @@ export class CacheableLocatorPromiseCache {
         }
     }
 
-    public delete(key: string) {
+    public delete(key: string): void {
         if (CacheableLocatorPromiseCache.useStatic) {
             CacheableLocatorPromiseCache.staticMap.delete(key);
         } else {
@@ -183,7 +183,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
 
     protected abstract getInterpretersImplementation(resource?: Uri): Promise<PythonEnvironment[]>;
 
-    protected createPersistenceStore(resource?: Uri) {
+    protected createPersistenceStore(resource?: Uri): IPersistentState<PythonEnvironment[]> {
         const cacheKey = this.getCacheKey(resource);
         const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         if (this.cachePerWorkspace) {
@@ -203,12 +203,12 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         }));
     }
 
-    protected async cacheInterpreters(interpreters: PythonEnvironment[], resource?: Uri) {
+    protected async cacheInterpreters(interpreters: PythonEnvironment[], resource?: Uri): Promise<void> {
         const persistence = this.createPersistenceStore(resource);
         await persistence.updateValue(interpreters);
     }
 
-    protected getCacheKey(resource?: Uri) {
+    protected getCacheKey(resource?: Uri): string {
         if (!resource || !this.cachePerWorkspace) {
             return this.cacheKeyPrefix;
         }

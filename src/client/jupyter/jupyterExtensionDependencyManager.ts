@@ -16,7 +16,7 @@ export class JupyterExtensionDependencyManager implements IJupyterExtensionDepen
         @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment,
     ) {}
 
-    public get isJupyterExtensionInstalled() {
+    public get isJupyterExtensionInstalled(): boolean {
         return this.extensions.getExtension(JUPYTER_EXTENSION_ID) !== undefined;
     }
 
