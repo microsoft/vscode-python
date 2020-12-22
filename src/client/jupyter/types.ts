@@ -9,6 +9,7 @@ export interface IJupyterServerUri {
     baseUrl: string;
     token: string;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     authorizationHeader: any; // JSON object for authorization header.
     expiration?: Date; // Date/time when header expires and should be refreshed.
     displayName: string;
@@ -42,4 +43,5 @@ export enum ColumnType {
     Bool = 'bool',
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type IRowsResponse = any[];

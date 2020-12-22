@@ -72,11 +72,13 @@ suite('Interpreters - PipEnv', () => {
                 procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
                 platformService = TypeMoq.Mock.ofType<IPlatformService>();
                 pipEnvServiceHelper = mock(PipEnvServiceHelper);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 processService.setup((x: any) => x.then).returns(() => undefined);
                 procServiceFactory
                     .setup((p) => p.create(TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(processService.object));
 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const persistentState = TypeMoq.Mock.ofType<IPersistentState<any>>();
                 persistentStateFactory
                     .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny()))

@@ -173,6 +173,7 @@ export function updateEnvironment(environment: PartialPythonEnvironment, other: 
     ];
     props.forEach((prop) => {
         if (!environment[prop] && other[prop]) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (environment as any)[prop] = other[prop];
         }
     });

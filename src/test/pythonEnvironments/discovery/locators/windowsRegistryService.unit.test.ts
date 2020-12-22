@@ -50,6 +50,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         interpreterHelper
             .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .returns(() => Promise.resolve({} as any));
         stateFactory
             .setup((s) => s.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -736,6 +737,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
                 hive: RegistryHive.HKCU,
                 arch: Architecture.x86,
 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 value: <any>undefined,
             },
 
@@ -955,6 +957,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
                 hive: RegistryHive.HKCU,
                 arch: Architecture.x86,
 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 value: <any>undefined,
             },
 

@@ -190,6 +190,7 @@ suite('Conda binary is located correctly', () => {
             return Object.keys(getFile(filePath));
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sinon.stub(fsapi, 'readFile' as any).callsFake(async (filePath: string | Buffer | number, encoding: string) => {
             if (typeof filePath !== 'string') {
                 throw new Error(`expected filePath to be string, got ${typeof filePath}`);

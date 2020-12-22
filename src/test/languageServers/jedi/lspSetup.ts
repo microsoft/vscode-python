@@ -17,6 +17,7 @@ const settingsJsonPath = path.join(__dirname, '..', '..', '..', '..', 'src', 'te
 const settingsJsonPromise = import('../../.vscode/settings.json');
 
 settingsJsonPromise.then((settingsJson) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (<any>settingsJson)['python.experiments.optInto'] = [JediLSP.experiment];
     return fs.writeFile(settingsJsonPath, JSON.stringify(settingsJson, undefined, ' '));
 });
