@@ -19,7 +19,7 @@ suite('Interpreters - Workspace VirtualEnv Service', () => {
             public async getInterpreterWatchers(resource: Uri | undefined): Promise<IInterpreterWatcher[]> {
                 return super.getInterpreterWatchers(resource);
             }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         })(undefined as any, instance(serviceContainer), instance(builder));
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
