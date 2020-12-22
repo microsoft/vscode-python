@@ -2,18 +2,8 @@
 // Licensed under the MIT License.
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import {
-    Disposable,
-    DocumentSelector,
-    EndOfLine,
-    NotebookCell,
-    Position,
-    Range,
-    TextDocument,
-    TextLine,
-    Uri,
-} from 'vscode';
-import { NotebookConcatTextDocument, NotebookDocument } from 'vscode-proposed';
+import { Disposable, DocumentSelector, EndOfLine, Position, Range, TextDocument, TextLine, Uri } from 'vscode';
+import { NotebookConcatTextDocument, NotebookCell, NotebookDocument } from 'vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
 
