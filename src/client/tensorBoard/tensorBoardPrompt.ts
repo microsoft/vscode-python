@@ -81,7 +81,7 @@ export class TensorBoardPrompt {
                 default:
                     break;
             }
-            sendTelemetryEvent(EventName.TENSORBOARD_PROMPT_SELECTION, undefined, { selection: telemetrySelection });
+            sendTelemetryEvent(EventName.TENSORBOARD_LAUNCH_PROMPT_SELECTION, undefined, { selection: telemetrySelection });
         }
     }
 

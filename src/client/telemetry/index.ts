@@ -1746,7 +1746,7 @@ export interface IEventNamePropertyMapping {
      * asking them if they want to launch an integrated TensorBoard session.
      * `selection` is one of 'yes', 'no', or 'do not ask again'.
      */
-    [EventName.TENSORBOARD_PROMPT_SELECTION]: {
+    [EventName.TENSORBOARD_LAUNCH_PROMPT_SELECTION]: {
         selection: TensorBoardPromptSelection;
     };
     /**
@@ -1798,5 +1798,18 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.TENSORBOARD_ENTRYPOINT_SHOWN]: {
         entrypoint: TensorBoardEntryPoint
+    };
+    /**
+     * Telemetry event sent when the user is prompted to install Python packages that are
+     * dependencies for launching an integrated TensorBoard session.
+     */
+    [EventName.TENSORBOARD_INSTALL_PROMPT_SHOWN]: never | undefined;
+    /**
+     * Telemetry event sent after the user has clicked on an option in the prompt we display
+     * asking them if they want to install Python packages for launching an integrated TensorBoard session.
+     * `selection` is one of 'yes' or 'no'.
+     */
+    [EventName.TENSORBOARD_INSTALL_PROMPT_SELECTION]: {
+        selection: TensorBoardPromptSelection
     }
 }
