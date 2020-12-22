@@ -107,7 +107,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
                     return;
                 }
                 const commandPrompts = this.getCommandPrompts(diagnostic);
-                const onClose = this.getOnCloseHandler(diagnostic);
+                const onClose = getOnCloseHandler(diagnostic);
                 await messageService.handle(diagnostic, { commandPrompts, message: diagnostic.message, onClose });
             }),
         );
@@ -143,16 +143,15 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
             }
         }
     }
+}
 
-    // eslint-disable-next-line class-methods-use-this
-    private getOnCloseHandler(diagnostic: IDiagnostic): IDiagnosticMessageOnCloseHandler | undefined {
-        if (diagnostic.code === DiagnosticCodes.NoPythonInterpretersDiagnostic) {
-            return (response?: string) => {
-                sendTelemetryEvent(EventName.PYTHON_NOT_INSTALLED_PROMPT, undefined, {
-                    selection: response ? 'Download' : 'Ignore',
-                });
-            };
-        }
-        return undefined;
+function getOnCloseHandler(diagnostic: IDiagnostic): IDiagnosticMessageOnCloseHandler | undefined {
+    if (diagnostic.code === DiagnosticCodes.NoPythonInterpretersDiagnostic) {
+        return (response?: string) => {
+            sendTelemetryEvent(EventName.PYTHON_NOT_INSTALLED_PROMPT, undefined, {
+                selection: response ? 'Download' : 'Ignore',
+            });
+        };
     }
+    return undefined;
 }

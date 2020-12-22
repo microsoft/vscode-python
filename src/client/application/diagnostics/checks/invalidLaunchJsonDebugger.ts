@@ -98,7 +98,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
     }
 
     private async diagnoseWorkspace(workspaceFolder: WorkspaceFolder, resource: Resource) {
-        const launchJson = this.getLaunchJsonFile(workspaceFolder);
+        const launchJson = getLaunchJsonFile(workspaceFolder);
         if (!(await this.fs.fileExists(launchJson))) {
             return [];
         }
@@ -158,31 +158,31 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         if ((await this.diagnoseWorkspace(workspaceFolder, undefined)).length === 0) {
             return;
         }
-        const launchJson = this.getLaunchJsonFile(workspaceFolder);
+        const launchJson = getLaunchJsonFile(workspaceFolder);
         let fileContents = await this.fs.readFile(launchJson);
         switch (code) {
             case DiagnosticCodes.InvalidDebuggerTypeDiagnostic: {
-                fileContents = this.findAndReplace(fileContents, '"pythonExperimental"', '"python"');
-                fileContents = this.findAndReplace(fileContents, '"Python Experimental:', '"Python:');
+                fileContents = findAndReplace(fileContents, '"pythonExperimental"', '"python"');
+                fileContents = findAndReplace(fileContents, '"Python Experimental:', '"Python:');
                 break;
             }
             case DiagnosticCodes.JustMyCodeDiagnostic: {
-                fileContents = this.findAndReplace(fileContents, '"debugStdLib": false', '"justMyCode": true');
-                fileContents = this.findAndReplace(fileContents, '"debugStdLib": true', '"justMyCode": false');
+                fileContents = findAndReplace(fileContents, '"debugStdLib": false', '"justMyCode": true');
+                fileContents = findAndReplace(fileContents, '"debugStdLib": true', '"justMyCode": false');
                 break;
             }
             case DiagnosticCodes.ConsoleTypeDiagnostic: {
-                fileContents = this.findAndReplace(fileContents, '"console": "none"', '"console": "internalConsole"');
+                fileContents = findAndReplace(fileContents, '"console": "none"', '"console": "internalConsole"');
                 break;
             }
             case DiagnosticCodes.ConfigPythonPathDiagnostic: {
-                fileContents = this.findAndReplace(fileContents, '"pythonPath":', '"python":');
-                fileContents = this.findAndReplace(
+                fileContents = findAndReplace(fileContents, '"pythonPath":', '"python":');
+                fileContents = findAndReplace(
                     fileContents,
                     '{config:python.pythonPath}',
                     '{command:python.interpreterPath}',
                 );
-                fileContents = this.findAndReplace(
+                fileContents = findAndReplace(
                     fileContents,
                     '{config:python.interpreterPath}',
                     '{command:python.interpreterPath}',
@@ -196,15 +196,13 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
 
         await this.fs.writeFile(launchJson, fileContents);
     }
+}
 
-    // eslint-disable-next-line class-methods-use-this
-    private findAndReplace(fileContents: string, search: string, replace: string) {
-        const searchRegex = new RegExp(search, 'g');
-        return fileContents.replace(searchRegex, replace);
-    }
+function findAndReplace(fileContents: string, search: string, replace: string) {
+    const searchRegex = new RegExp(search, 'g');
+    return fileContents.replace(searchRegex, replace);
+}
 
-    // eslint-disable-next-line class-methods-use-this
-    private getLaunchJsonFile(workspaceFolder: WorkspaceFolder) {
-        return path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
-    }
+function getLaunchJsonFile(workspaceFolder: WorkspaceFolder) {
+    return path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
 }

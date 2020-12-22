@@ -147,7 +147,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
                         command: {
                             diagnostic,
                             invoke: async (): Promise<void> => {
-                                const launchJson = this.getLaunchJsonFile(workspc.workspaceFolders![0]);
+                                const launchJson = getLaunchJsonFile(workspc.workspaceFolders![0]);
                                 const doc = await this.documentManager.openTextDocument(launchJson);
                                 await this.documentManager.showTextDocument(doc);
                             },
@@ -160,9 +160,8 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
             }
         }
     }
+}
 
-    // eslint-disable-next-line class-methods-use-this
-    private getLaunchJsonFile(workspaceFolder: WorkspaceFolder) {
-        return path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
-    }
+function getLaunchJsonFile(workspaceFolder: WorkspaceFolder) {
+    return path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
 }
