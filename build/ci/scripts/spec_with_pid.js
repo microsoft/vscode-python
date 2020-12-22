@@ -1,4 +1,5 @@
 'use strict';
+
 /**
  * @module Spec
  */
@@ -6,23 +7,19 @@
  * Module dependencies.
  */
 
-var Base = require('mocha/lib/reporters/base');
-var constants = require('mocha/lib/runner').constants;
-var EVENT_RUN_BEGIN = constants.EVENT_RUN_BEGIN;
-var EVENT_RUN_END = constants.EVENT_RUN_END;
-var EVENT_SUITE_BEGIN = constants.EVENT_SUITE_BEGIN;
-var EVENT_SUITE_END = constants.EVENT_SUITE_END;
-var EVENT_TEST_FAIL = constants.EVENT_TEST_FAIL;
-var EVENT_TEST_PASS = constants.EVENT_TEST_PASS;
-var EVENT_TEST_PENDING = constants.EVENT_TEST_PENDING;
-var inherits = require('mocha/lib/utils').inherits;
-var color = Base.color;
+const Base = require('mocha/lib/reporters/base');
+const { constants } = require('mocha/lib/runner');
 
-/**
- * Expose `Spec`.
- */
+const { EVENT_RUN_BEGIN } = constants;
+const { EVENT_RUN_END } = constants;
+const { EVENT_SUITE_BEGIN } = constants;
+const { EVENT_SUITE_END } = constants;
+const { EVENT_TEST_FAIL } = constants;
+const { EVENT_TEST_PASS } = constants;
+const { EVENT_TEST_PENDING } = constants;
+const { inherits } = require('mocha/lib/utils');
 
-exports = module.exports = Spec;
+const { color } = Base;
 
 const prefix = process.env.VSC_PYTHON_CI_TEST_PARALLEL ? `${process.pid}   ` : '';
 
@@ -39,37 +36,36 @@ const prefix = process.env.VSC_PYTHON_CI_TEST_PARALLEL ? `${process.pid}   ` : '
 function Spec(runner, options) {
     Base.call(this, runner, options);
 
-    var self = this;
-    var indents = 0;
-    var n = 0;
+    let indents = 0;
+    let n = 0;
 
     function indent() {
         return Array(indents).join('  ');
     }
 
-    runner.on(EVENT_RUN_BEGIN, function () {
+    runner.on(EVENT_RUN_BEGIN, () => {
         Base.consoleLog();
     });
 
-    runner.on(EVENT_SUITE_BEGIN, function (suite) {
-        ++indents;
+    runner.on(EVENT_SUITE_BEGIN, (suite) => {
+        indents += 1;
         Base.consoleLog(color('suite', `${prefix}%s%s`), indent(), suite.title);
     });
 
-    runner.on(EVENT_SUITE_END, function () {
-        --indents;
+    runner.on(EVENT_SUITE_END, () => {
+        indents -= 1;
         if (indents === 1) {
             Base.consoleLog();
         }
     });
 
-    runner.on(EVENT_TEST_PENDING, function (test) {
-        var fmt = indent() + color('pending', `${prefix} %s`);
+    runner.on(EVENT_TEST_PENDING, (test) => {
+        const fmt = indent() + color('pending', `${prefix} %s`);
         Base.consoleLog(fmt, test.title);
     });
 
-    runner.on(EVENT_TEST_PASS, function (test) {
-        var fmt;
+    runner.on(EVENT_TEST_PASS, (test) => {
+        let fmt;
         if (test.speed === 'fast') {
             fmt = indent() + color('checkmark', prefix + Base.symbols.ok) + color('pass', ' %s');
             Base.consoleLog(fmt, test.title);
@@ -83,11 +79,12 @@ function Spec(runner, options) {
         }
     });
 
-    runner.on(EVENT_TEST_FAIL, function (test) {
-        Base.consoleLog(indent() + color('fail', `${prefix}%d) %s`), ++n, test.title);
+    runner.on(EVENT_TEST_FAIL, (test) => {
+        n += 1;
+        Base.consoleLog(indent() + color('fail', `${prefix}%d) %s`), n, test.title);
     });
 
-    runner.once(EVENT_RUN_END, self.epilogue.bind(self));
+    runner.once(EVENT_RUN_END, this.epilogue.bind(this));
 }
 
 /**
@@ -96,3 +93,10 @@ function Spec(runner, options) {
 inherits(Spec, Base);
 
 Spec.description = 'hierarchical & verbose [default]';
+
+/**
+ * Expose `Spec`.
+ */
+
+exports = Spec;
+module.exports = exports;

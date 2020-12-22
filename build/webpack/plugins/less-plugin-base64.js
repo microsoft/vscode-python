@@ -9,7 +9,7 @@ class Base64MimeTypeNode {
         this.type = 'Base64MimeTypeNode';
     }
 
-    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     eval(context) {
         return this;
     }
@@ -31,7 +31,7 @@ class Base64Visitor {
         return this.visitor.visit(root);
     }
 
-    // eslint-disable-next-line class-methods-use-this, no-unused-vars
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
     visitUrl(URLNode, visitArgs) {
         // Return two new nodes in the call. One that has the mime type and other with the node. The data-uri
         // evaluator will transform this into a base64 string
@@ -53,7 +53,7 @@ class Base64Visitor {
  * url("./src/startPage-ui/react-common/images/foo.svg")
  */
 class Base64Plugin {
-    // eslint-disable-next-line no-useless-constructor
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor() {
         // No body.
     }

@@ -11,7 +11,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 
@@ -126,14 +126,13 @@ function buildConfiguration(bundle) {
                         name: 'nteract',
                         chunks: 'all',
                         minChunks: 2,
-                        // eslint-disable-next-line no-unused-vars
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         test(module, _chunks) {
                             // `module.resource` contains the absolute path of the file on disk.
                             // Look for `node_modules/monaco...`.
                             // eslint-disable-next-line no-shadow, global-require
                             const path = require('path');
                             return (
-                                // eslint-disable-next-line operator-linebreak
                                 module.resource &&
                                 module.resource.includes(`${path.sep}node_modules${path.sep}@nteract`)
                             );
@@ -145,7 +144,7 @@ function buildConfiguration(bundle) {
                         name: 'plotly',
                         chunks: 'all',
                         minChunks: 1,
-                        // eslint-disable-next-line no-unused-vars
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         test(module, _chunks) {
                             // `module.resource` contains the absolute path of the file on disk.
                             // Look for `node_modules/monaco...`.
@@ -164,7 +163,7 @@ function buildConfiguration(bundle) {
                         name: 'monaco',
                         chunks: 'all',
                         minChunks: 1,
-                        // eslint-disable-next-line no-unused-vars
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         test(module, _chunks) {
                             // `module.resource` contains the absolute path of the file on disk.
                             // Look for `node_modules/monaco...`.
