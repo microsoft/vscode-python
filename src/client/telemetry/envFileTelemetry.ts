@@ -14,13 +14,13 @@ import { EventName } from './constants';
 let _defaultEnvFileSetting: string | undefined;
 let envFileTelemetrySent = false;
 
-export function sendSettingTelemetry(workspaceService: IWorkspaceService, envFileSetting?: string) {
+export function sendSettingTelemetry(workspaceService: IWorkspaceService, envFileSetting?: string): void {
     if (shouldSendTelemetry() && envFileSetting !== defaultEnvFileSetting(workspaceService)) {
         sendTelemetry(true);
     }
 }
 
-export function sendFileCreationTelemetry() {
+export function sendFileCreationTelemetry(): void {
     if (shouldSendTelemetry()) {
         sendTelemetry();
     }
@@ -30,7 +30,7 @@ export async function sendActivationTelemetry(
     fileSystem: IFileSystem,
     workspaceService: IWorkspaceService,
     resource: Resource,
-) {
+): Promise<void> {
     if (shouldSendTelemetry()) {
         const systemVariables = new SystemVariables(resource, undefined, workspaceService);
         const envFilePath = systemVariables.resolveAny(defaultEnvFileSetting(workspaceService))!;
@@ -42,7 +42,7 @@ export async function sendActivationTelemetry(
     }
 }
 
-function sendTelemetry(hasCustomEnvPath: boolean = false) {
+function sendTelemetry(hasCustomEnvPath = false) {
     sendTelemetryEvent(EventName.ENVFILE_WORKSPACE, undefined, { hasCustomEnvPath });
 
     envFileTelemetrySent = true;
@@ -62,18 +62,17 @@ function defaultEnvFileSetting(workspaceService: IWorkspaceService) {
 }
 
 // Set state for tests.
-export namespace EnvFileTelemetryTests {
-    export function setState({ telemetrySent, defaultSetting }: { telemetrySent?: boolean; defaultSetting?: string }) {
+export const EnvFileTelemetryTests = {
+    setState: ({ telemetrySent, defaultSetting }: { telemetrySent?: boolean; defaultSetting?: string }): void => {
         if (telemetrySent !== undefined) {
             envFileTelemetrySent = telemetrySent;
         }
         if (defaultEnvFileSetting !== undefined) {
             _defaultEnvFileSetting = defaultSetting;
         }
-    }
-
-    export function resetState() {
+    },
+    resetState: (): void => {
         _defaultEnvFileSetting = undefined;
         envFileTelemetrySent = false;
-    }
-}
+    },
+};
