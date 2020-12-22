@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
-
+// eslint-disable-next-line max-classes-per-file
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { DiagnosticSeverity, Uri, workspace as workspc, WorkspaceFolder } from 'vscode';
@@ -70,10 +69,17 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
             true,
         );
     }
-    public async diagnose(_resource: Resource): Promise<IDiagnostic[]> {
+
+    // eslint-disable-next-line class-methods-use-this
+    public async diagnose(): Promise<IDiagnostic[]> {
         return [];
     }
-    public async validatePythonPath(pythonPath?: string, pythonPathSource?: PythonPathSource, resource?: Uri) {
+
+    public async validatePythonPath(
+        pythonPath?: string,
+        pythonPathSource?: PythonPathSource,
+        resource?: Uri,
+    ): Promise<boolean> {
         pythonPath = pythonPath ? this.resolveVariables(pythonPath, resource) : undefined;
 
         if (pythonPath === '${command:python.interpreterPath}' || !pythonPath) {
@@ -104,6 +110,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
         }
         return false;
     }
+
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         // This class can only handle one type of diagnostic, hence just use first item in list.
         if (diagnostics.length === 0 || !this.canHandle(diagnostics[0])) {
@@ -114,10 +121,12 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
 
         await this.messageService.handle(diagnostic, { commandPrompts });
     }
+
     protected resolveVariables(pythonPath: string, resource: Uri | undefined): string {
         const systemVariables = new SystemVariables(resource, undefined, this.workspace);
         return systemVariables.resolveAny(pythonPath);
     }
+
     private getCommandPrompts(diagnostic: IDiagnostic): { prompt: string; command?: IDiagnosticCommand }[] {
         switch (diagnostic.code) {
             case DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic: {
@@ -151,6 +160,8 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
             }
         }
     }
+
+    // eslint-disable-next-line class-methods-use-this
     private getLaunchJsonFile(workspaceFolder: WorkspaceFolder) {
         return path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
     }

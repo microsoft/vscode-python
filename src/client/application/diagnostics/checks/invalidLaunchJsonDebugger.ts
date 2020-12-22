@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
-
+// eslint-disable-next-line max-classes-per-file
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { DiagnosticSeverity, WorkspaceFolder } from 'vscode';
@@ -32,7 +31,7 @@ export class InvalidLaunchJsonDebuggerDiagnostic extends BaseDiagnostic {
             | DiagnosticCodes.ConsoleTypeDiagnostic
             | DiagnosticCodes.ConfigPythonPathDiagnostic,
         resource: Resource,
-        shouldShowPrompt: boolean = true,
+        shouldShowPrompt = true,
     ) {
         super(
             code,

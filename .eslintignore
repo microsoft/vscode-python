@@ -921,15 +921,6 @@ src/client/application/diagnostics/base.ts
 src/client/application/diagnostics/applicationDiagnostics.ts
 src/client/application/diagnostics/serviceRegistry.ts
 src/client/application/diagnostics/filter.ts
-src/client/application/diagnostics/checks/upgradeCodeRunner.ts
-src/client/application/diagnostics/checks/powerShellActivation.ts
-src/client/application/diagnostics/checks/envPathVariable.ts
-src/client/application/diagnostics/checks/invalidLaunchJsonDebugger.ts
-src/client/application/diagnostics/checks/pythonPathDeprecated.ts
-src/client/application/diagnostics/checks/lsNotSupported.ts
-src/client/application/diagnostics/checks/macPythonInterpreter.ts
-src/client/application/diagnostics/checks/invalidPythonPathInDebugger.ts
-src/client/application/diagnostics/checks/pythonInterpreter.ts
 src/client/application/diagnostics/promptHandler.ts
 src/client/application/diagnostics/constants.ts
 src/client/application/diagnostics/commands/base.ts
