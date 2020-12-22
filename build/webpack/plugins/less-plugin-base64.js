@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 // Most of this was based on https://github.com/less/less-plugin-inline-urls
 // License for this was included in the ThirdPartyNotices-Repository.txt
 const less = require('less');
@@ -8,6 +9,7 @@ class Base64MimeTypeNode {
         this.type = 'Base64MimeTypeNode';
     }
 
+    // eslint-disable-next-line no-unused-vars
     eval(context) {
         return this;
     }
@@ -29,6 +31,7 @@ class Base64Visitor {
         return this.visitor.visit(root);
     }
 
+    // eslint-disable-next-line class-methods-use-this, no-unused-vars
     visitUrl(URLNode, visitArgs) {
         // Return two new nodes in the call. One that has the mime type and other with the node. The data-uri
         // evaluator will transform this into a base64 string
@@ -42,20 +45,25 @@ class Base64Visitor {
 }
 /*
  * This was originally used to perform less on uris and turn them into base64 encoded so they can be loaded into
- * a webpack html. There's one caveat though. Less and webpack don't play well together. It runs the less at the root dir.
- * This means in order to use this in a less file, you need to qualify the urls as if they come from the root dir.
+ * a webpack html. There's one caveat though. Less and webpack don't play well together. It runs the less at the root
+ * dir. This means in order to use this in a less file, you need to qualify the urls as if they come from the root dir.
  * Example:
  * url("./foo.svg")
  * becomes
  * url("./src/startPage-ui/react-common/images/foo.svg")
  */
 class Base64Plugin {
-    constructor() {}
+    // eslint-disable-next-line no-useless-constructor
+    constructor() {
+        // No body.
+    }
 
+    // eslint-disable-next-line no-shadow, class-methods-use-this
     install(less, pluginManager) {
         pluginManager.addVisitor(new Base64Visitor());
     }
 
+    // eslint-disable-next-line class-methods-use-this
     printUsage() {
         console.log('Base64 Plugin. Add to your webpack.config.js as a plugin to convert URLs to base64 inline');
     }

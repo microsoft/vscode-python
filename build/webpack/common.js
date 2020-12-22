@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 const glob = require('glob');
 const path = require('path');
+// eslint-disable-next-line camelcase
 const webpack_bundle_analyzer = require('webpack-bundle-analyzer');
 const constants = require('../constants');
+
 exports.nodeModulesToExternalize = [
     'unicode/category/Lu',
     'unicode/category/Ll',

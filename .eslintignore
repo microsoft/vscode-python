@@ -1,25 +1,4 @@
-# Disable ESLint on all existing js, jsx, ts and tsx files in build/ and src/,
-# except for src/client/pythonEnvironments and src/test/pythonEnvironments.
-
-build/constants.js
-build/util.js
-
-build/ci/postInstall.js
-build/ci/performance/checkPerformanceResults.js
-build/ci/performance/createNewPerformanceBenchmark.js
-build/ci/performance/savePerformanceResults.js
-
-build/webpack/webpack.startPage-ui.config.js
-build/webpack/webpack.extension.config.js
-build/webpack/plugins/less-plugin-base64.js
-build/webpack/webpack.startPage-ui.config.builder.js
-build/webpack/pdfkit.js
-build/webpack/webpack.extension.dependencies.config.js
-build/webpack/common.js
-build/webpack/webpack.startPage-ui-viewers.config.js
-build/webpack/loaders/remarkLoader.js
-build/webpack/loaders/jsonloader.js
-build/webpack/loaders/externalizeDependencies.js
+# The following files were grandfathered out of eslint. They can be removed as time permits.
 
 src/test/mocks/mementos.ts
 src/test/mocks/process.ts
