@@ -86,7 +86,9 @@ async function addExtensionDependencies() {
     // extension dependencies need not be installed during development
     const packageJsonContents = await fsExtra.readFile('package.json', 'utf-8');
     const packageJson = JSON.parse(packageJsonContents);
-    packageJson.extensionDependencies = ['ms-toolsai.jupyter'].concat(packageJson.extensionDependencies ? packageJson.extensionDependencies : []);
+    packageJson.extensionDependencies = ['ms-toolsai.jupyter'].concat(
+        packageJson.extensionDependencies ? packageJson.extensionDependencies : [],
+    );
     await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
 }
 
@@ -102,11 +104,12 @@ async function updateBuildNumber(args) {
 
         // Change version number
         const versionParts = packageJson.version.split('.');
-        const buildNumberPortion = versionParts.length > 2 ? versionParts[2]
-            .replace(/(\d+)/, args.buildNumber) : args.buildNumber;
-        const newVersion = versionParts.length > 1
-            ? `${versionParts[0]}.${versionParts[1]}.${buildNumberPortion}`
-            : packageJson.version;
+        const buildNumberPortion =
+            versionParts.length > 2 ? versionParts[2].replace(/(\d+)/, args.buildNumber) : args.buildNumber;
+        const newVersion =
+            versionParts.length > 1
+                ? `${versionParts[0]}.${versionParts[1]}.${buildNumberPortion}`
+                : packageJson.version;
         packageJson.version = newVersion;
 
         // Write back to the package json
@@ -144,7 +147,10 @@ async function buildWebPack(webpackConfigName, args, env) {
     const warnings = stdOutLines
         .filter((item) => item.startsWith('WARNING in '))
         .filter(
-            (item) => allowedWarnings.findIndex((allowedWarning) => item.toLowerCase().startsWith(allowedWarning.toLowerCase())) === -1,
+            (item) =>
+                allowedWarnings.findIndex((allowedWarning) =>
+                    item.toLowerCase().startsWith(allowedWarning.toLowerCase()),
+                ) === -1,
         );
     const errors = stdOutLines.some((item) => item.startsWith('ERROR in'));
     if (errors) {
@@ -232,7 +238,9 @@ gulp.task('installPythonRequirements', async () => {
         });
     if (!success) {
         console.info("Failed to install Python Libs using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', args).catch((ex) => console.error("Failed to install Python Libs using 'python'", ex));
+        await spawnAsync('python', args).catch((ex) =>
+            console.error("Failed to install Python Libs using 'python'", ex),
+        );
     }
 });
 
@@ -259,7 +267,9 @@ gulp.task('installDebugpy', async () => {
         console.info(
             "Failed to install dependencies need by 'install_debugpy.py' using 'python3', attempting to install using 'python'",
         );
-        await spawnAsync('python', depsArgs).catch((ex) => console.error("Failed to install dependencies need by 'install_debugpy.py' using 'python'", ex));
+        await spawnAsync('python', depsArgs).catch((ex) =>
+            console.error("Failed to install dependencies need by 'install_debugpy.py' using 'python'", ex),
+        );
     }
 
     // Install new DEBUGPY with wheels for python 3.7
@@ -273,7 +283,9 @@ gulp.task('installDebugpy', async () => {
         });
     if (!successWithWheels) {
         console.info("Failed to install new DEBUGPY wheels using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', wheelsArgs, wheelsEnv).catch((ex) => console.error("Failed to install DEBUGPY wheels using 'python'", ex));
+        await spawnAsync('python', wheelsArgs, wheelsEnv).catch((ex) =>
+            console.error("Failed to install DEBUGPY wheels using 'python'", ex),
+        );
     }
 
     rmrf.sync('./pythonFiles/lib/temp');
@@ -313,11 +325,16 @@ function hasNativeDependencies() {
     }
     const dependencies = JSON.parse(spawn.sync('npm', ['ls', '--json', '--prod']).stdout.toString());
     const jsonProperties = Object.keys(flat.flatten(dependencies));
-    nativeDependencies = _.flatMap(nativeDependencies, (item) => path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep))
+    nativeDependencies = _.flatMap(nativeDependencies, (item) =>
+        path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep),
+    )
         .filter((item) => item.length > 0)
         .filter((item) => !item.includes('zeromq') && item !== 'fsevents') // This is a known native. Allow this one for now
         .filter(
-            (item) => jsonProperties.findIndex((flattenedDependency) => flattenedDependency.endsWith(`dependencies.${item}.version`)) >= 0,
+            (item) =>
+                jsonProperties.findIndex((flattenedDependency) =>
+                    flattenedDependency.endsWith(`dependencies.${item}.version`),
+                ) >= 0,
         );
     if (nativeDependencies.length > 0) {
         console.error('Native dependencies detected', nativeDependencies);
