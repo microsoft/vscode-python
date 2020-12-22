@@ -65,7 +65,7 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
         return [];
     }
 
-    public async _removePythonPathFromWorkspaceSettings(resource: Resource) {
+    public async _removePythonPathFromWorkspaceSettings(resource: Resource): Promise<void> {
         const workspaceConfig = this.workspaceService.getConfiguration('python', resource);
         await Promise.all([
             workspaceConfig.update('pythonPath', undefined, ConfigurationTarget.Workspace),
