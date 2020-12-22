@@ -24,7 +24,7 @@ export class TestFunctionCodeNavigator implements ITestCodeNavigator {
     @swallowExceptions('Navigate to test function')
     @captureTelemetry(EventName.UNITTEST_NAVIGATE, { byFunction: true }, true) // To measure execution time.
     public async navigateTo(resource: Uri, fn: TestFunction, focus: boolean = true): Promise<void> {
-        sendTelemetryEvent(EventName.UNITTEST_NAVIGATE, undefined, { focus_code: focus, byFunction: true });
+        sendTelemetryEvent(EventName.UNITTEST_NAVIGATE, undefined, { focusCode: focus, byFunction: true });
         if (this.cancellationToken) {
             this.cancellationToken.cancel();
         }
