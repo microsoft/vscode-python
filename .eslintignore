@@ -864,13 +864,6 @@ src/client/debugger/constants.ts
 src/client/languageServices/jediProxyFactory.ts
 src/client/languageServices/proposeLanguageServerBanner.ts
 
-src/client/telemetry/types.ts
-src/client/telemetry/importTracker.ts
-src/client/telemetry/constants.ts
-src/client/telemetry/index.ts
-src/client/telemetry/envFileTelemetry.ts
-src/client/telemetry/extensionInstallTelemetry.ts
-
 src/client/linters/pydocstyle.ts
 src/client/linters/serviceRegistry.ts
 src/client/linters/linterAvailability.ts
