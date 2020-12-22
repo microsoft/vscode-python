@@ -16,7 +16,6 @@ updates:
       - dependency-name: pytest # Due to Python 2.7 and #13776.
       - dependency-name: py # Due to Python 2.7.
     labels: []
-
   # Activate when we feel ready to keep up with frequency.
   # - package-ecosystem: 'npm'
   #   directory: /
