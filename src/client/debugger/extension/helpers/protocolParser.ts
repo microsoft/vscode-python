@@ -25,7 +25,7 @@ type Listener = (...args: any[]) => void;
  */
 @injectable()
 export class ProtocolParser implements IProtocolParser {
-    private rawData = new Buffer(0);
+    private rawData = Buffer.alloc(0);
     private contentLength: number = -1;
     private disposed: boolean = false;
     private stream?: Readable;

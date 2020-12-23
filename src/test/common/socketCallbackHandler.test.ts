@@ -9,8 +9,8 @@ import { createDeferred, Deferred } from '../../client/common/utils/async';
 const uint64be = require('uint64be');
 
 class Commands {
-    public static ExitCommandBytes: Buffer = new Buffer('exit');
-    public static PingBytes: Buffer = new Buffer('ping');
+    public static ExitCommandBytes: Buffer = Buffer.from('exit');
+    public static PingBytes: Buffer = Buffer.from('ping');
 }
 
 namespace ResponseCommands {
@@ -33,9 +33,9 @@ class MockSocketCallbackHandler extends SocketCallbackHandler {
     public ping(message: string) {
         this.SendRawCommand(Commands.PingBytes);
 
-        const stringBuffer = new Buffer(message);
+        const stringBuffer = Buffer.from(message);
         const buffer = Buffer.concat([
-            Buffer.concat([new Buffer('U'), uint64be.encode(stringBuffer.byteLength)]),
+            Buffer.concat([Buffer.from('U'), uint64be.encode(stringBuffer.byteLength)]),
             stringBuffer,
         ]);
         this.stream.Write(buffer);
@@ -102,7 +102,7 @@ class MockSocketClient {
         if (this.socket === undefined || this.def === undefined) {
             throw Error('not started');
         }
-        this.socketStream = new SocketStream(this.socket, new Buffer(''));
+        this.socketStream = new SocketStream(this.socket, Buffer.from(''));
         this.def.resolve();
         this.socket.on('error', () => {});
         this.socket.on('data', (data: Buffer) => {
@@ -119,7 +119,7 @@ class MockSocketClient {
                     }
                     cmdIdBytes.push(byte);
                 }
-                const cmdId = new Buffer(cmdIdBytes).toString();
+                const cmdId = Buffer.from(cmdIdBytes).toString();
                 const message = this.SocketStream.ReadString();
                 if (typeof message !== 'string') {
                     this.SocketStream.RollBackTransaction();
@@ -129,32 +129,32 @@ class MockSocketClient {
                 this.SocketStream.EndTransaction();
 
                 if (cmdId !== 'ping') {
-                    this.SocketStream.Write(new Buffer(ResponseCommands.Error));
+                    this.SocketStream.Write(Buffer.from(ResponseCommands.Error));
 
                     const errorMessage = `Received unknown command '${cmdId}'`;
                     const errorBuffer = Buffer.concat([
-                        Buffer.concat([new Buffer('A'), uint64be.encode(errorMessage.length)]),
-                        new Buffer(errorMessage),
+                        Buffer.concat([Buffer.from('A'), uint64be.encode(errorMessage.length)]),
+                        Buffer.from(errorMessage),
                     ]);
                     this.SocketStream.Write(errorBuffer);
                     return;
                 }
 
-                this.SocketStream.Write(new Buffer(ResponseCommands.Pong));
+                this.SocketStream.Write(Buffer.from(ResponseCommands.Pong));
 
-                const messageBuffer = new Buffer(message);
+                const messageBuffer = Buffer.from(message);
                 const pongBuffer = Buffer.concat([
-                    Buffer.concat([new Buffer('U'), uint64be.encode(messageBuffer.byteLength)]),
+                    Buffer.concat([Buffer.from('U'), uint64be.encode(messageBuffer.byteLength)]),
                     messageBuffer,
                 ]);
                 this.SocketStream.Write(pongBuffer);
             } catch (ex) {
-                this.SocketStream.Write(new Buffer(ResponseCommands.Error));
+                this.SocketStream.Write(Buffer.from(ResponseCommands.Error));
 
                 const errorMessage = `Fatal error in handling data at socket client. Error: ${ex.message}`;
                 const errorBuffer = Buffer.concat([
-                    Buffer.concat([new Buffer('A'), uint64be.encode(errorMessage.length)]),
-                    new Buffer(errorMessage),
+                    Buffer.concat([Buffer.from('A'), uint64be.encode(errorMessage.length)]),
+                    Buffer.from(errorMessage),
                 ]);
                 this.SocketStream.Write(errorBuffer);
             }
@@ -210,7 +210,7 @@ suite('SocketCallbackHandler', () => {
         });
 
         // Client has connected, now send information to the callback handler via sockets
-        const guidBuffer = Buffer.concat([new Buffer('A'), uint64be.encode(GUID.length), new Buffer(GUID)]);
+        const guidBuffer = Buffer.concat([Buffer.from('A'), uint64be.encode(GUID.length), Buffer.from(GUID)]);
         socketClient.SocketStream.Write(guidBuffer);
         socketClient.SocketStream.WriteInt32(PID);
         await def.promise;
@@ -246,7 +246,7 @@ suite('SocketCallbackHandler', () => {
         });
 
         // Client has connected, now send information to the callback handler via sockets
-        const guidBuffer = Buffer.concat([new Buffer('A'), uint64be.encode(GUID.length), new Buffer(GUID)]);
+        const guidBuffer = Buffer.concat([Buffer.from('A'), uint64be.encode(GUID.length), Buffer.from(GUID)]);
         socketClient.SocketStream.Write(guidBuffer);
 
         // Send the wrong pid
@@ -281,7 +281,7 @@ suite('SocketCallbackHandler', () => {
         });
 
         // Client has connected, now send information to the callback handler via sockets
-        const guidBuffer = Buffer.concat([new Buffer('A'), uint64be.encode(GUID.length), new Buffer(GUID)]);
+        const guidBuffer = Buffer.concat([Buffer.from('A'), uint64be.encode(GUID.length), Buffer.from(GUID)]);
         socketClient.SocketStream.Write(guidBuffer);
 
         // Send the wrong pid
@@ -304,7 +304,7 @@ suite('SocketCallbackHandler', () => {
         });
 
         // Client has connected, now send information to the callback handler via sockets
-        const guidBuffer = Buffer.concat([new Buffer('A'), uint64be.encode(GUID.length), new Buffer(GUID)]);
+        const guidBuffer = Buffer.concat([Buffer.from('A'), uint64be.encode(GUID.length), Buffer.from(GUID)]);
         socketClient.SocketStream.Write(guidBuffer);
         socketClient.SocketStream.WriteInt32(PID);
         await def.promise;
@@ -330,7 +330,7 @@ suite('SocketCallbackHandler', () => {
         });
 
         // Client has connected, now send information to the callback handler via sockets
-        const guidBuffer = Buffer.concat([new Buffer('A'), uint64be.encode(GUID.length), new Buffer(GUID)]);
+        const guidBuffer = Buffer.concat([Buffer.from('A'), uint64be.encode(GUID.length), Buffer.from(GUID)]);
         socketClient.SocketStream.Write(guidBuffer);
         socketClient.SocketStream.WriteInt32(PID);
         await def.promise;

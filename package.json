@@ -2101,7 +2101,7 @@
         "chai-as-promised": "^7.1.1",
         "chai-http": "^4.3.0",
         "codecov": "^3.7.1",
-        "copy-webpack-plugin": "^5.1.1",
+        "copy-webpack-plugin": "^5.1.2",
         "cors": "^2.8.5",
         "cross-env": "^6.0.3",
         "cross-spawn": "^6.0.5",
