@@ -9,9 +9,11 @@ type identifier<T> = string | symbol | Newable<T> | Abstract<T>;
 @injectable()
 export class ServiceManager implements IServiceManager {
     constructor(private container: Container) {}
+
     public add<T>(
         serviceIdentifier: identifier<T>,
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         constructor: new (...args: any[]) => T,
         name?: string | number | symbol | undefined,
         bindings?: symbol[],
@@ -28,6 +30,7 @@ export class ServiceManager implements IServiceManager {
             });
         }
     }
+
     public addFactory<T>(
         factoryIdentifier: interfaces.ServiceIdentifier<interfaces.Factory<T>>,
         factoryMethod: interfaces.FactoryCreator<T>,
@@ -42,6 +45,7 @@ export class ServiceManager implements IServiceManager {
     public addSingleton<T>(
         serviceIdentifier: identifier<T>,
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         constructor: new (...args: any[]) => T,
         name?: string | number | symbol | undefined,
         bindings?: symbol[],
@@ -70,9 +74,11 @@ export class ServiceManager implements IServiceManager {
             this.container.bind<T>(serviceIdentifier).toConstantValue(instance);
         }
     }
+
     public get<T>(serviceIdentifier: identifier<T>, name?: string | number | symbol | undefined): T {
         return name ? this.container.getNamed<T>(serviceIdentifier, name) : this.container.get<T>(serviceIdentifier);
     }
+
     public tryGet<T>(serviceIdentifier: identifier<T>, name?: string | number | symbol | undefined): T | undefined {
         try {
             return name
@@ -81,7 +87,10 @@ export class ServiceManager implements IServiceManager {
         } catch {
             // This might happen after the container has been destroyed
         }
+
+        return undefined;
     }
+
     public getAll<T>(serviceIdentifier: identifier<T>, name?: string | number | symbol | undefined): T[] {
         return name
             ? this.container.getAllNamed<T>(serviceIdentifier, name)
@@ -124,7 +133,7 @@ export class ServiceManager implements IServiceManager {
         }
     }
 
-    public dispose() {
+    public dispose(): void {
         this.container.unbindAll();
         this.container.unload();
     }
