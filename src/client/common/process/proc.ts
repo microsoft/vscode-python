@@ -3,6 +3,7 @@
 import { exec, execSync, spawn } from 'child_process';
 import { EventEmitter } from 'events';
 import { Observable } from 'rxjs/Observable';
+import { Readable } from 'stream';
 
 import { IDisposable } from '../types';
 import { createDeferred } from '../utils/async';
@@ -75,9 +76,9 @@ export class ProcessService extends EventEmitter implements IProcessService {
         const output = new Observable<Output<string>>((subscriber) => {
             const disposables: IDisposable[] = [];
 
-            const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
-                ee.on(name, fn as any);
-                disposables.push({ dispose: () => ee.removeListener(name, fn as any) as any });
+            const on = (ee: Readable | null, name: string, fn: Function) => {
+                ee?.on(name, fn as any);
+                disposables.push({ dispose: () => ee?.removeListener(name, fn as any) as any });
             };
 
             if (options.token) {
@@ -143,9 +144,9 @@ export class ProcessService extends EventEmitter implements IProcessService {
         this.processesToKill.add(disposable);
         const disposables: IDisposable[] = [];
 
-        const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
-            ee.on(name, fn as any);
-            disposables.push({ dispose: () => ee.removeListener(name, fn as any) as any });
+        const on = (ee: Readable | null, name: string, fn: Function) => {
+            ee?.on(name, fn as any);
+            disposables.push({ dispose: () => ee?.removeListener(name, fn as any) as any });
         };
 
         if (options.token) {

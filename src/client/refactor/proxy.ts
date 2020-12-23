@@ -118,7 +118,7 @@ export class RefactorProxy extends Disposable {
             return new Promise<T>((resolve, reject) => {
                 this._commandResolve = resolve;
                 this._commandReject = reject;
-                this._process!.stdin.write(command + '\n');
+                this._process!.stdin?.write(command + '\n');
             });
         });
     }

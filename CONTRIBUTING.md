@@ -18,7 +18,7 @@ The following projects have their own repositories:
 
 ### Prerequisites
 
-1. [Node.js](https://nodejs.org/) 12.15
+1. [Node.js](https://nodejs.org/) 12.20
 1. [Python](https://www.python.org/) 2.7 or later
 1. Windows, macOS, or Linux
 1. [Visual Studio Code](https://code.visualstudio.com/)
