@@ -38,7 +38,7 @@ class MockSocket {
 
 suite('SocketStream', () => {
     test('Read Byte', (done) => {
-        const buffer = new Buffer('X');
+        const buffer = Buffer.from('X');
         const byteValue = buffer[0];
         const socket = new MockSocket();
 
@@ -70,7 +70,7 @@ suite('SocketStream', () => {
     test('Read Ascii String', (done) => {
         const message = 'Hello World';
         const socket = new MockSocket();
-        const buffer = Buffer.concat([new Buffer('A'), uint64be.encode(message.length), new Buffer(message)]);
+        const buffer = Buffer.concat([Buffer.from('A'), uint64be.encode(message.length), Buffer.from(message)]);
 
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
 
@@ -80,9 +80,9 @@ suite('SocketStream', () => {
     test('Read Unicode String', (done) => {
         const message = 'Hello World - Функция проверки ИНН и КПП - 说明';
         const socket = new MockSocket();
-        const stringBuffer = new Buffer(message);
+        const stringBuffer = Buffer.from(message);
         const buffer = Buffer.concat([
-            Buffer.concat([new Buffer('U'), uint64be.encode(stringBuffer.byteLength)]),
+            Buffer.concat([Buffer.from('U'), uint64be.encode(stringBuffer.byteLength)]),
             stringBuffer,
         ]);
 
@@ -94,10 +94,10 @@ suite('SocketStream', () => {
     test('Read RollBackTransaction', (done) => {
         const message = 'Hello World';
         const socket = new MockSocket();
-        let buffer = Buffer.concat([new Buffer('A'), uint64be.encode(message.length), new Buffer(message)]);
+        let buffer = Buffer.concat([Buffer.from('A'), uint64be.encode(message.length), Buffer.from(message)]);
 
         // Write part of a second message
-        const partOfSecondMessage = Buffer.concat([new Buffer('A'), uint64be.encode(message.length)]);
+        const partOfSecondMessage = Buffer.concat([Buffer.from('A'), uint64be.encode(message.length)]);
         buffer = Buffer.concat([buffer, partOfSecondMessage]);
 
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
@@ -113,10 +113,10 @@ suite('SocketStream', () => {
     test('Read EndTransaction', (done) => {
         const message = 'Hello World';
         const socket = new MockSocket();
-        let buffer = Buffer.concat([new Buffer('A'), uint64be.encode(message.length), new Buffer(message)]);
+        let buffer = Buffer.concat([Buffer.from('A'), uint64be.encode(message.length), Buffer.from(message)]);
 
         // Write part of a second message
-        const partOfSecondMessage = Buffer.concat([new Buffer('A'), uint64be.encode(message.length)]);
+        const partOfSecondMessage = Buffer.concat([Buffer.from('A'), uint64be.encode(message.length)]);
         buffer = Buffer.concat([buffer, partOfSecondMessage]);
 
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
@@ -132,18 +132,18 @@ suite('SocketStream', () => {
     });
     test('Write Buffer', (done) => {
         const message = 'Hello World';
-        const buffer = new Buffer('');
+        const buffer = Buffer.from('');
         const socket = new MockSocket();
 
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
-        stream.Write(new Buffer(message));
+        stream.Write(Buffer.from(message));
 
         assert.equal(socket.dataWritten, message);
         done();
     });
     test('Write Int32', (done) => {
         const num = 1234;
-        const buffer = new Buffer('');
+        const buffer = Buffer.from('');
         const socket = new MockSocket();
 
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
@@ -154,7 +154,7 @@ suite('SocketStream', () => {
     });
     test('Write Int64', (done) => {
         const num = 9007199254740993;
-        const buffer = new Buffer('');
+        const buffer = Buffer.from('');
         const socket = new MockSocket();
 
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
@@ -165,7 +165,7 @@ suite('SocketStream', () => {
     });
     test('Write Ascii String', (done) => {
         const message = 'Hello World';
-        const buffer = new Buffer('');
+        const buffer = Buffer.from('');
         const socket = new MockSocket();
 
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
@@ -176,7 +176,7 @@ suite('SocketStream', () => {
     });
     test('Write Unicode String', (done) => {
         const message = 'Hello World - Функция проверки ИНН и КПП - 说明';
-        const buffer = new Buffer('');
+        const buffer = Buffer.from('');
         const socket = new MockSocket();
 
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
