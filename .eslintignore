@@ -18,10 +18,6 @@ src/test/mocks/vsc/range.ts
 src/test/mocks/vsc/index.ts
 src/test/mocks/vsc/arrays.ts
 
-src/test/smoke/common.ts
-src/test/smoke/runInTerminal.smoke.test.ts
-src/test/smoke/languageServer.smoke.test.ts
-
 src/test/analysisEngineTest.ts
 src/test/ciConstants.ts
 src/test/common.ts
