@@ -40,3 +40,12 @@ export function containsTensorBoardImport(lines: (string | undefined)[]): boolea
     }
     return false;
 }
+
+export function containsNotebookExtension(lines: (string | undefined)[]): boolean {
+    for (const s of lines) {
+        if (s?.startsWith('%tensorboard') || s?.startsWith('%load_ext tensorboard')) {
+            return true;
+        }
+    }
+    return false;
+}

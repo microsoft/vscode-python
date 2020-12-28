@@ -6,7 +6,7 @@ import { IServiceManager } from '../ioc/types';
 import { TensorBoardCodeActionProvider } from './tensorBoardCodeActionProvider';
 import { TensorBoardCodeLensProvider } from './tensorBoardCodeLensProvider';
 import { TensorBoardFileWatcher } from './tensorBoardFileWatcher';
-import { TensorBoardImportTracker } from './tensorBoardImportTracker';
+import { TensorBoardUsageTracker } from './tensorBoardUsageTracker';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 import { TensorBoardSessionProvider } from './tensorBoardSessionProvider';
 import { TensorBoardTerminalListener } from './tensorBoardTerminalListener';
@@ -23,7 +23,7 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<TensorBoardPrompt>(TensorBoardPrompt, TensorBoardPrompt);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        TensorBoardImportTracker,
+        TensorBoardUsageTracker,
     );
     serviceManager.addSingleton<TensorBoardTerminalListener>(TensorBoardTerminalListener, TensorBoardTerminalListener);
     serviceManager.addBinding(TensorBoardTerminalListener, IExtensionSingleActivationService);

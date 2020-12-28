@@ -3,19 +3,23 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { TextEditor } from 'vscode';
+import { TextDocumentChangeEvent, TextEditor } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import { IDisposableRegistry } from '../common/types';
 import { getDocumentLines } from '../telemetry/importTracker';
 import { TensorBoardLaunchSource } from './constants';
-import { containsTensorBoardImport } from './helpers';
+import { containsNotebookExtension, containsTensorBoardImport } from './helpers';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 
 const testExecution = isTestExecution();
+
+// Prompt the user to start an integrated TensorBoard session whenever the active Python file or Python notebook
+// contains a valid TensorBoard import. For Python notebooks only, also prompt the user when the active notebook
+// attempts to load the tensorboard nbextension.
 @injectable()
-export class TensorBoardImportTracker implements IExtensionSingleActivationService {
+export class TensorBoardUsageTracker implements IExtensionSingleActivationService {
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
@@ -39,21 +43,38 @@ export class TensorBoardImportTracker implements IExtensionSingleActivationServi
             this,
             this.disposables,
         );
+        this.documentManager.onDidChangeTextDocument((e) => this.onChangedTextDocument(e), this, this.disposables);
     }
 
-    private onChangedActiveTextEditor(editor: TextEditor | undefined) {
+    private onChangedActiveTextEditor(editor: TextEditor | undefined): void {
         if (!editor || !editor.document) {
             return;
         }
         const { document } = editor;
-        if (
-            (path.extname(document.fileName) === '.ipynb' && document.languageId === 'python') ||
-            path.extname(document.fileName) === '.py'
-        ) {
+        const extName = path.extname(document.fileName);
+        if (extName === '.py') {
             const lines = getDocumentLines(document);
             if (containsTensorBoardImport(lines)) {
                 this.prompt.showNativeTensorBoardPrompt(TensorBoardLaunchSource.fileimport).ignoreErrors();
             }
+        } else if (extName === '.ipynb' && document.languageId === 'python') {
+            const lines = getDocumentLines(document);
+            if (containsTensorBoardImport(lines)) {
+                this.prompt.showNativeTensorBoardPrompt(TensorBoardLaunchSource.fileimport).ignoreErrors();
+            } else if (containsNotebookExtension(lines)) {
+                this.prompt.showNativeTensorBoardPrompt(TensorBoardLaunchSource.nbextension).ignoreErrors();
+            }
         }
+    }
+
+    private onChangedTextDocument(change: TextDocumentChangeEvent) {
+        change.contentChanges.forEach((contentChange) => {
+            if (
+                contentChange.range.isSingleLine &&
+                containsNotebookExtension([change.document.lineAt(contentChange.range.start.line).text])
+            ) {
+                this.prompt.showNativeTensorBoardPrompt(TensorBoardLaunchSource.nbextension).ignoreErrors();
+            }
+        });
     }
 }
