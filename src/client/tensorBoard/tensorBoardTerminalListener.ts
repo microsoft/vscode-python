@@ -34,22 +34,24 @@ export class TensorBoardTerminalListener extends CoreTerminal implements IExtens
             window.onDidChangeActiveTerminal(() => this.reset(), this, this.disposableRegistry);
             this._inputHandler.onCursorMove(debounce(() => this.findTensorBoard(), 5000));
             // Only bother tracking one line at a time
-            this._inputHandler.onLineFeed(
-                debounce(() => {
-                    this.findTensorBoard(this._bufferService.buffer.y - 1);
-                    this.reset();
-                }),
-            );
+            this._inputHandler.onLineFeed(() => {
+                this.findTensorBoard(this._bufferService.buffer.y - 1);
+                this.reset();
+            });
         }
     }
 
     private findTensorBoard(row = this._bufferService.buffer.y) {
         const bufferContents = this._bufferService.buffer.translateBufferLineToString(row, false);
         if (bufferContents.includes('tensorboard')) {
-            this.prompt.showNativeTensorBoardPrompt().ignoreErrors();
-            // Unsubscribe from terminal data events ASAP
-            this.terminalDataListenerDisposable?.dispose();
+            this.complete();
         }
+    }
+
+    private complete() {
+        this.prompt.showNativeTensorBoardPrompt().ignoreErrors();
+        // Unsubscribe from terminal data events ASAP
+        this.terminalDataListenerDisposable?.dispose();
     }
 
     // This function is called whenever any data is written to a VS Code integrated
@@ -57,14 +59,21 @@ export class TensorBoardTerminalListener extends CoreTerminal implements IExtens
     // tensorboard from the active terminal.
     // onDidWriteTerminalData emits raw data being written to the terminal output.
     // TerminalDataWriteEvent.data can be a individual single character as user is typing
-    // something into terminal, so this function buffers characters and flushes them on a newline.
-    // It can also be a series of characters if the user pastes a command into the terminal
-    // or uses terminal history to fetch past commands.
+    // something into terminal. It can also be a series of characters if the user pastes
+    // a command into the terminal or uses terminal history to fetch past commands.
     // It can also fire with multiple characters from terminal prompt characters or terminal output.
     private async handleTerminalData(e: TerminalDataWriteEvent) {
         if (!window.activeTerminal || window.activeTerminal !== e.terminal) {
             return;
         }
+        // In the case of terminal scrollback or a pasted command, we might be lucky enough
+        // to get the whole command in e.data without having to feed it through the parser
+        if (e.data.includes('tensorboard')) {
+            this.complete();
+            return;
+        }
+        // If the user is entering one character at a time, we'll need to buffer individual characters
+        // and handle escape sequences which manipulate the position of the cursor in the buffer
         this.writeSync(e.data);
     }
 }
