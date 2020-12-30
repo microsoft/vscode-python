@@ -946,3 +946,6 @@ src/test/startPage/mountedWebViewFactory.ts
 src/test/startPage/reactHelpers.ts
 src/test/startPage/webBrowserPanel.ts
 src/test/startPage/webBrowserPanelProvider.ts
+
+# This directory contains vendored code
+src/client/tensorBoard/common/*

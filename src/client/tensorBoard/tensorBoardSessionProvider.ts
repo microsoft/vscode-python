@@ -50,6 +50,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                 this.workspaceService,
                 this.processServiceFactory,
                 this.commandManager,
+                this.disposables,
             );
             await newSession.initialize();
         } catch (e) {

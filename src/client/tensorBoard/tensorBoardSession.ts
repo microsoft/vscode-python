@@ -19,7 +19,7 @@ import { createPromiseFromCancellation } from '../common/cancellation';
 import { traceError, traceInfo } from '../common/logger';
 import { tensorboardLauncher } from '../common/process/internal/scripts';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../common/process/types';
-import { IInstaller, InstallerResponse, Product } from '../common/types';
+import { IDisposableRegistry, IInstaller, InstallerResponse, Product } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { TensorBoard } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -47,6 +47,7 @@ export class TensorBoardSession {
         private readonly workspaceService: IWorkspaceService,
         private readonly processServiceFactory: IProcessServiceFactory,
         private readonly commandManager: ICommandManager,
+        private readonly disposables: IDisposableRegistry,
     ) {}
 
     public async initialize(): Promise<void> {
@@ -248,11 +249,15 @@ export class TensorBoardSession {
             this.process?.kill();
             this.process = undefined;
         });
-        webviewPanel.onDidChangeViewState(() => {
-            if (webviewPanel.visible) {
-                this.update();
-            }
-        }, null);
+        webviewPanel.onDidChangeViewState(
+            () => {
+                if (webviewPanel.visible) {
+                    this.update();
+                }
+            },
+            undefined,
+            this.disposables,
+        );
         return webviewPanel;
     }
 
@@ -262,7 +267,7 @@ export class TensorBoardSession {
             <html lang="en">
                 <head>
                     <meta charset="UTF-8">
-                    <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'; frame-src ${this.url};">
+                    <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'; frame-src http: https:;">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>TensorBoard</title>
                 </head>

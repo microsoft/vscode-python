@@ -5,9 +5,8 @@ import { inject, injectable } from 'inversify';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { NativeTensorBoard } from '../common/experiments/groups';
-import { IDisposableRegistry, IExperimentService, IPersistentState, IPersistentStateFactory } from '../common/types';
+import { IExperimentService, IPersistentState, IPersistentStateFactory } from '../common/types';
 import { Common, TensorBoard } from '../common/utils/localize';
-import { ITensorBoardImportTracker } from './types';
 
 enum TensorBoardPromptStateKeys {
     ShowNativeTensorBoardPrompt = 'showNativeTensorBoardPrompt',
@@ -17,7 +16,7 @@ enum TensorBoardPromptStateKeys {
 export class TensorBoardPrompt {
     private state: IPersistentState<boolean>;
 
-    private enabled: Promise<boolean>;
+    private enabled: boolean;
 
     private inExperiment: Promise<boolean>;
 
@@ -28,8 +27,6 @@ export class TensorBoardPrompt {
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(ICommandManager) private commandManager: ICommandManager,
-        @inject(ITensorBoardImportTracker) private importTracker: ITensorBoardImportTracker,
-        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
         @inject(IExperimentService) private experimentService: IExperimentService,
     ) {
@@ -39,13 +36,12 @@ export class TensorBoardPrompt {
         );
         this.enabled = this.isPromptEnabled();
         this.inExperiment = this.isInExperiment();
-        this.importTracker.onDidImportTensorBoard(this.showNativeTensorBoardPrompt, this, this.disposableRegistry);
     }
 
     public async showNativeTensorBoardPrompt(): Promise<void> {
         if (
             (await this.inExperiment) &&
-            (await this.enabled) &&
+            this.enabled &&
             this.enabledInCurrentSession &&
             !this.waitingForUserSelection
         ) {
@@ -73,7 +69,7 @@ export class TensorBoardPrompt {
         }
     }
 
-    private async isPromptEnabled(): Promise<boolean> {
+    private isPromptEnabled(): boolean {
         return this.state.value;
     }
 
