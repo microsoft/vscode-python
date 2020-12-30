@@ -948,4 +948,4 @@ src/test/startPage/webBrowserPanel.ts
 src/test/startPage/webBrowserPanelProvider.ts
 
 # This directory contains vendored code
-src/client/tensorBoard/common/*
+src/client/tensorBoard/terminal/*
