@@ -12,6 +12,9 @@ import { IProcessServiceFactory } from '../common/process/types';
 import { IDisposableRegistry, IExperimentService, IInstaller } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
+import { TensorBoardLaunchSource } from './constants';
 import { TensorBoardSession } from './tensorBoardSession';
 
 @injectable()
@@ -34,7 +37,15 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
     private async activateInternal() {
         if (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) {
             this.disposables.push(
-                this.commandManager.registerCommand(Commands.LaunchTensorBoard, () => this.createNewSession()),
+                this.commandManager.registerCommand(
+                    Commands.LaunchTensorBoard,
+                    (entrypoint: TensorBoardLaunchSource | undefined) => {
+                        sendTelemetryEvent(EventName.TENSORBOARD_SESSION_LAUNCH, undefined, {
+                            entrypoint: entrypoint ?? TensorBoardLaunchSource.palette,
+                        });
+                        this.createNewSession();
+                    },
+                ),
             );
             const contextKey = new ContextKey('python.isInNativeTensorBoardExperiment', this.commandManager);
             contextKey.set(true).ignoreErrors();

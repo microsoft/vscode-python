@@ -6,6 +6,7 @@ import { NativeTensorBoard } from '../../client/common/experiments/groups';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { PersistentState, PersistentStateFactory } from '../../client/common/persistentState';
 import { Common } from '../../client/common/utils/localize';
+import { TensorBoardLaunchSource } from '../../client/tensorBoard/constants';
 import { TensorBoardPrompt } from '../../client/tensorBoard/tensorBoardPrompt';
 
 suite('TensorBoard prompt', () => {
@@ -23,7 +24,7 @@ suite('TensorBoard prompt', () => {
         );
 
         commandManager = mock(CommandManager);
-        when(commandManager.executeCommand(Commands.LaunchTensorBoard)).thenResolve();
+        when(commandManager.executeCommand(Commands.LaunchTensorBoard, anything())).thenResolve();
 
         persistentStateFactory = mock(PersistentStateFactory);
         persistentState = mock(PersistentState);
@@ -42,19 +43,19 @@ suite('TensorBoard prompt', () => {
             instance(persistentStateFactory),
             instance(experimentService),
         );
-        await prompt.showNativeTensorBoardPrompt();
+        await prompt.showNativeTensorBoardPrompt(TensorBoardLaunchSource.palette);
     }
 
     test('Show prompt if user is in experiment, and prompt has not previously been disabled or shown', async () => {
         await setupPromptWithOptions();
         verify(applicationShell.showInformationMessage(anything(), anything(), anything(), anything())).once();
-        verify(commandManager.executeCommand(Commands.LaunchTensorBoard)).once();
+        verify(commandManager.executeCommand(Commands.LaunchTensorBoard, anything())).once();
     });
 
     test('Do not show prompt if user is not in experiment', async () => {
         await setupPromptWithOptions(false);
         verify(applicationShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
-        verify(commandManager.executeCommand(Commands.LaunchTensorBoard)).never();
+        verify(commandManager.executeCommand(Commands.LaunchTensorBoard, anything())).never();
     });
 
     test('Disable prompt if user selects "Do not show again"', async () => {
@@ -65,13 +66,13 @@ suite('TensorBoard prompt', () => {
     test('Do not show prompt if user has previously disabled prompt', async () => {
         await setupPromptWithOptions(true, false);
         verify(applicationShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
-        verify(commandManager.executeCommand(Commands.LaunchTensorBoard)).never();
+        verify(commandManager.executeCommand(Commands.LaunchTensorBoard, anything())).never();
     });
 
     test('Do not show prompt more than once per session', async () => {
         await setupPromptWithOptions();
         verify(applicationShell.showInformationMessage(anything(), anything(), anything(), anything())).once();
-        await prompt.showNativeTensorBoardPrompt();
+        await prompt.showNativeTensorBoardPrompt(TensorBoardLaunchSource.palette);
         verify(applicationShell.showInformationMessage(anything(), anything(), anything(), anything())).once();
     });
 });

@@ -7,6 +7,9 @@ import { Commands } from '../common/constants';
 import { NativeTensorBoard } from '../common/experiments/groups';
 import { IExperimentService, IPersistentState, IPersistentStateFactory } from '../common/types';
 import { Common, TensorBoard } from '../common/utils/localize';
+import { callOnce, sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
+import { TensorBoardEntryPoint, TensorBoardLaunchSource, TensorBoardPromptSelection } from './constants';
 
 enum TensorBoardPromptStateKeys {
     ShowNativeTensorBoardPrompt = 'showNativeTensorBoardPrompt',
@@ -24,6 +27,10 @@ export class TensorBoardPrompt {
 
     private waitingForUserSelection = false;
 
+    private sendTelemetryOnce = callOnce(sendTelemetryEvent, EventName.TENSORBOARD_ENTRYPOINT_SHOWN, undefined, {
+        entrypoint: TensorBoardEntryPoint.prompt,
+    });
+
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(ICommandManager) private commandManager: ICommandManager,
@@ -38,7 +45,7 @@ export class TensorBoardPrompt {
         this.inExperiment = this.isInExperiment();
     }
 
-    public async showNativeTensorBoardPrompt(): Promise<void> {
+    public async showNativeTensorBoardPrompt(source: TensorBoardLaunchSource): Promise<void> {
         if (
             (await this.inExperiment) &&
             this.enabled &&
@@ -50,22 +57,31 @@ export class TensorBoardPrompt {
             const doNotAskAgain = Common.doNotShowAgain();
             const options = [yes, no, doNotAskAgain];
             this.waitingForUserSelection = true;
+            this.sendTelemetryOnce();
             const selection = await this.applicationShell.showInformationMessage(
                 TensorBoard.nativeTensorBoardPrompt(),
                 ...options,
             );
             this.waitingForUserSelection = false;
             this.enabledInCurrentSession = false;
+            let telemetrySelection = TensorBoardPromptSelection.Yes;
             switch (selection) {
                 case yes:
-                    await this.commandManager.executeCommand(Commands.LaunchTensorBoard);
+                    await this.commandManager.executeCommand(Commands.LaunchTensorBoard, source);
                     break;
                 case doNotAskAgain:
+                    telemetrySelection = TensorBoardPromptSelection.No;
                     await this.disablePrompt();
+                    break;
+                case no:
+                    telemetrySelection = TensorBoardPromptSelection.DoNotAskAgain;
                     break;
                 default:
                     break;
             }
+            sendTelemetryEvent(EventName.TENSORBOARD_LAUNCH_PROMPT_SELECTION, undefined, {
+                selection: telemetrySelection,
+            });
         }
     }
 

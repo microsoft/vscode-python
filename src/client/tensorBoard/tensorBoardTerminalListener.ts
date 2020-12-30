@@ -7,6 +7,7 @@ import { TensorBoardPrompt } from './tensorBoardPrompt';
 import { NativeTensorBoard } from '../common/experiments/groups';
 import { isTestExecution } from '../common/constants';
 import { CoreTerminal } from './terminal/CoreTerminal';
+import { TensorBoardLaunchSource } from './constants';
 @injectable()
 export class TensorBoardTerminalListener extends CoreTerminal implements IExtensionSingleActivationService {
     private terminalDataListenerDisposable: Disposable | undefined;
@@ -49,7 +50,7 @@ export class TensorBoardTerminalListener extends CoreTerminal implements IExtens
     }
 
     private complete() {
-        this.prompt.showNativeTensorBoardPrompt().ignoreErrors();
+        this.prompt.showNativeTensorBoardPrompt(TensorBoardLaunchSource.terminal).ignoreErrors();
         // Unsubscribe from terminal data events ASAP
         this.terminalDataListenerDisposable?.dispose();
     }

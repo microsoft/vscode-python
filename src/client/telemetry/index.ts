@@ -18,6 +18,12 @@ import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { LinterId } from '../linters/types';
 import { EnvironmentType } from '../pythonEnvironments/info';
+import {
+    TensorBoardPromptSelection,
+    TensorBoardLaunchSource,
+    TensorBoardSessionStartResult,
+    TensorBoardEntryPoint,
+} from '../tensorBoard/constants';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
 import type { LinterTrigger, TestTool } from './types';
@@ -93,6 +99,18 @@ function getTelemetryReporter() {
 
 export function clearTelemetryReporter(): void {
     telemetryReporter = undefined;
+}
+
+// Call `fn` exactly once
+export function callOnce<T, U extends unknown[]>(fn: (...args: U) => T, ...args: U): () => T | undefined {
+    let called = false;
+    return function () {
+        if (!called) {
+            called = true;
+            return fn(...args);
+        }
+        return undefined;
+    };
 }
 
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
@@ -1719,4 +1737,77 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartPageOpenFileBrowser]: never | undefined;
     [Telemetry.StartPageOpenFolder]: never | undefined;
     [Telemetry.StartPageOpenWorkspace]: never | undefined;
+
+    // TensorBoard integration events
+    /**
+     * Telemetry event sent after the user has clicked on an option in the prompt we display
+     * asking them if they want to launch an integrated TensorBoard session.
+     * `selection` is one of 'yes', 'no', or 'do not ask again'.
+     */
+    [EventName.TENSORBOARD_LAUNCH_PROMPT_SELECTION]: {
+        selection: TensorBoardPromptSelection;
+    };
+    /**
+     * Telemetry event sent after the python.launchTensorBoard command has been executed.
+     * The `entrypoint` property indicates whether the command was executed directly by the
+     * user from the command palette or as a result of:
+     * 1. tfevent files detected in current workspace --> prompt shown --> user clicked 'yes'
+     * 2. tensorboard import detected in active file --> prompt shown --> user clicked 'yes'
+     * 3. tensorboard import detected in active file --> codeaction shown --> user clicked on codeaction
+     * 4. tensorboard import detected in active file --> codelens shown --> user clicked on codelens
+     * 5. tensorboard command detected in terminal --> prompt shown --> user clicked 'yes'
+     * 6. tensorboard nbextension usage detected in ipynb --> prompt shown --> user clicked 'yes'
+     */
+    [EventName.TENSORBOARD_SESSION_LAUNCH]: {
+        entrypoint: TensorBoardLaunchSource;
+    };
+    /**
+     * Telemetry event sent after we have attempted to create a tensorboard program instance
+     * by spawning a daemon to run the tensorboard_launcher.py script. The event is sent with
+     * `durationMs` which should never exceed 60_000ms. Depending on the value of `result`, `durationMs` means:
+     * 1. 'success' --> the total amount of time taken for the execObservable daemon to report successful TB session launch
+     * 2. 'canceled' --> the total amount of time that the user waited for the daemon to start before canceling launch
+     * 3. 'error' --> 60_000ms, i.e. we timed out waiting for the daemon to launch
+     * In the first two cases durationMs should not be more than 60_000ms.
+     */
+    [EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION]: {
+        result: TensorBoardSessionStartResult;
+    };
+    /**
+     * Telemetry event sent after the webview framing the TensorBoard website has been successfully shown.
+     * This event is sent with `durationMs` which represents the total time to create a TensorBoardSession.
+     * Note that this event is only sent if an integrated TensorBoard session is successfully created in full.
+     * This includes checking whether the tensorboard package is installed and installing it if it's not already
+     * installed, requesting the user to select a log directory, starting the tensorboard
+     * program instance in a daemon, and showing the TensorBoard UI in a webpanel, in that order.
+     */
+    [EventName.TENSORBOARD_SESSION_E2E_STARTUP_DURATION]: never | undefined;
+    /**
+     * Telemetry event sent after the user has closed a TensorBoard webview panel. This event is
+     * sent with `durationMs` specifying the total duration of time that the TensorBoard session
+     * ran for before the user terminated the session.
+     */
+    [EventName.TENSORBOARD_SESSION_DURATION]: never | undefined;
+    /**
+     * Telemetry event sent when an entrypoint is displayed to the user. `entrypoint` is one of
+     * 'codeaction', 'codelens', or 'prompt'. This event is sent once per entrypoint per session to
+     * minimize redundant events since codeactions and codelenses can be displayed multiple times
+     * per file.
+     */
+    [EventName.TENSORBOARD_ENTRYPOINT_SHOWN]: {
+        entrypoint: TensorBoardEntryPoint;
+    };
+    /**
+     * Telemetry event sent when the user is prompted to install Python packages that are
+     * dependencies for launching an integrated TensorBoard session.
+     */
+    [EventName.TENSORBOARD_INSTALL_PROMPT_SHOWN]: never | undefined;
+    /**
+     * Telemetry event sent after the user has clicked on an option in the prompt we display
+     * asking them if they want to install Python packages for launching an integrated TensorBoard session.
+     * `selection` is one of 'yes' or 'no'.
+     */
+    [EventName.TENSORBOARD_INSTALL_PROMPT_SELECTION]: {
+        selection: TensorBoardPromptSelection;
+    };
 }

@@ -8,10 +8,17 @@ import { Commands, PYTHON } from '../common/constants';
 import { NativeTensorBoard, NativeTensorBoardEntrypoints } from '../common/experiments/groups';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
+import { callOnce, sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
+import { TensorBoardEntryPoint, TensorBoardLaunchSource } from './constants';
 import { containsTensorBoardImport } from './helpers';
 
 @injectable()
 export class TensorBoardCodeLensProvider implements IExtensionSingleActivationService {
+    private sendTelemetryOnce = callOnce(sendTelemetryEvent, EventName.TENSORBOARD_ENTRYPOINT_SHOWN, undefined, {
+        entrypoint: TensorBoardEntryPoint.codelens,
+    });
+
     constructor(
         @inject(IExperimentService) private experimentService: IExperimentService,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
@@ -26,6 +33,7 @@ export class TensorBoardCodeLensProvider implements IExtensionSingleActivationSe
         const command: Command = {
             title: TensorBoard.launchNativeTensorBoardSessionCodeLens(),
             command: Commands.LaunchTensorBoard,
+            arguments: [TensorBoardLaunchSource.codelens],
         };
         const codelenses: CodeLens[] = [];
         for (let index = 0; index < document.lineCount; index += 1) {
@@ -33,6 +41,7 @@ export class TensorBoardCodeLensProvider implements IExtensionSingleActivationSe
             if (containsTensorBoardImport([line.text])) {
                 const range = new Range(new Position(line.lineNumber, 0), new Position(line.lineNumber, 1));
                 codelenses.push(new CodeLens(range, command));
+                this.sendTelemetryOnce();
             }
         }
         return codelenses;

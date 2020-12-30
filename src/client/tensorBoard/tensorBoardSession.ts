@@ -22,7 +22,11 @@ import { IProcessServiceFactory, ObservableExecutionResult } from '../common/pro
 import { IDisposableRegistry, IInstaller, InstallerResponse, Product } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { TensorBoard } from '../common/utils/localize';
+import { StopWatch } from '../common/utils/stopWatch';
 import { IInterpreterService } from '../interpreter/contracts';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
+import { TensorBoardSessionStartResult } from './constants';
 
 /**
  * Manages the lifecycle of a TensorBoard session.
@@ -41,6 +45,9 @@ export class TensorBoardSession {
 
     private process: ChildProcess | undefined;
 
+    // This tracks the total duration of time that the user kept the TensorBoard panel open
+    private sessionDurationStopwatch: StopWatch | undefined;
+
     constructor(
         private readonly installer: IInstaller,
         private readonly interpreterService: IInterpreterService,
@@ -51,6 +58,7 @@ export class TensorBoardSession {
     ) {}
 
     public async initialize(): Promise<void> {
+        const e2eStartupDurationStopwatch = new StopWatch();
         const tensorBoardWasInstalled = await this.ensureTensorboardIsInstalled();
         if (!tensorBoardWasInstalled) {
             return;
@@ -62,7 +70,14 @@ export class TensorBoardSession {
         const startedSuccessfully = await this.startTensorboardSession(logDir);
         if (startedSuccessfully) {
             this.showPanel();
+            // Not using captureTelemetry on this method as we only want to send
+            // this particular telemetry event if the whole session creation succeeded
+            sendTelemetryEvent(
+                EventName.TENSORBOARD_SESSION_E2E_STARTUP_DURATION,
+                e2eStartupDurationStopwatch.elapsedTime,
+            );
         }
+        this.sessionDurationStopwatch = new StopWatch();
     }
 
     // Ensure that the TensorBoard package is installed before we attempt
@@ -175,6 +190,7 @@ export class TensorBoardSession {
 
         const processService = await this.processServiceFactory.create();
         const args = tensorboardLauncher([logDir]);
+        const sessionStartStopwatch = new StopWatch();
         const observable = processService.execObservable(pythonExecutable.path, args);
 
         const result = await window.withProgress(
@@ -194,16 +210,38 @@ export class TensorBoardSession {
         );
 
         switch (result) {
-            case timeout:
-                throw new Error(`Timed out after ${timeout / 1000} seconds waiting for TensorBoard to launch.`);
             case 'canceled':
                 traceInfo('Canceled starting TensorBoard session.');
+                sendTelemetryEvent(
+                    EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION,
+                    sessionStartStopwatch.elapsedTime,
+                    {
+                        result: TensorBoardSessionStartResult.cancel,
+                    },
+                );
                 observable.dispose();
                 return false;
             case 'success':
                 this.process = observable.proc;
+                sendTelemetryEvent(
+                    EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION,
+                    sessionStartStopwatch.elapsedTime,
+                    {
+                        result: TensorBoardSessionStartResult.success,
+                    },
+                );
                 return true;
+            case timeout:
+                sendTelemetryEvent(
+                    EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION,
+                    sessionStartStopwatch.elapsedTime,
+                    {
+                        result: TensorBoardSessionStartResult.error,
+                    },
+                );
+                throw new Error(`Timed out after ${timeout / 1000} seconds waiting for TensorBoard to launch.`);
             default:
+                // We should never get here
                 throw new Error(`Failed to start TensorBoard, received unknown promise result: ${result}`);
         }
     }
@@ -247,6 +285,7 @@ export class TensorBoardSession {
             this.webviewPanel = undefined;
             // Kill the running TensorBoard session
             this.process?.kill();
+            sendTelemetryEvent(EventName.TENSORBOARD_SESSION_DURATION, this.sessionDurationStopwatch?.elapsedTime);
             this.process = undefined;
         });
         webviewPanel.onDidChangeViewState(
