@@ -5,6 +5,7 @@ import { IExtensionSingleActivationService } from '../../client/activation/types
 import { sleep } from '../../client/common/utils/async';
 import { TensorBoardPrompt } from '../../client/tensorBoard/tensorBoardPrompt';
 import { TensorBoardTerminalListener } from '../../client/tensorBoard/tensorBoardTerminalListener';
+import { isWindows } from '../core';
 // import { isWindows } from '../core';
 import { initialize } from '../initialize';
 
@@ -67,17 +68,6 @@ suite('TensorBoard terminal listener', async () => {
     });
 
     test('Backspaces are correctly handled', async function () {
-        // We appear to be unable to handle backspaces on Linux as no corresponding
-        // \b character is written to the raw data stream when the user presses the
-        // backspace key. This behavior may be shell-dependent but is certainly the
-        // case with bash and sh. So onDidWriteTerminalData does not fire with the
-        // backspace character when the user enters a backspace, and we as the extension
-        // have no way of detecting that the user just hit a backspace, so we cannot
-        // update our buffer accordingly. In such situations `tensorboard` terminal
-        // command detection is totally best-effort.
-        // if (!isWindows) {
-        //     this.skip();
-        // }
         terminal.sendText('tensor', false);
         await sleep(terminalWriteTimeout);
         terminal.sendText('\b', false);
@@ -88,6 +78,11 @@ suite('TensorBoard terminal listener', async () => {
     });
 
     test('Cursor position is correctly updated', async function () {
+        // On Linux moving the cursor doesn't fire a terminal write data event
+        // so we have no way to know that the cursor moved...
+        if (!isWindows) {
+            this.skip();
+        }
         terminal.sendText('tensor', false);
         await sleep(terminalWriteTimeout);
         terminal.sendText('\x1b[D', false); // Move cursor one cell to the left
@@ -100,6 +95,11 @@ suite('TensorBoard terminal listener', async () => {
     });
 
     test('Insert into middle of current line', async function () {
+        // On Linux moving the cursor doesn't fire a terminal write data event
+        // so we have no way to know that the cursor moved...
+        if (!isWindows) {
+            this.skip();
+        }
         terminal.sendText('tensor', false);
         await sleep(terminalWriteTimeout);
         terminal.sendText('\x1b[D', false); // Move cursor one cell to the left
@@ -111,6 +111,11 @@ suite('TensorBoard terminal listener', async () => {
     });
 
     test('Insert into middle of current line inverse', async function () {
+        // On Linux moving the cursor doesn't fire a terminal write data event
+        // so we have no way to know that the cursor moved...
+        if (!isWindows) {
+            this.skip();
+        }
         terminal.sendText('tensor ', false);
         await sleep(terminalWriteTimeout);
         terminal.sendText('\x1b[D', false); // Move cursor one cell to the left
