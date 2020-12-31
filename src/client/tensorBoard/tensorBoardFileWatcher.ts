@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import { FileSystemWatcher, RelativePattern, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IWorkspaceService } from '../common/application/types';
+import { isTestExecution } from '../common/constants';
 import { NativeTensorBoard } from '../common/experiments/groups';
 import { traceError } from '../common/logger';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
@@ -30,7 +31,7 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
     }
 
     private async activateInternal() {
-        if (!(await this.experimentService.inExperiment(NativeTensorBoard.experiment))) {
+        if (!isTestExecution() && !(await this.experimentService.inExperiment(NativeTensorBoard.experiment))) {
             return;
         }
 
