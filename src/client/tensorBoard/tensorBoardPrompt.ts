@@ -67,9 +67,10 @@ export class TensorBoardPrompt {
             );
             this.waitingForUserSelection = false;
             this.enabledInCurrentSession = false;
-            let telemetrySelection = TensorBoardPromptSelection.Yes;
+            let telemetrySelection = TensorBoardPromptSelection.None;
             switch (selection) {
                 case yes:
+                    telemetrySelection = TensorBoardPromptSelection.Yes;
                     await this.commandManager.executeCommand(Commands.LaunchTensorBoard, source);
                     break;
                 case doNotAskAgain:

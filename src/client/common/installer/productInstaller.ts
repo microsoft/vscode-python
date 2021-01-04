@@ -580,8 +580,14 @@ export class TensorBoardInstaller extends DataScienceInstaller {
         const yes = Common.bannerLabelYes();
         const no = Common.bannerLabelNo();
         const selection = await this.appShell.showErrorMessage(TensorBoard.installPrompt(), ...[yes, no]);
+        let telemetrySelection = TensorBoardPromptSelection.None;
+        if (selection === yes) {
+            telemetrySelection = TensorBoardPromptSelection.Yes;
+        } else if (selection === no) {
+            telemetrySelection = TensorBoardPromptSelection.No;
+        }
         sendTelemetryEvent(EventName.TENSORBOARD_INSTALL_PROMPT_SELECTION, undefined, {
-            selection: selection === yes ? TensorBoardPromptSelection.Yes : TensorBoardPromptSelection.No,
+            selection: telemetrySelection,
         });
         return selection === yes ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
     }
