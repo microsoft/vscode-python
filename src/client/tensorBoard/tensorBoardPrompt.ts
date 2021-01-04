@@ -70,11 +70,11 @@ export class TensorBoardPrompt {
                     await this.commandManager.executeCommand(Commands.LaunchTensorBoard, source);
                     break;
                 case doNotAskAgain:
-                    telemetrySelection = TensorBoardPromptSelection.No;
+                    telemetrySelection = TensorBoardPromptSelection.DoNotAskAgain;
                     await this.disablePrompt();
                     break;
                 case no:
-                    telemetrySelection = TensorBoardPromptSelection.DoNotAskAgain;
+                    telemetrySelection = TensorBoardPromptSelection.No;
                     break;
                 default:
                     break;
