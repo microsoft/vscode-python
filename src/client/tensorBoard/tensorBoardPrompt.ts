@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import { once } from 'lodash';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { NativeTensorBoard } from '../common/experiments/groups';
 import { IExperimentService, IPersistentState, IPersistentStateFactory } from '../common/types';
 import { Common, TensorBoard } from '../common/utils/localize';
-import { callOnce, sendTelemetryEvent } from '../telemetry';
+import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { TensorBoardEntryPoint, TensorBoardLaunchSource, TensorBoardPromptSelection } from './constants';
 
@@ -27,9 +28,11 @@ export class TensorBoardPrompt {
 
     private waitingForUserSelection = false;
 
-    private sendTelemetryOnce = callOnce(sendTelemetryEvent, EventName.TENSORBOARD_ENTRYPOINT_SHOWN, undefined, {
-        entrypoint: TensorBoardEntryPoint.prompt,
-    });
+    private sendTelemetryOnce = once(
+        sendTelemetryEvent.bind(this, EventName.TENSORBOARD_ENTRYPOINT_SHOWN, undefined, {
+            entrypoint: TensorBoardEntryPoint.prompt,
+        }),
+    );
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -64,17 +67,18 @@ export class TensorBoardPrompt {
             );
             this.waitingForUserSelection = false;
             this.enabledInCurrentSession = false;
-            let telemetrySelection = TensorBoardPromptSelection.Yes;
+            let telemetrySelection = TensorBoardPromptSelection.None;
             switch (selection) {
                 case yes:
+                    telemetrySelection = TensorBoardPromptSelection.Yes;
                     await this.commandManager.executeCommand(Commands.LaunchTensorBoard, source);
                     break;
                 case doNotAskAgain:
-                    telemetrySelection = TensorBoardPromptSelection.No;
+                    telemetrySelection = TensorBoardPromptSelection.DoNotAskAgain;
                     await this.disablePrompt();
                     break;
                 case no:
-                    telemetrySelection = TensorBoardPromptSelection.DoNotAskAgain;
+                    telemetrySelection = TensorBoardPromptSelection.No;
                     break;
                 default:
                     break;

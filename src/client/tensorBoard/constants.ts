@@ -2,6 +2,7 @@ export enum TensorBoardPromptSelection {
     Yes = 'yes',
     No = 'no',
     DoNotAskAgain = 'doNotAskAgain',
+    None = 'none',
 }
 
 export enum TensorBoardLaunchSource {

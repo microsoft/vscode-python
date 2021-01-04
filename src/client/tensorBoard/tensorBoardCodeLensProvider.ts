@@ -2,22 +2,25 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import { once } from 'lodash';
 import { CodeLens, Command, languages, Position, Range, TextDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { Commands, PYTHON } from '../common/constants';
 import { NativeTensorBoard, NativeTensorBoardEntrypoints } from '../common/experiments/groups';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
-import { callOnce, sendTelemetryEvent } from '../telemetry';
+import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { TensorBoardEntryPoint, TensorBoardLaunchSource } from './constants';
 import { containsTensorBoardImport } from './helpers';
 
 @injectable()
 export class TensorBoardCodeLensProvider implements IExtensionSingleActivationService {
-    private sendTelemetryOnce = callOnce(sendTelemetryEvent, EventName.TENSORBOARD_ENTRYPOINT_SHOWN, undefined, {
-        entrypoint: TensorBoardEntryPoint.codelens,
-    });
+    private sendTelemetryOnce = once(
+        sendTelemetryEvent.bind(this, EventName.TENSORBOARD_ENTRYPOINT_SHOWN, undefined, {
+            entrypoint: TensorBoardEntryPoint.codelens,
+        }),
+    );
 
     constructor(
         @inject(IExperimentService) private experimentService: IExperimentService,
