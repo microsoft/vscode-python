@@ -101,18 +101,6 @@ export function clearTelemetryReporter(): void {
     telemetryReporter = undefined;
 }
 
-// Call `fn` exactly once
-export function callOnce<T, U extends unknown[]>(fn: (...args: U) => T, ...args: U): () => T | undefined {
-    let called = false;
-    return function () {
-        if (!called) {
-            called = true;
-            return fn(...args);
-        }
-        return undefined;
-    };
-}
-
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     durationMs?: Record<string, number> | number,
