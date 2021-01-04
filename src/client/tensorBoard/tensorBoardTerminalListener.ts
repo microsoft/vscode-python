@@ -1,22 +1,28 @@
+/* eslint-disable import/first */
 import { inject, injectable } from 'inversify';
-import { Disposable, TerminalDataWriteEvent, window } from 'vscode';
 import { debounce } from 'lodash';
+import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 import { NativeTensorBoard } from '../common/experiments/groups';
 import { isTestExecution } from '../common/constants';
-import { CoreTerminal } from './terminal/CoreTerminal';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(global as any).window = undefined;
+// eslint-disable-next-line import/order
+import { Terminal } from 'xterm';
 @injectable()
-export class TensorBoardTerminalListener extends CoreTerminal implements IExtensionSingleActivationService {
-    private terminalDataListenerDisposable: Disposable | undefined;
+export class TensorBoardTerminalListener implements IExtensionSingleActivationService {
+    private terminalDataListenerDisposable: vscode.Disposable | undefined;
+
+    private terminal: Terminal;
 
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(TensorBoardPrompt) private prompt: TensorBoardPrompt,
         @inject(IExperimentService) private experimentService: IExperimentService,
     ) {
-        super({});
+        this.terminal = new Terminal({ allowProposedApi: true });
     }
 
     public async activate(): Promise<void> {
@@ -25,25 +31,26 @@ export class TensorBoardTerminalListener extends CoreTerminal implements IExtens
 
     private async activateInternal() {
         if (isTestExecution() || (await this.experimentService.inExperiment(NativeTensorBoard.experiment))) {
-            this.terminalDataListenerDisposable = window.onDidWriteTerminalData(
+            this.terminalDataListenerDisposable = vscode.window.onDidWriteTerminalData(
                 (e) => this.handleTerminalData(e).ignoreErrors(),
                 this,
                 this.disposableRegistry,
             );
             // Only track and parse the active terminal's data since we only care about user input
-            window.onDidChangeActiveTerminal(() => this.reset(), this, this.disposableRegistry);
-            this._inputHandler.onCursorMove(debounce(() => this.findTensorBoard(), 5000));
+            vscode.window.onDidChangeActiveTerminal(() => this.terminal.reset(), this, this.disposableRegistry);
+            this.terminal.onCursorMove(debounce(() => this.findTensorBoard(), 5000));
             // Only bother tracking one line at a time
-            this._inputHandler.onLineFeed(() => {
-                this.findTensorBoard(this._bufferService.buffer.y - 1);
-                this.reset();
+            this.terminal.onLineFeed(() => {
+                this.findTensorBoard(this.terminal.buffer.active.cursorY - 1);
+                this.terminal.reset();
             });
         }
     }
 
-    private findTensorBoard(row = this._bufferService.buffer.y) {
-        const bufferContents = this._bufferService.buffer.translateBufferLineToString(row, false);
-        if (bufferContents.includes('tensorboard')) {
+    private findTensorBoard(row = this.terminal.buffer.active.cursorY) {
+        const line = this.terminal.buffer.active.getLine(row);
+        const bufferContents = line?.translateToString(false);
+        if (bufferContents && bufferContents.includes('tensorboard')) {
             this.complete();
         }
     }
@@ -62,8 +69,8 @@ export class TensorBoardTerminalListener extends CoreTerminal implements IExtens
     // something into terminal. It can also be a series of characters if the user pastes
     // a command into the terminal or uses terminal history to fetch past commands.
     // It can also fire with multiple characters from terminal prompt characters or terminal output.
-    private async handleTerminalData(e: TerminalDataWriteEvent) {
-        if (!window.activeTerminal || window.activeTerminal !== e.terminal) {
+    private async handleTerminalData(e: vscode.TerminalDataWriteEvent) {
+        if (!vscode.window.activeTerminal || vscode.window.activeTerminal !== e.terminal) {
             return;
         }
         // In the case of terminal scrollback or a pasted command, we might be lucky enough
@@ -74,6 +81,6 @@ export class TensorBoardTerminalListener extends CoreTerminal implements IExtens
         }
         // If the user is entering one character at a time, we'll need to buffer individual characters
         // and handle escape sequences which manipulate the position of the cursor in the buffer
-        this.writeSync(e.data);
+        this.terminal.write(e.data);
     }
 }
