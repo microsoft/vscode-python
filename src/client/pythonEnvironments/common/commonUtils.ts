@@ -22,7 +22,7 @@ import { isWindowsPythonExe } from './windowsUtils';
 export async function* findInterpretersInDir(
     root: string,
     recurseLevels?: number,
-    filter?: (x: string) => boolean,
+    filterFile?: (x: string) => boolean,
 ): AsyncIterableIterator<string> {
     const os = getOSType();
     const checkBin = os === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
@@ -40,18 +40,18 @@ export async function* findInterpretersInDir(
 
     for (const entry of entries) {
         const filename = path.join(root, entry.name);
-        if (filter && !filter(filename)) {
-            // eslint-disable-next-line no-continue
-            continue;
-        }
         // tslint:disable-next-line:no-suspicious-comment
         // TODO: If the "withFileTypes" option doesn't help us on Windows
         // then we will need to check manually (using `stat()`)..
         if (entry.isDirectory()) {
             if (recurseLevels && recurseLevels > 0) {
-                yield* findInterpretersInDir(filename, recurseLevels - 1, filter);
+                yield* findInterpretersInDir(filename, recurseLevels - 1, filterFile);
             }
         } else if (entry.isFile()) {
+            if (filterFile && !filterFile(filename)) {
+                // eslint-disable-next-line no-continue
+                continue;
+            }
             if (checkBin(filename)) {
                 yield filename;
             }
