@@ -6,7 +6,6 @@ import { sleep } from '../../client/common/utils/async';
 import { TensorBoardPrompt } from '../../client/tensorBoard/tensorBoardPrompt';
 import { TensorBoardTerminalListener } from '../../client/tensorBoard/tensorBoardTerminalListener';
 import { isWindows } from '../core';
-// import { isWindows } from '../core';
 import { initialize } from '../initialize';
 
 const terminalWriteTimeout = 5000;
