@@ -68,6 +68,15 @@ export class TensorBoardUsageTracker implements IExtensionSingleActivationServic
     }
 
     private onChangedTextDocument(change: TextDocumentChangeEvent) {
+        const { document } = change;
+        if (this.documentManager.activeTextEditor?.document !== document) {
+            return;
+        }
+        const extName = path.extname(document.fileName);
+        if (extName !== '.ipynb' || document.languageId !== 'python') {
+            return;
+        }
+
         change.contentChanges.forEach((contentChange) => {
             if (
                 contentChange.range.isSingleLine &&
