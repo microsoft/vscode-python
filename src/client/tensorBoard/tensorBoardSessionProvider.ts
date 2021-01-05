@@ -41,7 +41,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
         }
     }
 
-    private async createNewSession(): Promise<void> {
+    private async createNewSession(): Promise<TensorBoardSession | undefined> {
         traceInfo('Starting new TensorBoard session...');
         try {
             const newSession = new TensorBoardSession(
@@ -52,9 +52,11 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                 this.commandManager,
             );
             await newSession.initialize();
+            return newSession;
         } catch (e) {
             traceError(`Encountered error while starting new TensorBoard session: ${e}`);
             await this.applicationShell.showErrorMessage(TensorBoard.failedToStartSessionError().format(e));
         }
+        return undefined;
     }
 }

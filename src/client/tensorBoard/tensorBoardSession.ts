@@ -35,6 +35,14 @@ import { IInterpreterService } from '../interpreter/contracts';
  * - shuts down the TensorBoard process when the webview is closed
  */
 export class TensorBoardSession {
+    public get panel(): WebviewPanel | undefined {
+        return this.webviewPanel;
+    }
+
+    public get daemon(): ChildProcess | undefined {
+        return this.process;
+    }
+
     private webviewPanel: WebviewPanel | undefined;
 
     private url: string | undefined;
@@ -262,7 +270,7 @@ export class TensorBoardSession {
             <html lang="en">
                 <head>
                     <meta charset="UTF-8">
-                    <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'; frame-src ${this.url};">
+                    <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'; frame-src http: https: ${this.url};">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>TensorBoard</title>
                 </head>
@@ -275,7 +283,8 @@ export class TensorBoardSession {
                                 f.style.width = window.innerWidth / 0.7 + "px";
                             }
                         }
-                        window.addEventListener('resize', resizeFrame);
+                        resizeFrame(); // Call immediately to force a redraw on load
+                        window.addEventListener('resize', resizeFrame); // Redraw on every resize
                     </script>
                     <iframe
                         id="vscode-tensorboard-iframe"

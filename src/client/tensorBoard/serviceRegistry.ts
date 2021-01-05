@@ -12,10 +12,8 @@ import { TensorBoardSessionProvider } from './tensorBoardSessionProvider';
 import { ITensorBoardImportTracker } from './types';
 
 export function registerTypes(serviceManager: IServiceManager): void {
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        TensorBoardSessionProvider,
-    );
+    serviceManager.addSingleton<TensorBoardSessionProvider>(TensorBoardSessionProvider, TensorBoardSessionProvider);
+    serviceManager.addBinding(TensorBoardSessionProvider, IExtensionSingleActivationService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         TensorBoardFileWatcher,
