@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_WARNINGS } from '../../common/constants';
-import { LogOptions, traceDecorators, traceError, traceInfo, traceVerbose } from '../../common/logger';
+import { LogOptions, traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
@@ -195,6 +195,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // This happens on AzDo machines a bunch when using Conda (and we can't dictate the conda version in order to get the fix)
             let result: ExecutionResult<string> | undefined;
             let tryCount = 1;
+            let returnedEnv: NodeJS.ProcessEnv | undefined;
             while (!result) {
                 try {
                     result = await processService.shellExec(command, {
@@ -204,8 +205,19 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                         maxBuffer: 1000 * 1000,
                         throwOnStdErr: false,
                     });
-                    if (result.stderr && result.stderr.length > 0) {
-                        throw new Error(`StdErr from ShellExec, ${result.stderr} for ${command}`);
+                    try {
+                        returnedEnv = this.parseEnvironmentOutput(result.stdout, parse);
+                    } catch (ex) {
+                        if (!result.stderr) {
+                            throw ex;
+                        }
+                    }
+                    if (result.stderr) {
+                        if (returnedEnv) {
+                            traceWarning('Got env variables but with errors', result.stderr);
+                        } else {
+                            throw new Error(`StdErr from ShellExec, ${result.stderr} for ${command}`);
+                        }
                     }
                 } catch (exc) {
                     // Special case. Conda for some versions will state a file is in use. If
@@ -221,7 +233,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     }
                 }
             }
-            const returnedEnv = this.parseEnvironmentOutput(result.stdout, parse);
 
             // Put back the PYTHONWARNINGS value
             if (oldWarnings && returnedEnv) {
