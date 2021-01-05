@@ -41,7 +41,7 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
             this.emit('error', err);
         });
         this.log('starting server as', 'TCP');
-        if (host.trim.length === 0) {
+        if (host.trim().length === 0) {
             host = 'localhost';
         }
         this.server!.on('connection', (socket: net.Socket) => {
