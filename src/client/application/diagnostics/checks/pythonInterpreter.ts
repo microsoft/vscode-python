@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
-
+// eslint-disable-next-line max-classes-per-file
 import { inject, injectable } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import '../../../common/extensions';
@@ -59,6 +58,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
             false,
         );
     }
+
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const settings = configurationService.getSettings(resource);
@@ -92,6 +92,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
 
         return [];
     }
+
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         if (diagnostics.length === 0) {
             return;
@@ -106,11 +107,12 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
                     return;
                 }
                 const commandPrompts = this.getCommandPrompts(diagnostic);
-                const onClose = this.getOnCloseHandler(diagnostic);
-                return messageService.handle(diagnostic, { commandPrompts, message: diagnostic.message, onClose });
+                const onClose = getOnCloseHandler(diagnostic);
+                await messageService.handle(diagnostic, { commandPrompts, message: diagnostic.message, onClose });
             }),
         );
     }
+
     private getCommandPrompts(diagnostic: IDiagnostic): { prompt: string; command?: IDiagnosticCommand }[] {
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
         switch (diagnostic.code) {
@@ -141,15 +143,15 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
             }
         }
     }
-    private getOnCloseHandler(diagnostic: IDiagnostic): IDiagnosticMessageOnCloseHandler | undefined {
-        if (diagnostic.code === DiagnosticCodes.NoPythonInterpretersDiagnostic) {
-            return (response?: string) => {
-                sendTelemetryEvent(EventName.PYTHON_NOT_INSTALLED_PROMPT, undefined, {
-                    selection: response ? 'Download' : 'Ignore',
-                });
-            };
-        }
+}
 
-        return;
+function getOnCloseHandler(diagnostic: IDiagnostic): IDiagnosticMessageOnCloseHandler | undefined {
+    if (diagnostic.code === DiagnosticCodes.NoPythonInterpretersDiagnostic) {
+        return (response?: string) => {
+            sendTelemetryEvent(EventName.PYTHON_NOT_INSTALLED_PROMPT, undefined, {
+                selection: response ? 'Download' : 'Ignore',
+            });
+        };
     }
+    return undefined;
 }

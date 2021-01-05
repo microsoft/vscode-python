@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
-
+// eslint-disable-next-line max-classes-per-file
 import { inject, injectable } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import { IApplicationEnvironment } from '../../../common/application/types';
@@ -37,7 +36,9 @@ export const EnvironmentPathVariableDiagnosticsServiceId = 'EnvironmentPathVaria
 @injectable()
 export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsService {
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
+
     private readonly platform: IPlatformService;
+
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
@@ -49,15 +50,16 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
             DiagnosticCommandPromptHandlerServiceId,
         );
     }
+
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (this.platform.isWindows && this.doesPathVariableHaveInvalidEntries()) {
             const env = this.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
             const message = InvalidEnvPathVariableMessage.format(this.platform.pathVariableName, env.extensionName);
             return [new InvalidEnvironmentPathVariableDiagnostic(message, resource)];
-        } else {
-            return [];
         }
+        return [];
     }
+
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         // This class can only handle one type of diagnostic, hence just use first item in list.
         if (diagnostics.length === 0 || !this.canHandle(diagnostics[0])) {
@@ -84,6 +86,7 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
 
         await this.messageService.handle(diagnostic, { commandPrompts: options });
     }
+
     private doesPathVariableHaveInvalidEntries() {
         const currentProc = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
         const pathValue = currentProc.env[this.platform.pathVariableName];

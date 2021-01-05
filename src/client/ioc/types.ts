@@ -4,22 +4,19 @@
 import { interfaces } from 'inversify';
 import { IDisposable } from '../common/types';
 
-//tslint:disable:callable-types
-
 export interface Newable<T> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     new (...args: any[]): T;
 }
-//tslint:enable:callable-types
 
 export interface Abstract<T> {
     prototype: T;
 }
 
-//tslint:disable:callable-types
 export type ClassType<T> = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     new (...args: any[]): T;
 };
-//tslint:enable:callable-types
 
 export const IServiceManager = Symbol('IServiceManager');
 

@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
-
+// eslint-disable-next-line max-classes-per-file
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, DiagnosticSeverity, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
@@ -49,7 +48,9 @@ export const InvalidMacPythonInterpreterServiceId = 'InvalidMacPythonInterpreter
 @injectable()
 export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
     protected changeThrottleTimeout = 1000;
+
     private timeOut?: NodeJS.Timer | number;
+
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -68,12 +69,14 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         );
         this.addPythonPathChangedHandler();
     }
-    public dispose() {
-        if (this.timeOut) {
-            clearTimeout(this.timeOut as any);
+
+    public dispose(): void {
+        if (this.timeOut && typeof this.timeOut !== 'number') {
+            clearTimeout(this.timeOut);
             this.timeOut = undefined;
         }
     }
+
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (!this.platform.isMac) {
             return [];
@@ -119,6 +122,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
             ),
         ];
     }
+
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         if (diagnostics.length === 0) {
             return;
@@ -135,11 +139,12 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
                     return;
                 }
                 const commandPrompts = this.getCommandPrompts(diagnostic);
-                return messageService.handle(diagnostic, { commandPrompts, message: diagnostic.message });
+                await messageService.handle(diagnostic, { commandPrompts, message: diagnostic.message });
             }),
         );
     }
-    protected addPythonPathChangedHandler() {
+
+    protected addPythonPathChangedHandler(): void {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
@@ -150,10 +155,11 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         disposables.push(workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
     }
+
     protected async onDidChangeConfiguration(
         event?: ConfigurationChangeEvent,
         interpreterConfigurationScope?: InterpreterConfigurationScope,
-    ) {
+    ): Promise<void> {
         let workspaceUri: Resource;
         if (event) {
             const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -175,8 +181,8 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
             );
         }
         // Lets wait, for more changes, dirty simple throttling.
-        if (this.timeOut) {
-            clearTimeout(this.timeOut as any);
+        if (this.timeOut && typeof this.timeOut !== 'number') {
+            clearTimeout(this.timeOut);
             this.timeOut = undefined;
         }
         this.timeOut = setTimeout(() => {
@@ -186,6 +192,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
                 .ignoreErrors();
         }, this.changeThrottleTimeout);
     }
+
     private getCommandPrompts(diagnostic: IDiagnostic): { prompt: string; command?: IDiagnosticCommand }[] {
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
         switch (diagnostic.code) {

@@ -13,7 +13,7 @@ import { EXTENSION_ROOT_DIR } from '../constants';
  * case as 'MarketPlace'.
  *
  */
-export async function setExtensionInstallTelemetryProperties(fs: IFileSystem) {
+export async function setExtensionInstallTelemetryProperties(fs: IFileSystem): Promise<void> {
     // Look for PythonCodingPack file under `%USERPROFILE%/.vscode/extensions`
     // folder. If that file exists treat this extension as installed from coding
     // pack.

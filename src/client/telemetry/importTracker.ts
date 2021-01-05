@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -46,8 +47,10 @@ const testExecution = isTestExecution();
 @injectable()
 export class ImportTracker implements IExtensionSingleActivationService {
     private pendingChecks = new Map<string, NodeJS.Timer>();
+
     private sentMatches: Set<string> = new Set<string>();
 
+    // eslint-disable-next-line global-require
     private hashFn = require('hash.js').sha256;
 
     constructor(
@@ -58,7 +61,7 @@ export class ImportTracker implements IExtensionSingleActivationService {
         this.documentManager.onDidSaveTextDocument((t) => this.onOpenedOrSavedDocument(t), this, this.disposables);
     }
 
-    public dispose() {
+    public dispose(): void {
         this.pendingChecks.clear();
     }
 

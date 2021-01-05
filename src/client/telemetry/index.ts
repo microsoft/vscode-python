@@ -1,3 +1,4 @@
+/* eslint-disable global-require */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -9,7 +10,7 @@ import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceInfo } from '../common/logger';
 import { Telemetry } from '../common/startPage/constants';
-import { TerminalShellType } from '../common/terminal/types';
+import type { TerminalShellType } from '../common/terminal/types';
 import { Architecture } from '../common/utils/platform';
 import { StopWatch } from '../common/utils/stopWatch';
 import { DebugConfigurationType } from '../debugger/extension/types';
@@ -19,7 +20,7 @@ import { LinterId } from '../linters/types';
 import { EnvironmentType } from '../pythonEnvironments/info';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
-import { LinterTrigger, TestTool } from './types';
+import type { LinterTrigger, TestTool } from './types';
 
 /**
  * Checks whether telemetry is supported.
@@ -30,8 +31,8 @@ import { LinterTrigger, TestTool } from './types';
 function isTelemetrySupported(): boolean {
     try {
         const vsc = require('vscode');
-
         const reporter = require('vscode-extension-telemetry');
+
         return vsc !== undefined && reporter !== undefined;
     } catch {
         return false;
@@ -44,10 +45,10 @@ function isTelemetrySupported(): boolean {
  */
 export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolean {
     const settings = workspaceService.getConfiguration('telemetry').inspect<boolean>('enableTelemetry')!;
-    return settings.globalValue === false ? true : false;
+    return settings.globalValue === false;
 }
 
-const sharedProperties: Record<string, any> = {};
+const sharedProperties: Record<string, unknown> = {};
 /**
  * Set shared properties for all telemetry events.
  */
@@ -80,15 +81,17 @@ function getTelemetryReporter() {
     }
     const extensionId = PVSC_EXTENSION_ID;
 
-    const extensions = (require('vscode') as typeof import('vscode')).extensions;
+    const { extensions } = require('vscode') as typeof import('vscode');
     const extension = extensions.getExtension(extensionId)!;
     const extensionVersion = extension.packageJSON.version;
 
-    const reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
-    return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true));
+    const Reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
+    telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true);
+
+    return telemetryReporter;
 }
 
-export function clearTelemetryReporter() {
+export function clearTelemetryReporter(): void {
     telemetryReporter = undefined;
 }
 
@@ -97,16 +100,17 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     durationMs?: Record<string, number> | number,
     properties?: P[E],
     ex?: Error,
-) {
+): void {
     if (isTestExecution() || !isTelemetrySupported()) {
         return;
     }
     const reporter = getTelemetryReporter();
-    const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
+    const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs || undefined;
     const customProperties: Record<string, string> = {};
     const eventNameSent = eventName as string;
 
     if (properties) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data = properties as any;
         Object.getOwnPropertyNames(data).forEach((prop) => {
             if (data[prop] === undefined || data[prop] === null) {
@@ -115,14 +119,19 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             try {
                 // If there are any errors in serializing one property, ignore that and move on.
                 // Else nothing will be sent.
-                customProperties[prop] =
-                    typeof data[prop] === 'string'
-                        ? data[prop]
-                        : typeof data[prop] === 'object'
-                        ? 'object'
-                        : data[prop].toString();
-            } catch (ex) {
-                traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
+                switch (typeof data[prop]) {
+                    case 'string':
+                        customProperties[prop] = data[prop];
+                        break;
+                    case 'object':
+                        customProperties[prop] = 'object';
+                        break;
+                    default:
+                        customProperties[prop] = data[prop].toString();
+                        break;
+                }
+            } catch (exception) {
+                traceError(`Failed to serialize ${prop} for ${eventName}`, exception);
             }
         });
     }
@@ -156,10 +165,15 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 
 // Type-parameterized form of MethodDecorator in lib.es5.d.ts.
 type TypedMethodDescriptor<T> = (
-    target: Object,
+    target: unknown,
     propertyKey: string | symbol,
     descriptor: TypedPropertyDescriptor<T>,
 ) => TypedPropertyDescriptor<T> | void;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isPromise(object: any): object is Promise<void> {
+    return typeof object.then === 'function' && typeof object.catch === 'function';
+}
 
 /**
  * Decorates a method, sending a telemetry event with the given properties.
@@ -170,21 +184,23 @@ type TypedMethodDescriptor<T> = (
  * @param lazyProperties A static function on the decorated class which returns extra properties to add to the event.
  * This can be used to provide properties which are only known at runtime (after the decorator has executed).
  */
-
 export function captureTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     properties?: P[E],
-    captureDuration: boolean = true,
+    captureDuration = true,
     failureEventName?: E,
     lazyProperties?: (obj: This) => P[E],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
     return function (
-        _target: Object,
+        _target: unknown,
         _propertyKey: string | symbol,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         descriptor: TypedPropertyDescriptor<(this: This, ...args: any[]) => any>,
     ) {
         const originalMethod = descriptor.value!;
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         descriptor.value = function (this: This, ...args: any[]) {
             // Legacy case; fast path that sends event before method executes.
             // Does not set "failed" if the result is a Promise and throws an exception.
@@ -206,23 +222,15 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
             const result = originalMethod.apply(this, args);
 
             // If method being wrapped returns a promise then wait for it.
-
-            if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
-                (result as Promise<void>)
+            if (result && isPromise(result)) {
+                result
                     .then((data) => {
                         sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
                         return data;
                     })
-
                     .catch((ex) => {
-                        const failedProps: P[E] = props() || ({} as any);
-                        (failedProps as any).failed = true;
-                        sendTelemetryEvent(
-                            failureEventName ? failureEventName : eventName,
-                            stopWatch?.elapsedTime,
-                            failedProps,
-                            ex,
-                        );
+                        const failedProps: P[E] = { ...props(), failed: true } as P[E] & FailedEventType;
+                        sendTelemetryEvent(failureEventName || eventName, stopWatch?.elapsedTime, failedProps, ex);
                     });
             } else {
                 sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
@@ -238,13 +246,13 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
 // function sendTelemetryWhenDone<T extends IDSMappings, K extends keyof T>(eventName: K, properties?: T[K]);
 export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
-    promise: Promise<any> | Thenable<any>,
+    promise: Promise<unknown> | Thenable<unknown>,
     stopWatch?: StopWatch,
     properties?: P[E],
-) {
-    stopWatch = stopWatch ? stopWatch : new StopWatch();
+): void {
+    stopWatch = stopWatch || new StopWatch();
     if (typeof promise.then === 'function') {
-        (promise as Promise<any>).then(
+        (promise as Promise<unknown>).then(
             (data) => {
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties);
                 return data;
@@ -274,6 +282,8 @@ export interface ISharedPropertyMapping {
      */
     ['installSource']: undefined | 'marketPlace' | 'pythonCodingPack';
 }
+
+type FailedEventType = { failed: true };
 
 // Map all events to their properties
 export interface IEventNamePropertyMapping {
@@ -1255,11 +1265,11 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry sent from language server (details of telemetry sent can be provided by LS team)
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
+    [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the language server
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: any;
+    [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
      * Telemetry event sent with details when inExperiment() API is called
      */
@@ -1323,11 +1333,11 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
      */
-    [EventName.LANGUAGE_SERVER_TELEMETRY]: any;
+    [EventName.LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the Node.js server
      */
-    [EventName.LANGUAGE_SERVER_REQUEST]: any;
+    [EventName.LANGUAGE_SERVER_REQUEST]: unknown;
     /**
      * Telemetry sent on user response to 'Try Pylance' prompt.
      */
@@ -1564,7 +1574,7 @@ export interface IEventNamePropertyMapping {
          *
          * @type {boolean}
          */
-        focus_code?: boolean;
+        focusCode?: boolean;
     };
     /**
      * Tracks number of workspace folders shown in test explorer
@@ -1628,12 +1638,12 @@ export interface IEventNamePropertyMapping {
     [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
     /*
     Telemetry event sent with details of Jedi Memory usage.
-    mem_use - Memory usage of Process in kb.
+    memUse - Memory usage of Process in kb.
     limit - Upper bound for memory usage of Jedi process.
     isUserDefinedLimit - Whether the user has configfured the upper bound limit.
     restart - Whether to restart the Jedi Process (i.e. memory > limit).
     */
-    [EventName.JEDI_MEMORY]: { mem_use: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
+    [EventName.JEDI_MEMORY]: { memUse: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
     /*
     Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
     This information is useful in determining how well we identify shells on users machines.

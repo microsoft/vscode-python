@@ -24,7 +24,7 @@ export function initializeGlobals(
     // This is stored in ExtensionState.
     context: IExtensionContext,
 ): ExtensionState {
-    const cont = new Container();
+    const cont = new Container({ skipBaseClassChecks: true });
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
     const disposables: IDisposableRegistry = context.subscriptions;

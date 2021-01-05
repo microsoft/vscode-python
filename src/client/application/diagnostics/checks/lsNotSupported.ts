@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
-
+// eslint-disable-next-line max-classes-per-file
 import { inject, named } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import { ILanguageServerCompatibilityService } from '../../../activation/types';
@@ -41,13 +40,14 @@ export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
     ) {
         super([DiagnosticCodes.LSNotSupportedDiagnostic], serviceContainer, disposableRegistry, false);
     }
+
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (await this.lsCompatibility.isSupported()) {
             return [];
-        } else {
-            return [new LSNotSupportedDiagnostic(Diagnostics.lsNotSupported(), resource)];
         }
+        return [new LSNotSupportedDiagnostic(Diagnostics.lsNotSupported(), resource)];
     }
+
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         if (diagnostics.length === 0 || !this.canHandle(diagnostics[0])) {
             return;
