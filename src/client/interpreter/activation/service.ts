@@ -205,7 +205,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                         maxBuffer: 1000 * 1000,
                         throwOnStdErr: false,
                     });
+
                     try {
+                        // Try to parse the output, even if we have errors in stderr, its possible they are false positives.
+                        // If variables are available, then ignore errors (but log them).
                         returnedEnv = this.parseEnvironmentOutput(result.stdout, parse);
                     } catch (ex) {
                         if (!result.stderr) {
