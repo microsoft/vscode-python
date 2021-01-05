@@ -81,6 +81,7 @@ export class DirFilesLocator extends FSWatchingLocator {
         );
         this.subLocator = new FoundFilesLocator(
             kind,
+            // a wrapper
             () => getExecutables(dirname),
         );
     }

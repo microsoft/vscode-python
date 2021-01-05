@@ -6,9 +6,7 @@ import * as path from 'path';
 import { Architecture, getOSType, OSType } from '../../../../../client/common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, PythonExecutableInfo } from '../../../../../client/pythonEnvironments/base/info';
 import { PythonLocatorQuery } from '../../../../../client/pythonEnvironments/base/locator';
-import {
-    WindowsPathEnvVarLocator,
-} from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsKnownPathsLocator';
+import { WindowsPathEnvVarLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsKnownPathsLocator';
 import { ensureFSTree } from '../../../../utils/fs';
 import { createNamedEnv, getEnvs, sortedEnvs } from '../../common';
 
@@ -22,6 +20,7 @@ const EMPTY_EXECUTABLE: PythonExecutableInfo = {
 };
 
 function getEnv(
+    // These will all be provided.
     name: string,
     version: string,
     executable: string,
@@ -346,6 +345,7 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
             const locator = getActiveLocator(ROOT2, ROOT6, ROOT1);
 
             const envs = await Promise.all(
+                // Each executable is resolved.
                 executables.map((exe) => locator.resolveEnv(exe as string | PythonEnvInfo)),
             );
 

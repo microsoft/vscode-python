@@ -80,7 +80,7 @@ function parseFSEntry(
     opts: {
         topLevel?: boolean;
         allowInlineParents?: boolean;
-    } = {}
+    } = {},
 ): [string, FileKind] {
     let text = entry;
     if (text.startsWith('|')) {
@@ -193,7 +193,7 @@ function parseFSEntry(
 export function parseFSTree(
     text: string,
     // Use process.cwd() by default.
-    cwd?: string
+    cwd?: string,
 ): [string, string, FileKind][] {
     const curDir = cwd ?? process.cwd();
     const parsed: [string, string, FileKind][] = [];
@@ -203,7 +203,7 @@ export function parseFSTree(
         const [entry, parentIndex] = data;
         const opts = {
             topLevel: parentIndex === -1,
-            allowInlineParents: false
+            allowInlineParents: false,
         };
         const [relname, kind] = parseFSEntry(entry, opts);
         let filename: string;
@@ -229,7 +229,7 @@ export function parseFSTree(
 export async function ensureFSTree(
     spec: string,
     // Use process.cwd() by default.
-    cwd?: string
+    cwd?: string,
 ): Promise<string[]> {
     const roots: string[] = [];
     const promises = parseFSTree(spec, cwd)

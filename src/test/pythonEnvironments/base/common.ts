@@ -14,10 +14,7 @@ import {
     PythonExecutableInfo,
 } from '../../../client/pythonEnvironments/base/info';
 import { buildEnvInfo } from '../../../client/pythonEnvironments/base/info/env';
-import {
-    getEmptyVersion,
-    parseVersion,
-} from '../../../client/pythonEnvironments/base/info/pythonVersion';
+import { getEmptyVersion, parseVersion } from '../../../client/pythonEnvironments/base/info/pythonVersion';
 import {
     IPythonEnvsIterator,
     Locator,
@@ -33,7 +30,10 @@ export function createLocatedEnv(
     exec: string | PythonExecutableInfo = 'python',
     distro: PythonDistroInfo = { org: '' },
 ): PythonEnvInfo {
-    const location = locationStr === '' ? '' : path.normalize(locationStr);
+    const location =
+        locationStr === ''
+            ? '' // an empty location
+            : path.normalize(locationStr);
     let executable: string | undefined;
     if (typeof exec === 'string') {
         const normalizedExecutable = path.normalize(exec);
@@ -42,9 +42,10 @@ export function createLocatedEnv(
                 ? normalizedExecutable
                 : path.join(location, 'bin', normalizedExecutable);
     }
-    const version = versionStr === ''
-        ? getEmptyVersion()
-        : parseVersion(versionStr);
+    const version =
+        versionStr === ''
+            ? getEmptyVersion() // an empty version
+            : parseVersion(versionStr);
     const env = buildEnvInfo({
         kind,
         executable,
@@ -138,7 +139,10 @@ export class SimpleLocator extends Locator {
     }
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const envInfo: PythonEnvInfo = typeof env === 'string' ? createLocatedEnv('', '', undefined, env) : env;
+        const envInfo: PythonEnvInfo =
+            typeof env === 'string'
+                ? createLocatedEnv('', '', undefined, env) // an executable
+                : env;
         if (this.callbacks.resolve === undefined) {
             return envInfo;
         }

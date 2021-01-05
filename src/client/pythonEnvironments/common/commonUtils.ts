@@ -31,7 +31,9 @@ export async function* findInterpretersInDir(
     let dirContents: string[];
     try {
         dirContents = (await listDir(root))
+            // Build the full filename.
             .map((c) => path.join(root, c))
+            // Apply the filter.
             .filter(itemFilter);
     } catch (err) {
         // Treat a missing directory as empty.

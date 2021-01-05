@@ -9,11 +9,7 @@ import { getSearchPathEntries } from '../../../../common/utils/exec';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { isStandardPythonBinary } from '../../../common/commonUtils';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
-import {
-    ILocator,
-    IPythonEnvsIterator,
-    PythonLocatorQuery,
-} from '../../locator';
+import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { Locators } from '../../locators';
 import { getEnvs } from '../../locatorUtils';
 import { PythonEnvsChangedEvent } from '../../watcher';
@@ -34,6 +30,7 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
 
     constructor() {
         const dirLocators: (ILocator & IDisposable)[] = getSearchPathEntries()
+            // Build a locator for each directory.
             .map((dirname) => getDirFilesLocator(dirname, PythonEnvKind.Unknown));
         this.disposables.push(...dirLocators);
         this.locators = new Locators(dirLocators);
@@ -58,6 +55,7 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
 }
 
 function getDirFilesLocator(
+    // These are passed through to DirFilesLocator.
     dirname: string,
     kind: PythonEnvKind,
 ): ILocator & IDisposable {
