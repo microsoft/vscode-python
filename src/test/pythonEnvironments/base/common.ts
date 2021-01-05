@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import * as path from 'path';
 import { Event } from 'vscode';
 import { createDeferred, flattenIterator, iterable, mapToIterator } from '../../../client/common/utils/async';
-import { Architecture } from '../../../client/common/utils/platform';
+import { getArchitecture } from '../../../client/common/utils/platform';
 import { getVersionString } from '../../../client/common/utils/version';
 import {
     PythonDistroInfo,
@@ -14,7 +14,10 @@ import {
     PythonExecutableInfo,
 } from '../../../client/pythonEnvironments/base/info';
 import { buildEnvInfo } from '../../../client/pythonEnvironments/base/info/env';
-import { parseVersion } from '../../../client/pythonEnvironments/base/info/pythonVersion';
+import {
+    getEmptyVersion,
+    parseVersion,
+} from '../../../client/pythonEnvironments/base/info/pythonVersion';
 import {
     IPythonEnvsIterator,
     Locator,
@@ -39,14 +42,16 @@ export function createLocatedEnv(
                 ? normalizedExecutable
                 : path.join(location, 'bin', normalizedExecutable);
     }
-    const version = parseVersion(versionStr);
+    const version = versionStr === ''
+        ? getEmptyVersion()
+        : parseVersion(versionStr);
     const env = buildEnvInfo({
         kind,
         executable,
         location,
         version,
     });
-    env.arch = Architecture.x86;
+    env.arch = getArchitecture();
     env.distro = distro;
     if (typeof exec !== 'string') {
         env.executable = exec;

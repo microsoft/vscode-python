@@ -13,6 +13,7 @@ import { ILocator } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsReducer } from './base/locators/composite/environmentsReducer';
 import { PythonEnvsResolver } from './base/locators/composite/environmentsResolver';
+import { WindowsPathEnvVarLocator } from './base/locators/lowLevel/windowsKnownPathsLocator';
 import { WorkspaceVirtualEnvironmentLocator } from './base/locators/lowLevel/workspaceVirtualEnvLocator';
 import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
@@ -87,10 +88,16 @@ function createNonWorkspaceLocators(ext: ExtensionState): ILocator[] {
     let locators: (ILocator & Partial<IDisposable>)[];
     if (getOSType() === OSType.Windows) {
         // Windows specific locators go here
-        locators = [new WindowsRegistryLocator(), new WindowsStoreLocator()];
+        locators = [
+            new WindowsRegistryLocator(),
+            new WindowsStoreLocator(),
+            new WindowsPathEnvVarLocator(),
+        ];
     } else {
         // Linux/Mac locators go here
-        locators = [new PosixKnownPathsLocator()];
+        locators = [
+            new PosixKnownPathsLocator(),
+        ];
     }
     locators.push(new GlobalVirtualEnvironmentLocator(), new PyenvLocator(), new CustomVirtualEnvironmentLocator());
     const disposables = locators.filter((d) => d.dispose !== undefined) as IDisposable[];
