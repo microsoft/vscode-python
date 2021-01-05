@@ -40,9 +40,6 @@ export async function* findInterpretersInDir(
 
     for (const entry of entries) {
         const filename = path.join(root, entry.name);
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO: If the "withFileTypes" option doesn't help us on Windows
-        // then we will need to check manually (using `stat()`)..
         if (entry.isDirectory()) {
             if (recurseLevels && recurseLevels > 0) {
                 yield* findInterpretersInDir(filename, recurseLevels - 1, filterFile);
