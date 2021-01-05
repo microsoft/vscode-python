@@ -28,7 +28,7 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
             this.server = undefined;
         }
     }
-    public start({ port = 0, host = 'localhost' }: { port?: number; host?: string }): Promise<number> {
+    public start({ port, host }: { port: number; host: string } = { port: 0, host: 'localhost' }): Promise<number> {
         this.ipcBuffer = '';
         this.startedDef = createDeferred<number>();
         this.server = net.createServer(this.connectionListener.bind(this));
