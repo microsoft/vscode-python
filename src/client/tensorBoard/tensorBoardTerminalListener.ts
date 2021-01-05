@@ -7,10 +7,15 @@ import { IDisposableRegistry, IExperimentService } from '../common/types';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 import { NativeTensorBoard } from '../common/experiments/groups';
 import { isTestExecution } from '../common/constants';
+// This is a necessary hack for the xterm npm package to load, because
+// it currently expects to be loaded in the browser context and not in Node.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).window = undefined;
+// Import from xterm only after setting the global window variable to
+// prevent a ReferenceError being thrown.
 // eslint-disable-next-line import/order
 import { Terminal } from 'xterm';
+
 @injectable()
 export class TensorBoardTerminalListener implements IExtensionSingleActivationService {
     private terminalDataListenerDisposable: vscode.Disposable | undefined;
