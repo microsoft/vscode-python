@@ -30,6 +30,7 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
 
     async function find(
         rootName: string,
+        // These are passed through to findInterpretersInDir().
         recurseLevels?: number,
         filter?: (x: string) => boolean,
     ): Promise<string[]> {
@@ -93,15 +94,17 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
                     rootName,
                     IS_WINDOWS
                         ? [
-                            'python.exe',
-                            'python2.exe',
-                            'python3.8.exe',
-                        ]
+                              // These will match.
+                              'python.exe',
+                              'python2.exe',
+                              'python3.8.exe',
+                          ]
                         : [
-                            'python',
-                            'python2',
-                            'python3.8',
-                        ],
+                              // These will match.
+                              'python',
+                              'python2',
+                              'python3.8',
+                          ],
                 );
 
                 const found = await find(rootName);
@@ -114,13 +117,15 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
                     rootName,
                     IS_WINDOWS
                         ? [
-                            'python2.exe',
-                            'python3.8.exe',
-                        ]
+                              // These will match.
+                              'python2.exe',
+                              'python3.8.exe',
+                          ]
                         : [
-                            'python2',
-                            'python3.8',
-                        ],
+                              // These will match.
+                              'python2',
+                              'python3.8',
+                          ],
                 );
                 function filter(filename: string): boolean {
                     return filename.match(/python\d/) != null;
@@ -138,19 +143,21 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
                     rootName,
                     IS_WINDOWS
                         ? [
-                            'python.exe',
-                            'python2.exe',
-                            'python3.8.exe',
-                            'sub2/sub2.1/sub2.1.1/python.exe',
-                            'sub2/sub2.2/python3.exe',
-                        ]
+                              // These will match.
+                              'python.exe',
+                              'python2.exe',
+                              'python3.8.exe',
+                              'sub2/sub2.1/sub2.1.1/python.exe',
+                              'sub2/sub2.2/python3.exe',
+                          ]
                         : [
-                            'python',
-                            'python2',
-                            'python3.8',
-                            'sub2/sub2.1/sub2.1.1/python',
-                            'sub2/sub2.2/python3',
-                        ],
+                              // These will match.
+                              'python',
+                              'python2',
+                              'python3.8',
+                              'sub2/sub2.1/sub2.1.1/python',
+                              'sub2/sub2.2/python3',
+                          ],
                 );
 
                 const found = await find(rootName, 3);
@@ -163,15 +170,17 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
                     rootName,
                     IS_WINDOWS
                         ? [
-                            'python2.exe',
-                            'python3.8.exe',
-                            'sub2/sub2.2/python3.exe',
-                        ]
+                              // These will match.
+                              'python2.exe',
+                              'python3.8.exe',
+                              'sub2/sub2.2/python3.exe',
+                          ]
                         : [
-                            'python2',
-                            'python3.8',
-                            'sub2/sub2.2/python3',
-                        ],
+                              // These will match.
+                              'python2',
+                              'python3.8',
+                              'sub2/sub2.2/python3',
+                          ],
                 );
                 function filter(filename: string): boolean {
                     return filename.match(/python\d/) != null;
@@ -238,25 +247,27 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
                     rootName,
                     IS_WINDOWS
                         ? [
-                            'python.exe',
-                            'python2.exe',
-                            'python2.7.exe',
-                            'python27.exe',
-                            'python3.exe',
-                            'python3.8.exe',
-                            'python38.exe',
-                            'python381.exe',
-                        ]
+                              // These will match.
+                              'python.exe',
+                              'python2.exe',
+                              'python2.7.exe',
+                              'python27.exe',
+                              'python3.exe',
+                              'python3.8.exe',
+                              'python38.exe',
+                              'python381.exe',
+                          ]
                         : [
-                            'python',
-                            'python2',
-                            'python2.7',
-                            'python27',
-                            'python3',
-                            'python3.8',
-                            'python38',
-                            'python381',
-                        ],
+                              // These will match.
+                              'python',
+                              'python2',
+                              'python2.7',
+                              'python27',
+                              'python3',
+                              'python3.8',
+                              'python38',
+                              'python381',
+                          ],
                 );
 
                 const found = await find(rootName);
@@ -378,59 +389,61 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
                     rootName,
                     IS_WINDOWS
                         ? [
-                          '3.8/bin/python.exe',
-                          '3.8/bin/python3.exe',
-                          '3.8/bin/python3.8.exe',
-                          'my-python/python3.exe',
-                          'py/2.7/bin/python.exe',
-                          'py/2.7/bin/python2.exe',
-                          'py/2.7/bin/python2.7.exe',
-                          'py/3.8/bin/python.exe',
-                          'py/3.8/bin/python3.exe',
-                          'py/3.8/bin/python3.8.exe',
-                          'python/3.8/bin/python.exe',
-                          'python/3.8/bin/python3.exe',
-                          'python/3.8/bin/python3.8.exe',
-                          'python/bin/python.exe',
-                          'python/bin/python3.exe',
-                          'python/bin/python3.8.exe',
-                          'python-3.8/bin/python3.exe',
-                          'python-3.8/bin/python3.8.exe',
-                          'python.3.8/bin/python3.exe',
-                          'python.3.8/bin/python3.8.exe',
-                          'python2/python.exe',
-                          'python3/python3.exe',
-                          'python3.8/bin/python3.exe',
-                          'python3.8/bin/python3.8.exe',
-                          'python38/bin/python3.exe',
-                        ]
+                              // These will match.
+                              '3.8/bin/python.exe',
+                              '3.8/bin/python3.exe',
+                              '3.8/bin/python3.8.exe',
+                              'my-python/python3.exe',
+                              'py/2.7/bin/python.exe',
+                              'py/2.7/bin/python2.exe',
+                              'py/2.7/bin/python2.7.exe',
+                              'py/3.8/bin/python.exe',
+                              'py/3.8/bin/python3.exe',
+                              'py/3.8/bin/python3.8.exe',
+                              'python/3.8/bin/python.exe',
+                              'python/3.8/bin/python3.exe',
+                              'python/3.8/bin/python3.8.exe',
+                              'python/bin/python.exe',
+                              'python/bin/python3.exe',
+                              'python/bin/python3.8.exe',
+                              'python-3.8/bin/python3.exe',
+                              'python-3.8/bin/python3.8.exe',
+                              'python.3.8/bin/python3.exe',
+                              'python.3.8/bin/python3.8.exe',
+                              'python2/python.exe',
+                              'python3/python3.exe',
+                              'python3.8/bin/python3.exe',
+                              'python3.8/bin/python3.8.exe',
+                              'python38/bin/python3.exe',
+                          ]
                         : [
-                          '3.8/bin/python',
-                          '3.8/bin/python3',
-                          '3.8/bin/python3.8',
-                          'my-python/python3',
-                          'py/2.7/bin/python',
-                          'py/2.7/bin/python2',
-                          'py/2.7/bin/python2.7',
-                          'py/3.8/bin/python',
-                          'py/3.8/bin/python3',
-                          'py/3.8/bin/python3.8',
-                          'python/3.8/bin/python',
-                          'python/3.8/bin/python3',
-                          'python/3.8/bin/python3.8',
-                          'python/bin/python',
-                          'python/bin/python3',
-                          'python/bin/python3.8',
-                          'python-3.8/bin/python3',
-                          'python-3.8/bin/python3.8',
-                          'python.3.8/bin/python3',
-                          'python.3.8/bin/python3.8',
-                          'python2/python',
-                          'python3/python3',
-                          'python3.8/bin/python3',
-                          'python3.8/bin/python3.8',
-                          'python38/bin/python3',
-                        ],
+                              // These will match.
+                              '3.8/bin/python',
+                              '3.8/bin/python3',
+                              '3.8/bin/python3.8',
+                              'my-python/python3',
+                              'py/2.7/bin/python',
+                              'py/2.7/bin/python2',
+                              'py/2.7/bin/python2.7',
+                              'py/3.8/bin/python',
+                              'py/3.8/bin/python3',
+                              'py/3.8/bin/python3.8',
+                              'python/3.8/bin/python',
+                              'python/3.8/bin/python3',
+                              'python/3.8/bin/python3.8',
+                              'python/bin/python',
+                              'python/bin/python3',
+                              'python/bin/python3.8',
+                              'python-3.8/bin/python3',
+                              'python-3.8/bin/python3.8',
+                              'python.3.8/bin/python3',
+                              'python.3.8/bin/python3.8',
+                              'python2/python',
+                              'python3/python3',
+                              'python3.8/bin/python3',
+                              'python3.8/bin/python3.8',
+                              'python38/bin/python3',
+                          ],
                 );
 
                 const found = await find(rootName, 3);
@@ -503,24 +516,26 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
                 rootName,
                 IS_WINDOWS
                     ? [
-                        'pythons/python.exe',
-                        'pythons/python2.exe',
-                        'pythons/python2.7.exe',
-                        'pythons/python3.exe',
-                        'pythons/python3.7.exe',
-                        'pythons/python3.8.exe',
-                        'python3.8.exe/python.exe',
-                        'Python3.exe',
-                        'PYTHON.EXE',
-                    ]
+                          // These will match.
+                          'pythons/python.exe',
+                          'pythons/python2.exe',
+                          'pythons/python2.7.exe',
+                          'pythons/python3.exe',
+                          'pythons/python3.7.exe',
+                          'pythons/python3.8.exe',
+                          'python3.8.exe/python.exe',
+                          'Python3.exe',
+                          'PYTHON.EXE',
+                      ]
                     : [
-                        'pythons/python',
-                        'pythons/python2',
-                        'pythons/python2.7',
-                        'pythons/python3',
-                        'pythons/python3.7',
-                        'pythons/python3.8',
-                    ],
+                          // These will match.
+                          'pythons/python',
+                          'pythons/python2',
+                          'pythons/python2.7',
+                          'pythons/python3',
+                          'pythons/python3.7',
+                          'pythons/python3.8',
+                      ],
             );
 
             const found = await find(rootName, 3);
