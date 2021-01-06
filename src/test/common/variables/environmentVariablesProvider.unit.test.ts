@@ -316,7 +316,7 @@ suite('Multiroot Environment Variables Provider', () => {
             assert.deepEqual(vars, {});
         });
 
-        test.only(`Environment variables are updated when env file changes ${workspaceTitle}`, async () => {
+        test(`Environment variables are updated when env file changes ${workspaceTitle}`, async () => {
             const root = workspaceUri?.fsPath ?? '';
             const sourceDir = path.join(root, 'a', 'b');
             const envFile = path.join(sourceDir, 'env.file');
