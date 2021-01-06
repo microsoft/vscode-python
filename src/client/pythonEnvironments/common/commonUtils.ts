@@ -4,6 +4,7 @@
 import { Dirent } from 'fs';
 import * as path from 'path';
 import { getOSType, OSType } from '../../common/utils/platform';
+import { logError } from '../../logging';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
 import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
@@ -26,10 +27,18 @@ export function findInterpretersInDir(
     opts: {
         maxDepth?: number;
         filterFile?: FileFilterFunc;
+        ignoreErrors?: boolean;
     } = {},
 ): AsyncIterableIterator<string> {
     const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
-    return iterExecutables(root, checkBin, opts.filterFile, 1, opts.maxDepth);
+    return iterExecutables(
+        root,
+        checkBin,
+        opts.filterFile,
+        1,
+        opts.maxDepth,
+        opts.ignoreErrors === undefined ? false : opts.ignoreErrors,
+    );
 }
 
 export async function* iterExecutables(
@@ -38,6 +47,7 @@ export async function* iterExecutables(
     filterFile: FileFilterFunc | undefined,
     depth: number,
     maxDepth: number | undefined,
+    ignoreErrors: boolean,
 ): AsyncIterableIterator<string> {
     let entries: Dirent[];
     try {
@@ -47,6 +57,10 @@ export async function* iterExecutables(
         if (err.code === 'ENOENT') {
             return;
         }
+        if (ignoreErrors) {
+            logError(`listDir() failed for "${root}" (${err})`);
+            return;
+        }
         throw err; // re-throw
     }
 
@@ -54,14 +68,29 @@ export async function* iterExecutables(
         const filename = path.join(root, entry.name);
         if (entry.isDirectory()) {
             if (maxDepth && depth <= maxDepth) {
-                yield* iterExecutables(filename, checkBin, filterFile, depth + 1, maxDepth);
+                yield* iterExecutables(
+                    filename,
+                    checkBin,
+                    filterFile,
+                    depth + 1,
+                    maxDepth,
+                    ignoreErrors,
+                );
             }
         } else if (entry.isFile()) {
-            if (filterFile && !filterFile(filename)) {
-                // eslint-disable-next-line no-continue
-                continue;
+            let matched = true;
+            if (filterFile) {
+                try {
+                    matched = filterFile(filename);
+                } catch (err) {
+                    if (ignoreErrors) {
+                        logError(`filterFile() failed for "${filename}" (${err})`);
+                        return;
+                    }
+                    throw err; // re-throw
+                }
             }
-            if (checkBin(filename)) {
+            if (matched && checkBin(filename)) {
                 yield filename;
             }
         }
