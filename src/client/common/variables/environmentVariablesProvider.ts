@@ -3,13 +3,12 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
-import { IServiceContainer } from '../../ioc/types';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
 import { traceVerbose } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { IConfigurationService, ICurrentProcess, IDisposableRegistry } from '../types';
-import { clearCache, InMemoryInterpreterSpecificCache } from '../utils/cacheUtils';
+import { InMemoryCache } from '../utils/cacheUtils';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 
 const CACHE_DURATION = 60 * 60 * 1000;
@@ -19,6 +18,8 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     private fileWatchers = new Map<string, FileSystemWatcher>();
     private disposables: Disposable[] = [];
     private changeEventEmitter: EventEmitter<Uri | undefined>;
+    private readonly envVarCaches = new Map<string, InMemoryCache<EnvironmentVariables>>();
+
     constructor(
         @inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
@@ -26,7 +27,6 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ICurrentProcess) private process: ICurrentProcess,
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @optional() private cacheDuration: number = CACHE_DURATION,
     ) {
         disposableRegistry.push(this);
@@ -49,23 +49,25 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     }
 
     public async getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
-        // Cache resource specific interpreter data
-        const cacheStore = new InMemoryInterpreterSpecificCache<EnvironmentVariables>(
-            'getEnvironmentVariables',
-            this.cacheDuration,
-            [resource],
-            this.serviceContainer,
-        );
+        const cacheKey = this.getWorkspaceFolderUri(resource)?.fsPath ?? '';
+        let cache = this.envVarCaches.get(cacheKey);
 
-        let data = cacheStore.data;
-
-        if (!data) {
-            data = await this._getEnvironmentVariables(resource);
-            cacheStore.data = data;
+        if (cache) {
+            const cachedData = cache.data;
+            if (cachedData) {
+                traceVerbose(
+                    `Cached data exists getEnvironmentVariables, ${resource ? resource.fsPath : '<No Resource>'}`,
+                );
+                return { ...cachedData };
+            }
         } else {
-            traceVerbose(`Cached data exists getEnvironmentVariables, ${resource ? resource.fsPath : '<No Resource>'}`);
+            cache = new InMemoryCache(this.cacheDuration);
+            this.envVarCaches.set(cacheKey, cache);
         }
-        return data;
+
+        const vars = await this._getEnvironmentVariables(resource);
+        cache.data = { ...vars };
+        return vars;
     }
     public async _getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
         let mergedVars = await this.getCustomEnvironmentVariables(resource);
@@ -124,7 +126,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     }
 
     private onEnvironmentFileChanged(workspaceFolderUri?: Uri) {
-        clearCache();
+        this.envVarCaches.clear();
         this.changeEventEmitter.fire(workspaceFolderUri);
     }
 }
