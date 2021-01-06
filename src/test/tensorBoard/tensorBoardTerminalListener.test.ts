@@ -19,7 +19,6 @@ suite('TensorBoard terminal listener', async () => {
         // Stub the prompt show method so we can verify that it was called
         const prompt = serviceManager.get<TensorBoardPrompt>(TensorBoardPrompt);
         showNativeTensorBoardPrompt = sinon.stub(prompt, 'showNativeTensorBoardPrompt');
-        serviceManager.rebindInstance(TensorBoardPrompt, prompt);
         const terminalListener = serviceManager.get<IExtensionSingleActivationService>(TensorBoardTerminalListener);
         // Wait for activation so that we register our handler for onDidWriteTerminalData
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
