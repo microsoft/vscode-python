@@ -3,13 +3,6 @@
 
 'use strict';
 
-import '../../common/extensions';
-
-type CacheData = {
-    value: unknown;
-    expiry: number;
-};
-
 const globalCacheStore = new Map<string, { expiry: number; data: any }>();
 
 /**
@@ -30,15 +23,21 @@ export function clearCache() {
     globalCacheStore.clear();
 }
 
+type CacheData<T> = {
+    value: T;
+    expiry: number;
+};
+
+/**
+ * InMemoryCache caches a single value up until its expiry.
+ */
 export class InMemoryCache<T> {
-    private readonly _store = new Map<string, CacheData>();
-    protected get store(): Map<string, CacheData> {
-        return this._store;
-    }
-    constructor(protected readonly expiryDurationMs: number, protected readonly cacheKey: string = '') {}
+    private cacheData?: CacheData<T>;
+
+    constructor(protected readonly expiryDurationMs: number) {}
     public get hasData() {
-        if (!this.store.get(this.cacheKey) || this.hasExpired(this.store.get(this.cacheKey)!.expiry)) {
-            this.store.delete(this.cacheKey);
+        if (!this.cacheData || this.hasExpired(this.cacheData.expiry)) {
+            this.cacheData = undefined;
             return false;
         }
         return true;
@@ -52,19 +51,23 @@ export class InMemoryCache<T> {
      * @memberof InMemoryCache
      */
     public get data(): T | undefined {
-        if (!this.hasData || !this.store.has(this.cacheKey)) {
+        if (!this.hasData) {
             return;
         }
-        return this.store.get(this.cacheKey)?.value as T;
+        return this.cacheData?.value;
     }
     public set data(value: T | undefined) {
-        this.store.set(this.cacheKey, {
-            expiry: this.calculateExpiry(),
-            value,
-        });
+        if (value !== undefined) {
+            this.cacheData = {
+                expiry: this.calculateExpiry(),
+                value,
+            };
+        } else {
+            this.cacheData = undefined;
+        }
     }
     public clear() {
-        this.store.clear();
+        this.cacheData = undefined;
     }
 
     /**
