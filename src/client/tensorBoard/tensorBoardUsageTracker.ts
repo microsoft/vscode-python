@@ -51,7 +51,7 @@ export class TensorBoardUsageTracker implements IExtensionSingleActivationServic
             return;
         }
         const { document } = editor;
-        const extName = path.extname(document.fileName);
+        const extName = path.extname(document.fileName).toLowerCase();
         if (extName === '.py') {
             const lines = getDocumentLines(document);
             if (containsTensorBoardImport(lines)) {
@@ -72,7 +72,7 @@ export class TensorBoardUsageTracker implements IExtensionSingleActivationServic
         if (this.documentManager.activeTextEditor?.document !== document) {
             return;
         }
-        const extName = path.extname(document.fileName);
+        const extName = path.extname(document.fileName).toLowerCase();
         if (extName !== '.ipynb' || document.languageId !== 'python') {
             return;
         }
