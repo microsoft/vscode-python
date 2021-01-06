@@ -319,6 +319,7 @@ export class TensorBoardSession {
                                 f.style.width = window.innerWidth / 0.7 + "px";
                             }
                         }
+                        resizeFrame();
                         window.addEventListener('resize', resizeFrame);
                     </script>
                     <iframe
