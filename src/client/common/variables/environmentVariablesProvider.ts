@@ -9,8 +9,7 @@ import { IWorkspaceService } from '../application/types';
 import { traceVerbose } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { IConfigurationService, ICurrentProcess, IDisposableRegistry } from '../types';
-import { InMemoryInterpreterSpecificCache } from '../utils/cacheUtils';
-import { clearCachedResourceSpecificIngterpreterData } from '../utils/decorators';
+import { clearCache, InMemoryInterpreterSpecificCache } from '../utils/cacheUtils';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 
 const CACHE_DURATION = 60 * 60 * 1000;
@@ -51,19 +50,22 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
 
     public async getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
         // Cache resource specific interpreter data
-        const cacheStore = new InMemoryInterpreterSpecificCache(
+        const cacheStore = new InMemoryInterpreterSpecificCache<EnvironmentVariables>(
             'getEnvironmentVariables',
             this.cacheDuration,
             [resource],
             this.serviceContainer,
         );
-        if (cacheStore.hasData) {
+
+        let data = cacheStore.data;
+
+        if (!data) {
+            data = await this._getEnvironmentVariables(resource);
+            cacheStore.data = data;
+        } else {
             traceVerbose(`Cached data exists getEnvironmentVariables, ${resource ? resource.fsPath : '<No Resource>'}`);
-            return Promise.resolve(cacheStore.data) as Promise<EnvironmentVariables>;
         }
-        const promise = this._getEnvironmentVariables(resource);
-        promise.then((result) => (cacheStore.data = result)).ignoreErrors();
-        return promise;
+        return data;
     }
     public async _getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
         let mergedVars = await this.getCustomEnvironmentVariables(resource);
@@ -122,16 +124,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     }
 
     private onEnvironmentFileChanged(workspaceFolderUri?: Uri) {
-        clearCachedResourceSpecificIngterpreterData(
-            'getEnvironmentVariables',
-            workspaceFolderUri,
-            this.serviceContainer,
-        );
-        clearCachedResourceSpecificIngterpreterData(
-            'CustomEnvironmentVariables',
-            workspaceFolderUri,
-            this.serviceContainer,
-        );
+        clearCache();
         this.changeEventEmitter.fire(workspaceFolderUri);
     }
 }

@@ -234,7 +234,7 @@ suite('Multiroot Environment Variables Provider', () => {
             when(currentProcess.env).thenReturn(currentProcEnv);
             when(settings.envFile).thenReturn(envFile);
             when(workspace.getWorkspaceFolder(workspaceUri)).thenReturn(workspaceFolder);
-            when(envVarsService.parseFile(envFile, currentProcEnv)).thenResolve(envFileVars);
+            when(envVarsService.parseFile(envFile, currentProcEnv)).thenCall(async () => ({ ...envFileVars }));
             when(platform.pathVariableName).thenReturn('PATH');
 
             const vars = await provider.getEnvironmentVariables(workspaceUri);
@@ -255,7 +255,7 @@ suite('Multiroot Environment Variables Provider', () => {
             when(currentProcess.env).thenReturn(currentProcEnv);
             when(settings.envFile).thenReturn(envFile);
             when(workspace.getWorkspaceFolder(workspaceUri)).thenReturn(workspaceFolder);
-            when(envVarsService.parseFile(envFile, currentProcEnv)).thenResolve(envFileVars);
+            when(envVarsService.parseFile(envFile, currentProcEnv)).thenCall(async () => ({ ...envFileVars }));
             when(platform.pathVariableName).thenReturn('PATH');
 
             const vars = await provider.getEnvironmentVariables(workspaceUri);
@@ -323,6 +323,60 @@ suite('Multiroot Environment Variables Provider', () => {
             // Verify that the contents of `_getEnvironmentVariables()` method are invoked twice
             verify(configuration.getSettings(anything())).twice();
             assert.deepEqual(vars, {});
+        });
+
+        test(`Environment variables are updated when env file changes ${workspaceTitle}`, async () => {
+            const root = workspaceUri?.fsPath ?? '';
+            const sourceDir = path.join(root, 'a', 'b');
+            const envFile = path.join(sourceDir, 'env.file');
+            const sourceFile = path.join(sourceDir, 'main.py');
+
+            const workspaceFolder = workspaceUri ? { name: '', index: 0, uri: workspaceUri } : undefined;
+            const currentProcEnv = {
+                SOMETHING: 'wow',
+                PATH: 'some path value'
+            };
+            const envFileVars = { MY_FILE: '1234', PYTHONPATH: `./foo${path.delimiter}./bar` };
+
+            let onChangeHandler: undefined | ((resource?: Uri) => Function);
+            const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
+
+            fileSystemWatcher
+                .setup((fs) => fs.onDidChange(typemoq.It.isAny()))
+                .callback((cb) => (onChangeHandler = cb))
+                .verifiable(typemoq.Times.once());
+            when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
+
+            when(currentProcess.env).thenReturn(currentProcEnv);
+            when(settings.envFile).thenReturn(envFile);
+            when(workspace.getWorkspaceFolder(workspaceUri)).thenReturn(workspaceFolder);
+            when(envVarsService.parseFile(envFile, currentProcEnv)).thenCall(async () => ({ ...envFileVars }));
+            when(platform.pathVariableName).thenReturn('PATH');
+
+            provider.createFileWatcher(envFile, undefined);
+
+            fileSystemWatcher.verifyAll();
+            assert.ok(onChangeHandler);
+
+            async function checkVars() {
+                let vars = await provider.getEnvironmentVariables(undefined);
+                assert.deepEqual(vars, envFileVars);
+
+                vars = await provider.getEnvironmentVariables(Uri.file(sourceFile));
+                assert.deepEqual(vars, envFileVars);
+
+                vars = await provider.getEnvironmentVariables(Uri.file(sourceDir));
+                assert.deepEqual(vars, envFileVars);
+            }
+
+            await checkVars();
+
+            envFileVars.MY_FILE = 'CHANGED';
+            envFileVars.PYTHONPATH += 'CHANGED';
+
+            onChangeHandler!();
+
+            await checkVars();
         });
     });
 });
