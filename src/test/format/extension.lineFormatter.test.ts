@@ -144,7 +144,7 @@ suite('Formatting - line formatter', () => {
         testFormatMultiline('x = [\n  * param1,\n  * param2\n]', 2, '  *param2');
     });
     test('arrow operator', () => {
-        //testFormatMultiline('def f(a, b: 1, e: 3 = 4, f =5, * g: 6, ** k: 11) -> 12: pass', 0, 'def f(a, b: 1, e: 3 = 4, f=5, *g: 6, **k: 11) -> 12: pass');
+        // testFormatMultiline('def f(a, b: 1, e: 3 = 4, f =5, * g: 6, ** k: 11) -> 12: pass', 0, 'def f(a, b: 1, e: 3 = 4, f=5, *g: 6, **k: 11) -> 12: pass');
         testFormatMultiline('def f(a, \n    ** k: 11) -> 12: pass', 1, '    **k: 11) -> 12: pass');
     });
 
