@@ -39,6 +39,7 @@ export function findInterpretersInDir(
     return iterExecutables(root, 1, cfg);
 }
 
+// This function helps simplify the recursion case.
 async function* iterExecutables(
     root: string,
     depth: number,
@@ -66,6 +67,15 @@ async function* iterExecutables(
 
     for (const entry of entries) {
         const filename = path.join(root, entry.name);
+        // (FYI)
+        // Normally we would have to do an extra (expensive) `fs.lstat()`
+        // here for each file to determine its file type.  However,
+        // we were able to avoid this by using `listDir()` above.
+        // It is light wrapper around `fs.listDir()` with the
+        // "withFileTypes" option set to true.  So the file type
+        // of each entry is preserved for free.  If we needed more
+        // information than just the file type then we would be forced
+        // to incur the extra cost of `fs.lstat()`.
         if (entry.isDirectory()) {
             if (cfg.maxDepth && depth <= cfg.maxDepth) {
                 yield* iterExecutables(filename, depth + 1, cfg);
