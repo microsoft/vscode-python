@@ -1,10 +1,5 @@
 # The following files were grandfathered out of eslint. They can be removed as time permits.
 
-src/test/mocks/mementos.ts
-src/test/mocks/process.ts
-src/test/mocks/moduleInstaller.ts
-src/test/mocks/proc.ts
-src/test/mocks/autoSelector.ts
 src/test/mocks/vsc/extHostedTypes.ts
 src/test/mocks/vsc/uuid.ts
 src/test/mocks/vsc/strings.ts

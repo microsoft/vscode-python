@@ -15,22 +15,29 @@ import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 @injectable()
 export class MockAutoSelectionService
     implements IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService {
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
     public async setWorkspaceInterpreter(_resource: Resource, _interpreter: PythonEnvironment): Promise<void> {
         return Promise.resolve();
     }
-    public async setGlobalInterpreter(_interpreter: PythonEnvironment): Promise<void> {
-        return;
-    }
+
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
+    public async setGlobalInterpreter(_interpreter: PythonEnvironment): Promise<void> {}
+
+    // eslint-disable-next-line class-methods-use-this
     get onDidChangeAutoSelectedInterpreter(): Event<void> {
         return new EventEmitter<void>().event;
     }
+
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
     public autoSelectInterpreter(_resource: Resource): Promise<void> {
         return Promise.resolve();
     }
+
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
     public getAutoSelectedInterpreter(_resource: Resource): PythonEnvironment | undefined {
-        return;
+        return undefined;
     }
-    public registerInstance(_instance: IInterpreterAutoSeletionProxyService): void {
-        return;
-    }
+
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
+    public registerInstance(_instance: IInterpreterAutoSeletionProxyService): void {}
 }
