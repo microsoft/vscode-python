@@ -3,17 +3,17 @@ import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { IWorkspaceService } from '../../client/common/application/types';
-import { sleep } from '../../client/common/utils/async';
+import { IExperimentService } from '../../client/common/types';
 import { TensorBoardFileWatcher } from '../../client/tensorBoard/tensorBoardFileWatcher';
 import { TensorBoardPrompt } from '../../client/tensorBoard/tensorBoardPrompt';
+import { waitForCondition } from '../common';
 import { initialize } from '../initialize';
 
 suite('TensorBoard file system watcher', async () => {
     const tfeventfileName = 'events.out.tfevents.1606887221.24672.162.v2';
-    const currentDirectory = process.env.CODE_TESTS_WORKSPACE
-        ? process.env.CODE_TESTS_WORKSPACE
-        : path.join(__dirname, '..', '..', '..', 'src', 'test');
+    const currentDirectory = process.env.CODE_TESTS_WORKSPACE ?? path.join(__dirname, '..', '..', '..', 'src', 'test');
     let showNativeTensorBoardPrompt: sinon.SinonSpy;
+    const sandbox = sinon.createSandbox();
     let eventFile: string | undefined;
     let eventFileDirectory: string | undefined;
 
@@ -24,19 +24,21 @@ suite('TensorBoard file system watcher', async () => {
         await fse.writeFile(eventFile, '');
     }
 
-    async function testSetup() {
+    async function configureStubsAndActivate() {
         const { serviceManager } = await initialize();
         // Stub the prompt show method so we can verify that it was called
         const prompt = serviceManager.get<TensorBoardPrompt>(TensorBoardPrompt);
-        showNativeTensorBoardPrompt = sinon.stub(prompt, 'showNativeTensorBoardPrompt');
+        showNativeTensorBoardPrompt = sandbox.stub(prompt, 'showNativeTensorBoardPrompt');
         serviceManager.rebindInstance(TensorBoardPrompt, prompt);
+        const experimentService = serviceManager.get<IExperimentService>(IExperimentService);
+        sandbox.stub(experimentService, 'inExperiment').resolves(true);
         const fileWatcher = serviceManager.get<TensorBoardFileWatcher>(TensorBoardFileWatcher);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (fileWatcher as any).activateInternal();
     }
 
     teardown(async () => {
-        sinon.restore();
+        sandbox.restore();
         if (eventFile) {
             await fse.unlink(eventFile);
             eventFile = undefined;
@@ -49,42 +51,40 @@ suite('TensorBoard file system watcher', async () => {
 
     test('Preexisting tfeventfile in workspace root results in prompt being shown', async function () {
         await createFiles(currentDirectory);
-        await testSetup();
+        await configureStubsAndActivate();
         assert.ok(showNativeTensorBoardPrompt.called);
     });
 
     test('Preexisting tfeventfile one directory down results in prompt being shown', async function () {
         const dir1 = path.join(currentDirectory, '1');
         await createFiles(dir1);
-        await testSetup();
+        await configureStubsAndActivate();
         assert.ok(showNativeTensorBoardPrompt.called);
     });
 
     test('Preexisting tfeventfile two directories down does not result in prompt being called', async function () {
         const dir2 = path.join(currentDirectory, '1', '2');
         await createFiles(dir2);
-        await testSetup();
+        await configureStubsAndActivate();
         assert.ok(showNativeTensorBoardPrompt.notCalled);
     });
 
     test('Creating tfeventfile in workspace root results in prompt being shown', async function () {
-        await testSetup();
+        await configureStubsAndActivate();
         await createFiles(currentDirectory);
-        await sleep(5000); // Wait for VSCode to fire onDidCreate
-        assert.ok(showNativeTensorBoardPrompt.called);
+        waitForCondition(async () => showNativeTensorBoardPrompt.called, 5000, 'Prompt not shown');
     });
 
     test('Creating tfeventfile one directory down results in prompt being shown', async function () {
         const dir1 = path.join(currentDirectory, '1');
-        await testSetup();
+        await configureStubsAndActivate();
         await createFiles(dir1);
-        await sleep(5000); // Wait for VSCode to fire onDidCreate
-        assert.ok(showNativeTensorBoardPrompt.called);
+        waitForCondition(async () => showNativeTensorBoardPrompt.called, 5000, 'Prompt not shown');
     });
 
     test('Creating tfeventfile two directories down does not result in prompt being called', async function () {
         const dir2 = path.join(currentDirectory, '1', '2');
-        await testSetup();
+        await configureStubsAndActivate();
         await createFiles(dir2);
         assert.ok(showNativeTensorBoardPrompt.notCalled);
     });
