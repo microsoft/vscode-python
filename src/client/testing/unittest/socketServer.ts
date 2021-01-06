@@ -45,19 +45,11 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
             host = 'localhost';
         }
         this.server!.on('connection', (socket: net.Socket) => {
-            this.startedDef!.resolve((this.server!.address() as net.AddressInfo).port);
-            this.startedDef = undefined;
             this.emit('start', socket);
         });
-        this.server!.listen(port, host);
-        // this.server!.listen(port, host, () => {
-        //     this.startedDef!.resolve((this.server!.address() as net.AddressInfo).port);
-        //     this.startedDef = undefined;
-        //     this.emit('start', socket);
-        // });
-        const socket = net.createConnection(port, host);
-        this.server!.on('close', () => {
-            socket.destroy();
+        this.server!.listen(port, host, () => {
+            this.startedDef!.resolve((this.server!.address() as net.AddressInfo).port);
+            this.startedDef = undefined;
         });
         return this.startedDef!.promise;
     }
