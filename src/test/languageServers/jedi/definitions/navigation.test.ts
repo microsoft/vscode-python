@@ -36,6 +36,7 @@ suite('Language Server: Definition Navigation', () => {
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
+        ioc.registerInterpreterStorageTypes();
     }
 
     const assertFile = (expectedLocation: string, location: vscode.Uri) => {

@@ -42,6 +42,7 @@ suite('Language Server: Signatures (Jedi)', () => {
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
+        ioc.registerInterpreterStorageTypes();
     }
 
     test('For ctor', async () => {
