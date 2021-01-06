@@ -39,7 +39,7 @@ export function findInterpretersInDir(
     return iterExecutables(root, 1, cfg);
 }
 
-export async function* iterExecutables(
+async function* iterExecutables(
     root: string,
     depth: number,
     cfg: {
