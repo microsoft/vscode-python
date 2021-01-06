@@ -30,24 +30,24 @@ export function findInterpretersInDir(
         ignoreErrors?: boolean;
     } = {},
 ): AsyncIterableIterator<string> {
-    const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
-    return iterExecutables(
-        root,
-        checkBin,
-        opts.filterFile,
-        1,
-        opts.maxDepth,
-        opts.ignoreErrors === undefined ? false : opts.ignoreErrors,
-    );
+    const cfg = {
+        checkBin: getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin,
+        filterFile: opts?.filterFile,
+        maxDepth: opts?.maxDepth,
+        ignoreErrors: opts.ignoreErrors === undefined ? false : opts.ignoreErrors,
+    };
+    return iterExecutables(root, 1, cfg);
 }
 
 export async function* iterExecutables(
     root: string,
-    checkBin: FileFilterFunc,
-    filterFile: FileFilterFunc | undefined,
     depth: number,
-    maxDepth: number | undefined,
-    ignoreErrors: boolean,
+    cfg: {
+        checkBin: FileFilterFunc;
+        filterFile: FileFilterFunc | undefined;
+        maxDepth: number | undefined;
+        ignoreErrors: boolean;
+    },
 ): AsyncIterableIterator<string> {
     let entries: Dirent[];
     try {
@@ -57,7 +57,7 @@ export async function* iterExecutables(
         if (err.code === 'ENOENT') {
             return;
         }
-        if (ignoreErrors) {
+        if (cfg.ignoreErrors) {
             logError(`listDir() failed for "${root}" (${err})`);
             return;
         }
@@ -67,30 +67,23 @@ export async function* iterExecutables(
     for (const entry of entries) {
         const filename = path.join(root, entry.name);
         if (entry.isDirectory()) {
-            if (maxDepth && depth <= maxDepth) {
-                yield* iterExecutables(
-                    filename,
-                    checkBin,
-                    filterFile,
-                    depth + 1,
-                    maxDepth,
-                    ignoreErrors,
-                );
+            if (cfg.maxDepth && depth <= cfg.maxDepth) {
+                yield* iterExecutables(filename, depth + 1, cfg);
             }
         } else if (entry.isFile()) {
             let matched = true;
-            if (filterFile) {
+            if (cfg.filterFile) {
                 try {
-                    matched = filterFile(filename);
+                    matched = cfg.filterFile(filename);
                 } catch (err) {
-                    if (ignoreErrors) {
+                    if (cfg.ignoreErrors) {
                         logError(`filterFile() failed for "${filename}" (${err})`);
                         return;
                     }
                     throw err; // re-throw
                 }
             }
-            if (matched && checkBin(filename)) {
+            if (matched && cfg.checkBin(filename)) {
                 yield filename;
             }
         }
