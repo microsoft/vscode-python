@@ -1,2 +1,0 @@
-# Ignore vendored files from https://github.com/xtermjs/xterm.js
-src/client/tensorBoard/terminal/**
