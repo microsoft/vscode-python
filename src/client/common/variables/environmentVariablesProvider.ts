@@ -126,6 +126,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     }
 
     private onEnvironmentFileChanged(workspaceFolderUri?: Uri) {
+        // An environment file changing can affect multiple workspaces; clear everything and reparse later.
         this.envVarCaches.clear();
         this.changeEventEmitter.fire(workspaceFolderUri);
     }
