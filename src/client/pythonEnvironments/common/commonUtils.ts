@@ -13,20 +13,32 @@ import { listDir } from './externalDependencies';
 import { isPosixPythonBin } from './posixUtils';
 import { isWindowsPythonExe } from './windowsUtils';
 
+type FileFilterFunc = (filename: string) => boolean;
+
 /**
  * Searches recursively under the given `root` directory for python interpreters.
  * @param root : Directory where the search begins.
  * @param recurseLevels : Number of levels to search for from the root directory.
  * @param filter : Callback that identifies directories to ignore.
  */
-export async function* findInterpretersInDir(
+export function findInterpretersInDir(
     root: string,
-    recurseLevels?: number,
-    filterFile?: (x: string) => boolean,
+    opts: {
+        maxDepth?: number;
+        filterFile?: FileFilterFunc;
+    } = {},
 ): AsyncIterableIterator<string> {
-    const os = getOSType();
-    const checkBin = os === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
+    const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
+    return iterExecutables(root, checkBin, opts.filterFile, 1, opts.maxDepth);
+}
 
+export async function* iterExecutables(
+    root: string,
+    checkBin: FileFilterFunc,
+    filterFile: FileFilterFunc | undefined,
+    depth: number,
+    maxDepth: number | undefined,
+): AsyncIterableIterator<string> {
     let entries: Dirent[];
     try {
         entries = await listDir(root);
@@ -41,8 +53,8 @@ export async function* findInterpretersInDir(
     for (const entry of entries) {
         const filename = path.join(root, entry.name);
         if (entry.isDirectory()) {
-            if (recurseLevels && recurseLevels > 0) {
-                yield* findInterpretersInDir(filename, recurseLevels - 1, filterFile);
+            if (maxDepth && depth <= maxDepth) {
+                yield* iterExecutables(filename, checkBin, filterFile, depth + 1, maxDepth);
             }
         } else if (entry.isFile()) {
             if (filterFile && !filterFile(filename)) {
@@ -121,14 +133,17 @@ export function isStandardPythonBinary(executable: string): boolean {
  * @param envDir Absolute path to the environment directory
  */
 export async function getInterpreterPathFromDir(envDir: string): Promise<string | undefined> {
+    const maxDepth = 2;
+
     // Ignore any folders or files that not directly python binary related.
-    function filter(str: string): boolean {
+    function filterFile(str: string): boolean {
         const lower = str.toLowerCase();
         return ['bin', 'scripts'].includes(lower) || lower.search('python') >= 0;
     }
 
     // Search in the sub-directories for python binary
-    for await (const bin of findInterpretersInDir(envDir, 2, filter)) {
+    const executables = findInterpretersInDir(envDir, { maxDepth, filterFile });
+    for await (const bin of executables) {
         if (isStandardPythonBinary(bin)) {
             return bin;
         }

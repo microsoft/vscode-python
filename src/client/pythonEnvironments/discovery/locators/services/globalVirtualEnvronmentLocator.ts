@@ -121,7 +121,11 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
                 async function* generator() {
                     traceVerbose(`Searching for global virtual envs in: ${envRootDir}`);
 
-                    const envGenerator = findInterpretersInDir(envRootDir, searchDepth);
+                    const envGenerator = findInterpretersInDir(
+                        envRootDir,
+                        // This means we'll search in the current directory and the one below it.
+                        { maxDepth: searchDepth },
+                    );
 
                     for await (const env of envGenerator) {
                         // We only care about python.exe (on windows) and python (on linux/mac)

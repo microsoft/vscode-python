@@ -31,12 +31,13 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
     async function find(
         rootName: string,
         // These are passed through to findInterpretersInDir().
-        recurseLevels?: number,
-        filter?: (x: string) => boolean,
+        maxDepth?: number,
+        filterFile?: (x: string) => boolean,
     ): Promise<string[]> {
         const results: string[] = [];
         const root = path.join(datadir, rootName);
-        for await (const filename of findInterpretersInDir(root, recurseLevels, filter)) {
+        const executables = findInterpretersInDir(root, { maxDepth, filterFile });
+        for await (const filename of executables) {
             results.push(filename);
         }
         return results;
