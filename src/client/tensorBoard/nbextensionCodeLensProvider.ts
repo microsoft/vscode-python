@@ -54,7 +54,6 @@ export class TensorBoardNbextensionCodeLensProvider implements IExtensionSingleA
                 { trigger: TensorBoardEntrypointTrigger.fileimport, entrypoint: TensorBoardEntrypoint.codelens },
             ],
         };
-        console.log('In provideCodeLenses');
         const codelenses: CodeLens[] = [];
         for (let index = 0; index < document.lineCount; index += 1) {
             const line = document.lineAt(index);
