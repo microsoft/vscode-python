@@ -11,14 +11,15 @@ import { IDisposableRegistry, IExperimentService } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { TensorBoardEntryPoint, TensorBoardLaunchSource } from './constants';
+import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from './constants';
 import { containsTensorBoardImport } from './helpers';
 
 @injectable()
 export class TensorBoardCodeActionProvider implements CodeActionProvider, IExtensionSingleActivationService {
     private sendTelemetryOnce = once(
         sendTelemetryEvent.bind(this, EventName.TENSORBOARD_ENTRYPOINT_SHOWN, undefined, {
-            entrypoint: TensorBoardEntryPoint.codeaction,
+            entrypoint: TensorBoardEntrypoint.codeaction,
+            trigger: TensorBoardEntrypointTrigger.fileimport,
         }),
     );
 
@@ -42,7 +43,7 @@ export class TensorBoardCodeActionProvider implements CodeActionProvider, IExten
             nativeTensorBoardSession.command = {
                 title,
                 command: Commands.LaunchTensorBoard,
-                arguments: [TensorBoardLaunchSource.codeaction],
+                arguments: [TensorBoardEntrypoint.codeaction, TensorBoardEntrypointTrigger.fileimport],
             };
             this.sendTelemetryOnce();
             return [nativeTensorBoardSession];
