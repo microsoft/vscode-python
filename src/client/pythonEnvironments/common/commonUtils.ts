@@ -79,23 +79,37 @@ async function* iterExecutables(
                 yield* iterExecutables(filename, depth + 1, cfg);
             }
         } else if (entry.isFile()) {
-            let matched = true;
-            if (cfg.filterFile) {
-                try {
-                    matched = cfg.filterFile(filename);
-                } catch (err) {
-                    if (cfg.ignoreErrors) {
-                        logError(`filterFile() failed for "${filename}" (${err})`);
-                        return;
-                    }
-                    throw err; // re-throw
+            // TODO: We only need to do filtering on subdirs.  Files
+            // can be filtered by the caller.  This will be fixed in
+            // an upcoming change.
+            if (matchFile(filename, cfg.filterFile, cfg.ignoreErrors || false)) {
+                if (cfg.checkBin(filename)) {
+                    yield filename;
                 }
-            }
-            if (matched && cfg.checkBin(filename)) {
-                yield filename;
             }
         }
         // We ignore all other file types, including symlinks.
+    }
+}
+
+function matchFile(
+    filename: string,
+    filterFile: FileFilterFunc | undefined,
+    // If "ignoreErrors" is true then We treat a failed filter
+    // as though it returned `false`.
+    ignoreErrors: boolean,
+): boolean {
+    if (filterFile === undefined) {
+        return true;
+    }
+    try {
+        return filterFile(filename);
+    } catch (err) {
+        if (ignoreErrors) {
+            logError(`filter failed for "${filename}" (${err})`);
+            return false;
+        }
+        throw err; // re-throw
     }
 }
 
