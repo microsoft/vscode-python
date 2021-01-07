@@ -16,27 +16,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'News entry'
-        uses: brettcannon/check-for-changed-files@v1
+        uses: brettcannon/check-for-changed-files@v1.0.1
         with:
           file-pattern: 'news/*/*.md'
           skip-label: 'skip news'
 
       - name: 'package-lock.json matches package.json'
-        uses: brettcannon/check-for-changed-files@v1
+        uses: brettcannon/check-for-changed-files@v1.0.1
         with:
           prereq-pattern: 'package.json'
           file-pattern: 'package-lock.json'
           skip-label: 'skip package*.json'
 
       - name: 'package.json matches package-lock.json'
-        uses: brettcannon/check-for-changed-files@v1
+        uses: brettcannon/check-for-changed-files@v1.0.1
         with:
           prereq-pattern: 'package-lock.json'
           file-pattern: 'package.json'
           skip-label: 'skip package*.json'
 
       - name: 'Tests'
-        uses: brettcannon/check-for-changed-files@v1
+        uses: brettcannon/check-for-changed-files@v1.0.1
         with:
           prereq-pattern: src/**/*.ts
           file-pattern: |
