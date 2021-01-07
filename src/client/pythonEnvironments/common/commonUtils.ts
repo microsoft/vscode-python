@@ -42,7 +42,8 @@ export function findInterpretersInDir(
 // This function helps simplify the recursion case.
 async function* iterExecutables(
     root: string,
-    depth: number,
+    // "currentDepth" is the depth of the current level of recursion.
+    currentDepth: number,
     cfg: {
         filterFile: FileFilterFunc | undefined;
         maxDepth: number | undefined;
@@ -76,8 +77,8 @@ async function* iterExecutables(
         // information than just the file type then we would be forced
         // to incur the extra cost of `fs.lstat()`.
         if (entry.isDirectory()) {
-            if (cfg.maxDepth && depth <= cfg.maxDepth) {
-                yield* iterExecutables(filename, depth + 1, cfg);
+            if (cfg.maxDepth && currentDepth <= cfg.maxDepth) {
+                yield* iterExecutables(filename, currentDepth + 1, cfg);
             }
         } else if (entry.isFile()) {
             // TODO: We only need to do filtering on subdirs.  Files
