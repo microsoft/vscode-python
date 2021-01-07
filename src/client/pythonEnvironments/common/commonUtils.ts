@@ -35,6 +35,7 @@ export function findInterpretersInDir(
         maxDepth: recurseLevel,
         ignoreErrors: ignoreErrors || false,
     };
+    // We use an initial depth of 1.
     return iterExecutables(root, 1, cfg);
 }
 
