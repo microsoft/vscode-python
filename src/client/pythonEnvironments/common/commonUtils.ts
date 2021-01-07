@@ -27,11 +27,11 @@ type FileFilterFunc = (filename: string) => boolean;
 export function findInterpretersInDir(
     root: string,
     recurseLevel?: number,
-    filterFile?: FileFilterFunc,
+    filterSubDir?: FileFilterFunc,
     ignoreErrors?: boolean,
 ): AsyncIterableIterator<string> {
     const cfg = {
-        filterFile,
+        filterSubDir,
         maxDepth: recurseLevel,
         ignoreErrors: ignoreErrors || false,
     };
@@ -45,7 +45,7 @@ async function* iterExecutables(
     // "currentDepth" is the depth of the current level of recursion.
     currentDepth: number,
     cfg: {
-        filterFile: FileFilterFunc | undefined;
+        filterSubDir: FileFilterFunc | undefined;
         maxDepth: number | undefined;
         ignoreErrors: boolean;
     },
@@ -78,16 +78,13 @@ async function* iterExecutables(
         // to incur the extra cost of `fs.lstat()`.
         if (entry.isDirectory()) {
             if (cfg.maxDepth && currentDepth <= cfg.maxDepth) {
-                yield* iterExecutables(filename, currentDepth + 1, cfg);
+                if (matchFile(filename, cfg.filterSubDir, cfg.ignoreErrors)) {
+                    yield* iterExecutables(filename, currentDepth + 1, cfg);
+                }
             }
         } else if (entry.isFile()) {
-            // TODO: We only need to do filtering on subdirs.  Files
-            // can be filtered by the caller.  This will be fixed in
-            // an upcoming change.
-            if (matchFile(filename, cfg.filterFile, cfg.ignoreErrors || false)) {
-                if (checkBin(filename)) {
-                    yield filename;
-                }
+            if (checkBin(filename)) {
+                yield filename;
             }
         }
         // We ignore all other file types, including symlinks.

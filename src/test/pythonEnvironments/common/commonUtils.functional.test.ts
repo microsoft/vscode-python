@@ -21,7 +21,7 @@ async function ensureFSTreeIfNotWindows(tree: string): Promise<void> {
     }
 }
 
-suite('pyenvs common utils - findInterpretersInDir()', () => {
+suite('pyenvs common utils - finding Python executables', () => {
     const datadir = path.join(__dirname, '.data');
 
     function resolveDataFiles(rootName: string, relnames: string[]): string[] {
@@ -30,13 +30,13 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
 
     async function find(
         rootName: string,
-        // These are passed through to findInterpretersInDir().
         maxDepth?: number,
-        filterFile?: (x: string) => boolean,
+        filterDir?: (x: string) => boolean,
+        // Errors are helpful when testing, so we don't bother ignoring them.
     ): Promise<string[]> {
         const results: string[] = [];
         const root = path.join(datadir, rootName);
-        const executables = findInterpretersInDir(root, maxDepth, filterFile);
+        const executables = findInterpretersInDir(root, maxDepth, filterDir);
         for await (const filename of executables) {
             results.push(filename);
         }
@@ -60,6 +60,8 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
                          sub2.2/
                             <spam.exe>
                             python3.exe
+                      sub3/
+                         python.exe
                       <spam.exe>
                       spam.txt
                       <python.exe>
@@ -80,6 +82,8 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
                          sub2.2/
                             <spam>
                             python3
+                      sub3/
+                         python
                       <spam>
                       spam.txt
                       <python>
@@ -112,30 +116,6 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
 
                 assert.deepEqual(found, expected);
             });
-
-            test('filtered', async () => {
-                const expected = resolveDataFiles(
-                    rootName,
-                    IS_WINDOWS
-                        ? [
-                              // These will match.
-                              'python2.exe',
-                              'python3.8.exe',
-                          ]
-                        : [
-                              // These will match.
-                              'python2',
-                              'python3.8',
-                          ],
-                );
-                function filter(filename: string): boolean {
-                    return filename.match(/python\d/) != null;
-                }
-
-                const found = await find(rootName, undefined, filter);
-
-                assert.deepEqual(found, expected);
-            });
         });
 
         suite('recursive', () => {
@@ -150,6 +130,7 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
                               'python3.8.exe',
                               'sub2/sub2.1/sub2.1.1/python.exe',
                               'sub2/sub2.2/python3.exe',
+                              'sub3/python.exe',
                           ]
                         : [
                               // These will match.
@@ -158,6 +139,7 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
                               'python3.8',
                               'sub2/sub2.1/sub2.1.1/python',
                               'sub2/sub2.2/python3',
+                              'sub3/python',
                           ],
                 );
 
@@ -172,22 +154,24 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
                     IS_WINDOWS
                         ? [
                               // These will match.
+                              'python.exe',
                               'python2.exe',
                               'python3.8.exe',
-                              'sub2/sub2.2/python3.exe',
+                              'sub3/python.exe',
                           ]
                         : [
                               // These will match.
+                              'python',
                               'python2',
                               'python3.8',
-                              'sub2/sub2.2/python3',
+                              'sub3/python',
                           ],
                 );
-                function filter(filename: string): boolean {
-                    return filename.match(/python\d/) != null;
+                function filterDir(dirname: string): boolean {
+                    return dirname.match(/sub\d$/) !== null;
                 }
 
-                const found = await find(rootName, 3, filter);
+                const found = await find(rootName, 3, filterDir);
 
                 assert.deepEqual(found, expected);
             });
@@ -248,18 +232,18 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
                     rootName,
                     IS_WINDOWS
                         ? [
-                              // These will match.
+                              // These order here matters.
                               'python.exe',
-                              'python2.exe',
                               'python2.7.exe',
+                              'python2.exe',
                               'python27.exe',
-                              'python3.exe',
                               'python3.8.exe',
+                              'python3.exe',
                               'python38.exe',
                               'python381.exe',
                           ]
                         : [
-                              // These will match.
+                              // These order here matters.
                               'python',
                               'python2',
                               'python2.7',
@@ -390,35 +374,35 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
                     rootName,
                     IS_WINDOWS
                         ? [
-                              // These will match.
+                              // These order here matters.
                               '3.8/bin/python.exe',
-                              '3.8/bin/python3.exe',
                               '3.8/bin/python3.8.exe',
+                              '3.8/bin/python3.exe',
                               'my-python/python3.exe',
                               'py/2.7/bin/python.exe',
-                              'py/2.7/bin/python2.exe',
                               'py/2.7/bin/python2.7.exe',
+                              'py/2.7/bin/python2.exe',
                               'py/3.8/bin/python.exe',
-                              'py/3.8/bin/python3.exe',
                               'py/3.8/bin/python3.8.exe',
+                              'py/3.8/bin/python3.exe',
                               'python/3.8/bin/python.exe',
-                              'python/3.8/bin/python3.exe',
                               'python/3.8/bin/python3.8.exe',
+                              'python/3.8/bin/python3.exe',
                               'python/bin/python.exe',
-                              'python/bin/python3.exe',
                               'python/bin/python3.8.exe',
-                              'python-3.8/bin/python3.exe',
+                              'python/bin/python3.exe',
                               'python-3.8/bin/python3.8.exe',
-                              'python.3.8/bin/python3.exe',
+                              'python-3.8/bin/python3.exe',
                               'python.3.8/bin/python3.8.exe',
+                              'python.3.8/bin/python3.exe',
                               'python2/python.exe',
                               'python3/python3.exe',
-                              'python3.8/bin/python3.exe',
                               'python3.8/bin/python3.8.exe',
+                              'python3.8/bin/python3.exe',
                               'python38/bin/python3.exe',
                           ]
                         : [
-                              // These will match.
+                              // These order here matters.
                               '3.8/bin/python',
                               '3.8/bin/python3',
                               '3.8/bin/python3.8',
@@ -517,19 +501,19 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
                 rootName,
                 IS_WINDOWS
                     ? [
-                          // These will match.
+                          // These order here matters.
                           'pythons/python.exe',
-                          'pythons/python2.exe',
                           'pythons/python2.7.exe',
-                          'pythons/python3.exe',
+                          'pythons/python2.exe',
                           'pythons/python3.7.exe',
                           'pythons/python3.8.exe',
+                          'pythons/python3.exe',
                           'python3.8.exe/python.exe',
                           'Python3.exe',
                           'PYTHON.EXE',
                       ]
                     : [
-                          // These will match.
+                          // These order here matters.
                           'pythons/python',
                           'pythons/python2',
                           'pythons/python2.7',
