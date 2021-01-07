@@ -3,11 +3,11 @@
 import { inject, injectable } from 'inversify';
 
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
+import { LanguageServerAnalysisOptionsWithEnv } from '../common/analysisOptions';
 import { ILanguageServerOutputChannel } from '../types';
 
 @injectable()
-export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsBase {
+export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsWithEnv {
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         @inject(IEnvironmentVariablesProvider) envVarsProvider: IEnvironmentVariablesProvider,
