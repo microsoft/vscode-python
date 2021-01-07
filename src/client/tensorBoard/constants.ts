@@ -5,12 +5,9 @@ export enum TensorBoardPromptSelection {
     None = 'none',
 }
 
-export enum TensorBoardLaunchSource {
+export enum TensorBoardEntrypointTrigger {
     tfeventfiles = 'tfeventfiles',
-    codeaction = 'codeaction',
-    codelens = 'codelens',
     fileimport = 'fileimport',
-    terminal = 'terminal',
     nbextension = 'nbextension',
     palette = 'palette',
 }
@@ -21,8 +18,9 @@ export enum TensorBoardSessionStartResult {
     error = 'error',
 }
 
-export enum TensorBoardEntryPoint {
+export enum TensorBoardEntrypoint {
     prompt = 'prompt',
     codeaction = 'codeaction',
     codelens = 'codelens',
+    palette = 'palette',
 }

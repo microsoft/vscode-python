@@ -20,9 +20,9 @@ import { LinterId } from '../linters/types';
 import { EnvironmentType } from '../pythonEnvironments/info';
 import {
     TensorBoardPromptSelection,
-    TensorBoardLaunchSource,
+    TensorBoardEntrypointTrigger,
     TensorBoardSessionStartResult,
-    TensorBoardEntryPoint,
+    TensorBoardEntrypoint,
 } from '../tensorBoard/constants';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
@@ -1738,16 +1738,15 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent after the python.launchTensorBoard command has been executed.
      * The `entrypoint` property indicates whether the command was executed directly by the
-     * user from the command palette or as a result of:
-     * 1. tfevent files detected in current workspace --> prompt shown --> user clicked 'yes'
-     * 2. tensorboard import detected in active file --> prompt shown --> user clicked 'yes'
-     * 3. tensorboard import detected in active file --> codeaction shown --> user clicked on codeaction
-     * 4. tensorboard import detected in active file --> codelens shown --> user clicked on codelens
-     * 5. tensorboard command detected in terminal --> prompt shown --> user clicked 'yes'
-     * 6. tensorboard nbextension usage detected in ipynb --> prompt shown --> user clicked 'yes'
+     * user from the command palette or from a codeaction, codelens, or the user clicking 'yes'
+     * on the launch prompt we display.
+     * The `trigger` property indicates whether the entrypoint was triggered by the user
+     * importing tensorboard, using tensorboard in a notebook, detected tfevent files in
+     * the workspace. For the palette entrypoint, the trigger is also 'palette'.
      */
     [EventName.TENSORBOARD_SESSION_LAUNCH]: {
-        entrypoint: TensorBoardLaunchSource;
+        entrypoint: TensorBoardEntrypoint;
+        trigger: TensorBoardEntrypointTrigger;
     };
     /**
      * Telemetry event sent after we have attempted to create a tensorboard program instance
@@ -1777,13 +1776,19 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.TENSORBOARD_SESSION_DURATION]: never | undefined;
     /**
-     * Telemetry event sent when an entrypoint is displayed to the user. `entrypoint` is one of
-     * 'codeaction', 'codelens', or 'prompt'. This event is sent once per entrypoint per session to
-     * minimize redundant events since codeactions and codelenses can be displayed multiple times
-     * per file.
+     * Telemetry event sent when an entrypoint is displayed to the user. This event is sent once
+     * per entrypoint per session to minimize redundant events since codeactions and codelenses
+     * can be displayed multiple times per file.
+     * The `entrypoint` property indicates whether the command was executed directly by the
+     * user from the command palette or from a codeaction, codelens, or the user clicking 'yes'
+     * on the launch prompt we display.
+     * The `trigger` property indicates whether the entrypoint was triggered by the user
+     * importing tensorboard, using tensorboard in a notebook, detected tfevent files in
+     * the workspace. For the palette entrypoint, the trigger is also 'palette'.
      */
     [EventName.TENSORBOARD_ENTRYPOINT_SHOWN]: {
-        entrypoint: TensorBoardEntryPoint;
+        entrypoint: TensorBoardEntrypoint;
+        trigger: TensorBoardEntrypointTrigger;
     };
     /**
      * Telemetry event sent when the user is prompted to install Python packages that are

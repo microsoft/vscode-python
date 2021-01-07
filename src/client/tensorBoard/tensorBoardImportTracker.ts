@@ -9,7 +9,7 @@ import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import { IDisposableRegistry } from '../common/types';
 import { getDocumentLines } from '../telemetry/importTracker';
-import { TensorBoardLaunchSource } from './constants';
+import { TensorBoardEntrypointTrigger } from './constants';
 import { containsTensorBoardImport } from './helpers';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 
@@ -52,7 +52,7 @@ export class TensorBoardImportTracker implements IExtensionSingleActivationServi
         ) {
             const lines = getDocumentLines(document);
             if (containsTensorBoardImport(lines)) {
-                this.prompt.showNativeTensorBoardPrompt(TensorBoardLaunchSource.fileimport).ignoreErrors();
+                this.prompt.showNativeTensorBoardPrompt(TensorBoardEntrypointTrigger.fileimport).ignoreErrors();
             }
         }
     }

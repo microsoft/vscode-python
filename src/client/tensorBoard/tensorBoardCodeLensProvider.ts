@@ -11,14 +11,15 @@ import { IDisposableRegistry, IExperimentService } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { TensorBoardEntryPoint, TensorBoardLaunchSource } from './constants';
+import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from './constants';
 import { containsTensorBoardImport } from './helpers';
 
 @injectable()
 export class TensorBoardCodeLensProvider implements IExtensionSingleActivationService {
     private sendTelemetryOnce = once(
         sendTelemetryEvent.bind(this, EventName.TENSORBOARD_ENTRYPOINT_SHOWN, undefined, {
-            entrypoint: TensorBoardEntryPoint.codelens,
+            trigger: TensorBoardEntrypointTrigger.fileimport,
+            entrypoint: TensorBoardEntrypoint.codelens,
         }),
     );
 
@@ -36,7 +37,9 @@ export class TensorBoardCodeLensProvider implements IExtensionSingleActivationSe
         const command: Command = {
             title: TensorBoard.launchNativeTensorBoardSessionCodeLens(),
             command: Commands.LaunchTensorBoard,
-            arguments: [TensorBoardLaunchSource.codelens],
+            arguments: [
+                { trigger: TensorBoardEntrypointTrigger.fileimport, entrypoint: TensorBoardEntrypoint.codelens },
+            ],
         };
         const codelenses: CodeLens[] = [];
         for (let index = 0; index < document.lineCount; index += 1) {
