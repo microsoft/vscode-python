@@ -124,11 +124,7 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
                 async function* generator() {
                     traceVerbose(`Searching for custom virtual envs in: ${envRootDir}`);
 
-                    const envGenerator = findInterpretersInDir(
-                        envRootDir,
-                        // This means we'll search in the current directory and the one below it.
-                        { maxDepth: DEFAULT_SEARCH_DEPTH },
-                    );
+                    const envGenerator = findInterpretersInDir(envRootDir, DEFAULT_SEARCH_DEPTH);
 
                     for await (const env of envGenerator) {
                         // We only care about python.exe (on windows) and python (on linux/mac)

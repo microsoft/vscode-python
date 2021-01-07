@@ -36,7 +36,7 @@ suite('pyenvs common utils - findInterpretersInDir()', () => {
     ): Promise<string[]> {
         const results: string[] = [];
         const root = path.join(datadir, rootName);
-        const executables = findInterpretersInDir(root, { maxDepth, filterFile });
+        const executables = findInterpretersInDir(root, maxDepth, filterFile);
         for await (const filename of executables) {
             results.push(filename);
         }

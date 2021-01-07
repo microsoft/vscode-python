@@ -24,17 +24,15 @@ type FileFilterFunc = (filename: string) => boolean;
  */
 export function findInterpretersInDir(
     root: string,
-    opts: {
-        maxDepth?: number;
-        filterFile?: FileFilterFunc;
-        ignoreErrors?: boolean;
-    } = {},
+    recurseLevel?: number,
+    filterFile?: FileFilterFunc,
+    ignoreErrors?: boolean,
 ): AsyncIterableIterator<string> {
     const cfg = {
+        filterFile,
         checkBin: getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin,
-        filterFile: opts?.filterFile,
-        maxDepth: opts?.maxDepth,
-        ignoreErrors: opts.ignoreErrors === undefined ? false : opts.ignoreErrors,
+        maxDepth: recurseLevel,
+        ignoreErrors: ignoreErrors || false,
     };
     return iterExecutables(root, 1, cfg);
 }
@@ -165,7 +163,7 @@ export function isStandardPythonBinary(executable: string): boolean {
  * @param envDir Absolute path to the environment directory
  */
 export async function getInterpreterPathFromDir(envDir: string): Promise<string | undefined> {
-    const maxDepth = 2;
+    const recurseLevel = 2;
 
     // Ignore any folders or files that not directly python binary related.
     function filterFile(str: string): boolean {
@@ -174,7 +172,7 @@ export async function getInterpreterPathFromDir(envDir: string): Promise<string 
     }
 
     // Search in the sub-directories for python binary
-    const executables = findInterpretersInDir(envDir, { maxDepth, filterFile });
+    const executables = findInterpretersInDir(envDir, recurseLevel, filterFile);
     for await (const bin of executables) {
         if (isStandardPythonBinary(bin)) {
             return bin;
