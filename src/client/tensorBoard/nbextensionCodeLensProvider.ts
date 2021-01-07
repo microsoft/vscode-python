@@ -6,7 +6,7 @@ import { once } from 'lodash';
 import { CodeLens, Command, languages, Position, Range, TextDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { Commands, NotebookCellScheme, PYTHON_LANGUAGE } from '../common/constants';
-import { NativeTensorBoard, NativeTensorBoardEntrypoints } from '../common/experiments/groups';
+import { NativeTensorBoard } from '../common/experiments/groups';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
@@ -16,7 +16,7 @@ import { containsNotebookExtension } from './helpers';
 
 @injectable()
 export class TensorBoardNbextensionCodeLensProvider implements IExtensionSingleActivationService {
-    private sendNbExtensionOnce = once(
+    private sendTelemetryOnce = once(
         sendTelemetryEvent.bind(this, EventName.TENSORBOARD_ENTRYPOINT_SHOWN, undefined, {
             trigger: TensorBoardEntrypointTrigger.nbextension,
             entrypoint: TensorBoardEntrypoint.codelens,
@@ -33,17 +33,19 @@ export class TensorBoardNbextensionCodeLensProvider implements IExtensionSingleA
     }
 
     private async activateInternal() {
-        if (
-            (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) &&
-            (await this.experimentService.inExperiment(NativeTensorBoardEntrypoints.codeLenses))
-        ) {
+        if (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) {
             this.disposables.push(
-                languages.registerCodeLensProvider([{ scheme: NotebookCellScheme, language: PYTHON_LANGUAGE }], this),
+                languages.registerCodeLensProvider(
+                    [
+                        { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE },
+                        { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
+                    ],
+                    this,
+                ),
             );
         }
     }
 
-    // eslint-disable-next-line class-methods-use-this
     public provideCodeLenses(document: TextDocument): CodeLens[] {
         const command: Command = {
             title: TensorBoard.launchNativeTensorBoardSessionCodeLens(),
@@ -52,6 +54,7 @@ export class TensorBoardNbextensionCodeLensProvider implements IExtensionSingleA
                 { trigger: TensorBoardEntrypointTrigger.fileimport, entrypoint: TensorBoardEntrypoint.codelens },
             ],
         };
+        console.log('In provideCodeLenses');
         const codelenses: CodeLens[] = [];
         for (let index = 0; index < document.lineCount; index += 1) {
             const line = document.lineAt(index);
@@ -61,7 +64,7 @@ export class TensorBoardNbextensionCodeLensProvider implements IExtensionSingleA
                     { trigger: TensorBoardEntrypointTrigger.nbextension, entrypoint: TensorBoardEntrypoint.codelens },
                 ];
                 codelenses.push(new CodeLens(range, command));
-                this.sendNbExtensionOnce();
+                this.sendTelemetryOnce();
             }
         }
         return codelenses;

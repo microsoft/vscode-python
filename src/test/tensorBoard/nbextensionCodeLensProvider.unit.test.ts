@@ -27,14 +27,16 @@ suite('TensorBoard nbextension code lens provider', () => {
         const codeActions = codeLensProvider.provideCodeLenses(document);
         assert.ok(codeActions.length > 0, 'Failed to provide code lens for file loading tensorboard nbextension');
     });
-    test('Does not provide code lens for Python file loading tensorboard nbextension', async () => {
-        const document = new MockDocument('a=1\n%load_ext tensorboard', 'foo.py', async () => true);
-        const codeActions = codeLensProvider.provideCodeLenses(document);
-        assert.ok(codeActions.length === 0, 'Provided code lens for Python file loading tensorboard nbextension');
-    });
-    test('Does not provide code lens for Python file launching tensorboard nbextension', async () => {
-        const document = new MockDocument('a=1\n%tensorboard --logdir logs/fit', 'foo.py', async () => true);
-        const codeActions = codeLensProvider.provideCodeLenses(document);
-        assert.ok(codeActions.length === 0, 'Provided code lens for Python file loading tensorboard nbextension');
-    });
+    // Can't verify these cases without running in vscode as we depend on vscode to not call us
+    // based on the DocumentSelector we provided. See nbExtensionCodeLensProvider.test.ts for that.
+    // test('Does not provide code lens for Python file loading tensorboard nbextension', async () => {
+    //     const document = new MockDocument('a=1\n%load_ext tensorboard', 'foo.py', async () => true);
+    //     const codeActions = codeLensProvider.provideCodeLenses(document);
+    //     assert.ok(codeActions.length === 0, 'Provided code lens for Python file loading tensorboard nbextension');
+    // });
+    // test('Does not provide code lens for Python file launching tensorboard nbextension', async () => {
+    //     const document = new MockDocument('a=1\n%tensorboard --logdir logs/fit', 'foo.py', async () => true);
+    //     const codeActions = codeLensProvider.provideCodeLenses(document);
+    //     assert.ok(codeActions.length === 0, 'Provided code lens for Python file loading tensorboard nbextension');
+    // });
 });

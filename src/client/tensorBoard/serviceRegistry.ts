@@ -25,14 +25,16 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IExtensionSingleActivationService,
         TensorBoardUsageTracker,
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<TensorBoardImportCodeLensProvider>(
+        TensorBoardImportCodeLensProvider,
         TensorBoardImportCodeLensProvider,
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addBinding(TensorBoardImportCodeLensProvider, IExtensionSingleActivationService);
+    serviceManager.addSingleton<TensorBoardNbextensionCodeLensProvider>(
+        TensorBoardNbextensionCodeLensProvider,
         TensorBoardNbextensionCodeLensProvider,
     );
+    serviceManager.addBinding(TensorBoardNbextensionCodeLensProvider, IExtensionSingleActivationService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         TensorBoardCodeActionProvider,
