@@ -7,7 +7,6 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { InMemoryCache } from '../../../client/common/utils/cacheUtils';
 
-// tslint:disable:no-any max-func-body-length
 suite('Common Utils - CacheUtils', () => {
     suite('InMemory Cache', () => {
         let clock: sinon.SinonFakeTimers;
