@@ -60,30 +60,6 @@ suite('TensorBoard usage tracker', () => {
         await documentManager.showTextDocument(document);
         assert.ok(showNativeTensorBoardPrompt.calledOnce);
     });
-    test('Show prompt if Python notebook loads tensorboard nbextension', async () => {
-        const document = documentManager.addDocument('import foo\n%load_ext tensorboard', 'foo.ipynb');
-        await documentManager.showTextDocument(document);
-        await tensorBoardImportTracker.activate();
-        assert.ok(showNativeTensorBoardPrompt.calledOnce);
-    });
-    test('Show prompt if Python notebook launches tensorboard nbextension', async () => {
-        const document = documentManager.addDocument('import foo\n%tensorboard --logdir logs/fit', 'foo.ipynb');
-        await documentManager.showTextDocument(document);
-        await tensorBoardImportTracker.activate();
-        assert.ok(showNativeTensorBoardPrompt.calledOnce);
-    });
-    test('Do not show prompt if Python file loads tensorboard nbextension', async () => {
-        const document = documentManager.addDocument('import foo\n%load_ext tensorboard', 'foo.py');
-        await documentManager.showTextDocument(document);
-        await tensorBoardImportTracker.activate();
-        assert.ok(showNativeTensorBoardPrompt.notCalled);
-    });
-    test('Do not show prompt if Python file launches tensorboard nbextension', async () => {
-        const document = documentManager.addDocument('import foo\n%tensorboard --logdir logs/fit', 'foo.py');
-        await documentManager.showTextDocument(document);
-        await tensorBoardImportTracker.activate();
-        assert.ok(showNativeTensorBoardPrompt.notCalled);
-    });
     test('Do not show prompt if no tensorboard import', async () => {
         const document = documentManager.addDocument('import tensorflow as tf\nfrom torch.utils import foo', 'foo.py');
         await documentManager.showTextDocument(document);

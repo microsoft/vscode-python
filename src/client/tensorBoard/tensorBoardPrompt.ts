@@ -29,7 +29,7 @@ export class TensorBoardPrompt {
     private waitingForUserSelection = false;
 
     private sendTelemetryOnce = once((trigger) => {
-        sendTelemetryEvent.bind(this, EventName.TENSORBOARD_ENTRYPOINT_SHOWN, undefined, {
+        sendTelemetryEvent(EventName.TENSORBOARD_ENTRYPOINT_SHOWN, undefined, {
             entrypoint: TensorBoardEntrypoint.prompt,
             trigger,
         });

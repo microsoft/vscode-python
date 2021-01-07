@@ -4,11 +4,12 @@
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
 import { TensorBoardCodeActionProvider } from './tensorBoardCodeActionProvider';
-import { TensorBoardCodeLensProvider } from './tensorBoardCodeLensProvider';
+import { TensorBoardImportCodeLensProvider } from './tensorBoardImportCodeLensProvider';
 import { TensorBoardFileWatcher } from './tensorBoardFileWatcher';
 import { TensorBoardUsageTracker } from './tensorBoardUsageTracker';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 import { TensorBoardSessionProvider } from './tensorBoardSessionProvider';
+import { TensorBoardNbextensionCodeLensProvider } from './nbextensionCodeLensProvider';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -26,7 +27,11 @@ export function registerTypes(serviceManager: IServiceManager): void {
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        TensorBoardCodeLensProvider,
+        TensorBoardImportCodeLensProvider,
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        TensorBoardNbextensionCodeLensProvider,
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
