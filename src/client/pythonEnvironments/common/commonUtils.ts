@@ -14,6 +14,8 @@ import { listDir } from './externalDependencies';
 import { isPosixPythonBin } from './posixUtils';
 import { isWindowsPythonExe } from './windowsUtils';
 
+const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
+
 type FileFilterFunc = (filename: string) => boolean;
 
 /**
@@ -30,7 +32,6 @@ export function findInterpretersInDir(
 ): AsyncIterableIterator<string> {
     const cfg = {
         filterFile,
-        checkBin: getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin,
         maxDepth: recurseLevel,
         ignoreErrors: ignoreErrors || false,
     };
@@ -42,7 +43,6 @@ async function* iterExecutables(
     root: string,
     depth: number,
     cfg: {
-        checkBin: FileFilterFunc;
         filterFile: FileFilterFunc | undefined;
         maxDepth: number | undefined;
         ignoreErrors: boolean;
@@ -83,7 +83,7 @@ async function* iterExecutables(
             // can be filtered by the caller.  This will be fixed in
             // an upcoming change.
             if (matchFile(filename, cfg.filterFile, cfg.ignoreErrors || false)) {
-                if (cfg.checkBin(filename)) {
+                if (checkBin(filename)) {
                     yield filename;
                 }
             }
