@@ -85,6 +85,11 @@ export class CachingLocator extends LazyResourceBasedLocator {
         // it again in here is not a problem.
         if (this.cache.getAllEnvs() === undefined) {
             await this.ensureRecentRefresh(looper);
+        } else {
+            // Cache only contains complete envs, so not all envs maybe added to cache
+            // But we need to show them eventually, so trigger a refresh in background
+            // but do not block on it as we already have most envs in cache.
+            this.ensureRecentRefresh(looper).ignoreErrors();
         }
     }
 
