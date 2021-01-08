@@ -59,7 +59,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                         ) {
                             sendTelemetryEvent(EventName.TENSORBOARD_IMPORT_CODEACTION_CLICKED);
                         }
-                        this.createNewSession();
+                        return this.createNewSession();
                     },
                 ),
             );
