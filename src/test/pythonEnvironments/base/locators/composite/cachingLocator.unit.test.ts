@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
+import { expect } from 'chai';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { createDeferred } from '../../../../../client/common/utils/async';
@@ -120,6 +121,40 @@ suite('Python envs locator - CachingLocator', () => {
             const discovered = await getEnvs(iterator);
 
             assert.deepEqual(discovered, []);
+        });
+
+        test('a blocking refresh is triggered if cache is empty', async () => {
+            const expected: PythonEnvsChangedEvent = {};
+            const [, locator] = await getInitializedLocator([]);
+            let changeEvent: PythonEnvsChangedEvent | undefined;
+            const eventDeferred = createDeferred<void>();
+            locator.onChanged((e) => {
+                changeEvent = e;
+                eventDeferred.resolve();
+            });
+
+            await getEnvs(locator.iterEnvs());
+
+            expect(eventDeferred.resolved).to.equal(true, 'Event should already be fired');
+
+            assert.deepEqual(changeEvent, expected);
+        });
+
+        test('a refresh is triggered if cache is non-empty', async () => {
+            const expected: PythonEnvsChangedEvent = {};
+            const [, locator, cache] = await getInitializedLocator([]);
+            let changeEvent: PythonEnvsChangedEvent | undefined;
+            const eventDeferred = createDeferred<void>();
+            locator.onChanged((e) => {
+                changeEvent = e;
+                eventDeferred.resolve();
+            });
+            cache.setAllEnvs([env2]);
+
+            await getEnvs(locator.iterEnvs());
+
+            await eventDeferred.promise; // Event may or may not be fired yet, we have to wait
+            assert.deepEqual(changeEvent, expected);
         });
     });
 
