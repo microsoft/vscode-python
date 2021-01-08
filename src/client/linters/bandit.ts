@@ -31,7 +31,7 @@ export class Bandit extends BaseLinter {
                 '{line},{col},{severity},{test_id}:{msg}',
                 '-n',
                 '-1',
-                document.uri.fsPath
+                document.uri.fsPath,
             ],
             document,
             cancellation,
