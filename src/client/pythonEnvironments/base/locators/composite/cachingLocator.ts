@@ -50,12 +50,12 @@ export class CachingLocator extends LazyResourceBasedLocator {
         // Fall back to the underlying locator.
         const resolved = await this.locator.resolveEnv(env);
         if (resolved !== undefined) {
-            this.addEnvToCache(resolved);
+            await this.addEnvToCache(resolved);
         }
         return resolved;
     }
 
-    private addEnvToCache(env: PythonEnvInfo): void {
+    private async addEnvToCache(env: PythonEnvInfo): Promise<void> {
         const query = getMinimalPartialInfo(env);
         if (query === undefined) {
             return;
@@ -68,7 +68,7 @@ export class CachingLocator extends LazyResourceBasedLocator {
         const envs = this.cache.getAllEnvs();
         if (envs !== undefined) {
             envs.push(env);
-            this.updateCache(envs).ignoreErrors();
+            await this.updateCache(envs);
         }
     }
 
