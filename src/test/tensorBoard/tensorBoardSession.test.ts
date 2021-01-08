@@ -5,6 +5,7 @@ import { IApplicationShell, ICommandManager } from '../../client/common/applicat
 import { IExperimentService, IInstaller, InstallerResponse } from '../../client/common/types';
 import { TensorBoard } from '../../client/common/utils/localize';
 import { IServiceManager } from '../../client/ioc/types';
+import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../client/tensorBoard/constants';
 import { TensorBoardSession } from '../../client/tensorBoard/tensorBoardSession';
 import { TensorBoardSessionProvider } from '../../client/tensorBoard/tensorBoardSessionProvider';
 import { initialize } from '../initialize';
@@ -39,7 +40,11 @@ suite('TensorBoard session creation', async () => {
         // Stub user selections
         sandbox.stub(window, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
 
-        const session = (await commandManager.executeCommand('python.launchTensorBoard')) as TensorBoardSession;
+        const session = (await commandManager.executeCommand(
+            'python.launchTensorBoard',
+            TensorBoardEntrypoint.palette,
+            TensorBoardEntrypointTrigger.palette,
+        )) as TensorBoardSession;
 
         assert.ok(session.panel?.visible, 'Webview panel not shown on session creation golden path');
         assert.ok(errorMessageStub.notCalled, 'Error message shown on session creation golden path');
@@ -48,7 +53,11 @@ suite('TensorBoard session creation', async () => {
         // Stub user selections
         sandbox.stub(window, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
 
-        const session = (await commandManager.executeCommand('python.launchTensorBoard')) as TensorBoardSession;
+        const session = (await commandManager.executeCommand(
+            'python.launchTensorBoard',
+            TensorBoardEntrypoint.palette,
+            TensorBoardEntrypointTrigger.palette,
+        )) as TensorBoardSession;
 
         const { daemon, panel } = session;
         assert.ok(panel?.visible, 'Webview panel not shown');
@@ -62,7 +71,11 @@ suite('TensorBoard session creation', async () => {
         const filePickerStub = sandbox.stub(window, 'showOpenDialog');
 
         // Create session
-        await commandManager.executeCommand('python.launchTensorBoard');
+        await commandManager.executeCommand(
+            'python.launchTensorBoard',
+            TensorBoardEntrypoint.palette,
+            TensorBoardEntrypointTrigger.palette,
+        );
 
         assert.ok(filePickerStub.called, 'User requests to select another folder and file picker was not shown');
     });
@@ -72,7 +85,11 @@ suite('TensorBoard session creation', async () => {
         sandbox.stub(window, 'showOpenDialog').resolves(undefined);
 
         // Create session
-        await commandManager.executeCommand('python.launchTensorBoard');
+        await commandManager.executeCommand(
+            'python.launchTensorBoard',
+            TensorBoardEntrypoint.palette,
+            TensorBoardEntrypointTrigger.palette,
+        );
 
         assert.ok(errorMessageStub.notCalled, 'User opted not to select a logdir and error was shown');
     });
@@ -81,7 +98,11 @@ suite('TensorBoard session creation', async () => {
         sandbox.stub(installer, 'isInstalled').resolves(false);
         sandbox.stub(installer, 'promptToInstall').resolves(InstallerResponse.Ignore);
 
-        await commandManager.executeCommand('python.launchTensorBoard');
+        await commandManager.executeCommand(
+            'python.launchTensorBoard',
+            TensorBoardEntrypoint.palette,
+            TensorBoardEntrypointTrigger.palette,
+        );
 
         assert.ok(errorMessageStub.notCalled, 'User opted not to install and error was shown');
     });
@@ -89,7 +110,11 @@ suite('TensorBoard session creation', async () => {
         sandbox.stub(window, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
         sandbox.stub(window, 'withProgress').resolves('canceled');
 
-        await commandManager.executeCommand('python.launchTensorBoard');
+        await commandManager.executeCommand(
+            'python.launchTensorBoard',
+            TensorBoardEntrypoint.palette,
+            TensorBoardEntrypointTrigger.palette,
+        );
 
         assert.ok(errorMessageStub.notCalled, 'User canceled session start and error was shown');
     });
@@ -97,7 +122,11 @@ suite('TensorBoard session creation', async () => {
         sandbox.stub(window, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
         sandbox.stub(window, 'withProgress').resolves(60_000);
 
-        await commandManager.executeCommand('python.launchTensorBoard');
+        await commandManager.executeCommand(
+            'python.launchTensorBoard',
+            TensorBoardEntrypoint.palette,
+            TensorBoardEntrypointTrigger.palette,
+        );
 
         assert.ok(errorMessageStub.called, 'TensorBoard timed out but no error was shown');
     });
