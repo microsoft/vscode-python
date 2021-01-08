@@ -2,16 +2,27 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import { once } from 'lodash';
 import { CodeLens, Command, languages, Position, Range, TextDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { Commands, PYTHON } from '../common/constants';
 import { NativeTensorBoard, NativeTensorBoardEntrypoints } from '../common/experiments/groups';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
+import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from './constants';
 import { containsTensorBoardImport } from './helpers';
 
 @injectable()
 export class TensorBoardCodeLensProvider implements IExtensionSingleActivationService {
+    private sendTelemetryOnce = once(
+        sendTelemetryEvent.bind(this, EventName.TENSORBOARD_ENTRYPOINT_SHOWN, undefined, {
+            trigger: TensorBoardEntrypointTrigger.fileimport,
+            entrypoint: TensorBoardEntrypoint.codelens,
+        }),
+    );
+
     constructor(
         @inject(IExperimentService) private experimentService: IExperimentService,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
@@ -26,6 +37,9 @@ export class TensorBoardCodeLensProvider implements IExtensionSingleActivationSe
         const command: Command = {
             title: TensorBoard.launchNativeTensorBoardSessionCodeLens(),
             command: Commands.LaunchTensorBoard,
+            arguments: [
+                { trigger: TensorBoardEntrypointTrigger.fileimport, entrypoint: TensorBoardEntrypoint.codelens },
+            ],
         };
         const codelenses: CodeLens[] = [];
         for (let index = 0; index < document.lineCount; index += 1) {
@@ -33,6 +47,7 @@ export class TensorBoardCodeLensProvider implements IExtensionSingleActivationSe
             if (containsTensorBoardImport([line.text])) {
                 const range = new Range(new Position(line.lineNumber, 0), new Position(line.lineNumber, 1));
                 codelenses.push(new CodeLens(range, command));
+                this.sendTelemetryOnce();
             }
         }
         return codelenses;

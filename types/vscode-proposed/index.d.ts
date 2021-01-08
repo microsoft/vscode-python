@@ -16,21 +16,21 @@ import {
     WorkspaceEditEntryMetadata,
     Command,
     AccessibilityInformation,
-    Location
+    Location,
 } from 'vscode';
 
 // Copy nb section from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.
-//#region @rebornix: Notebook
+// #region @rebornix: Notebook
 
 export enum CellKind {
     Markdown = 1,
-    Code = 2
+    Code = 2,
 }
 
 export enum CellOutputKind {
     Text = 1,
     Error = 2,
-    Rich = 3
+    Rich = 3,
 }
 
 export interface CellStreamOutput {
@@ -91,12 +91,12 @@ export enum NotebookCellRunState {
     Running = 1,
     Idle = 2,
     Success = 3,
-    Error = 4
+    Error = 4,
 }
 
 export enum NotebookRunState {
     Running = 1,
-    Idle = 2
+    Idle = 2,
 }
 
 export interface NotebookCellMetadata {
@@ -272,19 +272,19 @@ export interface WorkspaceEdit {
         start: number,
         end: number,
         cells: NotebookCellData[],
-        metadata?: WorkspaceEditEntryMetadata
+        metadata?: WorkspaceEditEntryMetadata,
     ): void;
     replaceNotebookCellOutput(
         uri: Uri,
         index: number,
         outputs: CellOutput[],
-        metadata?: WorkspaceEditEntryMetadata
+        metadata?: WorkspaceEditEntryMetadata,
     ): void;
     replaceNotebookCellMetadata(
         uri: Uri,
         index: number,
         cellMetadata: NotebookCellMetadata,
-        metadata?: WorkspaceEditEntryMetadata
+        metadata?: WorkspaceEditEntryMetadata,
     ): void;
 }
 
@@ -316,7 +316,7 @@ export enum NotebookEditorRevealType {
      * If the range is outside the viewport, it will be revealed in the center of the viewport.
      * Otherwise, it will be revealed with as little scrolling as possible.
      */
-    InCenterIfOutsideViewport = 2
+    InCenterIfOutsideViewport = 2,
 }
 
 export interface NotebookEditor {
@@ -591,7 +591,7 @@ export interface NotebookContentProvider {
     backupNotebook(
         document: NotebookDocument,
         context: NotebookDocumentBackupContext,
-        cancellation: CancellationToken
+        cancellation: CancellationToken,
     ): Promise<NotebookDocumentBackup>;
 }
 
@@ -622,7 +622,7 @@ export interface NotebookKernelProvider<T extends NotebookKernel = NotebookKerne
         kernel: T,
         document: NotebookDocument,
         webview: NotebookCommunication,
-        token: CancellationToken
+        token: CancellationToken,
     ): ProviderResult<void>;
 }
 
@@ -638,7 +638,7 @@ export enum NotebookCellStatusBarAlignment {
     /**
      * Aligned to the right side.
      */
-    Right = 2
+    Right = 2,
 }
 
 export interface NotebookCellStatusBarItem {
@@ -672,12 +672,12 @@ export namespace notebook {
                 filenamePattern: NotebookFilenamePattern[];
                 exclusive?: boolean;
             };
-        }
+        },
     ): Disposable;
 
     export function registerNotebookKernelProvider(
         selector: NotebookDocumentFilter,
-        provider: NotebookKernelProvider
+        provider: NotebookKernelProvider,
     ): Disposable;
 
     export const onDidOpenNotebookDocument: Event<NotebookDocument>;
@@ -710,7 +710,7 @@ export namespace notebook {
      */
     export function createConcatTextDocument(
         notebook: NotebookDocument,
-        selector?: DocumentSelector
+        selector?: DocumentSelector,
     ): NotebookConcatTextDocument;
 
     export const onDidChangeActiveNotebookKernel: Event<{
@@ -730,11 +730,11 @@ export namespace notebook {
     export function createCellStatusBarItem(
         cell: NotebookCell,
         alignment?: NotebookCellStatusBarAlignment,
-        priority?: number
+        priority?: number,
     ): NotebookCellStatusBarItem;
 }
 
-//#region debug
+// #region debug
 
 /**
  * A DebugProtocolVariableContainer is an opaque stand-in type for the intersection of the Scope and Variable types defined in the Debug Adapter Protocol.
@@ -751,4 +751,4 @@ export interface DebugProtocolVariableContainer {
 export interface DebugProtocolVariable {
     // Properties: see details [here](https://microsoft.github.io/debug-adapter-protocol/specification#Base_Protocol_Variable).
 }
-//#endregion
+// #endregion

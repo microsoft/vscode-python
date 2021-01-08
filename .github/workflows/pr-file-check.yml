@@ -1,0 +1,45 @@
+name: PR files
+on:
+  pull_request:
+    types:
+      # On by default if you specify no types.
+      - 'opened'
+      - 'reopened'
+      - 'synchronize'
+      # For `skip-label` only.
+      - 'labeled'
+      - 'unlabeled'
+
+jobs:
+  changed-files-in-pr:
+    name: 'Check for changed files'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'News entry'
+        uses: brettcannon/check-for-changed-files@v1
+        with:
+          file-pattern: 'news/*/*.md'
+          skip-label: 'skip news'
+
+      - name: 'package-lock.json matches package.json'
+        uses: brettcannon/check-for-changed-files@v1
+        with:
+          prereq-pattern: 'package.json'
+          file-pattern: 'package-lock.json'
+          skip-label: 'skip package*.json'
+
+      - name: 'package.json matches package-lock.json'
+        uses: brettcannon/check-for-changed-files@v1
+        with:
+          prereq-pattern: 'package-lock.json'
+          file-pattern: 'package.json'
+          skip-label: 'skip package*.json'
+
+      - name: 'Tests'
+        uses: brettcannon/check-for-changed-files@v1
+        with:
+          prereq-pattern: src/**/*.ts
+          file-pattern: |
+            src/**/*.test.ts
+            .github/test_plan.md
+          skip-label: 'skip tests'

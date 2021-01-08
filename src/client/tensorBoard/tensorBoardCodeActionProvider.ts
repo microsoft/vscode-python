@@ -2,16 +2,27 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import { once } from 'lodash';
 import { CodeAction, CodeActionKind, CodeActionProvider, languages, Selection, TextDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { Commands, PYTHON } from '../common/constants';
 import { NativeTensorBoard, NativeTensorBoardEntrypoints } from '../common/experiments/groups';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
+import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from './constants';
 import { containsTensorBoardImport } from './helpers';
 
 @injectable()
 export class TensorBoardCodeActionProvider implements CodeActionProvider, IExtensionSingleActivationService {
+    private sendTelemetryOnce = once(
+        sendTelemetryEvent.bind(this, EventName.TENSORBOARD_ENTRYPOINT_SHOWN, undefined, {
+            entrypoint: TensorBoardEntrypoint.codeaction,
+            trigger: TensorBoardEntrypointTrigger.fileimport,
+        }),
+    );
+
     constructor(
         @inject(IExperimentService) private experimentService: IExperimentService,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
@@ -32,7 +43,9 @@ export class TensorBoardCodeActionProvider implements CodeActionProvider, IExten
             nativeTensorBoardSession.command = {
                 title,
                 command: Commands.LaunchTensorBoard,
+                arguments: [TensorBoardEntrypoint.codeaction, TensorBoardEntrypointTrigger.fileimport],
             };
+            this.sendTelemetryOnce();
             return [nativeTensorBoardSession];
         }
         return [];

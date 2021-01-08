@@ -200,7 +200,7 @@ suite('Linting - Arguments', () => {
                             '-f',
                             'custom',
                             '--msg-template',
-                            '{line},0,{severity},{test_id}:{msg}',
+                            '{line},{col},{severity},{test_id}:{msg}',
                             '-n',
                             '-1',
                             fileUri.fsPath,

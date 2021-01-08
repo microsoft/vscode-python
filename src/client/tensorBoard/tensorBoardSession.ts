@@ -19,10 +19,14 @@ import { createPromiseFromCancellation } from '../common/cancellation';
 import { traceError, traceInfo } from '../common/logger';
 import { tensorboardLauncher } from '../common/process/internal/scripts';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../common/process/types';
-import { IInstaller, InstallerResponse, Product } from '../common/types';
+import { IDisposableRegistry, IInstaller, InstallerResponse, Product } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { TensorBoard } from '../common/utils/localize';
+import { StopWatch } from '../common/utils/stopWatch';
 import { IInterpreterService } from '../interpreter/contracts';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
+import { TensorBoardSessionStartResult } from './constants';
 
 /**
  * Manages the lifecycle of a TensorBoard session.
@@ -49,15 +53,20 @@ export class TensorBoardSession {
 
     private process: ChildProcess | undefined;
 
+    // This tracks the total duration of time that the user kept the TensorBoard panel open
+    private sessionDurationStopwatch: StopWatch | undefined;
+
     constructor(
         private readonly installer: IInstaller,
         private readonly interpreterService: IInterpreterService,
         private readonly workspaceService: IWorkspaceService,
         private readonly processServiceFactory: IProcessServiceFactory,
         private readonly commandManager: ICommandManager,
+        private readonly disposables: IDisposableRegistry,
     ) {}
 
     public async initialize(): Promise<void> {
+        const e2eStartupDurationStopwatch = new StopWatch();
         const tensorBoardWasInstalled = await this.ensureTensorboardIsInstalled();
         if (!tensorBoardWasInstalled) {
             return;
@@ -69,7 +78,14 @@ export class TensorBoardSession {
         const startedSuccessfully = await this.startTensorboardSession(logDir);
         if (startedSuccessfully) {
             this.showPanel();
+            // Not using captureTelemetry on this method as we only want to send
+            // this particular telemetry event if the whole session creation succeeded
+            sendTelemetryEvent(
+                EventName.TENSORBOARD_SESSION_E2E_STARTUP_DURATION,
+                e2eStartupDurationStopwatch.elapsedTime,
+            );
         }
+        this.sessionDurationStopwatch = new StopWatch();
     }
 
     // Ensure that the TensorBoard package is installed before we attempt
@@ -182,6 +198,7 @@ export class TensorBoardSession {
 
         const processService = await this.processServiceFactory.create();
         const args = tensorboardLauncher([logDir]);
+        const sessionStartStopwatch = new StopWatch();
         const observable = processService.execObservable(pythonExecutable.path, args);
 
         const result = await window.withProgress(
@@ -201,16 +218,38 @@ export class TensorBoardSession {
         );
 
         switch (result) {
-            case timeout:
-                throw new Error(`Timed out after ${timeout / 1000} seconds waiting for TensorBoard to launch.`);
             case 'canceled':
                 traceInfo('Canceled starting TensorBoard session.');
+                sendTelemetryEvent(
+                    EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION,
+                    sessionStartStopwatch.elapsedTime,
+                    {
+                        result: TensorBoardSessionStartResult.cancel,
+                    },
+                );
                 observable.dispose();
                 return false;
             case 'success':
                 this.process = observable.proc;
+                sendTelemetryEvent(
+                    EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION,
+                    sessionStartStopwatch.elapsedTime,
+                    {
+                        result: TensorBoardSessionStartResult.success,
+                    },
+                );
                 return true;
+            case timeout:
+                sendTelemetryEvent(
+                    EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION,
+                    sessionStartStopwatch.elapsedTime,
+                    {
+                        result: TensorBoardSessionStartResult.error,
+                    },
+                );
+                throw new Error(`Timed out after ${timeout / 1000} seconds waiting for TensorBoard to launch.`);
             default:
+                // We should never get here
                 throw new Error(`Failed to start TensorBoard, received unknown promise result: ${result}`);
         }
     }
@@ -249,66 +288,59 @@ export class TensorBoardSession {
         const webviewPanel = window.createWebviewPanel('tensorBoardSession', 'TensorBoard', ViewColumn.Two, {
             enableScripts: true,
         });
+        webviewPanel.webview.html = `<!DOCTYPE html>
+        <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'; frame-src ${this.url} http: https:;">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>TensorBoard</title>
+            </head>
+            <body>
+                <script type="text/javascript">
+                    function resizeFrame() {
+                        var f = window.document.getElementById('vscode-tensorboard-iframe');
+                        if (f) {
+                            f.style.height = window.innerHeight / 0.7 + "px";
+                            f.style.width = window.innerWidth / 0.7 + "px";
+                        }
+                    }
+                    resizeFrame();
+                    window.addEventListener('resize', resizeFrame);
+                </script>
+                <iframe
+                    id="vscode-tensorboard-iframe"
+                    class="responsive-iframe"
+                    sandbox="allow-scripts allow-forms allow-same-origin allow-pointer-lock"
+                    src="${this.url}"
+                    frameborder="0"
+                    border="0"
+                    allowfullscreen
+                ></iframe>
+                <style>
+                    .responsive-iframe {
+                        transform: scale(0.7);
+                        transform-origin: 0 0;
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        overflow: hidden;
+                        display: block;
+                    }
+                </style>
+            </body>
+        </html>`;
         this.webviewPanel = webviewPanel;
-        webviewPanel.onDidDispose(() => {
-            this.webviewPanel = undefined;
-            // Kill the running TensorBoard session
-            this.process?.kill();
-            this.process = undefined;
-        });
-        webviewPanel.onDidChangeViewState(() => {
-            if (webviewPanel.visible) {
-                this.update();
-            }
-        }, null);
+        this.disposables.push(
+            webviewPanel.onDidDispose(() => {
+                this.webviewPanel = undefined;
+                // Kill the running TensorBoard session
+                this.process?.kill();
+                sendTelemetryEvent(EventName.TENSORBOARD_SESSION_DURATION, this.sessionDurationStopwatch?.elapsedTime);
+                this.process = undefined;
+            }),
+        );
         return webviewPanel;
-    }
-
-    private update() {
-        if (this.webviewPanel) {
-            this.webviewPanel.webview.html = `<!DOCTYPE html>
-            <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'; frame-src http: https: ${this.url};">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>TensorBoard</title>
-                </head>
-                <body>
-                    <script type="text/javascript">
-                        function resizeFrame() {
-                            var f = window.document.getElementById('vscode-tensorboard-iframe');
-                            if (f) {
-                                f.style.height = window.innerHeight / 0.7 + "px";
-                                f.style.width = window.innerWidth / 0.7 + "px";
-                            }
-                        }
-                        resizeFrame(); // Call immediately to force a redraw on load
-                        window.addEventListener('resize', resizeFrame); // Redraw on every resize
-                    </script>
-                    <iframe
-                        id="vscode-tensorboard-iframe"
-                        class="responsive-iframe"
-                        sandbox="allow-scripts allow-forms allow-same-origin allow-pointer-lock"
-                        src="${this.url}"
-                        frameborder="0"
-                        border="0"
-                        allowfullscreen
-                    ></iframe>
-                    <style>
-                        .responsive-iframe {
-                            transform: scale(0.7);
-                            transform-origin: 0 0;
-                            position: absolute;
-                            top: 0;
-                            left: 0;
-                            overflow: hidden;
-                            display: block;
-                        }
-                    </style>
-                </body>
-            </html>`;
-        }
     }
 
     private autopopulateLogDirectoryPath(): string | undefined {

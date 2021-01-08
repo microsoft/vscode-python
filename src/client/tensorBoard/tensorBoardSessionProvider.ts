@@ -12,6 +12,9 @@ import { IProcessServiceFactory } from '../common/process/types';
 import { IDisposableRegistry, IExperimentService, IInstaller } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
+import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from './constants';
 import { TensorBoardSession } from './tensorBoardSession';
 
 @injectable()
@@ -34,7 +37,31 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
     private async activateInternal() {
         if (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) {
             this.disposables.push(
-                this.commandManager.registerCommand(Commands.LaunchTensorBoard, () => this.createNewSession()),
+                this.commandManager.registerCommand(
+                    Commands.LaunchTensorBoard,
+                    (
+                        entrypoint: TensorBoardEntrypoint = TensorBoardEntrypoint.palette,
+                        trigger: TensorBoardEntrypointTrigger = TensorBoardEntrypointTrigger.palette,
+                    ) => {
+                        sendTelemetryEvent(EventName.TENSORBOARD_SESSION_LAUNCH, undefined, {
+                            trigger,
+                            entrypoint,
+                        });
+                        // Convenience telemetry events for A/B testing
+                        if (
+                            trigger === TensorBoardEntrypointTrigger.fileimport &&
+                            entrypoint === TensorBoardEntrypoint.codelens
+                        ) {
+                            sendTelemetryEvent(EventName.TENSORBOARD_IMPORT_CODELENS_CLICKED);
+                        } else if (
+                            trigger === TensorBoardEntrypointTrigger.fileimport &&
+                            entrypoint === TensorBoardEntrypoint.codeaction
+                        ) {
+                            sendTelemetryEvent(EventName.TENSORBOARD_IMPORT_CODEACTION_CLICKED);
+                        }
+                        this.createNewSession();
+                    },
+                ),
             );
             const contextKey = new ContextKey('python.isInNativeTensorBoardExperiment', this.commandManager);
             contextKey.set(true).ignoreErrors();
@@ -50,6 +77,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                 this.workspaceService,
                 this.processServiceFactory,
                 this.commandManager,
+                this.disposables,
             );
             await newSession.initialize();
             return newSession;

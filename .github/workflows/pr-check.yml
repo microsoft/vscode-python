@@ -1,4 +1,4 @@
-name: PR Check
+name: PR/CI Check
 
 on:
   pull_request:
