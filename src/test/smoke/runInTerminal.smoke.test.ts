@@ -17,6 +17,7 @@ suite('Smoke Test: Run Python File In Terminal', () => {
             return this.skip();
         }
         await initialize();
+        return undefined;
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);

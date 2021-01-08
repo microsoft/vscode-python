@@ -2,7 +2,6 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { ICurrentProcess, IPathUtils } from '../../../../common/types';
 import { IInterpreterHelper, IKnownSearchPathsForInterpreters } from '../../../../interpreter/contracts';
@@ -32,7 +31,6 @@ export class KnownPathsService extends CacheableLocatorService {
      *
      * Called by VS Code to indicate it is done with the resource.
      */
-
     // eslint-disable-next-line
     public dispose(): void {
         // No body
@@ -43,8 +41,7 @@ export class KnownPathsService extends CacheableLocatorService {
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    protected getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
+    protected getInterpretersImplementation(): Promise<PythonEnvironment[]> {
         return this.suggestionsFromKnownPaths();
     }
 
@@ -113,7 +110,7 @@ export class KnownSearchPathsForInterpreters implements IKnownSearchPathsForInte
                 searchPaths.push(path.join(pathUtils.home, p));
             });
             // Add support for paths such as /Users/xxx/anaconda/bin.
-            if (process.env.HOME) {
+            if (pathUtils.home && pathUtils.home !== '') {
                 searchPaths.push(path.join(pathUtils.home, 'anaconda', 'bin'));
                 searchPaths.push(path.join(pathUtils.home, 'python', 'bin'));
             }

@@ -12,29 +12,34 @@ import { JUPYTER_EXTENSION_ID } from '../../client/common/constants';
 import { SMOKE_TEST_EXTENSIONS_DIR } from '../constants';
 import { noop, sleep } from '../core';
 
-export async function updateSetting(setting: string, value: any) {
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+export async function updateSetting(setting: string, value: any): Promise<void> {
     const resource = vscode.workspace.workspaceFolders![0].uri;
     await vscode.workspace
         .getConfiguration('python', resource)
         .update(setting, value, vscode.ConfigurationTarget.WorkspaceFolder);
 }
-export async function removeLanguageServerFiles() {
+export async function removeLanguageServerFiles(): Promise<void> {
     const folders = await getLanguageServerFolders();
     await Promise.all(folders.map((item) => fs.remove(item).catch(noop)));
 }
 async function getLanguageServerFolders(): Promise<string[]> {
     return new Promise<string[]>((resolve, reject) => {
         glob('languageServer.*', { cwd: SMOKE_TEST_EXTENSIONS_DIR }, (ex, matches) => {
-            ex ? reject(ex) : resolve(matches.map((item) => path.join(SMOKE_TEST_EXTENSIONS_DIR, item)));
+            if (ex) {
+                reject(ex);
+            } else {
+                resolve(matches.map((item) => path.join(SMOKE_TEST_EXTENSIONS_DIR, item)));
+            }
         });
     });
 }
-export function isJediEnabled() {
+export function isJediEnabled(): boolean {
     const resource = vscode.workspace.workspaceFolders![0].uri;
     const settings = vscode.workspace.getConfiguration('python', resource);
     return settings.get<string>('languageServer') === 'Jedi';
 }
-export async function enableJedi(enable: boolean | undefined) {
+export async function enableJedi(enable: boolean | undefined): Promise<void> {
     if (isJediEnabled() === enable) {
         return;
     }

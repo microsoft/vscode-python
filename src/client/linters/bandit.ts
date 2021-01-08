@@ -24,7 +24,15 @@ export class Bandit extends BaseLinter {
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
         // View all errors in bandit <= 1.5.1 (https://github.com/PyCQA/bandit/issues/371)
         const messages = await this.run(
-            ['-f', 'custom', '--msg-template', '{line},0,{severity},{test_id}:{msg}', '-n', '-1', document.uri.fsPath],
+            [
+                '-f',
+                'custom',
+                '--msg-template',
+                '{line},{col},{severity},{test_id}:{msg}',
+                '-n',
+                '-1',
+                document.uri.fsPath
+            ],
             document,
             cancellation,
         );

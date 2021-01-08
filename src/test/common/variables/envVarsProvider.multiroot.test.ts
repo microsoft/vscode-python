@@ -11,7 +11,6 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposableRegistry, IPathUtils } from '../../../client/common/types';
-import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { getSearchPathEnvVarNames } from '../../../client/common/utils/exec';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
@@ -59,7 +58,6 @@ suite('Multiroot Environment Variables Provider', () => {
             IEnvironmentActivationService,
             instance(mockEnvironmentActivationService),
         );
-        clearCache();
         return initializeTest();
     });
     suiteTeardown(closeActiveWindows);
@@ -69,7 +67,6 @@ suite('Multiroot Environment Variables Provider', () => {
         await clearPythonPathInWorkspaceFolder(workspace4Path);
         await updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         await initializeTest();
-        clearCache();
     });
 
     function getVariablesProvider(mockVariables: EnvironmentVariables = { ...process.env }) {
@@ -88,7 +85,6 @@ suite('Multiroot Environment Variables Provider', () => {
             workspaceService,
             cfgService,
             mockProcess,
-            ioc.serviceContainer,
         );
     }
 
