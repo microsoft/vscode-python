@@ -78,6 +78,7 @@ const convertedKinds = new Map(
         [PythonEnvKind.VirtualEnv]: EnvironmentType.VirtualEnv,
         [PythonEnvKind.Pipenv]: EnvironmentType.Pipenv,
         [PythonEnvKind.Venv]: EnvironmentType.Venv,
+        [PythonEnvKind.VirtualEnvWrapper]: EnvironmentType.VirtualEnvWrapper,
     }),
 );
 

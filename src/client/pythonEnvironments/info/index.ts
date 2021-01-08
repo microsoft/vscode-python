@@ -115,6 +115,9 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType): string
         case EnvironmentType.Poetry: {
             return 'poetry';
         }
+        case EnvironmentType.VirtualEnvWrapper: {
+            return 'virtualenvwrapper';
+        }
         default: {
             return '';
         }
