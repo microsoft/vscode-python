@@ -46,7 +46,7 @@ export async function enableJedi(enable: boolean | undefined): Promise<void> {
     await updateSetting('languageServer', 'Jedi');
 }
 
-export async function openNotebook(file: string) {
+export async function openNotebook(file: string): Promise<vscode.NotebookEditor> {
     await verifyExtensionIsAvailable(JUPYTER_EXTENSION_ID);
     await vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(file), 'jupyter-notebook');
     const notebook = vscode.notebook.activeNotebookEditor;
