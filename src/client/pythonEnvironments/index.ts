@@ -13,6 +13,7 @@ import { ILocator } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsReducer } from './base/locators/composite/environmentsReducer';
 import { PythonEnvsResolver } from './base/locators/composite/environmentsResolver';
+import { WindowsPathEnvVarLocator } from './base/locators/lowLevel/windowsKnownPathsLocator';
 import { WorkspaceVirtualEnvironmentLocator } from './base/locators/lowLevel/workspaceVirtualEnvLocator';
 import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
@@ -43,7 +44,13 @@ export function initialize(ext: ExtensionState): PythonEnvironments {
     // Deal with legacy IOC.
     registerLegacyDiscoveryForIOC(ext.legacyIOC.serviceManager);
     initializeLegacyExternalDependencies(ext.legacyIOC.serviceContainer);
-    registerNewDiscoveryForIOC(ext.legacyIOC.serviceManager, api, environmentsSecurity, ext.disposables);
+    registerNewDiscoveryForIOC(
+        // These are what get wrapped in the legacy adapter.
+        ext.legacyIOC.serviceManager,
+        api,
+        environmentsSecurity,
+        ext.disposables,
+    );
 
     return api;
 }
@@ -53,7 +60,9 @@ export function initialize(ext: ExtensionState): PythonEnvironments {
  */
 export async function activate(api: PythonEnvironments): Promise<ActivationResult> {
     // Force an initial background refresh of the environments.
-    getEnvs(api.iterEnvs()).ignoreErrors();
+    getEnvs(api.iterEnvs())
+        // Don't wait for it to finish.
+        .ignoreErrors();
 
     // Registration with VS Code will go here.
 
@@ -65,9 +74,17 @@ export async function activate(api: PythonEnvironments): Promise<ActivationResul
 /**
  * Get the set of locators to use in the component.
  */
-async function createLocators(ext: ExtensionState, environmentsSecurity: IEnvironmentsSecurity): Promise<ILocator> {
+async function createLocators(
+    ext: ExtensionState,
+    // This is shared.
+    environmentsSecurity: IEnvironmentsSecurity,
+): Promise<ILocator> {
     // Create the low-level locators.
-    let locators: ILocator = new ExtensionLocators(createNonWorkspaceLocators(ext), createWorkspaceLocator(ext));
+    let locators: ILocator = new ExtensionLocators(
+        // Here we pull the locators together.
+        createNonWorkspaceLocators(ext),
+        createWorkspaceLocator(ext),
+    );
 
     // Create the env info service used by ResolvingLocator and CachingLocator.
     const envInfoService = new EnvironmentInfoService();
@@ -75,8 +92,18 @@ async function createLocators(ext: ExtensionState, environmentsSecurity: IEnviro
 
     // Build the stack of composite locators.
     locators = new PythonEnvsReducer(locators);
-    locators = new PythonEnvsResolver(locators, envInfoService, environmentsSecurity.isEnvSafe);
-    const caching = await createCachingLocator(ext, envInfoService, locators);
+    locators = new PythonEnvsResolver(
+        locators,
+        // These are shared.
+        envInfoService,
+        environmentsSecurity.isEnvSafe,
+    );
+    const caching = await createCachingLocator(
+        ext,
+        // This is shared.
+        envInfoService,
+        locators,
+    );
     ext.disposables.push(caching);
     locators = caching;
 
@@ -86,13 +113,24 @@ async function createLocators(ext: ExtensionState, environmentsSecurity: IEnviro
 function createNonWorkspaceLocators(ext: ExtensionState): ILocator[] {
     let locators: (ILocator & Partial<IDisposable>)[];
     if (getOSType() === OSType.Windows) {
-        // Windows specific locators go here
-        locators = [new WindowsRegistryLocator(), new WindowsStoreLocator()];
+        locators = [
+            // Windows specific locators go here.
+            new WindowsRegistryLocator(),
+            new WindowsStoreLocator(),
+            new WindowsPathEnvVarLocator(),
+        ];
     } else {
-        // Linux/Mac locators go here
-        locators = [new PosixKnownPathsLocator()];
+        locators = [
+            // Linux/Mac locators go here.
+            new PosixKnownPathsLocator(),
+        ];
     }
-    locators.push(new GlobalVirtualEnvironmentLocator(), new PyenvLocator(), new CustomVirtualEnvironmentLocator());
+    locators.push(
+        // OS-independent locators go here.
+        new GlobalVirtualEnvironmentLocator(),
+        new PyenvLocator(),
+        new CustomVirtualEnvironmentLocator(),
+    );
     const disposables = locators.filter((d) => d.dispose !== undefined) as IDisposable[];
     ext.disposables.push(...disposables);
     return locators;

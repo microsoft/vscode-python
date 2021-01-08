@@ -1803,4 +1803,14 @@ export interface IEventNamePropertyMapping {
     [EventName.TENSORBOARD_INSTALL_PROMPT_SELECTION]: {
         selection: TensorBoardPromptSelection;
     };
+    /**
+     * Telemetry event indicating the codeaction on a tensorboard import was clicked.
+     * Used for A/B testing codeaction vs codelens.
+     */
+    [EventName.TENSORBOARD_IMPORT_CODEACTION_CLICKED]: never | undefined;
+    /**
+     * Telemetry event indicating the codelens above a tensorboard import was clicked.
+     * Used for A/B testing codeaction vs codelens.
+     */
+    [EventName.TENSORBOARD_IMPORT_CODELENS_CLICKED]: never | undefined;
 }

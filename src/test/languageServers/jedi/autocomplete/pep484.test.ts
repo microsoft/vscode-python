@@ -37,6 +37,8 @@ suite('Language Server: Autocomplete PEP 484', () => {
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
+        ioc.registerInterpreterStorageTypes();
+        ioc.registerMockInterpreterTypes();
     }
 
     test('argument', async () => {

@@ -16,8 +16,7 @@ import { TensorBoardPrompt } from './tensorBoardPrompt';
 const testExecution = isTestExecution();
 
 // Prompt the user to start an integrated TensorBoard session whenever the active Python file or Python notebook
-// contains a valid TensorBoard import. For Python notebooks only, also prompt the user when the active notebook
-// attempts to load the tensorboard nbextension.
+// contains a valid TensorBoard import.
 @injectable()
 export class TensorBoardUsageTracker implements IExtensionSingleActivationService {
     constructor(
