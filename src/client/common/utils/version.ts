@@ -83,7 +83,7 @@ function copyStrict<T extends BasicVersionInfo>(info: T): RawBasicVersionInfo {
     const copied: RawBasicVersionInfo = {
         major: info.major,
         minor: info.minor,
-        micro: info.micro
+        micro: info.micro,
     };
 
     const unnormalized = ((info as unknown) as RawBasicVersionInfo).unnormalized;
@@ -91,7 +91,7 @@ function copyStrict<T extends BasicVersionInfo>(info: T): RawBasicVersionInfo {
         copied.unnormalized = {
             major: unnormalized.major,
             minor: unnormalized.minor,
-            micro: unnormalized.micro
+            micro: unnormalized.micro,
         };
     }
 
@@ -265,7 +265,7 @@ export function compareVersions<T extends BasicVersionInfo, V extends BasicVersi
     // the versions to compare:
     left: T,
     right: V,
-    compareExtra?: (v1: T, v2: V) => [number, string]
+    compareExtra?: (v1: T, v2: V) => [number, string],
 ): [number, string] {
     if (left.major < right.major) {
         return [1, 'major'];
@@ -359,7 +359,7 @@ export function areIdenticalVersion<T extends BasicVersionInfo, V extends BasicV
     // the versions to compare:
     left: T,
     right: V,
-    compareExtra?: (v1: T, v2: V) => [number, string]
+    compareExtra?: (v1: T, v2: V) => [number, string],
 ): boolean {
     const [result] = compareVersions(left, right, compareExtra);
     return result === 0;
@@ -374,7 +374,7 @@ export function areSimilarVersions<T extends BasicVersionInfo, V extends BasicVe
     // the versions to compare:
     left: T,
     right: V,
-    compareExtra?: (v1: T, v2: V) => [number, string]
+    compareExtra?: (v1: T, v2: V) => [number, string],
 ): boolean {
     const [result, prop] = compareVersions(left, right, compareExtra);
     if (result === 0) {
