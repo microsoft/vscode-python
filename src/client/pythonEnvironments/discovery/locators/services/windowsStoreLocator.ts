@@ -10,7 +10,7 @@ import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { getPythonVersionFromPath } from '../../../base/info/pythonVersion';
 import { IPythonEnvsIterator } from '../../../base/locator';
-import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
+import { FSWatcherKind, FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { getFileInfo } from '../../../common/externalDependencies';
 
 /**
@@ -138,7 +138,10 @@ export class WindowsStoreLocator extends FSWatchingLocator {
     private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
 
     constructor() {
-        super(getWindowsStoreAppsRoot, async () => this.kind, { executableBaseGlob: pythonExeGlob });
+        super(getWindowsStoreAppsRoot, async () => this.kind, {
+            executableBaseGlob: pythonExeGlob,
+            watcherKind: FSWatcherKind.Global,
+        });
     }
 
     protected doIterEnvs(): IPythonEnvsIterator {

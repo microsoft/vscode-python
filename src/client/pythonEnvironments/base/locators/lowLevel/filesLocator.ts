@@ -12,7 +12,7 @@ import { getFastEnvInfo } from '../../info/env';
 import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
 import { iterAndUpdateEnvs, resolveEnvFromIterator } from '../../locatorUtils';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
-import { FSWatchingLocator } from './fsWatchingLocator';
+import { FSWatcherKind, FSWatchingLocator } from './fsWatchingLocator';
 
 /**
  * A naive locator the wraps a function that finds Python executables.
@@ -78,6 +78,7 @@ export class DirFilesLocator extends FSWatchingLocator {
         super(
             () => [dirname],
             async () => kind,
+            { watcherKind: FSWatcherKind.Global },
         );
         this.subLocator = new FoundFilesLocator(
             kind,

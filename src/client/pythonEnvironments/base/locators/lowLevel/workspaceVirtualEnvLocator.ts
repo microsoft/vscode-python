@@ -19,7 +19,7 @@ import {
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { buildEnvInfo } from '../../info/env';
 import { IPythonEnvsIterator } from '../../locator';
-import { FSWatchingLocator } from './fsWatchingLocator';
+import { FSWatcherKind, FSWatchingLocator } from './fsWatchingLocator';
 
 /**
  * Default number of levels of sub-directories to recurse when looking for interpreters.
@@ -81,6 +81,7 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
             // Note detecting kind of virtual env depends on the file structure around the
             // executable, so we need to wait before attempting to detect it.
             delayOnCreated: 1000,
+            watcherKind: FSWatcherKind.Workspace,
         });
     }
 

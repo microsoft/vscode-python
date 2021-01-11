@@ -9,7 +9,7 @@ import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../..
 import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { IPythonEnvsIterator } from '../../../base/locator';
-import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
+import { FSWatcherKind, FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import {
     findInterpretersInDir,
     getEnvironmentDirFromPath,
@@ -107,6 +107,7 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
             // if the type detected is incorrect, it doesn't do any practical harm as kinds
             // in this locator are used in the same way (same activation commands etc.)
             delayOnCreated: 1000,
+            watcherKind: FSWatcherKind.Global,
         });
     }
 
