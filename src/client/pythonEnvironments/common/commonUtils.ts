@@ -54,6 +54,7 @@ async function* iterExecutables(
     try {
         entries = await listDir(root);
     } catch (err) {
+        console.log(`failed: ${err}`);
         // Treat a missing directory as empty.
         if (err.code === 'ENOENT') {
             return;
@@ -85,7 +86,7 @@ async function* iterExecutables(
         if (entry.isDirectory()) {
             if (cfg.maxDepth && currentDepth <= cfg.maxDepth) {
                 if (matchFile(filename, cfg.filterSubDir, cfg.ignoreErrors)) {
-                    yield* iterExecutables(filename, currentDepth + 1, cfg);
+                    yield* iterExecutables(filename, currentDepth + 1, cfg, debug);
                 }
             }
         } else if (entry.isFile()) {
