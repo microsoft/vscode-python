@@ -30,7 +30,7 @@ export function createTemporaryFile(
 // Something to consider: we should combine with `createDeclaratively`
 // (in src/test/testing/results.ts).
 
-type FileKind = 'dir' | 'file' | 'exe';
+type FileKind = 'dir' | 'file' | 'exe' | 'symlink';
 
 /**
  * Extract the name and kind for the given entry from a text FS tree.
@@ -81,8 +81,9 @@ function parseFSEntry(
         topLevel?: boolean;
         allowInlineParents?: boolean;
     } = {},
-): [string, FileKind] {
+): [string | [string, string], FileKind] {
     let text = entry;
+    let symlinkTarget = '';
     if (text.startsWith('|')) {
         text = text.slice(1);
     } else {
@@ -90,7 +91,20 @@ function parseFSEntry(
         if (text.match(/^<[^/<>]+>$/)) {
             const name = text.slice(1, -1);
             return [name, 'exe'];
-        } else if (text.includes('<') || text.includes('>')) {
+        }
+        // Deal with symlinks.
+        const parts = text.split(' -> ', 2);
+        if (parts.length == 2) {
+            [text, symlinkTarget] = parts;
+            if (text.endsWith('/')) {
+                throw Error(`bad symlink "${entry}"`);
+            }
+            if (symlinkTarget.includes('<') || symlinkTarget.includes('>')) {
+                throw Error(`bad entry "${entry}"`);
+            }
+        }
+        // It must be a regular file or directory.
+        if (text.includes('<') || text.includes('>')) {
             throw Error(`bad entry "${entry}"`);
         }
     }
@@ -114,13 +128,20 @@ function parseFSEntry(
 
     // Handle other entries.
     let relname: string;
+    let reltext: string | [string, string];
     let kind: FileKind;
     if (text.endsWith('/')) {
         kind = 'dir';
         relname = text.slice(0, -1);
+        reltext = text;
+    } else if (symlinkTarget !== '') {
+        kind = 'symlink';
+        relname = text;
+        reltext = [relname, symlinkTarget];
     } else {
         kind = 'file';
         relname = text;
+        reltext = text;
     }
     if (relname.includes('/') && !opts.allowInlineParents) {
         throw Error(`did not expect inline parents, got "${entry}"`);
@@ -128,7 +149,7 @@ function parseFSEntry(
     if (relname.startsWith('/') || relname.startsWith('./')) {
         throw Error(`expected relative path, got "${entry}"`);
     }
-    return [relname, kind];
+    return [reltext, kind];
 }
 
 /**
@@ -194,9 +215,9 @@ export function parseFSTree(
     text: string,
     // Use process.cwd() by default.
     cwd?: string,
-): [string, string, FileKind][] {
+): [string | [string, string], string, FileKind][] {
     const curDir = cwd ?? process.cwd();
-    const parsed: [string, string, FileKind][] = [];
+    const parsed: [string | [string, string], string, FileKind][] = [];
 
     const entries = parseTree(text);
     entries.forEach((data) => {
@@ -206,16 +227,26 @@ export function parseFSTree(
             allowInlineParents: false,
         };
         const [relname, kind] = parseFSEntry(entry, opts);
-        let filename: string;
+        let fullname: string | [string, string];
         let parentFilename: string;
         if (parentIndex === -1) {
             parentFilename = '';
-            filename = path.resolve(curDir, relname);
+            fullname = path.resolve(curDir, relname as string);
         } else {
-            [parentFilename] = parsed[parentIndex];
-            filename = path.join(parentFilename, relname);
+            if (typeof parsed[parentIndex][0] !== 'string') {
+                throw Error(`parent can't be a symlink, got ${parsed[parentIndex]} (for ${kind} ${relname})`);
+            }
+            parentFilename = parsed[parentIndex][0] as string;
+            if (kind === 'symlink') {
+                let [target, symlink] = relname as [string, string];
+                target = path.join(parentFilename, target);
+                symlink = path.join(parentFilename, symlink);
+                fullname = [target, symlink];
+            } else {
+                fullname = path.join(parentFilename, relname as string);
+            }
         }
-        parsed.push([filename, parentFilename, kind]);
+        parsed.push([fullname, parentFilename, kind]);
     });
 
     return parsed;
@@ -239,14 +270,15 @@ export async function ensureFSTree(
 
             try {
                 if (kind === 'dir') {
-                    await fsapi.ensureDir(filename);
+                    await fsapi.ensureDir(filename as string);
                 } else if (kind === 'exe') {
-                    // "touch" the file.
-                    await fsapi.ensureFile(filename);
-                    await fsapi.chmod(filename, 0o755);
+                    await ensureExecutable(filename as string);
                 } else if (kind === 'file') {
                     // "touch" the file.
-                    await fsapi.ensureFile(filename);
+                    await fsapi.ensureFile(filename as string);
+                } else if (kind === 'symlink') {
+                    const [symlink, target] = filename as [string, string];
+                    await ensureSymlink(target, symlink);
                 } else {
                     throw Error(`unsupported file kind ${kind}`);
                 }
@@ -257,9 +289,34 @@ export async function ensureFSTree(
             }
 
             if (parentFilename === '') {
-                roots.push(filename);
+                roots.push(filename as string);
             }
         });
     await Promise.all(promises);
     return roots;
+}
+
+async function ensureExecutable(filename: string): Promise<void> {
+    // "touch" the file.
+    await fsapi.ensureFile(filename as string);
+    await fsapi.chmod(filename as string, 0o755);
+}
+
+async function ensureSymlink(target: string, filename: string): Promise<void> {
+    try {
+        await fsapi.ensureSymlink(target, filename);
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            // The target doesn't exist.  Make the symlink anyway.
+            try {
+                await fsapi.symlink(target, filename);
+            } catch (err) {
+                if (err.code !== 'EEXIST') {
+                    throw err; // re-throw
+                }
+            }
+        } else {
+            throw err; // re-throw
+        }
+    }
 }
