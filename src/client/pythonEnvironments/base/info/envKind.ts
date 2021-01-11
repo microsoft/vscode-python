@@ -4,7 +4,7 @@
 import { PythonEnvKind } from '.';
 
 const kindsByName: Record<string, PythonEnvKind> = {
-    unknown: PythonEnvKind.Unknown,
+    // Note that PythonEnvKind.Unknown does not have an entry here.
     system: PythonEnvKind.System,
     macDefault: PythonEnvKind.MacDefault,
     winStore: PythonEnvKind.WindowsStore,
