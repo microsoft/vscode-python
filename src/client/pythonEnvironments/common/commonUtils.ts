@@ -104,8 +104,16 @@ async function* iterExecutables(
             if (checkBin(filename)) {
                 yield filename;
             }
+        } else {
+            // We ignore all other file types, including symlinks.
+            if (debug) {
+                if (entry.isSymbolicLink()) {
+                    console.log(`ignored symlink "${entry.name}"`);
+                } else {
+                    console.log(`ignored "${entry.name}"`);
+                }
+            }
         }
-        // We ignore all other file types, including symlinks.
     }
 }
 
