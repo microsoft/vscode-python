@@ -14,8 +14,6 @@ import { listDir } from './externalDependencies';
 import { isPosixPythonBin } from './posixUtils';
 import { isWindowsPythonExe } from './windowsUtils';
 
-const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
-
 type FileFilterFunc = (filename: string) => boolean;
 
 /**
@@ -65,6 +63,9 @@ async function* iterExecutables(
         throw err; // re-throw
     }
 
+    // "checkBin" is a local variable rather than global
+    // so we can stub it out during unit testing.
+    const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
     for (const entry of entries) {
         const filename = path.join(root, entry.name);
         // (FYI)
