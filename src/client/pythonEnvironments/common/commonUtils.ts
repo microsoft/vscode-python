@@ -50,12 +50,16 @@ async function* iterExecutables(
     },
     debug = false,
 ): AsyncIterableIterator<string> {
-    console.log(`iterating "${root}"`);
+    if (debug) {
+        console.log(`iterating "${root}"`);
+    }
     let entries: Dirent[];
     try {
         entries = await listDir(root);
     } catch (err) {
-        console.log(`failed: ${err}`);
+        if (debug) {
+            console.log(`failed: ${err}`);
+        }
         // Treat a missing directory as empty.
         if (err.code === 'ENOENT') {
             return;
@@ -67,9 +71,13 @@ async function* iterExecutables(
         throw err; // re-throw
     }
     if (debug) {
-        console.log(entries.map((e) => path.join(root, e.name)));
-    } else {
-        console.log('no debug');
+        entries.forEach((entry) => {
+            if (entry.isDirectory()) {
+                console.log(`  (dir) "${entry.name}"`);
+            } else {
+                console.log(`  "${entry.name}"`);
+            }
+        });
     }
 
     // "checkBin" is a local variable rather than global
