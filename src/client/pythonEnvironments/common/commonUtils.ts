@@ -27,6 +27,7 @@ export function findInterpretersInDir(
     recurseLevel?: number,
     filterSubDir?: FileFilterFunc,
     ignoreErrors?: boolean,
+    debug = false,
 ): AsyncIterableIterator<string> {
     const cfg = {
         filterSubDir,
@@ -34,7 +35,7 @@ export function findInterpretersInDir(
         ignoreErrors: ignoreErrors || false,
     };
     // We use an initial depth of 1.
-    return iterExecutables(root, 1, cfg);
+    return iterExecutables(root, 1, cfg, debug);
 }
 
 // This function helps simplify the recursion case.
@@ -47,6 +48,7 @@ async function* iterExecutables(
         maxDepth: number | undefined;
         ignoreErrors: boolean;
     },
+    debug = false,
 ): AsyncIterableIterator<string> {
     let entries: Dirent[];
     try {
@@ -61,6 +63,9 @@ async function* iterExecutables(
             return;
         }
         throw err; // re-throw
+    }
+    if (debug) {
+        console.log(entries.map((e) => path.join(root, e.name)));
     }
 
     // "checkBin" is a local variable rather than global
@@ -176,7 +181,12 @@ export function isStandardPythonBinary(executable: string): boolean {
  * environment directory.
  * @param envDir Absolute path to the environment directory
  */
-export async function getInterpreterPathFromDir(envDir: string): Promise<string | undefined> {
+export async function getInterpreterPathFromDir(
+    envDir: string,
+    opt: {
+        ignoreErrors?: boolean;
+    } = {}
+): Promise<string | undefined> {
     const recurseLevel = 2;
 
     // Ignore any folders or files that not directly python binary related.
@@ -187,7 +197,7 @@ export async function getInterpreterPathFromDir(envDir: string): Promise<string 
     }
 
     // Search in the sub-directories for python binary
-    const executables = findInterpretersInDir(envDir, recurseLevel, filterDir);
+    const executables = findInterpretersInDir(envDir, recurseLevel, filterDir, opt.ignoreErrors, true);
     for await (const bin of executables) {
         console.log(`found "${bin}"`);
         if (isStandardPythonBinary(bin)) {
