@@ -5,6 +5,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import { Uri } from 'vscode';
 import { DiscoveryVariants } from '../../../../client/common/experiments/groups';
 import { traceWarning } from '../../../../client/common/logger';
 import { FileChangeType } from '../../../../client/common/platform/fileSystemWatcher';
@@ -110,6 +111,7 @@ suite('Windows Store Locator', async () => {
         const expectedEvent = {
             kind: PythonEnvKind.WindowsStore,
             type: FileChangeType.Created,
+            searchLocation: Uri.file(testStoreAppRoot),
         };
         await setupLocator(async (e) => {
             actualEvent = e;
@@ -130,6 +132,7 @@ suite('Windows Store Locator', async () => {
         const expectedEvent = {
             kind: PythonEnvKind.WindowsStore,
             type: FileChangeType.Deleted,
+            searchLocation: Uri.file(testStoreAppRoot),
         };
         const executable = await windowsStoreEnvs.create('python3.4.exe');
         // Wait before the change event has been sent. If both operations occur almost simultaneously no event is sent.
@@ -153,6 +156,7 @@ suite('Windows Store Locator', async () => {
         const expectedEvent = {
             kind: PythonEnvKind.WindowsStore,
             type: FileChangeType.Changed,
+            searchLocation: Uri.file(testStoreAppRoot),
         };
         const executable = await windowsStoreEnvs.create('python3.4.exe');
         // Wait before the change event has been sent. If both operations occur almost simultaneously no event is sent.

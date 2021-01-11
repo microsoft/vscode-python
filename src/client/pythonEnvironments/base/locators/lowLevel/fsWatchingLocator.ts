@@ -37,6 +37,10 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
              * Time to wait before handling an environment-created event.
              */
             delayOnCreated?: number; // milliseconds
+            /**
+             * Location affected by the event. If not provided, a default search location is used.
+             */
+            searchLocation?: string;
         } = {},
     ) {
         super();
@@ -65,14 +69,17 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
             // Fetching kind after deletion normally fails because the file structure around the
             // executable is no longer available, so ignore the errors.
             const kind = await this.getKind(executable).catch(() => undefined);
-            // Search location is intended as the directory in which the environment was found in.
-            // For eg. the search location for an env containing 'bin' or 'Scripts' directory is:
+            // By default, search location particularly for virtual environments is intended as the
+            // directory in which the environment was found in.For eg.the default search location
+            // for an env containing 'bin' or 'Scripts' directory is:
             //
             // searchLocation <--- Return this directory
             //    env
             //    |__ bin or Scripts
             //        |__ python  <--- executable
-            const searchLocation = Uri.file(path.dirname(getEnvironmentDirFromPath(executable)));
+            const searchLocation = Uri.file(
+                this.opts.searchLocation ?? path.dirname(getEnvironmentDirFromPath(executable)),
+            );
             this.emitter.fire({ type, kind, searchLocation });
         };
         this.disposables.push(watchLocationForPythonBinaries(root, callback, this.opts.executableBaseGlob));
