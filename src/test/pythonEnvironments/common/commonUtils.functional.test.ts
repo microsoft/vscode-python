@@ -513,8 +513,8 @@ suite('pyenvs common utils - finding Python executables', () => {
                           'pythons/python3.8.exe',
                           'pythons/python3.exe',
                           'python3.8.exe/python.exe',
-                          'Python3.exe',
-                          'PYTHON.EXE',
+                          // 'Python3.exe',
+                          // 'PYTHON.EXE',
                       ]
                     : [
                           // These order here matters.
