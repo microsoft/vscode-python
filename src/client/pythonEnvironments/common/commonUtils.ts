@@ -182,13 +182,14 @@ export async function getInterpreterPathFromDir(envDir: string): Promise<string 
     // Ignore any folders or files that not directly python binary related.
     function filterDir(dirname: string): boolean {
         const lower = path.basename(dirname).toLowerCase();
-        console.log(`${lower} (${dirname})`);
+        console.log(`checking "${lower}" (${dirname})`);
         return ['bin', 'scripts'].includes(lower);
     }
 
     // Search in the sub-directories for python binary
     const executables = findInterpretersInDir(envDir, recurseLevel, filterDir);
     for await (const bin of executables) {
+        console.log(`found "${bin}"`);
         if (isStandardPythonBinary(bin)) {
             return bin;
         }
