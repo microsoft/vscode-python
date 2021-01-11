@@ -506,13 +506,13 @@ suite('pyenvs common utils - finding Python executables', () => {
                 IS_WINDOWS
                     ? [
                           // These order here matters.
+                          'python3.8.exe/python.exe',
                           'pythons/python.exe',
                           'pythons/python2.7.exe',
                           'pythons/python2.exe',
                           'pythons/python3.7.exe',
                           'pythons/python3.8.exe',
                           'pythons/python3.exe',
-                          'python3.8.exe/python.exe',
                           // 'Python3.exe',
                           // 'PYTHON.EXE',
                       ]
