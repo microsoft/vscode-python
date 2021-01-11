@@ -182,6 +182,7 @@ export async function getInterpreterPathFromDir(envDir: string): Promise<string 
     // Ignore any folders or files that not directly python binary related.
     function filterDir(dirname: string): boolean {
         const lower = path.basename(dirname).toLowerCase();
+        console.log(`${lower} (${dirname})`);
         return ['bin', 'scripts'].includes(lower);
     }
 
