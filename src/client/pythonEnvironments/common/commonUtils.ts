@@ -50,6 +50,7 @@ async function* iterExecutables(
     },
     debug = false,
 ): AsyncIterableIterator<string> {
+    console.log(`iterating "${root}"`);
     let entries: Dirent[];
     try {
         entries = await listDir(root);
@@ -67,6 +68,8 @@ async function* iterExecutables(
     }
     if (debug) {
         console.log(entries.map((e) => path.join(root, e.name)));
+    } else {
+        console.log('no debug');
     }
 
     // "checkBin" is a local variable rather than global
