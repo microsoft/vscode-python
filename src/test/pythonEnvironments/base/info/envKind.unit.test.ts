@@ -80,7 +80,7 @@ suite('pyenvs info - PyEnvKind', () => {
                 test(`check ${name}`, () => {
                     const kind = getKind(name);
 
-                    assert.equal(kind, undefined);
+                    assert.equal(kind, PythonEnvKind.Unknown);
                 });
             });
         });
@@ -89,6 +89,9 @@ suite('pyenvs info - PyEnvKind', () => {
     suite('getKindDisplayName()', () => {
         suite('known', () => {
             KIND_NAMES.forEach(([kind]) => {
+                if (kind === PythonEnvKind.OtherGlobal || kind === PythonEnvKind.OtherVirtual) {
+                    return;
+                }
                 test(`check ${kind}`, () => {
                     const name = getKindDisplayName(kind);
 
@@ -97,12 +100,19 @@ suite('pyenvs info - PyEnvKind', () => {
             });
         });
 
-        test('not known', () => {
-            const kind = PythonEnvKind.Unknown;
+        suite('not known', () => {
+            [
+                PythonEnvKind.Unknown,
+                PythonEnvKind.OtherGlobal,
+                PythonEnvKind.OtherVirtual,
+                // Any other kinds that don't have clear display names go here.
+            ].forEach((kind) => {
+                test(`check ${kind}`, () => {
+                    const name = getKindDisplayName(kind);
 
-            const name = getKindDisplayName(kind);
-
-            assert.equal(name, '???');
+                    assert.equal(name, '');
+                });
+            });
         });
     });
 

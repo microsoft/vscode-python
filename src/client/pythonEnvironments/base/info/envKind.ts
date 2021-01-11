@@ -23,6 +23,9 @@ const kindsByName: Record<string, PythonEnvKind> = {
 
 /**
  * Return the given (Python environment) kind's name.
+ *
+ * If the kind (e.g. Unknown) does not have a name
+ * then we return an empty string.
  */
 export function getKindName(kind: PythonEnvKind): string {
     if (kind === PythonEnvKind.Unknown) {
@@ -41,11 +44,8 @@ export function getKindName(kind: PythonEnvKind): string {
  *
  * If there is no match then return undefined.
  */
-export function getKind(name: string): PythonEnvKind | undefined {
-    if (name === 'unknown') {
-        return undefined;
-    }
-    return kindsByName[name];
+export function getKind(name: string): PythonEnvKind {
+    return kindsByName[name] || PythonEnvKind.Unknown;
 }
 
 /**
@@ -55,7 +55,7 @@ export function getKind(name: string): PythonEnvKind | undefined {
  */
 export function getKindDisplayName(kind: PythonEnvKind): string {
     for (const [candidate, value] of [
-        [PythonEnvKind.Unknown, '???'],
+        // Note that Unknown is excluded here.
         [PythonEnvKind.System, 'system'],
         [PythonEnvKind.MacDefault, 'mac default'],
         [PythonEnvKind.WindowsStore, 'windows store'],
@@ -63,13 +63,13 @@ export function getKindDisplayName(kind: PythonEnvKind): string {
         [PythonEnvKind.CondaBase, 'conda'],
         [PythonEnvKind.Poetry, 'poetry'],
         [PythonEnvKind.Custom, 'custom'],
-        [PythonEnvKind.OtherGlobal, '???'],
+        // For now we treat OtherGlobal like Unknown.
         [PythonEnvKind.Venv, 'venv'],
         [PythonEnvKind.VirtualEnv, 'virtualenv'],
         [PythonEnvKind.VirtualEnvWrapper, 'virtualenv'],
         [PythonEnvKind.Pipenv, 'pipenv'],
         [PythonEnvKind.Conda, 'conda'],
-        [PythonEnvKind.OtherVirtual, '???'],
+        // For now we treat OtherVirtual like Unknown.
     ] as [PythonEnvKind, string][]) {
         if (kind === candidate) {
             return value;
