@@ -358,6 +358,25 @@ def test_failure():
     -   [ ] `Run Test` works
     -   [ ] `Debug Test` works
 
+#### TensorBoard integration
+
+-   [ ] Executing `Python: Launch TensorBoard` command from the command palette works
+    -   [ ] If the `tensorboard` Python package is not installed, a prompt to install should be shown
+        -   [ ] The installation process should succeed
+    -   [ ] If no workspace or folder is open, a quickpick to select a folder to use as the log directory for the TensorBoard session should be shown
+    -   [ ] If a workspace or folder is open, a quickpick to select either the current working directory or another folder should be shown
+    -   [ ] After a log directory is selected, a progress indicator should appear while the TensorBoard session is starting up
+    -   [ ] A webview containing the TensorBoard webapp should open in view column 2
+    -   [ ] The text in the TensorBoard webapp should be approximately the same size as the font in VS Code
+-   [ ] `Launch TensorBoard Session` codelens works
+    -   [ ] A Python file or ipynb containing a TensorBoard import e.g. `from torch.util.tensorboard import SummaryWriter` should have a codelens above the import statement
+    -   [ ] A Python ipynb containing a `%load_ext tensorboard` or `%tensorboard` cell magic should have a codelens above the statement
+    -   [ ] When clicked, the codelens should run the `Python: Launch TensorBoard` command
+-   [ ] tfevent files created from a training run in the root of the workspace or folder currently open in VS Code or one directory level down should result in a prompt to launch an integrated TensorBoard session appearing in the bottom right of VS Code
+-   [ ] TensorBoard can be launched inline in a Python notebook by executing a cell containing the following code:
+        `%load_ext tensorboard`, then `%tensorboard --logdir path/to/logs`
+-   [ ] All of the above should work in Codespaces, Remote-SSH and desktop VS Code
+
 #### General
 
 -   [ ] Code lenses appears
