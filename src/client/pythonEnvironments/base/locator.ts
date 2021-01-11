@@ -159,7 +159,7 @@ export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChan
     resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
 }
 
-interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
+interface IEmitter<E extends PythonEnvsChangedEvent> {
     fire(e: E): void;
 }
 

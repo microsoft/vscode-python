@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { Uri } from 'vscode';
+import * as path from 'path';
 import { DiscoveryVariants } from '../../../../common/experiments/groups';
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
+import { getEnvironmentDirFromPath } from '../../../common/commonUtils';
 import { inExperiment } from '../../../common/externalDependencies';
 import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
 import { PythonEnvKind } from '../../info';
@@ -62,7 +65,15 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
             // Fetching kind after deletion normally fails because the file structure around the
             // executable is no longer available, so ignore the errors.
             const kind = await this.getKind(executable).catch(() => undefined);
-            this.emitter.fire({ type, kind });
+            // Search location is intended as the directory in which the environment was found in.
+            // For eg. the search location for an env containing 'bin' or 'Scripts' directory is:
+            //
+            // searchLocation <--- Return this directory
+            //    env
+            //    |__ bin or Scripts
+            //        |__ python  <--- executable
+            const searchLocation = Uri.file(path.dirname(getEnvironmentDirFromPath(executable)));
+            this.emitter.fire({ type, kind, searchLocation });
         };
         this.disposables.push(watchLocationForPythonBinaries(root, callback, this.opts.executableBaseGlob));
     }
