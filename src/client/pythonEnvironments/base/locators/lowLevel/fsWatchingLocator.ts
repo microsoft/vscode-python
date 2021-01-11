@@ -70,11 +70,11 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
             // executable is no longer available, so ignore the errors.
             const kind = await this.getKind(executable).catch(() => undefined);
             // By default, search location particularly for virtual environments is intended as the
-            // directory in which the environment was found in.For eg.the default search location
+            // directory in which the environment was found in. For eg. the default search location
             // for an env containing 'bin' or 'Scripts' directory is:
             //
-            // searchLocation <--- Return this directory
-            //    env
+            // searchLocation <--- Default search location directory
+            // |__ env
             //    |__ bin or Scripts
             //        |__ python  <--- executable
             const searchLocation = Uri.file(
