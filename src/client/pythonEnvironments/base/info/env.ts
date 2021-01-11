@@ -297,7 +297,7 @@ export function sortByPriority(...envs: PythonEnvInfo[]): PythonEnvInfo[] {
     // one location where we define priority and
     const envKindByPriority: PythonEnvKind[] = getPrioritizedEnvKinds();
     return envs.sort(
-        (a:PythonEnvInfo, b:PythonEnvInfo) => envKindByPriority.indexOf(a.kind) - envKindByPriority.indexOf(b.kind),
+        (a: PythonEnvInfo, b: PythonEnvInfo) => envKindByPriority.indexOf(a.kind) - envKindByPriority.indexOf(b.kind),
     );
 }
 

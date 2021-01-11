@@ -18,7 +18,7 @@ const kindsByName: Record<string, PythonEnvKind> = {
     virtualenvWrapper: PythonEnvKind.VirtualEnvWrapper,
     pipenv: PythonEnvKind.Pipenv,
     conda: PythonEnvKind.Conda,
-    otherVirtual: PythonEnvKind.OtherVirtual
+    otherVirtual: PythonEnvKind.OtherVirtual,
 };
 
 /**

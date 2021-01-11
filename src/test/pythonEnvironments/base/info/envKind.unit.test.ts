@@ -74,6 +74,8 @@ suite('pyenvs info - PyEnvKind', () => {
             [
                 '',
                 'unknown',
+                'spam',
+                // Any other unsupported value goes here.
             ].forEach((name) => {
                 test(`check ${name}`, () => {
                     const kind = getKind(name);
@@ -106,10 +108,10 @@ suite('pyenvs info - PyEnvKind', () => {
 
     suite('getPrioritizedEnvKinds()', () => {
         test('all Python env kinds are covered', () => {
-            assert.equal(
-                getPrioritizedEnvKinds().length,
-                getNamesAndValues(PythonEnvKind).length,
-            );
+            const numPrioritized = getPrioritizedEnvKinds().length;
+            const numNames = getNamesAndValues(PythonEnvKind).length;
+
+            assert.equal(numPrioritized, numNames);
         });
     });
 });
