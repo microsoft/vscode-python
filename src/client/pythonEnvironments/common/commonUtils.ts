@@ -185,7 +185,7 @@ export async function getInterpreterPathFromDir(
     envDir: string,
     opt: {
         ignoreErrors?: boolean;
-    } = {}
+    } = {},
 ): Promise<string | undefined> {
     const recurseLevel = 2;
 
