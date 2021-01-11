@@ -287,6 +287,7 @@ export class TensorBoardSession {
     private createPanel() {
         const webviewPanel = window.createWebviewPanel('tensorBoardSession', 'TensorBoard', ViewColumn.Two, {
             enableScripts: true,
+            retainContextWhenHidden: true,
         });
         webviewPanel.webview.html = `<!DOCTYPE html>
         <html lang="en">
