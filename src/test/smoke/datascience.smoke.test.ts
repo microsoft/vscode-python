@@ -16,7 +16,7 @@ import { verifyExtensionIsAvailable } from './common';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
 
-suite('Datascience smoke tests', () => {
+suite('Smoke Test: Datascience', () => {
     suiteSetup(async function () {
         if (!IS_SMOKE_TEST) {
             return this.skip();
