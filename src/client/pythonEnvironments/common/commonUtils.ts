@@ -27,7 +27,6 @@ export function findInterpretersInDir(
     recurseLevel?: number,
     filterSubDir?: FileFilterFunc,
     ignoreErrors?: boolean,
-    debug = false,
 ): AsyncIterableIterator<string> {
     const cfg = {
         filterSubDir,
@@ -35,7 +34,7 @@ export function findInterpretersInDir(
         ignoreErrors: ignoreErrors || false,
     };
     // We use an initial depth of 1.
-    return iterExecutables(root, 1, cfg, debug);
+    return iterExecutables(root, 1, cfg);
 }
 
 // This function helps simplify the recursion case.
@@ -48,18 +47,11 @@ async function* iterExecutables(
         maxDepth: number | undefined;
         ignoreErrors: boolean;
     },
-    debug = false,
 ): AsyncIterableIterator<string> {
-    if (debug) {
-        console.log(`iterating "${root}"`);
-    }
     let entries: Dirent[];
     try {
         entries = await listDir(root);
     } catch (err) {
-        if (debug) {
-            console.log(`failed: ${err}`);
-        }
         // Treat a missing directory as empty.
         if (err.code === 'ENOENT') {
             return;
@@ -69,15 +61,6 @@ async function* iterExecutables(
             return;
         }
         throw err; // re-throw
-    }
-    if (debug) {
-        entries.forEach((entry) => {
-            if (entry.isDirectory()) {
-                console.log(`  (dir) "${entry.name}"`);
-            } else {
-                console.log(`  "${entry.name}"`);
-            }
-        });
     }
 
     // "checkBin" is a local variable rather than global
@@ -97,7 +80,7 @@ async function* iterExecutables(
         if (entry.isDirectory()) {
             if (cfg.maxDepth && currentDepth <= cfg.maxDepth) {
                 if (matchFile(filename, cfg.filterSubDir, cfg.ignoreErrors)) {
-                    yield* iterExecutables(filename, currentDepth + 1, cfg, debug);
+                    yield* iterExecutables(filename, currentDepth + 1, cfg);
                 }
             }
         } else if (entry.isFile()) {
@@ -105,17 +88,11 @@ async function* iterExecutables(
                 yield filename;
             }
         } else if (entry.isSymbolicLink()) {
-            if (debug) {
-                console.log(`symlink "${entry.name}"`);
-            }
             if (checkBin(filename)) {
                 yield filename;
             }
         } else {
             // We ignore all other file types.
-            if (debug) {
-                console.log(`ignored "${entry.name}"`);
-            }
         }
     }
 }
@@ -215,14 +192,12 @@ export async function getInterpreterPathFromDir(
     // Ignore any folders or files that not directly python binary related.
     function filterDir(dirname: string): boolean {
         const lower = path.basename(dirname).toLowerCase();
-        console.log(`checking "${lower}" (${dirname})`);
         return ['bin', 'scripts'].includes(lower);
     }
 
     // Search in the sub-directories for python binary
-    const executables = findInterpretersInDir(envDir, recurseLevel, filterDir, opt.ignoreErrors, true);
+    const executables = findInterpretersInDir(envDir, recurseLevel, filterDir, opt.ignoreErrors);
     for await (const bin of executables) {
-        console.log(`found "${bin}"`);
         if (isStandardPythonBinary(bin)) {
             return bin;
         }
