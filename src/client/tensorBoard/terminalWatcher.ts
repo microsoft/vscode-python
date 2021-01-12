@@ -13,7 +13,7 @@ export class TerminalWatcher implements IExtensionSingleActivationService, IDisp
     constructor(@inject(IDisposableRegistry) private disposables: IDisposableRegistry) {}
 
     public async activate(): Promise<void> {
-        this.handle = setInterval(() => {
+        const handle = setInterval(() => {
             // When user runs a command in VSCode terminal, the terminal's name
             // becomes the program that is currently running. Since tensorboard
             // stays running in the terminal while the webapp is running and
@@ -23,8 +23,10 @@ export class TerminalWatcher implements IExtensionSingleActivationService, IDisp
             const matches = window.terminals.filter((terminal) => terminal.name === 'tensorboard');
             if (matches.length > 0) {
                 sendTelemetryEvent(EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL);
+                clearInterval(handle); // Only need telemetry sent once per VS Code session
             }
-        }, 300_000);
+        }, 100);
+        this.handle = handle;
         this.disposables.push(this);
     }
 
