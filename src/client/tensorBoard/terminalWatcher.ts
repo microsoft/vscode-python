@@ -9,22 +9,22 @@ import { EventName } from '../telemetry/constants';
 @injectable()
 export class TerminalWatcher implements IExtensionSingleActivationService, IDisposable {
     private handle: NodeJS.Timeout | undefined;
-    
+
     constructor(@inject(IDisposableRegistry) private disposables: IDisposableRegistry) {}
-    
+
     public async activate(): Promise<void> {
         this.handle = setInterval(() => {
             // When user runs a command in VSCode terminal, the terminal's name
             // becomes the program that is currently running. Since tensorboard
-            // stays running in the terminal while the webapp is running and 
+            // stays running in the terminal while the webapp is running and
             // until the user kills it, the terminal with the updated name should
             // stick around for long enough that we only need to run this check
-            // every 5 min or so 
+            // every 5 min or so
             const matches = window.terminals.filter((terminal) => terminal.name === 'tensorboard');
             if (matches.length > 0) {
                 sendTelemetryEvent(EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL);
             }
-        }, 300_000); 
+        }, 300_000);
         this.disposables.push(this);
     }
 
