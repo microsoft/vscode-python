@@ -172,13 +172,14 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
 
     // Call callback if an environment gets created within the resource provided.
     public onDidCreate(resource: Resource, callback: () => void): vscode.Disposable | undefined {
+        const workspaceFolder = resource ? vscode.workspace.getWorkspaceFolder(resource) : undefined;
         return this.enabled
             ? this.api.onChanged((e) => {
                   if (
                       e.type === FileChangeType.Created &&
-                      resource &&
+                      workspaceFolder &&
                       e.searchLocation &&
-                      isParentPath(e.searchLocation.fsPath, resource.fsPath)
+                      isParentPath(e.searchLocation.fsPath, workspaceFolder.uri.fsPath)
                   ) {
                       callback();
                   }
