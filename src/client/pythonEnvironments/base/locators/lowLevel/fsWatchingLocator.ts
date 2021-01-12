@@ -39,11 +39,8 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
              * Time to wait before handling an environment-created event.
              */
             delayOnCreated?: number; // milliseconds
-            /**
-             * FS watcher kind to control global and workspace locators.
-             */
-            watcherKind: FSWatcherKind;
-        },
+        } = {},
+        private readonly watcherKind: FSWatcherKind = FSWatcherKind.Global,
     ) {
         super();
     }
@@ -57,7 +54,7 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
 
         // Enable all workspace watchers.
         let enableGlobalWatchers = true;
-        if (this.opts.watcherKind === FSWatcherKind.Global) {
+        if (this.watcherKind === FSWatcherKind.Global) {
             // Enable global watchers only if the experiment allows it.
             enableGlobalWatchers = await inExperiment(DiscoveryVariants.discoverWithFileWatching);
         }

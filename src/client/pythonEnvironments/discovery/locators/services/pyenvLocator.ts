@@ -6,7 +6,7 @@ import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../..
 import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { IPythonEnvsIterator } from '../../../base/locator';
-import { FSWatcherKind, FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
+import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import {
     getEnvironmentDirFromPath,
     getInterpreterPathFromDir,
@@ -301,7 +301,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
 
 export class PyenvLocator extends FSWatchingLocator {
     constructor() {
-        super(getPyenvVersionsDir, async () => PythonEnvKind.Pyenv, { watcherKind: FSWatcherKind.Global });
+        super(getPyenvVersionsDir, async () => PythonEnvKind.Pyenv);
     }
 
     // eslint-disable-next-line class-methods-use-this

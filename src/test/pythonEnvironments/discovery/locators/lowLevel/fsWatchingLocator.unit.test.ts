@@ -34,9 +34,8 @@ suite('File System Watching Locator Tests', () => {
             super(
                 () => '/this/is/a/fake/path',
                 async () => Promise.resolve(PythonEnvKind.System),
-                {
-                    watcherKind,
-                },
+                {},
+                watcherKind,
             );
         }
 
