@@ -168,7 +168,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         );
     }
 
-    // VirtualEnvironmentPrompt
+    // For use in VirtualEnvironmentPrompt.activate()
 
     // Call callback if an environment gets created within the resource provided.
     public onDidCreate(resource: Resource, callback: () => void): vscode.Disposable | undefined {
@@ -189,7 +189,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         });
     }
 
-    // IInterpreterLocatorProgressHandler
+    // Implements IInterpreterLocatorProgressHandler
 
     // A result of `undefined` means "Fall back to the old code!"
     public get onRefreshing(): vscode.Event<void> | undefined {
@@ -200,7 +200,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return this.enabled ? this.refreshed.event : undefined;
     }
 
-    // IInterpreterHelper
+    // Implements IInterpreterHelper
 
     // A result of `undefined` means "Fall back to the old code!"
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
@@ -226,7 +226,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return isMacDefaultPythonPath(pythonPath);
     }
 
-    // IInterpreterService
+    // Implements IInterpreterService
 
     // We use the same getInterpreters() here as for IInterpreterLocatorService.
 
@@ -252,7 +252,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return convertEnvInfo(env);
     }
 
-    // ICondaService
+    // Implements ICondaService
 
     // A result of `undefined` means "Fall back to the old code!"
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined> {
@@ -285,7 +285,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return { name: '', path: location };
     }
 
-    // IWindowsStoreInterpreter
+    // Implements IWindowsStoreInterpreter
 
     // A result of `undefined` means "Fall back to the old code!"
     public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined> {
@@ -297,7 +297,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return isWindowsStoreEnvironment(pythonPath);
     }
 
-    // IInterpreterLocatorService
+    // Implements IInterpreterLocatorService
 
     // A result of `undefined` means "Fall back to the old code!"
     public get hasInterpreters(): Promise<boolean | undefined> {
