@@ -340,7 +340,6 @@ src/client/interpreter/configuration/interpreterSelector/commands/setInterpreter
 src/client/interpreter/configuration/interpreterSelector/commands/resetInterpreter.ts
 src/client/interpreter/configuration/interpreterSelector/commands/setShebangInterpreter.ts
 src/client/interpreter/configuration/interpreterSelector/interpreterSelector.ts
-src/client/interpreter/configuration/pythonPathUpdaterService.ts
 src/client/interpreter/configuration/pythonPathUpdaterServiceFactory.ts
 src/client/interpreter/configuration/services/globalUpdaterService.ts
 src/client/interpreter/configuration/services/workspaceUpdaterService.ts

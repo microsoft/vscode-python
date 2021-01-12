@@ -15,8 +15,11 @@ import { IPythonPathUpdaterServiceFactory, IPythonPathUpdaterServiceManager } fr
 @injectable()
 export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManager {
     private readonly pythonPathSettingsUpdaterFactory: IPythonPathUpdaterServiceFactory;
+
     private readonly interpreterVersionService: IInterpreterVersionService;
+
     private readonly executionFactory: IPythonExecutionFactory;
+
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.pythonPathSettingsUpdaterFactory = serviceContainer.get<IPythonPathUpdaterServiceFactory>(
             IPythonPathUpdaterServiceFactory,
@@ -24,6 +27,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         this.interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
         this.executionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
     }
+
     public async updatePythonPath(
         pythonPath: string | undefined,
         configTarget: ConfigurationTarget,
@@ -47,6 +51,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
             traceError('Python Extension: sendTelemetry', ex),
         );
     }
+
     private async sendTelemetry(
         duration: number,
         failed: boolean,
@@ -79,6 +84,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         }
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER, duration, telemetryProperties);
     }
+
     private getPythonUpdaterService(configTarget: ConfigurationTarget, wkspace?: Uri) {
         switch (configTarget) {
             case ConfigurationTarget.Global: {
