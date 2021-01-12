@@ -5,7 +5,8 @@ import { injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { DiscoveryVariants } from '../common/experiments/groups';
-import { IDisposableRegistry } from '../common/types';
+import { FileChangeType } from '../common/platform/fileSystemWatcher';
+import { IDisposableRegistry, Resource } from '../common/types';
 import { getVersionString, parseVersion } from '../common/utils/version';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -36,7 +37,7 @@ import { ILocator, PythonLocatorQuery } from './base/locator';
 import { isMacDefaultPythonPath } from './base/locators/lowLevel/macDefaultLocator';
 import { getEnvs } from './base/locatorUtils';
 import { getEnvironmentDirFromPath } from './common/commonUtils';
-import { inExperiment } from './common/externalDependencies';
+import { inExperiment, isParentPath } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
@@ -165,6 +166,24 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
                 getEnvs(this.api.iterEnvs(query)).ignoreErrors();
             }),
         );
+    }
+
+    // VirtualEnvironmentPrompt
+
+    // Call callback if an environment gets created within the resource provided.
+    public onDidCreate(resource: Resource, callback: () => void): vscode.Disposable | undefined {
+        return this.enabled
+            ? this.api.onChanged((e) => {
+                  if (
+                      e.type === FileChangeType.Created &&
+                      resource &&
+                      e.searchLocation &&
+                      isParentPath(e.searchLocation.fsPath, resource.fsPath)
+                  ) {
+                      callback();
+                  }
+              })
+            : undefined;
     }
 
     // IInterpreterLocatorProgressHandler

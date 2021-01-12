@@ -30,6 +30,8 @@ export interface IVirtualEnvironmentsSearchPathProvider {
 
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
+    // VirtualEnvPrompt
+    onDidCreate(resource: Resource, callback: () => void): Disposable | undefined;
     // IInterpreterLocatorService
     hasInterpreters: Promise<boolean | undefined>;
     getInterpreters(resource?: Uri): Promise<PythonEnvironment[] | undefined>;
