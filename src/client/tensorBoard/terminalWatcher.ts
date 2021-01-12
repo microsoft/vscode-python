@@ -25,7 +25,7 @@ export class TerminalWatcher implements IExtensionSingleActivationService, IDisp
                 sendTelemetryEvent(EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL);
                 clearInterval(handle); // Only need telemetry sent once per VS Code session
             }
-        }, 100);
+        }, 300_000);
         this.handle = handle;
         this.disposables.push(this);
     }
