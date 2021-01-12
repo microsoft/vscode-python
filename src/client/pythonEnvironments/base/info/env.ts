@@ -7,20 +7,9 @@ import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
 import { parseVersionFromExecutable } from './executable';
-import {
-    areEqualVersions,
-    areEquivalentVersions,
-    isVersionEmpty,
-} from './pythonVersion';
+import { areEqualVersions, areEquivalentVersions, isVersionEmpty } from './pythonVersion';
 
-import {
-    FileInfo,
-    PythonDistroInfo,
-    PythonEnvInfo,
-    PythonEnvKind,
-    PythonReleaseLevel,
-    PythonVersion,
-} from '.';
+import { FileInfo, PythonDistroInfo, PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion } from '.';
 
 /**
  * Create a new info object with all values empty.
@@ -34,7 +23,7 @@ export function buildEnvInfo(init?: {
     version?: PythonVersion;
     org?: string;
     arch?: Architecture;
-    fileInfo?: {ctime:number, mtime:number}
+    fileInfo?: { ctime: number; mtime: number };
 }): PythonEnvInfo {
     const env = {
         name: '',
@@ -76,7 +65,7 @@ export function buildEnvInfo(init?: {
 export function copyEnvInfo(
     env: PythonEnvInfo,
     updates?: {
-        kind?: PythonEnvKind,
+        kind?: PythonEnvKind;
     },
 ): PythonEnvInfo {
     // We don't care whether or not extra/hidden properties
@@ -88,12 +77,15 @@ export function copyEnvInfo(
     return copied;
 }
 
-function updateEnv(env: PythonEnvInfo, updates: {
-    kind?: PythonEnvKind;
-    executable?: string;
-    location?: string;
-    version?: PythonVersion;
-}): void {
+function updateEnv(
+    env: PythonEnvInfo,
+    updates: {
+        kind?: PythonEnvKind;
+        executable?: string;
+        location?: string;
+        version?: PythonVersion;
+    },
+): void {
     if (updates.kind !== undefined) {
         env.kind = updates.kind;
     }
@@ -112,9 +104,7 @@ function updateEnv(env: PythonEnvInfo, updates: {
  * Determine the corresponding Python executable filename, if any.
  */
 export function getEnvExecutable(env: string | Partial<PythonEnvInfo>): string {
-    const executable = typeof env === 'string'
-        ? env
-        : env.executable?.filename || '';
+    const executable = typeof env === 'string' ? env : env.executable?.filename || '';
     if (executable === '') {
         return '';
     }
@@ -224,9 +214,7 @@ export async function getMaxDerivedEnvInfo(minimal: PythonEnvInfo): Promise<Pyth
  *
  * The returned function is compatible with `Array.filter()`.
  */
-export function getEnvMatcher(
-    query: string | Partial<PythonEnvInfo>,
-): (env: PythonEnvInfo) => boolean {
+export function getEnvMatcher(query: string | Partial<PythonEnvInfo>): (env: PythonEnvInfo) => boolean {
     const executable = getEnvExecutable(query);
     if (executable === '') {
         // We could throw an exception error, but skipping it is fine.
@@ -241,10 +229,7 @@ export function getEnvMatcher(
 /**
  * Decide if the two sets of executables for the given envs are the same.
  */
-export function haveSameExecutables(
-    envs1: PythonEnvInfo[],
-    envs2: PythonEnvInfo[],
-): boolean {
+export function haveSameExecutables(envs1: PythonEnvInfo[], envs2: PythonEnvInfo[]): boolean {
     if (envs1.length !== envs2.length) {
         return false;
     }
@@ -291,8 +276,8 @@ export function areSameEnv(
         const rightVersion = typeof right === 'string' ? undefined : right.version;
         if (leftVersion && rightVersion) {
             if (
-                areEqualVersions(leftVersion, rightVersion)
-                || (allowPartialMatch && areEquivalentVersions(leftVersion, rightVersion))
+                areEqualVersions(leftVersion, rightVersion) ||
+                (allowPartialMatch && areEquivalentVersions(leftVersion, rightVersion))
             ) {
                 return true;
             }

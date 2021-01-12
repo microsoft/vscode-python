@@ -23,7 +23,7 @@ export abstract class LanguageServerPackageService implements ILanguageServerPac
     constructor(
         protected readonly serviceContainer: IServiceContainer,
         protected readonly appEnv: IApplicationEnvironment,
-        protected readonly platform: IPlatformService
+        protected readonly platform: IPlatformService,
     ) {}
 
     public abstract getNugetPackageName(): string;
@@ -80,7 +80,7 @@ export abstract class LanguageServerPackageService implements ILanguageServerPac
             package: LanguageServerDownloadChannel.stable,
             uri: `${azureCDNBlobStorageAccount}/${
                 LanguageServerDownloadChannel.stable
-            }/${this.getNugetPackageName()}.${minimumVersion}.nupkg`
+            }/${this.getNugetPackageName()}.${minimumVersion}.nupkg`,
         };
     }
 }

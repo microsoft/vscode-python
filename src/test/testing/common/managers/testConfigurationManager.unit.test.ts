@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import * as TypeMoq from 'typemoq';
 import { OutputChannel, Uri } from 'vscode';
 import { IInstaller, IOutputChannel, Product } from '../../../../client/common/types';
@@ -48,7 +46,7 @@ suite('Unit Test Configuration Manager (unit)', () => {
                 manager = new MockTestConfigurationManager(
                     workspaceUri,
                     product as UnitTestProduct,
-                    serviceContainer.object
+                    serviceContainer.object,
                 );
             });
 

@@ -1,18 +1,13 @@
+/* eslint-disable max-classes-per-file */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 'use strict';
 
-// tslint:disable:no-any max-classes-per-file max-func-body-length no-invalid-this
-
 import { expect } from 'chai';
 import * as path from 'path';
-import {
-    anything, instance, mock, verify, when,
-} from 'ts-mockito';
-import {
-    Disposable, FileSystemWatcher, Uri, WorkspaceFolder,
-} from 'vscode';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { Disposable, FileSystemWatcher, Uri, WorkspaceFolder } from 'vscode';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { isUnitTestExecution } from '../../../../client/common/constants';
 import { PlatformService } from '../../../../client/common/platform/platformService';
@@ -58,7 +53,7 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         when(platformService.isMac).thenReturn(os === OSType.OSX);
 
         class FSWatcher {
-            // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
+            // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
             public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
@@ -73,6 +68,7 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
 
         const fsWatcher = mock(FSWatcher);
         when(workspaceService.createFileSystemWatcher(anything())).thenReturn(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             instance((fsWatcher as any) as FileSystemWatcher),
         );
 
@@ -113,9 +109,10 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         when(platformService.isMac).thenReturn(os === OSType.OSX);
 
         class FSWatcher {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             private listener?: (e: Uri) => any;
 
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
             public onDidCreate(listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 this.listener = listener;
                 return { dispose: noop };
@@ -127,6 +124,7 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         }
         const fsWatcher = new FSWatcher();
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(workspaceService.createFileSystemWatcher(anything())).thenReturn((fsWatcher as any) as FileSystemWatcher);
         await watcher.register(undefined);
         let invoked = false;

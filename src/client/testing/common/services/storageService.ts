@@ -9,7 +9,7 @@ import {
     ITestCollectionStorageService,
     TestFunction,
     Tests,
-    TestSuite
+    TestSuite,
 } from './../types';
 
 @injectable()
@@ -19,7 +19,7 @@ export class TestCollectionStorageService implements ITestCollectionStorageServi
 
     constructor(
         @inject(IDisposableRegistry) disposables: Disposable[],
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
     ) {
         disposables.push(this);
     }

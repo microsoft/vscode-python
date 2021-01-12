@@ -5,11 +5,7 @@ import * as assert from 'assert';
 import { exec } from 'child_process';
 import { zip } from 'lodash';
 import { promisify } from 'util';
-import {
-    PythonEnvInfo,
-    PythonVersion,
-    UNKNOWN_PYTHON_VERSION,
-} from '../../../../client/pythonEnvironments/base/info';
+import { PythonEnvInfo, PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../../client/pythonEnvironments/base/info';
 import { getEmptyVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
 
 const execAsync = promisify(exec);

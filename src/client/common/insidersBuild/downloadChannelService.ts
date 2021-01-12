@@ -18,7 +18,7 @@ export class ExtensionChannelService implements IExtensionChannelService {
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IDisposableRegistry) disposables: IDisposable[]
+        @inject(IDisposableRegistry) disposables: IDisposable[],
     ) {
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
     }
@@ -33,7 +33,7 @@ export class ExtensionChannelService implements IExtensionChannelService {
             .inspect<ExtensionChannels>(insidersChannelSetting);
         if (!settings) {
             throw new Error(
-                `WorkspaceConfiguration.inspect returns 'undefined' for setting 'python.${insidersChannelSetting}'`
+                `WorkspaceConfiguration.inspect returns 'undefined' for setting 'python.${insidersChannelSetting}'`,
             );
         }
         return !settings.globalValue;

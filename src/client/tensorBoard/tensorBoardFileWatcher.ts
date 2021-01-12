@@ -8,6 +8,7 @@ import { IWorkspaceService } from '../common/application/types';
 import { NativeTensorBoard } from '../common/experiments/groups';
 import { traceError } from '../common/logger';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
+import { TensorBoardEntrypointTrigger } from './constants';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 
 @injectable()
@@ -22,7 +23,7 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(TensorBoardPrompt) private tensorBoardPrompt: TensorBoardPrompt,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IExperimentService) private experimentService: IExperimentService
+        @inject(IExperimentService) private experimentService: IExperimentService,
     ) {}
 
     public async activate(): Promise<void> {
@@ -50,7 +51,7 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
 
         // If workspace folders change, ensure we update our FileSystemWatchers
         this.disposables.push(
-            this.workspaceService.onDidChangeWorkspaceFolders((e) => this.updateFileSystemWatchers(e))
+            this.workspaceService.onDidChangeWorkspaceFolders((e) => this.updateFileSystemWatchers(e)),
         );
     }
 
@@ -59,13 +60,13 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
             for (const pattern of [this.globPattern1, this.globPattern2]) {
                 const matches = await this.workspaceService.findFiles(pattern, undefined, 1);
                 if (matches.length > 0) {
-                    await this.tensorBoardPrompt.showNativeTensorBoardPrompt();
+                    await this.tensorBoardPrompt.showNativeTensorBoardPrompt(TensorBoardEntrypointTrigger.tfeventfiles);
                     return;
                 }
             }
         } catch (e) {
             traceError(
-                `Failed to prompt to launch TensorBoard session based on preexisting tfevent files in workspace: ${e}`
+                `Failed to prompt to launch TensorBoard session based on preexisting tfevent files in workspace: ${e}`,
             );
         }
     }
@@ -91,10 +92,14 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
 
             // When a file is created or changed that matches `this.globPattern`, try to show our prompt
             this.disposables.push(
-                fileSystemWatcher.onDidCreate(() => this.tensorBoardPrompt.showNativeTensorBoardPrompt())
+                fileSystemWatcher.onDidCreate(() =>
+                    this.tensorBoardPrompt.showNativeTensorBoardPrompt(TensorBoardEntrypointTrigger.tfeventfiles),
+                ),
             );
             this.disposables.push(
-                fileSystemWatcher.onDidChange(() => this.tensorBoardPrompt.showNativeTensorBoardPrompt())
+                fileSystemWatcher.onDidChange(() =>
+                    this.tensorBoardPrompt.showNativeTensorBoardPrompt(TensorBoardEntrypointTrigger.tfeventfiles),
+                ),
             );
             this.disposables.push(fileSystemWatcher);
             fileWatchers.push(fileSystemWatcher);

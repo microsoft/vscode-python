@@ -25,11 +25,7 @@ export function watchLocationForPythonBinaries(
         throw new Error('Glob basename contains invalid characters');
     }
     function callbackClosure(type: FileChangeType, e: string) {
-        const isMatch = minimatch(
-            path.basename(e),
-            executableBaseGlob,
-            { nocase: getOSType() === OSType.Windows },
-        );
+        const isMatch = minimatch(path.basename(e), executableBaseGlob, { nocase: getOSType() === OSType.Windows });
         if (!isMatch) {
             // When deleting the file for some reason path to all directories leading up to python are reported
             // Skip those events
@@ -39,16 +35,8 @@ export function watchLocationForPythonBinaries(
     }
 
     return new Disposables(
-        ...[
-            executableBaseGlob,
-            `*/${executableBaseGlob}`,
-            `*/${binName}/${executableBaseGlob}`,
-        ].map(
-            (pattern) => watchLocationForPattern(
-                baseDir,
-                pattern,
-                callbackClosure,
-            ),
+        ...[executableBaseGlob, `*/${executableBaseGlob}`, `*/${binName}/${executableBaseGlob}`].map((pattern) =>
+            watchLocationForPattern(baseDir, pattern, callbackClosure),
         ),
     );
 }

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-invalid-template-strings no-any no-object-literal-type-assertion no-invalid-this
-
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
@@ -62,7 +60,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 workspaceService.object,
                 documentManager.object,
                 platformService.object,
-                configurationService.object
+                configurationService.object,
             );
         });
 
@@ -99,16 +97,16 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         const attach: Partial<AttachRequestArguments> = {
             name: 'Python attach',
             type: 'python',
-            request: 'attach'
+            request: 'attach',
         };
 
         async function resolveDebugConfiguration(
             workspaceFolder: WorkspaceFolder | undefined,
-            attachConfig: Partial<AttachRequestArguments>
+            attachConfig: Partial<AttachRequestArguments>,
         ) {
             let config = await debugProvider.resolveDebugConfiguration!(
                 workspaceFolder,
-                attachConfig as DebugConfiguration
+                attachConfig as DebugConfiguration,
             );
             if (config === undefined || config === null) {
                 return config;
@@ -129,7 +127,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
-                request: 'attach'
+                request: 'attach',
             });
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
@@ -144,7 +142,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([]);
 
             const debugConfig = await resolveDebugConfiguration(undefined, {
-                request: 'attach'
+                request: 'attach',
             });
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.least(3);
@@ -158,7 +156,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([]);
 
             const debugConfig = await resolveDebugConfiguration(undefined, {
-                request: 'attach'
+                request: 'attach',
             });
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.least(3);
@@ -174,7 +172,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([]);
 
             const debugConfig = await resolveDebugConfiguration(undefined, {
-                request: 'attach'
+                request: 'attach',
             });
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.least(3);
@@ -191,7 +189,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
 
             const debugConfig = await resolveDebugConfiguration(undefined, {
-                request: 'attach'
+                request: 'attach',
             });
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.least(3);
@@ -208,7 +206,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             const debugConfig = await resolveDebugConfiguration(undefined, {
                 ...attach,
-                connect: { host: 'localhost', port: 5678 }
+                connect: { host: 'localhost', port: 5678 },
             });
 
             expect(debugConfig).to.not.have.property('host', 'localhost');
@@ -222,7 +220,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             const debugConfig = await resolveDebugConfiguration(undefined, {
                 ...attach,
-                listen: { host: 'localhost', port: 5678 }
+                listen: { host: 'localhost', port: 5678 },
             } as AttachRequestArguments);
 
             expect(debugConfig).to.not.have.property('host', 'localhost');
@@ -238,7 +236,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const localRoot = `Debug_PythonPath_${new Date().toString()}`;
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...attach,
-                localRoot
+                localRoot,
             });
 
             expect(debugConfig).to.have.property('localRoot', localRoot);
@@ -256,7 +254,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                     ...attach,
                     localRoot,
-                    host
+                    host,
                 });
 
                 expect(debugConfig).to.have.property('localRoot', localRoot);
@@ -280,7 +278,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                     ...attach,
                     localRoot,
-                    host
+                    host,
                 });
                 const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
 
@@ -303,7 +301,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                     ...attach,
                     localRoot,
-                    host
+                    host,
                 });
                 const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
 
@@ -324,13 +322,13 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
                 const localRoot = `Debug_PythonPath_${new Date().toString()}`;
                 const debugPathMappings = [
-                    { localRoot: path.join('${workspaceFolder}', localRoot), remoteRoot: '/app/' }
+                    { localRoot: path.join('${workspaceFolder}', localRoot), remoteRoot: '/app/' },
                 ];
                 const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                     ...attach,
                     localRoot,
                     pathMappings: debugPathMappings,
-                    host
+                    host,
                 });
                 const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
 
@@ -351,13 +349,13 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
                 const localRoot = `Debug_PythonPath_${new Date().toString()}`;
                 const debugPathMappings = [
-                    { localRoot: path.join('${workspaceFolder}', localRoot), remoteRoot: '/app/' }
+                    { localRoot: path.join('${workspaceFolder}', localRoot), remoteRoot: '/app/' },
                 ];
                 const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                     ...attach,
                     localRoot,
                     pathMappings: debugPathMappings,
-                    host
+                    host,
                 });
                 const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
 
@@ -377,7 +375,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                     ...attach,
                     localRoot,
-                    host
+                    host,
                 });
                 const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
 
@@ -398,7 +396,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                     ...attach,
                     localRoot,
-                    host
+                    host,
                 });
 
                 expect(debugConfig).to.have.property('localRoot', localRoot);
@@ -419,7 +417,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...attach,
                 localRoot,
-                remoteRoot
+                remoteRoot,
             });
 
             expect(debugConfig!.pathMappings).to.be.lengthOf(1);
@@ -438,7 +436,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...attach,
                 localRoot,
-                remoteRoot
+                remoteRoot,
             });
 
             expect(debugConfig!.pathMappings).to.be.lengthOf(1);
@@ -455,7 +453,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const remoteRoot = `Debug_PythonPath_${new Date().toString()}`;
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...attach,
-                remoteRoot
+                remoteRoot,
             });
 
             expect(debugConfig).to.have.property('remoteRoot', remoteRoot);
@@ -471,7 +469,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const port = 12341234;
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...attach,
-                port
+                port,
             });
 
             expect(debugConfig).to.have.property('port', port);
@@ -489,7 +487,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const expectedDebugOptions = debugOptions.slice();
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...attach,
-                debugOptions
+                debugOptions,
             });
 
             expect(debugConfig).to.have.property('debugOptions').to.be.deep.equal(expectedDebugOptions);
@@ -499,48 +497,48 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             {
                 justMyCode: false,
                 debugStdLib: true,
-                expectedResult: false
+                expectedResult: false,
             },
             {
                 justMyCode: false,
                 debugStdLib: false,
-                expectedResult: false
+                expectedResult: false,
             },
             {
                 justMyCode: false,
                 debugStdLib: undefined,
-                expectedResult: false
+                expectedResult: false,
             },
             {
                 justMyCode: true,
                 debugStdLib: false,
-                expectedResult: true
+                expectedResult: true,
             },
             {
                 justMyCode: true,
                 debugStdLib: true,
-                expectedResult: true
+                expectedResult: true,
             },
             {
                 justMyCode: true,
                 debugStdLib: undefined,
-                expectedResult: true
+                expectedResult: true,
             },
             {
                 justMyCode: undefined,
                 debugStdLib: false,
-                expectedResult: true
+                expectedResult: true,
             },
             {
                 justMyCode: undefined,
                 debugStdLib: true,
-                expectedResult: false
+                expectedResult: false,
             },
             {
                 justMyCode: undefined,
                 debugStdLib: undefined,
-                expectedResult: true
-            }
+                expectedResult: true,
+            },
         ];
         test('Ensure justMyCode property is correctly derived from debugStdLib', async () => {
             const activeFile = 'xyz.py';
@@ -558,7 +556,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     ...attach,
                     debugOptions,
                     justMyCode: testParams.justMyCode,
-                    debugStdLib: testParams.debugStdLib
+                    debugStdLib: testParams.debugStdLib,
                 });
                 expect(debugConfig).to.have.property('justMyCode', testParams.expectedResult);
             });

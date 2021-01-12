@@ -56,13 +56,13 @@ export namespace vscUri {
             if (ret.authority) {
                 if (!_singleSlashStart.test(ret.path)) {
                     throw new Error(
-                        '[UriError]: If a URI contains an authority component, then the path component must either be empty or begin with a slash ("/") character'
+                        '[UriError]: If a URI contains an authority component, then the path component must either be empty or begin with a slash ("/") character',
                     );
                 }
             } else {
                 if (_doubleSlashStart.test(ret.path)) {
                     throw new Error(
-                        '[UriError]: If a URI does not contain an authority component, then the path cannot begin with two slash characters ("//")'
+                        '[UriError]: If a URI does not contain an authority component, then the path cannot begin with two slash characters ("//")',
                     );
                 }
             }
@@ -78,7 +78,6 @@ export namespace vscUri {
             return scheme || _empty;
         }
         if (!scheme) {
-            // tslint:disable-next-line: no-console
             console.trace('BAD uri lacks scheme, falling back to file-scheme.');
             scheme = 'file';
         }
@@ -123,7 +122,7 @@ export namespace vscUri {
      *       / \ /                        \
      *       urn:example:animal:ferret:nose
      */
-    // tslint:disable-next-line: no-use-before-declare
+
     export class URI implements UriComponents {
         static isUri(thing: any): thing is URI {
             if (thing instanceof URI) {
@@ -180,7 +179,7 @@ export namespace vscUri {
             path?: string,
             query?: string,
             fragment?: string,
-            _strict?: boolean
+            _strict?: boolean,
         );
 
         /**
@@ -197,7 +196,7 @@ export namespace vscUri {
             path?: string,
             query?: string,
             fragment?: string,
-            _strict: boolean = false
+            _strict: boolean = false,
         ) {
             if (typeof schemeOrData === 'object') {
                 this.scheme = schemeOrData.scheme || _empty;
@@ -325,7 +324,7 @@ export namespace vscUri {
                 decodeURIComponent(match[5] || _empty),
                 decodeURIComponent(match[7] || _empty),
                 decodeURIComponent(match[9] || _empty),
-                _strict
+                _strict,
             );
         }
 
@@ -388,7 +387,7 @@ export namespace vscUri {
                 components.authority,
                 components.path,
                 components.query,
-                components.fragment
+                components.fragment,
             );
         }
 
@@ -461,7 +460,6 @@ export namespace vscUri {
 
     const _pathSepMarker = isWindows ? 1 : undefined;
 
-    // tslint:disable-next-line:class-name
     class _URI extends URI {
         _formatted: string | null = null;
         _fsPath: string | null = null;
@@ -471,7 +469,7 @@ export namespace vscUri {
             path?: string,
             query?: string,
             fragment?: string,
-            _strict: boolean = false
+            _strict: boolean = false,
         ) {
             super(schemeOrData as any, authority, path, query, fragment, _strict);
             this._fsPath = this.fsPath;
@@ -497,7 +495,7 @@ export namespace vscUri {
 
         toJSON(): UriComponents {
             const res = <UriState>{
-                $mid: 1
+                $mid: 1,
             };
             // cached state
             if (this._fsPath) {
@@ -551,7 +549,7 @@ export namespace vscUri {
         [CharCode.Semicolon]: '%3B',
         [CharCode.Equals]: '%3D',
 
-        [CharCode.Space]: '%20'
+        [CharCode.Space]: '%20',
     };
 
     function encodeURIComponentFast(uriComponent: string, allowSlash: boolean): string {

@@ -24,7 +24,6 @@ const multirootPath = path.join(__dirname, '..', '..', '..', '..', 'src', 'testM
 const workspace4Path = Uri.file(path.join(multirootPath, 'workspace4'));
 const workspace4PyFile = Uri.file(path.join(workspace4Path.fsPath, 'one.py'));
 
-// tslint:disable-next-line:max-func-body-length
 suite('PythonExecutableService', () => {
     let serviceContainer: IServiceContainer;
     let configService: IConfigurationService;
@@ -32,7 +31,6 @@ suite('PythonExecutableService', () => {
 
     suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
-            // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
         await clearPythonPathInWorkspaceFolder(workspace4Path);
@@ -60,13 +58,13 @@ suite('PythonExecutableService', () => {
             'envFile',
             'someInvalidFile.env',
             workspace4PyFile,
-            ConfigurationTarget.WorkspaceFolder
+            ConfigurationTarget.WorkspaceFolder,
         );
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], {
             cwd: path.dirname(workspace4PyFile.fsPath),
-            throwOnStdErr: true
+            throwOnStdErr: true,
         });
 
         await expect(promise).to.eventually.be.rejectedWith(StdErrError);
@@ -76,7 +74,6 @@ suite('PythonExecutableService', () => {
         // This test has not been working for many months in Python 2.7 under
         // Windows. Tracked by #2547.
         if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
 
@@ -84,7 +81,7 @@ suite('PythonExecutableService', () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], {
             cwd: path.dirname(workspace4PyFile.fsPath),
-            throwOnStdErr: true
+            throwOnStdErr: true,
         });
 
         await expect(promise).to.eventually.have.property('stdout', `Hello${EOL}`);
@@ -104,7 +101,7 @@ suite('PythonExecutableService', () => {
         const randomModuleIsInstalled = pythonExecService.isModuleInstalled(randomModuleName);
         await expect(randomModuleIsInstalled).to.eventually.equal(
             false,
-            `Random module '${randomModuleName}' is installed`
+            `Random module '${randomModuleName}' is installed`,
         );
     });
 

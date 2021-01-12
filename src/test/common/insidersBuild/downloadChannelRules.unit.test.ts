@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { assert } from 'chai';
 import { instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
@@ -14,7 +12,7 @@ import {
     ExtensionInsidersWeeklyChannelRule,
     frequencyForDailyInsidersCheck,
     frequencyForWeeklyInsidersCheck,
-    lastLookUpTimeKey
+    lastLookUpTimeKey,
 } from '../../../client/common/insidersBuild/downloadChannelRules';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
@@ -39,7 +37,7 @@ suite('Download channel rules - ExtensionInsidersDailyChannelRule', () => {
         persistentStateFactory = mock(PersistentStateFactory);
         lastLookUpTime = TypeMoq.Mock.ofType<IPersistentState<number>>();
         when(persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1)).thenReturn(
-            lastLookUpTime.object
+            lastLookUpTime.object,
         );
         insidersDailyChannelRule = new ExtensionInsidersDailyChannelRule(instance(persistentStateFactory));
     });
@@ -104,7 +102,7 @@ suite('Download channel rules - ExtensionInsidersWeeklyChannelRule', () => {
         persistentStateFactory = mock(PersistentStateFactory);
         lastLookUpTime = TypeMoq.Mock.ofType<IPersistentState<number>>();
         when(persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1)).thenReturn(
-            lastLookUpTime.object
+            lastLookUpTime.object,
         );
         insidersWeeklyChannelRule = new ExtensionInsidersWeeklyChannelRule(instance(persistentStateFactory));
     });

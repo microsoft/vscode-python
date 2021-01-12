@@ -1,5 +1,3 @@
-// tslint:disable:quotemark ordered-imports member-ordering one-line prefer-const
-
 'use strict';
 
 import * as net from 'net';

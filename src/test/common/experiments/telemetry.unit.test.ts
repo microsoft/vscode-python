@@ -47,8 +47,8 @@ suite('Experimentation telemetry', () => {
             eventName: event,
             properties: {
                 foo: 'one',
-                bar: 'two'
-            }
+                bar: 'two',
+            },
         });
     });
 

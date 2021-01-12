@@ -3,11 +3,7 @@
 
 'use strict';
 
-// tslint:disable: no-any
-
-import {
-    instance, mock, verify,
-} from 'ts-mockito';
+import { instance, mock, verify } from 'ts-mockito';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -64,12 +60,22 @@ import { registerLegacyDiscoveryForIOC } from '../../client/pythonEnvironments/l
 suite('Interpreters - Service Registry', () => {
     test('Registrations', () => {
         const serviceManager = mock(ServiceManager);
-        registerLegacyDiscoveryForIOC(
-            instance(serviceManager),
-        );
+        registerLegacyDiscoveryForIOC(instance(serviceManager));
         verify(serviceManager.addSingleton(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters)).once();
-        verify(serviceManager.addSingleton(IVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvironmentsSearchPathProvider, 'global')).once();
-        verify(serviceManager.addSingleton(IVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvironmentsSearchPathProvider, 'workspace')).once();
+        verify(
+            serviceManager.addSingleton(
+                IVirtualEnvironmentsSearchPathProvider,
+                GlobalVirtualEnvironmentsSearchPathProvider,
+                'global',
+            ),
+        ).once();
+        verify(
+            serviceManager.addSingleton(
+                IVirtualEnvironmentsSearchPathProvider,
+                WorkspaceVirtualEnvironmentsSearchPathProvider,
+                'workspace',
+            ),
+        ).once();
 
         verify(serviceManager.addSingleton(ICondaService, CondaService)).once();
         verify(serviceManager.addSingleton(IPipEnvServiceHelper, PipEnvServiceHelper)).once();
@@ -108,20 +114,13 @@ suite('Interpreters - Service Registry', () => {
         verify(serviceManager.addSingleton(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE)).once();
 
         verify(
-            serviceManager.addSingleton(
-                IInterpreterLocatorService,
-                WindowsRegistryService,
-                WINDOWS_REGISTRY_SERVICE,
-            ),
+            serviceManager.addSingleton(IInterpreterLocatorService, WindowsRegistryService, WINDOWS_REGISTRY_SERVICE),
         ).once();
         verify(serviceManager.addSingleton(IInterpreterLocatorService, KnownPathsService, KNOWN_PATH_SERVICE)).once();
 
         verify(serviceManager.addSingleton(IInterpreterLocatorHelper, InterpreterLocatorHelper)).once();
         verify(
-            serviceManager.addSingleton(
-                IInterpreterLocatorProgressService,
-                InterpreterLocatorProgressService,
-            ),
+            serviceManager.addSingleton(IInterpreterLocatorProgressService, InterpreterLocatorProgressService),
         ).once();
 
         verify(serviceManager.addSingleton(WindowsStoreInterpreter, WindowsStoreInterpreter)).once();

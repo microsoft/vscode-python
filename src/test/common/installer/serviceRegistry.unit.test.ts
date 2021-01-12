@@ -17,7 +17,7 @@ import {
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
-    TestFrameworkProductPathService
+    TestFrameworkProductPathService,
 } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
 import { registerTypes } from '../../../client/common/installer/serviceRegistry';
@@ -28,7 +28,7 @@ import {
     INSIDERS_INSTALLER,
     IProductPathService,
     IProductService,
-    STABLE_INSTALLER
+    STABLE_INSTALLER,
 } from '../../../client/common/installer/types';
 import { ProductType } from '../../../client/common/types';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
@@ -50,22 +50,22 @@ suite('Common installer Service Registry', () => {
         verify(
             serviceManager.addSingleton<IInstallationChannelManager>(
                 IInstallationChannelManager,
-                InstallationChannelManager
-            )
+                InstallationChannelManager,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IExtensionBuildInstaller>(
                 IExtensionBuildInstaller,
                 StableBuildInstaller,
-                STABLE_INSTALLER
-            )
+                STABLE_INSTALLER,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IExtensionBuildInstaller>(
                 IExtensionBuildInstaller,
                 InsidersBuildInstaller,
-                INSIDERS_INSTALLER
-            )
+                INSIDERS_INSTALLER,
+            ),
         ).once();
 
         verify(serviceManager.addSingleton<IProductService>(IProductService, ProductService)).once();
@@ -73,36 +73,36 @@ suite('Common installer Service Registry', () => {
             serviceManager.addSingleton<IProductPathService>(
                 IProductPathService,
                 CTagsProductPathService,
-                ProductType.WorkspaceSymbols
-            )
+                ProductType.WorkspaceSymbols,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IProductPathService>(
                 IProductPathService,
                 FormatterProductPathService,
-                ProductType.Formatter
-            )
+                ProductType.Formatter,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IProductPathService>(
                 IProductPathService,
                 LinterProductPathService,
-                ProductType.Linter
-            )
+                ProductType.Linter,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IProductPathService>(
                 IProductPathService,
                 TestFrameworkProductPathService,
-                ProductType.TestFramework
-            )
+                ProductType.TestFramework,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IProductPathService>(
                 IProductPathService,
                 RefactoringLibraryProductPathService,
-                ProductType.RefactoringLibrary
-            )
+                ProductType.RefactoringLibrary,
+            ),
         ).once();
         verify(serviceManager.addSingleton<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider)).once();
     });

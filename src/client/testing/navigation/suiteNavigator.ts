@@ -19,12 +19,12 @@ export class TestSuiteCodeNavigator implements ITestCodeNavigator {
     constructor(
         @inject(ITestNavigatorHelper) private readonly helper: ITestNavigatorHelper,
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
-        @inject(ITestCollectionStorageService) private readonly storage: ITestCollectionStorageService
+        @inject(ITestCollectionStorageService) private readonly storage: ITestCollectionStorageService,
     ) {}
     @swallowExceptions('Navigate to test suite')
     @captureTelemetry(EventName.UNITTEST_NAVIGATE, { bySuite: true }, true) // For measuring execution time.
     public async navigateTo(resource: Uri, suite: TestSuite, focus: boolean = true): Promise<void> {
-        sendTelemetryEvent(EventName.UNITTEST_NAVIGATE, undefined, { focus_code: focus, bySuite: true });
+        sendTelemetryEvent(EventName.UNITTEST_NAVIGATE, undefined, { focusCode: focus, bySuite: true });
         if (this.cancellationToken) {
             this.cancellationToken.cancel();
         }

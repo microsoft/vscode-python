@@ -31,4 +31,4 @@ comment:
   require_changes: no
 
 fixes:
-  - "path with spaces/::"
+  - 'path with spaces/::'

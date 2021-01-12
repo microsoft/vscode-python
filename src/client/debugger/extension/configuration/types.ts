@@ -11,13 +11,13 @@ export interface IDebugConfigurationResolver<T extends DebugConfiguration> {
     resolveDebugConfiguration(
         folder: WorkspaceFolder | undefined,
         debugConfiguration: T,
-        token?: CancellationToken
+        token?: CancellationToken,
     ): Promise<T | undefined>;
 
     resolveDebugConfigurationWithSubstitutedVariables(
         folder: WorkspaceFolder | undefined,
         debugConfiguration: T,
-        token?: CancellationToken
+        token?: CancellationToken,
     ): Promise<T | undefined>;
 }
 

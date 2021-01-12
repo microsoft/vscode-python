@@ -10,7 +10,7 @@ import * as typeMoq from 'typemoq';
 import {
     DownloadBetaChannelRule,
     DownloadDailyChannelRule,
-    DownloadStableChannelRule
+    DownloadStableChannelRule,
 } from '../../../client/activation/common/downloadChannelRules';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -30,7 +30,7 @@ suite('Microsoft Language Server Download Channel Rules', () => {
             const hasExistingLSFolder = currentFolderPath ? false : true;
             expect(await rule.shouldLookForNewLanguageServer(currentFolder)).to.be.equal(
                 hasExistingLSFolder,
-                'invalid value'
+                'invalid value',
             );
         });
 
@@ -45,7 +45,7 @@ suite('Microsoft Language Server Download Channel Rules', () => {
                 state = typeMoq.Mock.ofType<IPersistentState<Boolean>>();
                 stateFactory
                     .setup((s) =>
-                        s.createGlobalPersistentState(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())
+                        s.createGlobalPersistentState(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()),
                     )
                     .returns(() => state.object)
                     .verifiable(typeMoq.Times.once());
@@ -71,7 +71,7 @@ suite('Microsoft Language Server Download Channel Rules', () => {
                 const shouldDownload = currentFolderPath ? false : true;
                 expect(await rule.shouldLookForNewLanguageServer(currentFolder)).to.be.equal(
                     shouldDownload,
-                    'invalid value'
+                    'invalid value',
                 );
             });
         });

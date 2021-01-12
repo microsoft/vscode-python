@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires max-func-body-length no-unnecessary-override no-invalid-template-strings no-any
-
 import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
@@ -147,7 +145,7 @@ suite('Python Settings - pythonPath', () => {
             workspaceService.object,
             experimentsManager.object,
             interpreterPathService.object,
-            interpreterSecurityService.object
+            interpreterSecurityService.object,
         );
         experimentsManager
             .setup((e) => e.inExperiment(DeprecatePythonPath.experiment))
@@ -180,7 +178,7 @@ suite('Python Settings - pythonPath', () => {
             workspaceService.object,
             experimentsManager.object,
             interpreterPathService.object,
-            interpreterSecurityService.object
+            interpreterSecurityService.object,
         );
         experimentsManager
             .setup((e) => e.inExperiment(DeprecatePythonPath.experiment))
@@ -205,7 +203,7 @@ suite('Python Settings - pythonPath', () => {
             new MockAutoSelectionService(),
             workspaceService.object,
             experimentsManager.object,
-            interpreterPathService.object
+            interpreterPathService.object,
         );
         const pythonPath = 'This is the new API python Path';
         pythonSettings.setup((p) => p.get(typemoq.It.isValue('pythonPath'))).verifiable(typemoq.Times.never());
@@ -235,7 +233,7 @@ suite('Python Settings - pythonPath', () => {
             new MockAutoSelectionService(),
             workspaceService.object,
             experimentsManager.object,
-            interpreterPathService.object
+            interpreterPathService.object,
         );
         const pythonPath = 'This is the settings python Path';
         pythonSettings

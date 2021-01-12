@@ -44,7 +44,7 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IExtensions) readonly extensions: IExtensions
+        @inject(IExtensions) readonly extensions: IExtensions,
     ) {
         this.fallback = new FallbackNodeLanguageServerFolderService(serviceContainer);
     }
@@ -75,7 +75,7 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
             assert.ok(path.isAbsolute(lsf.path));
             return {
                 path: lsf.path,
-                version: new SemVer(lsf.version)
+                version: new SemVer(lsf.version),
             };
         }
         return this.fallback.getCurrentLanguageServerDirectory();

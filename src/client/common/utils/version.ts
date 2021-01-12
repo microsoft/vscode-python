@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-multiline-string
-
 import * as semver from 'semver';
 import { verboseRegExp } from './regexp';
 
@@ -76,8 +74,8 @@ export const EMPTY_VERSION: RawBasicVersionInfo = {
     unnormalized: {
         major: undefined,
         minor: undefined,
-        micro: undefined
-    }
+        micro: undefined,
+    },
 };
 
 /**
@@ -213,7 +211,7 @@ export function parseBasicVersionInfo<T extends BasicVersionInfo>(verStr: string
         // This is effectively normalized.
         version: ({ major, minor, micro } as unknown) as T,
         before: before || '',
-        after: after || ''
+        after: after || '',
     };
 }
 
@@ -294,7 +292,6 @@ export function parseVersion(raw: string): semver.SemVer {
     raw = raw.replace(/\.00*(?=[1-9]|0\.)/, '.');
     const ver = semver.coerce(raw);
     if (ver === null || !semver.valid(ver)) {
-        // tslint:disable-next-line: no-suspicious-comment
         // TODO: Raise an exception instead?
         return new semver.SemVer('0.0.0');
     }

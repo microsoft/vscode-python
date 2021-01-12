@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-console no-require-imports no-var-requires
-
 // Must always be on top to setup expected env.
 process.env.VSC_PYTHON_SMOKE_TEST = '1';
 
@@ -25,7 +23,7 @@ class TestRunner {
     private async launchSmokeTests() {
         const env: Record<string, {}> = {
             VSC_PYTHON_SMOKE_TEST: '1',
-            CODE_EXTENSIONS_PATH: SMOKE_TEST_EXTENSIONS_DIR
+            CODE_EXTENSIONS_PATH: SMOKE_TEST_EXTENSIONS_DIR,
         };
 
         await this.launchTest(env);
@@ -34,7 +32,7 @@ class TestRunner {
         // When running smoke tests, we won't have access to unbundled files.
         const settings = `{ "python.languageServer": ${enable ? '"Microsoft"' : '"Jedi"'} }`;
         await fs.ensureDir(
-            path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode')
+            path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode'),
         );
         await fs.writeFile(
             path.join(
@@ -43,9 +41,9 @@ class TestRunner {
                 'testMultiRootWkspc',
                 'smokeTests',
                 '.vscode',
-                'settings.json'
+                'settings.json',
             ),
-            settings
+            settings,
         );
     }
     private async launchTest(customEnvVars: Record<string, {}>) {
@@ -58,14 +56,14 @@ class TestRunner {
                     EXTENSION_ROOT_DIR_FOR_TESTS,
                     'src',
                     'testMultiRootWkspc',
-                    'smokeTests'
+                    'smokeTests',
                 ),
                 ...process.env,
-                ...customEnvVars
+                ...customEnvVars,
             };
             const proc = spawn('node', [path.join(__dirname, 'standardTest.js')], {
                 cwd: EXTENSION_ROOT_DIR_FOR_TESTS,
-                env
+                env,
             });
             proc.stdout.pipe(process.stdout);
             proc.stderr.pipe(process.stderr);
@@ -83,7 +81,7 @@ class TestRunner {
 
     private async extractLatestExtension(targetDir: string): Promise<void> {
         const extensionFile = await new Promise<string>((resolve, reject) =>
-            glob('*.vsix', (ex, files) => (ex ? reject(ex) : resolve(files[0])))
+            glob('*.vsix', (ex, files) => (ex ? reject(ex) : resolve(files[0]))),
         );
         await unzip(extensionFile, targetDir);
     }

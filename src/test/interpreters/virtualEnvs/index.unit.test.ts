@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
@@ -18,7 +16,6 @@ import { IInterpreterLocatorService, IPipEnvService, PIPENV_SERVICE } from '../.
 import { VirtualEnvironmentManager } from '../../../client/interpreter/virtualEnvs';
 import { IServiceContainer } from '../../../client/ioc/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Virtual Environment Manager', () => {
     let process: TypeMoq.IMock<ICurrentProcess>;
     let processService: TypeMoq.IMock<IProcessService>;

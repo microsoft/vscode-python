@@ -25,7 +25,7 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         @inject(IPlatformService) platformService: IPlatformService,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IFileSystem) fileSystem: IFileSystem,
-        @inject(IDisposableRegistry) disposableRegistry: Disposable[]
+        @inject(IDisposableRegistry) disposableRegistry: Disposable[],
     ) {
         super(terminalServiceFactory, configurationService, workspace, disposableRegistry, platformService);
         this.terminalTitle = 'Django Shell';

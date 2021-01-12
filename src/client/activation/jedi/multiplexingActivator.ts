@@ -9,10 +9,10 @@ import {
     Position,
     ReferenceContext,
     SignatureHelpContext,
-    TextDocument
+    TextDocument,
 } from 'vscode';
 import { ServerCapabilities } from 'vscode-languageserver-protocol';
-// tslint:disable-next-line: import-name
+
 import { IWorkspaceService } from '../../common/application/types';
 import { isTestExecution } from '../../common/constants';
 import { JediLSP } from '../../common/experiments/groups';
@@ -22,7 +22,7 @@ import {
     IConfigurationService,
     IExperimentService,
     IPythonExtensionBanner,
-    Resource
+    Resource,
 } from '../../common/types';
 import { IServiceManager } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -51,7 +51,7 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
         @inject(IExperimentService) experimentService: IExperimentService,
         @inject(IPythonExtensionBanner)
         @named(BANNER_NAME_PROPOSE_LS)
-        private proposePylancePopup: IPythonExtensionBanner
+        private proposePylancePopup: IPythonExtensionBanner,
     ) {
         // Check experiment service to see if using new Jedi LSP protocol
         this.realLanguageServerPromise = experimentService.inExperiment(JediLSP.experiment).then((inExperiment) => {
@@ -62,7 +62,7 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
                       this.manager.get<ILanguageServerManager>(ILanguageServerManager),
                       this.manager.get<IWorkspaceService>(IWorkspaceService),
                       this.manager.get<IFileSystem>(IFileSystem),
-                      this.manager.get<IConfigurationService>(IConfigurationService)
+                      this.manager.get<IConfigurationService>(IConfigurationService),
                   );
             return this.realLanguageServer;
         });
@@ -106,61 +106,69 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
         return undefined;
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async provideRenameEdits(
         document: TextDocument,
         position: Position,
         newName: string,
-        token: CancellationToken
+        token: CancellationToken,
     ) {
         const server = await this.realLanguageServerPromise;
         return server.provideRenameEdits(document, position, newName, token);
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async provideDefinition(document: TextDocument, position: Position, token: CancellationToken) {
         const server = await this.realLanguageServerPromise;
         return server.provideDefinition(document, position, token);
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async provideHover(document: TextDocument, position: Position, token: CancellationToken) {
         const server = await this.realLanguageServerPromise;
         return server.provideHover(document, position, token);
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async provideReferences(
         document: TextDocument,
         position: Position,
         context: ReferenceContext,
-        token: CancellationToken
+        token: CancellationToken,
     ) {
         const server = await this.realLanguageServerPromise;
         return server.provideReferences(document, position, context, token);
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async provideCompletionItems(
         document: TextDocument,
         position: Position,
         token: CancellationToken,
-        context: CompletionContext
+        context: CompletionContext,
     ) {
         const server = await this.realLanguageServerPromise;
         return server.provideCompletionItems(document, position, token, context);
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async provideCodeLenses(document: TextDocument, token: CancellationToken) {
         const server = await this.realLanguageServerPromise;
         return server.provideCodeLenses(document, token);
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async provideDocumentSymbols(document: TextDocument, token: CancellationToken) {
         const server = await this.realLanguageServerPromise;
         return server.provideDocumentSymbols(document, token);
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async provideSignatureHelp(
         document: TextDocument,
         position: Position,
         token: CancellationToken,
-        context: SignatureHelpContext
+        context: SignatureHelpContext,
     ) {
         const server = await this.realLanguageServerPromise;
         return server.provideSignatureHelp(document, position, token, context);

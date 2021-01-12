@@ -46,12 +46,11 @@ suite('Nuget Azure Storage Repository', () => {
             serviceContainer.object,
             azureBlobStorageAccount,
             defaultStorageChannel,
-            azureCDNBlobStorageAccount
+            azureCDNBlobStorageAccount,
         );
     });
 
     test('Get all packages', async function () {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const platformService = new PlatformService();
         const packageJson = { [DotNetLanguageServerMinVersionKey]: '0.0.1' };
@@ -60,7 +59,7 @@ suite('Nuget Azure Storage Repository', () => {
         const lsPackageService = new DotNetLanguageServerPackageService(
             serviceContainer.object,
             appEnv.object,
-            platformService
+            platformService,
         );
         const packageName = lsPackageService.getNugetPackageName();
         const packages = await repo.getPackages(packageName, undefined);

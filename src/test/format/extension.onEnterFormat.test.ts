@@ -51,25 +51,25 @@ suite('Formatting - OnEnter provider', () => {
     test('Formatting line ending in string', () => testFormattingAtPosition(13, 0, 'x + """'));
 
     function testFormattingAtPosition(line: number, character: number, expectedFormattedString?: string): void {
-        const token = new CancellationTokenSource().token;
+        const { token } = new CancellationTokenSource();
         const edits = formatter.provideOnTypeFormattingEdits(
             document,
             new Position(line, character),
             '\n',
             { insertSpaces: true, tabSize: 2 },
-            token
+            token,
         );
         expect(edits).to.be.lengthOf(1);
         expect(edits[0].newText).to.be.equal(expectedFormattedString);
     }
     function doesNotFormat(line: number, character: number): void {
-        const token = new CancellationTokenSource().token;
+        const { token } = new CancellationTokenSource();
         const edits = formatter.provideOnTypeFormattingEdits(
             document,
             new Position(line, character),
             '\n',
             { insertSpaces: true, tabSize: 2 },
-            token
+            token,
         );
         expect(edits).to.be.lengthOf(0);
     }

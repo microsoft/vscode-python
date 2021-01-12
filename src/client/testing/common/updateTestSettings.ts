@@ -14,14 +14,13 @@ import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 
-// tslint:disable-next-line:no-suspicious-comment
 // TODO: rename the class since it is not used just for test settings
 @injectable()
 export class UpdateTestSettingService implements IExtensionActivationService {
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationEnvironment) private readonly application: IApplicationEnvironment,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
     ) {}
     public async activate(resource: Resource): Promise<void> {
         this.updateTestSettings(resource).ignoreErrors();
@@ -48,7 +47,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
             files.map(async (file) => {
                 const needsFixing = await this.doesFileNeedToBeFixed(file);
                 return { file, needsFixing };
-            })
+            }),
         );
         return result.filter((item) => item.needsFixing).map((item) => item.file);
     }
@@ -77,7 +76,6 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         fileContents = fileContents.replace(setting_pep8_enabled, '.pycodestyleEnabled');
         fileContents = fileContents.replace(setting_pep8_path, '.pycodestylePath');
 
-        // tslint:disable-next-line:no-suspicious-comment
         // TODO: remove when python.jediEnabled is no longer in typical user settings.
         if (fixLanguageServerSetting) {
             fileContents = this.fixLanguageServerSettings(fileContents);
@@ -128,15 +126,15 @@ export class UpdateTestSettingService implements IExtensionActivationService {
             const modificationOptions: ModificationOptions = {
                 formattingOptions: {
                     tabSize: 4,
-                    insertSpaces: true
-                }
+                    insertSpaces: true,
+                },
             };
 
             // `jediEnabled` is true, set it to Jedi.
             if (jediEnabled) {
                 return applyEdits(
                     fileContent,
-                    modify(fileContent, languageServerPath, LanguageServerType.Jedi, modificationOptions)
+                    modify(fileContent, languageServerPath, LanguageServerType.Jedi, modificationOptions),
                 );
             }
 
@@ -144,11 +142,9 @@ export class UpdateTestSettingService implements IExtensionActivationService {
             if (!languageServerNode) {
                 return applyEdits(
                     fileContent,
-                    modify(fileContent, languageServerPath, LanguageServerType.Microsoft, modificationOptions)
+                    modify(fileContent, languageServerPath, LanguageServerType.Microsoft, modificationOptions),
                 );
             }
-
-            // tslint:disable-next-line:no-empty
         } catch {}
         return fileContent;
     }

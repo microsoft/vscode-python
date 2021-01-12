@@ -13,6 +13,6 @@ const lightIconsPath = path.join(EXTENSION_ROOT_DIR, 'resources', 'light');
 export function getIcon(fileName: string): { light: Uri; dark: Uri } {
     return {
         dark: Uri.file(path.join(darkIconsPath, fileName)),
-        light: Uri.file(path.join(lightIconsPath, fileName))
+        light: Uri.file(path.join(lightIconsPath, fileName)),
     };
 }

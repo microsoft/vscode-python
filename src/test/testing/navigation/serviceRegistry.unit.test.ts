@@ -19,12 +19,11 @@ import {
     ITestCodeNavigator,
     ITestCodeNavigatorCommandHandler,
     ITestNavigatorHelper,
-    NavigableItemType
+    NavigableItemType,
 } from '../../../client/testing/navigation/types';
 
 use(chaisAsPromised);
 
-// tslint:disable:max-func-body-length no-any
 suite('Unit Tests - Navigation Service Registry', () => {
     test('Ensure services are registered', async () => {
         const serviceManager = mock(ServiceManager);
@@ -35,29 +34,29 @@ suite('Unit Tests - Navigation Service Registry', () => {
         verify(
             serviceManager.addSingleton<ITestCodeNavigatorCommandHandler>(
                 ITestCodeNavigatorCommandHandler,
-                TestCodeNavigatorCommandHandler
-            )
+                TestCodeNavigatorCommandHandler,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<ITestCodeNavigator>(
                 ITestCodeNavigator,
                 TestFileCodeNavigator,
-                NavigableItemType.testFile
-            )
+                NavigableItemType.testFile,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<ITestCodeNavigator>(
                 ITestCodeNavigator,
                 TestFunctionCodeNavigator,
-                NavigableItemType.testFunction
-            )
+                NavigableItemType.testFunction,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<ITestCodeNavigator>(
                 ITestCodeNavigator,
                 TestSuiteCodeNavigator,
-                NavigableItemType.testSuite
-            )
+                NavigableItemType.testSuite,
+            ),
         ).once();
         verify(serviceManager.addSingleton<IDocumentSymbolProvider>(anything(), TestFileSymbolProvider, 'test')).once();
     });

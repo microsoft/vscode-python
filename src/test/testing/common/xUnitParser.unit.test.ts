@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:max-func-body-length
-
 'use strict';
 
 import { expect } from 'chai';
@@ -58,7 +56,7 @@ suite('Testing - parse JUnit XML file', () => {
                     <testcase classname="test_spam.Tests" file="test_spam.py" line="3" name="test_spam" time="1.001">
                     </testcase>
                 </testsuite>
-            `)
+            `),
         );
 
         await parser.updateResultsFromXmlLogFile(tests, filename);
@@ -91,7 +89,7 @@ suite('Testing - parse JUnit XML file', () => {
                         </testcase>
                     </testsuite>
                 </testsuites>
-            `)
+            `),
         );
 
         await parser.updateResultsFromXmlLogFile(tests, filename);
@@ -112,7 +110,7 @@ suite('Testing - parse JUnit XML file', () => {
                     <testcase classname="test_spam.Tests" file="test_spam.py" line="3" name="test_spam" time="0.001">
                     </testcase>
                 </testsuite>
-            `)
+            `),
         );
 
         await parser.updateResultsFromXmlLogFile(tests, filename);
@@ -130,7 +128,7 @@ suite('Testing - parse JUnit XML file', () => {
                 <?xml version="1.0" encoding="utf-8"?>
                 <testsuite errors="0" failures="0" hostname="linux-desktop" name="pytest" skipped="0" tests="0" time="0.011" timestamp="2019-08-29T15:59:08.757654">
                 </testsuite>
-            `)
+            `),
         );
 
         await parser.updateResultsFromXmlLogFile(tests, filename);

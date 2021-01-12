@@ -25,7 +25,7 @@ export class PythonPathUpdaterServiceFactory implements IPythonPathUpdaterServic
         return new GlobalPythonPathUpdaterService(
             this.inDeprecatePythonPathExperiment,
             this.workspaceService,
-            this.interpreterPathService
+            this.interpreterPathService,
         );
     }
     public getWorkspacePythonPathConfigurationService(wkspace: Uri): IPythonPathUpdaterService {
@@ -33,7 +33,7 @@ export class PythonPathUpdaterServiceFactory implements IPythonPathUpdaterServic
             wkspace,
             this.inDeprecatePythonPathExperiment,
             this.workspaceService,
-            this.interpreterPathService
+            this.interpreterPathService,
         );
     }
     public getWorkspaceFolderPythonPathConfigurationService(workspaceFolder: Uri): IPythonPathUpdaterService {
@@ -41,7 +41,7 @@ export class PythonPathUpdaterServiceFactory implements IPythonPathUpdaterServic
             workspaceFolder,
             this.inDeprecatePythonPathExperiment,
             this.workspaceService,
-            this.interpreterPathService
+            this.interpreterPathService,
         );
     }
 }

@@ -8,8 +8,6 @@ import { Terminal } from 'vscode';
 import { traceVerbose } from '../../logger';
 import { IShellDetector, ShellIdentificationTelemetry, TerminalShellType } from '../types';
 
-// tslint:disable: max-classes-per-file
-
 /*
 When identifying the shell use the following algorithm:
 * 1. Identify shell based on the name of the terminal (if there is one already opened and used).
@@ -53,7 +51,7 @@ export abstract class BaseShellDetector implements IShellDetector {
     constructor(@unmanaged() public readonly priority: number) {}
     public abstract identify(
         telemetryProperties: ShellIdentificationTelemetry,
-        terminal?: Terminal
+        terminal?: Terminal,
     ): TerminalShellType | undefined;
     public identifyShellFromShellPath(shellPath: string): TerminalShellType {
         const shell = Array.from(detectableShells.keys()).reduce((matchedShell, shellToDetect) => {

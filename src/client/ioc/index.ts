@@ -4,9 +4,9 @@
 import { IServiceContainer } from './types';
 
 let container: IServiceContainer;
-export function getServiceContainer() {
+export function getServiceContainer(): IServiceContainer {
     return container;
 }
-export function setServiceContainer(serviceContainer: IServiceContainer) {
+export function setServiceContainer(serviceContainer: IServiceContainer): void {
     container = serviceContainer;
 }

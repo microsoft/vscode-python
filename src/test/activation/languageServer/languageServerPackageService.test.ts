@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any no-invalid-this max-func-body-length
-
 import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
@@ -41,7 +39,7 @@ suite('Language Server Package Service', () => {
             serviceContainer.object,
             azureBlobStorageAccount,
             defaultStorageChannel,
-            azureCDNBlobStorageAccount
+            azureCDNBlobStorageAccount,
         );
         serviceContainer.setup((c) => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);
         const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
@@ -51,7 +49,7 @@ suite('Language Server Package Service', () => {
         const lsPackageService = new DotNetLanguageServerPackageService(
             serviceContainer.object,
             appEnv.object,
-            platform.object
+            platform.object,
         );
         const packageName = lsPackageService.getNugetPackageName();
         const packages = await nugetRepo.getPackages(packageName, undefined);
@@ -65,7 +63,7 @@ suite('Language Server Package Service', () => {
         expect(latestReleases).to.be.length.greaterThan(0, 'No release packages returned.');
         expect(latestRelease.version.major).to.be.equal(
             lsPackageService.maxMajorVersion,
-            'New Major version of Language server has been released, we need to update it at our end.'
+            'New Major version of Language server has been released, we need to update it at our end.',
         );
     });
 });

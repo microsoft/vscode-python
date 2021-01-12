@@ -15,7 +15,7 @@ import {
     DebugSessionCustomEvent,
     Disposable,
     Event,
-    WorkspaceFolder
+    WorkspaceFolder,
 } from 'vscode';
 import { IDebugService } from './types';
 
@@ -46,18 +46,18 @@ export class DebugService implements IDebugService {
     public get onDidChangeBreakpoints(): Event<BreakpointsChangeEvent> {
         return debug.onDidChangeBreakpoints;
     }
-    // tslint:disable-next-line:no-any
+
     public registerDebugConfigurationProvider(debugType: string, provider: any): Disposable {
         return debug.registerDebugConfigurationProvider(debugType, provider);
     }
-    // tslint:disable-next-line:no-any
+
     public registerDebugAdapterTrackerFactory(debugType: string, provider: any): Disposable {
         return debug.registerDebugAdapterTrackerFactory(debugType, provider);
     }
     public startDebugging(
         folder: WorkspaceFolder | undefined,
         nameOrConfiguration: string | DebugConfiguration,
-        parentSession?: DebugSession
+        parentSession?: DebugSession,
     ): Thenable<boolean> {
         return debug.startDebugging(folder, nameOrConfiguration, parentSession);
     }
@@ -69,7 +69,7 @@ export class DebugService implements IDebugService {
     }
     public registerDebugAdapterDescriptorFactory(
         debugType: string,
-        factory: DebugAdapterDescriptorFactory
+        factory: DebugAdapterDescriptorFactory,
     ): Disposable {
         return debug.registerDebugAdapterDescriptorFactory(debugType, factory);
     }

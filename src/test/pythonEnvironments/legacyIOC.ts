@@ -12,10 +12,7 @@ import { EnvironmentsSecurity } from '../../client/pythonEnvironments/security';
  * This is here to support old tests.
  * @deprecated
  */
-export function registerForIOC(
-    serviceManager: IServiceManager,
-    serviceContainer: IServiceContainer,
-): void {
+export function registerForIOC(serviceManager: IServiceManager, serviceContainer: IServiceContainer): void {
     registerLegacyDiscoveryForIOC(serviceManager);
     initializeExternalDependencies(serviceContainer);
     // The old tests do not need real instances, directly pass in mocks.
@@ -23,6 +20,6 @@ export function registerForIOC(
         serviceManager,
         instance(mock(PythonEnvironments)),
         instance(mock(EnvironmentsSecurity)),
-        []
+        [],
     );
 }

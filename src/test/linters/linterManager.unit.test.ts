@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length messages-must-be-localized
-
 import * as assert from 'assert';
 import { expect } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
@@ -16,7 +14,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
@@ -171,7 +169,7 @@ suite('Linting - Linter Manager', () => {
                     linterInstances.set(product, instanceOfLinterInfo);
                     when(linterInfo.product).thenReturn(product);
                     when(linterInfo.enableAsync(anything(), resource)).thenResolve();
-                }
+                },
             );
 
             linterManager.getActiveLinters = () => Promise.resolve(Array.from(linterInstances.values()));

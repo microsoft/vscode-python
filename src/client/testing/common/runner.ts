@@ -7,7 +7,7 @@ import {
     IPythonExecutionService,
     IPythonToolExecutionService,
     ObservableExecutionResult,
-    SpawnOptions
+    SpawnOptions,
 } from '../../common/process/types';
 import { ExecutionInfo, IConfigurationService, IPythonSettings } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -26,11 +26,11 @@ export class TestRunner implements ITestRunner {
 export async function run(
     serviceContainer: IServiceContainer,
     testProvider: TestProvider,
-    options: Options
+    options: Options,
 ): Promise<string> {
     const testExecutablePath = getExecutablePath(
         testProvider,
-        serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(options.workspaceFolder)
+        serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(options.workspaceFolder),
     );
     const moduleName = getTestModuleName(testProvider);
     const spawnOptions = options as SpawnOptions;
@@ -46,7 +46,7 @@ export async function run(
         execPath: testExecutablePath,
         args: options.args,
         moduleName: testExecutablePath && testExecutablePath.length > 0 ? undefined : moduleName,
-        product: testHelper.parseProduct(testProvider)
+        product: testHelper.parseProduct(testProvider),
     };
 
     if (testProvider === UNITTEST_PROVIDER) {
@@ -59,11 +59,11 @@ export async function run(
             .get<IPythonExecutionFactory>(IPythonExecutionFactory)
             .createActivatedEnvironment({ resource: options.workspaceFolder });
         promise = pythonExecutionServicePromise.then((executionService) =>
-            executionService.execModuleObservable(executionInfo.moduleName!, executionInfo.args, options)
+            executionService.execModuleObservable(executionInfo.moduleName!, executionInfo.args, options),
         );
     } else {
         const pythonToolsExecutionService = serviceContainer.get<IPythonToolExecutionService>(
-            IPythonToolExecutionService
+            IPythonToolExecutionService,
         );
         promise = pythonToolsExecutionService.execObservable(executionInfo, spawnOptions, options.workspaceFolder);
     }
@@ -99,7 +99,7 @@ export async function run(
                         }
                     }
                     resolve(stdOut);
-                }
+                },
             );
         });
     });

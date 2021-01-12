@@ -3,8 +3,6 @@ import * as vscode from 'vscode';
 import { IFileSystem } from '../common/platform/types';
 import { ITag } from './contracts';
 
-// tslint:disable:no-require-imports no-var-requires no-suspicious-comment
-// tslint:disable:no-any
 // TODO: Turn these into imports.
 const LineByLineReader = require('line-by-line');
 const NamedRegexp = require('named-js-regexp');
@@ -108,7 +106,7 @@ export function parseTags(
     tagFile: string,
     query: string,
     token: vscode.CancellationToken,
-    fs: IFileSystem
+    fs: IFileSystem,
 ): Promise<ITag[]> {
     return fs.fileExists(tagFile).then((exists) => {
         if (!exists) {
@@ -167,6 +165,6 @@ function parseTagsLine(workspaceFolder: string, line: string, searchPattern: str
         code: match.code,
         position: new vscode.Position(Number(match.line) - 1, 0),
         symbolName: match.name,
-        symbolKind: symbolKind
+        symbolKind: symbolKind,
     };
 }

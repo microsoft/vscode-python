@@ -33,7 +33,7 @@ suite('DOT.NET', () => {
                     instance(macService),
                     instance(winService),
                     instance(linuxService),
-                    instance(platformService)
+                    instance(platformService),
                 );
 
                 when(platformService.osType).thenReturn(osType.value);

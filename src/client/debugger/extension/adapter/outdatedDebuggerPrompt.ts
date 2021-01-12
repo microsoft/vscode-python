@@ -17,7 +17,7 @@ class OutdatedDebuggerPrompt implements DebugAdapterTracker {
     constructor(
         private promptCheck: IPromptShowState,
         private appShell: IApplicationShell,
-        private browserService: IBrowserService
+        private browserService: IBrowserService,
     ) {}
 
     public onDidSendMessage(message: DebugProtocol.ProtocolMessage) {
@@ -73,7 +73,7 @@ export class OutdatedDebuggerPromptFactory implements DebugAdapterTrackerFactory
     private readonly promptCheck: OutdatedDebuggerPromptState;
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IBrowserService) private browserService: IBrowserService
+        @inject(IBrowserService) private browserService: IBrowserService,
     ) {
         this.promptCheck = new OutdatedDebuggerPromptState();
     }

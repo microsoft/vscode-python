@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any
-
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, CompletionItemKind, Position, SymbolKind, TextDocument, TextLine } from 'vscode';
 import { IAutoCompleteSettings, IConfigurationService, IPythonSettings } from '../../../client/common/types';
@@ -53,8 +51,8 @@ suite('Completion Provider', () => {
                 rawType: CompletionItemKind.Function,
                 rightLabel: 'right label',
                 text: 'some text',
-                type: CompletionItemKind.Function
-            }
+                type: CompletionItemKind.Function,
+            },
         ];
 
         autoCompleteSettings.setup((a) => a.addBrackets).returns(() => addBrackets);
@@ -80,8 +78,8 @@ suite('Completion Provider', () => {
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny(),
                     expectedSource,
-                    TypeMoq.It.isAny()
-                )
+                    TypeMoq.It.isAny(),
+                ),
             )
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());

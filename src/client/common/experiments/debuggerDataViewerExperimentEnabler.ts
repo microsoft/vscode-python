@@ -9,7 +9,7 @@ import { IExperimentService } from '../types';
 export class DebuggerDataViewerExperimentEnabler implements IExtensionSingleActivationService {
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {}
 
     public async activate(): Promise<void> {
@@ -21,7 +21,7 @@ export class DebuggerDataViewerExperimentEnabler implements IExtensionSingleActi
         // context menu item from the variable window context menu during a debugging session
         const isDataViewerExperimentEnabled = new ContextKey(
             'python.isDebuggerDataViewerExperimentEnabled',
-            this.commandManager
+            this.commandManager,
         );
         await isDataViewerExperimentEnabled.set(await this.experimentService.inExperiment('debuggerDataViewer'));
     }

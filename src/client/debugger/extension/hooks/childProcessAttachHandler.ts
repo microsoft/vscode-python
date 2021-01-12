@@ -20,7 +20,7 @@ import { IChildProcessAttachService, IDebugSessionEventHandlers } from './types'
 @injectable()
 export class ChildProcessAttachEventHandler implements IDebugSessionEventHandlers {
     constructor(
-        @inject(IChildProcessAttachService) private readonly childProcessAttachService: IChildProcessAttachService
+        @inject(IChildProcessAttachService) private readonly childProcessAttachService: IChildProcessAttachService,
     ) {}
 
     @swallowExceptions('Handle child process launch')

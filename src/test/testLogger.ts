@@ -37,9 +37,9 @@ function monkeypatchConsole() {
     const streams = ['log', 'error', 'warn', 'info', 'debug', 'trace'];
     const levels: { [key: string]: LogLevel } = {
         error: LogLevel.Error,
-        warn: LogLevel.Warn
+        warn: LogLevel.Warn,
     };
-    // tslint:disable-next-line:no-any
+
     const consoleAny: any = console;
     for (const stream of streams) {
         // Using symbols guarantee the properties will be unique & prevents
@@ -47,7 +47,7 @@ function monkeypatchConsole() {
         // We could use a closure but it's a bit trickier.
         const sym = Symbol.for(stream);
         consoleAny[sym] = consoleAny[stream];
-        // tslint:disable-next-line: no-function-expression
+
         consoleAny[stream] = function () {
             const args = Array.prototype.slice.call(arguments);
             const fn = consoleAny[sym];

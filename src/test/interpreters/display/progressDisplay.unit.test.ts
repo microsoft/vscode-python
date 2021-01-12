@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { expect } from 'chai';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
 import { CancellationToken, Disposable, Progress, ProgressOptions } from 'vscode';
@@ -16,7 +14,7 @@ import { InterpreterLocatorProgressStatubarHandler } from '../../../client/inter
 
 type ProgressTask<R> = (
     progress: Progress<{ message?: string; increment?: number }>,
-    token: CancellationToken
+    token: CancellationToken,
 ) => Thenable<R>;
 
 suite('Interpreters - Display Progress', () => {
@@ -33,7 +31,7 @@ suite('Interpreters - Display Progress', () => {
         },
         register(): void {
             noop();
-        }
+        },
     };
 
     test('Display loading message when refreshing interpreters for the first time', async () => {
@@ -42,7 +40,7 @@ suite('Interpreters - Display Progress', () => {
             instance(shell),
             progressService,
             [],
-            instance(mock(IComponentAdapter))
+            instance(mock(IComponentAdapter)),
         );
         when(shell.withProgress(anything(), anything())).thenResolve();
 
@@ -59,7 +57,7 @@ suite('Interpreters - Display Progress', () => {
             instance(shell),
             progressService,
             [],
-            instance(mock(IComponentAdapter))
+            instance(mock(IComponentAdapter)),
         );
         when(shell.withProgress(anything(), anything())).thenResolve();
 
@@ -81,7 +79,7 @@ suite('Interpreters - Display Progress', () => {
             instance(shell),
             progressService,
             [],
-            instance(mock(IComponentAdapter))
+            instance(mock(IComponentAdapter)),
         );
         when(shell.withProgress(anything(), anything())).thenResolve();
 

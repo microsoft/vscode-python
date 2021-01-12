@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
+import { expect } from 'chai';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { createDeferred } from '../../../../../client/common/utils/async';
@@ -11,11 +12,7 @@ import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnviro
 import { CachingLocator } from '../../../../../client/pythonEnvironments/base/locators/composite/cachingLocator';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
-import {
-    createLocatedEnv,
-    createNamedEnv,
-    SimpleLocator,
-} from '../../common';
+import { createLocatedEnv, createNamedEnv, SimpleLocator } from '../../common';
 
 const env1 = createNamedEnv('env1', '2.7.11', PythonEnvKind.System, '/usr/bin/python');
 const env2 = createNamedEnv('env2', '3.8.1', PythonEnvKind.System, '/usr/bin/python3');
@@ -44,7 +41,9 @@ suite('Python envs locator - CachingLocator', () => {
         await disposables.dispose();
     });
 
-    async function getInitializedLocator(initialEnvs: PythonEnvInfo[]): Promise<[SimpleLocator, CachingLocator]> {
+    async function getInitializedLocator(
+        initialEnvs: PythonEnvInfo[],
+    ): Promise<[SimpleLocator, CachingLocator, PythonEnvInfoCache]> {
         const cache = new FakeCache(
             () => Promise.resolve(undefined),
             () => Promise.resolve(undefined),
@@ -54,7 +53,7 @@ suite('Python envs locator - CachingLocator', () => {
         });
         const locator = new CachingLocator(cache, subLocator);
         disposables.push(locator);
-        return [subLocator, locator];
+        return [subLocator, locator, cache];
     }
 
     suite('onChanged', () => {
@@ -91,10 +90,7 @@ suite('Python envs locator - CachingLocator', () => {
             const expected = [env1, env2, env4, env5];
             const [, locator] = await getInitializedLocator(envs);
             const query = {
-                kinds: [
-                    PythonEnvKind.Venv,
-                    PythonEnvKind.System,
-                ],
+                kinds: [PythonEnvKind.Venv, PythonEnvKind.System],
             };
 
             const iterator = locator.iterEnvs(query);
@@ -125,6 +121,40 @@ suite('Python envs locator - CachingLocator', () => {
             const discovered = await getEnvs(iterator);
 
             assert.deepEqual(discovered, []);
+        });
+
+        test('a blocking refresh is triggered if cache is empty', async () => {
+            const expected: PythonEnvsChangedEvent = {};
+            const [, locator] = await getInitializedLocator([]);
+            let changeEvent: PythonEnvsChangedEvent | undefined;
+            const eventDeferred = createDeferred<void>();
+            locator.onChanged((e) => {
+                changeEvent = e;
+                eventDeferred.resolve();
+            });
+
+            await getEnvs(locator.iterEnvs());
+
+            expect(eventDeferred.resolved).to.equal(true, 'Event should already be fired');
+
+            assert.deepEqual(changeEvent, expected);
+        });
+
+        test('a refresh is triggered if cache is non-empty', async () => {
+            const expected: PythonEnvsChangedEvent = {};
+            const [, locator, cache] = await getInitializedLocator([]);
+            let changeEvent: PythonEnvsChangedEvent | undefined;
+            const eventDeferred = createDeferred<void>();
+            locator.onChanged((e) => {
+                changeEvent = e;
+                eventDeferred.resolve();
+            });
+            cache.setAllEnvs([env2]);
+
+            await getEnvs(locator.iterEnvs());
+
+            await eventDeferred.promise; // Event may or may not be fired yet, we have to wait
+            assert.deepEqual(changeEvent, expected);
         });
     });
 
@@ -160,6 +190,26 @@ suite('Python envs locator - CachingLocator', () => {
 
             assert.deepEqual(resolved, expected);
             assert.deepEqual(discoveredBefore, []);
+            assert.deepEqual(discoveredAfter, [env5]);
+        });
+
+        test('not in cache initially, added to cache when fetching downstream, and also found downstream', async () => {
+            const expected = env5;
+            const [subLocator, locator, cache] = await getInitializedLocator([]);
+            subLocator.callbacks.resolve = () => {
+                cache.setAllEnvs([env5]);
+                return Promise.resolve(env5);
+            };
+
+            const iterator1 = locator.iterEnvs();
+            const discoveredBefore = await getEnvs(iterator1);
+            const resolved = await locator.resolveEnv(env5);
+            const iterator2 = locator.iterEnvs();
+            const discoveredAfter = await getEnvs(iterator2);
+
+            assert.deepEqual(resolved, expected);
+            assert.deepEqual(discoveredBefore, []);
+            // Verify the same env isn't iterated twice
             assert.deepEqual(discoveredAfter, [env5]);
         });
 

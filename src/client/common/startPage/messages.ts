@@ -7,14 +7,14 @@ export enum CssMessages {
     GetCssRequest = 'get_css_request',
     GetCssResponse = 'get_css_response',
     GetMonacoThemeRequest = 'get_monaco_theme_request',
-    GetMonacoThemeResponse = 'get_monaco_theme_response'
+    GetMonacoThemeResponse = 'get_monaco_theme_response',
 }
 
 export enum SharedMessages {
     UpdateSettings = 'update_settings',
     Started = 'started',
     LocInit = 'loc_init',
-    StyleUpdate = 'style_update'
+    StyleUpdate = 'style_update',
 }
 
 export interface IGetCssRequest {

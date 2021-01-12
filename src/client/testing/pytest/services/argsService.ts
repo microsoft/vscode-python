@@ -20,6 +20,7 @@ const OptionsWithArguments = [
     '--basetemp',
     '--cache-show',
     '--capture',
+    '--code-highlight',
     '--color',
     '--confcutdir',
     '--cov',
@@ -31,6 +32,7 @@ const OptionsWithArguments = [
     '--doctest-glob',
     '--doctest-report',
     '--durations',
+    '--durations-min',
     '--ignore',
     '--ignore-glob',
     '--import-mode',
@@ -63,7 +65,7 @@ const OptionsWithArguments = [
     '--numprocesses',
     '--rsyncdir',
     '--rsyncignore',
-    '--tx'
+    '--tx',
 ];
 
 const OptionsWithoutArguments = [
@@ -97,7 +99,9 @@ const OptionsWithoutArguments = [
     '--nf',
     '--no-cov',
     '--no-cov-on-fail',
+    '--no-header',
     '--no-print-logs',
+    '--no-summary',
     '--noconftest',
     '--old-summary',
     '--pdb',
@@ -113,6 +117,7 @@ const OptionsWithoutArguments = [
     '--sw',
     '--stepwise-skip',
     '--strict',
+    '--strict-config',
     '--strict-markers',
     '--trace-config',
     '--verbose',
@@ -129,7 +134,7 @@ const OptionsWithoutArguments = [
     '--looponfail',
     '--trace',
     '--tx',
-    '-d'
+    '-d',
 ];
 
 @injectable()
@@ -141,13 +146,13 @@ export class ArgumentsService implements IArgumentsService {
     public getKnownOptions(): { withArgs: string[]; withoutArgs: string[] } {
         return {
             withArgs: OptionsWithArguments,
-            withoutArgs: OptionsWithoutArguments
+            withoutArgs: OptionsWithoutArguments,
         };
     }
     public getOptionValue(args: string[], option: string): string | string[] | undefined {
         return this.helper.getOptionValues(args, option);
     }
-    // tslint:disable-next-line: max-func-body-length
+
     public filterArguments(args: string[], argumentToRemoveOrFilter: string[] | TestFilter): string[] {
         const optionsWithoutArgsToRemove: string[] = [];
         const optionsWithArgsToRemove: string[] = [];
@@ -167,7 +172,7 @@ export class ArgumentsService implements IArgumentsService {
             switch (argumentToRemoveOrFilter) {
                 case TestFilter.removeTests: {
                     optionsWithoutArgsToRemove.push(
-                        ...['--lf', '--last-failed', '--ff', '--failed-first', '--nf', '--new-first']
+                        ...['--lf', '--last-failed', '--ff', '--failed-first', '--nf', '--new-first'],
                     );
                     optionsWithArgsToRemove.push(...['-k', '-m', '--lfnf', '--last-failed-no-failures']);
                     removePositionalArgs = true;
@@ -200,8 +205,8 @@ export class ArgumentsService implements IArgumentsService {
                             '--setup-only',
                             '--setup-show',
                             '--setup-plan',
-                            '--trace'
-                        ]
+                            '--trace',
+                        ],
                     );
                     optionsWithArgsToRemove.push(
                         ...[
@@ -222,8 +227,8 @@ export class ArgumentsService implements IArgumentsService {
                             '--result-log',
                             '-W',
                             '--pythonwarnings',
-                            '--log-*'
-                        ]
+                            '--log-*',
+                        ],
                     );
                     removePositionalArgs = true;
                     break;
@@ -244,8 +249,8 @@ export class ArgumentsService implements IArgumentsService {
                             '--failed-first',
                             '--nf',
                             '--new-first',
-                            '--trace'
-                        ]
+                            '--trace',
+                        ],
                     );
                     optionsWithArgsToRemove.push(...['-k', '-m', '--lfnf', '--last-failed-no-failures']);
                     removePositionalArgs = true;
@@ -262,7 +267,7 @@ export class ArgumentsService implements IArgumentsService {
             const positionalArgs = this.helper.getPositionalArguments(
                 filteredArgs,
                 OptionsWithArguments,
-                OptionsWithoutArguments
+                OptionsWithoutArguments,
             );
             filteredArgs = filteredArgs.filter((item) => positionalArgs.indexOf(item) === -1);
         }

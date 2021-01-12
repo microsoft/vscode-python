@@ -17,16 +17,16 @@ export class FileLaunchDebugConfigurationProvider implements IDebugConfiguration
     @captureTelemetry(
         EventName.DEBUGGER_CONFIGURATION_PROMPTS,
         { configurationType: DebugConfigurationType.launchFile },
-        false
+        false,
     )
     public async buildConfiguration(_input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
         const config: Partial<LaunchRequestArguments> = {
             name: DebugConfigStrings.file.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
-            // tslint:disable-next-line:no-invalid-template-strings
+
             program: '${file}',
-            console: 'integratedTerminal'
+            console: 'integratedTerminal',
         };
         Object.assign(state.config, config);
     }

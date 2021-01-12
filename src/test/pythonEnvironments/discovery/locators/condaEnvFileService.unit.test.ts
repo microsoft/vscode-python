@@ -18,7 +18,6 @@ import { MockState } from '../../../interpreters/mocks';
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
 const environmentsFilePath = path.join(environmentsPath, 'environments.txt');
 
-// tslint:disable-next-line:max-func-body-length
 suite('Interpreters from Conda Environments Text File', () => {
     let condaService: TypeMoq.IMock<ICondaService>;
     let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
@@ -81,9 +80,9 @@ suite('Interpreters from Conda Environments Text File', () => {
         condaService.setup((c) => c.condaEnvironmentsFile).returns(() => environmentsFilePath);
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
-            .returns((environmentPath) => (isWindows
-                ? path.join(environmentPath, 'python.exe')
-                : path.join(environmentPath, 'bin', 'python')));
+            .returns((environmentPath) =>
+                isWindows ? path.join(environmentPath, 'python.exe') : path.join(environmentPath, 'bin', 'python'),
+            );
         condaService
             .setup((c) => c.getCondaEnvironments(TypeMoq.It.isAny()))
             .returns(() => {

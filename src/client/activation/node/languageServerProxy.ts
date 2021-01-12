@@ -8,7 +8,7 @@ import {
     Disposable,
     LanguageClient,
     LanguageClientOptions,
-    State
+    State,
 } from 'vscode-languageclient/node';
 
 import { DeprecatePythonPath } from '../../common/experiments/groups';
@@ -18,11 +18,12 @@ import {
     IExperimentService,
     IExperimentsManager,
     IInterpreterPathService,
-    Resource
+    Resource,
 } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
+import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -72,14 +73,15 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
-        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService
+        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
+        @inject(IEnvironmentVariablesProvider) private readonly environmentService: IEnvironmentVariablesProvider,
     ) {
         this.startupCompleted = createDeferred<void>();
     }
 
     private static versionTelemetryProps(instance: NodeLanguageServerProxy) {
         return {
-            lsVersion: instance.lsVersion
+            lsVersion: instance.lsVersion,
         };
     }
 
@@ -111,12 +113,12 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         undefined,
         true,
         undefined,
-        NodeLanguageServerProxy.versionTelemetryProps
+        NodeLanguageServerProxy.versionTelemetryProps,
     )
     public async start(
         resource: Resource,
         interpreter: PythonEnvironment | undefined,
-        options: LanguageClientOptions
+        options: LanguageClientOptions,
     ): Promise<void> {
         if (!this.languageClient) {
             const directory = await this.folderService.getCurrentLanguageServerDirectory();
@@ -150,7 +152,6 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         }
     }
 
-    // tslint:disable-next-line: no-empty
     public loadExtension(_args?: {}) {}
 
     @captureTelemetry(
@@ -158,7 +159,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         undefined,
         true,
         undefined,
-        NodeLanguageServerProxy.versionTelemetryProps
+        NodeLanguageServerProxy.versionTelemetryProps,
     )
     protected async serverReady(): Promise<void> {
         while (this.languageClient && !this.languageClient.initializeResult) {
@@ -195,11 +196,19 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
                     // This is needed as interpreter changes via the interpreter path service happen
                     // outside of VS Code's settings (which would mean VS Code sends the config updates itself).
                     this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, {
-                        settings: null
+                        settings: null,
                     });
-                })
+                }),
             );
         }
+
+        this.disposables.push(
+            this.environmentService.onDidEnvironmentVariablesChange(() => {
+                this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, {
+                    settings: null,
+                });
+            }),
+        );
 
         const settings = this.configurationService.getSettings(resource);
         if (settings.downloadLanguageServer) {
@@ -208,13 +217,13 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
                 const formattedProperties = {
                     ...telemetryEvent.Properties,
                     // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
-                    method: telemetryEvent.Properties.method?.replace(/\//g, '.')
+                    method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
                 };
                 sendTelemetryEvent(
                     eventName,
                     telemetryEvent.Measurements,
                     formattedProperties,
-                    telemetryEvent.Exception
+                    telemetryEvent.Exception,
                 );
             });
         }
@@ -224,17 +233,17 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
             async (params: InExperiment.IRequest): Promise<InExperiment.IResponse> => {
                 const inExperiment = await this.experimentService.inExperiment(params.experimentName);
                 return { inExperiment };
-            }
+            },
         );
 
         this.languageClient!.onRequest(
             GetExperimentValue.Method,
             async <T extends boolean | number | string>(
-                params: GetExperimentValue.IRequest
+                params: GetExperimentValue.IRequest,
             ): Promise<GetExperimentValue.IResponse<T>> => {
                 const value = await this.experimentService.getExperimentValue<T>(params.experimentName);
                 return { value };
-            }
+            },
         );
     }
 }

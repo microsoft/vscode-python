@@ -1,5 +1,3 @@
-// tslint:disable:no-any no-empty member-ordering prefer-const prefer-template no-var-self
-
 import { ChildProcess } from 'child_process';
 import { Disposable, Position, Range, TextDocument, TextEditorOptions, window } from 'vscode';
 import '../common/extensions';
@@ -20,7 +18,7 @@ export class RefactorProxy extends Disposable {
     private initialized!: Deferred<void>;
     constructor(
         private workspaceRoot: string,
-        private getPythonExecutionService: () => Promise<IPythonExecutionService>
+        private getPythonExecutionService: () => Promise<IPythonExecutionService>,
     ) {
         super(() => {});
     }
@@ -50,7 +48,7 @@ export class RefactorProxy extends Disposable {
         name: string,
         filePath: string,
         range: Range,
-        options?: TextEditorOptions
+        options?: TextEditorOptions,
     ): Promise<T> {
         if (!options) {
             options = window.activeTextEditor!.options;
@@ -61,7 +59,7 @@ export class RefactorProxy extends Disposable {
             start: this.getOffsetAt(document, range.start).toString(),
             id: '1',
             name: name,
-            indent_size: options.tabSize
+            indent_size: options.tabSize,
         };
 
         return this.sendCommand<T>(JSON.stringify(command));
@@ -71,7 +69,7 @@ export class RefactorProxy extends Disposable {
         name: string,
         filePath: string,
         range: Range,
-        options?: TextEditorOptions
+        options?: TextEditorOptions,
     ): Promise<T> {
         if (!options) {
             options = window.activeTextEditor!.options;
@@ -83,7 +81,7 @@ export class RefactorProxy extends Disposable {
             end: this.getOffsetAt(document, range.end).toString(),
             id: '1',
             name: name,
-            indent_size: options.tabSize
+            indent_size: options.tabSize,
         };
         return this.sendCommand<T>(JSON.stringify(command));
     }
@@ -92,7 +90,7 @@ export class RefactorProxy extends Disposable {
         name: string,
         filePath: string,
         range: Range,
-        options?: TextEditorOptions
+        options?: TextEditorOptions,
     ): Promise<T> {
         if (!options) {
             options = window.activeTextEditor!.options;
@@ -111,17 +109,16 @@ export class RefactorProxy extends Disposable {
             end: this.getOffsetAt(document, range.end).toString(),
             id: '1',
             name: name,
-            indent_size: options.tabSize
+            indent_size: options.tabSize,
         };
         return this.sendCommand<T>(JSON.stringify(command));
     }
     private sendCommand<T>(command: string): Promise<T> {
         return this.initialize().then(() => {
-            // tslint:disable-next-line:promise-must-complete
             return new Promise<T>((resolve, reject) => {
                 this._commandResolve = resolve;
                 this._commandReject = reject;
-                this._process!.stdin.write(command + '\n');
+                this._process!.stdin?.write(command + '\n');
             });
         });
     }
@@ -143,7 +140,7 @@ export class RefactorProxy extends Disposable {
                     this.handleStdError(output.out);
                 }
             },
-            (error) => this.handleError(error)
+            (error) => this.handleError(error),
         );
 
         return this.initialized.promise;

@@ -13,7 +13,7 @@ import {
     HoverProvider,
     ReferenceProvider,
     RenameProvider,
-    SignatureHelpProvider
+    SignatureHelpProvider,
 } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
 import * as lsp from 'vscode-languageserver-protocol';
@@ -66,13 +66,12 @@ export enum LanguageServerType {
     Jedi = 'Jedi',
     Microsoft = 'Microsoft',
     Node = 'Pylance',
-    None = 'None'
+    None = 'None',
 }
 
 export const DotNetLanguageServerFolder = 'languageServer';
 export const NodeLanguageServerFolder = 'nodeLanguageServer';
 
-// tslint:disable-next-line: interface-name
 export interface LanguageServerCommandHandler {
     clearAnalysisCache(): void;
 }
@@ -148,7 +147,7 @@ export interface ILanguageServerCompatibilityService {
 export enum LanguageClientFactory {
     base = 'base',
     simple = 'simple',
-    downloaded = 'downloaded'
+    downloaded = 'downloaded',
 }
 export const ILanguageClientFactory = Symbol('ILanguageClientFactory');
 export interface ILanguageClientFactory {
@@ -156,7 +155,7 @@ export interface ILanguageClientFactory {
         resource: Resource,
         interpreter: PythonEnvironment | undefined,
         clientOptions: LanguageClientOptions,
-        env?: NodeJS.ProcessEnv
+        env?: NodeJS.ProcessEnv,
     ): Promise<LanguageClient>;
 }
 export const ILanguageServerAnalysisOptions = Symbol('ILanguageServerAnalysisOptions');
@@ -187,7 +186,7 @@ export interface ILanguageServerProxy extends IDisposable {
     start(
         resource: Resource,
         interpreter: PythonEnvironment | undefined,
-        options: LanguageClientOptions
+        options: LanguageClientOptions,
     ): Promise<void>;
     /**
      * Sends a request to LS so as to load other extensions.
@@ -203,7 +202,7 @@ export enum PlatformName {
     Windows32Bit = 'win-x86',
     Windows64Bit = 'win-x64',
     Mac64Bit = 'osx-x64',
-    Linux64Bit = 'linux-x64'
+    Linux64Bit = 'linux-x64',
 }
 export const IPlatformData = Symbol('IPlatformData');
 export interface IPlatformData {

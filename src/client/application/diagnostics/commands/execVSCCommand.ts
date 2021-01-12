@@ -15,7 +15,7 @@ export class ExecuteVSCCommand extends BaseDiagnosticCommand {
     constructor(
         diagnostic: IDiagnostic,
         private serviceContainer: IServiceContainer,
-        private commandName: CommandsWithoutArgs
+        private commandName: CommandsWithoutArgs,
     ) {
         super(diagnostic);
     }

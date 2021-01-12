@@ -10,7 +10,6 @@ import { BaseTerminalActivator } from '../../../../client/common/terminal/activa
 import { ITerminalActivator, ITerminalHelper } from '../../../../client/common/terminal/types';
 import { noop } from '../../../../client/common/utils/misc';
 
-// tslint:disable:max-func-body-length no-any
 suite('Terminal Base Activator', () => {
     let activator: ITerminalActivator;
     let helper: TypeMoq.IMock<ITerminalHelper>;
@@ -28,14 +27,14 @@ suite('Terminal Base Activator', () => {
         { commandCount: 1, preserveFocus: false },
         { commandCount: 2, preserveFocus: false },
         { commandCount: 1, preserveFocus: true },
-        { commandCount: 1, preserveFocus: true }
+        { commandCount: 1, preserveFocus: true },
     ].forEach((item) => {
         const titleSuffix = `(${item.commandCount} activation command, and preserve focus in terminal is ${item.preserveFocus})`;
         const activationCommands = item.commandCount === 1 ? ['CMD1'] : ['CMD1', 'CMD2'];
         test(`Terminal is activated ${titleSuffix}`, async () => {
             helper
                 .setup((h) =>
-                    h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                    h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                 )
                 .returns(() => Promise.resolve(activationCommands));
             const terminal = TypeMoq.Mock.ofType<Terminal>();
@@ -58,7 +57,7 @@ suite('Terminal Base Activator', () => {
         test(`Terminal is activated only once ${titleSuffix}`, async () => {
             helper
                 .setup((h) =>
-                    h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                    h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                 )
                 .returns(() => Promise.resolve(activationCommands));
             const terminal = TypeMoq.Mock.ofType<Terminal>();
@@ -83,7 +82,7 @@ suite('Terminal Base Activator', () => {
         test(`Terminal is activated only once ${titleSuffix} (even when not waiting)`, async () => {
             helper
                 .setup((h) =>
-                    h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                    h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                 )
                 .returns(() => Promise.resolve(activationCommands));
             const terminal = TypeMoq.Mock.ofType<Terminal>();
@@ -102,7 +101,7 @@ suite('Terminal Base Activator', () => {
             const activated = await Promise.all([
                 activator.activateEnvironmentInTerminal(terminal.object, { preserveFocus: item.preserveFocus }),
                 activator.activateEnvironmentInTerminal(terminal.object, { preserveFocus: item.preserveFocus }),
-                activator.activateEnvironmentInTerminal(terminal.object, { preserveFocus: item.preserveFocus })
+                activator.activateEnvironmentInTerminal(terminal.object, { preserveFocus: item.preserveFocus }),
             ]);
 
             terminal.verifyAll();

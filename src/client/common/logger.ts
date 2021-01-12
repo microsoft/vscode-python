@@ -5,6 +5,6 @@ export {
     logError as traceError,
     logInfo as traceInfo,
     logVerbose as traceVerbose,
-    logWarning as traceWarning
+    logWarning as traceWarning,
 } from '../logging';
 export { TraceOptions as LogOptions } from '../logging/trace';

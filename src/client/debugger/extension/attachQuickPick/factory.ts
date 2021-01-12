@@ -20,7 +20,7 @@ export class AttachProcessProviderFactory implements IAttachProcessProviderFacto
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
-        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
     ) {}
 
     public registerCommands() {
@@ -29,7 +29,7 @@ export class AttachProcessProviderFactory implements IAttachProcessProviderFacto
         const disposable = this.commandManager.registerCommand(
             Commands.PickLocalProcess,
             () => picker.showQuickPick(),
-            this
+            this,
         );
         this.disposableRegistry.push(disposable);
     }

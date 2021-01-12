@@ -25,7 +25,7 @@ const info: PythonEnvironment = {
     envType: EnvironmentType.Unknown,
     version: new SemVer('1.0.0-alpha'),
     sysPrefix: '',
-    sysVersion: ''
+    sysVersion: '',
 };
 
 class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
@@ -33,7 +33,7 @@ class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
     public label: string;
     public description!: string;
     public detail?: string;
-    // tslint:disable-next-line: no-any
+
     public interpreter = {} as any;
     constructor(l: string, p: string) {
         this.path = p;
@@ -41,7 +41,6 @@ class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
     }
 }
 
-// tslint:disable-next-line:max-func-body-length
 suite('Interpreters - selector', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
@@ -51,10 +50,9 @@ suite('Interpreters - selector', () => {
     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
 
     class TestInterpreterSelector extends InterpreterSelector {
-        // tslint:disable-next-line:no-unnecessary-override
         public async suggestionToQuickPickItem(
             suggestion: PythonEnvironment,
-            workspaceUri?: Uri
+            workspaceUri?: Uri,
         ): Promise<IInterpreterQuickPickItem> {
             return super.suggestionToQuickPickItem(suggestion, workspaceUri);
         }
@@ -82,7 +80,7 @@ suite('Interpreters - selector', () => {
             comparer.object,
             experimentsManager.object,
             interpreterSecurityService.object,
-            new PathUtils(false)
+            new PathUtils(false),
         );
     });
 
@@ -93,7 +91,7 @@ suite('Interpreters - selector', () => {
                 comparer.object,
                 experimentsManager.object,
                 interpreterSecurityService.object,
-                new PathUtils(isWindows)
+                new PathUtils(isWindows),
             );
 
             const initial: PythonEnvironment[] = [
@@ -102,7 +100,7 @@ suite('Interpreters - selector', () => {
                 { displayName: '2', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
                 { displayName: '2 (virtualenv)', path: 'c:/path2/path2', envType: EnvironmentType.VirtualEnv },
                 { displayName: '3', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
-                { displayName: '4', path: 'c:/path4/path4', envType: EnvironmentType.Conda }
+                { displayName: '4', path: 'c:/path4/path4', envType: EnvironmentType.Conda },
             ].map((item) => {
                 return { ...info, ...item };
             });
@@ -118,7 +116,7 @@ suite('Interpreters - selector', () => {
                 new InterpreterQuickPickItem('2', 'c:/path2/path2'),
                 new InterpreterQuickPickItem('2 (virtualenv)', 'c:/path2/path2'),
                 new InterpreterQuickPickItem('3', 'c:/path2/path2'),
-                new InterpreterQuickPickItem('4', 'c:/path4/path4')
+                new InterpreterQuickPickItem('4', 'c:/path4/path4'),
             ];
 
             assert.equal(actual.length, expected.length, 'Suggestion lengths are different.');
@@ -126,35 +124,34 @@ suite('Interpreters - selector', () => {
                 assert.equal(
                     actual[i].label,
                     expected[i].label,
-                    `Suggestion label is different at ${i}: exected '${expected[i].label}', found '${actual[i].label}'.`
+                    `Suggestion label is different at ${i}: exected '${expected[i].label}', found '${actual[i].label}'.`,
                 );
                 assert.equal(
                     actual[i].path,
                     expected[i].path,
-                    `Suggestion path is different at ${i}: exected '${expected[i].path}', found '${actual[i].path}'.`
+                    `Suggestion path is different at ${i}: exected '${expected[i].path}', found '${actual[i].path}'.`,
                 );
             }
         });
     });
 
     test('When in Deprecate PythonPath experiment, remove unsafe interpreters from the suggested interpreters list', async () => {
-        // tslint:disable-next-line: no-any
         const interpreterList = ['interpreter1', 'interpreter2', 'interpreter3'] as any;
         interpreterService
             .setup((i) => i.getInterpreters(folder1.uri, { onSuggestion: true }))
             .returns(() => interpreterList);
-        // tslint:disable-next-line: no-any
+
         interpreterSecurityService.setup((i) => i.isSafe('interpreter1' as any)).returns(() => true);
-        // tslint:disable-next-line: no-any
+
         interpreterSecurityService.setup((i) => i.isSafe('interpreter2' as any)).returns(() => false);
-        // tslint:disable-next-line: no-any
+
         interpreterSecurityService.setup((i) => i.isSafe('interpreter3' as any)).returns(() => undefined);
         experimentsManager.reset();
         experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
         experimentsManager
             .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
             .returns(() => undefined);
-        // tslint:disable-next-line: no-any
+
         selector.suggestionToQuickPickItem = (item, _) => Promise.resolve(item as any);
         const suggestion = await selector.getSuggestions(folder1.uri);
         assert.deepEqual(suggestion, ['interpreter1', 'interpreter3']);

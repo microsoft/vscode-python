@@ -16,7 +16,7 @@ import { IPythonPathUpdaterServiceManager } from '../../../client/interpreter/co
 import {
     IInterpreterHelper,
     IInterpreterLocatorService,
-    IInterpreterWatcherBuilder
+    IInterpreterWatcherBuilder,
 } from '../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
 import { VirtualEnvironmentPrompt } from '../../../client/interpreter/virtualEnvs/virtualEnvPrompt';
@@ -24,14 +24,12 @@ import { CacheableLocatorService } from '../../../client/pythonEnvironments/disc
 import { InterpreterWatcherBuilder } from '../../../client/pythonEnvironments/discovery/locators/services/interpreterWatcherBuilder';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Virtual Environment Prompt', () => {
     class VirtualEnvironmentPromptTest extends VirtualEnvironmentPrompt {
-        // tslint:disable-next-line:no-unnecessary-override
         public async handleNewEnvironment(resource: Uri): Promise<void> {
             await super.handleNewEnvironment(resource);
         }
-        // tslint:disable-next-line:no-unnecessary-override
+
         public async notifyUser(interpreter: PythonEnvironment, resource: Uri): Promise<void> {
             await super.notifyUser(interpreter, resource);
         }
@@ -59,7 +57,7 @@ suite('Virtual Environment Prompt', () => {
             instance(pythonPathUpdaterService),
             instance(locator),
             [instance(disposable)],
-            instance(appShell)
+            instance(appShell),
         );
     });
 
@@ -69,11 +67,11 @@ suite('Virtual Environment Prompt', () => {
         const interpreter2 = { path: 'path/to/interpreter2' };
         const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-        // tslint:disable:no-any
+
         when(locator.getInterpreters(resource)).thenResolve([interpreter1, interpreter2] as any);
         when(helper.getBestInterpreter(anything())).thenReturn(interpreter2 as any);
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
-            notificationPromptEnabled.object
+            notificationPromptEnabled.object,
         );
         notificationPromptEnabled.setup((n) => n.value).returns(() => true);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve();
@@ -92,7 +90,7 @@ suite('Virtual Environment Prompt', () => {
         const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
-            notificationPromptEnabled.object
+            notificationPromptEnabled.object,
         );
         notificationPromptEnabled.setup((n) => n.value).returns(() => true);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[0] as any);
@@ -101,8 +99,8 @@ suite('Virtual Environment Prompt', () => {
                 interpreter1.path,
                 ConfigurationTarget.WorkspaceFolder,
                 'ui',
-                resource
-            )
+                resource,
+            ),
         ).thenResolve();
 
         await environmentPrompt.notifyUser(interpreter1 as any, resource);
@@ -114,8 +112,8 @@ suite('Virtual Environment Prompt', () => {
                 interpreter1.path,
                 ConfigurationTarget.WorkspaceFolder,
                 'ui',
-                resource
-            )
+                resource,
+            ),
         ).once();
     });
 
@@ -125,7 +123,7 @@ suite('Virtual Environment Prompt', () => {
         const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
-            notificationPromptEnabled.object
+            notificationPromptEnabled.object,
         );
         notificationPromptEnabled.setup((n) => n.value).returns(() => true);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[1] as any);
@@ -134,8 +132,8 @@ suite('Virtual Environment Prompt', () => {
                 interpreter1.path,
                 ConfigurationTarget.WorkspaceFolder,
                 'ui',
-                resource
-            )
+                resource,
+            ),
         ).thenResolve();
         notificationPromptEnabled
             .setup((n) => n.updateValue(false))
@@ -151,8 +149,8 @@ suite('Virtual Environment Prompt', () => {
                 interpreter1.path,
                 ConfigurationTarget.WorkspaceFolder,
                 'ui',
-                resource
-            )
+                resource,
+            ),
         ).never();
         notificationPromptEnabled.verifyAll();
     });
@@ -163,7 +161,7 @@ suite('Virtual Environment Prompt', () => {
         const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
-            notificationPromptEnabled.object
+            notificationPromptEnabled.object,
         );
         notificationPromptEnabled.setup((n) => n.value).returns(() => true);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[2] as any);
@@ -185,7 +183,7 @@ suite('Virtual Environment Prompt', () => {
         const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
-            notificationPromptEnabled.object
+            notificationPromptEnabled.object,
         );
         notificationPromptEnabled.setup((n) => n.value).returns(() => false);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[0] as any);

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { FileSystem } from '../../../client/common/platform/fileSystem';

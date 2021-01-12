@@ -11,7 +11,6 @@ import { DocumentManager } from '../../client/common/application/documentManager
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Active resource service', () => {
     let documentManager: IDocumentManager;
     let workspaceService: IWorkspaceService;
@@ -26,10 +25,10 @@ suite('Active resource service', () => {
         const activeTextEditor = {
             document: {
                 isUntitled: false,
-                uri: Uri.parse('a')
-            }
+                uri: Uri.parse('a'),
+            },
         };
-        // tslint:disable-next-line:no-any
+
         when(documentManager.activeTextEditor).thenReturn(activeTextEditor as any);
 
         const activeResource = activeResourceService.getActiveResource();
@@ -43,10 +42,10 @@ suite('Active resource service', () => {
         const activeTextEditor = {
             document: {
                 isUntitled: true,
-                uri: Uri.parse('a')
-            }
+                uri: Uri.parse('a'),
+            },
         };
-        // tslint:disable-next-line:no-any
+
         when(documentManager.activeTextEditor).thenReturn(activeTextEditor as any);
         when(workspaceService.workspaceFolders).thenReturn([]);
 
@@ -60,14 +59,14 @@ suite('Active resource service', () => {
     test('If no document is currently opened & the workspace opened contains workspace folders, return the uri of the first workspace folder', async () => {
         const workspaceFolders = [
             {
-                uri: Uri.parse('a')
+                uri: Uri.parse('a'),
             },
             {
-                uri: Uri.parse('b')
-            }
+                uri: Uri.parse('b'),
+            },
         ];
         when(documentManager.activeTextEditor).thenReturn(undefined);
-        // tslint:disable-next-line:no-any
+
         when(workspaceService.workspaceFolders).thenReturn(workspaceFolders as any);
 
         const activeResource = activeResourceService.getActiveResource();

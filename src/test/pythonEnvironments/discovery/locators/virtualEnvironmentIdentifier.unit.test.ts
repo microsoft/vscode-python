@@ -10,7 +10,10 @@ import * as platformUtils from '../../../../client/common/utils/platform';
 import { PythonReleaseLevel, PythonVersion } from '../../../../client/pythonEnvironments/base/info';
 import * as fileUtils from '../../../../client/pythonEnvironments/common/externalDependencies';
 import {
-    getPythonVersionFromPyvenvCfg, isVenvEnvironment, isVirtualenvEnvironment, isVirtualenvwrapperEnvironment,
+    getPythonVersionFromPyvenvCfg,
+    isVenvEnvironment,
+    isVirtualenvEnvironment,
+    isVirtualenvwrapperEnvironment,
 } from '../../../../client/pythonEnvironments/discovery/locators/services/virtualEnvironmentIdentifier';
 import { TEST_DATA_ROOT, TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertVersionsEqual } from './envTestUtils';
@@ -19,7 +22,7 @@ suite('isVenvEnvironment Tests', () => {
     const pyvenvCfg = 'pyvenv.cfg';
     const envRoot = path.join('path', 'to', 'env');
     const configPath = path.join('env', pyvenvCfg);
-    let fileExistsStub:sinon.SinonStub;
+    let fileExistsStub: sinon.SinonStub;
 
     setup(() => {
         fileExistsStub = ImportMock.mockFunction(fileUtils, 'pathExists');
@@ -38,7 +41,7 @@ suite('isVenvEnvironment Tests', () => {
     test('pyvenv.cfg exists in the current folder', async () => {
         const interpreter = path.join(envRoot, 'python');
 
-        fileExistsStub.callsFake((p:string) => {
+        fileExistsStub.callsFake((p: string) => {
             if (p.endsWith(configPath)) {
                 return Promise.resolve(true);
             }
@@ -51,7 +54,7 @@ suite('isVenvEnvironment Tests', () => {
     test('pyvenv.cfg exists in the parent folder', async () => {
         const interpreter = path.join(envRoot, 'bin', 'python');
 
-        fileExistsStub.callsFake((p:string) => {
+        fileExistsStub.callsFake((p: string) => {
             if (p.endsWith(configPath)) {
                 return Promise.resolve(true);
             }
@@ -93,7 +96,7 @@ suite('isVirtualenvwrapperEnvironment Tests', () => {
 
     let getEnvVariableStub: sinon.SinonStub;
     let getUserHomeDirStub: sinon.SinonStub;
-    let pathExistsStub:sinon.SinonStub;
+    let pathExistsStub: sinon.SinonStub;
     let readDirStub: sinon.SinonStub;
 
     setup(() => {
@@ -170,9 +173,9 @@ suite('Virtual Env Version Parser Tests', () => {
     }
 
     function getTestData(): ICondaPythonVersionTestData[] {
-        const data:ICondaPythonVersionTestData[] = [];
+        const data: ICondaPythonVersionTestData[] = [];
 
-        const cases = (fsapi.readdirSync(testDataRoot)).map((c) => path.join(testDataRoot, c));
+        const cases = fsapi.readdirSync(testDataRoot).map((c) => path.join(testDataRoot, c));
         const casesToVersion = new Map<string, PythonVersion>();
         casesToVersion.set('case1', { major: 3, minor: 9, micro: 0 });
 
@@ -184,7 +187,10 @@ suite('Virtual Env Version Parser Tests', () => {
             sysVersion: undefined,
         });
         casesToVersion.set('case3', {
-            major: 3, minor: 9, micro: 0, release: { level: PythonReleaseLevel.Candidate, serial: 1 },
+            major: 3,
+            minor: 9,
+            micro: 0,
+            release: { level: PythonReleaseLevel.Candidate, serial: 1 },
         });
         casesToVersion.set('case4', {
             major: 3,

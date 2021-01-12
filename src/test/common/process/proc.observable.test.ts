@@ -12,7 +12,6 @@ import { initialize } from './../../initialize';
 
 use(chaiAsPromised);
 
-// tslint:disable-next-line:max-func-body-length
 suite('ProcessService', () => {
     let pythonPath: string;
     suiteSetup(() => {
@@ -23,7 +22,6 @@ suite('ProcessService', () => {
     teardown(initialize);
 
     test('execObservable should stream output with new lines', function (done) {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(10000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
@@ -37,7 +35,7 @@ suite('ProcessService', () => {
             'time.sleep(2)',
             'print("3")',
             'sys.stdout.flush()',
-            'time.sleep(2)'
+            'time.sleep(2)',
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
@@ -58,17 +56,16 @@ suite('ProcessService', () => {
                 }
             },
             done,
-            done
+            done,
         );
     });
 
     test('execObservable should stream output without new lines', function (done) {
         // Skipping to get nightly build to pass. Opened this issue:
         // https://github.com/microsoft/vscode-python/issues/7411
-        // tslint:disable-next-line: no-invalid-this
+
         this.skip();
 
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(10000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
@@ -82,7 +79,7 @@ suite('ProcessService', () => {
             'time.sleep(2)',
             'sys.stdout.write("3")',
             'sys.stdout.flush()',
-            'time.sleep(2)'
+            'time.sleep(2)',
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
@@ -103,12 +100,11 @@ suite('ProcessService', () => {
                 }
             },
             done,
-            done
+            done,
         );
     });
 
     test('execObservable should end when cancellationToken is cancelled', function (done) {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
@@ -119,11 +115,11 @@ suite('ProcessService', () => {
             'time.sleep(10)',
             'print("2")',
             'sys.stdout.flush()',
-            'time.sleep(2)'
+            'time.sleep(2)',
         ];
         const cancellationToken = new CancellationTokenSource();
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], {
-            token: cancellationToken.token
+            token: cancellationToken.token,
         });
 
         const def = createDeferred();
@@ -150,12 +146,11 @@ suite('ProcessService', () => {
                 } else {
                     def.reject('Program terminated even before cancelling it.');
                 }
-            }
+            },
         );
     });
 
     test('execObservable should end when process is killed', function (done) {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
@@ -166,11 +161,11 @@ suite('ProcessService', () => {
             'time.sleep(10)',
             'print("2")',
             'sys.stdout.flush()',
-            'time.sleep(2)'
+            'time.sleep(2)',
         ];
         const cancellationToken = new CancellationTokenSource();
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], {
-            token: cancellationToken.token
+            token: cancellationToken.token,
         });
         let procKilled = false;
 
@@ -195,12 +190,11 @@ suite('ProcessService', () => {
             () => {
                 const errorMsg = procKilled ? undefined : 'Program terminated even before killing it.';
                 done(errorMsg);
-            }
+            },
         );
     });
 
     test('execObservable should stream stdout and stderr separately', function (done) {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(20000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
@@ -223,7 +217,7 @@ suite('ProcessService', () => {
             'time.sleep(2)',
             'sys.stderr.write("c")',
             'sys.stderr.flush()',
-            'time.sleep(2)'
+            'time.sleep(2)',
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = [
@@ -232,7 +226,7 @@ suite('ProcessService', () => {
             { out: '2', source: 'stdout' },
             { out: 'b', source: 'stderr' },
             { out: '3', source: 'stdout' },
-            { out: 'c', source: 'stderr' }
+            { out: 'c', source: 'stderr' },
         ];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
@@ -249,14 +243,13 @@ suite('ProcessService', () => {
                 expect(output.source).to.be.equal(expectedOutput.source, 'Expected sopurce is incorrect');
             },
             done,
-            done
+            done,
         );
     });
 
     test('execObservable should send stdout and stderr streams separately', async function () {
         // This test is failing on Windows. Tracked by GH #4755.
         if (isOs(OSType.Windows)) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
     });
@@ -277,7 +270,7 @@ suite('ProcessService', () => {
             },
             () => {
                 done("Completed, when we're expecting an error to be thrown.");
-            }
+            },
         );
     });
 
@@ -296,7 +289,7 @@ suite('ProcessService', () => {
             },
             () => {
                 done("Completed, when we're expecting an error to be thrown.");
-            }
+            },
         );
     });
 
@@ -310,7 +303,7 @@ suite('ProcessService', () => {
                 done(`Output received, when we\'re not expecting any, ${JSON.stringify(output)}`);
             },
             done,
-            done
+            done,
         );
     });
 });

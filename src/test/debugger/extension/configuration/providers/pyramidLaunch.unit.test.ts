@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any no-invalid-template-strings max-func-body-length
-
 import { expect } from 'chai';
 import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
@@ -28,11 +26,10 @@ suite('Debugging - Configuration Provider Pyramid', () => {
     let provider: TestPyramidLaunchDebugConfigurationProvider;
     let input: MultiStepInput<DebugConfigurationState>;
     class TestPyramidLaunchDebugConfigurationProvider extends PyramidLaunchDebugConfigurationProvider {
-        // tslint:disable-next-line:no-unnecessary-override
         public resolveVariables(pythonPath: string, resource: Uri | undefined): string {
             return super.resolveVariables(pythonPath, resource);
         }
-        // tslint:disable-next-line:no-unnecessary-override
+
         public async getDevelopmentIniPath(folder: WorkspaceFolder): Promise<string | undefined> {
             return super.getDevelopmentIniPath(folder);
         }
@@ -45,7 +42,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
         provider = new TestPyramidLaunchDebugConfigurationProvider(
             instance(fs),
             instance(workspaceService),
-            instance(pathUtils)
+            instance(pathUtils),
         );
     });
     test("getDevelopmentIniPath should return undefined if file doesn't exist", async () => {
@@ -66,7 +63,6 @@ suite('Debugging - Configuration Provider Pyramid', () => {
 
         const file = await provider.getDevelopmentIniPath(folder);
 
-        // tslint:disable-next-line:no-invalid-template-strings
         expect(file).to.be.equal('${workspaceFolder}-development.ini');
     });
     test('Resolve variables (with resource)', async () => {
@@ -141,7 +137,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
             module: 'pyramid.scripts.pserve',
             args: ['xyz.ini'],
             pyramid: true,
-            jinja: true
+            jinja: true,
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -162,7 +158,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
             module: 'pyramid.scripts.pserve',
             args: ['hello'],
             pyramid: true,
-            jinja: true
+            jinja: true,
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -186,7 +182,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
             module: 'pyramid.scripts.pserve',
             args: [defaultIni],
             pyramid: true,
-            jinja: true
+            jinja: true,
         };
 
         expect(state.config).to.be.deep.equal(config);

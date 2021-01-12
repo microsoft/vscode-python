@@ -41,7 +41,7 @@ suite('Join Mailing list Prompt Tests', () => {
             instance(factory),
             instance(experimentService),
             instance(browserService),
-            instance(applicationEnvironment)
+            instance(applicationEnvironment),
         );
 
         sendTelemetryStub = ImportMock.mockFunction(telemetry, 'sendTelemetryEvent');
@@ -110,19 +110,18 @@ suite('Join Mailing list Prompt Tests', () => {
         when(experimentService.getExperimentValue(JoinMailingListPromptVariants.variant1)).thenResolve('Sample value');
 
         when(appShell.showInformationMessage(anything(), Common.bannerLabelYes(), Common.bannerLabelNo())).thenResolve(
-            // tslint:disable-next-line: no-any
-            Common.bannerLabelYes() as any
+            Common.bannerLabelYes() as any,
         );
 
         await joinMailingList.activate();
 
         assert.ok(sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED));
         verify(
-            browserService.launch('https://aka.ms/python-vscode-mailinglist?m=test.sessionId&utm_source=vscode')
+            browserService.launch('https://aka.ms/python-vscode-mailinglist?m=test.sessionId&utm_source=vscode'),
         ).once();
         verify(storage.updateValue(true)).once();
         assert.ok(
-            sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT, undefined, { selection: 'Yes' })
+            sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT, undefined, { selection: 'Yes' }),
         );
     });
     test('Show any variant, but user clicks "No"', async () => {
@@ -131,8 +130,7 @@ suite('Join Mailing list Prompt Tests', () => {
         when(experimentService.getExperimentValue(JoinMailingListPromptVariants.variant1)).thenResolve('Sample value');
 
         when(appShell.showInformationMessage(anything(), Common.bannerLabelYes(), Common.bannerLabelNo())).thenResolve(
-            // tslint:disable-next-line: no-any
-            Common.bannerLabelNo() as any
+            Common.bannerLabelNo() as any,
         );
 
         await joinMailingList.activate();
@@ -140,7 +138,7 @@ suite('Join Mailing list Prompt Tests', () => {
         assert.ok(sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED));
         verify(storage.updateValue(true)).once();
         assert.ok(
-            sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT, undefined, { selection: 'No' })
+            sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT, undefined, { selection: 'No' }),
         );
     });
     test('Show any variant, but user clicks close', async () => {
@@ -149,7 +147,7 @@ suite('Join Mailing list Prompt Tests', () => {
         when(experimentService.getExperimentValue(JoinMailingListPromptVariants.variant1)).thenResolve('Sample value');
 
         when(appShell.showInformationMessage(anything(), Common.bannerLabelYes(), Common.bannerLabelNo())).thenResolve(
-            undefined
+            undefined,
         );
 
         await joinMailingList.activate();
@@ -157,7 +155,9 @@ suite('Join Mailing list Prompt Tests', () => {
         assert.ok(sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED));
         verify(storage.updateValue(true)).once();
         assert.ok(
-            sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT, undefined, { selection: undefined })
+            sendTelemetryStub.calledWithExactly(EventName.JOIN_MAILING_LIST_PROMPT, undefined, {
+                selection: undefined,
+            }),
         );
     });
 });

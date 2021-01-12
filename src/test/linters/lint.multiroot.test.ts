@@ -8,7 +8,7 @@ import {
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
-    TestFrameworkProductPathService
+    TestFrameworkProductPathService,
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
@@ -18,8 +18,6 @@ import { TEST_OUTPUT_CHANNEL } from '../../client/testing/common/constants';
 import { TEST_TIMEOUT } from '../constants';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
-
-// tslint:disable:max-func-body-length no-invalid-this
 
 const multirootPath = path.join(__dirname, '..', '..', '..', 'src', 'testMultiRootWkspc');
 
@@ -58,27 +56,27 @@ suite('Multiroot Linting', () => {
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             CTagsProductPathService,
-            ProductType.WorkspaceSymbols
+            ProductType.WorkspaceSymbols,
         );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             FormatterProductPathService,
-            ProductType.Formatter
+            ProductType.Formatter,
         );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             LinterProductPathService,
-            ProductType.Linter
+            ProductType.Linter,
         );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             TestFrameworkProductPathService,
-            ProductType.TestFramework
+            ProductType.TestFramework,
         );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             RefactoringLibraryProductPathService,
-            ProductType.RefactoringLibrary
+            ProductType.RefactoringLibrary,
         );
     }
 
@@ -90,7 +88,7 @@ suite('Multiroot Linting', () => {
     async function testLinterInWorkspaceFolder(
         product: Product,
         workspaceFolderRelativePath: string,
-        mustHaveErrors: boolean
+        mustHaveErrors: boolean,
     ): Promise<void> {
         const fileToLint = path.join(multirootPath, workspaceFolderRelativePath, 'file.py');
         const cancelToken = new CancellationTokenSource();
@@ -129,17 +127,17 @@ suite('Multiroot Linting', () => {
             'languageServer',
             LanguageServerType.Jedi,
             Uri.file(multirootPath),
-            ConfigurationTarget.Global
+            ConfigurationTarget.Global,
         );
         await Promise.all([
             config.updateSetting(setting, global, Uri.file(multirootPath), ConfigurationTarget.Global),
-            config.updateSetting(setting, wks, Uri.file(multirootPath), ConfigurationTarget.Workspace)
+            config.updateSetting(setting, wks, Uri.file(multirootPath), ConfigurationTarget.Workspace),
         ]);
         await testLinterInWorkspaceFolder(product, 'workspace1', wks);
         await Promise.all(
             [ConfigurationTarget.Global, ConfigurationTarget.Workspace].map((configTarget) =>
-                config.updateSetting(setting, undefined, Uri.file(multirootPath), configTarget)
-            )
+                config.updateSetting(setting, undefined, Uri.file(multirootPath), configTarget),
+            ),
         );
     }
 });

@@ -4,7 +4,7 @@
 'use strict';
 
 import * as React from 'react';
-// tslint:disable-next-line:import-name match-default-export-name
+
 import InlineSVG from 'svg-inline-react';
 
 // This react component loads our svg files inline so that we can load them in vscode as it no longer
@@ -14,32 +14,32 @@ export enum ImageName {
     Interactive,
     Python,
     PythonColor,
-    OpenFolder
+    OpenFolder,
 }
 
 // All of the images must be 'require' so that webpack doesn't rewrite the import as requiring a .default.
-// tslint:disable:no-require-imports
+
 const images: { [key: string]: { light: string; dark: string } } = {
     Notebook: {
         light: require('./images/StartPage/Notebook.svg'),
-        dark: require('./images/StartPage/Notebook-inverse.svg')
+        dark: require('./images/StartPage/Notebook-inverse.svg'),
     },
     Interactive: {
         light: require('./images/StartPage/Interactive.svg'),
-        dark: require('./images/StartPage/Interactive-inverse.svg')
+        dark: require('./images/StartPage/Interactive-inverse.svg'),
     },
     Python: {
         light: require('./images/StartPage/Python.svg'),
-        dark: require('./images/StartPage/Python-inverse.svg')
+        dark: require('./images/StartPage/Python-inverse.svg'),
     },
     PythonColor: {
         light: require('./images/StartPage/Python-color.svg'),
-        dark: require('./images/StartPage/Python-color.svg')
+        dark: require('./images/StartPage/Python-color.svg'),
     },
     OpenFolder: {
         light: require('./images/StartPage/OpenFolder.svg'),
-        dark: require('./images/StartPage/OpenFolder-inverse.svg')
-    }
+        dark: require('./images/StartPage/OpenFolder-inverse.svg'),
+    },
 };
 
 interface IImageProps {

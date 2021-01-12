@@ -14,7 +14,7 @@ import { IAttachItem, IAttachPicker, IAttachProcessProvider, REFRESH_BUTTON_ICON
 export class AttachPicker implements IAttachPicker {
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        private readonly attachItemsProvider: IAttachProcessProvider
+        private readonly attachItemsProvider: IAttachProcessProvider,
     ) {}
 
     public showQuickPick(): Promise<string> {
@@ -23,7 +23,7 @@ export class AttachPicker implements IAttachPicker {
 
             const refreshButton = {
                 iconPath: getIcon(REFRESH_BUTTON_ICON),
-                tooltip: AttachProcess.refreshList()
+                tooltip: AttachProcess.refreshList(),
             };
 
             const quickPick = this.applicationShell.createQuickPick<IAttachItem>();
@@ -43,7 +43,7 @@ export class AttachPicker implements IAttachPicker {
                     quickPick.items = attachItems;
                 },
                 this,
-                disposables
+                disposables,
             );
 
             quickPick.onDidAccept(
@@ -60,7 +60,7 @@ export class AttachPicker implements IAttachPicker {
                     resolve(selectedId);
                 },
                 undefined,
-                disposables
+                disposables,
             );
 
             quickPick.onDidHide(
@@ -71,7 +71,7 @@ export class AttachPicker implements IAttachPicker {
                     reject(new Error(AttachProcess.noProcessSelected()));
                 },
                 undefined,
-                disposables
+                disposables,
             );
 
             quickPick.show();

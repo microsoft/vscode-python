@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:max-classes-per-file
-
 import { Event, EventEmitter, Uri } from 'vscode';
 import { FileChangeType } from '../../common/platform/fileSystemWatcher';
 import { PythonEnvKind } from './info';
@@ -61,7 +59,8 @@ export interface IPythonEnvsWatcher<E extends BasicPythonEnvsChangedEvent = Pyth
  * should be used.  Only in low-level cases should you consider using
  * `BasicPythonEnvsChangedEvent`.
  */
-export class PythonEnvsWatcher<T extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent> implements IPythonEnvsWatcher<T> {
+export class PythonEnvsWatcher<T extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
+    implements IPythonEnvsWatcher<T> {
     /**
      * The hook for registering event listeners (callbacks).
      */
@@ -76,7 +75,7 @@ export class PythonEnvsWatcher<T extends BasicPythonEnvsChangedEvent = PythonEnv
     /**
      * Send the event to all registered listeners.
      */
-    public fire(event: T) {
+    public fire(event: T): void {
         this.didChange.fire(event);
     }
 }

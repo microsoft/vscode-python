@@ -30,7 +30,7 @@ export class CondaEnvService extends CacheableLocatorService {
      *
      * Called by VS Code to indicate it is done with the resource.
      */
-    // tslint:disable-next-line:no-empty
+
     public dispose(): void {
         // No body
     }
@@ -64,8 +64,8 @@ export class CondaEnvService extends CacheableLocatorService {
             const environments = await this.condaService.getCondaEnvironments(true);
             if (Array.isArray(environments) && environments.length > 0) {
                 interpreters.forEach((interpreter) => {
-                    const environment = environments.find(
-                        (item) => this.fileSystem.arePathsSame(item.path, interpreter!.envPath!),
+                    const environment = environments.find((item) =>
+                        this.fileSystem.arePathsSame(item.path, interpreter!.envPath!),
                     );
                     if (environment) {
                         interpreter.envName = environment!.name;

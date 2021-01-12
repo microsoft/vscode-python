@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
-
 import { assert, expect } from 'chai';
 import { ChildProcess } from 'child_process';
 import { EOL } from 'os';
@@ -22,7 +20,7 @@ import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
     IPythonExecutionService,
-    Output
+    Output,
 } from '../../client/common/process/types';
 import {
     IConfigurationService,
@@ -32,7 +30,7 @@ import {
     IPersistentState,
     IPersistentStateFactory,
     IPythonSettings,
-    ISortImportSettings
+    ISortImportSettings,
 } from '../../client/common/types';
 import { createDeferred, createDeferredFromPromise } from '../../client/common/utils/async';
 import { Common, Diagnostics } from '../../client/common/utils/localize';
@@ -92,8 +90,8 @@ suite('Import Sort Provider', () => {
                 c.registerCommand(
                     TypeMoq.It.isValue(Commands.Sort_Imports),
                     TypeMoq.It.isAny(),
-                    TypeMoq.It.isValue(sortProvider)
-                )
+                    TypeMoq.It.isValue(sortProvider),
+                ),
             )
             .verifiable(TypeMoq.Times.once());
 
@@ -160,7 +158,7 @@ suite('Import Sort Provider', () => {
     test('Ensure no edits are provided when there is only one line', async () => {
         const uri = Uri.file('TestDoc');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
-        // tslint:disable-next-line:no-any
+
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
             .setup((d) => d.lineCount)
@@ -183,7 +181,7 @@ suite('Import Sort Provider', () => {
     test('Ensure no edits are provided when there are no lines', async () => {
         const uri = Uri.file('TestDoc');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
-        // tslint:disable-next-line:no-any
+
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
             .setup((d) => d.lineCount)
@@ -348,7 +346,7 @@ suite('Import Sort Provider', () => {
         const executionResult = {
             proc: childProcess.object,
             out: new Observable<Output<string>>((subscriber) => (actualSubscriber = subscriber)),
-            dispose: noop
+            dispose: noop,
         };
         const expectedArgs = ['-', '--diff', '1', '2'];
         processService
@@ -356,8 +354,8 @@ suite('Import Sort Provider', () => {
                 p.execObservable(
                     TypeMoq.It.isValue('CUSTOM_ISORT'),
                     TypeMoq.It.isValue(expectedArgs),
-                    TypeMoq.It.isValue({ token: undefined, cwd: path.sep })
-                )
+                    TypeMoq.It.isValue({ token: undefined, cwd: path.sep }),
+                ),
             )
             .returns(() => executionResult)
             .verifiable(TypeMoq.Times.once());
@@ -367,8 +365,8 @@ suite('Import Sort Provider', () => {
                 e.getWorkspaceEditsFromPatch(
                     TypeMoq.It.isValue('Hello'),
                     TypeMoq.It.isValue('DIFF'),
-                    TypeMoq.It.isAny()
-                )
+                    TypeMoq.It.isAny(),
+                ),
             )
             .returns(() => expectedEdit)
             .verifiable(TypeMoq.Times.once());
@@ -435,7 +433,7 @@ suite('Import Sort Provider', () => {
         const executionResult = {
             proc: childProcess.object,
             out: new Observable<Output<string>>((subscriber) => (actualSubscriber = subscriber)),
-            dispose: noop
+            dispose: noop,
         };
         const importScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'sortImports.py');
         const expectedArgs = [ISOLATED, importScript, '-', '--diff', '1', '2'];
@@ -443,8 +441,8 @@ suite('Import Sort Provider', () => {
             .setup((p) =>
                 p.execObservable(
                     TypeMoq.It.isValue(expectedArgs),
-                    TypeMoq.It.isValue({ token: undefined, cwd: path.sep })
-                )
+                    TypeMoq.It.isValue({ token: undefined, cwd: path.sep }),
+                ),
             )
             .returns(() => executionResult)
             .verifiable(TypeMoq.Times.once());
@@ -454,8 +452,8 @@ suite('Import Sort Provider', () => {
                 e.getWorkspaceEditsFromPatch(
                     TypeMoq.It.isValue('Hello'),
                     TypeMoq.It.isValue('DIFF'),
-                    TypeMoq.It.isAny()
-                )
+                    TypeMoq.It.isAny(),
+                ),
             )
             .returns(() => expectedEdit)
             .verifiable(TypeMoq.Times.once());
@@ -496,8 +494,8 @@ suite('Import Sort Provider', () => {
                 e.getWorkspaceEditsFromPatch(
                     TypeMoq.It.isValue('Hello'),
                     TypeMoq.It.isValue('DIFF'),
-                    TypeMoq.It.isAny()
-                )
+                    TypeMoq.It.isAny(),
+                ),
             )
             .returns(() => result);
 
@@ -520,7 +518,7 @@ suite('Import Sort Provider', () => {
         const firstExecutionResult = {
             proc: firstChildProcess.object,
             out: new Observable<Output<string>>((subscriber) => (firstSubscriber = subscriber)),
-            dispose: noop
+            dispose: noop,
         };
         processService
             .setup((p) => p.execObservable(TypeMoq.It.isValue('CUSTOM_ISORT'), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -548,7 +546,7 @@ suite('Import Sort Provider', () => {
         const secondExecutionResult = {
             proc: secondChildProcess.object,
             out: new Observable<Output<string>>((subscriber) => (secondSubscriber = subscriber)),
-            dispose: noop
+            dispose: noop,
         };
         processService.reset();
         processService.setup((d: any) => d.then).returns(() => undefined);
@@ -575,7 +573,7 @@ suite('Import Sort Provider', () => {
     test('If isort raises a warning message related to isort5 upgrade guide, show message', async () => {
         const _showWarningAndOptionallyShowOutput = sinon.stub(
             SortImportsEditingProvider.prototype,
-            '_showWarningAndOptionallyShowOutput'
+            '_showWarningAndOptionallyShowOutput',
         );
         _showWarningAndOptionallyShowOutput.resolves();
         const uri = Uri.file('something.py');
@@ -604,8 +602,8 @@ suite('Import Sort Provider', () => {
                 e.getWorkspaceEditsFromPatch(
                     TypeMoq.It.isValue('Hello'),
                     TypeMoq.It.isValue('DIFF'),
-                    TypeMoq.It.isAny()
-                )
+                    TypeMoq.It.isAny(),
+                ),
             )
             .returns(() => result);
 
@@ -626,7 +624,7 @@ suite('Import Sort Provider', () => {
         const executionResult = {
             proc: childProcess.object,
             out: new Observable<Output<string>>((s) => (subscriber = s)),
-            dispose: noop
+            dispose: noop,
         };
         processService.reset();
         processService.setup((d: any) => d.then).returns(() => undefined);
@@ -653,8 +651,8 @@ suite('Import Sort Provider', () => {
                 s.showWarningMessage(
                     Diagnostics.checkIsort5UpgradeGuide(),
                     Common.openOutputPanel(),
-                    Common.doNotShowAgain()
-                )
+                    Common.doNotShowAgain(),
+                ),
             )
             .returns(() => Promise.resolve(Common.openOutputPanel()));
         output.setup((o) => o.show(true)).verifiable(TypeMoq.Times.once());
@@ -680,8 +678,8 @@ suite('Import Sort Provider', () => {
                 s.showWarningMessage(
                     Diagnostics.checkIsort5UpgradeGuide(),
                     Common.openOutputPanel(),
-                    Common.doNotShowAgain()
-                )
+                    Common.doNotShowAgain(),
+                ),
             )
             .returns(() => Promise.resolve(Common.doNotShowAgain()))
             .verifiable(TypeMoq.Times.once());

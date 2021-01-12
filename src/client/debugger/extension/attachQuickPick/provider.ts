@@ -15,7 +15,7 @@ import { WmicProcessParser } from './wmicProcessParser';
 export class AttachProcessProvider implements IAttachProcessProvider {
     constructor(
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory
+        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
     ) {}
 
     public getAttachItems(): Promise<IAttachItem[]> {
@@ -23,7 +23,7 @@ export class AttachProcessProvider implements IAttachProcessProvider {
             processEntries.sort(
                 (
                     { processName: aprocessName, commandLine: aCommandLine },
-                    { processName: bProcessName, commandLine: bCommandLine }
+                    { processName: bProcessName, commandLine: bCommandLine },
                 ) => {
                     const compare = (aString: string, bString: string): number => {
                         // localeCompare is significantly slower than < and > (2000 ms vs 80 ms for 10,000 elements)
@@ -53,7 +53,7 @@ export class AttachProcessProvider implements IAttachProcessProvider {
                     }
 
                     return compare(aprocessName, bProcessName);
-                }
+                },
             );
 
             return processEntries;

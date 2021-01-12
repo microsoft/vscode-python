@@ -11,7 +11,7 @@ import {
     ICommandManager,
     IDocumentManager,
     IWebviewPanelProvider,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -43,7 +43,7 @@ suite('StartPage tests', () => {
             .setup((m) => m.update(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
             .returns(() => Promise.resolve());
         const packageJson = {
-            version: actualVersion
+            version: actualVersion,
         };
         appEnvironment.setup((ae) => ae.packageJson).returns(() => packageJson);
     }
@@ -81,7 +81,7 @@ suite('StartPage tests', () => {
             documentManager.object,
             appShell.object,
             context.object,
-            appEnvironment.object
+            appEnvironment.object,
         );
     });
 

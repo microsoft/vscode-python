@@ -8,7 +8,7 @@ import { ITextRangeCollection, IToken, TokenizerMode, TokenType } from '../langu
 export function getDocumentTokens(
     document: TextDocument,
     tokenizeTo: Position,
-    mode: TokenizerMode
+    mode: TokenizerMode,
 ): ITextRangeCollection<IToken> {
     const text = document.getText(new Range(new Position(0, 0), tokenizeTo));
     return new Tokenizer().tokenize(text, 0, text.length, mode);

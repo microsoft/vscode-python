@@ -7,8 +7,6 @@ import { Event, Extension, extensions } from 'vscode';
 
 import { IExtensions } from '../../client/common/types';
 
-// tslint:disable:no-any unified-signatures
-
 @injectable()
 export class MockExtensions implements IExtensions {
     public all: Extension<any>[] = [];

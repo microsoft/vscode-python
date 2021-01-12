@@ -13,14 +13,13 @@ import {
     Position,
     SnippetString,
     TextDocument,
-    Uri
+    Uri,
 } from 'vscode';
 import { LanguageService } from '../../../../../client/common/application/languageService';
 import { ILanguageService } from '../../../../../client/common/application/types';
 import { DebugConfigStrings } from '../../../../../client/common/utils/localize';
 import { LaunchJsonCompletionProvider } from '../../../../../client/debugger/extension/configuration/launch.json/completionProvider';
 
-// tslint:disable:no-any no-multiline-string max-func-body-length
 suite('Debugging - launch.json Completion Provider', () => {
     let completionProvider: LaunchJsonCompletionProvider;
     let languageService: ILanguageService;
@@ -32,10 +31,10 @@ suite('Debugging - launch.json Completion Provider', () => {
     test('Activation will register the completion provider', async () => {
         await completionProvider.activate();
         verify(
-            languageService.registerCompletionItemProvider(deepEqual({ language: 'json' }), completionProvider)
+            languageService.registerCompletionItemProvider(deepEqual({ language: 'json' }), completionProvider),
         ).once();
         verify(
-            languageService.registerCompletionItemProvider(deepEqual({ language: 'jsonc' }), completionProvider)
+            languageService.registerCompletionItemProvider(deepEqual({ language: 'jsonc' }), completionProvider),
         ).once();
     });
     test('Cannot provide completions for non launch.json files', () => {
@@ -124,14 +123,14 @@ suite('Debugging - launch.json Completion Provider', () => {
             command: {
                 command: 'python.SelectAndInsertDebugConfiguration',
                 title: DebugConfigStrings.launchJsonCompletions.description(),
-                arguments: [document.object, position, token]
+                arguments: [document.object, position, token],
             },
             documentation: DebugConfigStrings.launchJsonCompletions.description(),
             sortText: 'AAAA',
             preselect: true,
             kind: CompletionItemKind.Enum,
             label: DebugConfigStrings.launchJsonCompletions.label(),
-            insertText: new SnippetString()
+            insertText: new SnippetString(),
         };
 
         assert.deepEqual(completions[0], expectedCompletionItem);

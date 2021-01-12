@@ -18,7 +18,7 @@ class PythonProcessService {
             // from ProcessService:
             exec(file: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
             execObservable(file: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
-        }
+        },
     ) {}
 
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
@@ -30,7 +30,7 @@ class PythonProcessService {
     public execModuleObservable(
         moduleName: string,
         moduleArgs: string[],
-        options: SpawnOptions
+        options: SpawnOptions,
     ): ObservableExecutionResult<string> {
         const args = internalPython.execModule(moduleName, moduleArgs);
         const opts: SpawnOptions = { ...options };
@@ -47,7 +47,7 @@ class PythonProcessService {
     public async execModule(
         moduleName: string,
         moduleArgs: string[],
-        options: SpawnOptions
+        options: SpawnOptions,
     ): Promise<ExecutionResult<string>> {
         const args = internalPython.execModule(moduleName, moduleArgs);
         const opts: SpawnOptions = { ...options };
@@ -73,7 +73,7 @@ export function createPythonProcessService(
         getExecutionInfo(pythonArgs?: string[]): PythonExecInfo;
         getExecutionObservableInfo(pythonArgs?: string[]): PythonExecInfo;
         isModuleInstalled(moduleName: string): Promise<boolean>;
-    }
+    },
 ) {
     const deps = {
         // from PythonService:
@@ -82,7 +82,7 @@ export function createPythonProcessService(
         getExecutionObservableInfo: (a?: string[]) => env.getExecutionObservableInfo(a),
         // from ProcessService:
         exec: async (f: string, a: string[], o: SpawnOptions) => procs.exec(f, a, o),
-        execObservable: (f: string, a: string[], o: SpawnOptions) => procs.execObservable(f, a, o)
+        execObservable: (f: string, a: string[], o: SpawnOptions) => procs.execObservable(f, a, o),
     };
     return new PythonProcessService(deps);
 }

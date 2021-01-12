@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-classes-per-file
-
 import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -42,17 +40,17 @@ type TrackedDebugger = {
 class DebugAdapterTracker {
     constructor(
         // This contains all the state.
-        private readonly tracked: TrackedDebugger
+        private readonly tracked: TrackedDebugger,
     ) {}
 
     // debugpy -> VS Code
-    // tslint:disable-next-line:no-any
+
     public onDidSendMessage(message: any): void {
         this.onDAPMessage('debugpy', message as DebugProtocol.ProtocolMessage);
     }
 
     // VS Code -> debugpy
-    // tslint:disable-next-line:no-any
+
     public onWillReceiveMessage(message: any): void {
         this.onDAPMessage('vscode', message as DebugProtocol.ProtocolMessage);
     }
@@ -153,7 +151,7 @@ class Debuggers {
             }
             const result = {
                 exitCode: tracked.exitCode,
-                stdout: tracked.output.stdout
+                stdout: tracked.output.stdout,
             };
             this.results[id] = result;
             return result;
@@ -184,7 +182,7 @@ class DebuggerSession {
         public readonly id: number,
         public readonly config: vscode.DebugConfiguration,
         private readonly wsRoot?: vscode.WorkspaceFolder,
-        private readonly proc?: Proc
+        private readonly proc?: Proc,
     ) {}
 
     public async start() {
@@ -215,7 +213,7 @@ class DebuggerSession {
             vscode.Uri.file(filename),
             // VS Code wants 0-indexed line and column numbers.
             // We default to the beginning of the line.
-            new vscode.Position(line - 1, ch ? ch - 1 : 0)
+            new vscode.Position(line - 1, ch ? ch - 1 : 0),
         );
         const bp = new vscode.SourceBreakpoint(loc);
         vscode.debug.addBreakpoints([bp]);
@@ -240,7 +238,7 @@ class DebuggerSession {
                 const msg = (baseMsg as unknown) as DebugProtocol.StoppedEvent;
                 this.stopped = {
                     breakpoint: msg.body.reason === 'breakpoint',
-                    threadId: (msg.body.threadId as unknown) as number
+                    threadId: (msg.body.threadId as unknown) as number,
                 };
             } else {
                 // For now there aren't any other events we care about.
@@ -283,7 +281,7 @@ export class DebuggerFixture extends PythonFixture {
         configName: string,
         file: string,
         scriptArgs: string[],
-        wsRoot?: vscode.WorkspaceFolder
+        wsRoot?: vscode.WorkspaceFolder,
     ): DebuggerSession {
         const config = getConfig(configName);
         let proc: Proc | undefined;
@@ -323,7 +321,7 @@ export class DebuggerFixture extends PythonFixture {
             request: 'launch',
             program: filename,
             args: args,
-            console: 'integratedTerminal'
+            console: 'integratedTerminal',
         };
     }
 
@@ -338,11 +336,10 @@ export class DebuggerFixture extends PythonFixture {
                 host: 'localhost',
                 pathMappings: [
                     {
-                        // tslint:disable-next-line:no-invalid-template-strings
                         localRoot: '${workspaceFolder}',
-                        remoteRoot: '.'
-                    }
-                ]
+                        remoteRoot: '.',
+                    },
+                ],
             };
         } else {
             const proc = this.runScript(filename, ...args);
@@ -350,7 +347,7 @@ export class DebuggerFixture extends PythonFixture {
                 type: 'python',
                 name: 'debug',
                 request: 'attach',
-                processId: proc.pid
+                processId: proc.pid,
             };
         }
     }
@@ -360,7 +357,7 @@ export class DebuggerFixture extends PythonFixture {
             host: 'localhost',
             port: port,
             // This causes problems if we set it to true.
-            waitUntilDebuggerAttaches: false
+            waitUntilDebuggerAttaches: false,
         });
         args.push(filename, ...scriptArgs);
         return this.runScript(args[0], ...args.slice(1));

@@ -17,7 +17,7 @@ import { AutoSelectionRule, IInterpreterAutoSelectionRule, IInterpreterAutoSelec
 
 export enum NextAction {
     runNextRule = 'runNextRule',
-    exit = 'exit'
+    exit = 'exit',
 }
 
 @injectable()
@@ -27,11 +27,11 @@ export abstract class BaseRuleService implements IInterpreterAutoSelectionRule {
     constructor(
         @unmanaged() protected readonly ruleName: AutoSelectionRule,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory
+        @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory,
     ) {
         this.stateStore = stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
             `InterpreterAutoSeletionRule-${this.ruleName}`,
-            undefined
+            undefined,
         );
     }
     public setNextRule(rule: IInterpreterAutoSelectionRule): void {
@@ -47,7 +47,7 @@ export abstract class BaseRuleService implements IInterpreterAutoSelectionRule {
         sendTelemetryEvent(
             EventName.PYTHON_INTERPRETER_AUTO_SELECTION,
             { elapsedTime: stopWatch.elapsedTime },
-            { rule: this.ruleName, identified }
+            { rule: this.ruleName, identified },
         );
         if (action === NextAction.runNextRule) {
             await this.next(resource, manager);
@@ -60,12 +60,12 @@ export abstract class BaseRuleService implements IInterpreterAutoSelectionRule {
     }
     protected abstract onAutoSelectInterpreter(
         resource: Resource,
-        manager?: IInterpreterAutoSelectionService
+        manager?: IInterpreterAutoSelectionService,
     ): Promise<NextAction>;
     @traceDecorators.verbose('setGlobalInterpreter')
     protected async setGlobalInterpreter(
         interpreter?: PythonEnvironment,
-        manager?: IInterpreterAutoSelectionService
+        manager?: IInterpreterAutoSelectionService,
     ): Promise<boolean> {
         await this.cacheSelectedInterpreter(undefined, interpreter);
         if (!interpreter || !manager || !interpreter.version) {
@@ -93,7 +93,7 @@ export abstract class BaseRuleService implements IInterpreterAutoSelectionRule {
         sendTelemetryEvent(
             EventName.PYTHON_INTERPRETER_AUTO_SELECTION,
             {},
-            { rule: this.ruleName, interpreterMissing: true }
+            { rule: this.ruleName, interpreterMissing: true },
         );
         await this.cacheSelectedInterpreter(resource, undefined);
     }

@@ -14,7 +14,7 @@ export class InterpreterVersionService implements IInterpreterVersionService {
     public async getVersion(pythonPath: string, defaultValue: string): Promise<string> {
         const processService = await this.processServiceFactory.create();
         return getPythonVersion(pythonPath, defaultValue, (cmd, args) =>
-            processService.exec(cmd, args, { mergeStdOutErr: true })
+            processService.exec(cmd, args, { mergeStdOutErr: true }),
         );
     }
 

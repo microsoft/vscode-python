@@ -19,7 +19,7 @@ export function lookForTestFile(tests: Tests, testFile: string) {
             (t) =>
                 (t.name.toUpperCase() === testFile.toUpperCase() ||
                     t.name.toUpperCase() === testFileToSearch.toUpperCase()) &&
-                t.nameToRun.toUpperCase() === t.name.toUpperCase()
+                t.nameToRun.toUpperCase() === t.name.toUpperCase(),
         );
     } else {
         found = tests.testFiles.some((t) => t.name === testFile && t.nameToRun === t.name);

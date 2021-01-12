@@ -18,16 +18,12 @@ import { IPlatformService } from '../../../client/common/platform/types';
 import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { IConfigurationService, ICurrentProcess, IPythonSettings } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
-import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
-import { ServiceContainer } from '../../../client/ioc/container';
-import { IServiceContainer } from '../../../client/ioc/types';
 import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 import { noop } from '../../core';
 
-// tslint:disable:no-any max-func-body-length
 suite('Multiroot Environment Variables Provider', () => {
     let provider: EnvironmentVariablesProvider;
     let envVarsService: IEnvironmentVariablesService;
@@ -36,7 +32,6 @@ suite('Multiroot Environment Variables Provider', () => {
     let configuration: IConfigurationService;
     let currentProcess: ICurrentProcess;
     let settings: IPythonSettings;
-    let serviceContainer: IServiceContainer;
 
     setup(() => {
         envVarsService = mock(EnvironmentVariablesService);
@@ -45,7 +40,6 @@ suite('Multiroot Environment Variables Provider', () => {
         configuration = mock(ConfigurationService);
         currentProcess = mock(CurrentProcess);
         settings = mock(PythonSettings);
-        serviceContainer = mock(ServiceContainer);
 
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
         when(workspace.onDidChangeConfiguration).thenReturn(noop as any);
@@ -56,12 +50,9 @@ suite('Multiroot Environment Variables Provider', () => {
             instance(workspace),
             instance(configuration),
             instance(currentProcess),
-            instance(serviceContainer)
         );
 
         sinon.stub(EnvFileTelemetry, 'sendFileCreationTelemetry').returns();
-
-        clearCache();
     });
 
     teardown(() => {
@@ -79,7 +70,7 @@ suite('Multiroot Environment Variables Provider', () => {
         const changedEvent: ConfigurationChangeEvent = {
             affectsConfiguration(setting: string, uri?: Uri) {
                 return setting === 'python.envFile' && uri!.fsPath === workspaceFolder1Uri.fsPath;
-            }
+            },
         };
 
         provider.configurationChanged(changedEvent);
@@ -96,7 +87,7 @@ suite('Multiroot Environment Variables Provider', () => {
         const changedEvent: ConfigurationChangeEvent = {
             affectsConfiguration(_setting: string, _uri?: Uri) {
                 return false;
-            }
+            },
         };
 
         provider.configurationChanged(changedEvent);
@@ -109,7 +100,7 @@ suite('Multiroot Environment Variables Provider', () => {
         const changedEvent: ConfigurationChangeEvent = {
             affectsConfiguration(_setting: string, _uri?: Uri) {
                 return true;
-            }
+            },
         };
 
         provider.configurationChanged(changedEvent);
@@ -235,7 +226,7 @@ suite('Multiroot Environment Variables Provider', () => {
             when(currentProcess.env).thenReturn(currentProcEnv);
             when(settings.envFile).thenReturn(envFile);
             when(workspace.getWorkspaceFolder(workspaceUri)).thenReturn(workspaceFolder);
-            when(envVarsService.parseFile(envFile, currentProcEnv)).thenResolve(envFileVars);
+            when(envVarsService.parseFile(envFile, currentProcEnv)).thenCall(async () => ({ ...envFileVars }));
             when(platform.pathVariableName).thenReturn('PATH');
 
             const vars = await provider.getEnvironmentVariables(workspaceUri);
@@ -256,7 +247,7 @@ suite('Multiroot Environment Variables Provider', () => {
             when(currentProcess.env).thenReturn(currentProcEnv);
             when(settings.envFile).thenReturn(envFile);
             when(workspace.getWorkspaceFolder(workspaceUri)).thenReturn(workspaceFolder);
-            when(envVarsService.parseFile(envFile, currentProcEnv)).thenResolve(envFileVars);
+            when(envVarsService.parseFile(envFile, currentProcEnv)).thenCall(async () => ({ ...envFileVars }));
             when(platform.pathVariableName).thenReturn('PATH');
 
             const vars = await provider.getEnvironmentVariables(workspaceUri);
@@ -311,8 +302,7 @@ suite('Multiroot Environment Variables Provider', () => {
                 instance(workspace),
                 instance(configuration),
                 instance(currentProcess),
-                instance(serviceContainer),
-                100
+                100,
             );
             const vars = await provider.getEnvironmentVariables(workspaceUri);
 
@@ -324,6 +314,60 @@ suite('Multiroot Environment Variables Provider', () => {
             // Verify that the contents of `_getEnvironmentVariables()` method are invoked twice
             verify(configuration.getSettings(anything())).twice();
             assert.deepEqual(vars, {});
+        });
+
+        test(`Environment variables are updated when env file changes ${workspaceTitle}`, async () => {
+            const root = workspaceUri?.fsPath ?? '';
+            const sourceDir = path.join(root, 'a', 'b');
+            const envFile = path.join(sourceDir, 'env.file');
+            const sourceFile = path.join(sourceDir, 'main.py');
+
+            const workspaceFolder = workspaceUri ? { name: '', index: 0, uri: workspaceUri } : undefined;
+            const currentProcEnv = {
+                SOMETHING: 'wow',
+                PATH: 'some path value',
+            };
+            const envFileVars = { MY_FILE: '1234', PYTHONPATH: `./foo${path.delimiter}./bar` };
+
+            let onChangeHandler: undefined | ((resource?: Uri) => Function);
+            const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
+
+            fileSystemWatcher
+                .setup((fs) => fs.onDidChange(typemoq.It.isAny()))
+                .callback((cb) => (onChangeHandler = cb))
+                .verifiable(typemoq.Times.once());
+            when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
+
+            when(currentProcess.env).thenReturn(currentProcEnv);
+            when(settings.envFile).thenReturn(envFile);
+            when(workspace.getWorkspaceFolder(anything())).thenReturn(workspaceFolder);
+            when(envVarsService.parseFile(envFile, currentProcEnv)).thenCall(async () => ({ ...envFileVars }));
+            when(platform.pathVariableName).thenReturn('PATH');
+
+            provider.createFileWatcher(envFile, undefined);
+
+            fileSystemWatcher.verifyAll();
+            assert.ok(onChangeHandler);
+
+            async function checkVars() {
+                let vars = await provider.getEnvironmentVariables(undefined);
+                assert.deepEqual(vars, envFileVars);
+
+                vars = await provider.getEnvironmentVariables(Uri.file(sourceFile));
+                assert.deepEqual(vars, envFileVars);
+
+                vars = await provider.getEnvironmentVariables(Uri.file(sourceDir));
+                assert.deepEqual(vars, envFileVars);
+            }
+
+            await checkVars();
+
+            envFileVars.MY_FILE = 'CHANGED';
+            envFileVars.PYTHONPATH += 'CHANGED';
+
+            onChangeHandler!();
+
+            await checkVars();
         });
     });
 });

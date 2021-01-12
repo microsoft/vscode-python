@@ -16,7 +16,7 @@ export class LanguageServerOutputChannel implements ILanguageServerOutputChannel
     private registered = false;
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
     ) {}
 
     public get channel() {

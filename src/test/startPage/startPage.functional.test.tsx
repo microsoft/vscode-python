@@ -22,12 +22,11 @@ suite('StartPage tests', () => {
         await ioc.dispose();
     });
 
-    // tslint:disable-next-line: no-any
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
         // Setup our webview panel
         const wrapper = ioc.createWebView(
             () => mount(<StartPage skipDefault={true} baseTheme={'vscode-light'} testMode={true} />),
-            'default'
+            'default',
         );
 
         // Make sure the plot viewer provider and execution factory in the container is created (the extension does this on startup in the extension)
@@ -36,10 +35,9 @@ suite('StartPage tests', () => {
         return wrapper.wrapper;
     }
 
-    // tslint:disable:no-any
     function runMountedTest(
         name: string,
-        testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>
+        testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
     ) {
         test(name, async () => {
             const wrapper = mountWebView();
@@ -62,7 +60,6 @@ suite('StartPage tests', () => {
                     originalUpdateFunc = originalUpdateFunc.bind(component);
                 }
 
-                // tslint:disable-next-line:no-any
                 component.componentDidUpdate = (prevProps: Readonly<P>, prevState: Readonly<S>, snapshot?: any) => {
                     // When the component updates, call the original function and resolve our promise
                     if (originalUpdateFunc) {

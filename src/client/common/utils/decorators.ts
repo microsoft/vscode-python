@@ -1,16 +1,11 @@
-// tslint:disable:no-any no-require-imports no-function-expression no-invalid-this
-
 import { ProgressLocation, ProgressOptions, window } from 'vscode';
 import '../../common/extensions';
-import { IServiceContainer } from '../../ioc/types';
 import { isTestExecution } from '../constants';
 import { traceError, traceVerbose } from '../logger';
-import { Resource } from '../types';
 import { createDeferred, Deferred } from './async';
-import { getCacheKeyFromFunctionArgs, getGlobalCacheStore, InMemoryInterpreterSpecificCache } from './cacheUtils';
+import { getCacheKeyFromFunctionArgs, getGlobalCacheStore } from './cacheUtils';
 import { TraceInfo, tracing } from './misc';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
 const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
 type VoidFunction = () => any;
@@ -57,7 +52,6 @@ export function debounceAsync(wait?: number) {
 }
 
 export function makeDebounceDecorator(wait?: number) {
-    // tslint:disable-next-line:no-any no-function-expression
     return function (_target: any, _propertyName: string, descriptor: TypedPropertyDescriptor<VoidFunction>) {
         // We could also make use of _debounce() options.  For instance,
         // the following causes the original method to be called
@@ -77,14 +71,13 @@ export function makeDebounceDecorator(wait?: number) {
                 return originalMethod.apply(this, arguments as any);
             },
             wait,
-            options
+            options,
         );
         (descriptor as any).value = debounced;
     };
 }
 
 export function makeDebounceAsyncDecorator(wait?: number) {
-    // tslint:disable-next-line:no-any no-function-expression
     return function (_target: any, _propertyName: string, descriptor: TypedPropertyDescriptor<AsyncVoidFunction>) {
         type StateInformation = {
             started: boolean;
@@ -127,25 +120,13 @@ export function makeDebounceAsyncDecorator(wait?: number) {
     };
 }
 
-type VSCodeType = typeof import('vscode');
-
-export function clearCachedResourceSpecificIngterpreterData(
-    key: string,
-    resource: Resource,
-    serviceContainer: IServiceContainer,
-    vscode: VSCodeType = require('vscode')
-) {
-    const cacheStore = new InMemoryInterpreterSpecificCache(key, 0, [resource], serviceContainer, vscode);
-    cacheStore.clear();
-}
-
 type PromiseFunctionWithAnyArgs = (...any: any) => Promise<any>;
 const cacheStoreForMethods = getGlobalCacheStore();
 export function cache(expiryDurationMs: number) {
     return function (
         target: Object,
         propertyName: string,
-        descriptor: TypedPropertyDescriptor<PromiseFunctionWithAnyArgs>
+        descriptor: TypedPropertyDescriptor<PromiseFunctionWithAnyArgs>,
     ) {
         const originalMethod = descriptor.value!;
         const className = 'constructor' in target && target.constructor.name ? target.constructor.name : '';
@@ -163,7 +144,7 @@ export function cache(expiryDurationMs: number) {
             const promise = originalMethod.apply(this, args) as Promise<any>;
             promise
                 .then((result) =>
-                    cacheStoreForMethods.set(key, { data: result, expiry: Date.now() + expiryDurationMs })
+                    cacheStoreForMethods.set(key, { data: result, expiry: Date.now() + expiryDurationMs }),
                 )
                 .ignoreErrors();
             return promise;
@@ -179,14 +160,12 @@ export function cache(expiryDurationMs: number) {
  * @returns void
  */
 export function swallowExceptions(scopeName?: string) {
-    // tslint:disable-next-line:no-any no-function-expression
     return function (_target: any, propertyName: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value!;
         const errorMessage = `Python Extension (Error in ${scopeName || propertyName}, method:${propertyName}):`;
-        // tslint:disable-next-line:no-any no-function-expression
+
         descriptor.value = function (...args: any[]) {
             try {
-                // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
                 const result = originalMethod.apply(this, args);
 
                 // If method being wrapped returns a promise then wait and swallow errors.
@@ -208,16 +187,15 @@ export function swallowExceptions(scopeName?: string) {
     };
 }
 
-// tslint:disable-next-line:no-any
 type PromiseFunction = (...any: any[]) => Promise<any>;
 
 export function displayProgress(title: string, location = ProgressLocation.Window) {
     return function (_target: Object, _propertyName: string, descriptor: TypedPropertyDescriptor<PromiseFunction>) {
         const originalMethod = descriptor.value!;
-        // tslint:disable-next-line:no-any no-function-expression
+
         descriptor.value = async function (...args: any[]) {
             const progressOptions: ProgressOptions = { location, title };
-            // tslint:disable-next-line:no-invalid-this
+
             const promise = originalMethod.apply(this, args);
             if (!isTestExecution()) {
                 window.withProgress(progressOptions, () => promise);
@@ -231,29 +209,28 @@ export function displayProgress(title: string, location = ProgressLocation.Windo
 export type CallInfo = {
     kind: string; // "Class", etc.
     name: string;
-    // tslint:disable-next-line:no-any
+
     args: any[];
 };
 
 // Return a decorator that traces the decorated function.
 export function trace(log: (c: CallInfo, t: TraceInfo) => void) {
-    // tslint:disable-next-line:no-function-expression no-any
     return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
-        // tslint:disable-next-line:no-function-expression no-any
+
         descriptor.value = function (...args: any[]) {
             const call = {
                 kind: 'Class',
                 name: _ && _.constructor ? _.constructor.name : '',
-                args
+                args,
             };
-            // tslint:disable-next-line:no-this-assignment no-invalid-this
+
             const scope = this;
             return tracing(
                 // "log()"
                 (t) => log(call, t),
                 // "run()"
-                () => originalMethod.apply(scope, args)
+                () => originalMethod.apply(scope, args),
             );
         };
 

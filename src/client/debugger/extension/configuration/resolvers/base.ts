@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-template-strings no-suspicious-comment
-
 import { injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
@@ -29,7 +27,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         protected readonly workspaceService: IWorkspaceService,
         protected readonly documentManager: IDocumentManager,
         protected readonly platformService: IPlatformService,
-        protected readonly configurationService: IConfigurationService
+        protected readonly configurationService: IConfigurationService,
     ) {}
 
     // This is a legacy hook used solely for backwards-compatible manual substitution
@@ -43,7 +41,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
     public async resolveDebugConfiguration(
         _folder: WorkspaceFolder | undefined,
         debugConfiguration: DebugConfiguration,
-        _token?: CancellationToken
+        _token?: CancellationToken,
     ): Promise<T | undefined> {
         return debugConfiguration as T;
     }
@@ -51,7 +49,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
     public abstract resolveDebugConfigurationWithSubstitutedVariables(
         folder: WorkspaceFolder | undefined,
         debugConfiguration: DebugConfiguration,
-        token?: CancellationToken
+        token?: CancellationToken,
     ): Promise<T | undefined>;
 
     protected getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
@@ -85,7 +83,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
 
     protected resolveAndUpdatePaths(
         workspaceFolder: Uri | undefined,
-        debugConfiguration: LaunchRequestArguments
+        debugConfiguration: LaunchRequestArguments,
     ): void {
         this.resolveAndUpdateEnvFilePath(workspaceFolder, debugConfiguration);
         this.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
@@ -93,7 +91,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
 
     protected resolveAndUpdateEnvFilePath(
         workspaceFolder: Uri | undefined,
-        debugConfiguration: LaunchRequestArguments
+        debugConfiguration: LaunchRequestArguments,
     ): void {
         if (!debugConfiguration) {
             return;
@@ -101,7 +99,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         if (debugConfiguration.envFile && (workspaceFolder || debugConfiguration.cwd)) {
             const systemVariables = new SystemVariables(
                 undefined,
-                (workspaceFolder ? workspaceFolder.fsPath : undefined) || debugConfiguration.cwd
+                (workspaceFolder ? workspaceFolder.fsPath : undefined) || debugConfiguration.cwd,
             );
             debugConfiguration.envFile = systemVariables.resolveAny(debugConfiguration.envFile);
         }
@@ -109,7 +107,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
 
     protected resolveAndUpdatePythonPath(
         workspaceFolder: Uri | undefined,
-        debugConfiguration: LaunchRequestArguments
+        debugConfiguration: LaunchRequestArguments,
     ): void {
         if (!debugConfiguration) {
             return;
@@ -138,7 +136,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
     protected fixUpPathMappings(
         pathMappings: PathMapping[],
         defaultLocalRoot?: string,
-        defaultRemoteRoot?: string
+        defaultRemoteRoot?: string,
     ): PathMapping[] {
         if (!defaultLocalRoot) {
             return [];
@@ -151,8 +149,8 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
             pathMappings = [
                 {
                     localRoot: defaultLocalRoot,
-                    remoteRoot: defaultRemoteRoot
-                }
+                    remoteRoot: defaultRemoteRoot,
+                },
             ];
         } else {
             // Expand ${workspaceFolder} variable first if necessary.
@@ -160,7 +158,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
             pathMappings = pathMappings.map(({ localRoot: mappedLocalRoot, remoteRoot }) => ({
                 localRoot: systemVariables.resolveAny(mappedLocalRoot),
                 // TODO: Apply to remoteRoot too?
-                remoteRoot
+                remoteRoot,
             }));
         }
 
@@ -190,7 +188,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
 
     protected sendTelemetry(
         trigger: 'launch' | 'attach' | 'test',
-        debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>
+        debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>,
     ) {
         const name = debugConfiguration.name || '';
         const moduleName = debugConfiguration.module || '';
@@ -213,7 +211,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
             watson: name.toLowerCase().indexOf('watson') >= 0,
             pyspark: name.toLowerCase().indexOf('pyspark') >= 0,
             gevent: name.toLowerCase().indexOf('gevent') >= 0,
-            scrapy: moduleName.toLowerCase() === 'scrapy'
+            scrapy: moduleName.toLowerCase() === 'scrapy',
         };
         sendTelemetryEvent(EventName.DEBUGGER, undefined, telemetryProps);
     }

@@ -303,7 +303,7 @@ suite('chain async iterators', () => {
             // We don't need anything special here.
             { value: 'foo' },
             { value: 'bar' },
-            { value: 'baz' }
+            { value: 'baz' },
         ];
         const it = (async function* () {
             yield* expected;

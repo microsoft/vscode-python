@@ -1,9 +1,7 @@
 'use strict';
 
-// tslint:disable:no-var-requires no-require-imports
-
 // This line should always be right on top.
-// tslint:disable:no-any
+
 if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
@@ -86,11 +84,10 @@ export function deactivate(): Thenable<void> {
 /////////////////////////////
 // activation helpers
 
-// tslint:disable-next-line:max-func-body-length
 async function activateUnsafe(
     context: IExtensionContext,
     startupStopWatch: StopWatch,
-    startupDurations: Record<string, number>
+    startupDurations: Record<string, number>,
 ): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
     const activationDeferred = createDeferred<void>();
     displayProgress(activationDeferred.promise);
@@ -122,7 +119,6 @@ async function activateUnsafe(
     return [api, activationPromise, ext.legacyIOC.serviceContainer];
 }
 
-// tslint:disable-next-line:no-any
 function displayProgress(promise: Promise<any>) {
     const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension() };
     window.withProgress(progressOptions, () => promise);
@@ -133,7 +129,7 @@ function displayProgress(promise: Promise<any>) {
 
 async function handleError(ex: Error, startupDurations: Record<string, number>) {
     notifyUser(
-        "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information."
+        "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information.",
     );
     traceError('extension activation failed', ex);
     await sendErrorTelemetry(ex, startupDurations, activatedServiceContainer);
@@ -145,10 +141,8 @@ interface IAppShell {
 
 function notifyUser(msg: string) {
     try {
-        // tslint:disable-next-line:no-any
         let appShell: IAppShell = (window as any) as IAppShell;
         if (activatedServiceContainer) {
-            // tslint:disable-next-line:no-any
             appShell = (activatedServiceContainer.get<IApplicationShell>(IApplicationShell) as any) as IAppShell;
         }
         appShell.showErrorMessage(msg).ignoreErrors();

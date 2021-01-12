@@ -9,7 +9,7 @@ import {
     DebugAdapterTrackerFactory,
     DebugConfiguration,
     DebugSession,
-    ProviderResult
+    ProviderResult,
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 

@@ -6,7 +6,7 @@ import { IRegistry, RegistryHive } from './types';
 
 enum RegistryArchitectures {
     x86 = 'x86',
-    x64 = 'x64'
+    x64 = 'x64',
 }
 
 @injectable()
@@ -22,7 +22,7 @@ export class RegistryImplementation implements IRegistry {
             (ex) => {
                 traceError('Fetching key value from windows registry resulted in an error', ex);
                 return undefined;
-            }
+            },
         );
     }
 }
@@ -39,7 +39,6 @@ export function getArchitectureDisplayName(arch?: Architecture) {
 }
 
 async function getRegistryValue(options: Options, name: string = '') {
-    // tslint:disable-next-line:no-require-imports
     const Registry = require('winreg') as typeof import('winreg');
     return new Promise<string | undefined | null>((resolve) => {
         new Registry(options).get(name, (error, result) => {
@@ -52,7 +51,6 @@ async function getRegistryValue(options: Options, name: string = '') {
 }
 
 async function getRegistryKeys(options: Options): Promise<string[]> {
-    // tslint:disable-next-line:no-require-imports
     const Registry = require('winreg') as typeof import('winreg');
     // https://github.com/python/peps/blob/master/pep-0514.txt#L85
     return new Promise<string[]>((resolve) => {
@@ -75,7 +73,6 @@ function translateArchitecture(arch?: Architecture): RegistryArchitectures | und
     }
 }
 function translateHive(hive: RegistryHive): string | undefined {
-    // tslint:disable-next-line:no-require-imports
     const Registry = require('winreg') as typeof import('winreg');
     switch (hive) {
         case RegistryHive.HKCU:

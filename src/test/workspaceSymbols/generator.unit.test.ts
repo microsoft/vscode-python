@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
@@ -22,7 +20,6 @@ import { IConfigurationService, IOutputChannel, IPythonSettings } from '../../cl
 import { Generator } from '../../client/workspaceSymbols/generator';
 use(chaiAsPromised);
 
-// tslint:disable-next-line:max-func-body-length
 suite('Workspace Symbols Generator', () => {
     let configurationService: IConfigurationService;
     let pythonSettings: typemoq.IMock<IPythonSettings>;
@@ -48,7 +45,7 @@ suite('Workspace Symbols Generator', () => {
             instance(shell),
             instance(fs),
             factory.object,
-            instance(configurationService)
+            instance(configurationService),
         );
     });
     test('should be disabled', () => {
@@ -75,7 +72,7 @@ suite('Workspace Symbols Generator', () => {
             enabled: true,
             tagFilePath: '1234',
             exclusionPatterns: [],
-            ctagsPath
+            ctagsPath,
         } as any;
         pythonSettings.setup((p) => p.workspaceSymbols).returns(() => workspaceSymbols);
         when(fs.directoryExists(anything())).thenResolve(true);
@@ -84,8 +81,8 @@ suite('Workspace Symbols Generator', () => {
                 subscribe: (cb: (out: Output<string>) => void, _errorCb: any, done: Function) => {
                     cb({ source: 'stderr', out: 'KABOOM' });
                     done();
-                }
-            }
+                },
+            },
         };
         when(processService.execObservable(ctagsPath, anything(), anything())).thenReturn(observable as any);
 
@@ -99,7 +96,7 @@ suite('Workspace Symbols Generator', () => {
             enabled: true,
             tagFilePath: '1234',
             exclusionPatterns: [],
-            ctagsPath
+            ctagsPath,
         } as any;
         pythonSettings.setup((p) => p.workspaceSymbols).returns(() => workspaceSymbols);
         when(fs.directoryExists(anything())).thenResolve(true);
@@ -108,8 +105,8 @@ suite('Workspace Symbols Generator', () => {
                 subscribe: (cb: (out: Output<string>) => void, _errorCb: any, done: Function) => {
                     cb({ source: 'stdout', out: '' });
                     done();
-                }
-            }
+                },
+            },
         };
         when(processService.execObservable(ctagsPath, anything(), anything())).thenReturn(observable as any);
 

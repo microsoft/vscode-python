@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable: no-any
-
 import { createHash } from 'crypto';
 import { injectable } from 'inversify';
 import { traceError } from './logger';
@@ -17,11 +15,10 @@ export class CryptoUtils implements ICryptoUtils {
     public createHash<E extends keyof IHashFormat>(
         data: string,
         hashFormat: E,
-        algorithm: 'SHA512' | 'SHA256' | 'FNV' = 'FNV'
+        algorithm: 'SHA512' | 'SHA256' | 'FNV' = 'FNV',
     ): IHashFormat[E] {
         let hash: string;
         if (algorithm === 'FNV') {
-            // tslint:disable-next-line:no-require-imports
             const fnv = require('@enonic/fnv-plus');
             hash = fnv.fast1a32hex(data) as string;
         } else if (algorithm === 'SHA256') {

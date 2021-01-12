@@ -23,7 +23,7 @@ import { BaseShellDetector } from './baseShellDetector';
 export class UserEnvironmentShellDetector extends BaseShellDetector {
     constructor(
         @inject(ICurrentProcess) private readonly currentProcess: ICurrentProcess,
-        @inject(IPlatformService) private readonly platform: IPlatformService
+        @inject(IPlatformService) private readonly platform: IPlatformService,
     ) {
         super(1);
     }
@@ -32,7 +32,7 @@ export class UserEnvironmentShellDetector extends BaseShellDetector {
     }
     public identify(
         telemetryProperties: ShellIdentificationTelemetry,
-        _terminal?: Terminal
+        _terminal?: Terminal,
     ): TerminalShellType | undefined {
         const shellPath = this.getDefaultPlatformShell();
         telemetryProperties.hasShellInEnv = !!shellPath;

@@ -1,7 +1,7 @@
+/* eslint-disable global-require */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable-next-line: import-name
 import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
 
 import { LanguageServerType } from '../activation/types';
@@ -10,7 +10,7 @@ import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceInfo } from '../common/logger';
 import { Telemetry } from '../common/startPage/constants';
-import { TerminalShellType } from '../common/terminal/types';
+import type { TerminalShellType } from '../common/terminal/types';
 import { Architecture } from '../common/utils/platform';
 import { StopWatch } from '../common/utils/stopWatch';
 import { DebugConfigurationType } from '../debugger/extension/types';
@@ -18,11 +18,15 @@ import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { LinterId } from '../linters/types';
 import { EnvironmentType } from '../pythonEnvironments/info';
+import {
+    TensorBoardPromptSelection,
+    TensorBoardEntrypointTrigger,
+    TensorBoardSessionStartResult,
+    TensorBoardEntrypoint,
+} from '../tensorBoard/constants';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
-import { LinterTrigger, TestTool } from './types';
-
-// tslint:disable: no-any
+import type { LinterTrigger, TestTool } from './types';
 
 /**
  * Checks whether telemetry is supported.
@@ -32,10 +36,9 @@ import { LinterTrigger, TestTool } from './types';
  */
 function isTelemetrySupported(): boolean {
     try {
-        // tslint:disable-next-line:no-require-imports
         const vsc = require('vscode');
-        // tslint:disable-next-line:no-require-imports
         const reporter = require('vscode-extension-telemetry');
+
         return vsc !== undefined && reporter !== undefined;
     } catch {
         return false;
@@ -48,10 +51,10 @@ function isTelemetrySupported(): boolean {
  */
 export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolean {
     const settings = workspaceService.getConfiguration('telemetry').inspect<boolean>('enableTelemetry')!;
-    return settings.globalValue === false ? true : false;
+    return settings.globalValue === false;
 }
 
-const sharedProperties: Record<string, any> = {};
+const sharedProperties: Record<string, unknown> = {};
 /**
  * Set shared properties for all telemetry events.
  */
@@ -83,17 +86,18 @@ function getTelemetryReporter() {
         return telemetryReporter;
     }
     const extensionId = PVSC_EXTENSION_ID;
-    // tslint:disable-next-line:no-require-imports
-    const extensions = (require('vscode') as typeof import('vscode')).extensions;
+
+    const { extensions } = require('vscode') as typeof import('vscode');
     const extension = extensions.getExtension(extensionId)!;
     const extensionVersion = extension.packageJSON.version;
 
-    // tslint:disable-next-line:no-require-imports
-    const reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
-    return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true));
+    const Reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
+    telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true);
+
+    return telemetryReporter;
 }
 
-export function clearTelemetryReporter() {
+export function clearTelemetryReporter(): void {
     telemetryReporter = undefined;
 }
 
@@ -101,17 +105,18 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     eventName: E,
     durationMs?: Record<string, number> | number,
     properties?: P[E],
-    ex?: Error
-) {
+    ex?: Error,
+): void {
     if (isTestExecution() || !isTelemetrySupported()) {
         return;
     }
     const reporter = getTelemetryReporter();
-    const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
+    const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs || undefined;
     const customProperties: Record<string, string> = {};
     const eventNameSent = eventName as string;
 
     if (properties) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data = properties as any;
         Object.getOwnPropertyNames(data).forEach((prop) => {
             if (data[prop] === undefined || data[prop] === null) {
@@ -120,14 +125,19 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             try {
                 // If there are any errors in serializing one property, ignore that and move on.
                 // Else nothing will be sent.
-                customProperties[prop] =
-                    typeof data[prop] === 'string'
-                        ? data[prop]
-                        : typeof data[prop] === 'object'
-                        ? 'object'
-                        : data[prop].toString();
-            } catch (ex) {
-                traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
+                switch (typeof data[prop]) {
+                    case 'string':
+                        customProperties[prop] = data[prop];
+                        break;
+                    case 'object':
+                        customProperties[prop] = 'object';
+                        break;
+                    default:
+                        customProperties[prop] = data[prop].toString();
+                        break;
+                }
+            } catch (exception) {
+                traceError(`Failed to serialize ${prop} for ${eventName}`, exception);
             }
         });
     }
@@ -139,7 +149,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         const errorProps = {
             errorName: ex.name,
             errorMessage: ex.message,
-            errorStack: ex.stack ?? ''
+            errorStack: ex.stack ?? '',
         };
         Object.assign(customProperties, errorProps);
 
@@ -153,18 +163,23 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
         traceInfo(
             `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
-                customProperties
-            )} `
+                customProperties,
+            )} `,
         );
     }
 }
 
 // Type-parameterized form of MethodDecorator in lib.es5.d.ts.
 type TypedMethodDescriptor<T> = (
-    target: Object,
+    target: unknown,
     propertyKey: string | symbol,
-    descriptor: TypedPropertyDescriptor<T>
+    descriptor: TypedPropertyDescriptor<T>,
 ) => TypedPropertyDescriptor<T> | void;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isPromise(object: any): object is Promise<void> {
+    return typeof object.then === 'function' && typeof object.catch === 'function';
+}
 
 /**
  * Decorates a method, sending a telemetry event with the given properties.
@@ -175,28 +190,29 @@ type TypedMethodDescriptor<T> = (
  * @param lazyProperties A static function on the decorated class which returns extra properties to add to the event.
  * This can be used to provide properties which are only known at runtime (after the decorator has executed).
  */
-// tslint:disable-next-line:no-any function-name
 export function captureTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     properties?: P[E],
-    captureDuration: boolean = true,
+    captureDuration = true,
     failureEventName?: E,
-    lazyProperties?: (obj: This) => P[E]
+    lazyProperties?: (obj: This) => P[E],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
-    // tslint:disable-next-line:no-function-expression no-any
     return function (
-        _target: Object,
+        _target: unknown,
         _propertyKey: string | symbol,
-        descriptor: TypedPropertyDescriptor<(this: This, ...args: any[]) => any>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        descriptor: TypedPropertyDescriptor<(this: This, ...args: any[]) => any>,
     ) {
         const originalMethod = descriptor.value!;
-        // tslint:disable-next-line:no-function-expression no-any
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         descriptor.value = function (this: This, ...args: any[]) {
             // Legacy case; fast path that sends event before method executes.
             // Does not set "failed" if the result is a Promise and throws an exception.
             if (!captureDuration && !lazyProperties) {
                 sendTelemetryEvent(eventName, undefined, properties);
-                // tslint:disable-next-line:no-invalid-this
+
                 return originalMethod.apply(this, args);
             }
 
@@ -209,29 +225,18 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
 
             const stopWatch = captureDuration ? new StopWatch() : undefined;
 
-            // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
             const result = originalMethod.apply(this, args);
 
             // If method being wrapped returns a promise then wait for it.
-            // tslint:disable-next-line:no-unsafe-any
-            if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
-                // tslint:disable-next-line:prefer-type-cast
-                (result as Promise<void>)
+            if (result && isPromise(result)) {
+                result
                     .then((data) => {
                         sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
                         return data;
                     })
-                    // tslint:disable-next-line:promise-function-async
                     .catch((ex) => {
-                        // tslint:disable-next-line:no-any
-                        const failedProps: P[E] = props() || ({} as any);
-                        (failedProps as any).failed = true;
-                        sendTelemetryEvent(
-                            failureEventName ? failureEventName : eventName,
-                            stopWatch?.elapsedTime,
-                            failedProps,
-                            ex
-                        );
+                        const failedProps: P[E] = { ...props(), failed: true } as P[E] & FailedEventType;
+                        sendTelemetryEvent(failureEventName || eventName, stopWatch?.elapsedTime, failedProps, ex);
                     });
             } else {
                 sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
@@ -247,25 +252,21 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
 // function sendTelemetryWhenDone<T extends IDSMappings, K extends keyof T>(eventName: K, properties?: T[K]);
 export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
-    promise: Promise<any> | Thenable<any>,
+    promise: Promise<unknown> | Thenable<unknown>,
     stopWatch?: StopWatch,
-    properties?: P[E]
-) {
-    stopWatch = stopWatch ? stopWatch : new StopWatch();
+    properties?: P[E],
+): void {
+    stopWatch = stopWatch || new StopWatch();
     if (typeof promise.then === 'function') {
-        // tslint:disable-next-line:prefer-type-cast no-any
-        (promise as Promise<any>).then(
+        (promise as Promise<unknown>).then(
             (data) => {
-                // tslint:disable-next-line:no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties);
                 return data;
-                // tslint:disable-next-line:promise-function-async
             },
             (ex) => {
-                // tslint:disable-next-line:no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties, ex);
                 return Promise.reject(ex);
-            }
+            },
         );
     } else {
         throw new Error('Method is neither a Promise nor a Theneable');
@@ -287,6 +288,8 @@ export interface ISharedPropertyMapping {
      */
     ['installSource']: undefined | 'marketPlace' | 'pythonCodingPack';
 }
+
+type FailedEventType = { failed: true };
 
 // Map all events to their properties
 export interface IEventNamePropertyMapping {
@@ -1268,11 +1271,11 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry sent from language server (details of telemetry sent can be provided by LS team)
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
+    [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the language server
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: any;
+    [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
      * Telemetry event sent with details when inExperiment() API is called
      */
@@ -1336,11 +1339,11 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
      */
-    [EventName.LANGUAGE_SERVER_TELEMETRY]: any;
+    [EventName.LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the Node.js server
      */
-    [EventName.LANGUAGE_SERVER_REQUEST]: any;
+    [EventName.LANGUAGE_SERVER_REQUEST]: unknown;
     /**
      * Telemetry sent on user response to 'Try Pylance' prompt.
      */
@@ -1577,7 +1580,7 @@ export interface IEventNamePropertyMapping {
          *
          * @type {boolean}
          */
-        focus_code?: boolean;
+        focusCode?: boolean;
     };
     /**
      * Tracks number of workspace folders shown in test explorer
@@ -1641,12 +1644,12 @@ export interface IEventNamePropertyMapping {
     [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
     /*
     Telemetry event sent with details of Jedi Memory usage.
-    mem_use - Memory usage of Process in kb.
+    memUse - Memory usage of Process in kb.
     limit - Upper bound for memory usage of Jedi process.
     isUserDefinedLimit - Whether the user has configfured the upper bound limit.
     restart - Whether to restart the Jedi Process (i.e. memory > limit).
     */
-    [EventName.JEDI_MEMORY]: { mem_use: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
+    [EventName.JEDI_MEMORY]: { memUse: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
     /*
     Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
     This information is useful in determining how well we identify shells on users machines.
@@ -1722,4 +1725,92 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartPageOpenFileBrowser]: never | undefined;
     [Telemetry.StartPageOpenFolder]: never | undefined;
     [Telemetry.StartPageOpenWorkspace]: never | undefined;
+
+    // TensorBoard integration events
+    /**
+     * Telemetry event sent after the user has clicked on an option in the prompt we display
+     * asking them if they want to launch an integrated TensorBoard session.
+     * `selection` is one of 'yes', 'no', or 'do not ask again'.
+     */
+    [EventName.TENSORBOARD_LAUNCH_PROMPT_SELECTION]: {
+        selection: TensorBoardPromptSelection;
+    };
+    /**
+     * Telemetry event sent after the python.launchTensorBoard command has been executed.
+     * The `entrypoint` property indicates whether the command was executed directly by the
+     * user from the command palette or from a codeaction, codelens, or the user clicking 'yes'
+     * on the launch prompt we display.
+     * The `trigger` property indicates whether the entrypoint was triggered by the user
+     * importing tensorboard, using tensorboard in a notebook, detected tfevent files in
+     * the workspace. For the palette entrypoint, the trigger is also 'palette'.
+     */
+    [EventName.TENSORBOARD_SESSION_LAUNCH]: {
+        entrypoint: TensorBoardEntrypoint;
+        trigger: TensorBoardEntrypointTrigger;
+    };
+    /**
+     * Telemetry event sent after we have attempted to create a tensorboard program instance
+     * by spawning a daemon to run the tensorboard_launcher.py script. The event is sent with
+     * `durationMs` which should never exceed 60_000ms. Depending on the value of `result`, `durationMs` means:
+     * 1. 'success' --> the total amount of time taken for the execObservable daemon to report successful TB session launch
+     * 2. 'canceled' --> the total amount of time that the user waited for the daemon to start before canceling launch
+     * 3. 'error' --> 60_000ms, i.e. we timed out waiting for the daemon to launch
+     * In the first two cases durationMs should not be more than 60_000ms.
+     */
+    [EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION]: {
+        result: TensorBoardSessionStartResult;
+    };
+    /**
+     * Telemetry event sent after the webview framing the TensorBoard website has been successfully shown.
+     * This event is sent with `durationMs` which represents the total time to create a TensorBoardSession.
+     * Note that this event is only sent if an integrated TensorBoard session is successfully created in full.
+     * This includes checking whether the tensorboard package is installed and installing it if it's not already
+     * installed, requesting the user to select a log directory, starting the tensorboard
+     * program instance in a daemon, and showing the TensorBoard UI in a webpanel, in that order.
+     */
+    [EventName.TENSORBOARD_SESSION_E2E_STARTUP_DURATION]: never | undefined;
+    /**
+     * Telemetry event sent after the user has closed a TensorBoard webview panel. This event is
+     * sent with `durationMs` specifying the total duration of time that the TensorBoard session
+     * ran for before the user terminated the session.
+     */
+    [EventName.TENSORBOARD_SESSION_DURATION]: never | undefined;
+    /**
+     * Telemetry event sent when an entrypoint is displayed to the user. This event is sent once
+     * per entrypoint per session to minimize redundant events since codeactions and codelenses
+     * can be displayed multiple times per file.
+     * The `entrypoint` property indicates whether the command was executed directly by the
+     * user from the command palette or from a codeaction, codelens, or the user clicking 'yes'
+     * on the launch prompt we display.
+     * The `trigger` property indicates whether the entrypoint was triggered by the user
+     * importing tensorboard, using tensorboard in a notebook, detected tfevent files in
+     * the workspace. For the palette entrypoint, the trigger is also 'palette'.
+     */
+    [EventName.TENSORBOARD_ENTRYPOINT_SHOWN]: {
+        entrypoint: TensorBoardEntrypoint;
+        trigger: TensorBoardEntrypointTrigger;
+    };
+    /**
+     * Telemetry event sent when the user is prompted to install Python packages that are
+     * dependencies for launching an integrated TensorBoard session.
+     */
+    [EventName.TENSORBOARD_INSTALL_PROMPT_SHOWN]: never | undefined;
+    /**
+     * Telemetry event sent after the user has clicked on an option in the prompt we display
+     * asking them if they want to install Python packages for launching an integrated TensorBoard session.
+     * `selection` is one of 'yes' or 'no'.
+     */
+    [EventName.TENSORBOARD_INSTALL_PROMPT_SELECTION]: {
+        selection: TensorBoardPromptSelection;
+    };
+    /**
+     * Telemetry event indicating the codeaction on a tensorboard import was clicked.
+     * Used for A/B testing codeaction vs codelens.
+     */
+    [EventName.TENSORBOARD_IMPORT_CODEACTION_CLICKED]: never | undefined;
+    /**
+     * Telemetry event indicating the codelens above a tensorboard import was clicked.
+     * Used for A/B testing codeaction vs codelens.
+     */
+    [EventName.TENSORBOARD_IMPORT_CODELENS_CLICKED]: never | undefined;
 }

@@ -15,8 +15,6 @@ import { MockRegistry, MockState } from '../../../interpreters/mocks';
 
 const environmentsPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'pythonFiles', 'environments');
 
-// tslint:disable:max-func-body-length no-octal-literal no-invalid-this
-
 suite('Interpreters from Windows Registry (unit)', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
@@ -51,7 +49,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const state = new MockState(undefined);
         interpreterHelper
             .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
-            // tslint:disable-next-line:no-empty no-any
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .returns(() => Promise.resolve({} as any));
         stateFactory
             .setup((s) => s.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -425,7 +424,10 @@ suite('Interpreters from Windows Registry (unit)', () => {
                 values: ['\\Software\\Python\\Company Three\\6.0.0'],
             },
             {
-                key: '\\Software\\Python', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['7.0.0'],
+                key: '\\Software\\Python',
+                hive: RegistryHive.HKLM,
+                arch: Architecture.x86,
+                values: ['7.0.0'],
             },
             {
                 key: '\\Software\\Python\\Company A',
@@ -627,7 +629,10 @@ suite('Interpreters from Windows Registry (unit)', () => {
                 values: ['\\Software\\Python\\Company Five\\8.0.0'],
             },
             {
-                key: '\\Software\\Python', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['9.0.0'],
+                key: '\\Software\\Python',
+                hive: RegistryHive.HKLM,
+                arch: Architecture.x86,
+                values: ['9.0.0'],
             },
             {
                 key: '\\Software\\Python\\Company A',
@@ -731,7 +736,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
                 key: '\\Software\\Python\\Company Five\\8.0.0\\InstallPath',
                 hive: RegistryHive.HKCU,
                 arch: Architecture.x86,
-                // tslint:disable-next-line:no-any
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 value: <any>undefined,
             },
 
@@ -843,7 +849,10 @@ suite('Interpreters from Windows Registry (unit)', () => {
                 values: ['\\Software\\Python\\Company Five\\Five !'],
             },
             {
-                key: '\\Software\\Python', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['A'],
+                key: '\\Software\\Python',
+                hive: RegistryHive.HKLM,
+                arch: Architecture.x86,
+                values: ['A'],
             },
             {
                 key: '\\Software\\Python\\Company A',
@@ -947,7 +956,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
                 key: '\\Software\\Python\\Company Five\\Five !\\InstallPath',
                 hive: RegistryHive.HKCU,
                 arch: Architecture.x86,
-                // tslint:disable-next-line:no-any
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 value: <any>undefined,
             },
 

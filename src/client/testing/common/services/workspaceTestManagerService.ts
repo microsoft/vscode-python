@@ -7,7 +7,7 @@ import {
     ITestManagerService,
     ITestManagerServiceFactory,
     IWorkspaceTestManagerService,
-    UnitTestProduct
+    UnitTestProduct,
 } from './../types';
 
 @injectable()
@@ -16,7 +16,7 @@ export class WorkspaceTestManagerService implements IWorkspaceTestManagerService
     constructor(
         @inject(IOutputChannel) @named(TEST_OUTPUT_CHANNEL) private outChannel: OutputChannel,
         @inject(ITestManagerServiceFactory) private testManagerServiceFactory: ITestManagerServiceFactory,
-        @inject(IDisposableRegistry) disposables: Disposable[]
+        @inject(IDisposableRegistry) disposables: Disposable[],
     ) {
         disposables.push(this);
     }

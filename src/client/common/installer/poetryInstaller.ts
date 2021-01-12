@@ -36,7 +36,7 @@ export class PoetryInstaller extends ModuleInstaller {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IProcessServiceFactory) private readonly processFactory: IProcessServiceFactory
+        @inject(IProcessServiceFactory) private readonly processFactory: IProcessServiceFactory,
     ) {
         super(serviceContainer);
     }
@@ -72,7 +72,7 @@ export class PoetryInstaller extends ModuleInstaller {
         }
         return {
             args,
-            execPath
+            execPath,
         };
     }
 }

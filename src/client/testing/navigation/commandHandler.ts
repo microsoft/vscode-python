@@ -23,7 +23,7 @@ export class TestCodeNavigatorCommandHandler implements ITestCodeNavigatorComman
         @inject(ITestCodeNavigator)
         @named(NavigableItemType.testSuite)
         private readonly testSuiteNavigator: ITestCodeNavigator,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
         disposableRegistry.push(this);
     }
@@ -37,19 +37,19 @@ export class TestCodeNavigatorCommandHandler implements ITestCodeNavigatorComman
         let disposable = this.commandManager.registerCommand(
             Commands.navigateToTestFile,
             this.testFileNavigator.navigateTo,
-            this.testFileNavigator
+            this.testFileNavigator,
         );
         this.disposables.push(disposable);
         disposable = this.commandManager.registerCommand(
             Commands.navigateToTestFunction,
             this.testFunctionNavigator.navigateTo,
-            this.testFunctionNavigator
+            this.testFunctionNavigator,
         );
         this.disposables.push(disposable);
         disposable = this.commandManager.registerCommand(
             Commands.navigateToTestSuite,
             this.testSuiteNavigator.navigateTo,
-            this.testSuiteNavigator
+            this.testSuiteNavigator,
         );
         this.disposables.push(disposable);
     }

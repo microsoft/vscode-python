@@ -14,7 +14,6 @@ import { LintingEngine } from '../../client/linters/lintingEngine';
 import { ILinterManager, ILintingEngine } from '../../client/linters/types';
 import { initialize } from '../initialize';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Linting - LintingEngine', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let lintManager: TypeMoq.IMock<ILinterManager>;
@@ -76,7 +75,7 @@ suite('Linting - LintingEngine', () => {
         } catch {
             lintManager.verify(
                 (l) => l.isLintingEnabled(TypeMoq.It.isAny(), TypeMoq.It.isValue(doc.uri)),
-                TypeMoq.Times.once()
+                TypeMoq.Times.once(),
             );
         }
     });
@@ -91,9 +90,9 @@ suite('Linting - LintingEngine', () => {
                         TypeMoq.It.isAny(),
                         TypeMoq.It.isAny(),
                         TypeMoq.It.isAny(),
-                        TypeMoq.It.isValue(doc.uri)
+                        TypeMoq.It.isValue(doc.uri),
                     ),
-                TypeMoq.Times.atLeastOnce()
+                TypeMoq.Times.atLeastOnce(),
             );
         }
     });
@@ -103,7 +102,7 @@ suite('Linting - LintingEngine', () => {
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
             (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-            TypeMoq.Times.never()
+            TypeMoq.Times.never(),
         );
     });
 
@@ -112,7 +111,7 @@ suite('Linting - LintingEngine', () => {
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
             (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-            TypeMoq.Times.never()
+            TypeMoq.Times.never(),
         );
     });
 
@@ -121,7 +120,7 @@ suite('Linting - LintingEngine', () => {
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
             (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-            TypeMoq.Times.never()
+            TypeMoq.Times.never(),
         );
     });
     test('Ensure files with showModifications scheme are not linted', async () => {
@@ -129,7 +128,7 @@ suite('Linting - LintingEngine', () => {
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
             (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-            TypeMoq.Times.never()
+            TypeMoq.Times.never(),
         );
     });
     test('Ensure files with svn scheme are not linted', async () => {
@@ -137,7 +136,7 @@ suite('Linting - LintingEngine', () => {
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
             (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-            TypeMoq.Times.never()
+            TypeMoq.Times.never(),
         );
     });
 
@@ -146,7 +145,7 @@ suite('Linting - LintingEngine', () => {
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
             (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-            TypeMoq.Times.never()
+            TypeMoq.Times.never(),
         );
     });
 
@@ -155,7 +154,7 @@ suite('Linting - LintingEngine', () => {
         language: string,
         exists: boolean,
         ignorePattern: string[] = [],
-        scheme?: string
+        scheme?: string,
     ): TextDocument {
         fileSystem.setup((x) => x.fileExists(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(exists));
 

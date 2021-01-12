@@ -55,7 +55,7 @@ export class Prospector extends BaseLinter {
                     column: msg.location.character,
                     line: lineNumber,
                     type: msg.code,
-                    provider: `${this.info.id} - ${msg.source}`
+                    provider: `${this.info.id} - ${msg.source}`,
                 };
             });
     }

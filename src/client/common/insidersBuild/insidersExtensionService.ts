@@ -26,7 +26,7 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
         @inject(IExtensionBuildInstaller)
         @named(INSIDERS_INSTALLER)
         private readonly insidersInstaller: IExtensionBuildInstaller,
-        @inject(IDisposableRegistry) public readonly disposables: IDisposable[]
+        @inject(IDisposableRegistry) public readonly disposables: IDisposable[],
     ) {}
 
     public async activate() {
@@ -38,22 +38,22 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
         this.disposables.push(
             this.extensionChannelService.onDidChannelChange((channel) => {
                 return this.handleChannel(channel, true);
-            })
+            }),
         );
         this.disposables.push(
             this.cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, () =>
-                this.extensionChannelService.updateChannel('off')
-            )
+                this.extensionChannelService.updateChannel('off'),
+            ),
         );
         this.disposables.push(
             this.cmdManager.registerCommand(Commands.SwitchToInsidersDaily, () =>
-                this.extensionChannelService.updateChannel('daily')
-            )
+                this.extensionChannelService.updateChannel('daily'),
+            ),
         );
         this.disposables.push(
             this.cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, () =>
-                this.extensionChannelService.updateChannel('weekly')
-            )
+                this.extensionChannelService.updateChannel('weekly'),
+            ),
         );
     }
 

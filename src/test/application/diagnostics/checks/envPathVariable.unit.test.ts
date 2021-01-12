@@ -13,7 +13,7 @@ import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/ap
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import {
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt
+    MessageCommandPrompt,
 } from '../../../../client/application/diagnostics/promptHandler';
 import {
     DiagnosticScope,
@@ -21,7 +21,7 @@ import {
     IDiagnosticCommand,
     IDiagnosticFilterService,
     IDiagnosticHandlerService,
-    IDiagnosticsService
+    IDiagnosticsService,
 } from '../../../../client/application/diagnostics/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../../client/common/application/types';
 import { IPlatformService } from '../../../../client/common/platform/types';
@@ -29,7 +29,6 @@ import { ICurrentProcess, IPathUtils } from '../../../../client/common/types';
 import { EnvironmentVariables } from '../../../../client/common/variables/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
-// tslint:disable:max-func-body-length no-any
 suite('Application Diagnostics - Checks Env Path Variable', () => {
     let diagnosticService: IDiagnosticsService;
     let platformService: typemoq.IMock<IPlatformService>;
@@ -54,8 +53,8 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
             .setup((s) =>
                 s.get(
                     typemoq.It.isValue(IDiagnosticHandlerService),
-                    typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId)
-                )
+                    typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId),
+                ),
             )
             .returns(() => messageHandler.object);
 
@@ -181,9 +180,9 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
                     typemoq.It.isAny(),
                     typemoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({
                         type: 'ignore',
-                        options: DiagnosticScope.Global
-                    })
-                )
+                        options: DiagnosticScope.Global,
+                    }),
+                ),
             )
             .returns(() => alwaysIgnoreCommand.object)
             .verifiable(typemoq.Times.once());
@@ -192,8 +191,8 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
             .setup((f) =>
                 f.createCommand(
                     typemoq.It.isAny(),
-                    typemoq.It.isObjectWith<CommandOption<'launch', string>>({ type: 'launch' })
-                )
+                    typemoq.It.isObjectWith<CommandOption<'launch', string>>({ type: 'launch' }),
+                ),
             )
             .returns(() => launchBrowserCommand.object)
             .verifiable(typemoq.Times.once());
@@ -211,7 +210,7 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
 
         filterService
             .setup((f) =>
-                f.shouldIgnoreDiagnostic(typemoq.It.isValue(DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic))
+                f.shouldIgnoreDiagnostic(typemoq.It.isValue(DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic)),
             )
             .returns(() => Promise.resolve(true))
             .verifiable(typemoq.Times.once());

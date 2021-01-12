@@ -16,7 +16,7 @@ import {
     EnvFileTelemetryTests,
     sendActivationTelemetry,
     sendFileCreationTelemetry,
-    sendSettingTelemetry
+    sendSettingTelemetry,
 } from '../../client/telemetry/envFileTelemetry';
 
 suite('Env file telemetry', () => {
@@ -34,21 +34,20 @@ suite('Env file telemetry', () => {
 
         const mockWorkspaceConfig = {
             inspect: () => ({
-                defaultValue: defaultEnvFileValue
-            })
+                defaultValue: defaultEnvFileValue,
+            }),
         };
 
-        // tslint:disable-next-line: no-any
         when(workspaceService.getConfiguration('python')).thenReturn(mockWorkspaceConfig as any);
 
         const mockSendTelemetryEvent = (
             eventName: EventName,
             _: number | undefined,
-            { hasCustomEnvPath }: { hasCustomEnvPath: boolean }
+            { hasCustomEnvPath }: { hasCustomEnvPath: boolean },
         ) => {
             telemetryEvent = {
                 eventName,
-                hasCustomEnvPath
+                hasCustomEnvPath,
             };
         };
 

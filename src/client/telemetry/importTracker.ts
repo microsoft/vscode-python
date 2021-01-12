@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -46,19 +47,21 @@ const testExecution = isTestExecution();
 @injectable()
 export class ImportTracker implements IExtensionSingleActivationService {
     private pendingChecks = new Map<string, NodeJS.Timer>();
+
     private sentMatches: Set<string> = new Set<string>();
-    // tslint:disable-next-line:no-require-imports
+
+    // eslint-disable-next-line global-require
     private hashFn = require('hash.js').sha256;
 
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
     ) {
         this.documentManager.onDidOpenTextDocument((t) => this.onOpenedOrSavedDocument(t), this, this.disposables);
         this.documentManager.onDidSaveTextDocument((t) => this.onOpenedOrSavedDocument(t), this, this.disposables);
     }
 
-    public dispose() {
+    public dispose(): void {
         this.pendingChecks.clear();
     }
 
@@ -69,7 +72,7 @@ export class ImportTracker implements IExtensionSingleActivationService {
 
     private onOpenedOrSavedDocument(document: TextDocument) {
         // Make sure this is a Python file.
-        if (path.extname(document.fileName) === '.py') {
+        if (path.extname(document.fileName).toLowerCase() === '.py') {
             this.scheduleDocument(document);
         }
     }

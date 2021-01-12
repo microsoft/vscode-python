@@ -14,12 +14,10 @@ class DocumentPosition {
     constructor(public document: vscode.TextDocument, public position: vscode.Position) {}
 
     public static fromObject(item: object): DocumentPosition {
-        // tslint:disable-next-line:no-any
         return (item as any)._documentPosition as DocumentPosition;
     }
 
     public attachTo(item: object): void {
-        // tslint:disable-next-line:no-any
         (item as any)._documentPosition = this;
     }
 }
@@ -30,7 +28,7 @@ export class CompletionSource {
     constructor(
         jediFactory: JediFactory,
         private serviceContainer: IServiceContainer,
-        private itemInfoSource: IItemInfoSource
+        private itemInfoSource: IItemInfoSource,
     ) {
         this.jediFactory = jediFactory;
     }
@@ -38,7 +36,7 @@ export class CompletionSource {
     public async getVsCodeCompletionItems(
         document: vscode.TextDocument,
         position: vscode.Position,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<vscode.CompletionItem[]> {
         const result = await this.getCompletionResult(document, position, token);
         if (result === undefined) {
@@ -49,7 +47,7 @@ export class CompletionSource {
 
     public async getDocumentation(
         completionItem: vscode.CompletionItem,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<LanguageItemInfo[] | undefined> {
         const documentPosition = DocumentPosition.fromObject(completionItem);
         if (documentPosition === undefined) {
@@ -76,7 +74,7 @@ export class CompletionSource {
     private async getCompletionResult(
         document: vscode.TextDocument,
         position: vscode.Position,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<proxy.ICompletionResult | undefined> {
         if (position.character <= 0 || isPositionInsideStringOrComment(document, position)) {
             return undefined;
@@ -91,7 +89,7 @@ export class CompletionSource {
             fileName: document.fileName,
             columnIndex: columnIndex,
             lineIndex: position.line,
-            source: source
+            source: source,
         };
 
         return this.jediFactory.getJediProxyHandler<proxy.ICompletionResult>(document.uri).sendCommand(cmd, token);
@@ -100,7 +98,7 @@ export class CompletionSource {
     private toVsCodeCompletions(
         documentPosition: DocumentPosition,
         data: proxy.ICompletionResult,
-        resource: vscode.Uri
+        resource: vscode.Uri,
     ): vscode.CompletionItem[] {
         return data && data.items.length > 0
             ? data.items.map((item) => this.toVsCodeCompletion(documentPosition, item, resource))
@@ -110,7 +108,7 @@ export class CompletionSource {
     private toVsCodeCompletion(
         documentPosition: DocumentPosition,
         item: proxy.IAutoCompleteItem,
-        resource: vscode.Uri
+        resource: vscode.Uri,
     ): vscode.CompletionItem {
         const completionItem = new vscode.CompletionItem(item.text);
         completionItem.kind = item.type;

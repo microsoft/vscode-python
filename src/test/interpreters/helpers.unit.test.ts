@@ -13,7 +13,6 @@ import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { IInterpreterHashProviderFactory } from '../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
-// tslint:disable:max-func-body-length no-any
 suite('Interpreters Display Helper', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
@@ -45,7 +44,7 @@ suite('Interpreters Display Helper', () => {
     });
     test('getActiveWorkspaceUri should return the workspace if there is only one', () => {
         const folderUri = Uri.file('abc');
-        // tslint:disable-next-line:no-any
+
         workspaceService.setup((w) => w.workspaceFolders).returns(() => [{ uri: folderUri } as any]);
 
         const workspace = helper.getActiveWorkspaceUri(undefined);
@@ -55,7 +54,7 @@ suite('Interpreters Display Helper', () => {
     });
     test('getActiveWorkspaceUri should return undefined if we no active editor and have more than one workspace folder', () => {
         const folderUri = Uri.file('abc');
-        // tslint:disable-next-line:no-any
+
         workspaceService.setup((w) => w.workspaceFolders).returns(() => [{ uri: folderUri } as any, undefined as any]);
         documentManager.setup((d) => d.activeTextEditor).returns(() => undefined);
 
@@ -65,7 +64,7 @@ suite('Interpreters Display Helper', () => {
     test('getActiveWorkspaceUri should return undefined of the active editor does not belong to a workspace and if we have more than one workspace folder', () => {
         const folderUri = Uri.file('abc');
         const documentUri = Uri.file('file');
-        // tslint:disable-next-line:no-any
+
         workspaceService.setup((w) => w.workspaceFolders).returns(() => [{ uri: folderUri } as any, undefined as any]);
         const textEditor = TypeMoq.Mock.ofType<TextEditor>();
         const document = TypeMoq.Mock.ofType<TextDocument>();
@@ -81,14 +80,14 @@ suite('Interpreters Display Helper', () => {
         const folderUri = Uri.file('abc');
         const documentWorkspaceFolderUri = Uri.file('file.abc');
         const documentUri = Uri.file('file');
-        // tslint:disable-next-line:no-any
+
         workspaceService.setup((w) => w.workspaceFolders).returns(() => [{ uri: folderUri } as any, undefined as any]);
         const textEditor = TypeMoq.Mock.ofType<TextEditor>();
         const document = TypeMoq.Mock.ofType<TextDocument>();
         textEditor.setup((t) => t.document).returns(() => document.object);
         document.setup((d) => d.uri).returns(() => documentUri);
         documentManager.setup((d) => d.activeTextEditor).returns(() => textEditor.object);
-        // tslint:disable-next-line:no-any
+
         workspaceService
             .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isValue(documentUri)))
             .returns(() => {

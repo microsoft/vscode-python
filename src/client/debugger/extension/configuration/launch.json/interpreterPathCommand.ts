@@ -15,14 +15,14 @@ export class InterpreterPathCommand implements IExtensionSingleActivationService
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposable[]
+        @inject(IDisposableRegistry) private readonly disposables: IDisposable[],
     ) {}
 
     public async activate() {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.GetSelectedInterpreterPath, (args) => {
                 return this._getSelectedInterpreterPath(args);
-            })
+            }),
         );
     }
 

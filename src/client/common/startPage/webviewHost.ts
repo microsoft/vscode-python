@@ -37,14 +37,14 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         @unmanaged() private cssGenerator: ICodeCssGenerator,
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
-        @unmanaged() protected readonly useCustomEditorApi: boolean
+        @unmanaged() protected readonly useCustomEditorApi: boolean,
     ) {
         // Listen for settings changes from vscode.
         this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
 
         // Listen for settings changes
         this._disposables.push(
-            this.configService.getSettings(undefined).onDidChange(this.onSettingsChanged.bind(this))
+            this.configService.getSettings(undefined).onDidChange(this.onSettingsChanged.bind(this)),
         );
     }
 
@@ -88,7 +88,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         return this.postMessageInternal(type.toString(), payload);
     }
 
-    // tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any): void {
         switch (message) {
             case CssMessages.GetCssRequest:
@@ -114,7 +113,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
     }
 
-    // tslint:disable-next-line:no-any
     protected async postMessageInternal(type: string, payload?: any): Promise<void> {
         if (this.webviewInit) {
             // Make sure the webpanel is up before we send it anything.
@@ -140,7 +138,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         return this.postMessageInternal(CssMessages.GetCssResponse, {
             css,
             theme: theme,
-            knownDark: isDark
+            knownDark: isDark,
         });
     }
 

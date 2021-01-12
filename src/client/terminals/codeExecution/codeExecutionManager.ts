@@ -26,7 +26,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) private disposableRegistry: Disposable[],
         @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
     ) {}
 
     public get onExecutedCode(): Event<string> {
@@ -36,29 +36,25 @@ export class CodeExecutionManager implements ICodeExecutionManager {
     public registerCommands() {
         [Commands.Exec_In_Terminal, Commands.Exec_In_Terminal_Icon].forEach((cmd) => {
             this.disposableRegistry.push(
-                this.commandManager.registerCommand(
-                    // tslint:disable-next-line:no-any
-                    cmd as any,
-                    async (file: Resource) => {
-                        const trigger = cmd === Commands.Exec_In_Terminal ? 'command' : 'icon';
-                        await this.executeFileInTerminal(file, trigger).catch((ex) =>
-                            traceError('Failed to execute file in terminal', ex)
-                        );
-                    }
-                )
+                this.commandManager.registerCommand(cmd as any, async (file: Resource) => {
+                    const trigger = cmd === Commands.Exec_In_Terminal ? 'command' : 'icon';
+                    await this.executeFileInTerminal(file, trigger).catch((ex) =>
+                        traceError('Failed to execute file in terminal', ex),
+                    );
+                }),
             );
         });
         this.disposableRegistry.push(
             this.commandManager.registerCommand(
                 Commands.Exec_Selection_In_Terminal,
-                this.executeSelectionInTerminal.bind(this)
-            )
+                this.executeSelectionInTerminal.bind(this),
+            ),
         );
         this.disposableRegistry.push(
             this.commandManager.registerCommand(
                 Commands.Exec_Selection_In_Django_Shell,
-                this.executeSelectionInDjangoShell.bind(this)
-            )
+                this.executeSelectionInDjangoShell.bind(this),
+            ),
         );
     }
     private async executeFileInTerminal(file: Resource, trigger: 'command' | 'icon') {

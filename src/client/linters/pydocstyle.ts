@@ -63,14 +63,13 @@ export class PyDocStyle extends BaseLinter {
                         const trmmedSourceLine = sourceLine.trim();
                         const sourceStart = sourceLine.indexOf(trmmedSourceLine);
 
-                        // tslint:disable-next-line:no-object-literal-type-assertion
                         return {
                             code: code,
                             message: message,
                             column: sourceStart,
                             line: lineNumber,
                             type: '',
-                            provider: this.info.id
+                            provider: this.info.id,
                         } as ILintMessage;
                     } catch (ex) {
                         traceError(`Failed to parse pydocstyle line '${line}'`, ex);

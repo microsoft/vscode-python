@@ -6,7 +6,11 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { Architecture } from '../../../../client/common/utils/platform';
 import {
-    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION,
+    PythonEnvInfo,
+    PythonEnvKind,
+    PythonReleaseLevel,
+    PythonVersion,
+    UNKNOWN_PYTHON_VERSION,
 } from '../../../../client/pythonEnvironments/base/info';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
@@ -29,22 +33,16 @@ suite('Windows Registry', () => {
                 {
                     key: '\\SOFTWARE\\Python',
                     values: { '': '' },
-                    subKeys: [
-                        '\\SOFTWARE\\Python\\PythonCore',
-                        '\\SOFTWARE\\Python\\ContinuumAnalytics',
-                    ],
+                    subKeys: ['\\SOFTWARE\\Python\\PythonCore', '\\SOFTWARE\\Python\\ContinuumAnalytics'],
                 },
                 {
                     key: '\\SOFTWARE\\Python\\PythonCore',
-                    values:
-                    {
+                    values: {
                         '': '',
                         DisplayName: 'Python Software Foundation',
                         SupportUrl: 'www.python.org',
                     },
-                    subKeys: [
-                        '\\SOFTWARE\\Python\\PythonCore\\3.9',
-                    ],
+                    subKeys: ['\\SOFTWARE\\Python\\PythonCore\\3.9'],
                 },
                 {
                     key: '\\SOFTWARE\\Python\\PythonCore\\3.9',
@@ -56,9 +54,7 @@ suite('Windows Registry', () => {
                         SysVersion: '3.9',
                         Version: '3.9.0rc2',
                     },
-                    subKeys: [
-                        '\\SOFTWARE\\Python\\PythonCore\\3.9\\InstallPath',
-                    ],
+                    subKeys: ['\\SOFTWARE\\Python\\PythonCore\\3.9\\InstallPath'],
                 },
                 {
                     key: '\\SOFTWARE\\Python\\PythonCore\\3.9\\InstallPath',
@@ -73,9 +69,7 @@ suite('Windows Registry', () => {
                     values: {
                         '': '',
                     },
-                    subKeys: [
-                        '\\SOFTWARE\\Python\\ContinuumAnalytics\\Anaconda38-64',
-                    ],
+                    subKeys: ['\\SOFTWARE\\Python\\ContinuumAnalytics\\Anaconda38-64'],
                 },
                 {
                     key: '\\SOFTWARE\\Python\\ContinuumAnalytics\\Anaconda38-64',
@@ -87,9 +81,7 @@ suite('Windows Registry', () => {
                         SysVersion: '3.8',
                         Version: 'py38_4.8.3',
                     },
-                    subKeys: [
-                        '\\SOFTWARE\\Python\\PythonCore\\Anaconda38-64\\InstallPath',
-                    ],
+                    subKeys: ['\\SOFTWARE\\Python\\PythonCore\\Anaconda38-64\\InstallPath'],
                 },
                 {
                     key: '\\SOFTWARE\\Python\\PythonCore\\Anaconda38-64\\InstallPath',
@@ -104,21 +96,16 @@ suite('Windows Registry', () => {
                 {
                     key: '\\SOFTWARE\\Python',
                     values: { '': '' },
-                    subKeys: [
-                        '\\SOFTWARE\\Python\\PythonCore',
-                    ],
+                    subKeys: ['\\SOFTWARE\\Python\\PythonCore'],
                 },
                 {
                     key: '\\SOFTWARE\\Python\\PythonCore',
-                    values:
-                    {
+                    values: {
                         '': '',
                         DisplayName: 'Python Software Foundation',
                         SupportUrl: 'www.python.org',
                     },
-                    subKeys: [
-                        '\\SOFTWARE\\Python\\PythonCore\\3.7',
-                    ],
+                    subKeys: ['\\SOFTWARE\\Python\\PythonCore\\3.7'],
                 },
                 {
                     key: '\\SOFTWARE\\Python\\PythonCore\\3.7',
@@ -130,9 +117,7 @@ suite('Windows Registry', () => {
                         SysVersion: '3.7',
                         Version: '3.7.7',
                     },
-                    subKeys: [
-                        '\\SOFTWARE\\Python\\PythonCore\\3.7\\InstallPath',
-                    ],
+                    subKeys: ['\\SOFTWARE\\Python\\PythonCore\\3.7\\InstallPath'],
                 },
                 {
                     key: '\\SOFTWARE\\Python\\PythonCore\\3.7\\InstallPath',
@@ -145,28 +130,21 @@ suite('Windows Registry', () => {
             ],
         },
         x86: {
-            HKLM: [
-
-            ],
+            HKLM: [],
             HKCU: [
                 {
                     key: '\\SOFTWARE\\Python',
                     values: { '': '' },
-                    subKeys: [
-                        '\\SOFTWARE\\Python\\PythonCodingPack',
-                    ],
+                    subKeys: ['\\SOFTWARE\\Python\\PythonCodingPack'],
                 },
                 {
                     key: '\\SOFTWARE\\Python\\PythonCodingPack',
-                    values:
-                    {
+                    values: {
                         '': '',
                         DisplayName: 'Python Software Foundation',
                         SupportUrl: 'www.python.org',
                     },
-                    subKeys: [
-                        '\\SOFTWARE\\Python\\PythonCodingPack\\3.8',
-                    ],
+                    subKeys: ['\\SOFTWARE\\Python\\PythonCodingPack\\3.8'],
                 },
                 {
                     key: '\\SOFTWARE\\Python\\PythonCodingPack\\3.8',
@@ -177,9 +155,7 @@ suite('Windows Registry', () => {
                         SysArchitecture: '32bit',
                         SysVersion: '3.8.5',
                     },
-                    subKeys: [
-                        '\\SOFTWARE\\Python\\PythonCodingPack\\3.8\\InstallPath',
-                    ],
+                    subKeys: ['\\SOFTWARE\\Python\\PythonCodingPack\\3.8\\InstallPath'],
                 },
                 {
                     key: '\\SOFTWARE\\Python\\PythonCodingPack\\3.8\\InstallPath',
@@ -233,11 +209,13 @@ suite('Windows Registry', () => {
 
     async function getDataFromKey(
         { arch, hive, key }: winreg.Options,
-        org:string,
-    ):Promise<winutils.IRegistryInterpreterData> {
+        org: string,
+    ): Promise<winutils.IRegistryInterpreterData> {
         const data = await fakeRegistryValues({ arch, hive, key });
         const subKey = (await fakeRegistryKeys({ arch, hive, key }))[0];
-        const subKeyData = (await fakeRegistryValues({ arch, hive, key: subKey.key })).find((x) => x.name === 'ExecutablePath');
+        const subKeyData = (await fakeRegistryValues({ arch, hive, key: subKey.key })).find(
+            (x) => x.name === 'ExecutablePath',
+        );
 
         return Promise.resolve({
             interpreterPath: subKeyData?.value ?? '',
@@ -249,9 +227,9 @@ suite('Windows Registry', () => {
         });
     }
 
-    async function createExpectedEnv(data:winutils.IRegistryInterpreterData): Promise<PythonEnvInfo> {
-        const versionStr = (data.versionStr ?? data.sysVersionStr) ?? data.interpreterPath;
-        let version:PythonVersion;
+    async function createExpectedEnv(data: winutils.IRegistryInterpreterData): Promise<PythonEnvInfo> {
+        const versionStr = data.versionStr ?? data.sysVersionStr ?? data.interpreterPath;
+        let version: PythonVersion;
         try {
             version = parseVersion(versionStr);
         } catch (ex) {
@@ -275,10 +253,7 @@ suite('Windows Registry', () => {
         };
     }
 
-    async function getExpectedDataFromKey(
-        { arch, hive, key }: winreg.Options,
-        org:string,
-    ):Promise<PythonEnvInfo> {
+    async function getExpectedDataFromKey({ arch, hive, key }: winreg.Options, org: string): Promise<PythonEnvInfo> {
         return createExpectedEnv(await getDataFromKey({ arch, hive, key }, org));
     }
 
@@ -296,18 +271,31 @@ suite('Windows Registry', () => {
     });
 
     test('iterEnvs()', async () => {
-        const expectedEnvs: PythonEnvInfo[] = (await Promise.all(
-            [
-                getExpectedDataFromKey({ arch: 'x64', hive: winreg.HKLM, key: '\\SOFTWARE\\Python\\PythonCore\\3.9' }, 'PythonCore'),
-                getExpectedDataFromKey({ arch: 'x64', hive: winreg.HKLM, key: '\\SOFTWARE\\Python\\ContinuumAnalytics\\Anaconda38-64' }, 'ContinuumAnalytics'),
-                getExpectedDataFromKey({ arch: 'x64', hive: winreg.HKCU, key: '\\SOFTWARE\\Python\\PythonCore\\3.7' }, 'PythonCore'),
-                getExpectedDataFromKey({ arch: 'x86', hive: winreg.HKCU, key: '\\SOFTWARE\\Python\\PythonCodingPack\\3.8' }, 'PythonCodingPack'),
-            ],
-        )).sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        const expectedEnvs: PythonEnvInfo[] = (
+            await Promise.all([
+                getExpectedDataFromKey(
+                    { arch: 'x64', hive: winreg.HKLM, key: '\\SOFTWARE\\Python\\PythonCore\\3.9' },
+                    'PythonCore',
+                ),
+                getExpectedDataFromKey(
+                    { arch: 'x64', hive: winreg.HKLM, key: '\\SOFTWARE\\Python\\ContinuumAnalytics\\Anaconda38-64' },
+                    'ContinuumAnalytics',
+                ),
+                getExpectedDataFromKey(
+                    { arch: 'x64', hive: winreg.HKCU, key: '\\SOFTWARE\\Python\\PythonCore\\3.7' },
+                    'PythonCore',
+                ),
+                getExpectedDataFromKey(
+                    { arch: 'x86', hive: winreg.HKCU, key: '\\SOFTWARE\\Python\\PythonCodingPack\\3.8' },
+                    'PythonCodingPack',
+                ),
+            ])
+        ).sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator))
-            .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
+            a.executable.filename.localeCompare(b.executable.filename),
+        );
 
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
@@ -318,8 +306,9 @@ suite('Windows Registry', () => {
         });
 
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator))
-            .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
+            a.executable.filename.localeCompare(b.executable.filename),
+        );
 
         assert.deepStrictEqual(actualEnvs, []);
     });
@@ -332,22 +321,32 @@ suite('Windows Registry', () => {
             return fakeRegistryKeys({ arch, hive, key });
         });
 
-        const expectedEnvs: PythonEnvInfo[] = (await Promise.all(
-            [
-                getExpectedDataFromKey({ arch: 'x64', hive: winreg.HKCU, key: '\\SOFTWARE\\Python\\PythonCore\\3.7' }, 'PythonCore'),
-                getExpectedDataFromKey({ arch: 'x86', hive: winreg.HKCU, key: '\\SOFTWARE\\Python\\PythonCodingPack\\3.8' }, 'PythonCodingPack'),
-            ],
-        )).sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        const expectedEnvs: PythonEnvInfo[] = (
+            await Promise.all([
+                getExpectedDataFromKey(
+                    { arch: 'x64', hive: winreg.HKCU, key: '\\SOFTWARE\\Python\\PythonCore\\3.7' },
+                    'PythonCore',
+                ),
+                getExpectedDataFromKey(
+                    { arch: 'x86', hive: winreg.HKCU, key: '\\SOFTWARE\\Python\\PythonCodingPack\\3.8' },
+                    'PythonCodingPack',
+                ),
+            ])
+        ).sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator))
-            .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
+            a.executable.filename.localeCompare(b.executable.filename),
+        );
 
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
 
     test('resolveEnv(string)', async () => {
-        const expected: PythonEnvInfo = await getExpectedDataFromKey({ arch: 'x64', hive: winreg.HKLM, key: '\\SOFTWARE\\Python\\PythonCore\\3.9' }, 'PythonCore');
+        const expected: PythonEnvInfo = await getExpectedDataFromKey(
+            { arch: 'x64', hive: winreg.HKLM, key: '\\SOFTWARE\\Python\\PythonCore\\3.9' },
+            'PythonCore',
+        );
         const interpreterPath = path.join(regTestRoot, 'py39', 'python.exe');
 
         const actual = await locator.resolveEnv(interpreterPath);
@@ -356,11 +355,14 @@ suite('Windows Registry', () => {
     });
 
     test('resolveEnv(PythonEnvInfo)', async () => {
-        const expected: PythonEnvInfo = await getExpectedDataFromKey({ arch: 'x64', hive: winreg.HKLM, key: '\\SOFTWARE\\Python\\PythonCore\\3.9' }, 'PythonCore');
+        const expected: PythonEnvInfo = await getExpectedDataFromKey(
+            { arch: 'x64', hive: winreg.HKLM, key: '\\SOFTWARE\\Python\\PythonCore\\3.9' },
+            'PythonCore',
+        );
         const interpreterPath = path.join(regTestRoot, 'py39', 'python.exe');
 
         // Partially filled in env info object
-        const input:PythonEnvInfo = {
+        const input: PythonEnvInfo = {
             name: '',
             location: '',
             kind: PythonEnvKind.Unknown,

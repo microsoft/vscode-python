@@ -16,7 +16,6 @@ import { TerminalAutoActivation } from '../../../client/terminals/activation';
 import { ITerminalAutoActivation } from '../../../client/terminals/types';
 import { noop } from '../../core';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Terminal Auto Activation', () => {
     let activator: ITerminalActivator;
     let terminalManager: ITerminalManager;
@@ -34,7 +33,7 @@ suite('Terminal Auto Activation', () => {
             processId: Promise.resolve(0),
             sendText: noop,
             show: noop,
-            exitStatus: { code: 0 }
+            exitStatus: { code: 0 },
         };
         terminalManager = mock(TerminalManager);
         activator = mock(TerminalActivator);
@@ -44,7 +43,7 @@ suite('Terminal Auto Activation', () => {
             instance(terminalManager),
             [],
             instance(activator),
-            instance(activeResourceService)
+            instance(activeResourceService),
         );
     });
 
@@ -77,7 +76,7 @@ suite('Terminal Auto Activation', () => {
             processId: Promise.resolve(0),
             sendText: noop,
             show: noop,
-            exitStatus: { code: 0 }
+            exitStatus: { code: 0 },
         };
         type EventHandler = (e: Terminal) => void;
         let handler: undefined | EventHandler;

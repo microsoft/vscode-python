@@ -12,7 +12,7 @@ import {
     Event,
     EventEmitter,
     Uri,
-    WorkspaceConfiguration
+    WorkspaceConfiguration,
 } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import {
@@ -20,7 +20,7 @@ import {
     InterpreterPathService,
     isGlobalSettingCopiedKey,
     workspaceFolderKeysForWhichTheCopyIsDone_Key,
-    workspaceKeysForWhichTheCopyIsDone_Key
+    workspaceKeysForWhichTheCopyIsDone_Key,
 } from '../../client/common/interpreterPathService';
 import { FileSystemPaths } from '../../client/common/platform/fs-paths';
 import { InterpreterConfigurationScope, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
@@ -42,7 +42,7 @@ suite('Interpreter Path Service', async () => {
             .returns(() => ({
                 uri: resource,
                 name: 'Workspacefolder',
-                index: 0
+                index: 0,
             }));
         workspaceService.setup((w) => w.getWorkspaceFolder(resourceOutsideOfWorkspace)).returns(() => undefined);
         persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
@@ -57,15 +57,15 @@ suite('Interpreter Path Service', async () => {
     test('Ensure execution of method copyOldInterpreterStorageValuesToNew() goes as expected', async () => {
         const _copyWorkspaceFolderValueToNewStorage = sinon.stub(
             InterpreterPathService.prototype,
-            '_copyWorkspaceFolderValueToNewStorage'
+            '_copyWorkspaceFolderValueToNewStorage',
         );
         const _copyWorkspaceValueToNewStorage = sinon.stub(
             InterpreterPathService.prototype,
-            '_copyWorkspaceValueToNewStorage'
+            '_copyWorkspaceValueToNewStorage',
         );
         const _moveGlobalSettingValueToNewStorage = sinon.stub(
             InterpreterPathService.prototype,
-            '_moveGlobalSettingValueToNewStorage'
+            '_moveGlobalSettingValueToNewStorage',
         );
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         workspaceService.setup((w) => w.getConfiguration('python', resource)).returns(() => workspaceConfig.object);
@@ -76,9 +76,8 @@ suite('Interpreter Path Service', async () => {
                     ({
                         globalValue: 'globalPythonPath',
                         workspaceFolderValue: 'workspaceFolderPythonPath',
-                        workspaceValue: 'workspacePythonPath'
-                        // tslint:disable-next-line: no-any
-                    } as any)
+                        workspaceValue: 'workspacePythonPath',
+                    } as any),
             );
 
         interpreterPathService = new InterpreterPathService(persistentStateFactory.object, workspaceService.object, []);
@@ -248,9 +247,8 @@ suite('Interpreter Path Service', async () => {
             .returns(
                 () =>
                     ({
-                        globalValue: interpreterPath
-                        // tslint:disable-next-line: no-any
-                    } as any)
+                        globalValue: interpreterPath,
+                    } as any),
             );
         workspaceConfig
             .setup((w) => w.update('defaultInterpreterPath', interpreterPath, true))
@@ -270,9 +268,8 @@ suite('Interpreter Path Service', async () => {
             .returns(
                 () =>
                     ({
-                        globalValue: 'storedValue'
-                        // tslint:disable-next-line: no-any
-                    } as any)
+                        globalValue: 'storedValue',
+                    } as any),
             );
         workspaceConfig
             .setup((w) => w.update('defaultInterpreterPath', interpreterPath, true))
@@ -458,9 +455,8 @@ suite('Interpreter Path Service', async () => {
             .returns(
                 () =>
                     ({
-                        globalValue: 'default/path/to/interpreter'
-                        // tslint:disable-next-line: no-any
-                    } as any)
+                        globalValue: 'default/path/to/interpreter',
+                    } as any),
             );
         const persistentState = TypeMoq.Mock.ofType<IPersistentState<string | undefined>>();
         workspaceService.setup((w) => w.workspaceFolders).returns(() => undefined);
@@ -473,7 +469,7 @@ suite('Interpreter Path Service', async () => {
         assert.deepEqual(settings, {
             globalValue: 'default/path/to/interpreter',
             workspaceFolderValue: undefined,
-            workspaceValue: undefined
+            workspaceValue: undefined,
         });
 
         persistentStateFactory.verifyAll();
@@ -491,9 +487,8 @@ suite('Interpreter Path Service', async () => {
             .returns(
                 () =>
                     ({
-                        globalValue: 'default/path/to/interpreter'
-                        // tslint:disable-next-line: no-any
-                    } as any)
+                        globalValue: 'default/path/to/interpreter',
+                    } as any),
             );
         const workspaceFolderPersistentState = TypeMoq.Mock.ofType<IPersistentState<string | undefined>>();
         workspaceService.setup((w) => w.workspaceFolders).returns(() => undefined);
@@ -510,7 +505,7 @@ suite('Interpreter Path Service', async () => {
         assert.deepEqual(settings, {
             globalValue: 'default/path/to/interpreter',
             workspaceFolderValue: 'workspaceFolderValue',
-            workspaceValue: 'workspaceFolderValue'
+            workspaceValue: 'workspaceFolderValue',
         });
     });
 
@@ -528,16 +523,15 @@ suite('Interpreter Path Service', async () => {
             .returns(
                 () =>
                     ({
-                        globalValue: 'default/path/to/interpreter'
-                        // tslint:disable-next-line: no-any
-                    } as any)
+                        globalValue: 'default/path/to/interpreter',
+                    } as any),
             );
         const workspaceFolderPersistentState = TypeMoq.Mock.ofType<IPersistentState<string | undefined>>();
         const workspacePersistentState = TypeMoq.Mock.ofType<IPersistentState<string | undefined>>();
         workspaceService.setup((w) => w.workspaceFolders).returns(() => undefined);
         persistentStateFactory
             .setup((p) =>
-                p.createGlobalPersistentState<string | undefined>(expectedWorkspaceFolderSettingKey, undefined)
+                p.createGlobalPersistentState<string | undefined>(expectedWorkspaceFolderSettingKey, undefined),
             )
             .returns(() => workspaceFolderPersistentState.object);
         persistentStateFactory
@@ -551,7 +545,7 @@ suite('Interpreter Path Service', async () => {
         assert.deepEqual(settings, {
             globalValue: 'default/path/to/interpreter',
             workspaceFolderValue: 'workspaceFolderValue',
-            workspaceValue: 'workspaceValue'
+            workspaceValue: 'workspaceValue',
         });
     });
 
@@ -559,7 +553,7 @@ suite('Interpreter Path Service', async () => {
         interpreterPathService.inspect = () => ({
             globalValue: 'default/path/to/interpreter',
             workspaceFolderValue: 'workspaceFolderValue',
-            workspaceValue: 'workspaceValue'
+            workspaceValue: 'workspaceValue',
         });
         const settingValue = interpreterPathService.get(resource);
         expect(settingValue).to.equal('workspaceFolderValue');
@@ -569,7 +563,7 @@ suite('Interpreter Path Service', async () => {
         interpreterPathService.inspect = () => ({
             globalValue: 'default/path/to/interpreter',
             workspaceFolderValue: undefined,
-            workspaceValue: 'workspaceValue'
+            workspaceValue: 'workspaceValue',
         });
         const settingValue = interpreterPathService.get(resource);
         expect(settingValue).to.equal('workspaceValue');
@@ -579,7 +573,7 @@ suite('Interpreter Path Service', async () => {
         interpreterPathService.inspect = () => ({
             globalValue: 'default/path/to/interpreter',
             workspaceFolderValue: undefined,
-            workspaceValue: 'workspaceValue'
+            workspaceValue: 'workspaceValue',
         });
         const settingValue = interpreterPathService.get(resource);
         expect(settingValue).to.equal('workspaceValue');
@@ -589,7 +583,7 @@ suite('Interpreter Path Service', async () => {
         interpreterPathService.inspect = () => ({
             globalValue: 'default/path/to/interpreter',
             workspaceFolderValue: undefined,
-            workspaceValue: undefined
+            workspaceValue: undefined,
         });
         const settingValue = interpreterPathService.get(resource);
         expect(settingValue).to.equal('default/path/to/interpreter');
@@ -599,7 +593,7 @@ suite('Interpreter Path Service', async () => {
         interpreterPathService.inspect = () => ({
             globalValue: undefined,
             workspaceFolderValue: undefined,
-            workspaceValue: undefined
+            workspaceValue: undefined,
         });
         const settingValue = interpreterPathService.get(resource);
         expect(settingValue).to.equal('python');

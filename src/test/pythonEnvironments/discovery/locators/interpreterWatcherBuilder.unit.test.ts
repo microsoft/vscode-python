@@ -3,12 +3,8 @@
 
 'use strict';
 
-// tslint:disable:no-any max-classes-per-file max-func-body-length
-
 import { expect } from 'chai';
-import {
-    anything, instance, mock, when,
-} from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../../client/ioc/container';
@@ -23,6 +19,7 @@ suite('Interpreters - Watcher Builder', () => {
 
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn();
         when(serviceContainer.get<IInterpreterWatcher>(IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE)).thenReturn(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (watcher as any) as IInterpreterWatcher,
         );
 
@@ -38,6 +35,7 @@ suite('Interpreters - Watcher Builder', () => {
 
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn();
         when(serviceContainer.get<IInterpreterWatcher>(IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE)).thenReturn(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (watcher as any) as IInterpreterWatcher,
         );
 

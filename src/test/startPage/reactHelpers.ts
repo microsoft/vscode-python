@@ -7,7 +7,7 @@
 
 // Custom module loader so we can skip loading the 'canvas' module which won't load
 // inside of vscode
-// tslint:disable:no-var-requires no-require-imports no-any no-function-expression
+
 const Module = require('module');
 
 (function () {
@@ -26,13 +26,10 @@ const Module = require('module');
                 // This should happen when not inside vscode.
             }
         }
-        // tslint:disable-next-line:no-invalid-this
+
         return _require(this, filepath);
     };
 })();
-
-// tslint:disable:no-string-literal no-any object-literal-key-quotes max-func-body-length member-ordering
-// tslint:disable: no-require-imports no-var-requires
 
 // Monkey patch the stylesheet impl from jsdom before loading jsdom.
 // This is necessary to get slickgrid to work.
@@ -108,7 +105,7 @@ class MockCanvas implements CanvasRenderingContext2D {
         _r0: number,
         _x1: number,
         _y1: number,
-        _r1: number
+        _r1: number,
     ): CanvasGradient {
         throw new Error('Method not implemented.');
     }
@@ -150,7 +147,7 @@ class MockCanvas implements CanvasRenderingContext2D {
         throw new Error('Method not implemented.');
     }
     public stroke(): void;
-    // tslint:disable-next-line: unified-signatures
+
     public stroke(path: Path2D): void;
     public stroke(_path?: any) {
         throw new Error('Method not implemented.');
@@ -161,7 +158,7 @@ class MockCanvas implements CanvasRenderingContext2D {
         throw new Error('Method not implemented.');
     }
     public scrollPathIntoView(): void;
-    // tslint:disable-next-line: unified-signatures
+
     public scrollPathIntoView(path: Path2D): void;
     public scrollPathIntoView(_path?: any) {
         throw new Error('Method not implemented.');
@@ -186,7 +183,7 @@ class MockCanvas implements CanvasRenderingContext2D {
         dx: number,
         dy: number,
         dw: number,
-        dh: number
+        dh: number,
     ): void;
     public drawImage(
         _image: any,
@@ -197,7 +194,7 @@ class MockCanvas implements CanvasRenderingContext2D {
         _dx?: any,
         _dy?: any,
         _dw?: any,
-        _dh?: any
+        _dh?: any,
     ) {
         throw new Error('Method not implemented.');
     }
@@ -217,7 +214,7 @@ class MockCanvas implements CanvasRenderingContext2D {
         dirtyX: number,
         dirtyY: number,
         dirtyWidth: number,
-        dirtyHeight: number
+        dirtyHeight: number,
     ): void;
     public putImageData(
         _imagedata: any,
@@ -226,7 +223,7 @@ class MockCanvas implements CanvasRenderingContext2D {
         _dirtyX?: any,
         _dirtyY?: any,
         _dirtyWidth?: any,
-        _dirtyHeight?: any
+        _dirtyHeight?: any,
     ) {
         throw new Error('Method not implemented.');
     }
@@ -251,7 +248,7 @@ class MockCanvas implements CanvasRenderingContext2D {
         _radius: number,
         _startAngle: number,
         _endAngle: number,
-        _anticlockwise?: boolean | undefined
+        _anticlockwise?: boolean | undefined,
     ): void {
         throw new Error('Method not implemented.');
     }
@@ -272,7 +269,7 @@ class MockCanvas implements CanvasRenderingContext2D {
         _rotation: number,
         _startAngle: number,
         _endAngle: number,
-        _anticlockwise?: boolean | undefined
+        _anticlockwise?: boolean | undefined,
     ): void {
         throw new Error('Method not implemented.');
     }
@@ -293,14 +290,12 @@ class MockCanvas implements CanvasRenderingContext2D {
 const mockCanvas = new MockCanvas();
 
 export function setUpDomEnvironment() {
-    // tslint:disable-next-line:no-http-string
     const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', {
         pretendToBeVisual: true,
-        url: 'http://localhost'
+        url: 'http://localhost',
     });
     const { window } = dom;
 
-    // tslint:disable: no-function-expression no-empty
     try {
         // If running inside of vscode, we need to mock the canvas because the real canvas is not
         // returned.
@@ -316,7 +311,6 @@ export function setUpDomEnvironment() {
         noop();
     }
 
-    // tslint:disable-next-line: no-function-expression
     window.HTMLCanvasElement.prototype.toDataURL = function () {
         return '';
     };
@@ -325,22 +319,22 @@ export function setUpDomEnvironment() {
     (global as any)['Element'] = window.Element;
     // tslist:disable-next-line:no-string-literal no-any
     (global as any)['location'] = window.location;
-    // tslint:disable-next-line:no-string-literal no-any
+
     (global as any)['window'] = window;
-    // tslint:disable-next-line:no-string-literal no-any
+
     (global as any)['document'] = window.document;
-    // tslint:disable-next-line:no-string-literal no-any
+
     (global as any)['navigator'] = {
         userAgent: 'node.js',
-        platform: 'node'
+        platform: 'node',
     };
     (global as any)['Event'] = window.Event;
     (global as any)['KeyboardEvent'] = window.KeyboardEvent;
     (global as any)['MouseEvent'] = window.MouseEvent;
     (global as any)['DocumentFragment'] = window.DocumentFragment;
-    // tslint:disable-next-line:no-string-literal no-any
+
     (global as any)['getComputedStyle'] = window.getComputedStyle;
-    // tslint:disable-next-line:no-string-literal no-any
+
     (global as any)['self'] = window;
     copyProps(window, global);
 
@@ -353,11 +347,11 @@ export function setUpDomEnvironment() {
         setEnd: (_endNode: any, _endOffset: any) => noop(),
         setStart: (_startNode: any, _startOffset: any) => noop(),
         getBoundingClientRect: () => null,
-        getClientRects: () => []
+        getClientRects: () => [],
     });
 
     // Another special case. CodeMirror needs selection
-    // tslint:disable-next-line:no-string-literal no-any
+
     (global as any)['document'].selection = {
         anchorNode: null,
         anchorOffset: 0,
@@ -385,7 +379,7 @@ export function setUpDomEnvironment() {
         selectAllChildren: (_parentNode: Node) => noop(),
         setBaseAndExtent: (_baseNode: Node, _baseOffset: number, _extentNode: Node, _extentOffset: number) => noop(),
         setPosition: (_parentNode: Node, _offset: number) => noop(),
-        toString: () => '{Selection}'
+        toString: () => '{Selection}',
     };
 
     (global as any)['DOMParser'] = dom.window.DOMParser;
@@ -397,7 +391,7 @@ export function setUpDomEnvironment() {
     // export the function we need to dispose of the timer it's set. So force it to.
     const configurationRegex = /.*(\\|\/)node_modules(\\|\/)monaco-editor(\\|\/)esm(\\|\/)vs(\\|\/)editor(\\|\/)browser(\\|\/)config(\\|\/)configuration\.js/g;
     const _oldLoader = require.extensions['.js'];
-    // tslint:disable-next-line:no-function-expression
+
     require.extensions['.js'] = function (mod: any, filename) {
         if (configurationRegex.test(filename)) {
             let content = require('fs').readFileSync(filename, 'utf8');
@@ -488,7 +482,7 @@ const keyMap: { [key: string]: { code: number; shift: boolean } } = {
     '~': { code: 192, shift: true },
     ' ': { code: 32, shift: false },
     '\n': { code: 13, shift: false },
-    '\r': { code: 0, shift: false } // remove \r from the text.
+    '\r': { code: 0, shift: false }, // remove \r from the text.
 };
 
 export function createMessageEvent(data: any): MessageEvent {

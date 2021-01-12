@@ -1,13 +1,13 @@
 'use strict';
 
 import * as net from 'net';
-// tslint:disable:no-var-requires no-require-imports member-ordering no-any
+
 const uint64be = require('uint64be');
 
 enum DataType {
     string,
     int32,
-    int64
+    int64,
 }
 
 export class SocketStream {
@@ -26,7 +26,7 @@ export class SocketStream {
         this.socket.write(buffer);
     }
     public WriteString(value: string) {
-        const stringBuffer = new Buffer(value, 'utf-8');
+        const stringBuffer = Buffer.from(value, 'utf-8');
         this.WriteInt32(stringBuffer.length);
         if (stringBuffer.length > 0) {
             this.socket.write(stringBuffer);
@@ -81,7 +81,7 @@ export class SocketStream {
             this.buffer = additionalData;
             return;
         }
-        const newBuffer = new Buffer(this.buffer.length + additionalData.length);
+        const newBuffer = Buffer.alloc(this.buffer.length + additionalData.length);
         this.buffer.copy(newBuffer);
         additionalData.copy(newBuffer, this.buffer.length);
         this.buffer = newBuffer;
@@ -119,7 +119,7 @@ export class SocketStream {
             throw new Error('IOException() - Socket.ReadString failed to read string type;');
         }
 
-        const type = new Buffer([byteRead]).toString();
+        const type = Buffer.from([byteRead]).toString();
         let isUnicode = false;
         switch (type) {
             case 'N': // null string

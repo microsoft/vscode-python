@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-invalid-this no-any
-
 import * as assert from 'assert';
 import { expect } from 'chai';
 import * as path from 'path';
@@ -20,7 +18,7 @@ const fileDefinitions = path.join(
     'src',
     'testMultiRootWkspc',
     'smokeTests',
-    'definitions.py'
+    'definitions.py',
 );
 
 const notebookDefinitions = path.join(
@@ -28,7 +26,7 @@ const notebookDefinitions = path.join(
     'src',
     'testMultiRootWkspc',
     'smokeTests',
-    'definitions.ipynb'
+    'definitions.ipynb',
 );
 
 suite('Insiders Test: Language Server', () => {
@@ -39,7 +37,7 @@ suite('Insiders Test: Language Server', () => {
                 'linting.ignorePatterns',
                 ['**/dir1/**'],
                 vscode.workspace.workspaceFolders![0].uri,
-                vscode.ConfigurationTarget.WorkspaceFolder
+                vscode.ConfigurationTarget.WorkspaceFolder,
             );
             await initialize();
         } else {
@@ -56,7 +54,7 @@ suite('Insiders Test: Language Server', () => {
             'linting.ignorePatterns',
             undefined,
             vscode.workspace.workspaceFolders![0].uri,
-            vscode.ConfigurationTarget.WorkspaceFolder
+            vscode.ConfigurationTarget.WorkspaceFolder,
         );
     });
     teardown(closeActiveWindows);
@@ -69,7 +67,7 @@ suite('Insiders Test: Language Server', () => {
             const locations = await vscode.commands.executeCommand<vscode.Location[]>(
                 'vscode.executeDefinitionProvider',
                 textDocument.uri,
-                startPosition
+                startPosition,
             );
             if (locations && locations.length > 0) {
                 expect(locations![0].uri.fsPath).to.contain(path.basename(fileDefinitions));
@@ -92,7 +90,7 @@ suite('Insiders Test: Language Server', () => {
             const locations = await vscode.commands.executeCommand<vscode.Location[]>(
                 'vscode.executeDefinitionProvider',
                 notebookDocument.cells[2].uri, // Second cell should have a function with the decorator on it
-                startPosition
+                startPosition,
             );
             if (locations && locations.length > 0) {
                 expect(locations![0].uri.fsPath).to.contain(path.basename(notebookDefinitions));

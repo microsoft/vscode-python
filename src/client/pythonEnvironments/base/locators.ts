@@ -4,12 +4,7 @@
 import { EventEmitter } from 'vscode';
 import { chain } from '../../common/utils/async';
 import { PythonEnvInfo } from './info';
-import {
-    ILocator,
-    IPythonEnvsIterator,
-    PythonEnvUpdatedEvent,
-    PythonLocatorQuery,
-} from './locator';
+import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from './locator';
 import { PythonEnvsWatchers } from './watchers';
 
 /**
@@ -26,7 +21,8 @@ export function combineIterators(iterators: IPythonEnvsIterator[]): IPythonEnvsI
     const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
     let numActive = events.length;
     events.forEach((event) => {
-        event!((e: PythonEnvUpdatedEvent | null) => { // NOSONAR
+        event!((e: PythonEnvUpdatedEvent | null) => {
+            // NOSONAR
             if (e === null) {
                 numActive -= 1;
                 if (numActive === 0) {

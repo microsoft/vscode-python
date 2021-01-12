@@ -13,7 +13,7 @@ const formatFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'p
 const grammarFile = path.join(formatFilesPath, 'pythonGrammar.py');
 
 // https://www.python.org/dev/peps/pep-0008/#code-lay-out
-// tslint:disable-next-line:max-func-body-length
+
 suite('Formatting - line formatter', () => {
     const formatter = new LineFormatter();
 
@@ -35,7 +35,7 @@ suite('Formatting - line formatter', () => {
     test('Colon slices with double colon', () => {
         testFormatLine(
             'ham [1:9 ], ham[ 1: 9:   3], ham[: 9 :3], ham[1: :3], ham [ 1: 9:]',
-            'ham[1:9], ham[1:9:3], ham[:9:3], ham[1::3], ham[1:9:]'
+            'ham[1:9], ham[1:9:3], ham[:9:3], ham[1::3], ham[1:9:]',
         );
     });
     test('Colon slices with operators', () => {
@@ -44,7 +44,7 @@ suite('Formatting - line formatter', () => {
     test('Colon slices with functions', () => {
         testFormatLine(
             'ham[ : upper_fn ( x) : step_fn(x )], ham[ :: step_fn(x)]',
-            'ham[:upper_fn(x):step_fn(x)], ham[::step_fn(x)]'
+            'ham[:upper_fn(x):step_fn(x)], ham[::step_fn(x)]',
         );
     });
     test('Colon in for loop', () => {
@@ -136,7 +136,7 @@ suite('Formatting - line formatter', () => {
         testFormatMultiline(
             'l4= lambda x =lambda y =lambda z= 1: z: y(): x()',
             0,
-            'l4 = lambda x=lambda y=lambda z=1: z: y(): x()'
+            'l4 = lambda x=lambda y=lambda z=1: z: y(): x()',
         );
     });
     test('star in multiline arguments', () => {
@@ -144,7 +144,7 @@ suite('Formatting - line formatter', () => {
         testFormatMultiline('x = [\n  * param1,\n  * param2\n]', 2, '  *param2');
     });
     test('arrow operator', () => {
-        //testFormatMultiline('def f(a, b: 1, e: 3 = 4, f =5, * g: 6, ** k: 11) -> 12: pass', 0, 'def f(a, b: 1, e: 3 = 4, f=5, *g: 6, **k: 11) -> 12: pass');
+        // testFormatMultiline('def f(a, b: 1, e: 3 = 4, f =5, * g: 6, ** k: 11) -> 12: pass', 0, 'def f(a, b: 1, e: 3 = 4, f=5, *g: 6, **k: 11) -> 12: pass');
         testFormatMultiline('def f(a, \n    ** k: 11) -> 12: pass', 1, '    **k: 11) -> 12: pass');
     });
 
@@ -156,19 +156,18 @@ suite('Formatting - line formatter', () => {
         testFormatMultiline('z=foo (0 , x= 1, (3+7) , y , z )', 0, 'z = foo(0, x=1, (3 + 7), y, z)');
         testFormatMultiline('foo (0,\n x= 1,', 1, ' x=1,');
         testFormatMultiline(
-            // tslint:disable-next-line:no-multiline-string
             `async def fetch():
   async with aiohttp.ClientSession() as session:
     async with session.ws_connect(
         "http://127.0.0.1:8000/", headers = cookie) as ws: # add unwanted spaces`,
             3,
-            '        "http://127.0.0.1:8000/", headers=cookie) as ws:  # add unwanted spaces'
+            '        "http://127.0.0.1:8000/", headers=cookie) as ws:  # add unwanted spaces',
         );
         testFormatMultiline('def pos0key1(*, key): return key\npos0key1(key= 100)', 1, 'pos0key1(key=100)');
         testFormatMultiline(
             'def test_string_literals(self):\n  x= 1; y =2; self.assertTrue(len(x) == 0 and x == y)',
             1,
-            '  x = 1; y = 2; self.assertTrue(len(x) == 0 and x == y)'
+            '  x = 1; y = 2; self.assertTrue(len(x) == 0 and x == y)',
         );
     });
     test('Grammar file', () => {
@@ -201,7 +200,7 @@ suite('Formatting - line formatter', () => {
                 const line = TypeMoq.Mock.ofType<TextLine>();
                 line.setup((x) => x.text).returns(() => lines[n]);
                 line.setup((x) => x.range).returns(
-                    () => new Range(new Position(n, 0), new Position(n, lines[n].length))
+                    () => new Range(new Position(n, 0), new Position(n, lines[n].length)),
                 );
                 return line.object;
             });

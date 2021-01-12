@@ -19,7 +19,7 @@ let installer: IInstaller;
 export function activateSimplePythonRefactorProvider(
     context: vscode.ExtensionContext,
     outputChannel: vscode.OutputChannel,
-    serviceContainer: IServiceContainer
+    serviceContainer: IServiceContainer,
 ) {
     installer = serviceContainer.get<IInstaller>(IInstaller);
     let disposable = vscode.commands.registerCommand(Commands.Refactor_Extract_Variable, () => {
@@ -28,8 +28,7 @@ export function activateSimplePythonRefactorProvider(
             vscode.window.activeTextEditor!,
             vscode.window.activeTextEditor!.selection,
             outputChannel,
-            serviceContainer
-            // tslint:disable-next-line:no-empty
+            serviceContainer,
         ).catch(() => {});
         sendTelemetryWhenDone(EventName.REFACTOR_EXTRACT_VAR, promise, stopWatch);
     });
@@ -41,8 +40,7 @@ export function activateSimplePythonRefactorProvider(
             vscode.window.activeTextEditor!,
             vscode.window.activeTextEditor!.selection,
             outputChannel,
-            serviceContainer
-            // tslint:disable-next-line:no-empty
+            serviceContainer,
         ).catch(() => {});
         sendTelemetryWhenDone(EventName.REFACTOR_EXTRACT_FUNCTION, promise, stopWatch);
     });
@@ -54,8 +52,7 @@ export function extractVariable(
     textEditor: vscode.TextEditor,
     range: vscode.Range,
     outputChannel: vscode.OutputChannel,
-    serviceContainer: IServiceContainer
-    // tslint:disable-next-line:no-any
+    serviceContainer: IServiceContainer,
 ): Promise<any> {
     let workspaceFolder = vscode.workspace.getWorkspaceFolder(textEditor.document.uri);
     if (
@@ -79,7 +76,7 @@ export function extractVariable(
                 newName,
                 textEditor.document.uri.fsPath,
                 range,
-                textEditor.options
+                textEditor.options,
             )
             .then((response) => {
                 return response.results[0].diff;
@@ -94,8 +91,7 @@ export function extractMethod(
     textEditor: vscode.TextEditor,
     range: vscode.Range,
     outputChannel: vscode.OutputChannel,
-    serviceContainer: IServiceContainer
-    // tslint:disable-next-line:no-any
+    serviceContainer: IServiceContainer,
 ): Promise<any> {
     let workspaceFolder = vscode.workspace.getWorkspaceFolder(textEditor.document.uri);
     if (
@@ -119,7 +115,7 @@ export function extractMethod(
                 newName,
                 textEditor.document.uri.fsPath,
                 range,
-                textEditor.options
+                textEditor.options,
             )
             .then((response) => {
                 return response.results[0].diff;
@@ -129,13 +125,11 @@ export function extractMethod(
     });
 }
 
-// tslint:disable-next-line:no-any
 function validateDocumentForRefactor(textEditor: vscode.TextEditor): Promise<any> {
     if (!textEditor.document.isDirty) {
         return Promise.resolve();
     }
 
-    // tslint:disable-next-line:no-any
     return new Promise<any>((resolve, reject) => {
         vscode.window.showInformationMessage('Please save changes before refactoring', 'Save').then((item) => {
             if (item === 'Save') {
@@ -151,8 +145,7 @@ function extractName(
     textEditor: vscode.TextEditor,
     newName: string,
     renameResponse: Promise<string>,
-    outputChannel: vscode.OutputChannel
-    // tslint:disable-next-line:no-any
+    outputChannel: vscode.OutputChannel,
 ): Promise<any> {
     let changeStartsAtLine = -1;
     return renameResponse
@@ -188,12 +181,12 @@ function extractName(
                     textEditor.selections = [
                         new vscode.Selection(
                             newWordPosition,
-                            new vscode.Position(newWordPosition.line, newWordPosition.character + newName.length)
-                        )
+                            new vscode.Position(newWordPosition.line, newWordPosition.character + newName.length),
+                        ),
                     ];
                     textEditor.revealRange(
                         new vscode.Range(textEditor.selection.start, textEditor.selection.end),
-                        vscode.TextEditorRevealType.Default
+                        vscode.TextEditorRevealType.Default,
                     );
                 }
                 return newWordPosition;

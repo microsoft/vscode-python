@@ -6,7 +6,6 @@
 'use strict';
 
 import { vscMockArrays } from './arrays';
-// tslint:disable:all
 
 export namespace vscMockHtmlContent {
     export interface IMarkdownString {
@@ -68,7 +67,7 @@ export namespace vscMockHtmlContent {
 
     export function markedStringsEquals(
         a: IMarkdownString | IMarkdownString[],
-        b: IMarkdownString | IMarkdownString[]
+        b: IMarkdownString | IMarkdownString[],
     ): boolean {
         if (!a && !b) {
             return true;

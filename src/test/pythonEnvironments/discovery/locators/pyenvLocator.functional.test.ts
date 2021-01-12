@@ -29,7 +29,11 @@ suite('Pyenv Locator Tests', () => {
         getOsTypeStub.returns(platformUtils.OSType.Linux);
 
         watchLocationForPatternStub = sinon.stub(fsWatcher, 'watchLocationForPattern');
-        watchLocationForPatternStub.returns({ dispose: () => { /* do nothing */ } });
+        watchLocationForPatternStub.returns({
+            dispose: () => {
+                /* do nothing */
+            },
+        });
 
         locator = new PyenvLocator();
     });
@@ -40,7 +44,7 @@ suite('Pyenv Locator Tests', () => {
         watchLocationForPatternStub.restore();
     });
 
-    function getExpectedPyenvInfo(name:string) : PythonEnvInfo | undefined {
+    function getExpectedPyenvInfo(name: string): PythonEnvInfo | undefined {
         if (name === '3.9.0') {
             const envInfo = buildEnvInfo({
                 kind: PythonEnvKind.Pyenv,
@@ -114,14 +118,17 @@ suite('Pyenv Locator Tests', () => {
             getExpectedPyenvInfo('conda1'),
             getExpectedPyenvInfo('miniconda'),
             getExpectedPyenvInfo('venv1'),
-        ].filter((e) => e !== undefined).sort((a, b) => {
-            if (a && b) {
-                return a.executable.filename.localeCompare(b.executable.filename);
-            }
-            return 0;
-        });
+        ]
+            .filter((e) => e !== undefined)
+            .sort((a, b) => {
+                if (a && b) {
+                    return a.executable.filename.localeCompare(b.executable.filename);
+                }
+                return 0;
+            });
 
         const actualEnvs = (await getEnvs(locator.iterEnvs()))
+            // We sort for a stable comparision.
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
@@ -138,7 +145,7 @@ suite('Pyenv Locator Tests', () => {
         const expected = getExpectedPyenvInfo('3.9.0');
 
         // Partially filled in env info object
-        const input:PythonEnvInfo = {
+        const input: PythonEnvInfo = {
             name: '',
             location: '',
             kind: PythonEnvKind.Unknown,

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length no-invalid-this
-
 import * as assert from 'assert';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
@@ -18,7 +16,7 @@ import {
     developmentBuildUri,
     InsidersBuildInstaller,
     StableBuildInstaller,
-    vsixFileExtension
+    vsixFileExtension,
 } from '../../../client/common/installer/extensionBuildInstaller';
 import { FileDownloader } from '../../../client/common/net/fileDownloader';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
@@ -48,7 +46,7 @@ suite('Extension build installer - Stable build installer', async () => {
         when(output.append(ExtensionChannels.installingStableMessage())).thenReturn();
         when(output.appendLine(ExtensionChannels.installationCompleteMessage())).thenReturn();
         when(cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID)).thenResolve(
-            undefined
+            undefined,
         );
         when(appShell.withProgressCustomIcon(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
         await stableBuildInstaller.install();
@@ -82,7 +80,7 @@ suite('Extension build installer - Insiders build installer', async () => {
             instance(fileDownloader),
             instance(fs),
             instance(cmdManager),
-            instance(appShell)
+            instance(appShell),
         );
     });
     test('Installing Insiders build downloads and installs Insiders', async () => {
@@ -90,7 +88,7 @@ suite('Extension build installer - Insiders build installer', async () => {
         const options = {
             extension: vsixFileExtension,
             outputChannel: output,
-            progressMessagePrefix: ExtensionChannels.downloadingInsidersMessage()
+            progressMessagePrefix: ExtensionChannels.downloadingInsidersMessage(),
         };
         when(output.append(ExtensionChannels.installingInsidersMessage())).thenReturn();
         when(output.appendLine(ExtensionChannels.startingDownloadOutputMessage())).thenReturn();
@@ -101,7 +99,7 @@ suite('Extension build installer - Insiders build installer', async () => {
                 expect(downloadOptions.extension).to.equal(options.extension, 'Incorrect file extension');
                 expect(downloadOptions.progressMessagePrefix).to.equal(options.progressMessagePrefix);
                 return Promise.resolve(vsixFilePath);
-            }
+            },
         );
         when(appShell.withProgressCustomIcon(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
         when(cmdManager.executeCommand('workbench.extensions.installExtension', anything())).thenCall((_, cb) => {

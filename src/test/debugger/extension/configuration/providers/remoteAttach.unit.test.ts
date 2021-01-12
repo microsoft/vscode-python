@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any no-invalid-template-strings max-func-body-length
-
 import { expect } from 'chai';
 import * as path from 'path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
@@ -20,10 +18,9 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
     let provider: TestRemoteAttachDebugConfigurationProvider;
     let input: MultiStepInput<DebugConfigurationState>;
     class TestRemoteAttachDebugConfigurationProvider extends RemoteAttachDebugConfigurationProvider {
-        // tslint:disable-next-line:no-unnecessary-override
         public async configurePort(
             i: MultiStepInput<DebugConfigurationState>,
-            config: Partial<AttachRequestArguments>
+            config: Partial<AttachRequestArguments>,
         ) {
             return super.configurePort(i, config);
         }
@@ -87,14 +84,14 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
             request: 'attach',
             connect: {
                 host: 'localhost',
-                port: 5678
+                port: 5678,
             },
             pathMappings: [
                 {
                     localRoot: '${workspaceFolder}',
-                    remoteRoot: '.'
-                }
-            ]
+                    remoteRoot: '.',
+                },
+            ],
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -122,14 +119,14 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
             request: 'attach',
             connect: {
                 host: 'Hello',
-                port: 9999
+                port: 9999,
             },
             pathMappings: [
                 {
                     localRoot: '${workspaceFolder}',
-                    remoteRoot: '.'
-                }
-            ]
+                    remoteRoot: '.',
+                },
+            ],
         };
 
         expect(state.config).to.be.deep.equal(config);

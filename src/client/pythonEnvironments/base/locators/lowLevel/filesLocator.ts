@@ -9,12 +9,7 @@ import { findInterpretersInDir } from '../../../common/commonUtils';
 import { normalizePath } from '../../../common/externalDependencies';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { getFastEnvInfo } from '../../info/env';
-import {
-    ILocator,
-    IPythonEnvsIterator,
-    PythonEnvUpdatedEvent,
-    PythonLocatorQuery,
-} from '../../locator';
+import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
 import { iterAndUpdateEnvs, resolveEnvFromIterator } from '../../locatorUtils';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { FSWatchingLocator } from './fsWatchingLocator';
@@ -38,9 +33,7 @@ export class FoundFilesLocator implements ILocator {
     public iterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator {
         const executablesPromise = this.getExecutables();
         const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
-        async function* generator(
-            kind: PythonEnvKind,
-        ): IPythonEnvsIterator {
+        async function* generator(kind: PythonEnvKind): IPythonEnvsIterator {
             const executables = await executablesPromise;
             yield* iterAndUpdateEnvs(
                 iterMinimalEnvsFromExecutables(executables, kind),
@@ -88,6 +81,7 @@ export class DirFilesLocator extends FSWatchingLocator {
         );
         this.subLocator = new FoundFilesLocator(
             kind,
+            // a wrapper
             () => getExecutables(dirname),
         );
     }

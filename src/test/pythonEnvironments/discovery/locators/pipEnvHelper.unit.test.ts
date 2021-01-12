@@ -3,7 +3,11 @@ import * as pathModule from 'path';
 import * as sinon from 'sinon';
 import * as platformApis from '../../../../client/common/utils/platform';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { _getAssociatedPipfile, isPipenvEnvironment, isPipenvEnvironmentRelatedToFolder } from '../../../../client/pythonEnvironments/discovery/locators/services/pipEnvHelper';
+import {
+    _getAssociatedPipfile,
+    isPipenvEnvironment,
+    isPipenvEnvironmentRelatedToFolder,
+} from '../../../../client/pythonEnvironments/discovery/locators/services/pipEnvHelper';
 
 const path = platformApis.getOSType() === platformApis.OSType.Windows ? pathModule.win32 : pathModule.posix;
 
@@ -170,7 +174,7 @@ suite('Pipenv helper', () => {
             assert.equal(result, false);
         });
 
-        test('If not local & the name of the project isn\'t used as a prefix in the environment folder, return false', async () => {
+        test("If not local & the name of the project isn't used as a prefix in the environment folder, return false", async () => {
             const interpreterPath = path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe');
             // The project name (someProjectName) isn't used as a prefix in environment folder name (project-2s1eXEJ2)
             const project = path.join('path', 'to', 'someProjectName');

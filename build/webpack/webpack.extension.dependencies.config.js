@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
-// tslint:disable-next-line: no-require-imports
 const copyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
 const constants = require('../constants');
 const common = require('./common');
+
 const entryItems = {};
 common.nodeModulesToExternalize.forEach((moduleName) => {
     entryItems[`node_modules/${moduleName}`] = `./node_modules/${moduleName}`;
@@ -18,7 +19,7 @@ const config = {
     entry: entryItems,
     devtool: 'source-map',
     node: {
-        __dirname: false
+        __dirname: false,
     },
     module: {},
     externals: ['vscode', 'commonjs'],
@@ -26,17 +27,18 @@ const config = {
         ...common.getDefaultPlugins('dependencies'),
         // vsls requires our package.json to be next to node_modules. It's how they
         // 'find' the calling extension.
-        new copyWebpackPlugin([{ from: './package.json', to: '.' }])
+        // eslint-disable-next-line new-cap
+        new copyWebpackPlugin([{ from: './package.json', to: '.' }]),
     ],
     resolve: {
-        extensions: ['.js']
+        extensions: ['.js'],
     },
     output: {
         filename: '[name].js',
         path: path.resolve(constants.ExtensionRootDir, 'out', 'client'),
         libraryTarget: 'commonjs2',
-        devtoolModuleFilenameTemplate: '../../[resource-path]'
-    }
+        devtoolModuleFilenameTemplate: '../../[resource-path]',
+    },
 };
-// tslint:disable-next-line:no-default-export
+
 exports.default = config;

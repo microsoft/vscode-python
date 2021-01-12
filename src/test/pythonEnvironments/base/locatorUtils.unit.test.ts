@@ -13,19 +13,14 @@ import {
     PythonLocatorQuery,
 } from '../../../client/pythonEnvironments/base/locator';
 import { getEnvs, getQueryFilter } from '../../../client/pythonEnvironments/base/locatorUtils';
-import {
-    createLocatedEnv,
-    createNamedEnv,
-} from './common';
+import { createLocatedEnv, createNamedEnv } from './common';
 
 const homeDir = path.normalize('/home/me');
 const workspaceRoot = Uri.file('workspace-root');
 const doesNotExist = Uri.file(path.normalize('does-not-exist'));
 
 function setSearchLocation(env: PythonEnvInfo, location?: string): void {
-    const locationStr = location === undefined
-        ? path.dirname(env.location)
-        : path.normalize(location);
+    const locationStr = location === undefined ? path.dirname(env.location) : path.normalize(location);
     env.searchLocation = Uri.file(locationStr);
 }
 
@@ -61,12 +56,7 @@ const envSL5 = createLocatedEnv(`${homeDir}/.venvs/envSL5`, '3.9.0', PythonEnvKi
 setSearchLocation(envSL5);
 const rootedLocatedEnvs = [envSL1, envSL2, envSL3, envSL4, envSL5];
 
-const envs = [
-    ...plainEnvs,
-    ...locatedEnvs,
-    ...rootedEnvs,
-    ...rootedLocatedEnvs,
-];
+const envs = [...plainEnvs, ...locatedEnvs, ...rootedEnvs, ...rootedLocatedEnvs];
 
 suite('Python envs locator utils - getQueryFilter', () => {
     suite('empty query', () => {
@@ -175,9 +165,7 @@ suite('Python envs locator utils - getQueryFilter', () => {
         test('match multiple (one location)', () => {
             const expected = [envS3, envSL2];
             const searchLocations = {
-                roots: [
-                    workspaceRoot,
-                ],
+                roots: [workspaceRoot],
             };
             const query: PythonLocatorQuery = { searchLocations };
 
@@ -335,7 +323,7 @@ suite('Python envs locator utils - getEnvs', () => {
     test('empty, no update emitter', async () => {
         const iterator = (async function* () {
             // Yield nothing.
-        }()) as IPythonEnvsIterator;
+        })() as IPythonEnvsIterator;
 
         const result = await getEnvs(iterator);
 
@@ -348,7 +336,7 @@ suite('Python envs locator utils - getEnvs', () => {
         const iterator = (async function* () {
             // Yield nothing.
             emitter.fire(null);
-        }()) as IPythonEnvsIterator;
+        })() as IPythonEnvsIterator;
         iterator.onUpdated = emitter.event;
 
         const result = await getEnvs(iterator);
@@ -359,7 +347,7 @@ suite('Python envs locator utils - getEnvs', () => {
     test('yield one, no update emitter', async () => {
         const iterator = (async function* () {
             yield env1;
-        }()) as IPythonEnvsIterator;
+        })() as IPythonEnvsIterator;
 
         const result = await getEnvs(iterator);
 
@@ -371,7 +359,7 @@ suite('Python envs locator utils - getEnvs', () => {
         const iterator = (async function* () {
             yield env1;
             emitter.fire(null);
-        }()) as IPythonEnvsIterator;
+        })() as IPythonEnvsIterator;
         iterator.onUpdated = emitter.event;
 
         const result = await getEnvs(iterator);
@@ -387,7 +375,7 @@ suite('Python envs locator utils - getEnvs', () => {
             yield old;
             emitter.fire({ index: 0, old, update: envSL2 });
             emitter.fire(null);
-        }()) as IPythonEnvsIterator;
+        })() as IPythonEnvsIterator;
         iterator.onUpdated = emitter.event;
 
         const result = await getEnvs(iterator);
@@ -399,7 +387,7 @@ suite('Python envs locator utils - getEnvs', () => {
         const expected = rootedLocatedEnvs;
         const iterator = (async function* () {
             yield* expected;
-        }()) as IPythonEnvsIterator;
+        })() as IPythonEnvsIterator;
 
         const result = await getEnvs(iterator);
 
@@ -412,7 +400,7 @@ suite('Python envs locator utils - getEnvs', () => {
         const iterator = (async function* () {
             yield* expected;
             emitter.fire(null);
-        }()) as IPythonEnvsIterator;
+        })() as IPythonEnvsIterator;
         iterator.onUpdated = emitter.event;
 
         const result = await getEnvs(iterator);
@@ -437,7 +425,7 @@ suite('Python envs locator utils - getEnvs', () => {
                 emitter.fire({ index, old: original[index], update: expected[index] });
             });
             emitter.fire(null);
-        }()) as IPythonEnvsIterator;
+        })() as IPythonEnvsIterator;
         iterator.onUpdated = emitter.event;
 
         const result = await getEnvs(iterator);
@@ -462,7 +450,7 @@ suite('Python envs locator utils - getEnvs', () => {
                 }
             });
             emitter.fire(null);
-        }()) as IPythonEnvsIterator;
+        })() as IPythonEnvsIterator;
         iterator.onUpdated = emitter.event;
 
         const result = await getEnvs(iterator);

@@ -1,13 +1,12 @@
 'use strict';
 
-// tslint:disable-next-line:no-var-requires no-require-imports
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 import {
     CancellationToken,
     Location,
     SymbolInformation,
     Uri,
-    WorkspaceSymbolProvider as IWorspaceSymbolProvider
+    WorkspaceSymbolProvider as IWorspaceSymbolProvider,
 } from 'vscode';
 import { ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
@@ -21,7 +20,7 @@ export class WorkspaceSymbolProvider implements IWorspaceSymbolProvider {
     public constructor(
         private fs: IFileSystem,
         private commands: ICommandManager,
-        private tagGenerators: Generator[]
+        private tagGenerators: Generator[],
     ) {}
 
     @captureTelemetry(EventName.WORKSPACE_SYMBOLS_GO_TO)
@@ -30,7 +29,7 @@ export class WorkspaceSymbolProvider implements IWorspaceSymbolProvider {
             return [];
         }
         const generatorsWithTagFiles = await Promise.all(
-            this.tagGenerators.map((generator) => this.fs.fileExists(generator.tagFilePath))
+            this.tagGenerators.map((generator) => this.fs.fileExists(generator.tagFilePath)),
         );
         if (generatorsWithTagFiles.filter((exists) => exists).length !== this.tagGenerators.length) {
             await this.commands.executeCommand(Commands.Build_Workspace_Symbols, true, token);
@@ -42,7 +41,7 @@ export class WorkspaceSymbolProvider implements IWorspaceSymbolProvider {
                 if (await this.fs.fileExists(generator.tagFilePath)) {
                     generators.push(generator);
                 }
-            })
+            }),
         );
 
         const promises = generators
@@ -54,7 +53,7 @@ export class WorkspaceSymbolProvider implements IWorspaceSymbolProvider {
                     generator!.tagFilePath,
                     query,
                     token,
-                    this.fs
+                    this.fs,
                 );
                 if (!Array.isArray(items)) {
                     return [];
@@ -65,8 +64,8 @@ export class WorkspaceSymbolProvider implements IWorspaceSymbolProvider {
                             item.symbolName,
                             item.symbolKind,
                             '',
-                            new Location(Uri.file(item.fileName), item.position)
-                        )
+                            new Location(Uri.file(item.fileName), item.position),
+                        ),
                 );
             });
 

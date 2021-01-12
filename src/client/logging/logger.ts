@@ -39,7 +39,6 @@ interface IConfigurableLogger {
     add(transport: Transport): void;
 }
 
-// tslint:disable-next-line: no-suspicious-comment
 /**
  * TODO: We should actually have this method in `./_global.ts` as this is exported globally.
  * But for some reason, importing '../client/logging/_global' fails when launching the tests.
@@ -61,7 +60,7 @@ export function getPreDefinedConfiguration(): LoggerConfig {
     }
     if (process.env.VSC_PYTHON_LOG_FILE) {
         config.file = {
-            logfile: process.env.VSC_PYTHON_LOG_FILE
+            logfile: process.env.VSC_PYTHON_LOG_FILE,
         };
     }
     return config;

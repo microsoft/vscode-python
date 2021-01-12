@@ -13,6 +13,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ISortImportsEditingProvider>(ISortImportsEditingProvider, SortImportsEditingProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        CodeActionProviderService
+        CodeActionProviderService,
     );
 }

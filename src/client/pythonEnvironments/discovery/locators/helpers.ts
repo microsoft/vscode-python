@@ -14,7 +14,6 @@ export async function lookForInterpretersInDirectory(pathToCheck: string): Promi
     // Technically, we should be able to use fs.getFiles().  However,
     // that breaks some tests.  So we stick with the broader behavior.
     try {
-        // tslint:disable-next-line: no-suspicious-comment
         // TODO https://github.com/microsoft/vscode-python/issues/11338
         const files = await fsapi.readdir(pathToCheck);
         return files
@@ -40,17 +39,17 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                 item.path = path.normalize(item.path);
                 return item;
             })
-            .reduce<PythonEnvironment[]>((accumulator, current:PythonEnvironment) => {
+            .reduce<PythonEnvironment[]>((accumulator, current: PythonEnvironment) => {
                 const currentVersion = current && current.version ? current.version.raw : undefined;
                 let existingItem = accumulator.find((item) => {
                     // If same version and same base path, then ignore.
                     // Could be Python 3.6 with path = python.exe, and Python 3.6 and path = python3.exe.
                     if (
-                        item.version
-                        && item.version.raw === currentVersion
-                        && item.path
-                        && current.path
-                        && this.fs.arePathsSame(path.dirname(item.path), path.dirname(current.path))
+                        item.version &&
+                        item.version.raw === currentVersion &&
+                        item.path &&
+                        current.path &&
+                        this.fs.arePathsSame(path.dirname(item.path), path.dirname(current.path))
                     ) {
                         return true;
                     }
@@ -62,8 +61,8 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                     // Preserve type information.
                     // Possible we identified environment as unknown, but a later provider has identified env type.
                     if (
-                        existingItem.envType === EnvironmentType.Unknown
-                        && current.envType !== EnvironmentType.Unknown
+                        existingItem.envType === EnvironmentType.Unknown &&
+                        current.envType !== EnvironmentType.Unknown
                     ) {
                         existingItem.envType = current.envType;
                     }

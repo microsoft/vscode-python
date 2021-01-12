@@ -9,7 +9,6 @@ import { IExtensions } from '../types';
 
 @injectable()
 export class Extensions implements IExtensions {
-    // tslint:disable-next-line:no-any
     public get all(): readonly Extension<any>[] {
         return extensions.all;
     }
@@ -18,7 +17,6 @@ export class Extensions implements IExtensions {
         return extensions.onDidChange;
     }
 
-    // tslint:disable-next-line:no-any
     public getExtension(extensionId: any) {
         return extensions.getExtension(extensionId);
     }

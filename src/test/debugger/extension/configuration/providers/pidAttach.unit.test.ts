@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any no-invalid-template-strings max-func-body-length
-
 import { expect } from 'chai';
 import * as path from 'path';
 import { Uri } from 'vscode';
@@ -27,8 +25,8 @@ suite('Debugging - Configuration Provider File', () => {
             name: DebugConfigStrings.attachPid.snippet.name(),
             type: DebuggerTypeName,
             request: 'attach',
-            // tslint:disable-next-line:no-invalid-template-strings
-            processId: '${command:pickProcess}'
+
+            processId: '${command:pickProcess}',
         };
 
         expect(state.config).to.be.deep.equal(config);

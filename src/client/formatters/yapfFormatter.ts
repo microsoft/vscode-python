@@ -15,7 +15,7 @@ export class YapfFormatter extends BaseFormatter {
         document: vscode.TextDocument,
         options: vscode.FormattingOptions,
         token: vscode.CancellationToken,
-        range?: vscode.Range
+        range?: vscode.Range,
     ): Thenable<vscode.TextEdit[]> {
         const stopWatch = new StopWatch();
         const settings = this.serviceContainer
@@ -26,7 +26,6 @@ export class YapfFormatter extends BaseFormatter {
 
         const yapfArgs = ['--diff'];
         if (formatSelection && range !== undefined) {
-            // tslint:disable-next-line:no-non-null-assertion
             yapfArgs.push(...['--lines', `${range.start.line + 1}-${range.end.line + 1}`]);
         }
         // Yapf starts looking for config file starting from the file path.

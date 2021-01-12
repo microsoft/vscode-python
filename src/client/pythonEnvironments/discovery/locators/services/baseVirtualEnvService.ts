@@ -1,5 +1,3 @@
-// tslint:disable:no-unnecessary-callback-wrapper no-require-imports no-var-requires
-
 import { injectable, unmanaged } from 'inversify';
 import { flatten, noop } from 'lodash';
 import * as path from 'path';
@@ -56,12 +54,12 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             .then((dirs) => dirs.filter((dir) => dir.length > 0))
             .then((dirs) => Promise.all(dirs.map((d) => lookForInterpretersInDirectory(d))))
             .then((pathsWithInterpreters) => flatten(pathsWithInterpreters))
-            .then((interpreters) => Promise.all(
-                interpreters.map((interpreter) => this.getVirtualEnvDetails(interpreter, resource)),
-            ))
-            .then((interpreters) => interpreters.filter(
-                (interpreter) => !!interpreter,
-            ).map((interpreter) => interpreter!)) // NOSONAR
+            .then((interpreters) =>
+                Promise.all(interpreters.map((interpreter) => this.getVirtualEnvDetails(interpreter, resource))),
+            )
+            .then((interpreters) =>
+                interpreters.filter((interpreter) => !!interpreter).map((interpreter) => interpreter!),
+            ) // NOSONAR
             .catch((err) => {
                 traceError('Python Extension (lookForInterpretersInVenvs):', err);
                 // Ignore exceptions.
@@ -72,20 +70,22 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
     private getProspectiveDirectoriesForLookup(subDirs: string[]) {
         const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
         const dirToLookFor = platform.virtualEnvBinName;
-        return subDirs.map((subDir) => this.fileSystem
-            .getSubDirectories(subDir)
-            .then((dirs) => {
-                const scriptOrBinDirs = dirs.filter((dir) => {
-                    const folderName = path.basename(dir);
-                    return this.fileSystem.arePathsSame(folderName, dirToLookFor);
-                });
-                return scriptOrBinDirs.length === 1 ? scriptOrBinDirs[0] : '';
-            })
-            .catch((err) => {
-                traceError('Python Extension (getProspectiveDirectoriesForLookup):', err);
-                // Ignore exceptions.
-                return '';
-            }));
+        return subDirs.map((subDir) =>
+            this.fileSystem
+                .getSubDirectories(subDir)
+                .then((dirs) => {
+                    const scriptOrBinDirs = dirs.filter((dir) => {
+                        const folderName = path.basename(dir);
+                        return this.fileSystem.arePathsSame(folderName, dirToLookFor);
+                    });
+                    return scriptOrBinDirs.length === 1 ? scriptOrBinDirs[0] : '';
+                })
+                .catch((err) => {
+                    traceError('Python Extension (getProspectiveDirectoriesForLookup):', err);
+                    // Ignore exceptions.
+                    return '';
+                }),
+        );
     }
 
     private async getVirtualEnvDetails(interpreter: string, resource?: Uri): Promise<PythonEnvironment | undefined> {
@@ -93,16 +93,18 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             this.helper.getInterpreterInformation(interpreter),
             this.virtualEnvMgr.getEnvironmentName(interpreter, resource),
             this.virtualEnvMgr.getEnvironmentType(interpreter, resource),
-        ]).then(([details, virtualEnvName, type]):Promise<PythonEnvironment | undefined> => {
-            if (!details) {
-                return Promise.resolve(undefined);
-            }
-            this._hasInterpreters.resolve(true);
-            return Promise.resolve({
-                ...(details as PythonEnvironment),
-                envName: virtualEnvName,
-                type: type! as EnvironmentType,
-            });
-        });
+        ]).then(
+            ([details, virtualEnvName, type]): Promise<PythonEnvironment | undefined> => {
+                if (!details) {
+                    return Promise.resolve(undefined);
+                }
+                this._hasInterpreters.resolve(true);
+                return Promise.resolve({
+                    ...(details as PythonEnvironment),
+                    envName: virtualEnvName,
+                    type: type! as EnvironmentType,
+                });
+            },
+        );
     }
 }

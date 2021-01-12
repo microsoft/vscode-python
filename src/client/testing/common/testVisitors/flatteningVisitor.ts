@@ -7,14 +7,13 @@ import {
     TestFile,
     TestFolder,
     TestFunction,
-    TestSuite
+    TestSuite,
 } from '../types';
 
 @injectable()
 export class TestFlatteningVisitor implements ITestVisitor {
-    // tslint:disable-next-line:variable-name
     private _flattedTestFunctions = new Map<string, FlattenedTestFunction>();
-    // tslint:disable-next-line:variable-name
+
     private _flattenedTestSuites = new Map<string, FlattenedTestSuite>();
     public get flattenedTestFunctions(): FlattenedTestFunction[] {
         return [...this._flattedTestFunctions.values()];
@@ -22,9 +21,9 @@ export class TestFlatteningVisitor implements ITestVisitor {
     public get flattenedTestSuites(): FlattenedTestSuite[] {
         return [...this._flattenedTestSuites.values()];
     }
-    // tslint:disable-next-line:no-empty
+
     public visitTestFunction(_testFunction: TestFunction): void {}
-    // tslint:disable-next-line:no-empty
+
     public visitTestSuite(_testSuite: TestSuite): void {}
     public visitTestFile(testFile: TestFile): void {
         // sample test_three (file name without extension and all / replaced with ., meaning this is the package)
@@ -33,7 +32,7 @@ export class TestFlatteningVisitor implements ITestVisitor {
         testFile.functions.forEach((fn) => this.addTestFunction(fn, testFile, packageName));
         testFile.suites.forEach((suite) => this.visitTestSuiteOfAFile(suite, testFile));
     }
-    // tslint:disable-next-line:no-empty
+
     public visitTestFolder(_testFile: TestFolder) {}
     private visitTestSuiteOfAFile(testSuite: TestSuite, parentTestFile: TestFile): void {
         testSuite.functions.forEach((fn) => this.visitTestFunctionOfASuite(fn, testSuite, parentTestFile));
@@ -43,7 +42,7 @@ export class TestFlatteningVisitor implements ITestVisitor {
     private visitTestFunctionOfASuite(
         testFunction: TestFunction,
         parentTestSuite: TestSuite,
-        parentTestFile: TestFile
+        parentTestFile: TestFile,
     ) {
         const key = `Function:${testFunction.name},Suite:${parentTestSuite.name},SuiteXmlName:${parentTestSuite.xmlName},ParentFile:${parentTestFile.fullPath}`;
         if (this._flattenedTestSuites.has(key)) {
@@ -53,7 +52,7 @@ export class TestFlatteningVisitor implements ITestVisitor {
             testFunction,
             xmlClassName: parentTestSuite.xmlName,
             parentTestFile,
-            parentTestSuite
+            parentTestSuite,
         };
         this._flattedTestFunctions.set(key, flattenedFunction);
     }

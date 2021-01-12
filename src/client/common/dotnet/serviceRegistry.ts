@@ -16,21 +16,21 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IOSDotNetCompatibilityService>(
         IOSDotNetCompatibilityService,
         MacDotNetCompatibilityService,
-        OSType.OSX
+        OSType.OSX,
     );
     serviceManager.addSingleton<IOSDotNetCompatibilityService>(
         IOSDotNetCompatibilityService,
         WindowsDotNetCompatibilityService,
-        OSType.Windows
+        OSType.Windows,
     );
     serviceManager.addSingleton<IOSDotNetCompatibilityService>(
         IOSDotNetCompatibilityService,
         LinuxDotNetCompatibilityService,
-        OSType.Linux
+        OSType.Linux,
     );
     serviceManager.addSingleton<IOSDotNetCompatibilityService>(
         IOSDotNetCompatibilityService,
         UnknownOSDotNetCompatibilityService,
-        OSType.Unknown
+        OSType.Unknown,
     );
 }

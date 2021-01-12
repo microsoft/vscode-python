@@ -16,7 +16,6 @@ import { TestFunctionCodeNavigator } from '../../../client/testing/navigation/fu
 import { TestSuiteCodeNavigator } from '../../../client/testing/navigation/suiteNavigator';
 import { ITestCodeNavigator, ITestCodeNavigatorCommandHandler } from '../../../client/testing/navigation/types';
 
-// tslint:disable:max-func-body-length
 suite('Unit Tests - Navigation Command Handler', () => {
     let commandHandler: ITestCodeNavigatorCommandHandler;
     let cmdManager: ICommandManager;
@@ -29,14 +28,14 @@ suite('Unit Tests - Navigation Command Handler', () => {
         fileHandler = mock(TestFileCodeNavigator);
         functionHandler = mock(TestFunctionCodeNavigator);
         suiteHandler = mock(TestSuiteCodeNavigator);
-        // tslint:disable-next-line: no-any
+
         disposableRegistry = mock(AsyncDisposableRegistry) as any;
         commandHandler = new TestCodeNavigatorCommandHandler(
             instance(cmdManager),
             instance(fileHandler),
             instance(functionHandler),
             instance(suiteHandler),
-            instance(disposableRegistry)
+            instance(disposableRegistry),
         );
     });
     test('Ensure Navigation handlers are registered', async () => {
@@ -45,22 +44,22 @@ suite('Unit Tests - Navigation Command Handler', () => {
             cmdManager.registerCommand(
                 Commands.navigateToTestFile,
                 instance(fileHandler).navigateTo,
-                instance(fileHandler)
-            )
+                instance(fileHandler),
+            ),
         ).once();
         verify(
             cmdManager.registerCommand(
                 Commands.navigateToTestFunction,
                 instance(functionHandler).navigateTo,
-                instance(functionHandler)
-            )
+                instance(functionHandler),
+            ),
         ).once();
         verify(
             cmdManager.registerCommand(
                 Commands.navigateToTestSuite,
                 instance(suiteHandler).navigateTo,
-                instance(suiteHandler)
-            )
+                instance(suiteHandler),
+            ),
         ).once();
     });
     test('Ensure handlers are disposed', async () => {
@@ -71,22 +70,22 @@ suite('Unit Tests - Navigation Command Handler', () => {
             cmdManager.registerCommand(
                 Commands.navigateToTestFile,
                 instance(fileHandler).navigateTo,
-                instance(fileHandler)
-            )
+                instance(fileHandler),
+            ),
         ).thenReturn(disposable1.object);
         when(
             cmdManager.registerCommand(
                 Commands.navigateToTestFunction,
                 instance(functionHandler).navigateTo,
-                instance(functionHandler)
-            )
+                instance(functionHandler),
+            ),
         ).thenReturn(disposable2.object);
         when(
             cmdManager.registerCommand(
                 Commands.navigateToTestSuite,
                 instance(suiteHandler).navigateTo,
-                instance(suiteHandler)
-            )
+                instance(suiteHandler),
+            ),
         ).thenReturn(disposable3.object);
 
         commandHandler.register();

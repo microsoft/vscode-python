@@ -13,7 +13,7 @@ import {
     CompletionItemProvider,
     Position,
     SnippetString,
-    TextDocument
+    TextDocument,
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../../activation/types';
 import { ILanguageService } from '../../../../common/application/types';
@@ -23,27 +23,27 @@ import { DebugConfigStrings } from '../../../../common/utils/localize';
 const configurationNodeName = 'configurations';
 enum JsonLanguages {
     json = 'json',
-    jsonWithComments = 'jsonc'
+    jsonWithComments = 'jsonc',
 }
 
 @injectable()
 export class LaunchJsonCompletionProvider implements CompletionItemProvider, IExtensionSingleActivationService {
     constructor(
         @inject(ILanguageService) private readonly languageService: ILanguageService,
-        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
     ) {}
     public async activate(): Promise<void> {
         this.disposableRegistry.push(
-            this.languageService.registerCompletionItemProvider({ language: JsonLanguages.json }, this)
+            this.languageService.registerCompletionItemProvider({ language: JsonLanguages.json }, this),
         );
         this.disposableRegistry.push(
-            this.languageService.registerCompletionItemProvider({ language: JsonLanguages.jsonWithComments }, this)
+            this.languageService.registerCompletionItemProvider({ language: JsonLanguages.jsonWithComments }, this),
         );
     }
     public async provideCompletionItems(
         document: TextDocument,
         position: Position,
-        token: CancellationToken
+        token: CancellationToken,
     ): Promise<CompletionItem[]> {
         if (!this.canProvideCompletions(document, position)) {
             return [];
@@ -54,15 +54,15 @@ export class LaunchJsonCompletionProvider implements CompletionItemProvider, IEx
                 command: {
                     command: 'python.SelectAndInsertDebugConfiguration',
                     title: DebugConfigStrings.launchJsonCompletions.description(),
-                    arguments: [document, position, token]
+                    arguments: [document, position, token],
                 },
                 documentation: DebugConfigStrings.launchJsonCompletions.description(),
                 sortText: 'AAAA',
                 preselect: true,
                 kind: CompletionItemKind.Enum,
                 label: DebugConfigStrings.launchJsonCompletions.label(),
-                insertText: new SnippetString()
-            }
+                insertText: new SnippetString(),
+            },
         ];
     }
     public canProvideCompletions(document: TextDocument, position: Position) {

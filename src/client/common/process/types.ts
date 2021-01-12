@@ -24,7 +24,6 @@ export type ObservableExecutionResult<T extends string | Buffer> = {
     dispose(): void;
 };
 
-// tslint:disable-next-line:interface-name
 export type SpawnOptions = ChildProcessSpawnOptions & {
     encoding?: string;
     token?: CancellationToken;
@@ -33,7 +32,6 @@ export type SpawnOptions = ChildProcessSpawnOptions & {
     extraVariables?: NodeJS.ProcessEnv;
 };
 
-// tslint:disable-next-line:interface-name
 export type ShellOptions = ExecOptions & { throwOnStdErr?: boolean };
 
 export type ExecutionResult<T extends string | Buffer> = {
@@ -82,7 +80,7 @@ export interface IPythonExecutionFactory {
     createCondaExecutionService(
         pythonPath: string,
         processService?: IProcessService,
-        resource?: Uri
+        resource?: Uri,
     ): Promise<IPythonExecutionService | undefined>;
 }
 export const IPythonExecutionService = Symbol('IPythonExecutionService');
@@ -116,7 +114,7 @@ export interface IPythonToolExecutionService {
     execObservable(
         executionInfo: ExecutionInfo,
         options: SpawnOptions,
-        resource: Uri
+        resource: Uri,
     ): Promise<ObservableExecutionResult<string>>;
     exec(executionInfo: ExecutionInfo, options: SpawnOptions, resource: Uri): Promise<ExecutionResult<string>>;
 }

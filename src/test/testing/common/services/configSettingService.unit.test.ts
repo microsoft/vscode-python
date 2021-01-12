@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any
-
 import { expect, use } from 'chai';
 import * as chaiPromise from 'chai-as-promised';
 import * as typeMoq from 'typemoq';
@@ -16,7 +14,7 @@ import { IServiceContainer } from '../../../../client/ioc/types';
 import { UNIT_TEST_PRODUCTS } from '../../../../client/testing/common/constants';
 import {
     BufferedTestConfigSettingsService,
-    TestConfigSettingsService
+    TestConfigSettingsService,
 } from '../../../../client/testing/common/services/configSettingService';
 import { UnitTestProduct } from '../../../../client/testing/common/types';
 import { ITestConfigSettingsService } from '../../../../client/testing/types';
@@ -26,7 +24,7 @@ use(chaiPromise);
 const updateMethods: (keyof Omit<ITestConfigSettingsService, 'getTestEnablingSetting'>)[] = [
     'updateTestArgs',
     'disable',
-    'enable'
+    'enable',
 ];
 
 suite('Unit Tests - ConfigSettingsService', () => {
@@ -133,7 +131,7 @@ suite('Unit Tests - ConfigSettingsService', () => {
                     const pythonConfig = typeMoq.Mock.ofType<WorkspaceConfiguration>();
                     workspaceService
                         .setup((w) =>
-                            w.getConfiguration(typeMoq.It.isValue('python'), typeMoq.It.isValue(workspaceUri))
+                            w.getConfiguration(typeMoq.It.isValue('python'), typeMoq.It.isValue(workspaceUri)),
                         )
                         .returns(() => pythonConfig.object)
                         .verifiable(typeMoq.Times.once());
@@ -176,7 +174,7 @@ suite('Unit Tests - ConfigSettingsService', () => {
                     const pythonConfig = typeMoq.Mock.ofType<WorkspaceConfiguration>();
                     workspaceService
                         .setup((w) =>
-                            w.getConfiguration(typeMoq.It.isValue('python'), typeMoq.It.isValue(workspaceUri))
+                            w.getConfiguration(typeMoq.It.isValue('python'), typeMoq.It.isValue(workspaceUri)),
                         )
                         .returns(() => pythonConfig.object)
                         .verifiable(typeMoq.Times.once());
@@ -236,8 +234,8 @@ suite('Unit Tests - BufferedTestConfigSettingsService', () => {
             c.updateTestArgs(
                 typeMoq.It.isValue(testDir),
                 typeMoq.It.isValue(Product.pytest),
-                typeMoq.It.isValue(newArgs)
-            )
+                typeMoq.It.isValue(newArgs),
+            ),
         )
             .returns(() => Promise.resolve())
             .verifiable(typeMoq.Times.once());

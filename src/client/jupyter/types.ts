@@ -8,7 +8,8 @@ import { QuickPickItem } from 'vscode';
 export interface IJupyterServerUri {
     baseUrl: string;
     token: string;
-    // tslint:disable-next-line: no-any
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     authorizationHeader: any; // JSON object for authorization header.
     expiration?: Date; // Date/time when header expires and should be refreshed.
     displayName: string;
@@ -39,8 +40,8 @@ export interface IDataViewerDataProvider {
 export enum ColumnType {
     String = 'string',
     Number = 'number',
-    Bool = 'bool'
+    Bool = 'bool',
 }
 
-// tslint:disable-next-line: no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type IRowsResponse = any[];

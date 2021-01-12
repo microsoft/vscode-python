@@ -28,7 +28,6 @@ suite('Debugger Integration', () => {
     let fix: DebuggerFixture;
     suiteSetup(async function () {
         if (IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
-            // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
         await initialize();
@@ -58,7 +57,7 @@ suite('Debugger Integration', () => {
         'launch': ['launch a file', [...defaultScriptArgs, outFile]],
         // prettier-ignore
         'attach': ['attach to a local port', defaultScriptArgs],
-        'attach to PID': ['attach to a local PID', defaultScriptArgs]
+        'attach to PID': ['attach to a local PID', defaultScriptArgs],
         // For now we do not worry about "test" debugging.
     };
 

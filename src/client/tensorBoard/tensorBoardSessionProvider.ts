@@ -12,6 +12,9 @@ import { IProcessServiceFactory } from '../common/process/types';
 import { IDisposableRegistry, IExperimentService, IInstaller } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
+import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from './constants';
 import { TensorBoardSession } from './tensorBoardSession';
 
 @injectable()
@@ -24,24 +27,48 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
-        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory
+        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
     ) {}
 
-    public async activate() {
+    public async activate(): Promise<void> {
         this.activateInternal().ignoreErrors();
     }
 
     private async activateInternal() {
         if (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) {
             this.disposables.push(
-                this.commandManager.registerCommand(Commands.LaunchTensorBoard, () => this.createNewSession())
+                this.commandManager.registerCommand(
+                    Commands.LaunchTensorBoard,
+                    (
+                        entrypoint: TensorBoardEntrypoint = TensorBoardEntrypoint.palette,
+                        trigger: TensorBoardEntrypointTrigger = TensorBoardEntrypointTrigger.palette,
+                    ) => {
+                        sendTelemetryEvent(EventName.TENSORBOARD_SESSION_LAUNCH, undefined, {
+                            trigger,
+                            entrypoint,
+                        });
+                        // Convenience telemetry events for A/B testing
+                        if (
+                            trigger === TensorBoardEntrypointTrigger.fileimport &&
+                            entrypoint === TensorBoardEntrypoint.codelens
+                        ) {
+                            sendTelemetryEvent(EventName.TENSORBOARD_IMPORT_CODELENS_CLICKED);
+                        } else if (
+                            trigger === TensorBoardEntrypointTrigger.fileimport &&
+                            entrypoint === TensorBoardEntrypoint.codeaction
+                        ) {
+                            sendTelemetryEvent(EventName.TENSORBOARD_IMPORT_CODEACTION_CLICKED);
+                        }
+                        return this.createNewSession();
+                    },
+                ),
             );
             const contextKey = new ContextKey('python.isInNativeTensorBoardExperiment', this.commandManager);
             contextKey.set(true).ignoreErrors();
         }
     }
 
-    private async createNewSession(): Promise<void> {
+    private async createNewSession(): Promise<TensorBoardSession | undefined> {
         traceInfo('Starting new TensorBoard session...');
         try {
             const newSession = new TensorBoardSession(
@@ -49,12 +76,15 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                 this.interpreterService,
                 this.workspaceService,
                 this.processServiceFactory,
-                this.commandManager
+                this.commandManager,
+                this.disposables,
             );
             await newSession.initialize();
+            return newSession;
         } catch (e) {
             traceError(`Encountered error while starting new TensorBoard session: ${e}`);
             await this.applicationShell.showErrorMessage(TensorBoard.failedToStartSessionError().format(e));
         }
+        return undefined;
     }
 }

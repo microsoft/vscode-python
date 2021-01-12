@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-
 import { expect } from 'chai';
 import { FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
 import { PathUtils } from '../../../client/common/platform/pathUtils';

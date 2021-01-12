@@ -12,7 +12,7 @@ export class BaseTerminalActivator implements ITerminalActivator {
     constructor(private readonly helper: ITerminalHelper) {}
     public async activateEnvironmentInTerminal(
         terminal: Terminal,
-        options?: TerminalActivationOptions
+        options?: TerminalActivationOptions,
     ): Promise<boolean> {
         if (this.activatedTerminals.has(terminal)) {
             return this.activatedTerminals.get(terminal)!;
@@ -24,7 +24,7 @@ export class BaseTerminalActivator implements ITerminalActivator {
         const activationCommands = await this.helper.getEnvironmentActivationCommands(
             terminalShellType,
             options?.resource,
-            options?.interpreter
+            options?.interpreter,
         );
         let activated = false;
         if (activationCommands) {

@@ -19,7 +19,7 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
         @unmanaged() protected readonly azureBlobStorageAccount: string,
         @unmanaged() protected readonly azureBlobStorageContainer: string,
         @unmanaged() protected readonly azureCDNBlobStorageAccount: string,
-        private getBlobStore: (uri: string) => Promise<IAZBlobStore> = _getAZBlobStore
+        private getBlobStore: (uri: string) => Promise<IAZBlobStore> = _getAZBlobStore,
     ) {}
 
     public async getPackages(packageName: string, resource: Resource): Promise<NugetPackage[]> {
@@ -28,7 +28,7 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
             this.azureBlobStorageContainer,
             packageName,
             this.azureCDNBlobStorageAccount,
-            resource
+            resource,
         );
     }
 
@@ -39,19 +39,19 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
         azureBlobStorageContainer: string,
         packageName: string,
         azureCDNBlobStorageAccount: string,
-        resource: Resource
+        resource: Resource,
     ) {
         const results = await this.listBlobStoreCatalog(
             this.fixBlobStoreURI(azureBlobStorageAccount, resource),
             azureBlobStorageContainer,
-            packageName
+            packageName,
         );
         const nugetService = this.serviceContainer.get<INugetService>(INugetService);
         return results.map((item) => {
             return {
                 package: item.name,
                 uri: `${azureCDNBlobStorageAccount}/${azureBlobStorageContainer}/${item.name}`,
-                version: nugetService.getVersionFromPackageFileName(item.name)
+                version: nugetService.getVersionFromPackageFileName(item.name),
             };
         });
     }
@@ -59,12 +59,12 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
     private async listBlobStoreCatalog(
         azureBlobStorageAccount: string,
         azureBlobStorageContainer: string,
-        packageName: string
+        packageName: string,
     ): Promise<IBlobResult[]> {
         const blobStore = await this.getBlobStore(azureBlobStorageAccount);
         return new Promise<IBlobResult[]>((resolve, reject) => {
             // We must pass undefined according to docs, but type definition doesn't all it to be undefined or null!!!
-            // tslint:disable-next-line:no-any
+
             const token = undefined as any;
             blobStore.listBlobsSegmentedWithPrefix(azureBlobStorageContainer, packageName, token, (error, result) => {
                 if (error) {
@@ -85,7 +85,6 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
             return uri;
         }
 
-        // tslint:disable-next-line:no-http-string
         return uri.replace(/^https:/, 'http:');
     }
 }
@@ -108,14 +107,13 @@ interface IAZBlobStore {
     listBlobsSegmentedWithPrefix(
         container: string,
         prefix: string,
-        // tslint:disable-next-line:no-any
+
         currentToken: any,
-        callback: ErrorOrResult<IBlobResults>
+        callback: ErrorOrResult<IBlobResults>,
     ): void;
 }
 
 async function _getAZBlobStore(uri: string): Promise<IAZBlobStore> {
-    // tslint:disable-next-line:no-require-imports
     const az = (await import('azure-storage')) as typeof import('azure-storage');
     return az.createBlobServiceAnonymous(uri);
 }

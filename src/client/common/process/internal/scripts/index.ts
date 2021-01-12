@@ -89,7 +89,6 @@ namespace _completion {
         id: number;
     };
     type _Response1 = {
-        // tslint:disable-next-line:no-any no-banned-terms
         arguments: any[];
     };
     type _Response2 =
@@ -214,11 +213,9 @@ export function refactor(root: string): [string[], (out: string) => object[]] {
     const script = path.join(SCRIPTS_DIR, 'refactor.py');
     const args = maybeIsolated([script, root]);
 
-    // tslint:disable-next-line:no-suspicious-comment
     // TODO: Make the return type more specific, like we did
     // with completion().
     function parse(out: string): object[] {
-        // tslint:disable-next-line:no-suspicious-comment
         // TODO: Also handle "STARTED"?
         return out
             .split(/\r?\n/g)
@@ -286,7 +283,7 @@ namespace _symbolProvider {
 export function symbolProvider(
     filename: string,
     // If "text" is provided then it gets passed to the script as-is.
-    text?: string
+    text?: string,
 ): [string[], (out: string) => _symbolProvider.Symbols] {
     const script = path.join(SCRIPTS_DIR, 'symbolProvider.py');
     const args = maybeIsolated([script, filename]);
@@ -342,7 +339,7 @@ export function shell_exec(command: string, lockfile: string, shellArgs: string[
         // The shell args must come after the command
         // but before the lockfile.
         ...shellArgs,
-        lockfile.fileToCommandArgument()
+        lockfile.fileToCommandArgument(),
     ]);
 }
 

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
@@ -76,7 +74,7 @@ suite('Environment Variables Service', () => {
 
         test('Simple variable substitution is supported', async () => {
             const vars = await variablesService.parseFile(path.join(envFilesFolderPath, '.env6'), {
-                BINDIR: '/usr/bin'
+                BINDIR: '/usr/bin',
             });
 
             expect(vars).to.not.equal(undefined, 'Variables is undefiend');
@@ -85,7 +83,7 @@ suite('Environment Variables Service', () => {
             expect(vars).to.have.property(
                 'PYTHONPATH',
                 '/home/user/git/foobar/foo:/home/user/git/foobar/bar',
-                'value is invalid'
+                'value is invalid',
             );
             expect(vars).to.have.property('PYTHON', '/usr/bin/python3', 'value is invalid');
         });

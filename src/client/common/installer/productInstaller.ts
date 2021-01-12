@@ -1,5 +1,3 @@
-// tslint:disable:max-classes-per-file max-classes-per-file
-
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
@@ -10,6 +8,7 @@ import { ILinterManager, LinterId } from '../../linters/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { TensorBoardPromptSelection } from '../../tensorBoard/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { LinterInstallationPromptVariants } from '../experiments/groups';
@@ -26,7 +25,7 @@ import {
     IPersistentStateFactory,
     ModuleNamePurpose,
     Product,
-    ProductType
+    ProductType,
 } from '../types';
 import { Common, Installer, Linters, TensorBoard } from '../utils/localize';
 import { isResource, noop } from '../utils/misc';
@@ -36,7 +35,7 @@ import {
     IModuleInstaller,
     InterpreterUri,
     IProductPathService,
-    IProductService
+    IProductService,
 } from './types';
 
 export { Product } from '../types';
@@ -61,7 +60,7 @@ export abstract class BaseInstaller {
     public promptToInstall(
         product: Product,
         resource?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
     ): Promise<InstallerResponse> {
         // If this method gets called twice, while previous promise has not been resolved, then return that same promise.
         // E.g. previous promise is not resolved as a message has been displayed to the user, so no point displaying
@@ -83,7 +82,7 @@ export abstract class BaseInstaller {
     public async install(
         product: Product,
         resource?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
     ): Promise<InstallerResponse> {
         if (product === Product.unittest) {
             return InstallerResponse.Installed;
@@ -101,7 +100,7 @@ export abstract class BaseInstaller {
             .catch((ex) => traceError(`Error in installing the module '${moduleName}', ${ex}`));
 
         return this.isInstalled(product, resource).then((isInstalled) =>
-            isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore
+            isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore,
         );
     }
 
@@ -132,7 +131,7 @@ export abstract class BaseInstaller {
     protected abstract promptToInstallImplementation(
         product: Product,
         resource?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
     ): Promise<InstallerResponse>;
     protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
         const productType = this.productService.getProductType(product);
@@ -156,13 +155,13 @@ export class CTagsInstaller extends BaseInstaller {
             this.outputChannel.appendLine('Install Universal Ctags Win32 to enable support for Workspace Symbols');
             this.outputChannel.appendLine('Download the CTags binary from the Universal CTags site.');
             this.outputChannel.appendLine(
-                'Option 1: Extract ctags.exe from the downloaded zip to any folder within your PATH so that Visual Studio Code can run it.'
+                'Option 1: Extract ctags.exe from the downloaded zip to any folder within your PATH so that Visual Studio Code can run it.',
             );
             this.outputChannel.appendLine(
-                'Option 2: Extract to any folder and add the path to this folder to the command setting.'
+                'Option 2: Extract to any folder and add the path to this folder to the command setting.',
             );
             this.outputChannel.appendLine(
-                'Option 3: Extract to any folder and define that path in the python.workspaceSymbols.ctagsPath setting of your user settings file (settings.json).'
+                'Option 3: Extract to any folder and define that path in the python.workspaceSymbols.ctagsPath setting of your user settings file (settings.json).',
             );
             this.outputChannel.show();
         } else {
@@ -178,12 +177,12 @@ export class CTagsInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(
         product: Product,
         resource?: Uri,
-        _cancel?: CancellationToken
+        _cancel?: CancellationToken,
     ): Promise<InstallerResponse> {
         const item = await this.appShell.showErrorMessage(
             'Install CTags to enable Python workspace symbols?',
             'Yes',
-            'No'
+            'No',
         );
         return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
     }
@@ -193,7 +192,7 @@ export class FormatterInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(
         product: Product,
         resource?: Uri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
     ): Promise<InstallerResponse> {
         // Hard-coded on purpose because the UI won't necessarily work having
         // another formatter.
@@ -255,7 +254,7 @@ export class LinterInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(
         product: Product,
         resource?: Uri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
     ): Promise<InstallerResponse> {
         // This is a hack, really we should be handling this in a service that
         // controls the prompts we show. The issue here was that if we show
@@ -277,7 +276,7 @@ export class LinterInstaller extends BaseInstaller {
                 // We won't show a prompt, so tell the extension to treat as though user
                 // ignored the prompt.
                 sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT, undefined, {
-                    prompt: 'noPrompt'
+                    prompt: 'noPrompt',
                 });
 
                 const productName = ProductNames.get(product)!;
@@ -292,7 +291,7 @@ export class LinterInstaller extends BaseInstaller {
         }
 
         sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT, undefined, {
-            prompt: 'old'
+            prompt: 'old',
         });
         return this.oldPromptForInstallation(product, resource, cancel);
     }
@@ -340,7 +339,7 @@ export class LinterInstaller extends BaseInstaller {
         const prompt = pylintFirst ? 'pylintFirst' : 'flake8first';
 
         sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT, undefined, {
-            prompt
+            prompt,
         });
 
         const response = await this.appShell.showInformationMessage(message, ...options);
@@ -348,20 +347,20 @@ export class LinterInstaller extends BaseInstaller {
         if (response === installPylint) {
             sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT_ACTION, undefined, {
                 prompt,
-                action: 'installPylint'
+                action: 'installPylint',
             });
             return this.install(Product.pylint, resource, cancel);
         } else if (response === installFlake8) {
             sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT_ACTION, undefined, {
                 prompt,
-                action: 'installFlake8'
+                action: 'installFlake8',
             });
             await this.linterManager.setActiveLintersAsync([Product.flake8], resource);
             return this.install(Product.flake8, resource, cancel);
         } else if (response === doNotShowAgain) {
             sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT_ACTION, undefined, {
                 prompt,
-                action: 'disablePrompt'
+                action: 'disablePrompt',
             });
             await this.setStoredResponse(disableLinterInstallPromptKey, true);
             return InstallerResponse.Ignore;
@@ -369,7 +368,7 @@ export class LinterInstaller extends BaseInstaller {
 
         sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT_ACTION, undefined, {
             prompt,
-            action: 'close'
+            action: 'close',
         });
         return InstallerResponse.Ignore;
     }
@@ -400,14 +399,14 @@ export class LinterInstaller extends BaseInstaller {
         if (response === install) {
             sendTelemetryEvent(EventName.LINTER_NOT_INSTALLED_PROMPT, undefined, {
                 tool: productName as LinterId,
-                action: 'install'
+                action: 'install',
             });
             return this.install(product, resource, cancel);
         } else if (response === doNotShowAgain) {
             await this.setStoredResponse(disableLinterInstallPromptKey, true);
             sendTelemetryEvent(EventName.LINTER_NOT_INSTALLED_PROMPT, undefined, {
                 tool: productName as LinterId,
-                action: 'disablePrompt'
+                action: 'disablePrompt',
             });
             return InstallerResponse.Ignore;
         }
@@ -431,7 +430,7 @@ export class LinterInstaller extends BaseInstaller {
                 'linting.pycodestyleEnabled',
                 'linting.prospectorEnabled',
                 'linting.pydocstyleEnabled',
-                'linting.pylamaEnabled'
+                'linting.pylamaEnabled',
             ];
 
             const values = keys.map((key) => {
@@ -472,7 +471,7 @@ export class TestFrameworkInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(
         product: Product,
         resource?: Uri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
     ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
 
@@ -494,13 +493,13 @@ export class RefactoringLibraryInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(
         product: Product,
         resource?: Uri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
     ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const item = await this.appShell.showErrorMessage(
             `Refactoring library ${productName} is not installed. Install?`,
             'Yes',
-            'No'
+            'No',
         );
         return item === 'Yes' ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
     }
@@ -511,7 +510,7 @@ export class DataScienceInstaller extends BaseInstaller {
     public async install(
         product: Product,
         interpreterUri?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
     ): Promise<InstallerResponse> {
         // Precondition
         if (isResource(interpreterUri)) {
@@ -545,7 +544,7 @@ export class DataScienceInstaller extends BaseInstaller {
             .catch((ex) => traceError(`Error in installing the module '${moduleName}', ${ex}`));
 
         return this.isInstalled(product, interpreter).then((isInstalled) =>
-            isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore
+            isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore,
         );
     }
     /**
@@ -555,13 +554,13 @@ export class DataScienceInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(
         product: Product,
         resource?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
     ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const item = await this.appShell.showErrorMessage(
             Installer.dataScienceInstallPrompt().format(productName),
             'Yes',
-            'No'
+            'No',
         );
         if (item === 'Yes') {
             return this.install(product, resource, cancel);
@@ -574,12 +573,22 @@ export class TensorBoardInstaller extends DataScienceInstaller {
     protected async promptToInstallImplementation(
         product: Product,
         resource: Uri,
-        cancel: CancellationToken
+        cancel: CancellationToken,
     ): Promise<InstallerResponse> {
+        sendTelemetryEvent(EventName.TENSORBOARD_INSTALL_PROMPT_SHOWN);
         // Show a prompt message specific to TensorBoard
         const yes = Common.bannerLabelYes();
         const no = Common.bannerLabelNo();
         const selection = await this.appShell.showErrorMessage(TensorBoard.installPrompt(), ...[yes, no]);
+        let telemetrySelection = TensorBoardPromptSelection.None;
+        if (selection === yes) {
+            telemetrySelection = TensorBoardPromptSelection.Yes;
+        } else if (selection === no) {
+            telemetrySelection = TensorBoardPromptSelection.No;
+        }
+        sendTelemetryEvent(EventName.TENSORBOARD_INSTALL_PROMPT_SELECTION, undefined, {
+            selection: telemetrySelection,
+        });
         return selection === yes ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
     }
 }
@@ -591,18 +600,17 @@ export class ProductInstaller implements IInstaller {
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private outputChannel: OutputChannel
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private outputChannel: OutputChannel,
     ) {
         this.productService = serviceContainer.get<IProductService>(IProductService);
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
     }
 
-    // tslint:disable-next-line:no-empty
     public dispose() {}
     public async promptToInstall(
         product: Product,
         resource?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
     ): Promise<InstallerResponse> {
         const currentInterpreter = isResource(resource)
             ? await this.interpreterService.getActiveInterpreter(resource)
@@ -615,7 +623,7 @@ export class ProductInstaller implements IInstaller {
     public async install(
         product: Product,
         resource?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
     ): Promise<InstallerResponse> {
         return this.createInstaller(product).install(product, resource, cancel);
     }
@@ -649,7 +657,6 @@ export class ProductInstaller implements IInstaller {
     }
 }
 
-// tslint:disable-next-line: cyclomatic-complexity
 function translateProductToModule(product: Product, purpose: ModuleNamePurpose): string {
     switch (product) {
         case Product.mypy:

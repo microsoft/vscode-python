@@ -11,12 +11,12 @@ import {
     IExperimentsManager,
     IInterpreterPathService,
     InspectInterpreterSettingType,
-    Resource
+    Resource,
 } from './common/types';
 import {
     AutoSelectionRule,
     IInterpreterAutoSelectionRule,
-    IInterpreterAutoSelectionService
+    IInterpreterAutoSelectionService,
 } from './interpreter/autoSelection/types';
 import { ICondaService, IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
@@ -30,11 +30,10 @@ interface IStopWatch {
 }
 
 export async function sendStartupTelemetry(
-    // tslint:disable-next-line:no-any
     activatedPromise: Promise<any>,
     durations: Record<string, number>,
     stopWatch: IStopWatch,
-    serviceContainer: IServiceContainer
+    serviceContainer: IServiceContainer,
 ) {
     if (isTestExecution()) {
         return;
@@ -53,10 +52,9 @@ export async function sendStartupTelemetry(
 export async function sendErrorTelemetry(
     ex: Error,
     durations: Record<string, number>,
-    serviceContainer?: IServiceContainer
+    serviceContainer?: IServiceContainer,
 ) {
     try {
-        // tslint:disable-next-line:no-any
         let props: any = {};
         if (serviceContainer) {
             try {
@@ -101,16 +99,15 @@ export function hasUserDefinedPythonPath(resource: Resource, serviceContainer: I
 function getPreferredWorkspaceInterpreter(resource: Resource, serviceContainer: IServiceContainer) {
     const workspaceInterpreterSelector = serviceContainer.get<IInterpreterAutoSelectionRule>(
         IInterpreterAutoSelectionRule,
-        AutoSelectionRule.workspaceVirtualEnvs
+        AutoSelectionRule.workspaceVirtualEnvs,
     );
     const interpreter = workspaceInterpreterSelector.getPreviouslyAutoSelectedInterpreter(resource);
     return interpreter ? interpreter.path : undefined;
 }
 
 async function getActivationTelemetryProps(serviceContainer: IServiceContainer): Promise<EditorLoadTelemetry> {
-    // tslint:disable-next-line:no-suspicious-comment
     // TODO: Not all of this data is showing up in the database...
-    // tslint:disable-next-line:no-suspicious-comment
+
     // TODO: If any one of these parts fails we send no info.  We should
     // be able to partially populate as much as possible instead
     // (through granular try-catch statements).
@@ -130,7 +127,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
             .then((ver) => (ver ? ver.raw : ''))
             .catch<string>(() => ''),
         interpreterService.getActiveInterpreter().catch<PythonEnvironment | undefined>(() => undefined),
-        interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonEnvironment[]>(() => [])
+        interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonEnvironment[]>(() => []),
     ]);
     const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
     const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
@@ -153,6 +150,6 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         hasPython3,
         usingUserDefinedInterpreter,
         usingAutoSelectedWorkspaceInterpreter,
-        usingGlobalInterpreter
+        usingGlobalInterpreter,
     };
 }

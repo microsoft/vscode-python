@@ -24,14 +24,14 @@ suite('Common Providers Service Registry', () => {
         verify(
             serviceManager.addSingleton<ISortImportsEditingProvider>(
                 ISortImportsEditingProvider,
-                SortImportsEditingProvider
-            )
+                SortImportsEditingProvider,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
-                CodeActionProviderService
-            )
+                CodeActionProviderService,
+            ),
         ).once();
     });
 });

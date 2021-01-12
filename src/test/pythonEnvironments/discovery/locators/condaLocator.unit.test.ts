@@ -34,26 +34,38 @@ suite('Conda Python Version Parser Tests', () => {
     }
 
     function getTestData(): ICondaPythonVersionTestData[] {
-        const data:ICondaPythonVersionTestData[] = [];
+        const data: ICondaPythonVersionTestData[] = [];
 
-        const cases = (fsapi.readdirSync(testDataRoot)).map((c) => path.join(testDataRoot, c));
+        const cases = fsapi.readdirSync(testDataRoot).map((c) => path.join(testDataRoot, c));
         const casesToVersion = new Map<string, PythonVersion>();
         casesToVersion.set('case1', { major: 3, minor: 8, micro: 5 });
 
         casesToVersion.set('case2', {
-            major: 3, minor: 9, micro: 0, release: { level: PythonReleaseLevel.Alpha, serial: 1 },
+            major: 3,
+            minor: 9,
+            micro: 0,
+            release: { level: PythonReleaseLevel.Alpha, serial: 1 },
         });
 
         casesToVersion.set('case3', {
-            major: 3, minor: 9, micro: 0, release: { level: PythonReleaseLevel.Beta, serial: 2 },
+            major: 3,
+            minor: 9,
+            micro: 0,
+            release: { level: PythonReleaseLevel.Beta, serial: 2 },
         });
 
         casesToVersion.set('case4', {
-            major: 3, minor: 9, micro: 0, release: { level: PythonReleaseLevel.Candidate, serial: 1 },
+            major: 3,
+            minor: 9,
+            micro: 0,
+            release: { level: PythonReleaseLevel.Candidate, serial: 1 },
         });
 
         casesToVersion.set('case5', {
-            major: 3, minor: 9, micro: 0, release: { level: PythonReleaseLevel.Candidate, serial: 2 },
+            major: 3,
+            minor: 9,
+            micro: 0,
+            release: { level: PythonReleaseLevel.Candidate, serial: 2 },
         });
 
         for (const c of cases) {

@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-// tslint:disable:trailing-comma no-any
+
 import * as child_process from 'child_process';
 import { ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
@@ -18,7 +18,7 @@ import {
     FileSystemWatcher,
     Uri,
     WorkspaceFolder,
-    WorkspaceFoldersChangeEvent
+    WorkspaceFoldersChangeEvent,
 } from 'vscode';
 import { LanguageServerType } from '../../client/activation/types';
 
@@ -31,7 +31,7 @@ import {
     IDocumentManager,
     IWebviewPanelOptions,
     IWebviewPanelProvider,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../client/common/application/types';
 import { WebviewPanelProvider } from '../../client/common/application/webviewPanels/webviewPanelProvider';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -63,7 +63,7 @@ import {
     IPathUtils,
     IPythonSettings,
     IsWindows,
-    Resource
+    Resource,
 } from '../../client/common/types';
 import { sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -151,7 +151,6 @@ export class StartPageIocContainer extends UnitTestIocContainer {
                 await Promise.all(tempFiles.map((t) => fs.remove(t)));
             }
         } catch (exc) {
-            // tslint:disable-next-line: no-console
             console.log(`Exception on cleanup: ${exc}`);
         }
         await this.asyncRegistry.dispose();
@@ -160,7 +159,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
 
         if (!this.uiTest) {
             // Blur window focus so we don't have editors polling
-            // tslint:disable-next-line: no-require-imports
+
             const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
             reactHelpers.blurWindow();
         }
@@ -179,7 +178,6 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         EnvironmentActivationServiceCache.forceUseNormal();
     }
 
-    // tslint:disable:max-func-body-length
     public registerStartPageTypes() {
         this.defaultPythonPath = this.findPythonPath();
 
@@ -194,7 +192,6 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         // Create the workspace service first as it's used to set config values.
         this.createWorkspaceService();
 
-        // tslint:disable-next-line: no-require-imports
         const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
         reactHelpers.setUpDomEnvironment();
 
@@ -206,7 +203,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         } else {
             this.serviceManager.addSingletonInstance<IWebviewPanelProvider>(
                 IWebviewPanelProvider,
-                instance(this.webPanelProvider)
+                instance(this.webPanelProvider),
             );
         }
 
@@ -222,7 +219,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(this.getSettings.bind(this));
         this.serviceManager.addSingletonInstance<IConfigurationService>(
             IConfigurationService,
-            configurationService.object
+            configurationService.object,
         );
 
         // Setup our command list
@@ -269,7 +266,6 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         });
     }
 
-    // tslint:disable:any
     public createWebView(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, id: string) {
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
         this.pendingWebPanel = this.get<IMountedWebViewFactory>(IMountedWebViewFactory).create(id, mount);
@@ -289,7 +285,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
             setting = new MockPythonSettings(
                 resource,
                 new MockAutoSelectionService(),
-                this.serviceManager.get<IWorkspaceService>(IWorkspaceService)
+                this.serviceManager.get<IWorkspaceService>(IWorkspaceService),
             );
             this.settingsMap.set(key, setting);
         } else if (this.disposed) {
@@ -334,17 +330,14 @@ export class StartPageIocContainer extends UnitTestIocContainer {
 
             public ignoreDeleteEvents = false;
 
-            // tslint:disable-next-line:no-any
             public onDidChange(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
 
-            // tslint:disable-next-line:no-any
             public onDidDelete(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
 
-            // tslint:disable-next-line:no-any
             public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
@@ -365,7 +358,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'startPage');
 
         when(workspaceService.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(
-            new MockFileSystemWatcher()
+            new MockFileSystemWatcher(),
         );
         when(workspaceService.createFileSystemWatcher(anything())).thenReturn(new MockFileSystemWatcher());
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
@@ -404,7 +397,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
             executeInFileDir: false,
             launchArgs: [],
             activateEnvironment: true,
-            activateEnvInCurrentTerminal: false
+            activateEnvInCurrentTerminal: false,
         };
         pythonSettings.languageServer = languageServerType;
         return pythonSettings;
@@ -425,7 +418,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
                 const output = child_process.execFileSync(
                     process.env.CI_PYTHON_PATH || 'python',
                     ['-c', 'import sys;print(sys.executable)'],
-                    { encoding: 'utf8' }
+                    { encoding: 'utf8' },
                 );
                 StartPageIocContainer.foundPythonPath = output.replace(/\r?\n/g, '');
             }

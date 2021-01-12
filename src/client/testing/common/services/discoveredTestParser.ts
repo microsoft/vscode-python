@@ -24,7 +24,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
             testFiles: [],
             testFolders: [],
             testFunctions: [],
-            testSuites: []
+            testSuites: [],
         };
 
         const workspace = this.workspaceService.getWorkspaceFolder(resource);
@@ -40,7 +40,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
                 time: 0,
                 testFiles: [],
                 resource: resource,
-                nameToRun: data.rootid
+                nameToRun: data.rootid,
             };
             tests.rootTestFolders.push(rootFolder);
             tests.testFolders.push(rootFolder);
@@ -67,7 +67,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
         rootFolder: testing.TestFolder,
         parent: TestDataItem,
         discoveredTests: discovery.DiscoveredTests,
-        tests: testing.Tests
+        tests: testing.Tests,
     ) {
         const parentType = getTestDataItemType(parent);
         switch (parentType) {
@@ -104,7 +104,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
         rootFolder: testing.TestFolder,
         parentFolder: testing.TestFolder,
         discoveredTests: discovery.DiscoveredTests,
-        tests: testing.Tests
+        tests: testing.Tests,
     ) {
         const folders = discoveredTests.parents
             .filter((child) => child.kind === 'folder' && child.parentid === parentFolder.nameToRun)
@@ -141,7 +141,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
         rootFolder: testing.TestFolder,
         parentFile: testing.TestFile,
         discoveredTests: discovery.DiscoveredTests,
-        tests: testing.Tests
+        tests: testing.Tests,
     ) {
         const suites = discoveredTests.parents
             .filter((child) => child.kind === 'suite' && child.parentid === parentFile.nameToRun)
@@ -164,7 +164,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
             .filter((child) => child.kind === 'function' && child.parentid === parentFile.nameToRun)
             .map((func) => createParameterizedTestFunction(rootFolder, func as discovery.TestFunction));
         parameterizedFunctions.forEach((func) =>
-            this.processParameterizedFunction(rootFolder, parentFile, func, discoveredTests, tests)
+            this.processParameterizedFunction(rootFolder, parentFile, func, discoveredTests, tests),
         );
     }
 
@@ -184,7 +184,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
         rootFolder: testing.TestFolder,
         parentSuite: testing.TestSuite,
         discoveredTests: discovery.DiscoveredTests,
-        tests: testing.Tests
+        tests: testing.Tests,
     ) {
         const suites = discoveredTests.parents
             .filter((child) => child.kind === 'suite' && child.parentid === parentSuite.nameToRun)
@@ -207,7 +207,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
             .filter((child) => child.kind === 'function' && child.parentid === parentSuite.nameToRun)
             .map((func) => createParameterizedTestFunction(rootFolder, func as discovery.TestFunction));
         parameterizedFunctions.forEach((func) =>
-            this.processParameterizedFunction(rootFolder, parentSuite, func, discoveredTests, tests)
+            this.processParameterizedFunction(rootFolder, parentSuite, func, discoveredTests, tests),
         );
     }
 
@@ -230,7 +230,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
         parent: testing.TestFile | testing.TestSuite,
         parentFunction: testing.SubtestParent,
         discoveredTests: discovery.DiscoveredTests,
-        tests: testing.Tests
+        tests: testing.Tests,
     ) {
         if (!parentFunction.asSuite) {
             return;
@@ -254,7 +254,7 @@ function createTestFolder(root: testing.TestFolder, item: discovery.TestFolder):
         resource: root.resource,
         time: 0,
         folders: [],
-        testFiles: []
+        testFiles: [],
     };
 }
 
@@ -268,14 +268,14 @@ function createTestFile(root: testing.TestFolder, item: discovery.TestFile): tes
         resource: root.resource,
         suites: [],
         time: 0,
-        xmlName: createXmlName(item.id)
+        xmlName: createXmlName(item.id),
     };
 }
 
 function createTestSuite(
     parentSuiteFile: testing.TestFile | testing.TestSuite,
     resource: Uri,
-    item: discovery.TestSuite
+    item: discovery.TestSuite,
 ): testing.TestSuite {
     const suite = {
         functions: [],
@@ -286,7 +286,7 @@ function createTestSuite(
         time: 0,
         xmlName: '',
         isInstance: false,
-        isUnitTest: false
+        isUnitTest: false,
     };
     suite.xmlName = `${parentSuiteFile.xmlName}.${item.name}`;
     return suite;
@@ -297,14 +297,14 @@ function createFlattenedSuite(tests: testing.Tests, suite: testing.TestSuite): t
     return {
         parentTestFile: parentFile,
         testSuite: suite,
-        xmlClassName: parentFile.xmlName
+        xmlClassName: parentFile.xmlName,
     };
 }
 
 function createFlattenedParameterizedFunction(
     tests: testing.Tests,
     func: testing.TestFunction,
-    parent: testing.TestFile | testing.TestSuite
+    parent: testing.TestFile | testing.TestSuite,
 ): testing.FlattenedTestFunction {
     const type = getTestDataItemType(parent);
     const parentFile =
@@ -314,7 +314,7 @@ function createFlattenedParameterizedFunction(
         parentTestFile: parentFile,
         parentTestSuite: parentSuite,
         xmlClassName: parentSuite ? parentSuite.xmlName : parentFile.xmlName,
-        testFunction: func
+        testFunction: func,
     };
 }
 
@@ -327,13 +327,13 @@ function createFlattenedFunction(tests: testing.Tests, func: testing.TestFunctio
         parentTestFile: parentFile,
         parentTestSuite: parentSuite,
         xmlClassName: parentSuite ? parentSuite.xmlName : parentFile.xmlName,
-        testFunction: func
+        testFunction: func,
     };
 }
 
 function createParameterizedTestFunction(
     root: testing.TestFolder,
-    item: discovery.TestFunction
+    item: discovery.TestFunction,
 ): testing.SubtestParent {
     const suite: testing.TestSuite = {
         functions: [],
@@ -344,13 +344,13 @@ function createParameterizedTestFunction(
         resource: root.resource,
         time: 0,
         suites: [],
-        xmlName: ''
+        xmlName: '',
     };
     return {
         asSuite: suite,
         name: item.name,
         nameToRun: item.id,
-        time: 0
+        time: 0,
     };
 }
 
@@ -360,7 +360,7 @@ function createTestFunction(root: testing.TestFolder, item: discovery.Test): tes
         nameToRun: item.id,
         resource: root.resource,
         time: 0,
-        file: item.source.substr(0, item.source.lastIndexOf(':'))
+        file: item.source.substr(0, item.source.lastIndexOf(':')),
     };
 }
 

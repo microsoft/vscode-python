@@ -19,7 +19,7 @@ import {
     IOutputChannel,
     IPycodestyleCategorySeverity,
     IPylintCategorySeverity,
-    IPythonSettings
+    IPythonSettings,
 } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
@@ -117,7 +117,7 @@ export class LintingSettings {
         this.flake8CategorySeverity = {
             E: DiagnosticSeverity.Error,
             W: DiagnosticSeverity.Warning,
-            F: DiagnosticSeverity.Warning
+            F: DiagnosticSeverity.Warning,
         };
 
         this.mypyEnabled = false;
@@ -125,7 +125,7 @@ export class LintingSettings {
         this.mypyArgs = [];
         this.mypyCategorySeverity = {
             error: DiagnosticSeverity.Error,
-            note: DiagnosticSeverity.Hint
+            note: DiagnosticSeverity.Hint,
         };
 
         this.banditEnabled = false;
@@ -137,7 +137,7 @@ export class LintingSettings {
         this.pycodestyleArgs = [];
         this.pycodestyleCategorySeverity = {
             E: DiagnosticSeverity.Error,
-            W: DiagnosticSeverity.Warning
+            W: DiagnosticSeverity.Warning,
         };
 
         this.pylamaEnabled = false;
@@ -160,7 +160,7 @@ export class LintingSettings {
             error: DiagnosticSeverity.Error,
             fatal: DiagnosticSeverity.Error,
             refactor: DiagnosticSeverity.Hint,
-            warning: DiagnosticSeverity.Warning
+            warning: DiagnosticSeverity.Warning,
         };
         this.pylintUseMinimalCheckers = false;
     }
@@ -196,7 +196,7 @@ export class BaseTestFixture {
         serviceContainer?: TypeMoq.IMock<IServiceContainer>,
         ignoreConfigUpdates = false,
         public readonly workspaceDir = '.',
-        protected readonly printLogs = false
+        protected readonly printLogs = false,
     ) {
         this.serviceContainer = serviceContainer
             ? serviceContainer
@@ -270,7 +270,7 @@ export class BaseTestFixture {
 
     public async getLinter(product: Product, enabled = true): Promise<ILinter> {
         const info = this.linterManager.getLinterInfo(product);
-        // tslint:disable-next-line:no-any
+
         (this.lintingSettings as any)[info.enabledSettingName] = enabled;
 
         await this.linterManager.setActiveLintersAsync([product]);
@@ -305,7 +305,7 @@ export class BaseTestFixture {
     private initConfig(ignoreUpdates = false): void {
         this.configService
             .setup((c) =>
-                c.updateSetting(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                c.updateSetting(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             )
             .callback((setting, value) => {
                 if (ignoreUpdates) {
@@ -313,7 +313,6 @@ export class BaseTestFixture {
                 }
                 const prefix = 'linting.';
                 if (setting.startsWith(prefix)) {
-                    // tslint:disable-next-line:no-any
                     (this.lintingSettings as any)[setting.substring(prefix.length)] = value;
                 }
             })

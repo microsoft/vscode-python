@@ -17,7 +17,7 @@ import {
     SignatureHelpContext,
     SymbolInformation,
     TextDocument,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 
 import { Resource } from '../common/types';
@@ -30,7 +30,7 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
     constructor(
         private impl: ILanguageServerActivator,
         private _type: LanguageServerType,
-        private disposeCallback: () => void
+        private disposeCallback: () => void,
     ) {}
 
     public increment = () => {
@@ -76,14 +76,14 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
         document: TextDocument,
         position: Position,
         newName: string,
-        token: CancellationToken
+        token: CancellationToken,
     ): ProviderResult<WorkspaceEdit> {
         return this.impl.provideRenameEdits(document, position, newName, token);
     }
     public provideDefinition(
         document: TextDocument,
         position: Position,
-        token: CancellationToken
+        token: CancellationToken,
     ): ProviderResult<Location | Location[] | LocationLink[]> {
         return this.impl.provideDefinition(document, position, token);
     }
@@ -94,7 +94,7 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
         document: TextDocument,
         position: Position,
         context: ReferenceContext,
-        token: CancellationToken
+        token: CancellationToken,
     ): ProviderResult<Location[]> {
         return this.impl.provideReferences(document, position, context, token);
     }
@@ -102,7 +102,7 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
         document: TextDocument,
         position: Position,
         token: CancellationToken,
-        context: CompletionContext
+        context: CompletionContext,
     ): ProviderResult<CompletionItem[] | CompletionList> {
         return this.impl.provideCompletionItems(document, position, token, context);
     }
@@ -116,7 +116,7 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
     }
     public provideDocumentSymbols(
         document: TextDocument,
-        token: CancellationToken
+        token: CancellationToken,
     ): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
         return this.impl.provideDocumentSymbols(document, token);
     }
@@ -124,7 +124,7 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
         document: TextDocument,
         position: Position,
         token: CancellationToken,
-        context: SignatureHelpContext
+        context: SignatureHelpContext,
     ): ProviderResult<SignatureHelp> {
         return this.impl.provideSignatureHelp(document, position, token, context);
     }

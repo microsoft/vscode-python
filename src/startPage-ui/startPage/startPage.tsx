@@ -20,7 +20,7 @@ export interface IStartPageProps {
 // In general it consists of its render method and methods that send and receive messages.
 export class StartPage extends React.Component<IStartPageProps> implements IMessageHandler {
     private releaseNotes: ISettingPackage = {
-        showAgainSetting: false
+        showAgainSetting: false,
     };
     private postOffice: PostOffice = new PostOffice();
 
@@ -32,7 +32,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.RequestShowAgainSetting);
     }
 
-    // tslint:disable: no-any
     public componentWillMount() {
         // Add ourselves as a handler for the post office
         this.postOffice.addHandler(this);
@@ -52,7 +51,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     }
 
     public render() {
-        // tslint:disable: react-a11y-anchors
         return (
             <div className="main-page">
                 <div className="title-row">
@@ -122,7 +120,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                         <div className="text" role="button" onClick={this.openInteractiveWindow}>
                             {getLocString(
                                 'StartPage.openInteractiveWindow',
-                                'Use the Interactive Window to develop Python Scripts'
+                                'Use the Interactive Window to develop Python Scripts',
                             )}
                         </div>
                         {this.renderInteractiveWindowDescription()}
@@ -147,7 +145,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         );
     }
 
-    // tslint:disable-next-line: no-any
     public handleMessage = (msg: string, payload?: any) => {
         if (msg === StartPageMessages.SendSetting) {
             this.releaseNotes.showAgainSetting = payload.showAgainSetting;
@@ -170,90 +167,84 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     }
 
     private renderNotebookDescription(): JSX.Element {
-        // tslint:disable: react-no-dangerous-html
         return (
             <div
                 className="paragraph list"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.notebookDescription',
-                        '- Run "<div class="link italics" role="button" onclick={0}>Create New Blank Jupyter Notebook</div>" in the Command Palette (<div class="italics">Shift + Command + P</div>)<br />- Explore our <div class="link" role="button" onclick={1}>sample notebook</div> to learn about notebook features'
-                    ).format('openCommandPaletteWithSelection()', 'openSampleNotebook()')
+                        '- Run "<div class="link italics" role="button" onclick={0}>Create New Blank Jupyter Notebook</div>" in the Command Palette (<div class="italics">Shift + Command + P</div>)<br />- Explore our <div class="link" role="button" onclick={1}>sample notebook</div> to learn about notebook features',
+                    ).format('openCommandPaletteWithSelection()', 'openSampleNotebook()'),
                 }}
             />
         );
     }
 
     private renderPythonFileDescription(): JSX.Element {
-        // tslint:disable: react-no-dangerous-html
         return (
             <div
                 className="paragraph list"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.pythonFileDescription',
-                        '- Create a <div class="link" role="button" onclick={0}>new file</div> with a .py extension'
-                    ).format('createPythonFile()')
+                        '- Create a <div class="link" role="button" onclick={0}>new file</div> with a .py extension',
+                    ).format('createPythonFile()'),
                 }}
             />
         );
     }
 
     private renderInteractiveWindowDescription(): JSX.Element {
-        // tslint:disable: react-no-dangerous-html
         return (
             <div
                 className="paragraph list"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.interactiveWindowDesc',
-                        '- You can create cells on a Python file by typing "#%%" <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window'
-                    )
+                        '- You can create cells on a Python file by typing "#%%" <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window',
+                    ),
                 }}
             />
         );
     }
 
     private renderFolderDescription(): JSX.Element {
-        // tslint:disable: react-no-dangerous-html
         return (
             <div
                 className="paragraph list"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.folderDesc',
-                        '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a <div class="link" role="button" onclick={1}>Workspace</div>'
-                    ).format('openFolder()', 'openWorkspace()')
+                        '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a <div class="link" role="button" onclick={1}>Workspace</div>',
+                    ).format('openFolder()', 'openWorkspace()'),
                 }}
             />
         );
     }
 
     private renderReleaseNotesLink(): JSX.Element {
-        // tslint:disable: react-no-dangerous-html
         return (
             <div
                 className="paragraph"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.releaseNotes',
-                        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features.'
-                    ).format('https://aka.ms/AA8dxtb')
+                        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features.',
+                    ).format('https://aka.ms/AA8dxtb'),
                 }}
             />
         );
     }
 
     private renderTutorialAndDoc(): JSX.Element {
-        // tslint:disable: react-no-dangerous-html
         return (
             <div
                 className="paragraph"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.tutorialAndDoc',
-                        'Explore more features in our <a class="link" href={0}>Tutorials</a> or check <a class="link" href={1}>Documentation</a> for tips and troubleshooting.'
-                    ).format('https://aka.ms/AA8dqti', 'https://aka.ms/AA8dxwy')
+                        'Explore more features in our <a class="link" href={0}>Tutorials</a> or check <a class="link" href={1}>Documentation</a> for tips and troubleshooting.',
+                    ).format('https://aka.ms/AA8dqti', 'https://aka.ms/AA8dxwy'),
                 }}
             />
         );
@@ -287,7 +278,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         this.releaseNotes.showAgainSetting = !this.releaseNotes.showAgainSetting;
         this.postOffice.sendMessage<IStartPageMapping>(
             StartPageMessages.UpdateSettings,
-            this.releaseNotes.showAgainSetting
+            this.releaseNotes.showAgainSetting,
         );
     };
 }

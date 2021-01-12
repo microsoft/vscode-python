@@ -15,12 +15,10 @@ import {
     TestFolder,
     TestFunction,
     TestStatus,
-    TestSuite
+    TestSuite,
 } from '../../../client/testing/common/types';
 import { FailedTestHandler } from '../../../client/testing/explorer/failedTestHandler';
 import { noop, sleep } from '../../core';
-
-// tslint:disable:no-any
 
 suite('Unit Tests Test Explorer View Items', () => {
     let failedTestHandler: FailedTestHandler;
@@ -46,14 +44,14 @@ suite('Unit Tests Test Explorer View Items', () => {
             time: 0,
             resource: uri,
             nameToRun: 'fn1',
-            status: TestStatus.Error
+            status: TestStatus.Error,
         };
         const failedFunc2: TestFunction = {
             name: 'fn2',
             time: 0,
             resource: uri,
             nameToRun: 'fn2',
-            status: TestStatus.Fail
+            status: TestStatus.Fail,
         };
         when(commandManager.executeCommand(Commands.Test_Reveal_Test_Item, anything())).thenResolve();
 
@@ -79,7 +77,7 @@ suite('Unit Tests Test Explorer View Items', () => {
             isUnitTest: false,
             suites: [],
             xmlName: 'suite1',
-            status: TestStatus.Error
+            status: TestStatus.Error,
         };
         const failedFile: TestFile = {
             name: 'suite1',
@@ -90,7 +88,7 @@ suite('Unit Tests Test Explorer View Items', () => {
             suites: [],
             xmlName: 'file',
             status: TestStatus.Error,
-            fullPath: ''
+            fullPath: '',
         };
         const failedFolder: TestFolder = {
             name: 'suite1',
@@ -99,7 +97,7 @@ suite('Unit Tests Test Explorer View Items', () => {
             nameToRun: 'file',
             testFiles: [],
             folders: [],
-            status: TestStatus.Error
+            status: TestStatus.Error,
         };
         when(commandManager.executeCommand(Commands.Test_Reveal_Test_Item, anything())).thenResolve();
 

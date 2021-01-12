@@ -7,7 +7,7 @@ import {
     IWebviewPanel,
     IWebviewPanelMessageListener,
     IWebviewPanelOptions,
-    WebviewMessage
+    WebviewMessage,
 } from '../../client/common/application/types';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IDisposable } from '../../client/common/types';
@@ -32,11 +32,10 @@ export type WaitForMessageOptions = {
 
     // Optional check for the payload of the message
     // will only return (or count) message if this returns true
-    // tslint:disable-next-line: no-any
+
     withPayload?(payload: any): boolean;
 };
 
-// tslint:disable: no-any
 export interface IMountedWebView extends IWebviewPanel, IDisposable {
     readonly id: string;
     readonly wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
@@ -65,19 +64,18 @@ export class MountedWebView implements IMountedWebView, IDisposable {
         // Setup the acquireVsCodeApi. The react control will cache this value when it's mounted.
         const globalAcquireVsCodeApi = (): IVsCodeApi => {
             return {
-                // tslint:disable-next-line:no-any
                 postMessage: (msg: any) => {
                     this.postMessageToWebPanel(msg);
                 },
-                // tslint:disable-next-line:no-any no-empty
+
                 setState: (_msg: any) => {},
-                // tslint:disable-next-line:no-any no-empty
+
                 getState: () => {
                     return {};
-                }
+                },
             };
         };
-        // tslint:disable-next-line:no-string-literal
+
         (global as any)['acquireVsCodeApi'] = globalAcquireVsCodeApi;
 
         // Remap event handlers to point to the container.
@@ -113,7 +111,7 @@ export class MountedWebView implements IMountedWebView, IDisposable {
             // handle some messages during the ctor.
             setTimeout(() => {
                 this.missedMessages.forEach((m) =>
-                    this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop()
+                    this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop(),
                 );
                 this.missedMessages = [];
             }, 0);
@@ -191,7 +189,6 @@ export class MountedWebView implements IMountedWebView, IDisposable {
     public postMessage(m: WebviewMessage): void {
         // Actually send to the UI
         if (this.reactMessageCallback) {
-            // tslint:disable-next-line: no-require-imports
             const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
             const message = reactHelpers.createMessageEvent(m);
             this.reactMessageCallback(message);

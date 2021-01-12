@@ -28,13 +28,13 @@ export class DiagnosticCommandPromptHandlerService implements IDiagnosticHandler
     }
     public async handle(
         diagnostic: IDiagnostic,
-        options: MessageCommandPrompt = { commandPrompts: [] }
+        options: MessageCommandPrompt = { commandPrompts: [] },
     ): Promise<void> {
         const prompts = options.commandPrompts.map((option) => option.prompt);
         const response = await this.displayMessage(
             options.message ? options.message : diagnostic.message,
             diagnostic.severity,
-            prompts
+            prompts,
         );
         if (options.onClose) {
             options.onClose(response);
@@ -50,7 +50,7 @@ export class DiagnosticCommandPromptHandlerService implements IDiagnosticHandler
     private async displayMessage(
         message: string,
         severity: DiagnosticSeverity,
-        prompts: string[]
+        prompts: string[],
     ): Promise<string | undefined> {
         switch (severity) {
             case DiagnosticSeverity.Error: {

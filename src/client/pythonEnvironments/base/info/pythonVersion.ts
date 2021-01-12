@@ -3,20 +3,11 @@
 
 import * as path from 'path';
 import { traceError } from '../../../common/logger';
-import {
-    EMPTY_VERSION,
-    isVersionInfoEmpty,
-    parseBasicVersionInfo,
-} from '../../../common/utils/version';
+import { EMPTY_VERSION, isVersionInfoEmpty, parseBasicVersionInfo } from '../../../common/utils/version';
 
-import {
-    PythonReleaseLevel,
-    PythonVersion,
-    PythonVersionRelease,
-    UNKNOWN_PYTHON_VERSION,
-} from '.';
+import { PythonReleaseLevel, PythonVersion, PythonVersionRelease, UNKNOWN_PYTHON_VERSION } from '.';
 
-export function getPythonVersionFromPath(exe:string): PythonVersion {
+export function getPythonVersionFromPath(exe: string): PythonVersion {
     let version = UNKNOWN_PYTHON_VERSION;
     try {
         version = parseVersion(path.basename(exe));
@@ -146,7 +137,7 @@ export function isVersionEmpty(version: PythonVersion): boolean {
  * @param {PythonVersion} right
  * @returns {boolean}
  */
-export function areEqualVersions(left: PythonVersion, right:PythonVersion): boolean {
+export function areEqualVersions(left: PythonVersion, right: PythonVersion): boolean {
     return left === right;
 }
 
@@ -158,15 +149,12 @@ export function areEqualVersions(left: PythonVersion, right:PythonVersion): bool
  * @param {PythonVersion} right
  * @returns {boolean}
  */
-export function areEquivalentVersions(left: PythonVersion, right:PythonVersion): boolean {
+export function areEquivalentVersions(left: PythonVersion, right: PythonVersion): boolean {
     if (left.major === 2 && right.major === 2) {
         // We are going to assume that if the major version is 2 then the version is 2.7
         return true;
     }
 
     // In the case of 3.* if major and minor match we assume that they are equivalent versions
-    return (
-        left.major === right.major
-        && left.minor === right.minor
-    );
+    return left.major === right.major && left.minor === right.minor;
 }

@@ -19,7 +19,6 @@ import { IEnvironmentActivationService } from '../../../client/interpreter/activ
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { noop } from '../../core';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Interpreters Activation - Python Environment Variables (using terminals)', () => {
     let envActivationService: IEnvironmentActivationService;
     let terminalFactory: ITerminalServiceFactory;
@@ -32,7 +31,7 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
         path: '',
         sysPrefix: '',
         sysVersion: '',
-        envType: EnvironmentType.Conda
+        envType: EnvironmentType.Conda,
     };
     setup(() => {
         terminalFactory = mock(TerminalServiceFactory);
@@ -46,7 +45,7 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
         envActivationService = new TerminalEnvironmentActivationService(
             instance(terminalFactory),
             instance(fs),
-            instance(envVarsProvider)
+            instance(envVarsProvider),
         );
     });
 
@@ -106,8 +105,8 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
                                 cmd,
                                 deepEqual([isolated, pyFile, jsonFile.fileToCommandArgument()]),
                                 anything(),
-                                false
-                            )
+                                false,
+                            ),
                         ).once();
                     });
                     test('Should return activated environment variables', async () => {

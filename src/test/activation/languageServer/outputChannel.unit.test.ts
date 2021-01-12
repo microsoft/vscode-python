@@ -11,7 +11,6 @@ import { IOutputChannel } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
 import { OutputChannelNames } from '../../../client/common/utils/localize';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Language Server Output Channel', () => {
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let languageServerOutputChannel: LanguageServerOutputChannel;
@@ -54,8 +53,8 @@ suite('Language Server Output Channel', () => {
                 c.executeCommand(
                     TypeMoq.It.isValue('setContext'),
                     TypeMoq.It.isValue('python.hasLanguageServerOutputChannel'),
-                    TypeMoq.It.isValue(true)
-                )
+                    TypeMoq.It.isValue(true),
+                ),
             )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
@@ -85,8 +84,8 @@ suite('Language Server Output Channel', () => {
                 c.executeCommand(
                     TypeMoq.It.isValue('setContext'),
                     TypeMoq.It.isValue('python.hasLanguageServerOutputChannel'),
-                    TypeMoq.It.isValue(true)
-                )
+                    TypeMoq.It.isValue(true),
+                ),
             )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());

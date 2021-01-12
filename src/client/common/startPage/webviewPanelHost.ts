@@ -12,7 +12,7 @@ import {
     IWebviewPanel,
     IWebviewPanelMessageListener,
     IWebviewPanelProvider,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../application/types';
 import { traceInfo } from '../logger';
 import { createDeferred } from '../utils/async';
@@ -50,13 +50,13 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         messageListenerCtor: (
             callback: (message: string, payload: {}) => void,
             viewChanged: (panel: IWebviewPanel) => void,
-            disposed: () => void
+            disposed: () => void,
         ) => IWebviewPanelMessageListener,
         @unmanaged() private rootPath: string,
         @unmanaged() private scripts: string[],
         @unmanaged() private _title: string,
         @unmanaged() private viewColumn: ViewColumn,
-        @unmanaged() protected readonly useCustomEditorApi: boolean
+        @unmanaged() protected readonly useCustomEditorApi: boolean,
     ) {
         super(configService, cssGenerator, themeFinder, workspaceService, useCustomEditorApi);
 
@@ -64,7 +64,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         this.messageListener = messageListenerCtor(
             this.onMessage.bind(this),
             this.webPanelViewStateChanged.bind(this),
-            this.dispose.bind(this)
+            this.dispose.bind(this),
         );
     }
 
@@ -106,7 +106,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         }
     }
 
-    // tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
             case SharedMessages.Started:
@@ -165,7 +164,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
                 settings,
                 cwd,
                 webViewPanel,
-                additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : []
+                additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : [],
             });
 
             // Set our webview after load
@@ -199,7 +198,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         this.onViewStateChanged({ current, previous });
     };
 
-    // tslint:disable-next-line:no-any
     private webPanelRendered() {
         if (this.webviewInit && !this.webviewInit.resolved) {
             // Send telemetry for startup

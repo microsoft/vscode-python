@@ -20,7 +20,7 @@ export class ModuleLaunchDebugConfigurationProvider implements IDebugConfigurati
             name: DebugConfigStrings.module.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
-            module: DebugConfigStrings.module.snippet.default()
+            module: DebugConfigStrings.module.snippet.default(),
         };
         const selectedModule = await input.showInputBox({
             title: DebugConfigStrings.module.enterModule.title(),
@@ -28,8 +28,8 @@ export class ModuleLaunchDebugConfigurationProvider implements IDebugConfigurati
             prompt: DebugConfigStrings.module.enterModule.prompt(),
             validate: (value) =>
                 Promise.resolve(
-                    value && value.trim().length > 0 ? undefined : DebugConfigStrings.module.enterModule.invalid()
-                )
+                    value && value.trim().length > 0 ? undefined : DebugConfigStrings.module.enterModule.invalid(),
+                ),
         });
         if (selectedModule) {
             manuallyEnteredAValue = true;
@@ -38,7 +38,7 @@ export class ModuleLaunchDebugConfigurationProvider implements IDebugConfigurati
 
         sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
             configurationType: DebugConfigurationType.launchModule,
-            manuallyEnteredAValue
+            manuallyEnteredAValue,
         });
         Object.assign(state.config, config);
     }

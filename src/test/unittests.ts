@@ -10,12 +10,10 @@ import * as os from 'os';
 if (os.platform() === 'win32') {
     const proc = child_process.spawn('C:\\Windows\\System32\\Reg.exe', ['/?']);
     proc.on('error', () => {
-        // tslint:disable-next-line: no-console
         console.error('error during reg.exe');
     });
 }
 
-// tslint:disable:no-any no-require-imports no-var-requires
 if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
@@ -27,11 +25,11 @@ process.env.NODE_ENV = 'production'; // Make sure react is using production bits
 import { initialize } from './vscode-mock';
 
 // Custom module loader so we skip .css files that break non webpack wrapped compiles
-// tslint:disable-next-line:no-var-requires no-require-imports
+
 const Module = require('module');
 
 // Required for DS functional tests.
-// tslint:disable-next-line:no-function-expression
+
 (function () {
     const origRequire = Module.prototype.require;
     const _require = (context: any, filepath: any) => {
@@ -46,14 +44,14 @@ const Module = require('module');
             const queryEnd = filepath.indexOf('!');
             if (queryEnd >= 0) {
                 const query = filepath.substring('expose-loader?'.length, queryEnd);
-                // tslint:disable-next-line:no-invalid-this
+
                 (global as any)[query] = _require(this, filepath.substring(queryEnd + 1));
                 return '';
             }
         }
         if (filepath.startsWith('slickgrid/slick.core')) {
             // Special case. This module sticks something into the global 'window' object.
-            // tslint:disable-next-line:no-invalid-this
+
             const result = _require(this, filepath);
 
             // However it doesn't look in the 'window' object later. we have to move it to
@@ -64,7 +62,7 @@ const Module = require('module');
 
             return result;
         }
-        // tslint:disable-next-line:no-invalid-this
+
         return _require(this, filepath);
     };
 })();

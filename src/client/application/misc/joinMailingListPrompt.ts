@@ -22,7 +22,7 @@ export class JoinMailingListPrompt implements IExtensionSingleActivationService 
         @inject(IPersistentStateFactory) private readonly factory: IPersistentStateFactory,
         @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(IBrowserService) private browserService: IBrowserService,
-        @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment
+        @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment,
     ) {
         this.storage = this.factory.createGlobalPersistentState('JoinMailingListPrompt', false);
     }
@@ -62,14 +62,14 @@ export class JoinMailingListPrompt implements IExtensionSingleActivationService 
         const selection = await this.shell.showInformationMessage(
             promptContent,
             Common.bannerLabelYes(),
-            Common.bannerLabelNo()
+            Common.bannerLabelNo(),
         );
 
         if (selection === Common.bannerLabelYes()) {
             sendTelemetryEvent(EventName.JOIN_MAILING_LIST_PROMPT, undefined, { selection: 'Yes' });
             const query = querystring.stringify({
                 m: encodeURIComponent(this.appEnvironment.sessionId),
-                utm_source: 'vscode'
+                utm_source: 'vscode',
             });
             const url = `https://aka.ms/python-vscode-mailinglist?${query}`;
             this.browserService.launch(url);

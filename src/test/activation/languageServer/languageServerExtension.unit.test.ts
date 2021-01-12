@@ -14,13 +14,10 @@ import { IDisposable } from '../../../client/common/types';
 
 use(chaiAsPromised);
 
-// tslint:disable:max-func-body-length no-any chai-vague-errors no-unused-expression
-
 const loadExtensionCommand = 'python._loadLanguageServerExtension';
 
 suite('Language Server - Language Server Extension', () => {
     class LanguageServerExtensionTest extends LanguageServerExtension {
-        // tslint:disable-next-line:no-unnecessary-override
         public async register(): Promise<void> {
             return super.register();
         }
@@ -39,7 +36,7 @@ suite('Language Server - Language Server Extension', () => {
     });
     test('Must register command handler', async () => {
         when(cmdManager.registerCommand(loadExtensionCommand, anything())).thenReturn(
-            commandRegistrationDisposable.object
+            commandRegistrationDisposable.object,
         );
         await extension.register();
         verify(cmdManager.registerCommand(loadExtensionCommand, anything())).once();

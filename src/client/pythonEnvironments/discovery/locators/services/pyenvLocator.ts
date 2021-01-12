@@ -2,17 +2,15 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import {
-    getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
-} from '../../../../common/utils/platform';
-import {
-    PythonEnvInfo, PythonEnvKind,
-} from '../../../base/info';
+import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
+import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import {
-    getEnvironmentDirFromPath, getInterpreterPathFromDir, getPythonVersionFromPath,
+    getEnvironmentDirFromPath,
+    getInterpreterPathFromDir,
+    getPythonVersionFromPath,
 } from '../../../common/commonUtils';
 import { getFileInfo, getSubDirs, pathExists } from '../../../common/externalDependencies';
 
@@ -27,7 +25,8 @@ function getPyenvDir(): string {
 
     if (!pyenvDir) {
         const homeDir = getUserHomeDir() || '';
-        pyenvDir = getOSType() === OSType.Windows ? path.join(homeDir, '.pyenv', 'pyenv-win') : path.join(homeDir, '.pyenv');
+        pyenvDir =
+            getOSType() === OSType.Windows ? path.join(homeDir, '.pyenv', 'pyenv-win') : path.join(homeDir, '.pyenv');
     }
 
     return pyenvDir;
@@ -42,11 +41,11 @@ function getPyenvVersionsDir(): string {
  * @param {string} interpreterPath: Absolute path to the python interpreter.
  * @returns {boolean}: Returns true if the interpreter belongs to a pyenv environment.
  */
-export async function isPyenvEnvironment(interpreterPath:string): Promise<boolean> {
+export async function isPyenvEnvironment(interpreterPath: string): Promise<boolean> {
     let pathToCheck = interpreterPath;
     let pyenvDir = getPyenvDir();
 
-    if (!await pathExists(pyenvDir)) {
+    if (!(await pathExists(pyenvDir))) {
         return false;
     }
 
@@ -65,7 +64,7 @@ export async function isPyenvEnvironment(interpreterPath:string): Promise<boolea
 export interface IPyenvVersionStrings {
     pythonVer?: string;
     distro?: string;
-    distroVer?:string;
+    distroVer?: string;
 }
 
 /**
@@ -75,7 +74,7 @@ export interface IPyenvVersionStrings {
  *
  * The parsers below were written based on the list obtained from pyenv version 1.2.21
  */
-function getKnownPyenvVersionParsers() : Map<string, (path:string) => Promise<IPyenvVersionStrings|undefined>> {
+function getKnownPyenvVersionParsers(): Map<string, (path: string) => Promise<IPyenvVersionStrings | undefined>> {
     /**
      * This function parses versions that are plain python versions.
      * @param str string to parse
@@ -84,7 +83,7 @@ function getKnownPyenvVersionParsers() : Map<string, (path:string) => Promise<IP
      *   2.7.18
      *   3.9.0
      */
-    function pythonOnly(str:string): Promise<IPyenvVersionStrings> {
+    function pythonOnly(str: string): Promise<IPyenvVersionStrings> {
         return Promise.resolve({
             pythonVer: str,
             distro: undefined,
@@ -100,7 +99,7 @@ function getKnownPyenvVersionParsers() : Map<string, (path:string) => Promise<IP
      *   miniconda3-4.7.12
      *   anaconda3-2020.07
      */
-    function distroOnly(str:string): Promise<IPyenvVersionStrings|undefined> {
+    function distroOnly(str: string): Promise<IPyenvVersionStrings | undefined> {
         const parts = str.split('-');
         if (parts.length === 3) {
             return Promise.resolve({
@@ -142,7 +141,7 @@ function getKnownPyenvVersionParsers() : Map<string, (path:string) => Promise<IP
      *  pypy3.5-5.8.0-src
      *  pypy3.5-5.8.0
      */
-    function pypyParser(str:string): Promise<IPyenvVersionStrings|undefined> {
+    function pypyParser(str: string): Promise<IPyenvVersionStrings | undefined> {
         const pattern = /[0-9\.]+/;
 
         const parts = str.split('-');
@@ -155,7 +154,10 @@ function getKnownPyenvVersionParsers() : Map<string, (path:string) => Promise<IP
             });
         }
 
-        if (parts.length === 3 && (parts[2].startsWith('src') || parts[2].startsWith('beta') || parts[2].startsWith('alpha'))) {
+        if (
+            parts.length === 3 &&
+            (parts[2].startsWith('src') || parts[2].startsWith('beta') || parts[2].startsWith('alpha'))
+        ) {
             return Promise.resolve({
                 pythonVer,
                 distroVer: `${parts[1]}-${parts[2]}`,
@@ -163,7 +165,7 @@ function getKnownPyenvVersionParsers() : Map<string, (path:string) => Promise<IP
             });
         }
 
-        if (parts.length === 3 && (parts[1] === 'stm')) {
+        if (parts.length === 3 && parts[1] === 'stm') {
             return Promise.resolve({
                 pythonVer,
                 distroVer: parts[2],
@@ -194,7 +196,7 @@ function getKnownPyenvVersionParsers() : Map<string, (path:string) => Promise<IP
         });
     }
 
-    const parsers: Map<string, (path:string) => Promise<IPyenvVersionStrings|undefined>> = new Map();
+    const parsers: Map<string, (path: string) => Promise<IPyenvVersionStrings | undefined>> = new Map();
     parsers.set('activepython', distroOnly);
     parsers.set('anaconda', distroOnly);
     parsers.set('graalpython', distroOnly);
@@ -219,7 +221,7 @@ function getKnownPyenvVersionParsers() : Map<string, (path:string) => Promise<IP
  * name and version. Sometimes it may also have python version as a part of the name. This function
  * extracts the various strings.
  */
-export function parsePyenvVersion(str:string): Promise<IPyenvVersionStrings|undefined> {
+export function parsePyenvVersion(str: string): Promise<IPyenvVersionStrings | undefined> {
     const allParsers = getKnownPyenvVersionParsers();
     const knownPrefixes = Array.from(allParsers.keys());
 
@@ -286,8 +288,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
             envInfo.defaultDisplayName = `${subDir}:pyenv`;
 
             envInfo.name = subDir;
-            envInfo.distro.org = (versionStrings && versionStrings.distro)
-                ? versionStrings.distro : envInfo.distro.org;
+            envInfo.distro.org = versionStrings && versionStrings.distro ? versionStrings.distro : envInfo.distro.org;
 
             const fileData = await getFileInfo(interpreterPath);
             envInfo.executable.ctime = fileData.ctime;
@@ -300,10 +301,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
 
 export class PyenvLocator extends FSWatchingLocator {
     constructor() {
-        super(
-            getPyenvVersionsDir,
-            async () => PythonEnvKind.Pyenv,
-        );
+        super(getPyenvVersionsDir, async () => PythonEnvKind.Pyenv);
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -328,8 +326,7 @@ export class PyenvLocator extends FSWatchingLocator {
 
             const versionStrings = await parsePyenvVersion(envInfo.name);
             envInfo.version = await getPythonVersionFromPath(executablePath, versionStrings?.pythonVer);
-            envInfo.distro.org = (versionStrings && versionStrings.distro)
-                ? versionStrings.distro : envInfo.distro.org;
+            envInfo.distro.org = versionStrings && versionStrings.distro ? versionStrings.distro : envInfo.distro.org;
 
             const fileData = await getFileInfo(executablePath);
             envInfo.executable.ctime = fileData.ctime;

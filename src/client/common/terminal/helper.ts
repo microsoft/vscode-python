@@ -19,7 +19,7 @@ import {
     ITerminalActivationCommandProvider,
     ITerminalHelper,
     TerminalActivationProviders,
-    TerminalShellType
+    TerminalShellType,
 } from './types';
 
 @injectable()
@@ -46,7 +46,7 @@ export class TerminalHelper implements ITerminalHelper {
         @inject(ITerminalActivationCommandProvider)
         @named(TerminalActivationProviders.pipenv)
         private readonly pipenv: ITerminalActivationCommandProvider,
-        @multiInject(IShellDetector) shellDetectors: IShellDetector[]
+        @multiInject(IShellDetector) shellDetectors: IShellDetector[],
     ) {
         this.shellDetector = new ShellDetector(this.platform, shellDetectors);
     }
@@ -69,7 +69,7 @@ export class TerminalHelper implements ITerminalHelper {
     public async getEnvironmentActivationCommands(
         terminalShellType: TerminalShellType,
         resource?: Uri,
-        interpreter?: PythonEnvironment
+        interpreter?: PythonEnvironment,
     ): Promise<string[] | undefined> {
         const providers = [this.pipenv, this.pyenv, this.bashCShellFish, this.commandPromptAndPowerShell];
         const promise = this.getActivationCommands(resource || undefined, interpreter, terminalShellType, providers);
@@ -77,14 +77,14 @@ export class TerminalHelper implements ITerminalHelper {
             terminalShellType,
             EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL,
             interpreter,
-            promise
+            promise,
         ).ignoreErrors();
         return promise;
     }
     public async getEnvironmentActivationShellCommands(
         resource: Resource,
         shell: TerminalShellType,
-        interpreter?: PythonEnvironment
+        interpreter?: PythonEnvironment,
     ): Promise<string[] | undefined> {
         if (this.platform.osType === OSType.Unknown) {
             return;
@@ -95,7 +95,7 @@ export class TerminalHelper implements ITerminalHelper {
             shell,
             EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_RUNNING_CODE,
             interpreter,
-            promise
+            promise,
         ).ignoreErrors();
         return promise;
     }
@@ -104,7 +104,7 @@ export class TerminalHelper implements ITerminalHelper {
         terminalShellType: TerminalShellType,
         eventName: EventName,
         interpreter: PythonEnvironment | undefined,
-        promise: Promise<string[] | undefined>
+        promise: Promise<string[] | undefined>,
     ): Promise<void> {
         let hasCommands = false;
         let failed = false;
@@ -125,7 +125,7 @@ export class TerminalHelper implements ITerminalHelper {
         resource: Resource,
         interpreter: PythonEnvironment | undefined,
         terminalShellType: TerminalShellType,
-        providers: ITerminalActivationCommandProvider[]
+        providers: ITerminalActivationCommandProvider[],
     ): Promise<string[] | undefined> {
         const settings = this.configurationService.getSettings(resource);
 

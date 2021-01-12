@@ -1,5 +1,3 @@
-// tslint:disable:no-console
-
 import { spawnSync } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -9,7 +7,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 
 // If running smoke tests, we don't have access to this.
 if (process.env.TEST_FILES_SUFFIX !== 'smoke.test') {
-    // tslint:disable-next-line: no-var-requires no-require-imports
     const logger = require('./testLogger');
     logger.initializeLogger();
 }
@@ -45,7 +42,7 @@ async function installJupyterExtension(vscodeExecutablePath: string) {
     // For now install Jupyter from the marketplace
     spawnSync(cliPath, ['--install-extension', JUPYTER_EXTENSION_ID], {
         encoding: 'utf-8',
-        stdio: 'inherit'
+        stdio: 'inherit',
     });
 }
 
@@ -60,7 +57,7 @@ async function installPylanceExtension(vscodeExecutablePath: string) {
     // For now install pylance from the marketplace
     spawnSync(cliPath, ['--install-extension', PYLANCE_EXTENSION_ID], {
         encoding: 'utf-8',
-        stdio: 'inherit'
+        stdio: 'inherit',
     });
 
     // Make sure to enable it by writing to our workspace path settings
@@ -96,7 +93,7 @@ async function start() {
         extensionTestsPath: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'out', 'test'),
         launchArgs,
         version: channel,
-        extensionTestsEnv: { ...process.env, UITEST_DISABLE_INSIDERS: '1' }
+        extensionTestsEnv: { ...process.env, UITEST_DISABLE_INSIDERS: '1' },
     });
 }
 start().catch((ex) => {

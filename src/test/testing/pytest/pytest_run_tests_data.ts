@@ -8,8 +8,6 @@ import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { TestStatus, TestsToRun } from '../../../client/testing/common/types';
 
-// tslint:disable: no-any
-
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
 
 export interface ITestDetails {
@@ -43,7 +41,7 @@ export const allTestDetails: ITestDetails[] = [
         issueLineText: 'self.fail("Not implemented")',
         message: 'AssertionError: Not implemented',
         imported: false,
-        status: TestStatus.Fail
+        status: TestStatus.Fail,
     },
     {
         className: 'test_root.Test_Root_test1',
@@ -52,7 +50,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_Root_B',
         sourceTestName: 'test_Root_B',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'test_root.Test_Root_test1',
@@ -63,7 +61,7 @@ export const allTestDetails: ITestDetails[] = [
         testDefRange: new vscode.Range(13, 8, 13, 19),
         message: 'demonstrating skipping',
         imported: false,
-        status: TestStatus.Skipped
+        status: TestStatus.Skipped,
     },
     {
         className: 'tests.test_another_pytest',
@@ -72,7 +70,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_username',
         sourceTestName: 'test_username',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_another_pytest',
@@ -81,7 +79,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_parametrized_username[one]',
         sourceTestName: 'test_parametrized_username',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_another_pytest',
@@ -90,7 +88,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_parametrized_username[two]',
         sourceTestName: 'test_parametrized_username',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_another_pytest',
@@ -103,7 +101,7 @@ export const allTestDetails: ITestDetails[] = [
         issueLineText: "assert non_parametrized_username in ['one', 'two', 'threes']",
         message: "AssertionError: assert 'three' in ['one', 'two', 'threes']",
         imported: false,
-        status: TestStatus.Fail
+        status: TestStatus.Fail,
     },
     {
         className:
@@ -121,7 +119,7 @@ export const allTestDetails: ITestDetails[] = [
         issueLineText: 'assert False',
         message: 'AssertionError',
         imported: true,
-        status: TestStatus.Fail
+        status: TestStatus.Fail,
     },
     {
         className: 'tests.test_foreign_nested_tests.TestNestedForeignTests.TestInheritingHere.()',
@@ -138,7 +136,7 @@ export const allTestDetails: ITestDetails[] = [
         issueLineText: 'assert False',
         message: 'AssertionError',
         imported: true,
-        status: TestStatus.Fail
+        status: TestStatus.Fail,
     },
     {
         className: 'tests.test_foreign_nested_tests.TestNestedForeignTests.TestInheritingHere.()',
@@ -148,7 +146,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_nested_normal',
         sourceTestName: 'test_nested_normal',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_foreign_nested_tests.TestNestedForeignTests',
@@ -157,7 +155,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_normal',
         sourceTestName: 'test_normal',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_pytest.Test_CheckMyApp',
@@ -168,7 +166,7 @@ export const allTestDetails: ITestDetails[] = [
         testDefRange: new vscode.Range(7, 8, 7, 25),
         message: 'demonstrating skipping',
         imported: false,
-        status: TestStatus.Skipped
+        status: TestStatus.Skipped,
     },
     {
         className: 'tests.test_pytest.Test_CheckMyApp',
@@ -177,7 +175,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_complex_check',
         sourceTestName: 'test_complex_check',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_pytest.Test_CheckMyApp.Test_NestedClassA.()',
@@ -186,7 +184,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_nested_class_methodB',
         sourceTestName: 'test_nested_class_methodB',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_pytest.Test_CheckMyApp.Test_NestedClassA.().Test_nested_classB_Of_A.()',
@@ -195,7 +193,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_d',
         sourceTestName: 'test_d',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_pytest.Test_CheckMyApp.Test_NestedClassA.()',
@@ -204,7 +202,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_nested_class_methodC',
         sourceTestName: 'test_nested_class_methodC',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_pytest.Test_CheckMyApp',
@@ -213,7 +211,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_simple_check2',
         sourceTestName: 'test_simple_check2',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_pytest.Test_CheckMyApp',
@@ -222,7 +220,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_complex_check2',
         sourceTestName: 'test_complex_check2',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_pytest',
@@ -231,7 +229,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_username',
         sourceTestName: 'test_username',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_pytest',
@@ -240,7 +238,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_parametrized_username[one]',
         sourceTestName: 'test_parametrized_username',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_pytest',
@@ -249,7 +247,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_parametrized_username[two]',
         sourceTestName: 'test_parametrized_username',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_pytest',
@@ -262,7 +260,7 @@ export const allTestDetails: ITestDetails[] = [
         issueLineText: "assert non_parametrized_username in ['one', 'two', 'threes']",
         message: "AssertionError: assert 'three' in ['one', 'two', 'threes']",
         imported: false,
-        status: TestStatus.Fail
+        status: TestStatus.Fail,
     },
     {
         className: 'tests.test_unittest_one.Test_test1',
@@ -275,7 +273,7 @@ export const allTestDetails: ITestDetails[] = [
         issueLineText: 'self.fail("Not implemented")',
         message: 'AssertionError: Not implemented',
         imported: false,
-        status: TestStatus.Fail
+        status: TestStatus.Fail,
     },
     {
         className: 'tests.test_unittest_one.Test_test1',
@@ -284,7 +282,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_B',
         sourceTestName: 'test_B',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_unittest_one.Test_test1',
@@ -295,7 +293,7 @@ export const allTestDetails: ITestDetails[] = [
         testDefRange: new vscode.Range(13, 8, 13, 14),
         message: 'demonstrating skipping',
         imported: false,
-        status: TestStatus.Skipped
+        status: TestStatus.Skipped,
     },
     {
         className: 'tests.test_unittest_two.Test_test2',
@@ -308,7 +306,7 @@ export const allTestDetails: ITestDetails[] = [
         issueLineText: 'self.fail("Not implemented")',
         message: 'AssertionError: Not implemented',
         imported: false,
-        status: TestStatus.Fail
+        status: TestStatus.Fail,
     },
     {
         className: 'tests.test_unittest_two.Test_test2',
@@ -317,7 +315,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_B2',
         sourceTestName: 'test_B2',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.test_unittest_two.Test_test2',
@@ -330,7 +328,7 @@ export const allTestDetails: ITestDetails[] = [
         issueLineText: "self.assertEqual(1,2,'Not equal')",
         message: 'AssertionError: 1 != 2 : Not equal',
         imported: false,
-        status: TestStatus.Fail
+        status: TestStatus.Fail,
     },
     {
         className: 'tests.test_unittest_two.Test_test2',
@@ -343,7 +341,7 @@ export const allTestDetails: ITestDetails[] = [
         issueLineText: 'raise ArithmeticError()',
         message: 'ArithmeticError',
         imported: false,
-        status: TestStatus.Fail
+        status: TestStatus.Fail,
     },
     {
         className: 'tests.test_unittest_two.Test_test2a',
@@ -357,7 +355,7 @@ export const allTestDetails: ITestDetails[] = [
         message: 'AssertionError: Not implemented',
         imported: false,
         passOnFailedRun: true,
-        status: TestStatus.Fail
+        status: TestStatus.Fail,
     },
     {
         className: 'tests.test_unittest_two.Test_test2a',
@@ -366,7 +364,7 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_222B2',
         sourceTestName: 'test_222B2',
         imported: false,
-        status: TestStatus.Pass
+        status: TestStatus.Pass,
     },
     {
         className: 'tests.unittest_three_test.Test_test3',
@@ -379,7 +377,7 @@ export const allTestDetails: ITestDetails[] = [
         issueLineText: 'self.fail("Not implemented")',
         message: 'AssertionError: Not implemented',
         imported: false,
-        status: TestStatus.Fail
+        status: TestStatus.Fail,
     },
     {
         className: 'tests.unittest_three_test.Test_test3',
@@ -388,8 +386,8 @@ export const allTestDetails: ITestDetails[] = [
         testName: 'test_B',
         sourceTestName: 'test_B',
         imported: false,
-        status: TestStatus.Pass
-    }
+        status: TestStatus.Pass,
+    },
 ];
 
 export interface ITestScenarioDetails {
@@ -412,7 +410,7 @@ export const testScenarios: ITestScenarioDetails[] = [
         testsToRun: undefined as any,
         testDetails: allTestDetails.filter(() => {
             return true;
-        })
+        }),
     },
     {
         scenarioName: 'Run Specific Test File',
@@ -427,16 +425,16 @@ export const testScenarios: ITestScenarioDetails[] = [
                     xmlName: 'tests/test_another_pytest.py',
                     functions: [],
                     suites: [],
-                    time: 0
-                }
+                    time: 0,
+                },
             ],
             testFolder: [],
             testFunction: [],
-            testSuite: []
+            testSuite: [],
         },
         testDetails: allTestDetails.filter((td) => {
             return td.fileName === path.join('tests', 'test_another_pytest.py');
-        })
+        }),
     },
     {
         scenarioName: 'Run Specific Test Suite',
@@ -446,7 +444,7 @@ export const testScenarios: ITestScenarioDetails[] = [
         testSuiteIndex: 0,
         testDetails: allTestDetails.filter((td) => {
             return td.className === 'test_root.Test_Root_test1';
-        })
+        }),
     },
     {
         scenarioName: 'Run Specific Test Function',
@@ -456,7 +454,7 @@ export const testScenarios: ITestScenarioDetails[] = [
         testFunctionIndex: 0,
         testDetails: allTestDetails.filter((td) => {
             return td.testName === 'test_Root_A';
-        })
+        }),
     },
     {
         scenarioName: 'Run Failed Tests',
@@ -467,6 +465,6 @@ export const testScenarios: ITestScenarioDetails[] = [
             return true;
         }),
         shouldRunFailed: true,
-        failedRunOutput: 'two.again.xml'
-    }
+        failedRunOutput: 'two.again.xml',
+    },
 ];

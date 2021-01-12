@@ -1,18 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable-next-line:no-single-line-block-comment
 /* eslint-disable max-classes-per-file */
 
 import { Event, Uri } from 'vscode';
 import { IAsyncIterableIterator, iterEmpty } from '../../common/utils/async';
 import { PythonEnvInfo, PythonEnvKind } from './info';
-import {
-    BasicPythonEnvsChangedEvent,
-    IPythonEnvsWatcher,
-    PythonEnvsChangedEvent,
-    PythonEnvsWatcher,
-} from './watcher';
+import { BasicPythonEnvsChangedEvent, IPythonEnvsWatcher, PythonEnvsChangedEvent, PythonEnvsWatcher } from './watcher';
 
 /**
  * A single update to a previously provided Python env object.
@@ -165,7 +159,7 @@ export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChan
     resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
 }
 
-interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
+interface IEmitter<E extends PythonEnvsChangedEvent> {
     fire(e: E): void;
 }
 
@@ -181,8 +175,7 @@ interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
  * should be used.  Only in low-level cases should you consider using
  * `BasicPythonEnvsChangedEvent`.
  */
-abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
-implements ILocator<E> {
+abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent> implements ILocator<E> {
     public readonly onChanged: Event<E>;
 
     protected readonly emitter: IEmitter<E>;

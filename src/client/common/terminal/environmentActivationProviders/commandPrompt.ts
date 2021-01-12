@@ -14,7 +14,7 @@ const SCRIPTS: ActivationScripts = ({
     [TerminalShellType.commandPrompt]: ['activate.bat', 'Activate.ps1'],
     // Group 2
     [TerminalShellType.powershell]: ['Activate.ps1', 'activate.bat'],
-    [TerminalShellType.powershellCore]: ['Activate.ps1', 'activate.bat']
+    [TerminalShellType.powershellCore]: ['Activate.ps1', 'activate.bat'],
 } as unknown) as ActivationScripts;
 
 export function getAllScripts(pathJoin: (...p: string[]) => string): string[] {
@@ -27,7 +27,7 @@ export function getAllScripts(pathJoin: (...p: string[]) => string): string[] {
                     name,
                     // We also add scripts in subdirs.
                     pathJoin('Scripts', name),
-                    pathJoin('scripts', name)
+                    pathJoin('scripts', name),
                 );
             }
         }
@@ -49,7 +49,7 @@ export class CommandPromptAndPowerShell extends VenvBaseActivationCommandProvide
                     name,
                     // We also add scripts in subdirs.
                     path.join('Scripts', name),
-                    path.join('scripts', name)
+                    path.join('scripts', name),
                 );
             }
             this.scripts[shell] = scripts;
@@ -58,7 +58,7 @@ export class CommandPromptAndPowerShell extends VenvBaseActivationCommandProvide
 
     public async getActivationCommandsForInterpreter(
         pythonPath: string,
-        targetShell: TerminalShellType
+        targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
         const scriptFile = await this.findScriptFile(pythonPath, targetShell);
         if (!scriptFile) {

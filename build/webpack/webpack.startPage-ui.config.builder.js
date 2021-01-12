@@ -5,17 +5,20 @@
 
 // Note to editors, if you change this file you have to restart compile-webviews.
 // It doesn't reload the config otherwise.
-const common = require('./common');
+
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
-const constants = require('../constants');
+
 const configFileName = 'tsconfig.startPage-ui.json';
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const constants = require('../constants');
+const common = require('./common');
 
 // Any build on the CI is considered production mode.
 const isProdBuild = constants.isCI || process.argv.includes('--mode');
@@ -24,7 +27,7 @@ function getEntry(bundle) {
     switch (bundle) {
         case 'viewers':
             return {
-                startPage: [`./src/startPage-ui/startPage/index.tsx`]
+                startPage: ['./src/startPage-ui/startPage/index.tsx'],
             };
         default:
             throw new Error(`Bundle not supported ${bundle}`);
@@ -37,8 +40,8 @@ function getPlugins(bundle) {
             checkSyntacticErrors: true,
             tsconfig: configFileName,
             reportFiles: ['src/startPage-ui/**/*.{ts,tsx}'],
-            memoryLimit: 9096
-        })
+            memoryLimit: 9096,
+        }),
     ];
     if (isProdBuild) {
         plugins.push(...common.getDefaultPlugins(bundle));
@@ -47,8 +50,8 @@ function getPlugins(bundle) {
         case 'viewers': {
             const definePlugin = new webpack.DefinePlugin({
                 'process.env': {
-                    NODE_ENV: JSON.stringify('production')
-                }
+                    NODE_ENV: JSON.stringify('production'),
+                },
             });
 
             plugins.push(
@@ -58,9 +61,9 @@ function getPlugins(bundle) {
                         template: 'src/startPage-ui/startPage/index.html',
                         indexUrl: `${constants.ExtensionRootDir}/out/1`,
                         chunks: ['commons', 'startPage'],
-                        filename: 'index.startPage.html'
-                    })
-                ]
+                        filename: 'index.startPage.html',
+                    }),
+                ],
             );
             break;
         }
@@ -81,9 +84,9 @@ function buildConfiguration(bundle) {
             ...[
                 {
                     from: path.join(constants.ExtensionRootDir, 'node_modules/font-awesome/**/*'),
-                    to: path.join(constants.ExtensionRootDir, 'out', 'startPage-ui', bundleFolder, 'node_modules')
-                }
-            ]
+                    to: path.join(constants.ExtensionRootDir, 'out', 'startPage-ui', bundleFolder, 'node_modules'),
+                },
+            ],
         );
     }
     const config = {
@@ -92,14 +95,16 @@ function buildConfiguration(bundle) {
         output: {
             path: path.join(constants.ExtensionRootDir, 'out', 'startPage-ui', bundleFolder),
             filename: '[name].js',
-            chunkFilename: `[name].bundle.js`
+            chunkFilename: '[name].bundle.js',
         },
         mode: 'development', // Leave as is, we'll need to see stack traces when there are errors.
         devtool: isProdBuild ? 'source-map' : 'inline-source-map',
         optimization: {
             minimize: isProdBuild,
             minimizer: isProdBuild ? [new TerserPlugin({ sourceMap: true })] : [],
-            moduleIds: 'hashed', // (doesn't re-generate bundles unnecessarily) https://webpack.js.org/configuration/optimization/#optimizationmoduleids.
+            // (doesn't re-generate bundles unnecessarily)
+            // https://webpack.js.org/configuration/optimization/#optimizationmoduleids.
+            moduleIds: 'hashed',
             splitChunks: {
                 chunks: 'all',
                 cacheGroups: {
@@ -110,8 +115,9 @@ function buildConfiguration(bundle) {
                     commons: {
                         name: 'commons',
                         chunks: 'initial',
-                        minChunks: bundle === 'notebook' ? 2 : 1, // We want at least one shared bundle (2 for notebooks, as we want monago split into another).
-                        filename: '[name].initial.bundle.js'
+                        // We want at least one shared bundle (2 for notebooks, as we want monago split into another)
+                        minChunks: bundle === 'notebook' ? 2 : 1,
+                        filename: '[name].initial.bundle.js',
                     },
                     // Even though nteract has been split up, some of them are large as nteract alone is large.
                     // This will ensure nteract (just some of the nteract) goes into a separate bundle.
@@ -120,15 +126,17 @@ function buildConfiguration(bundle) {
                         name: 'nteract',
                         chunks: 'all',
                         minChunks: 2,
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         test(module, _chunks) {
                             // `module.resource` contains the absolute path of the file on disk.
                             // Look for `node_modules/monaco...`.
+                            // eslint-disable-next-line no-shadow, global-require
                             const path = require('path');
                             return (
                                 module.resource &&
                                 module.resource.includes(`${path.sep}node_modules${path.sep}@nteract`)
                             );
-                        }
+                        },
                     },
                     // Bundling `plotly` with nteract isn't the best option, as this plotly alone is 6mb.
                     // This will ensure it is in a seprate bundle, hence small files for SSH scenarios.
@@ -136,38 +144,42 @@ function buildConfiguration(bundle) {
                         name: 'plotly',
                         chunks: 'all',
                         minChunks: 1,
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         test(module, _chunks) {
                             // `module.resource` contains the absolute path of the file on disk.
                             // Look for `node_modules/monaco...`.
+                            // eslint-disable-next-line no-shadow, global-require
                             const path = require('path');
                             return (
                                 module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}plotly`)
                             );
-                        }
+                        },
                     },
                     // Monaco is a monster. For SSH again, we pull this into a seprate bundle.
                     // This is only a solution for SSH.
-                    // Ideal solution would be to dynamically load monaoc `await import`, that way it will benefit UX and SSH.
-                    // This solution doesn't improve UX, as we still need to wait for monaco to load.
+                    // Ideal solution would be to dynamically load monaoc `await import`, that way it will benefit UX
+                    // and SSH. This solution doesn't improve UX, as we still need to wait for monaco to load.
                     monaco: {
                         name: 'monaco',
                         chunks: 'all',
                         minChunks: 1,
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         test(module, _chunks) {
                             // `module.resource` contains the absolute path of the file on disk.
                             // Look for `node_modules/monaco...`.
+                            // eslint-disable-next-line global-require, no-shadow
                             const path = require('path');
                             return (
                                 module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}monaco`)
                             );
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             },
-            chunkIds: 'named'
+            chunkIds: 'named',
         },
         node: {
-            fs: 'empty'
+            fs: 'empty',
         },
         plugins: [
             new FixDefaultImportPlugin(),
@@ -179,21 +191,21 @@ function buildConfiguration(bundle) {
                     { from: './**/*theme*.json', to: '.' },
                     {
                         from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
-                        to: path.join(constants.ExtensionRootDir, 'out', 'startPage-ui', bundleFolder)
+                        to: path.join(constants.ExtensionRootDir, 'out', 'startPage-ui', bundleFolder),
                     },
-                    ...filesToCopy
+                    ...filesToCopy,
                 ],
-                { context: 'src' }
+                { context: 'src' },
             ),
             new webpack.optimize.LimitChunkCountPlugin({
-                maxChunks: 100
+                maxChunks: 100,
             }),
-            ...getPlugins(bundle)
+            ...getPlugins(bundle),
         ],
         externals: ['log4js'],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.
-            extensions: ['.ts', '.tsx', '.js', '.json', '.svg']
+            extensions: ['.ts', '.tsx', '.js', '.json', '.svg'],
         },
 
         module: {
@@ -206,30 +218,35 @@ function buildConfiguration(bundle) {
                             loader: 'thread-loader',
                             options: {
                                 // there should be 1 cpu for the fork-ts-checker-webpack-plugin
+                                // eslint-disable-next-line global-require
                                 workers: require('os').cpus().length - 1,
                                 workerNodeArgs: ['--max-old-space-size=9096'],
-                                poolTimeout: isProdBuild ? 1000 : Infinity // set this to Infinity in watch mode - see https://github.com/webpack-contrib/thread-loader
-                            }
+                                // set this to Infinity in watch mode;
+                                // see https://github.com/webpack-contrib/thread-loader
+                                poolTimeout: isProdBuild ? 1000 : Infinity,
+                            },
                         },
                         {
                             loader: 'ts-loader',
                             options: {
-                                happyPackMode: true, // IMPORTANT! use happyPackMode mode to speed-up compilation and reduce errors reported to webpack
+                                // IMPORTANT! use happyPackMode mode to speed-up compilation and reduce errors reported
+                                // to webpack
+                                happyPackMode: true,
                                 configFile: configFileName,
                                 // Faster (turn on only on CI, for dev we don't need this).
                                 transpileOnly: true,
-                                reportFiles: ['src/startPage-ui/**/*.{ts,tsx}']
-                            }
-                        }
-                    ]
+                                reportFiles: ['src/startPage-ui/**/*.{ts,tsx}'],
+                            },
+                        },
+                    ],
                 },
                 {
                     test: /\.svg$/,
-                    use: ['svg-inline-loader']
+                    use: ['svg-inline-loader'],
                 },
                 {
                     test: /\.css$/,
-                    use: ['style-loader', 'css-loader']
+                    use: ['style-loader', 'css-loader'],
                 },
                 {
                     test: /\.js$/,
@@ -237,9 +254,9 @@ function buildConfiguration(bundle) {
                     use: [
                         {
                             loader: path.resolve('./build/webpack/loaders/remarkLoader.js'),
-                            options: {}
-                        }
-                    ]
+                            options: {},
+                        },
+                    ],
                 },
                 {
                     test: /\.json$/,
@@ -248,25 +265,25 @@ function buildConfiguration(bundle) {
                     use: [
                         {
                             loader: path.resolve('./build/webpack/loaders/jsonloader.js'),
-                            options: {}
-                        }
-                    ]
+                            options: {},
+                        },
+                    ],
                 },
                 {
                     test: /\.(png|woff|woff2|eot|gif|ttf)$/,
                     use: [
                         {
                             loader: 'url-loader?limit=100000',
-                            options: { esModule: false }
-                        }
-                    ]
+                            options: { esModule: false },
+                        },
+                    ],
                 },
                 {
                     test: /\.less$/,
-                    use: ['style-loader', 'css-loader', 'less-loader']
-                }
-            ]
-        }
+                    use: ['style-loader', 'css-loader', 'less-loader'],
+                },
+            ],
+        },
     };
 
     if (bundle === 'renderers') {

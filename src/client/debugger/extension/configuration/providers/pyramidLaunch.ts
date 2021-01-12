@@ -18,7 +18,6 @@ import { DebuggerTypeName } from '../../../constants';
 import { LaunchRequestArguments } from '../../../types';
 import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationProvider } from '../../types';
 
-// tslint:disable-next-line:no-invalid-template-strings
 const workspaceFolderToken = '${workspaceFolder}';
 
 @injectable()
@@ -26,7 +25,7 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
     constructor(
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IPathUtils) private pathUtils: IPathUtils
+        @inject(IPathUtils) private pathUtils: IPathUtils,
     ) {}
     public async buildConfiguration(input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
         const iniPath = await this.getDevelopmentIniPath(state.folder);
@@ -40,7 +39,7 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
             module: 'pyramid.scripts.pserve',
             args: [iniPath || defaultIni],
             pyramid: true,
-            jinja: true
+            jinja: true,
         };
 
         if (!iniPath) {
@@ -48,7 +47,7 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
                 title: DebugConfigStrings.pyramid.enterDevelopmentIniPath.title(),
                 value: defaultIni,
                 prompt: DebugConfigStrings.pyramid.enterDevelopmentIniPath.prompt(),
-                validate: (value) => this.validateIniPath(state ? state.folder : undefined, defaultIni, value)
+                validate: (value) => this.validateIniPath(state ? state.folder : undefined, defaultIni, value),
             });
             if (selectedIniPath) {
                 manuallyEnteredAValue = true;
@@ -59,14 +58,14 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
         sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
             configurationType: DebugConfigurationType.launchPyramid,
             autoDetectedPyramidIniPath: !!iniPath,
-            manuallyEnteredAValue
+            manuallyEnteredAValue,
         });
         Object.assign(state.config, config);
     }
     public async validateIniPath(
         folder: WorkspaceFolder | undefined,
         defaultValue: string,
-        selected?: string
+        selected?: string,
     ): Promise<string | undefined> {
         if (!folder) {
             return;

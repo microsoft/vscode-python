@@ -17,22 +17,22 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestNavigatorHelper>(ITestNavigatorHelper, TestNavigatorHelper);
     serviceManager.addSingleton<ITestCodeNavigatorCommandHandler>(
         ITestCodeNavigatorCommandHandler,
-        TestCodeNavigatorCommandHandler
+        TestCodeNavigatorCommandHandler,
     );
     serviceManager.addSingleton<ITestCodeNavigator>(
         ITestCodeNavigator,
         TestFileCodeNavigator,
-        NavigableItemType.testFile
+        NavigableItemType.testFile,
     );
     serviceManager.addSingleton<ITestCodeNavigator>(
         ITestCodeNavigator,
         TestFunctionCodeNavigator,
-        NavigableItemType.testFunction
+        NavigableItemType.testFunction,
     );
     serviceManager.addSingleton<ITestCodeNavigator>(
         ITestCodeNavigator,
         TestSuiteCodeNavigator,
-        NavigableItemType.testSuite
+        NavigableItemType.testSuite,
     );
     serviceManager.addSingleton<IDocumentSymbolProvider>(IDocumentSymbolProvider, TestFileSymbolProvider, 'test');
 }

@@ -22,7 +22,7 @@ export class FailedTestHandler implements IExtensionSingleActivationService, IDi
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(ITestCollectionStorageService) private readonly storage: ITestCollectionStorageService
+        @inject(ITestCollectionStorageService) private readonly storage: ITestCollectionStorageService,
     ) {
         disposableRegistry.push(this);
     }

@@ -1,5 +1,3 @@
-// tslint:disable:interface-name no-any max-func-body-length estrict-plus-operands no-empty
-
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -14,7 +12,7 @@ import {
     TextEditorOptions,
     Uri,
     window,
-    workspace
+    workspace,
 } from 'vscode';
 import { getTextEditsFromPatch } from '../../client/common/editor';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
@@ -37,7 +35,7 @@ const refactorSourceFile = path.join(
     'pythonFiles',
     'refactoring',
     'standAlone',
-    'refactor.py'
+    'refactor.py',
 );
 const refactorTargetFileDir = path.join(
     __dirname,
@@ -48,7 +46,7 @@ const refactorTargetFileDir = path.join(
     'test',
     'pythonFiles',
     'refactoring',
-    'standAlone'
+    'standAlone',
 );
 
 interface RenameResponse {
@@ -62,7 +60,7 @@ suite('Method Extraction', () => {
         cursorStyle: TextEditorCursorStyle.Line,
         insertSpaces: true,
         lineNumbers: TextEditorLineNumbersStyle.Off,
-        tabSize: 4
+        tabSize: 4,
     };
     let refactorTargetFile = '';
     let ioc: UnitTestIocContainer;
@@ -107,7 +105,6 @@ suite('Method Extraction', () => {
         const workspaceRoot = path.dirname(refactorTargetFile);
         const proxy = new RefactorProxy(workspaceRoot, createPythonExecGetter(workspaceRoot));
 
-        // tslint:disable-next-line:no-multiline-string
         const DIFF = `--- a/refactor.py\n+++ b/refactor.py\n@@ -237,9 +237,12 @@\n             try:\n                 self._process_request(self._input.readline())\n             except Exception as ex:\n-                message = ex.message + '  \\n' + traceback.format_exc()\n-                sys.stderr.write(str(len(message)) + ':' + message)\n-                sys.stderr.flush()\n+                self.myNewMethod(ex)\n+\n+    def myNewMethod(self, ex):\n+        message = ex.message + '  \\n' + traceback.format_exc()\n+        sys.stderr.write(str(len(message)) + ':' + message)\n+        sys.stderr.flush()\n \n if __name__ == '__main__':\n     RopeRefactoring().watch()\n`;
         const mockTextDoc = await workspace.openTextDocument(refactorTargetFile);
         const expectedTextEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
@@ -117,7 +114,7 @@ suite('Method Extraction', () => {
                 'myNewMethod',
                 refactorTargetFile,
                 rangeOfTextToExtract,
-                options
+                options,
             );
             if (shouldError) {
                 assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
@@ -127,7 +124,7 @@ suite('Method Extraction', () => {
             assert.equal(textEdits.length, expectedTextEdits.length, 'Invalid number of Text Edits');
             textEdits.forEach((edit) => {
                 const foundEdit = expectedTextEdits.filter(
-                    (item) => item.newText === edit.newText && item.range.isEqual(edit.range)
+                    (item) => item.newText === edit.newText && item.range.isEqual(edit.range),
                 );
                 assert.equal(foundEdit.length, 1, 'Edit not found');
             });
@@ -154,7 +151,7 @@ suite('Method Extraction', () => {
     async function testingMethodExtractionEndToEnd(
         shouldError: boolean,
         startPos: Position,
-        endPos: Position
+        endPos: Position,
     ): Promise<void> {
         const ch = new MockOutputChannel('Python');
         const rangeOfTextToExtract = new Range(startPos, endPos);
@@ -179,7 +176,7 @@ suite('Method Extraction', () => {
                     .text.trim()
                     .indexOf('def newmethod'),
                 0,
-                'New Method not created'
+                'New Method not created',
             );
             assert.equal(newMethodRefLine.text.trim().startsWith('self.newmethod'), true, 'New Method not being used');
         } catch (error) {

@@ -22,7 +22,6 @@ export class TestManagerService implements ITestManagerService {
             return;
         }
 
-        // tslint:disable-next-line:no-non-null-assertion
         if (!this.cachedTestManagers.has(preferredTestManager)) {
             const testDirectory = this.getTestWorkingDirectory();
             const testProvider = this.testsHelper.parseProviderName(preferredTestManager);

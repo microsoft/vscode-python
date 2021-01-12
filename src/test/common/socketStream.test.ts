@@ -11,12 +11,12 @@ import * as assert from 'assert';
 // as well as import your extension to test it
 import * as net from 'net';
 import { SocketStream } from '../../client/common/net/socket/SocketStream';
-// tslint:disable:no-require-imports no-var-requires
+
 const uint64be = require('uint64be');
 
 class MockSocket {
     private _data: string;
-    // tslint:disable-next-line:no-any
+
     private _rawDataWritten: any;
     constructor() {
         this._data = '';
@@ -24,24 +24,24 @@ class MockSocket {
     public get dataWritten(): string {
         return this._data;
     }
-    // tslint:disable-next-line:no-any
+
     public get rawDataWritten(): any {
         return this._rawDataWritten;
     }
-    // tslint:disable-next-line:no-any
+
     public write(data: any) {
         this._data = `${data}` + '';
         this._rawDataWritten = data;
     }
 }
 // Defines a Mocha test suite to group tests of similar kind together
-// tslint:disable-next-line:max-func-body-length
+
 suite('SocketStream', () => {
     test('Read Byte', (done) => {
-        const buffer = new Buffer('X');
+        const buffer = Buffer.from('X');
         const byteValue = buffer[0];
         const socket = new MockSocket();
-        // tslint:disable-next-line:no-any
+
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
 
         assert.equal(stream.ReadByte(), byteValue);
@@ -51,7 +51,7 @@ suite('SocketStream', () => {
         const num = 1234;
         const socket = new MockSocket();
         const buffer = uint64be.encode(num);
-        // tslint:disable-next-line:no-any
+
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
 
         assert.equal(stream.ReadInt32(), num);
@@ -61,7 +61,7 @@ suite('SocketStream', () => {
         const num = 9007199254740993;
         const socket = new MockSocket();
         const buffer = uint64be.encode(num);
-        // tslint:disable-next-line:no-any
+
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
 
         assert.equal(stream.ReadInt64(), num);
@@ -70,8 +70,8 @@ suite('SocketStream', () => {
     test('Read Ascii String', (done) => {
         const message = 'Hello World';
         const socket = new MockSocket();
-        const buffer = Buffer.concat([new Buffer('A'), uint64be.encode(message.length), new Buffer(message)]);
-        // tslint:disable-next-line:no-any
+        const buffer = Buffer.concat([Buffer.from('A'), uint64be.encode(message.length), Buffer.from(message)]);
+
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
 
         assert.equal(stream.ReadString(), message);
@@ -80,12 +80,12 @@ suite('SocketStream', () => {
     test('Read Unicode String', (done) => {
         const message = 'Hello World - Функция проверки ИНН и КПП - 说明';
         const socket = new MockSocket();
-        const stringBuffer = new Buffer(message);
+        const stringBuffer = Buffer.from(message);
         const buffer = Buffer.concat([
-            Buffer.concat([new Buffer('U'), uint64be.encode(stringBuffer.byteLength)]),
-            stringBuffer
+            Buffer.concat([Buffer.from('U'), uint64be.encode(stringBuffer.byteLength)]),
+            stringBuffer,
         ]);
-        // tslint:disable-next-line:no-any
+
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
 
         assert.equal(stream.ReadString(), message);
@@ -94,12 +94,12 @@ suite('SocketStream', () => {
     test('Read RollBackTransaction', (done) => {
         const message = 'Hello World';
         const socket = new MockSocket();
-        let buffer = Buffer.concat([new Buffer('A'), uint64be.encode(message.length), new Buffer(message)]);
+        let buffer = Buffer.concat([Buffer.from('A'), uint64be.encode(message.length), Buffer.from(message)]);
 
         // Write part of a second message
-        const partOfSecondMessage = Buffer.concat([new Buffer('A'), uint64be.encode(message.length)]);
+        const partOfSecondMessage = Buffer.concat([Buffer.from('A'), uint64be.encode(message.length)]);
         buffer = Buffer.concat([buffer, partOfSecondMessage]);
-        // tslint:disable-next-line:no-any
+
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
 
         stream.BeginTransaction();
@@ -113,12 +113,12 @@ suite('SocketStream', () => {
     test('Read EndTransaction', (done) => {
         const message = 'Hello World';
         const socket = new MockSocket();
-        let buffer = Buffer.concat([new Buffer('A'), uint64be.encode(message.length), new Buffer(message)]);
+        let buffer = Buffer.concat([Buffer.from('A'), uint64be.encode(message.length), Buffer.from(message)]);
 
         // Write part of a second message
-        const partOfSecondMessage = Buffer.concat([new Buffer('A'), uint64be.encode(message.length)]);
+        const partOfSecondMessage = Buffer.concat([Buffer.from('A'), uint64be.encode(message.length)]);
         buffer = Buffer.concat([buffer, partOfSecondMessage]);
-        // tslint:disable-next-line:no-any
+
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
 
         stream.BeginTransaction();
@@ -132,20 +132,20 @@ suite('SocketStream', () => {
     });
     test('Write Buffer', (done) => {
         const message = 'Hello World';
-        const buffer = new Buffer('');
+        const buffer = Buffer.from('');
         const socket = new MockSocket();
-        // tslint:disable-next-line:no-any
+
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
-        stream.Write(new Buffer(message));
+        stream.Write(Buffer.from(message));
 
         assert.equal(socket.dataWritten, message);
         done();
     });
     test('Write Int32', (done) => {
         const num = 1234;
-        const buffer = new Buffer('');
+        const buffer = Buffer.from('');
         const socket = new MockSocket();
-        // tslint:disable-next-line:no-any
+
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
         stream.WriteInt32(num);
 
@@ -154,9 +154,9 @@ suite('SocketStream', () => {
     });
     test('Write Int64', (done) => {
         const num = 9007199254740993;
-        const buffer = new Buffer('');
+        const buffer = Buffer.from('');
         const socket = new MockSocket();
-        // tslint:disable-next-line:no-any
+
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
         stream.WriteInt64(num);
 
@@ -165,9 +165,9 @@ suite('SocketStream', () => {
     });
     test('Write Ascii String', (done) => {
         const message = 'Hello World';
-        const buffer = new Buffer('');
+        const buffer = Buffer.from('');
         const socket = new MockSocket();
-        // tslint:disable-next-line:no-any
+
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
         stream.WriteString(message);
 
@@ -176,9 +176,9 @@ suite('SocketStream', () => {
     });
     test('Write Unicode String', (done) => {
         const message = 'Hello World - Функция проверки ИНН и КПП - 说明';
-        const buffer = new Buffer('');
+        const buffer = Buffer.from('');
         const socket = new MockSocket();
-        // tslint:disable-next-line:no-any
+
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
         stream.WriteString(message);
 

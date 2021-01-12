@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
-
+// eslint-disable-next-line max-classes-per-file
 import { inject, named } from 'inversify';
 import { ConfigurationTarget, DiagnosticSeverity } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
@@ -24,7 +23,7 @@ export class PythonPathDeprecatedDiagnostic extends BaseDiagnostic {
             message,
             DiagnosticSeverity.Information,
             DiagnosticScope.WorkspaceFolder,
-            resource
+            resource,
         );
     }
 }
@@ -33,18 +32,21 @@ export const PythonPathDeprecatedDiagnosticServiceId = 'PythonPathDeprecatedDiag
 
 export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsService {
     private workspaceService: IWorkspaceService;
+
     private output: IOutputChannel;
+
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IDiagnosticHandlerService)
         @named(DiagnosticCommandPromptHandlerServiceId)
         protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
         super([DiagnosticCodes.PythonPathDeprecatedDiagnostic], serviceContainer, disposableRegistry, true);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.output = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     }
+
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
         experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
@@ -63,11 +65,11 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
         return [];
     }
 
-    public async _removePythonPathFromWorkspaceSettings(resource: Resource) {
+    public async _removePythonPathFromWorkspaceSettings(resource: Resource): Promise<void> {
         const workspaceConfig = this.workspaceService.getConfiguration('python', resource);
         await Promise.all([
             workspaceConfig.update('pythonPath', undefined, ConfigurationTarget.Workspace),
-            workspaceConfig.update('pythonPath', undefined, ConfigurationTarget.WorkspaceFolder)
+            workspaceConfig.update('pythonPath', undefined, ConfigurationTarget.WorkspaceFolder),
         ]);
     }
 
@@ -86,13 +88,13 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
                 prompt: Common.openOutputPanel(),
                 command: {
                     diagnostic,
-                    invoke: async (): Promise<void> => this.output.show(true)
-                }
+                    invoke: async (): Promise<void> => this.output.show(true),
+                },
             },
             {
                 prompt: Common.doNotShowAgain(),
-                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global })
-            }
+                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global }),
+            },
         ];
 
         await this.messageService.handle(diagnostic, { commandPrompts: options });

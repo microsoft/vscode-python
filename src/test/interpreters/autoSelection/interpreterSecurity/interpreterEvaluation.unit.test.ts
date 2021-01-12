@@ -43,13 +43,12 @@ suite('Interpreter Evaluation', () => {
             applicationShell.object,
             browserService.object,
             interpreterHelper.object,
-            interpreterSecurityStorage.object
+            interpreterSecurityStorage.object,
         );
     });
 
     suite('Method evaluateIfInterpreterIsSafe()', () => {
         test('If no workspaces are opened, return true', async () => {
-            // tslint:disable-next-line: no-any
             const interpreter = { path: 'interpreterPath' } as any;
             interpreterHelper.setup((i) => i.getActiveWorkspaceUri(resource)).returns(() => undefined);
             const isSafe = await interpreterEvaluation.evaluateIfInterpreterIsSafe(interpreter, resource);
@@ -57,37 +56,33 @@ suite('Interpreter Evaluation', () => {
         });
 
         test('If method inferValueFromStorage() returns a defined value, return the value', async () => {
-            // tslint:disable-next-line: no-any
             const interpreter = { path: 'interpreterPath' } as any;
             interpreterHelper
                 .setup((i) => i.getActiveWorkspaceUri(resource))
                 .returns(
                     () =>
                         ({
-                            folderUri: resource
-                            // tslint:disable-next-line: no-any
-                        } as any)
+                            folderUri: resource,
+                        } as any),
                 );
-            // tslint:disable-next-line: no-any
+
             interpreterEvaluation.inferValueUsingCurrentState = () => 'storageValue' as any;
             const isSafe = await interpreterEvaluation.evaluateIfInterpreterIsSafe(interpreter, resource);
             expect(isSafe).to.equal('storageValue');
         });
 
         test('If method inferValueFromStorage() returns a undefined value, infer the value using the prompt and return it', async () => {
-            // tslint:disable-next-line: no-any
             const interpreter = { path: 'interpreterPath' } as any;
             interpreterHelper
                 .setup((i) => i.getActiveWorkspaceUri(resource))
                 .returns(
                     () =>
                         ({
-                            folderUri: resource
-                            // tslint:disable-next-line: no-any
-                        } as any)
+                            folderUri: resource,
+                        } as any),
                 );
             interpreterEvaluation.inferValueUsingCurrentState = () => undefined;
-            // tslint:disable-next-line: no-any
+
             interpreterEvaluation._inferValueUsingPrompt = () => 'promptValue' as any;
             const isSafe = await interpreterEvaluation.evaluateIfInterpreterIsSafe(interpreter, resource);
             expect(isSafe).to.equal('promptValue');
@@ -96,7 +91,6 @@ suite('Interpreter Evaluation', () => {
 
     suite('Method inferValueUsingStorage()', () => {
         test('If no workspaces are opened, return true', async () => {
-            // tslint:disable-next-line: no-any
             const interpreter = { path: 'interpreterPath' } as any;
             interpreterHelper.setup((i) => i.getActiveWorkspaceUri(resource)).returns(() => undefined);
             const isSafe = interpreterEvaluation.inferValueUsingCurrentState(interpreter, resource);
@@ -104,52 +98,46 @@ suite('Interpreter Evaluation', () => {
         });
 
         test('If interpreter is stored outside the workspace, return true', async () => {
-            // tslint:disable-next-line: no-any
             const interpreter = { path: 'interpreterPath' } as any;
             interpreterHelper
                 .setup((i) => i.getActiveWorkspaceUri(resource))
                 .returns(
                     () =>
                         ({
-                            folderUri: resource
-                            // tslint:disable-next-line: no-any
-                        } as any)
+                            folderUri: resource,
+                        } as any),
                 );
             const isSafe = interpreterEvaluation.inferValueUsingCurrentState(interpreter, resource);
             expect(isSafe).to.equal(true, 'Should be true');
         });
 
         test('If interpreter is stored in the workspace but method _areInterpretersInWorkspaceSafe() returns a defined value, return the value', async () => {
-            // tslint:disable-next-line: no-any
             const interpreter = { path: `${resource.fsPath}/interpreterPath` } as any;
             interpreterHelper
                 .setup((i) => i.getActiveWorkspaceUri(resource))
                 .returns(
                     () =>
                         ({
-                            folderUri: resource
-                            // tslint:disable-next-line: no-any
-                        } as any)
+                            folderUri: resource,
+                        } as any),
                 );
             areInterpretersInWorkspaceSafe
                 .setup((i) => i.value)
-                // tslint:disable-next-line: no-any
+
                 .returns(() => 'areInterpretersInWorkspaceSafeValue' as any);
             const isSafe = interpreterEvaluation.inferValueUsingCurrentState(interpreter, resource);
             expect(isSafe).to.equal('areInterpretersInWorkspaceSafeValue');
         });
 
         test('If prompt has been disabled, return true', async () => {
-            // tslint:disable-next-line: no-any
             const interpreter = { path: `${resource.fsPath}/interpreterPath` } as any;
             interpreterHelper
                 .setup((i) => i.getActiveWorkspaceUri(resource))
                 .returns(
                     () =>
                         ({
-                            folderUri: resource
-                            // tslint:disable-next-line: no-any
-                        } as any)
+                            folderUri: resource,
+                        } as any),
                 );
             areInterpretersInWorkspaceSafe.setup((i) => i.value).returns(() => undefined);
             unsafeInterpreterPromptEnabled.setup((s) => s.value).returns(() => false);
@@ -158,16 +146,14 @@ suite('Interpreter Evaluation', () => {
         });
 
         test('Otherwise return `undefined`', async () => {
-            // tslint:disable-next-line: no-any
             const interpreter = { path: `${resource.fsPath}/interpreterPath` } as any;
             interpreterHelper
                 .setup((i) => i.getActiveWorkspaceUri(resource))
                 .returns(
                     () =>
                         ({
-                            folderUri: resource
-                            // tslint:disable-next-line: no-any
-                        } as any)
+                            folderUri: resource,
+                        } as any),
                 );
             areInterpretersInWorkspaceSafe.setup((i) => i.value).returns(() => undefined);
             unsafeInterpreterPromptEnabled.setup((s) => s.value).returns(() => true);

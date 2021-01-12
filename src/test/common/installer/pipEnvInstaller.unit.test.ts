@@ -11,7 +11,6 @@ import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../../client/inte
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
-// tslint:disable-next-line: max-func-body-length
 suite('PipEnv installer', async () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let locatorService: TypeMoq.IMock<IInterpreterLocatorService>;
@@ -35,18 +34,18 @@ suite('PipEnv installer', async () => {
 
     test('If InterpreterUri is Pipenv interpreter, method isSupported() returns true', async () => {
         const interpreter = {
-            envType: EnvironmentType.Pipenv
+            envType: EnvironmentType.Pipenv,
         };
-        // tslint:disable-next-line: no-any
+
         const result = await pipEnvInstaller.isSupported(interpreter as any);
         expect(result).to.equal(true, 'Should be true');
     });
 
     test('If InterpreterUri is Python interpreter but not of type Pipenv, method isSupported() returns false', async () => {
         const interpreter = {
-            envType: EnvironmentType.Conda
+            envType: EnvironmentType.Conda,
         };
-        // tslint:disable-next-line: no-any
+
         const result = await pipEnvInstaller.isSupported(interpreter as any);
         expect(result).to.equal(false, 'Should be false');
     });
@@ -58,8 +57,8 @@ suite('PipEnv installer', async () => {
             .returns(() =>
                 Promise.resolve([
                     TypeMoq.Mock.ofType<PythonEnvironment>().object,
-                    TypeMoq.Mock.ofType<PythonEnvironment>().object
-                ])
+                    TypeMoq.Mock.ofType<PythonEnvironment>().object,
+                ]),
             );
         const result = await pipEnvInstaller.isSupported(resource);
         expect(result).to.equal(true, 'Should be true');

@@ -41,7 +41,7 @@ export class ArgumentsHelper implements IArgumentsHelper {
     public getPositionalArguments(
         args: string[],
         optionsWithArguments: string[] = [],
-        optionsWithoutArguments: string[] = []
+        optionsWithoutArguments: string[] = [],
     ): string[] {
         const nonPositionalIndexes: number[] = [];
         args.forEach((arg, index) => {
@@ -58,14 +58,14 @@ export class ArgumentsHelper implements IArgumentsHelper {
             } else if (arg.startsWith('-')) {
                 // Ok this is an unknown option, lets treat this as one without values.
                 traceWarning(
-                    `Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`
+                    `Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`,
                 );
                 nonPositionalIndexes.push(index);
                 return;
             } else if (arg.indexOf('=') > 0) {
                 // Ok this is an unknown option with a value
                 traceWarning(
-                    `Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`
+                    `Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`,
                 );
                 nonPositionalIndexes.push(index);
             }
@@ -75,7 +75,7 @@ export class ArgumentsHelper implements IArgumentsHelper {
     public filterArguments(
         args: string[],
         optionsWithArguments: string[] = [],
-        optionsWithoutArguments: string[] = []
+        optionsWithoutArguments: string[] = [],
     ): string[] {
         let ignoreIndex = -1;
         return args.filter((arg, index) => {

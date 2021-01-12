@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-// tslint:disable-next-line:no-require-imports
+
 import untildify = require('untildify');
 
 import { PathUtils } from '../../../client/common/platform/pathUtils';
@@ -15,7 +15,6 @@ import { IOutputChannel } from '../../../client/common/types';
 import { Logging } from '../../../client/common/utils/localize';
 import { getOSType, OSType } from '../../common';
 
-// tslint:disable: max-func-body-length
 suite('ProcessLogger suite', () => {
     let outputChannel: TypeMoq.IMock<IOutputChannel>;
     let pathUtils: PathUtils;
@@ -55,7 +54,7 @@ suite('ProcessLogger suite', () => {
 
         const expectedResult = `> test --foo --bar "import test"\n${Logging.currentWorkingDirectory()} ${path.join(
             'debug',
-            'path'
+            'path',
         )}\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
     });
@@ -67,7 +66,7 @@ suite('ProcessLogger suite', () => {
 
         const expectedResult = `> test --foo --bar \'import test\'\n${Logging.currentWorkingDirectory()} ${path.join(
             'debug',
-            'path'
+            'path',
         )}\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
     });
@@ -80,7 +79,7 @@ suite('ProcessLogger suite', () => {
         const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${path.join(
             '~',
             'debug',
-            'path'
+            'path',
         )}\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
     });
@@ -103,7 +102,7 @@ suite('ProcessLogger suite', () => {
         const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n`;
         expect(outputResult).to.equal(
             expectedResult,
-            'Output string is incorrect: Working directory line should not be displayed'
+            'Output string is incorrect: Working directory line should not be displayed',
         );
     });
 
@@ -115,7 +114,7 @@ suite('ProcessLogger suite', () => {
         const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n`;
         expect(outputResult).to.equal(
             expectedResult,
-            'Output string is incorrect: Working directory line should not be displayed'
+            'Output string is incorrect: Working directory line should not be displayed',
         );
     });
 });

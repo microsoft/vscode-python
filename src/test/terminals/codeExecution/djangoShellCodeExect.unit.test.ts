@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-multiline-string no-trailing-whitespace
-
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
@@ -18,7 +16,6 @@ import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/code
 import { ICodeExecutionService } from '../../../client/terminals/types';
 import { PYTHON_PATH } from '../../common';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Terminal - Django Shell Code Execution', () => {
     let executor: ICodeExecutionService;
     let terminalSettings: TypeMoq.IMock<ITerminalSettings>;
@@ -39,7 +36,7 @@ suite('Terminal - Django Shell Code Execution', () => {
             .setup((c) => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
                 return {
-                    dispose: () => void 0
+                    dispose: () => void 0,
                 };
             });
         platform = TypeMoq.Mock.ofType<IPlatformService>();
@@ -55,7 +52,7 @@ suite('Terminal - Django Shell Code Execution', () => {
             platform.object,
             commandManager.object,
             fileSystem.object,
-            disposables
+            disposables,
         );
 
         terminalFactory.setup((f) => f.getTerminalService(TypeMoq.It.isAny())).returns(() => terminalService.object);
@@ -80,7 +77,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         expectedPythonPath: string,
         terminalArgs: string[],
         expectedTerminalArgs: string[],
-        resource?: Uri
+        resource?: Uri,
     ) {
         platform.setup((p) => p.isWindows).returns(() => isWindows);
         settings.setup((s) => s.pythonPath).returns(() => pythonPath);
@@ -102,7 +99,7 @@ suite('Terminal - Django Shell Code Execution', () => {
             pythonPath,
             'c:/program files/python/python.exe',
             terminalArgs,
-            expectedTerminalArgs
+            expectedTerminalArgs,
         );
     });
 
@@ -146,7 +143,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder);
         const expectedTerminalArgs = terminalArgs.concat(
             `${path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument()}`,
-            'shell'
+            'shell',
         );
 
         await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
@@ -160,7 +157,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder);
         const expectedTerminalArgs = terminalArgs.concat(
             path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument(),
-            'shell'
+            'shell',
         );
 
         await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
@@ -175,7 +172,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         workspace.setup((w) => w.workspaceFolders).returns(() => [workspaceFolder]);
         const expectedTerminalArgs = terminalArgs.concat(
             `${path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument()}`,
-            'shell'
+            'shell',
         );
 
         await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
@@ -190,7 +187,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         workspace.setup((w) => w.workspaceFolders).returns(() => [workspaceFolder]);
         const expectedTerminalArgs = terminalArgs.concat(
             path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument(),
-            'shell'
+            'shell',
         );
 
         await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
@@ -200,7 +197,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         pythonPath: string,
         terminalArgs: string[],
         condaEnv: { name: string; path: string },
-        resource?: Uri
+        resource?: Uri,
     ) {
         settings.setup((s) => s.pythonPath).returns(() => pythonPath);
         terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
@@ -217,7 +214,7 @@ suite('Terminal - Django Shell Code Execution', () => {
             execObservable: procs.execObservable,
             execModuleObservable: procs.execModuleObservable,
             exec: procs.exec,
-            execModule: procs.execModule
+            execModule: procs.execModule,
         };
         const expectedTerminalArgs = [...terminalArgs, 'manage.py', 'shell'];
         pythonExecutionFactory

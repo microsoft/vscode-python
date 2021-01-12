@@ -23,7 +23,7 @@ import {
     TestFolder,
     TestFunction,
     Tests,
-    TestSuite
+    TestSuite,
 } from '../../../client/testing/common/types';
 import { TestTreeViewProvider } from '../../../client/testing/explorer/testTreeViewProvider';
 import { ITestManagementService } from '../../../client/testing/types';
@@ -33,19 +33,17 @@ import { ITestManagementService } from '../../../client/testing/types';
  * ITestManagementService.
  */
 export class ExplorerTestsDisposable implements IDisposable {
-    // tslint:disable-next-line:no-empty
     public dispose() {}
 }
 
 export function getMockTestFolder(folderPath: string, testFiles: TestFile[] = []): TestFolder {
-    // tslint:disable-next-line:no-unnecessary-local-variable
     const folder: TestFolder = {
         resource: Uri.file(__filename),
         folders: [],
         name: folderPath,
         nameToRun: folderPath,
         testFiles: testFiles,
-        time: 0
+        time: 0,
     };
 
     return folder;
@@ -54,9 +52,8 @@ export function getMockTestFolder(folderPath: string, testFiles: TestFile[] = []
 export function getMockTestFile(
     filePath: string,
     testSuites: TestSuite[] = [],
-    testFunctions: TestFunction[] = []
+    testFunctions: TestFunction[] = [],
 ): TestFile {
-    // tslint:disable-next-line:no-unnecessary-local-variable
     const testFile: TestFile = {
         resource: Uri.file(__filename),
         name: path_parse(filePath).base,
@@ -65,7 +62,7 @@ export function getMockTestFile(
         fullPath: join(__dirname, filePath),
         functions: testFunctions,
         suites: testSuites,
-        xmlName: filePath.replace(/\//g, '.')
+        xmlName: filePath.replace(/\//g, '.'),
     };
 
     return testFile;
@@ -76,12 +73,11 @@ export function getMockTestSuite(
     testFunctions: TestFunction[] = [],
     subSuites: TestSuite[] = [],
     instance: boolean = true,
-    unitTest: boolean = true
+    unitTest: boolean = true,
 ): TestSuite {
     const suiteNameChunks = suiteNameToRun.split('::');
     const suiteName = suiteNameChunks[suiteNameChunks.length - 1];
 
-    // tslint:disable-next-line:no-unnecessary-local-variable
     const testSuite: TestSuite = {
         resource: Uri.file(__filename),
         functions: testFunctions,
@@ -91,7 +87,7 @@ export function getMockTestSuite(
         nameToRun: suiteNameToRun,
         suites: subSuites,
         time: 0,
-        xmlName: suiteNameToRun.replace(/\//g, '.').replace(/\:\:/g, ':')
+        xmlName: suiteNameToRun.replace(/\//g, '.').replace(/\:\:/g, ':'),
     };
     return testSuite;
 }
@@ -100,12 +96,11 @@ export function getMockTestFunction(fnNameToRun: string): TestFunction {
     const fnNameChunks = fnNameToRun.split('::');
     const fnName = fnNameChunks[fnNameChunks.length - 1];
 
-    // tslint:disable-next-line:no-unnecessary-local-variable
     const fn: TestFunction = {
         resource: Uri.file(__filename),
         name: fnName,
         nameToRun: fnNameToRun,
-        time: 0
+        time: 0,
     };
 
     return fn;
@@ -231,7 +226,7 @@ export function createMockTestExplorer(
     testsData?: Tests,
     unitTestMgmtService?: ITestManagementService,
     workspaceService?: IWorkspaceService,
-    commandManager?: ICommandManager
+    commandManager?: ICommandManager,
 ): TestTreeViewProvider {
     if (!testStore) {
         testStore = createMockTestStorageService(testsData).object;
@@ -256,6 +251,6 @@ export function createMockTestExplorer(
         unitTestMgmtService,
         workspaceService,
         commandManager,
-        dispRegMoq.object
+        dispRegMoq.object,
     );
 }

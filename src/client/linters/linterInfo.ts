@@ -8,8 +8,6 @@ import { IWorkspaceService } from '../common/application/types';
 import { ExecutionInfo, IConfigurationService, Product } from '../common/types';
 import { ILinterInfo, LinterId } from './types';
 
-// tslint:disable:no-any
-
 export class LinterInfo implements ILinterInfo {
     private _id: LinterId;
     private _product: Product;
@@ -19,7 +17,7 @@ export class LinterInfo implements ILinterInfo {
         product: Product,
         id: LinterId,
         protected configService: IConfigurationService,
-        configFileNames: string[] = []
+        configFileNames: string[] = [],
     ) {
         this._product = product;
         this._id = id;
@@ -81,7 +79,7 @@ export class PylintLinterInfo extends LinterInfo {
     constructor(
         configService: IConfigurationService,
         private readonly workspaceService: IWorkspaceService,
-        configFileNames: string[] = []
+        configFileNames: string[] = [],
     ) {
         super(Product.pylint, LinterId.PyLint, configService, configFileNames);
     }

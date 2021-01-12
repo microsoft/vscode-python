@@ -1,10 +1,7 @@
-// tslint:disable:no-require-imports no-var-requires no-unnecessary-callback-wrapper
-// tslint:disable-next-line:no-single-line-block-comment
 /* eslint-disable max-classes-per-file */
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { ICurrentProcess, IPathUtils } from '../../../../common/types';
 import { IInterpreterHelper, IKnownSearchPathsForInterpreters } from '../../../../interpreter/contracts';
@@ -34,7 +31,6 @@ export class KnownPathsService extends CacheableLocatorService {
      *
      * Called by VS Code to indicate it is done with the resource.
      */
-    // tslint:disable:no-empty
     // eslint-disable-next-line
     public dispose(): void {
         // No body
@@ -45,8 +41,7 @@ export class KnownPathsService extends CacheableLocatorService {
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    protected getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
+    protected getInterpretersImplementation(): Promise<PythonEnvironment[]> {
         return this.suggestionsFromKnownPaths();
     }
 
@@ -57,15 +52,13 @@ export class KnownPathsService extends CacheableLocatorService {
         const promises = this.knownSearchPaths.getSearchPaths().map((dir) => this.getInterpretersInDirectory(dir));
         return Promise.all<string[]>(promises)
             .then((listOfInterpreters) => flatten(listOfInterpreters))
-            .then((interpreters) => interpreters.filter(
-                (item) => item.length > 0,
-            ))
-            .then((interpreters) => Promise.all(
-                interpreters.map((interpreter) => this.getInterpreterDetails(interpreter)),
-            ))
-            .then((interpreters) => interpreters.filter(
-                (interpreter) => !!interpreter,
-            ).map((interpreter) => interpreter!));
+            .then((interpreters) => interpreters.filter((item) => item.length > 0))
+            .then((interpreters) =>
+                Promise.all(interpreters.map((interpreter) => this.getInterpreterDetails(interpreter))),
+            )
+            .then((interpreters) =>
+                interpreters.filter((interpreter) => !!interpreter).map((interpreter) => interpreter!),
+            );
     }
 
     /**

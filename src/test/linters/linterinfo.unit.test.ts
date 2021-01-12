@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:chai-vague-errors no-unused-expression max-func-body-length no-any
-
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
@@ -22,7 +20,7 @@ suite('Linter Info - Pylint', () => {
 
         when(config.getSettings(anything())).thenReturn({
             linting: { pylintEnabled: false },
-            languageServer: LanguageServerType.Jedi
+            languageServer: LanguageServerType.Jedi,
         } as any);
 
         expect(linterInfo.isEnabled()).to.be.false;
@@ -32,7 +30,7 @@ suite('Linter Info - Pylint', () => {
 
         when(config.getSettings(anything())).thenReturn({
             linting: { pylintEnabled: false },
-            languageServer: LanguageServerType.Jedi
+            languageServer: LanguageServerType.Jedi,
         } as any);
 
         expect(linterInfo.isEnabled()).to.be.false;
@@ -42,7 +40,7 @@ suite('Linter Info - Pylint', () => {
 
         when(config.getSettings(anything())).thenReturn({
             linting: { pylintEnabled: true },
-            languageServer: LanguageServerType.Jedi
+            languageServer: LanguageServerType.Jedi,
         } as any);
 
         expect(linterInfo.isEnabled()).to.be.true;
@@ -52,12 +50,11 @@ suite('Linter Info - Pylint', () => {
 
         when(config.getSettings(anything())).thenReturn({
             linting: { pylintEnabled: true },
-            languageServer: LanguageServerType.Microsoft
+            languageServer: LanguageServerType.Microsoft,
         } as any);
 
         const pythonConfig = {
-            // tslint:disable-next-line:no-empty
-            inspect: () => {}
+            inspect: () => {},
         };
         when(workspace.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
 
@@ -67,12 +64,12 @@ suite('Linter Info - Pylint', () => {
         const linterInfo = new PylintLinterInfo(instance(config), instance(workspace), []);
         const inspectStub = sinon.stub();
         const pythonConfig = {
-            inspect: inspectStub
+            inspect: inspectStub,
         };
 
         when(config.getSettings(anything())).thenReturn({
             linting: { pylintEnabled: true },
-            languageServer: LanguageServerType.Microsoft
+            languageServer: LanguageServerType.Microsoft,
         } as any);
         when(workspace.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
 
@@ -82,32 +79,31 @@ suite('Linter Info - Pylint', () => {
     const testsForisEnabled = [
         {
             testName: 'When workspaceFolder setting is provided',
-            inspection: { workspaceFolderValue: true }
+            inspection: { workspaceFolderValue: true },
         },
         {
             testName: 'When workspace setting is provided',
-            inspection: { workspaceValue: true }
+            inspection: { workspaceValue: true },
         },
         {
             testName: 'When global setting is provided',
-            inspection: { globalValue: true }
-        }
+            inspection: { globalValue: true },
+        },
     ];
 
     suite('Test is enabled when using Language Server and Pylint is configured', () => {
         testsForisEnabled.forEach((testParams) => {
             test(testParams.testName, async () => {
-                // tslint:disable-next-line:no-shadowed-variable
                 const config = mock(ConfigurationService);
                 const workspaceService = mock(WorkspaceService);
                 const linterInfo = new PylintLinterInfo(instance(config), instance(workspaceService), []);
 
                 const pythonConfig = {
-                    inspect: () => testParams.inspection
+                    inspect: () => testParams.inspection,
                 };
                 when(config.getSettings(anything())).thenReturn({
                     linting: { pylintEnabled: true },
-                    languageServer: LanguageServerType.Microsoft
+                    languageServer: LanguageServerType.Microsoft,
                 } as any);
                 when(workspaceService.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
 

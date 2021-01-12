@@ -19,7 +19,7 @@ export enum LinterId {
     PyDocStyle = 'pydocstyle',
     PyLama = 'pylama',
     PyLint = 'pylint',
-    Bandit = 'bandit'
+    Bandit = 'bandit',
 }
 
 export interface ILinterInfo {
@@ -58,7 +58,7 @@ export interface ILinterManager {
         product: Product,
         outputChannel: vscode.OutputChannel,
         serviceContainer: IServiceContainer,
-        resource?: vscode.Uri
+        resource?: vscode.Uri,
     ): Promise<ILinter>;
 }
 
@@ -75,7 +75,7 @@ export enum LintMessageSeverity {
     Hint,
     Error,
     Warning,
-    Information
+    Information,
 }
 
 export const ILintingEngine = Symbol('ILintingEngine');

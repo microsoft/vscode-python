@@ -9,14 +9,12 @@ import { Extension, Uri, WorkspaceConfiguration } from 'vscode';
 import {
     ILanguageServerFolder,
     ILSExtensionApi,
-    NodeLanguageServerFolderService
+    NodeLanguageServerFolderService,
 } from '../../../client/activation/node/languageServerFolderService';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../../client/common/constants';
 import { IConfigurationService, IExtensions, IPythonSettings } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
-
-// tslint:disable:max-func-body-length
 
 suite('Node Language Server Folder Service', () => {
     const resource = Uri.parse('a');
@@ -29,7 +27,6 @@ suite('Node Language Server Folder Service', () => {
     let extensions: TypeMoq.IMock<IExtensions>;
 
     class TestService extends NodeLanguageServerFolderService {
-        // tslint:disable-next-line: no-unnecessary-override
         public languageServerFolder(): Promise<ILanguageServerFolder | undefined> {
             return super.languageServerFolder();
         }
@@ -56,7 +53,7 @@ suite('Node Language Server Folder Service', () => {
             serviceContainer.object,
             configService.object,
             workspaceService.object,
-            extensions.object
+            extensions.object,
         );
 
         const lsf = await folderService.languageServerFolder();
@@ -72,7 +69,7 @@ suite('Node Language Server Folder Service', () => {
             serviceContainer.object,
             configService.object,
             workspaceService.object,
-            extensions.object
+            extensions.object,
         );
 
         const lsf = await folderService.languageServerFolder();
@@ -88,7 +85,7 @@ suite('Node Language Server Folder Service', () => {
             serviceContainer.object,
             configService.object,
             workspaceService.object,
-            extensions.object
+            extensions.object,
         );
 
         const lsf = await folderService.languageServerFolder();
@@ -104,7 +101,7 @@ suite('Node Language Server Folder Service', () => {
             serviceContainer.object,
             configService.object,
             workspaceService.object,
-            extensions.object
+            extensions.object,
         );
 
         const lsf = await folderService.languageServerFolder();
@@ -121,7 +118,7 @@ suite('Node Language Server Folder Service', () => {
             serviceContainer.object,
             configService.object,
             workspaceService.object,
-            extensions.object
+            extensions.object,
         );
 
         const lsf = await folderService.languageServerFolder();
@@ -135,8 +132,8 @@ suite('Node Language Server Folder Service', () => {
         const extensionApi: ILSExtensionApi = {
             languageServerFolder: async () => ({
                 path: lsPath,
-                version: lsVersion
-            })
+                version: lsVersion,
+            }),
         };
 
         let folderService: TestService;
@@ -153,7 +150,7 @@ suite('Node Language Server Folder Service', () => {
                 serviceContainer.object,
                 configService.object,
                 workspaceService.object,
-                extensions.object
+                extensions.object,
             );
         });
 

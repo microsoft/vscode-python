@@ -8,13 +8,13 @@ import { EnvironmentVariables } from '../variables/types';
 export enum Architecture {
     Unknown = 1,
     x86 = 2,
-    x64 = 3
+    x64 = 3,
 }
 export enum OSType {
     Unknown = 'Unknown',
     Windows = 'Windows',
     OSX = 'OSX',
-    Linux = 'Linux'
+    Linux = 'Linux',
 }
 
 // Return the OS type for the given platform string.
@@ -33,7 +33,7 @@ export function getOSType(platform: string = process.platform): OSType {
 const architectures: Record<string, Architecture> = {
     x86: Architecture.x86, // 32-bit
     x64: Architecture.x64, // 64-bit
-    '': Architecture.Unknown
+    '': Architecture.Unknown,
 };
 
 /**
@@ -44,7 +44,7 @@ export function getArchitecture(): Architecture {
     if (fromProc !== undefined) {
         return fromProc;
     }
-    // tslint:disable-next-line:no-require-imports
+
     const arch = require('arch');
     return architectures[arch()] || Architecture.Unknown;
 }
@@ -53,7 +53,6 @@ export function getArchitecture(): Architecture {
  * Look up the requested env var value (or  undefined` if not set).
  */
 export function getEnvironmentVariable(key: string): string | undefined {
-    // tslint:disable-next-line: no-any
     return ((process.env as any) as EnvironmentVariables)[key];
 }
 

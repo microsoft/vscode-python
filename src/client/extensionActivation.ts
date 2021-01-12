@@ -3,15 +3,13 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-
 import { CodeActionKind, debug, DebugConfigurationProvider, languages, OutputChannel, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import {
     IExtensionActivationManager,
     IExtensionSingleActivationService,
-    ILanguageServerExtension
+    ILanguageServerExtension,
 } from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
@@ -30,7 +28,7 @@ import {
     IDisposableRegistry,
     IExperimentsManager,
     IFeatureDeprecationManager,
-    IOutputChannel
+    IOutputChannel,
 } from './common/types';
 import { OutputChannelNames } from './common/utils/localize';
 import { noop } from './common/utils/misc';
@@ -45,7 +43,7 @@ import {
     IComponentAdapter,
     IInterpreterLocatorProgressHandler,
     IInterpreterLocatorProgressService,
-    IInterpreterService
+    IInterpreterService,
 } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { getLanguageConfiguration } from './language/languageConfiguration';
@@ -69,7 +67,7 @@ import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from '.
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
 
 // components
-import * as pythonEnvironments from './pythonEnvironments';
+// import * as pythonEnvironments from './pythonEnvironments';
 
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
@@ -77,7 +75,7 @@ import { Components } from './extensionInit';
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
     ext: ExtensionState,
-    components: Components
+    _components: Components,
 ): Promise<ActivationResult[]> {
     // Note that each activation returns a promise that resolves
     // when that activation completes.  However, it might have started
@@ -89,9 +87,14 @@ export async function activateComponents(
     // activation resolves `ActivationResult`, which can safely wrap
     // the "inner" promise.
     const promises: Promise<ActivationResult>[] = [
-        pythonEnvironments.activate(components.pythonEnvs),
+        // TODO: For now the extension should only interact with the component via the component adapter,
+        // which takes care of putting the component behind the experiment flag. It already activates the
+        // component among other things, hence the following is not needed.
+        // pythonEnvironments.activate(components.pythonEnvs),
+        // If we need to activate, we need to use the adapter:
+        // https://github.com/microsoft/vscode-python/issues/14984
         // These will go away eventually.
-        activateLegacy(ext)
+        activateLegacy(ext),
     ];
     return Promise.all(promises);
 }
@@ -99,7 +102,6 @@ export async function activateComponents(
 /////////////////////////////
 // old activation code
 
-// tslint:disable-next-line:no-suspicious-comment
 // TODO: Gradually move simple initialization
 // and DI registration currently in this function over
 // to initializeComponents().  Likewise with complex
@@ -230,8 +232,8 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     context.subscriptions.push(
         languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), {
-            providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports]
-        })
+            providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports],
+        }),
     );
 
     serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationService).forEach((debugConfigProvider) => {

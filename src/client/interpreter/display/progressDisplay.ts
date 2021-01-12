@@ -13,7 +13,7 @@ import { Common, Interpreters } from '../../common/utils/localize';
 import {
     IComponentAdapter,
     IInterpreterLocatorProgressHandler,
-    IInterpreterLocatorProgressService
+    IInterpreterLocatorProgressService,
 } from '../contracts';
 
 // The parts of IComponentAdapter used here.
@@ -30,7 +30,7 @@ export class InterpreterLocatorProgressStatubarHandler implements IInterpreterLo
         @inject(IInterpreterLocatorProgressService)
         private readonly progressService: IInterpreterLocatorProgressService,
         @inject(IDisposableRegistry) private readonly disposables: Disposable[],
-        @inject(IComponentAdapter) private readonly pyenvs: IComponent
+        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
     ) {}
     public register() {
         const onRefreshing = this.pyenvs.onRefreshing ?? this.progressService.onRefreshing;
@@ -54,7 +54,7 @@ export class InterpreterLocatorProgressStatubarHandler implements IInterpreterLo
     private createProgress() {
         const progressOptions: ProgressOptions = {
             location: ProgressLocation.Window,
-            title: this.isFirstTimeLoadingInterpreters ? Common.loadingExtension() : Interpreters.refreshing()
+            title: this.isFirstTimeLoadingInterpreters ? Common.loadingExtension() : Interpreters.refreshing(),
         };
         this.isFirstTimeLoadingInterpreters = false;
         this.shell.withProgress(progressOptions, () => {

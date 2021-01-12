@@ -14,10 +14,9 @@ const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(
     'test',
     'pythonFiles',
     'testFiles',
-    'single'
+    'single',
 );
 
-// tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - pytest - discovery against actual python process', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST
@@ -56,12 +55,12 @@ suite('Unit Tests - pytest - discovery against actual python process', () => {
         assert.equal(
             tests.testFiles.some((t) => t.name === 'test_one.py'),
             true,
-            'Test File not found'
+            'Test File not found',
         );
         assert.equal(
             tests.testFiles.some((t) => t.name === 'test_root.py'),
             true,
-            'Test File not found'
+            'Test File not found',
         );
     });
 });

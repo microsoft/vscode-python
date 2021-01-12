@@ -23,22 +23,18 @@ const originalFileToFormatWithConfig = path.join(sortingPath, 'withconfig', 'ori
 const fileToFormatWithConfig1 = path.join(sortingPath, 'withconfig', 'before.1.py');
 const originalFileToFormatWithConfig1 = path.join(sortingPath, 'withconfig', 'original.1.py');
 
-// tslint:disable-next-line:max-func-body-length
 suite('Sorting', () => {
     let ioc: UnitTestIocContainer;
     let sorter: ISortImportsEditingProvider;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
     suiteSetup(async function () {
-        const pythonVersion = process.env.CI_PYTHON_VERSION // GHA uses this
-            ? parseFloat(process.env.CI_PYTHON_VERSION)
-            : process.env.PythonVersion // Azdo uses this
-            ? parseFloat(process.env.PythonVersion)
-            : undefined;
+        const pythonVersion = process.env.CI_PYTHON_VERSION ? parseFloat(process.env.CI_PYTHON_VERSION) : undefined;
         if (pythonVersion && pythonVersion < 3) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
         await initialize();
+
+        return undefined;
     });
     suiteTeardown(async () => {
         fs.writeFileSync(fileToFormatWithConfig, fs.readFileSync(originalFileToFormatWithConfig));
@@ -48,7 +44,6 @@ suite('Sorting', () => {
         await closeActiveWindows();
     });
     setup(async function () {
-        // tslint:disable-next-line:no-invalid-this
         this.timeout(TEST_TIMEOUT * 2);
         await initializeTest();
         initializeDI();
@@ -83,26 +78,26 @@ suite('Sorting', () => {
         assert.equal(
             edits.filter((value) => value.newText === EOL && value.range.isEqual(new Range(2, 0, 2, 0))).length,
             1,
-            'EOL not found'
+            'EOL not found',
         );
         assert.equal(
             edits.filter((value) => value.newText === '' && value.range.isEqual(new Range(3, 0, 4, 0))).length,
             1,
-            '"" not found'
+            '"" not found',
         );
         assert.equal(
             edits.filter(
                 (value) =>
                     value.newText === `from rope.refactor.extract import ExtractMethod, ExtractVariable${EOL}` &&
-                    value.range.isEqual(new Range(15, 0, 15, 0))
+                    value.range.isEqual(new Range(15, 0, 15, 0)),
             ).length,
             1,
-            'Text not found'
+            'Text not found',
         );
         assert.equal(
             edits.filter((value) => value.newText === '' && value.range.isEqual(new Range(16, 0, 18, 0))).length,
             1,
-            '"" not found'
+            '"" not found',
         );
     });
 
@@ -125,7 +120,7 @@ suite('Sorting', () => {
         assert.equal(
             edits.filter((value) => value.newText === newValue && value.range.isEqual(new Range(0, 0, 3, 0))).length,
             1,
-            'New Text not found'
+            'New Text not found',
         );
     });
 
@@ -142,7 +137,7 @@ suite('Sorting', () => {
             'sortImports.args',
             ['--sp', path.join(sortingPath, 'withconfig')],
             Uri.file(sortingPath),
-            ConfigurationTarget.Workspace
+            ConfigurationTarget.Workspace,
         );
         const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
         const editor = await window.showTextDocument(textDocument);
@@ -159,7 +154,7 @@ suite('Sorting', () => {
             'sortImports.args',
             ['--sp', path.join(sortingPath, 'withconfig')],
             Uri.file(sortingPath),
-            configTarget
+            configTarget,
         );
         const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
         const editor = await window.showTextDocument(textDocument);

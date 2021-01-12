@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable:no-console no-require-imports no-var-requires
-
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
@@ -22,8 +20,6 @@ const StreamZip = require('node-stream-zip');
 
 export { sleep } from './core';
 
-// tslint:disable:no-invalid-this no-any
-
 const fileInNonRootWorkspace = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'pythonFiles', 'dummy.py');
 export const rootWorkspaceUri = getWorkspaceRoot();
 
@@ -36,7 +32,7 @@ export enum OSType {
     Unknown = 'Unknown',
     Windows = 'Windows',
     OSX = 'OSX',
-    Linux = 'Linux'
+    Linux = 'Linux',
 }
 
 export type PythonSettingKeys =
@@ -76,7 +72,7 @@ export async function updateSetting(
     setting: PythonSettingKeys,
     value: {} | undefined,
     resource: Uri | undefined,
-    configTarget: ConfigurationTarget
+    configTarget: ConfigurationTarget,
 ) {
     const vscode = require('vscode') as typeof import('vscode');
     const settings = vscode.workspace.getConfiguration('python', { uri: resource, languageId: 'python' } || null);
@@ -172,7 +168,7 @@ export function getExtensionSettings(resource: Uri | undefined): IPythonSettings
         }
         public async setWorkspaceInterpreter(
             _resource: Uri,
-            _interpreter: PythonEnvironment | undefined
+            _interpreter: PythonEnvironment | undefined,
         ): Promise<void> {
             return;
         }
@@ -221,7 +217,7 @@ async function setAutoSaveDelay(resource: string | Uri | undefined, config: Conf
 async function setPythonPathInWorkspace(
     resource: string | Uri | undefined,
     config: ConfigurationTarget,
-    pythonPath?: string
+    pythonPath?: string,
 ) {
     const vscode = require('vscode') as typeof import('vscode');
     if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST) {
@@ -242,7 +238,7 @@ async function restoreGlobalPythonPathSetting(): Promise<void> {
     const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
     await Promise.all([
         pythonConfig.update('pythonPath', undefined, true),
-        pythonConfig.update('defaultInterpreterPath', undefined, true)
+        pythonConfig.update('defaultInterpreterPath', undefined, true),
     ]);
     await disposePythonSettings();
 }
@@ -272,7 +268,7 @@ function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
         return process.env.CI_PYTHON_PATH;
     }
-    // tslint:disable-next-line:no-suspicious-comment
+
     // TODO: Change this to python3.
     // See https://github.com/microsoft/vscode-python/issues/10910.
     return 'python';
@@ -427,7 +423,7 @@ export async function isPythonVersionInProcess(procService?: IProcessService, ..
         return isVersionInList(currentPyVersion, ...versions);
     } else {
         console.error(
-            `Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`
+            `Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`,
         );
         return false;
     }
@@ -460,7 +456,7 @@ export async function isPythonVersion(...versions: string[]): Promise<boolean> {
         return isVersionInList(currentPyVersion, ...versions);
     } else {
         console.error(
-            `Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`
+            `Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`,
         );
         return false;
     }
@@ -476,7 +472,7 @@ export async function unzip(zipFile: string, targetFolder: string): Promise<void
     return new Promise<void>((resolve, reject) => {
         const zip = new StreamZip({
             file: zipFile,
-            storeEntries: true
+            storeEntries: true,
         });
         zip.on('ready', async () => {
             zip.extract('extension', targetFolder, (err: any) => {
@@ -502,12 +498,12 @@ export async function unzip(zipFile: string, targetFolder: string): Promise<void
 export async function waitForCondition(
     condition: () => Promise<boolean>,
     timeoutMs: number,
-    errorMessage: string
+    errorMessage: string,
 ): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
         const timeout = setTimeout(() => {
             clearTimeout(timeout);
-            // tslint:disable-next-line: no-use-before-declare
+
             clearTimeout(timer);
             reject(new Error(errorMessage));
         }, timeoutMs);
@@ -530,7 +526,6 @@ export async function retryIfFail<T>(fn: () => Promise<T>, timeoutMs: number = 6
     const started = new Date().getTime();
     while (timeoutMs > new Date().getTime() - started) {
         try {
-            // tslint:disable-next-line: no-unnecessary-local-variable
             const result = await fn();
             // Capture result, if no exceptions return that.
             return result;
@@ -565,7 +560,6 @@ export async function openFile(file: string): Promise<TextDocument> {
  * @class FakeClock
  */
 export class FakeClock {
-    // tslint:disable-next-line:no-any
     private clock?: any;
     /**
      * Creates an instance of FakeClock.
@@ -574,7 +568,6 @@ export class FakeClock {
      */
     constructor(private readonly advacenTimeMs: number = 10_000) {}
     public install() {
-        // tslint:disable-next-line:no-require-imports
         const lolex = require('lolex');
         this.clock = lolex.install();
     }
@@ -660,7 +653,7 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
         return this.handledEvents;
     }
     private readonly handler: IDisposable;
-    // tslint:disable-next-line: no-any
+
     private readonly handledEvents: any[] = [];
     constructor(event: Event<T>, private readonly eventNameForErrorMessages: string, disposables: IDisposable[] = []) {
         disposables.push(this);
@@ -678,14 +671,14 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
         await waitForCondition(
             async () => this.count === numberOfTimesFired,
             waitPeriod,
-            `${this.eventNameForErrorMessages} event fired ${this.count}, expected ${numberOfTimesFired}`
+            `${this.eventNameForErrorMessages} event fired ${this.count}, expected ${numberOfTimesFired}`,
         );
     }
     public async assertFiredAtLeast(numberOfTimesFired: number, waitPeriod: number = 2_000): Promise<void> {
         await waitForCondition(
             async () => this.count >= numberOfTimesFired,
             waitPeriod,
-            `${this.eventNameForErrorMessages} event fired ${this.count}, expected at least ${numberOfTimesFired}.`
+            `${this.eventNameForErrorMessages} event fired ${this.count}, expected at least ${numberOfTimesFired}.`,
         );
     }
     public atIndex(index: number): T {
@@ -704,8 +697,7 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
 export function createEventHandler<T, K extends keyof T>(
     obj: T,
     eventName: K,
-    dispoables: IDisposable[] = []
+    dispoables: IDisposable[] = [],
 ): T[K] extends Event<infer TArgs> ? TestEventHandler<TArgs> : TestEventHandler<void> {
-    // tslint:disable-next-line: no-any
     return new TestEventHandler(obj[eventName] as any, eventName as string, dispoables) as any;
 }

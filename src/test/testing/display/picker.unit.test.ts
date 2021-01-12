@@ -20,9 +20,6 @@ import { ITestCollectionStorageService, TestFunction, Tests, TestsToRun } from '
 import { onItemSelected, TestDisplay, Type } from '../../../client/testing/display/picker';
 import { createEmptyResults } from '../results';
 
-// tslint:disable:no-any
-// tslint:disable:max-func-body-length
-
 suite('Unit Tests - Picker (execution of commands)', () => {
     getNamesAndValues<Type>(Type).forEach((item) => {
         getNamesAndValues<CommandSource>(CommandSource).forEach((commandSource) => {
@@ -39,8 +36,8 @@ suite('Unit Tests - Picker (execution of commands)', () => {
                             name: 'some_name',
                             nameToRun: 'some_name_to_run',
                             time: 0,
-                            resource: workspaceUri
-                        }
+                            resource: workspaceUri,
+                        },
                     ];
                     const selection = { type: item.value, fn: { testFunction }, fns: testFunctions };
 
@@ -57,7 +54,7 @@ suite('Unit Tests - Picker (execution of commands)', () => {
                         commandSource.value,
                         workspaceUri,
                         selection as any,
-                        debug
+                        debug,
                     );
 
                     switch (selection.type) {
@@ -77,8 +74,8 @@ suite('Unit Tests - Picker (execution of commands)', () => {
                                     undefined,
                                     commandSource.value,
                                     workspaceUri,
-                                    undefined
-                                )
+                                    undefined,
+                                ),
                             ).once();
                             return;
                         }
@@ -90,8 +87,8 @@ suite('Unit Tests - Picker (execution of commands)', () => {
                                     commandSource.value,
                                     workspaceUri,
                                     selection.fns,
-                                    debug
-                                )
+                                    debug,
+                                ),
                             ).once();
                             return;
                         }
@@ -101,14 +98,18 @@ suite('Unit Tests - Picker (execution of commands)', () => {
                                     Commands.Tests_Discover,
                                     undefined,
                                     commandSource.value,
-                                    workspaceUri
-                                )
+                                    workspaceUri,
+                                ),
                             ).once();
                             return;
                         }
                         case Type.ViewTestOutput: {
                             verify(
-                                commandManager.executeCommand(Commands.Tests_ViewOutput, undefined, commandSource.value)
+                                commandManager.executeCommand(
+                                    Commands.Tests_ViewOutput,
+                                    undefined,
+                                    commandSource.value,
+                                ),
                             ).once();
                             return;
                         }
@@ -118,8 +119,8 @@ suite('Unit Tests - Picker (execution of commands)', () => {
                                     Commands.Tests_Run_Failed,
                                     undefined,
                                     commandSource.value,
-                                    workspaceUri
-                                )
+                                    workspaceUri,
+                                ),
                             ).once();
                             return;
                         }
@@ -128,7 +129,7 @@ suite('Unit Tests - Picker (execution of commands)', () => {
                                 ? Commands.Tests_Select_And_Debug_Method
                                 : Commands.Tests_Select_And_Run_Method;
                             verify(
-                                commandManager.executeCommand(cmd, undefined, commandSource.value, workspaceUri)
+                                commandManager.executeCommand(cmd, undefined, commandSource.value, workspaceUri),
                             ).once();
                             return;
                         }
@@ -140,8 +141,8 @@ suite('Unit Tests - Picker (execution of commands)', () => {
                                     undefined,
                                     commandSource.value,
                                     workspaceUri,
-                                    testsToRun
-                                )
+                                    testsToRun,
+                                ),
                             ).never();
                             return;
                         }
@@ -153,8 +154,8 @@ suite('Unit Tests - Picker (execution of commands)', () => {
                                     undefined,
                                     commandSource.value,
                                     workspaceUri,
-                                    testsToRun
-                                )
+                                    testsToRun,
+                                ),
                             ).never();
                             return;
                         }
@@ -164,8 +165,8 @@ suite('Unit Tests - Picker (execution of commands)', () => {
                                     Commands.Tests_Configure,
                                     undefined,
                                     commandSource.value,
-                                    workspaceUri
-                                )
+                                    workspaceUri,
+                                ),
                             ).once();
                             return;
                         }
@@ -192,8 +193,8 @@ suite('Testing - TestDisplay', () => {
         collectedTests.testFiles = [
             {
                 fullPath: fullpath ? fullpath : 'path/to/testfile',
-                ...anything()
-            }
+                ...anything(),
+            },
         ];
         return collectedTests;
     }
@@ -204,7 +205,7 @@ suite('Testing - TestDisplay', () => {
         mockedTestCollectionStorage = mock(TestCollectionStorageService);
         mockedAppShell = mock(ApplicationShell);
         when(mockedServiceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService)).thenReturn(
-            instance(mockedTestCollectionStorage)
+            instance(mockedTestCollectionStorage),
         );
         when(mockedServiceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(mockedAppShell));
 
@@ -241,7 +242,7 @@ suite('Testing - TestDisplay', () => {
                 wkspace,
                 'rootDirectory',
                 fileName,
-                codeLensTestFunctions()
+                codeLensTestFunctions(),
             );
 
             verify(mockedAppShell.showQuickPick(anything(), anything())).once();
@@ -256,7 +257,7 @@ suite('Testing - TestDisplay', () => {
                 wkspace,
                 'rootDirectory',
                 fileName,
-                codeLensTestFunctions()
+                codeLensTestFunctions(),
             );
 
             verify(mockedAppShell.showQuickPick(anything(), anything())).never();

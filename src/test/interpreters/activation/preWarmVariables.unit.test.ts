@@ -24,7 +24,7 @@ suite('Interpreters Activation - Env Variables', () => {
         when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
         activationService = new PreWarmActivatedEnvironmentVariables(
             instance(envActivationService),
-            instance(interpreterService)
+            instance(interpreterService),
         );
     });
     test('Should pre-warm env variables', async () => {

@@ -26,7 +26,6 @@ const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(testFilesPath, 'single');
 const unitTestTestFilesCwdPath = path.join(testFilesPath, 'cwd', 'src');
 const defaultUnitTestArgs = ['-v', '-s', '.', '-p', '*test*.py'];
 
-// tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - unittest - discovery with mocked process output', () => {
     let ioc: UnitTestIocContainer;
     const rootDirectory = UNITTEST_TEST_FILES_PATH;
@@ -60,7 +59,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
         ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(
             IInterpreterService,
-            instance(mock(InterpreterService))
+            instance(mock(InterpreterService)),
         );
         registerForIOC(ioc.serviceManager, ioc.serviceContainer);
         ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
@@ -83,7 +82,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
                         .split(/\r?\n/g)
                         .map((item) => item.trim())
                         .join(EOL),
-                    source: 'stdout'
+                    source: 'stdout',
                 });
             }
         });
@@ -91,7 +90,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
 
     test('Discover Tests (single test file)', async () => {
         await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
-        // tslint:disable-next-line:no-multiline-string
+
         await injectTestDiscoveryOutput(`start
     test_one.Test_test1.test_A
     test_one.Test_test1.test_B
@@ -106,20 +105,20 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
         assert.equal(
             tests.testFiles.some((t) => t.name === 'test_one.py' && t.nameToRun === 'test_one'),
             true,
-            'Test File not found'
+            'Test File not found',
         );
         assert.equal(
             tests.testFunctions.some(
-                (t) => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A'
+                (t) => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A',
             ),
             true,
-            'Test File not found'
+            'Test File not found',
         );
     });
 
     test('Discover Tests', async () => {
         await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
-        // tslint:disable-next-line:no-multiline-string
+
         await injectTestDiscoveryOutput(`start
     test_unittest_one.Test_test1.test_A
     test_unittest_one.Test_test1.test_B
@@ -140,36 +139,36 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
         assert.equal(
             tests.testFiles.some((t) => t.name === 'test_unittest_one.py' && t.nameToRun === 'test_unittest_one'),
             true,
-            'Test File not found'
+            'Test File not found',
         );
         assert.equal(
             tests.testFiles.some((t) => t.name === 'test_unittest_two.py' && t.nameToRun === 'test_unittest_two'),
             true,
-            'Test File not found'
+            'Test File not found',
         );
         assert.equal(
             tests.testFunctions.some(
                 (t) =>
                     t.testFunction.name === 'test_A' &&
-                    t.testFunction.nameToRun === 'test_unittest_one.Test_test1.test_A'
+                    t.testFunction.nameToRun === 'test_unittest_one.Test_test1.test_A',
             ),
             true,
-            'Test File not found'
+            'Test File not found',
         );
         assert.equal(
             tests.testFunctions.some(
                 (t) =>
                     t.testFunction.name === 'test_A2' &&
-                    t.testFunction.nameToRun === 'test_unittest_two.Test_test2.test_A2'
+                    t.testFunction.nameToRun === 'test_unittest_two.Test_test2.test_A2',
             ),
             true,
-            'Test File not found'
+            'Test File not found',
         );
     });
 
     test('Discover Tests (pattern = *_test_*.py)', async () => {
         await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=*_test*.py'], rootWorkspaceUri, configTarget);
-        // tslint:disable-next-line:no-multiline-string
+
         await injectTestDiscoveryOutput(`start
     unittest_three_test.Test_test3.test_A
     unittest_three_test.Test_test3.test_B
@@ -183,22 +182,22 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
         assert.equal(
             tests.testFiles.some((t) => t.name === 'unittest_three_test.py' && t.nameToRun === 'unittest_three_test'),
             true,
-            'Test File not found'
+            'Test File not found',
         );
         assert.equal(
             tests.testFunctions.some(
                 (t) =>
                     t.testFunction.name === 'test_A' &&
-                    t.testFunction.nameToRun === 'unittest_three_test.Test_test3.test_A'
+                    t.testFunction.nameToRun === 'unittest_three_test.Test_test3.test_A',
             ),
             true,
-            'Test File not found'
+            'Test File not found',
         );
     });
 
     test('Setting cwd should return tests', async () => {
         await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
-        // tslint:disable-next-line:no-multiline-string
+
         await injectTestDiscoveryOutput(`start
     test_cwd.Test_Current_Working_Directory.test_cwd
     `);

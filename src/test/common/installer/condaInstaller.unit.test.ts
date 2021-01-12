@@ -17,14 +17,12 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { CondaEnvironmentInfo } from '../../../client/pythonEnvironments/discovery/locators/services/conda';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Common - Conda Installer', () => {
     let installer: CondaInstallerTest;
     let serviceContainer: IServiceContainer;
     let condaService: ICondaService;
     let configService: IConfigurationService;
     class CondaInstallerTest extends CondaInstaller {
-        // tslint:disable-next-line: no-unnecessary-override
         public async getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo> {
             return super.getExecutionInfo(moduleName, resource);
         }
@@ -93,7 +91,7 @@ suite('Common - Conda Installer', () => {
         const condaPath = 'some Conda Path';
         const condaEnv: CondaEnvironmentInfo = {
             name: 'Hello',
-            path: 'Some Path'
+            path: 'Some Path',
         };
 
         when(configService.getSettings(uri)).thenReturn(instance(settings));
@@ -112,7 +110,7 @@ suite('Common - Conda Installer', () => {
         const condaPath = 'some Conda Path';
         const condaEnv: CondaEnvironmentInfo = {
             name: '',
-            path: 'Some Path'
+            path: 'Some Path',
         };
 
         when(configService.getSettings(uri)).thenReturn(instance(settings));
@@ -124,7 +122,7 @@ suite('Common - Conda Installer', () => {
 
         assert.deepEqual(execInfo, {
             args: ['install', '--prefix', condaEnv.path.fileToCommandArgument(), 'abc', '-y'],
-            execPath: condaPath
+            execPath: condaPath,
         });
     });
 });

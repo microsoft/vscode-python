@@ -25,7 +25,7 @@ import {
     IProcessService,
     IProcessServiceFactory,
     IPythonExecutionFactory,
-    IPythonExecutionService
+    IPythonExecutionService,
 } from './types';
 
 // Minimum version number of conda required to be able to use 'conda run'
@@ -43,7 +43,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
-        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
+        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
@@ -62,24 +62,24 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             processService,
             this.fileSystem,
             undefined,
-            await this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)
+            await this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath),
         );
     }
 
     public async createActivatedEnvironment(
-        options: ExecutionFactoryCreateWithEnvironmentOptions
+        options: ExecutionFactoryCreateWithEnvironmentOptions,
     ): Promise<IPythonExecutionService> {
         const envVars = await this.activationHelper.getActivatedEnvironmentVariables(
             options.resource,
             options.interpreter,
-            options.allowEnvironmentFetchExceptions
+            options.allowEnvironmentFetchExceptions,
         );
         const hasEnvVars = envVars && Object.keys(envVars).length > 0;
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
         if (!hasEnvVars) {
             return this.create({
                 resource: options.resource,
-                pythonPath: options.interpreter ? options.interpreter.path : undefined
+                pythonPath: options.interpreter ? options.interpreter.path : undefined,
             });
         }
         const pythonPath = options.interpreter
@@ -96,7 +96,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     public async createCondaExecutionService(
         pythonPath: string,
         processService?: IProcessService,
-        resource?: Uri
+        resource?: Uri,
     ): Promise<IPythonExecutionService | undefined> {
         const processServicePromise = processService
             ? Promise.resolve(processService)
@@ -105,7 +105,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             this.condaService.getCondaVersion(),
             this.condaService.getCondaEnvironment(pythonPath),
             this.condaService.getCondaFile(),
-            processServicePromise
+            processServicePromise,
         ]);
 
         if (condaVersion && gte(condaVersion, CONDA_RUN_VERSION) && condaEnvironment && condaFile && procService) {
@@ -119,7 +119,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 procService,
                 this.fileSystem,
                 // This is what causes a CondaEnvironment to be returned:
-                [condaFile, condaEnvironment]
+                [condaFile, condaEnvironment],
             );
         }
 
@@ -132,7 +132,7 @@ function createPythonService(
     procService: IProcessService,
     fs: IFileSystem,
     conda?: [string, CondaEnvironmentInfo],
-    isWindowsStore?: boolean
+    isWindowsStore?: boolean,
 ): IPythonExecutionService {
     let env = createPythonEnv(pythonPath, procService, fs);
     if (conda) {
@@ -150,6 +150,6 @@ function createPythonService(
         execObservable: (a, o) => procs.execObservable(a, o),
         execModuleObservable: (m, a, o) => procs.execModuleObservable(m, a, o),
         exec: (a, o) => procs.exec(a, o),
-        execModule: (m, a, o) => procs.execModule(m, a, o)
+        execModule: (m, a, o) => procs.execModule(m, a, o),
     };
 }

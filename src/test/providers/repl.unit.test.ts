@@ -8,14 +8,13 @@ import {
     IActiveResourceService,
     ICommandManager,
     IDocumentManager,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../client/common/application/types';
 import { Commands } from '../../client/common/constants';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ReplProvider } from '../../client/providers/replProvider';
 import { ICodeExecutionService } from '../../client/terminals/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('REPL Provider', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let commandManager: TypeMoq.IMock<ICommandManager>;
@@ -42,7 +41,6 @@ suite('REPL Provider', () => {
     teardown(() => {
         try {
             replProvider.dispose();
-            // tslint:disable-next-line:no-empty
         } catch {}
     });
 
@@ -50,7 +48,7 @@ suite('REPL Provider', () => {
         replProvider = new ReplProvider(serviceContainer.object);
         commandManager.verify(
             (c) => c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-            TypeMoq.Times.once()
+            TypeMoq.Times.once(),
         );
     });
 
@@ -58,7 +56,7 @@ suite('REPL Provider', () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         commandManager
             .setup((c) =>
-                c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             )
             .returns(() => disposable.object);
 
@@ -74,7 +72,7 @@ suite('REPL Provider', () => {
         let commandHandler: undefined | (() => void);
         commandManager
             .setup((c) =>
-                c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             )
             .returns((_cmd, callback) => {
                 commandHandler = callback;
@@ -91,7 +89,7 @@ suite('REPL Provider', () => {
 
         serviceContainer.verify(
             (c) => c.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('repl')),
-            TypeMoq.Times.once()
+            TypeMoq.Times.once(),
         );
         codeExecutionService.verify((c) => c.initializeRepl(TypeMoq.It.isValue(resource)), TypeMoq.Times.once());
     });

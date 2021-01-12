@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
-
 import { expect } from 'chai';
 import * as fs from 'fs';
 import * as glob from 'glob';
@@ -21,7 +19,6 @@ suite('Extension version tests', () => {
     suiteSetup(async function () {
         // Skip the entire suite if running locally
         if (!branchName) {
-            // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
     });
@@ -33,25 +30,23 @@ suite('Extension version tests', () => {
 
     test('If we are running a pipeline in the main branch, the extension version in `package.json` should have the "-dev" suffix', async function () {
         if (branchName !== 'main') {
-            // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
 
         return expect(
             version.endsWith('-dev'),
-            'When running a pipeline in the main branch, the extension version in package.json should have the -dev suffix'
+            'When running a pipeline in the main branch, the extension version in package.json should have the -dev suffix',
         ).to.be.true;
     });
 
     test('If we are running a pipeline in the release branch, the extension version in `package.json` should not have the "-dev" suffix', async function () {
         if (!branchName!.startsWith('release')) {
-            // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
 
         return expect(
             version.endsWith('-dev'),
-            'When running a pipeline in the release branch, the extension version in package.json should not have the -dev suffix'
+            'When running a pipeline in the release branch, the extension version in package.json should not have the -dev suffix',
         ).to.be.false;
     });
 });

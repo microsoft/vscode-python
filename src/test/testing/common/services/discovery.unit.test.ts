@@ -13,7 +13,7 @@ import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
     IPythonExecutionService,
-    SpawnOptions
+    SpawnOptions,
 } from '../../../../client/common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { TestDiscoveredTestParser } from '../../../../client/testing/common/services/discoveredTestParser';
@@ -22,14 +22,12 @@ import { DiscoveredTests, ITestDiscoveredTestParser } from '../../../../client/t
 import { TestDiscoveryOptions, Tests } from '../../../../client/testing/common/types';
 import { MockOutputChannel } from '../../../mockClasses';
 
-// tslint:disable:no-unnecessary-override no-any
 suite('Unit Tests - Common Discovery', () => {
     let output: OutputChannel;
     let discovery: TestsDiscoveryService;
     let executionFactory: IPythonExecutionFactory;
     let parser: ITestDiscoveredTestParser;
     setup(() => {
-        // tslint:disable-next-line:no-use-before-declare
         output = mock(StubOutput);
         executionFactory = mock(PythonExecutionFactory);
         parser = mock(TestDiscoveredTestParser);
@@ -42,7 +40,7 @@ suite('Unit Tests - Common Discovery', () => {
             workspaceFolder: Uri.file(__dirname),
             ignoreCache: false,
             token: new CancellationTokenSource().token,
-            outChannel: new MockOutputChannel('Test')
+            outChannel: new MockOutputChannel('Test'),
         };
         const discoveredTests: DiscoveredTests[] = [{ hello: 1 } as any];
         const parsedResult = ({ done: true } as any) as Tests;
@@ -60,20 +58,20 @@ suite('Unit Tests - Common Discovery', () => {
             workspaceFolder: Uri.file(__dirname),
             ignoreCache: false,
             token: new CancellationTokenSource().token,
-            outChannel: new MockOutputChannel('Test')
+            outChannel: new MockOutputChannel('Test'),
         };
         const discoveredTests = '[1]';
         const execService = typemoq.Mock.ofType<IPythonExecutionService>();
         execService.setup((e: any) => e.then).returns(() => undefined);
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
-            resource: options.workspaceFolder
+            resource: options.workspaceFolder,
         };
         const pythonFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'testing_tools', 'run_adapter.py');
         const spawnOptions: SpawnOptions = {
             token: options.token,
             cwd: options.cwd,
-            throwOnStdErr: true
+            throwOnStdErr: true,
         };
 
         when(executionFactory.createActivatedEnvironment(deepEqual(creationOptions))).thenResolve(execService.object);
@@ -88,8 +86,6 @@ suite('Unit Tests - Common Discovery', () => {
         assert.deepEqual(result, discoveredTests);
     });
 });
-
-// tslint:disable:no-empty
 
 //class StubOutput implements OutputChannel {
 class StubOutput {

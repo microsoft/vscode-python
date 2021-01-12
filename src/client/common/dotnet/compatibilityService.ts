@@ -24,7 +24,7 @@ export class DotNetCompatibilityService implements IDotNetCompatibilityService {
         @inject(IOSDotNetCompatibilityService) @named(OSType.OSX) macService: IOSDotNetCompatibilityService,
         @inject(IOSDotNetCompatibilityService) @named(OSType.Windows) winService: IOSDotNetCompatibilityService,
         @inject(IOSDotNetCompatibilityService) @named(OSType.Linux) linuxService: IOSDotNetCompatibilityService,
-        @inject(IPlatformService) private readonly platformService: IPlatformService
+        @inject(IPlatformService) private readonly platformService: IPlatformService,
     ) {
         this.mappedServices.set(OSType.Unknown, unknownOsService);
         this.mappedServices.set(OSType.OSX, macService);

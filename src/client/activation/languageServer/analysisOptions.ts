@@ -11,11 +11,11 @@ import { IConfigurationService, IExtensionContext, IPathUtils, Resource } from '
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
+import { LanguageServerAnalysisOptionsWithEnv } from '../common/analysisOptions';
 import { ILanguageServerFolderService, ILanguageServerOutputChannel } from '../types';
 
 @injectable()
-export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsBase {
+export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsWithEnv {
     private resource: Resource;
     private interpreter: PythonEnvironment | undefined;
     private languageServerFolder: string = '';
@@ -29,7 +29,8 @@ export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisO
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ILanguageServerOutputChannel) lsOutputChannel: ILanguageServerOutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
+        @inject(ILanguageServerFolderService)
+        private readonly languageServerFolderService: ILanguageServerFolderService,
     ) {
         super(envVarsProvider, lsOutputChannel);
     }
@@ -104,12 +105,12 @@ export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisO
 
         return {
             interpreter: {
-                properties
+                properties,
             },
             searchPaths,
             typeStubSearchPaths: this.typeshedPaths,
             cacheFolderPath: this.getCacheFolderPath(),
-            excludeFiles: this.excludedFiles
+            excludeFiles: this.excludedFiles,
         };
     }
 

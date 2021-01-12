@@ -13,7 +13,7 @@ import {
     IBufferDecoder,
     IProcessServiceFactory,
     IPythonExecutionFactory,
-    IPythonToolExecutionService
+    IPythonToolExecutionService,
 } from '../../../client/common/process/types';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceManager } from '../../../client/ioc/types';
@@ -29,16 +29,16 @@ suite('Common Process Service Registry', () => {
         registerTypes(instance(serviceManager));
         verify(serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder)).once();
         verify(
-            serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory)
+            serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory),
         ).once();
         verify(
-            serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory)
+            serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory),
         ).once();
         verify(
             serviceManager.addSingleton<IPythonToolExecutionService>(
                 IPythonToolExecutionService,
-                PythonToolExecutionService
-            )
+                PythonToolExecutionService,
+            ),
         ).once();
     });
 });

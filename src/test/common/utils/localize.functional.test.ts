@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-
 import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -55,7 +53,7 @@ suite('Localization', () => {
         assert.equal(
             val,
             'Can you please take 2 minutes to tell us how the Python extension is working for you?',
-            'LanguageService string doesnt match'
+            'LanguageService string doesnt match',
         );
         done();
     });
@@ -72,7 +70,7 @@ suite('Localization', () => {
     test('key found for locale', (done) => {
         addLocale('spam', {
             'debug.selectConfigurationTitle': '???',
-            'Common.gotIt': '!!!'
+            'Common.gotIt': '!!!',
         });
         setLocale('spam');
 
@@ -86,7 +84,7 @@ suite('Localization', () => {
 
     test('key not found for locale (default used)', (done) => {
         addLocale('spam', {
-            'debug.selectConfigurationTitle': '???'
+            'debug.selectConfigurationTitle': '???',
         });
         setLocale('spam');
 
@@ -127,9 +125,8 @@ suite('Localization', () => {
     });
 
     test('all keys used', function (done) {
-        // tslint:disable-next-line:no-suspicious-comment
         // TODO: Unused keys need to be cleaned up.
-        // tslint:disable-next-line:no-invalid-this
+
         this.skip();
         //test('all keys used', done => {
         const nlsCollection = getDefaultCollection();
@@ -189,7 +186,6 @@ function getDefaultCollection() {
     return JSON.parse(contents);
 }
 
-// tslint:disable-next-line:no-any
 function useEveryLocalization(topns: any) {
     // Read all of the namespaces from the localize import.
     const entries = Object.keys(topns);
@@ -205,7 +201,6 @@ function useEveryLocalization(topns: any) {
     });
 }
 
-// tslint:disable-next-line:no-any
 function useEveryLocalizationInNS(ns: any) {
     // The namespace should have functions inside of it.
     // @ts-ignore

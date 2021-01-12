@@ -24,7 +24,7 @@ export class BlackFormatter extends BaseFormatter {
         document: vscode.TextDocument,
         options: vscode.FormattingOptions,
         token: vscode.CancellationToken,
-        range?: vscode.Range
+        range?: vscode.Range,
     ): Promise<vscode.TextEdit[]> {
         const stopWatch = new StopWatch();
         const settings = this.serviceContainer

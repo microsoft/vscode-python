@@ -6,7 +6,10 @@ import * as sinon from 'sinon';
 import * as executablesAPI from '../../../../client/common/utils/exec';
 import { Architecture } from '../../../../client/common/utils/platform';
 import {
-    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion,
+    PythonEnvInfo,
+    PythonEnvKind,
+    PythonReleaseLevel,
+    PythonVersion,
 } from '../../../../client/pythonEnvironments/base/info';
 import { InterpreterInformation } from '../../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
@@ -25,7 +28,7 @@ suite('Posix Known Path Locator', () => {
     const testLocation2 = path.join(testPosixKnownPathsRoot, 'location2');
     const testLocation3 = path.join(testPosixKnownPathsRoot, 'location3');
 
-    const testFileData:Map<string, string[]> = new Map();
+    const testFileData: Map<string, string[]> = new Map();
 
     testFileData.set(testLocation1, ['python', 'python3']);
     testFileData.set(testLocation2, ['python', 'python37', 'python38']);
@@ -35,9 +38,9 @@ suite('Posix Known Path Locator', () => {
         executable: string,
         sysVersion?: string,
         sysPrefix?: string,
-        versionStr?:string,
+        versionStr?: string,
     ): InterpreterInformation {
-        let version:PythonVersion;
+        let version: PythonVersion;
         try {
             version = parseVersion(versionStr ?? path.basename(executable));
             if (sysVersion) {
@@ -76,7 +79,7 @@ suite('Posix Known Path Locator', () => {
         const testLocations = [testLocation1, testLocation2, testLocation3];
         getPathEnvVar.returns(testLocations);
 
-        const envs:PythonEnvInfo[] = [];
+        const envs: PythonEnvInfo[] = [];
         testLocations.forEach((location) => {
             const binaries = testFileData.get(location);
             if (binaries) {
@@ -116,7 +119,6 @@ suite('Posix Known Path Locator', () => {
     test('resolveEnv(PythonEnvInfo)', async () => {
         const pythonPath = path.join(testLocation1, 'python');
         const expected = {
-
             name: '',
             location: '',
             kind: PythonEnvKind.OtherGlobal,
@@ -125,7 +127,7 @@ suite('Posix Known Path Locator', () => {
         };
 
         // Partially filled in env info object
-        const input:PythonEnvInfo = {
+        const input: PythonEnvInfo = {
             name: '',
             location: '',
             kind: PythonEnvKind.Unknown,

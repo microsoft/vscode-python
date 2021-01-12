@@ -19,7 +19,7 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
         @unmanaged() protected readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
         @unmanaged() protected readonly commandManager: ICommandManager,
         @unmanaged() protected readonly applicationShell: IApplicationShell,
-        @unmanaged() protected readonly workspaceService: IWorkspaceService
+        @unmanaged() protected readonly workspaceService: IWorkspaceService,
     ) {
         this.disposables.push(this);
     }
@@ -43,13 +43,13 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
         ) {
             return {
                 folderUri: undefined,
-                configTarget: ConfigurationTarget.Global
+                configTarget: ConfigurationTarget.Global,
             };
         }
         if (!this.workspaceService.workspaceFile && this.workspaceService.workspaceFolders.length === 1) {
             return {
                 folderUri: this.workspaceService.workspaceFolders[0].uri,
-                configTarget: ConfigurationTarget.WorkspaceFolder
+                configTarget: ConfigurationTarget.WorkspaceFolder,
             };
         }
 
@@ -60,16 +60,16 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
             ...this.workspaceService.workspaceFolders.map((w) => ({
                 label: w.name,
                 description: path.dirname(w.uri.fsPath),
-                uri: w.uri
+                uri: w.uri,
             })),
             {
                 label: Interpreters.entireWorkspace(),
-                uri: this.workspaceService.workspaceFolders[0].uri
-            }
+                uri: this.workspaceService.workspaceFolders[0].uri,
+            },
         ];
 
         const selection = await this.applicationShell.showQuickPick(quickPickItems, {
-            placeHolder: 'Select the workspace to set the interpreter'
+            placeHolder: 'Select the workspace to set the interpreter',
         });
 
         return selection

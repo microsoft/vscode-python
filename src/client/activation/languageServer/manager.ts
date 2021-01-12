@@ -20,7 +20,7 @@ import {
     ILanguageServerFolderService,
     ILanguageServerManager,
     ILanguageServerProxy,
-    LanguageServerType
+    LanguageServerType,
 } from '../types';
 
 @injectable()
@@ -40,18 +40,18 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(ILanguageServerExtension) private readonly lsExtension: ILanguageServerExtension,
         @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
-        @inject(ICommandManager) commandManager: ICommandManager
+        @inject(ICommandManager) commandManager: ICommandManager,
     ) {
         this.disposables.push(
             commandManager.registerCommand(Commands.RestartLS, () => {
                 this.restartLanguageServer().ignoreErrors();
-            })
+            }),
         );
     }
 
     private static versionTelemetryProps(instance: DotNetLanguageServerManager) {
         return {
-            lsVersion: instance.lsVersion
+            lsVersion: instance.lsVersion,
         };
     }
 
@@ -114,7 +114,7 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
         undefined,
         true,
         undefined,
-        DotNetLanguageServerManager.versionTelemetryProps
+        DotNetLanguageServerManager.versionTelemetryProps,
     )
     @traceDecorators.verbose('Starting language server')
     protected async startLanguageServer(): Promise<void> {
@@ -125,7 +125,7 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
             this.serviceContainer,
             LanguageServerType.Microsoft,
             () => this.languageServerProxy?.languageClient,
-            this.lsVersion
+            this.lsVersion,
         );
 
         // Make sure the middleware is connected if we restart and we we're already connected.

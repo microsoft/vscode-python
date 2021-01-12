@@ -16,7 +16,7 @@ import {
     getTestFile,
     getTestFolder,
     getTestFunction,
-    getTestSuite
+    getTestSuite,
 } from '../../../client/testing/common/testUtils';
 import {
     FlattenedTestFunction,
@@ -26,11 +26,9 @@ import {
     TestFolder,
     TestFunction,
     Tests,
-    TestSuite
+    TestSuite,
 } from '../../../client/testing/common/types';
 import { TestDataItem, TestDataItemType, TestWorkspaceFolder } from '../../../client/testing/types';
-
-// tslint:disable:prefer-template
 
 function longestCommonSubstring(strings: string[]): string {
     strings = strings.concat().sort();
@@ -50,7 +48,7 @@ export function createMockTestDataItem<T extends TestDataItem>(
     type: TestDataItemType,
     nameSuffix: string = '',
     name?: string,
-    nameToRun?: string
+    nameToRun?: string,
 ) {
     const folder: TestFolder = {
         resource: Uri.file(__filename),
@@ -58,7 +56,7 @@ export function createMockTestDataItem<T extends TestDataItem>(
         name: name || 'Some Folder' + nameSuffix,
         nameToRun: nameToRun || name || ' Some Folder' + nameSuffix,
         testFiles: [],
-        time: 0
+        time: 0,
     };
     const file: TestFile = {
         resource: Uri.file(__filename),
@@ -68,13 +66,13 @@ export function createMockTestDataItem<T extends TestDataItem>(
         xmlName: name || 'some xml name' + nameSuffix,
         functions: [],
         suites: [],
-        time: 0
+        time: 0,
     };
     const func: TestFunction = {
         resource: Uri.file(__filename),
         name: name || 'Some Function' + nameSuffix,
         nameToRun: nameToRun || name || ' Some Function' + nameSuffix,
-        time: 0
+        time: 0,
     };
     const suite: TestSuite = {
         resource: Uri.file(__filename),
@@ -85,7 +83,7 @@ export function createMockTestDataItem<T extends TestDataItem>(
         isUnitTest: false,
         suites: [],
         xmlName: name || 'some name' + nameSuffix,
-        time: 0
+        time: 0,
     };
 
     switch (type) {
@@ -119,9 +117,9 @@ export function createSubtestParent(funcs: TestFunction[]): SubtestParent {
             isUnitTest: false,
             isInstance: false,
             xmlName: '',
-            time: 0
+            time: 0,
         },
-        time: 0
+        time: 0,
     };
     funcs.forEach((func) => {
         func.subtestParent = subtestParent;
@@ -133,9 +131,8 @@ export function createTests(
     folders: TestFolder[],
     files: TestFile[],
     suites: TestSuite[],
-    funcs: TestFunction[]
+    funcs: TestFunction[],
 ): Tests {
-    // tslint:disable:no-any
     return {
         summary: { errors: 0, skipped: 0, passed: 0, failures: 0 },
         rootTestFolders: folders.length > 0 ? [folders[0]] : [],
@@ -144,19 +141,18 @@ export function createTests(
         testSuites: suites.map((suite) => {
             return {
                 testSuite: suite,
-                xmlClassName: suite.xmlName
+                xmlClassName: suite.xmlName,
             } as any;
         }),
         testFunctions: funcs.map((func) => {
             return {
                 testFunction: func,
-                xmlClassName: func.name
+                xmlClassName: func.name,
             } as any;
-        })
+        }),
     };
 }
 
-// tslint:disable:max-func-body-length no-any
 suite('Unit Tests - TestUtils', () => {
     test('Get TestDataItemType for Folders', () => {
         const item = createMockTestDataItem(TestDataItemType.folder);
@@ -239,7 +235,7 @@ suite('Unit Tests - TestUtils', () => {
             testFiles: [],
             testFolders: [folder1, folder2, folder3, folder4, folder5],
             testFunctions: [],
-            testSuites: []
+            testSuites: [],
         };
         assert.equal(getParent(tests, folder1), undefined);
         assert.equal(getParent(tests, folder2), folder1);
@@ -272,7 +268,7 @@ suite('Unit Tests - TestUtils', () => {
             testFiles: [file1, file2, file3, file4],
             testFolders: [folder1, folder2, folder3, folder4, folder5],
             testFunctions: [],
-            testSuites: []
+            testSuites: [],
         };
         assert.equal(getParent(tests, file1), folder1);
         assert.equal(getParent(tests, file2), folder3);
@@ -306,43 +302,43 @@ suite('Unit Tests - TestUtils', () => {
         suite3.functions.push(fn5);
         const flattendSuite1: FlattenedTestSuite = {
             testSuite: suite1,
-            xmlClassName: suite1.xmlName
+            xmlClassName: suite1.xmlName,
         } as any;
         const flattendSuite2: FlattenedTestSuite = {
             testSuite: suite2,
-            xmlClassName: suite2.xmlName
+            xmlClassName: suite2.xmlName,
         } as any;
         const flattendSuite3: FlattenedTestSuite = {
             testSuite: suite3,
-            xmlClassName: suite3.xmlName
+            xmlClassName: suite3.xmlName,
         } as any;
         const flattendSuite4: FlattenedTestSuite = {
             testSuite: suite4,
-            xmlClassName: suite4.xmlName
+            xmlClassName: suite4.xmlName,
         } as any;
         const flattendSuite5: FlattenedTestSuite = {
             testSuite: suite5,
-            xmlClassName: suite5.xmlName
+            xmlClassName: suite5.xmlName,
         } as any;
         const flattendFn1: FlattenedTestFunction = {
             testFunction: fn1,
-            xmlClassName: fn1.name
+            xmlClassName: fn1.name,
         } as any;
         const flattendFn2: FlattenedTestFunction = {
             testFunction: fn2,
-            xmlClassName: fn2.name
+            xmlClassName: fn2.name,
         } as any;
         const flattendFn3: FlattenedTestFunction = {
             testFunction: fn3,
-            xmlClassName: fn3.name
+            xmlClassName: fn3.name,
         } as any;
         const flattendFn4: FlattenedTestFunction = {
             testFunction: fn4,
-            xmlClassName: fn4.name
+            xmlClassName: fn4.name,
         } as any;
         const flattendFn5: FlattenedTestFunction = {
             testFunction: fn5,
-            xmlClassName: fn5.name
+            xmlClassName: fn5.name,
         } as any;
         const tests: Tests = {
             rootTestFolders: [],
@@ -350,7 +346,7 @@ suite('Unit Tests - TestUtils', () => {
             testFiles: [file1, file2, file3, file4],
             testFolders: [],
             testFunctions: [flattendFn1, flattendFn2, flattendFn3, flattendFn4, flattendFn5],
-            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5]
+            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5],
         };
         // Test parent file of functions (standalone and those in suites).
         assert.equal(getParentFile(tests, fn1), file1);
@@ -393,43 +389,43 @@ suite('Unit Tests - TestUtils', () => {
         suite3.functions.push(fn5);
         const flattendSuite1: FlattenedTestSuite = {
             testSuite: suite1,
-            xmlClassName: suite1.xmlName
+            xmlClassName: suite1.xmlName,
         } as any;
         const flattendSuite2: FlattenedTestSuite = {
             testSuite: suite2,
-            xmlClassName: suite2.xmlName
+            xmlClassName: suite2.xmlName,
         } as any;
         const flattendSuite3: FlattenedTestSuite = {
             testSuite: suite3,
-            xmlClassName: suite3.xmlName
+            xmlClassName: suite3.xmlName,
         } as any;
         const flattendSuite4: FlattenedTestSuite = {
             testSuite: suite4,
-            xmlClassName: suite4.xmlName
+            xmlClassName: suite4.xmlName,
         } as any;
         const flattendSuite5: FlattenedTestSuite = {
             testSuite: suite5,
-            xmlClassName: suite5.xmlName
+            xmlClassName: suite5.xmlName,
         } as any;
         const flattendFn1: FlattenedTestFunction = {
             testFunction: fn1,
-            xmlClassName: fn1.name
+            xmlClassName: fn1.name,
         } as any;
         const flattendFn2: FlattenedTestFunction = {
             testFunction: fn2,
-            xmlClassName: fn2.name
+            xmlClassName: fn2.name,
         } as any;
         const flattendFn3: FlattenedTestFunction = {
             testFunction: fn3,
-            xmlClassName: fn3.name
+            xmlClassName: fn3.name,
         } as any;
         const flattendFn4: FlattenedTestFunction = {
             testFunction: fn4,
-            xmlClassName: fn4.name
+            xmlClassName: fn4.name,
         } as any;
         const flattendFn5: FlattenedTestFunction = {
             testFunction: fn5,
-            xmlClassName: fn5.name
+            xmlClassName: fn5.name,
         } as any;
         const tests: Tests = {
             rootTestFolders: [],
@@ -437,7 +433,7 @@ suite('Unit Tests - TestUtils', () => {
             testFiles: [file1, file2, file3, file4],
             testFolders: [],
             testFunctions: [flattendFn1, flattendFn2, flattendFn3, flattendFn4, flattendFn5],
-            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5]
+            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5],
         };
         // Test parent file of functions (standalone and those in suites).
         assert.equal(getParentSuite(tests, fn1), undefined);
@@ -459,11 +455,11 @@ suite('Unit Tests - TestUtils', () => {
         const fn1 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         const flattendSuite1: FlattenedTestSuite = {
             testSuite: suite1,
-            xmlClassName: suite1.xmlName
+            xmlClassName: suite1.xmlName,
         } as any;
         const flattendFn1: FlattenedTestFunction = {
             testFunction: fn1,
-            xmlClassName: fn1.name
+            xmlClassName: fn1.name,
         } as any;
         const tests: Tests = {
             rootTestFolders: [],
@@ -471,7 +467,7 @@ suite('Unit Tests - TestUtils', () => {
             testFiles: [file1],
             testFolders: [],
             testFunctions: [flattendFn1],
-            testSuites: [flattendSuite1]
+            testSuites: [flattendSuite1],
         };
         assert.throws(() => getParentFile(tests, fn1), new RegExp('No parent file for provided test item'));
         assert.throws(() => getParentFile(tests, suite1), new RegExp('No parent file for provided test item'));
@@ -482,11 +478,11 @@ suite('Unit Tests - TestUtils', () => {
         const fn1 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         const flattendSuite1: FlattenedTestSuite = {
             testSuite: suite1,
-            xmlClassName: suite1.xmlName
+            xmlClassName: suite1.xmlName,
         } as any;
         const flattendFn1: FlattenedTestFunction = {
             testFunction: fn1,
-            xmlClassName: fn1.name
+            xmlClassName: fn1.name,
         } as any;
         const tests: Tests = {
             rootTestFolders: [],
@@ -494,7 +490,7 @@ suite('Unit Tests - TestUtils', () => {
             testFiles: [file1],
             testFolders: [],
             testFunctions: [flattendFn1],
-            testSuites: [flattendSuite1]
+            testSuites: [flattendSuite1],
         };
         assert.equal(getParent(tests, fn1), undefined);
         assert.equal(getParent(tests, suite1), undefined);
@@ -516,23 +512,23 @@ suite('Unit Tests - TestUtils', () => {
         suite4.suites.push(suite5);
         const flattendSuite1: FlattenedTestSuite = {
             testSuite: suite1,
-            xmlClassName: suite1.xmlName
+            xmlClassName: suite1.xmlName,
         } as any;
         const flattendSuite2: FlattenedTestSuite = {
             testSuite: suite2,
-            xmlClassName: suite2.xmlName
+            xmlClassName: suite2.xmlName,
         } as any;
         const flattendSuite3: FlattenedTestSuite = {
             testSuite: suite3,
-            xmlClassName: suite3.xmlName
+            xmlClassName: suite3.xmlName,
         } as any;
         const flattendSuite4: FlattenedTestSuite = {
             testSuite: suite4,
-            xmlClassName: suite4.xmlName
+            xmlClassName: suite4.xmlName,
         } as any;
         const flattendSuite5: FlattenedTestSuite = {
             testSuite: suite5,
-            xmlClassName: suite5.xmlName
+            xmlClassName: suite5.xmlName,
         } as any;
         const tests: Tests = {
             rootTestFolders: [],
@@ -540,7 +536,7 @@ suite('Unit Tests - TestUtils', () => {
             testFiles: [file1, file2, file3, file4],
             testFolders: [],
             testFunctions: [],
-            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5]
+            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5],
         };
         assert.equal(getParent(tests, suite1), file1);
         assert.equal(getParent(tests, suite2), file1);
@@ -575,43 +571,43 @@ suite('Unit Tests - TestUtils', () => {
         suite3.functions.push(fn5);
         const flattendSuite1: FlattenedTestSuite = {
             testSuite: suite1,
-            xmlClassName: suite1.xmlName
+            xmlClassName: suite1.xmlName,
         } as any;
         const flattendSuite2: FlattenedTestSuite = {
             testSuite: suite2,
-            xmlClassName: suite2.xmlName
+            xmlClassName: suite2.xmlName,
         } as any;
         const flattendSuite3: FlattenedTestSuite = {
             testSuite: suite3,
-            xmlClassName: suite3.xmlName
+            xmlClassName: suite3.xmlName,
         } as any;
         const flattendSuite4: FlattenedTestSuite = {
             testSuite: suite4,
-            xmlClassName: suite4.xmlName
+            xmlClassName: suite4.xmlName,
         } as any;
         const flattendSuite5: FlattenedTestSuite = {
             testSuite: suite5,
-            xmlClassName: suite5.xmlName
+            xmlClassName: suite5.xmlName,
         } as any;
         const flattendFn1: FlattenedTestFunction = {
             testFunction: fn1,
-            xmlClassName: fn1.name
+            xmlClassName: fn1.name,
         } as any;
         const flattendFn2: FlattenedTestFunction = {
             testFunction: fn2,
-            xmlClassName: fn2.name
+            xmlClassName: fn2.name,
         } as any;
         const flattendFn3: FlattenedTestFunction = {
             testFunction: fn3,
-            xmlClassName: fn3.name
+            xmlClassName: fn3.name,
         } as any;
         const flattendFn4: FlattenedTestFunction = {
             testFunction: fn4,
-            xmlClassName: fn4.name
+            xmlClassName: fn4.name,
         } as any;
         const flattendFn5: FlattenedTestFunction = {
             testFunction: fn5,
-            xmlClassName: fn5.name
+            xmlClassName: fn5.name,
         } as any;
         const tests: Tests = {
             rootTestFolders: [],
@@ -619,7 +615,7 @@ suite('Unit Tests - TestUtils', () => {
             testFiles: [file1, file2, file3, file4],
             testFolders: [],
             testFunctions: [flattendFn1, flattendFn2, flattendFn3, flattendFn4, flattendFn5],
-            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5]
+            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5],
         };
         assert.equal(getParent(tests, fn1), file1);
         assert.equal(getParent(tests, fn2), file1);

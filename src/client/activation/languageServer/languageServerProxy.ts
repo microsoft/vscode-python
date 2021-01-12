@@ -29,7 +29,7 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
     constructor(
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
         @inject(ITestManagementService) private readonly testManager: ITestManagementService,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
     ) {
         this.startupCompleted = createDeferred<void>();
     }
@@ -56,7 +56,7 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
     public async start(
         resource: Resource,
         interpreter: PythonEnvironment | undefined,
-        options: LanguageClientOptions
+        options: LanguageClientOptions,
     ): Promise<void> {
         if (!this.languageClient) {
             this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
@@ -92,8 +92,8 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
         this.startupCompleted.promise
             .then(() =>
                 this.languageClient!.sendRequest('python/loadExtension', args).then(noop, (ex) =>
-                    traceError('Request python/loadExtension failed', ex)
-                )
+                    traceError('Request python/loadExtension failed', ex),
+                ),
             )
             .ignoreErrors();
     }
@@ -132,7 +132,7 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
                 const formattedProperties = {
                     ...telemetryEvent.Properties,
                     // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
-                    method: telemetryEvent.Properties.method?.replace(/\//g, '.')
+                    method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
                 };
                 sendTelemetryEvent(eventName, telemetryEvent.Measurements, formattedProperties);
             });

@@ -11,7 +11,7 @@ import {
     TestFunction,
     Tests,
     TestStatus,
-    UnitTestParserOptions
+    UnitTestParserOptions,
 } from '../../common/types';
 
 @injectable()
@@ -88,7 +88,7 @@ export class TestsParser implements ITestsParser {
                 nameToRun: moduleName,
                 xmlName: '',
                 status: TestStatus.Idle,
-                time: 0
+                time: 0,
             };
             testFiles.push(testFile);
         }
@@ -107,7 +107,7 @@ export class TestsParser implements ITestsParser {
                 nameToRun: suiteToRun,
                 xmlName: '',
                 status: TestStatus.Idle,
-                time: 0
+                time: 0,
             };
             testFile.suites.push(testSuite!);
         }
@@ -117,7 +117,7 @@ export class TestsParser implements ITestsParser {
             name: functionName,
             nameToRun: testId,
             status: TestStatus.Idle,
-            time: 0
+            time: 0,
         };
 
         testSuite!.functions.push(testFunction);

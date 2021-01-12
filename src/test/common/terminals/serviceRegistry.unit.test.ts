@@ -18,7 +18,7 @@ import {
     ICodeExecutionHelper,
     ICodeExecutionManager,
     ICodeExecutionService,
-    ITerminalAutoActivation
+    ITerminalAutoActivation,
 } from '../../../client/terminals/types';
 
 suite('Common Terminal Service Registry', () => {
@@ -38,27 +38,27 @@ suite('Common Terminal Service Registry', () => {
             serviceManager.addSingleton<ICodeExecutionService>(
                 ICodeExecutionService,
                 DjangoShellCodeExecutionProvider,
-                'djangoShell'
-            )
+                'djangoShell',
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<ICodeExecutionService>(
                 ICodeExecutionService,
                 TerminalCodeExecutionProvider,
-                'standard'
-            )
+                'standard',
+            ),
         ).once();
         verify(serviceManager.addSingleton<ICodeExecutionService>(ICodeExecutionService, ReplProvider, 'repl')).once();
 
         verify(
-            serviceManager.addSingleton<ITerminalAutoActivation>(ITerminalAutoActivation, TerminalAutoActivation)
+            serviceManager.addSingleton<ITerminalAutoActivation>(ITerminalAutoActivation, TerminalAutoActivation),
         ).once();
 
         verify(
             serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
-                ExtensionActivationForTerminalActivation
-            )
+                ExtensionActivationForTerminalActivation,
+            ),
         ).once();
     });
 });

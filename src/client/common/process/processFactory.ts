@@ -16,7 +16,7 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
         @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider,
         @inject(IProcessLogger) private readonly processLogger: IProcessLogger,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
-        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
     ) {}
     public async create(resource?: Uri): Promise<IProcessService> {
         const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);

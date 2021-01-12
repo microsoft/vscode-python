@@ -20,7 +20,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
 
     public async getInstallationChannel(
         product: Product,
-        resource?: InterpreterUri
+        resource?: InterpreterUri,
     ): Promise<IModuleInstaller | undefined> {
         const channels = await this.getInstallationChannels(resource);
         if (channels.length === 1) {
@@ -39,13 +39,13 @@ export class InstallationChannelManager implements IInstallationChannelManager {
             return {
                 label: `Install using ${installer.displayName}`,
                 description: '',
-                installer
+                installer,
             };
         });
         const selection = await appShell.showQuickPick<typeof options[0]>(options, {
             matchOnDescription: true,
             matchOnDetail: true,
-            placeHolder
+            placeHolder,
         });
         return selection ? selection.installer : undefined;
     }
@@ -95,7 +95,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
             appShell.openUrl(
                 `https://www.bing.com/search?q=Install Pip ${osName} ${
                     interpreter.envType === EnvironmentType.Conda ? 'Conda' : ''
-                }`
+                }`,
             );
         }
     }

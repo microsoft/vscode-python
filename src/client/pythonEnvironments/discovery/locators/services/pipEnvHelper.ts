@@ -29,7 +29,7 @@ function getSearchHeight() {
  */
 export async function _getAssociatedPipfile(
     searchDir: string,
-    options: {lookIntoParentDirectories: boolean},
+    options: { lookIntoParentDirectories: boolean },
 ): Promise<string | undefined> {
     const pipFileName = getEnvironmentVariable('PIPENV_PIPFILE') || 'Pipfile';
     let heightToSearch = options.lookIntoParentDirectories ? getSearchHeight() : 1;
@@ -85,7 +85,9 @@ async function getProjectDir(envFolder: string): Promise<string | undefined> {
     }
     const projectDir = await readFile(dotProjectFile);
     if (!(await pathExists(projectDir))) {
-        traceError(`The .project file inside environment folder: ${envFolder} doesn't contain a valid path to the project`);
+        traceError(
+            `The .project file inside environment folder: ${envFolder} doesn't contain a valid path to the project`,
+        );
         return undefined;
     }
     return projectDir;
@@ -142,7 +144,7 @@ export async function isPipenvEnvironmentRelatedToFolder(interpreterPath: string
 
     // PIPENV_NO_INHERIT is used to tell pipenv not to look for Pipfile in parent directories
     // https://pipenv.pypa.io/en/latest/advanced/#pipenv.environments.PIPENV_NO_INHERIT
-    const lookIntoParentDirectories = (getEnvironmentVariable('PIPENV_NO_INHERIT') === undefined);
+    const lookIntoParentDirectories = getEnvironmentVariable('PIPENV_NO_INHERIT') === undefined;
     const pipFileAssociatedWithFolder = await _getAssociatedPipfile(folder, { lookIntoParentDirectories });
     if (!pipFileAssociatedWithFolder) {
         return false;

@@ -56,7 +56,7 @@ import {
     WorkspaceEdit,
     WorkspaceFolder,
     WorkspaceFolderPickOptions,
-    WorkspaceFoldersChangeEvent
+    WorkspaceFoldersChangeEvent,
 } from 'vscode';
 import type {
     NotebookCellLanguageChangeEvent as VSCNotebookCellLanguageChangeEvent,
@@ -71,13 +71,11 @@ import type {
     NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
     NotebookEditor,
     NotebookKernel,
-    NotebookKernelProvider
+    NotebookKernelProvider,
 } from 'vscode-proposed';
 
 import { IAsyncDisposable, Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';
-
-// tslint:disable:no-any unified-signatures
 
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
@@ -238,7 +236,7 @@ export interface IApplicationShell {
     showQuickPick(
         items: string[] | Thenable<string[]>,
         options?: QuickPickOptions,
-        token?: CancellationToken
+        token?: CancellationToken,
     ): Thenable<string | undefined>;
 
     /**
@@ -252,7 +250,7 @@ export interface IApplicationShell {
     showQuickPick<T extends QuickPickItem>(
         items: T[] | Thenable<T[]>,
         options?: QuickPickOptions,
-        token?: CancellationToken
+        token?: CancellationToken,
     ): Thenable<T | undefined>;
 
     /**
@@ -385,7 +383,7 @@ export interface IApplicationShell {
      */
     withProgress<R>(
         options: ProgressOptions,
-        task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>
+        task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>,
     ): Thenable<R>;
 
     /**
@@ -412,7 +410,7 @@ export interface IApplicationShell {
      */
     withProgressCustomIcon<R>(
         icon: string,
-        task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>
+        task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>,
     ): Thenable<R>;
 
     /**
@@ -449,7 +447,7 @@ export interface ICommandManager {
     registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
         command: E,
         callback: (...args: U) => any,
-        thisArg?: any
+        thisArg?: any,
     ): Disposable;
 
     /**
@@ -469,7 +467,7 @@ export interface ICommandManager {
     registerTextEditorCommand(
         command: string,
         callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void,
-        thisArg?: any
+        thisArg?: any,
     ): Disposable;
 
     /**
@@ -784,7 +782,7 @@ export interface IWorkspaceService {
         globPattern: GlobPattern,
         ignoreCreateEvents?: boolean,
         ignoreChangeEvents?: boolean,
-        ignoreDeleteEvents?: boolean
+        ignoreDeleteEvents?: boolean,
     ): FileSystemWatcher;
 
     /**
@@ -806,7 +804,7 @@ export interface IWorkspaceService {
         include: GlobPattern,
         exclude?: GlobPattern,
         maxResults?: number,
-        token?: CancellationToken
+        token?: CancellationToken,
     ): Thenable<Uri[]>;
 
     /**
@@ -937,7 +935,7 @@ export interface IDebugService {
     startDebugging(
         folder: WorkspaceFolder | undefined,
         nameOrConfiguration: string | DebugConfiguration,
-        parentSession?: DebugSession
+        parentSession?: DebugSession,
     ): Thenable<boolean>;
 
     /**
@@ -1139,7 +1137,7 @@ export interface IWebviewPanelOptions extends IWebviewOptions {
      * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
      */
     additionalPaths?: string[];
-    // tslint:disable-next-line: no-any
+
     settings?: any;
     // Web panel to use if supplied by VS code instead
     webViewPanel?: WebviewPanel;
@@ -1186,7 +1184,6 @@ export interface IActiveResourceService {
 
 // Temporary hack to get the nyc compiler to find these types. vscode.proposed.d.ts doesn't work for some reason.
 
-// tslint:disable: interface-name
 //#region Custom editor https://github.com/microsoft/vscode/issues/77131
 
 /**
@@ -1460,7 +1457,7 @@ export interface CustomEditorProvider<T extends CustomDocument = CustomDocument>
     backupCustomDocument(
         document: T,
         context: CustomDocumentBackupContext,
-        cancellation: CancellationToken
+        cancellation: CancellationToken,
     ): Thenable<CustomDocumentBackup>;
 }
 
@@ -1497,7 +1494,7 @@ export interface ICustomEditorService {
              * can properly synchronize the states of all editor instances for a resource so that they are consistent.
              */
             readonly supportsMultipleEditorsPerDocument?: boolean;
-        }
+        },
     ): Disposable;
     /**
      * Opens a file with a custom editor
@@ -1558,7 +1555,7 @@ export interface IVSCodeNotebook {
              * Default to false. If the content provider doesn't persisit a metadata property in the file document, it should be set to true.
              */
             transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
-        }
+        },
     ): Disposable;
 
     registerNotebookKernelProvider(selector: NotebookDocumentFilter, provider: NotebookKernelProvider): Disposable;

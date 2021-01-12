@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-multiline-string
-
 import { expect } from 'chai';
 
 import { verboseRegExp } from '../../../client/common/utils/regexp';
@@ -30,15 +28,15 @@ suite('Utils for regular expressions - verboseRegExp()', () => {
         [
             `spam
           eggs`,
-            'spameggs'
+            'spameggs',
         ],
         // empty
         ['  ', '(?:)'],
         [
             `
          `,
-            '(?:)'
-        ]
+            '(?:)',
+        ],
     ];
     for (const [pat, expected] of whitespaceTests) {
         test(`whitespace removed ("${pat}")`, () => {
@@ -61,7 +59,7 @@ suite('Utils for regular expressions - verboseRegExp()', () => {
         '',
         `
         `,
-        '  '
+        '  ',
     ];
     for (const pat of emptyPatterns) {
         test(`no pattern ("${pat}")`, () => {

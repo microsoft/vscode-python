@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { expect } from 'chai';
 import { instance, mock } from 'ts-mockito';
 import * as typemoq from 'typemoq';
@@ -16,7 +14,6 @@ import { IDebugConfigurationResolver } from '../../../../client/debugger/extensi
 import { DebugConfigurationState } from '../../../../client/debugger/extension/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../../../client/debugger/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Debugging - Configuration Service', () => {
     let attachResolver: typemoq.IMock<IDebugConfigurationResolver<AttachRequestArguments>>;
     let launchResolver: typemoq.IMock<IDebugConfigurationResolver<LaunchRequestArguments>>;
@@ -25,10 +22,9 @@ suite('Debugging - Configuration Service', () => {
     let providerFactory: DebugConfigurationProviderFactory;
 
     class TestPythonDebugConfigurationService extends PythonDebugConfigurationService {
-        // tslint:disable-next-line:no-unnecessary-override
         public async pickDebugConfiguration(
             input: IMultiStepInput<DebugConfigurationState>,
-            state: DebugConfigurationState
+            state: DebugConfigurationState,
         ) {
             return super.pickDebugConfiguration(input, state);
         }
@@ -42,19 +38,19 @@ suite('Debugging - Configuration Service', () => {
             attachResolver.object,
             launchResolver.object,
             instance(providerFactory),
-            multiStepFactory.object
+            multiStepFactory.object,
         );
     });
     test('Should use attach resolver when passing attach config', async () => {
         const config = ({
-            request: 'attach'
+            request: 'attach',
         } as any) as AttachRequestArguments;
         const folder = { name: '1', index: 0, uri: Uri.parse('1234') };
         const expectedConfig = { yay: 1 };
 
         attachResolver
             .setup((a) =>
-                a.resolveDebugConfiguration(typemoq.It.isValue(folder), typemoq.It.isValue(config), typemoq.It.isAny())
+                a.resolveDebugConfiguration(typemoq.It.isValue(folder), typemoq.It.isValue(config), typemoq.It.isAny()),
             )
             .returns(() => Promise.resolve(expectedConfig as any))
             .verifiable(typemoq.Times.once());
@@ -78,8 +74,8 @@ suite('Debugging - Configuration Service', () => {
                     a.resolveDebugConfiguration(
                         typemoq.It.isValue(folder),
                         typemoq.It.isValue((config as any) as LaunchRequestArguments),
-                        typemoq.It.isAny()
-                    )
+                        typemoq.It.isAny(),
+                    ),
                 )
                 .returns(() => Promise.resolve(expectedConfig as any))
                 .verifiable(typemoq.Times.once());
@@ -95,7 +91,6 @@ suite('Debugging - Configuration Service', () => {
         });
     });
     test('Picker should be displayed', async () => {
-        // tslint:disable-next-line:no-object-literal-type-assertion
         const state = ({ configs: [], folder: {}, token: undefined } as any) as DebugConfigurationState;
         const multiStepInput = typemoq.Mock.ofType<IMultiStepInput<DebugConfigurationState>>();
         multiStepInput
@@ -108,7 +103,6 @@ suite('Debugging - Configuration Service', () => {
         multiStepInput.verifyAll();
     });
     test('Existing Configuration items must be removed before displaying picker', async () => {
-        // tslint:disable-next-line:no-object-literal-type-assertion
         const state = ({ configs: [1, 2, 3], folder: {}, token: undefined } as any) as DebugConfigurationState;
         const multiStepInput = typemoq.Mock.ofType<IMultiStepInput<DebugConfigurationState>>();
         multiStepInput
@@ -127,7 +121,7 @@ suite('Debugging - Configuration Service', () => {
             run: (_: any, state: any) => {
                 Object.assign(state.config, expectedConfig);
                 return Promise.resolve();
-            }
+            },
         };
         multiStepFactory
             .setup((f) => f.create())
@@ -144,7 +138,7 @@ suite('Debugging - Configuration Service', () => {
     });
     test('Ensure `undefined` is returned if QuickPick is cancelled', async () => {
         const multiStepInput = {
-            run: () => Promise.resolve()
+            run: () => Promise.resolve(),
         };
         const folder = { name: '1', index: 0, uri: Uri.parse('1234') };
         multiStepFactory

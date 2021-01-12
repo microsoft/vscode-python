@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:insecure-random no-any
-
 import * as assert from 'assert';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
@@ -16,7 +14,7 @@ import {
     DiagnosticScope,
     IDiagnostic,
     IDiagnosticsService,
-    ISourceMapSupportService
+    ISourceMapSupportService,
 } from '../../../client/application/diagnostics/types';
 import { IApplicationDiagnostics } from '../../../client/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
@@ -26,7 +24,6 @@ import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { sleep } from '../../common';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Application Diagnostics - ApplicationDiagnostics', () => {
     let serviceContainer: typemoq.IMock<IServiceContainer>;
     let envHealthCheck: typemoq.IMock<IDiagnosticsService>;
@@ -105,7 +102,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
             scope: undefined,
             severity: undefined,
             resource: undefined,
-            invokeHandler: 'default'
+            invokeHandler: 'default',
         } as any;
         envHealthCheck
             .setup((e) => e.diagnose(typemoq.It.isAny()))
@@ -149,7 +146,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
                 scope: i % 2 === 0 ? DiagnosticScope.Global : DiagnosticScope.WorkspaceFolder,
                 severity: DiagnosticSeverity.Error,
                 resource: undefined,
-                invokeHandler: 'default'
+                invokeHandler: 'default',
             };
             diagnostics.push(diagnostic);
         }
@@ -160,7 +157,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
                 scope: i % 2 === 0 ? DiagnosticScope.Global : DiagnosticScope.WorkspaceFolder,
                 severity: DiagnosticSeverity.Warning,
                 resource: undefined,
-                invokeHandler: 'default'
+                invokeHandler: 'default',
             };
             diagnostics.push(diagnostic);
         }
@@ -171,7 +168,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
                 scope: i % 2 === 0 ? DiagnosticScope.Global : DiagnosticScope.WorkspaceFolder,
                 severity: DiagnosticSeverity.Information,
                 resource: undefined,
-                invokeHandler: 'default'
+                invokeHandler: 'default',
             };
             diagnostics.push(diagnostic);
         }
@@ -223,7 +220,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
 
         when(svcContainer.getAll<IDiagnosticsService>(IDiagnosticsService)).thenReturn([
             instance(foreGroundService),
-            instance(backGroundService)
+            instance(backGroundService),
         ]);
         when(foreGroundService.runInBackground).thenReturn(false);
         when(backGroundService.runInBackground).thenReturn(true);

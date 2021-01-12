@@ -40,11 +40,11 @@ export namespace PsProcessParser {
     // Since 'args' contains the full path to the executable, even if truncated, searching will work as desired.
     export const psLinuxCommand: ProcessListCommand = {
         command: 'ps',
-        args: ['axww', '-o', `pid=,comm=${commColumnTitle},args=`]
+        args: ['axww', '-o', `pid=,comm=${commColumnTitle},args=`],
     };
     export const psDarwinCommand: ProcessListCommand = {
         command: 'ps',
-        args: ['axww', '-o', `pid=,comm=${commColumnTitle},args=`, '-c']
+        args: ['axww', '-o', `pid=,comm=${commColumnTitle},args=`, '-c'],
     };
 
     export function parseProcesses(processes: string): IAttachItem[] {
@@ -94,7 +94,7 @@ export namespace PsProcessParser {
                 detail: cmdline,
                 id: pid,
                 processName: executable,
-                commandLine: cmdline
+                commandLine: cmdline,
             };
         }
     }

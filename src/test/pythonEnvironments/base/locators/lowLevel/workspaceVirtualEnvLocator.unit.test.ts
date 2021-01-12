@@ -59,7 +59,11 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
         getOSTypeStub = sinon.stub(platformUtils, 'getOSType');
         getOSTypeStub.returns(platformUtils.OSType.Linux);
         watchLocationForPatternStub = sinon.stub(fsWatcher, 'watchLocationForPattern');
-        watchLocationForPatternStub.returns({ dispose: () => { /* do nothing */ } });
+        watchLocationForPatternStub.returns({
+            dispose: () => {
+                /* do nothing */
+            },
+        });
         locator = new WorkspaceVirtualEnvironmentLocator(testWorkspaceFolder);
     });
     teardown(async () => {
@@ -105,8 +109,8 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator)).sort(
-            (a, b) => a.executable.filename.localeCompare(b.executable.filename),
+        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
+            a.executable.filename.localeCompare(b.executable.filename),
         );
 
         comparePaths(actualEnvs, expectedEnvs);
@@ -137,8 +141,8 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator)).sort(
-            (a, b) => a.executable.filename.localeCompare(b.executable.filename),
+        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
+            a.executable.filename.localeCompare(b.executable.filename),
         );
 
         comparePaths(actualEnvs, expectedEnvs);

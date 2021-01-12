@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-unnecessary-override no-invalid-template-strings max-func-body-length no-any
-
 import { expect } from 'chai';
 import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
@@ -27,7 +25,7 @@ suite('Debugging - Config Resolver', () => {
         public resolveDebugConfiguration(
             _folder: WorkspaceFolder | undefined,
             _debugConfiguration: DebugConfiguration,
-            _token?: CancellationToken
+            _token?: CancellationToken,
         ): Promise<AttachRequestArguments | LaunchRequestArguments | undefined> {
             throw new Error('Not Implemented');
         }
@@ -35,7 +33,7 @@ suite('Debugging - Config Resolver', () => {
         public resolveDebugConfigurationWithSubstitutedVariables(
             _folder: WorkspaceFolder | undefined,
             _debugConfiguration: DebugConfiguration,
-            _token?: CancellationToken
+            _token?: CancellationToken,
         ): Promise<AttachRequestArguments | LaunchRequestArguments | undefined> {
             throw new Error('Not Implemented');
         }
@@ -50,7 +48,7 @@ suite('Debugging - Config Resolver', () => {
 
         public resolveAndUpdatePythonPath(
             workspaceFolder: Uri | undefined,
-            debugConfiguration: LaunchRequestArguments
+            debugConfiguration: LaunchRequestArguments,
         ): void {
             return super.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
         }
@@ -85,7 +83,7 @@ suite('Debugging - Config Resolver', () => {
             instance(workspaceService),
             instance(documentManager),
             instance(platformService),
-            instance(configurationService)
+            instance(configurationService),
         );
     });
 
@@ -145,9 +143,9 @@ suite('Debugging - Config Resolver', () => {
     [
         {
             title: 'Should get directory of active program when there are not workspace folders',
-            workspaceFolders: undefined
+            workspaceFolders: undefined,
         },
-        { title: 'Should get directory of active program when there are 0 workspace folders', workspaceFolders: [] }
+        { title: 'Should get directory of active program when there are 0 workspace folders', workspaceFolders: [] },
     ].forEach((item) => {
         test(item.title, () => {
             const programPath = path.join('one', 'two', 'three.xyz');
@@ -215,7 +213,7 @@ suite('Debugging - Config Resolver', () => {
     });
     test('pythonPath in debug config must point to pythonPath in settings  if pythonPath in config is ${command:python.interpreterPath}', () => {
         const config = {
-            pythonPath: '${command:python.interpreterPath}'
+            pythonPath: '${command:python.interpreterPath}',
         };
         const pythonPath = path.join('1', '2', '3');
 
@@ -231,7 +229,7 @@ suite('Debugging - Config Resolver', () => {
         '::1': true,
         '127.0.0.2': false,
         '156.1.2.3': false,
-        '::2': false
+        '::2': false,
     };
     Object.keys(localHostTestMatrix).forEach((key) => {
         test(`Local host = ${localHostTestMatrix[key]} for ${key}`, () => {

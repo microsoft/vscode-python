@@ -13,7 +13,7 @@ export class IgnoreDiagnosticCommand extends BaseDiagnosticCommand {
     constructor(
         diagnostic: IDiagnostic,
         private serviceContainer: IServiceContainer,
-        private readonly scope: DiagnosticScope
+        private readonly scope: DiagnosticScope,
     ) {
         super(diagnostic);
     }

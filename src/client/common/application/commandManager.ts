@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-any
-
 import { inject, injectable } from 'inversify';
 import { commands, Disposable, TextEditor, TextEditorEdit } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from './commands';
@@ -12,7 +10,7 @@ import { ICommandManager, IJupyterExtensionDependencyManager } from './types';
 export class CommandManager implements ICommandManager {
     constructor(
         @inject(IJupyterExtensionDependencyManager)
-        private jupyterExtensionDependencyManager: IJupyterExtensionDependencyManager
+        private jupyterExtensionDependencyManager: IJupyterExtensionDependencyManager,
     ) {}
 
     /**
@@ -51,7 +49,7 @@ export class CommandManager implements ICommandManager {
     public registerTextEditorCommand(
         command: string,
         callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void,
-        thisArg?: any
+        thisArg?: any,
     ): Disposable {
         return commands.registerTextEditorCommand(command, callback, thisArg);
     }

@@ -25,7 +25,7 @@ export enum PythonEnvKind {
     VirtualEnvWrapper = 'virt-virtualenvwrapper',
     Pipenv = 'virt-pipenv',
     Conda = 'virt-conda',
-    OtherVirtual = 'virt-other'
+    OtherVirtual = 'virt-other',
 }
 
 /**
@@ -81,7 +81,7 @@ export enum PythonReleaseLevel {
     Alpha = 'alpha',
     Beta = 'beta',
     Candidate = 'candidate',
-    Final = 'final'
+    Final = 'final',
 }
 
 /**
@@ -157,7 +157,7 @@ export type PythonEnvInfo = _PythonEnvInfo & {
  * Note this object is immutable. So if it is assigned to another object, the properties of the other object
  * also cannot be modified by reference. For eg. `otherVersionObject.major = 3` won't work.
  */
-export const UNKNOWN_PYTHON_VERSION:PythonVersion = {
+export const UNKNOWN_PYTHON_VERSION: PythonVersion = {
     major: -1,
     minor: -1,
     micro: -1,

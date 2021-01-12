@@ -11,6 +11,6 @@ export interface IEnvironmentActivationService {
     getActivatedEnvironmentVariables(
         resource: Resource,
         interpreter?: PythonEnvironment,
-        allowExceptions?: boolean
+        allowExceptions?: boolean,
     ): Promise<NodeJS.ProcessEnv | undefined>;
 }

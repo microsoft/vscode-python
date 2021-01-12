@@ -3,14 +3,10 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-
 import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
-import {
-    anything, instance, mock, when,
-} from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
@@ -25,7 +21,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnv
 enum OS {
     Windows = 'Windows',
     Linux = 'Linux',
-    Mac = 'Mac'
+    Mac = 'Mac',
 }
 
 suite('Interpreters - Locators Helper', () => {

@@ -1,16 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable-next-line:no-single-line-block-comment
 /* eslint-disable max-classes-per-file */
 
 import { cloneDeep } from 'lodash';
 import { PythonEnvInfo } from './info';
-import {
-    areSameEnv,
-    getEnvExecutable,
-    haveSameExecutables,
-} from './info/env';
+import { areSameEnv, getEnvExecutable, haveSameExecutables } from './info/env';
 
 /**
  * A simple in-memory store of Python envs.
@@ -55,9 +50,7 @@ export class PythonEnvsCache {
     /**
      * Find the matching env in the cache, if any.
      */
-    public lookUp(
-        query: string | Partial<PythonEnvInfo>,
-    ): PythonEnvInfo | undefined {
+    public lookUp(query: string | Partial<PythonEnvInfo>): PythonEnvInfo | undefined {
         const executable = getEnvExecutable(query);
         if (executable === '') {
             return undefined;

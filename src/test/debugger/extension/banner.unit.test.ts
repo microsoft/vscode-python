@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
-
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DebugSession } from 'vscode';
@@ -14,7 +12,7 @@ import {
     IDisposableRegistry,
     IPersistentState,
     IPersistentStateFactory,
-    IRandom
+    IRandom,
 } from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
 import { DebuggerBanner, PersistentStateKeys } from '../../../client/debugger/extension/banner';
@@ -54,26 +52,26 @@ suite('Debugging - Banner', () => {
             .setup((f) =>
                 f.createGlobalPersistentState(
                     typemoq.It.isValue(PersistentStateKeys.DebuggerLaunchCounter),
-                    typemoq.It.isAny()
-                )
+                    typemoq.It.isAny(),
+                ),
             )
             .returns(() => launchCounterState.object);
         factory
             .setup((f) =>
-                f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.ShowBanner), typemoq.It.isAny())
+                f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.ShowBanner), typemoq.It.isAny()),
             )
             .returns(() => showBannerState.object);
         factory
             .setup((f) =>
                 f.createGlobalPersistentState(
                     typemoq.It.isValue(PersistentStateKeys.DebuggerLaunchThresholdCounter),
-                    typemoq.It.isAny()
-                )
+                    typemoq.It.isAny(),
+                ),
             )
             .returns(() => launchThresholdCounterState.object);
         factory
             .setup((f) =>
-                f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.UserSelected), typemoq.It.isAny())
+                f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.UserSelected), typemoq.It.isAny()),
             )
             .returns(() => userSelectedState.object);
 
@@ -102,8 +100,8 @@ suite('Debugging - Banner', () => {
                     typemoq.It.isValue(message),
                     typemoq.It.isValue(yes),
                     typemoq.It.isValue(no),
-                    typemoq.It.isValue(later)
-                )
+                    typemoq.It.isValue(later),
+                ),
             )
             .returns(() => Promise.resolve(yes));
 
@@ -290,8 +288,8 @@ suite('Debugging - Banner', () => {
                     typemoq.It.isValue(message),
                     typemoq.It.isValue(yes),
                     typemoq.It.isValue(no),
-                    typemoq.It.isValue(later)
-                )
+                    typemoq.It.isValue(later),
+                ),
             )
             .verifiable(typemoq.Times.once());
         banner.initialize();
@@ -332,8 +330,8 @@ suite('Debugging - Banner', () => {
                     typemoq.It.isValue(message),
                     typemoq.It.isValue(yes),
                     typemoq.It.isValue(no),
-                    typemoq.It.isValue(later)
-                )
+                    typemoq.It.isValue(later),
+                ),
             )
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());

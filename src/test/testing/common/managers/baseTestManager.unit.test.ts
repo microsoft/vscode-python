@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, OutputChannel, Uri } from 'vscode';
@@ -20,7 +18,7 @@ import {
     IDisposableRegistry,
     IInstaller,
     IOutputChannel,
-    IPythonSettings
+    IPythonSettings,
 } from '../../../../client/common/types';
 import { ServiceContainer } from '../../../../client/ioc/container';
 import { IServiceContainer } from '../../../../client/ioc/types';
@@ -37,7 +35,7 @@ import {
     ITestMessageService,
     ITestResultsService,
     ITestsHelper,
-    ITestsStatusUpdaterService
+    ITestsStatusUpdaterService,
 } from '../../../../client/testing/common/types';
 import { TestManager as NoseTestManager } from '../../../../client/testing/nosetest/main';
 import { TestManager as PyTestTestManager } from '../../../../client/testing/pytest/main';
@@ -50,12 +48,11 @@ import { TestManagerRunner } from '../../../../client/testing/unittest/runner';
 import { noop } from '../../../core';
 import { MockOutputChannel } from '../../../mockClasses';
 
-// tslint:disable: max-func-body-length
 suite('Unit Tests - Base Test Manager', () => {
     [
         { name: 'nose', class: NoseTestManager },
         { name: 'pytest', class: PyTestTestManager },
-        { name: 'unittest', class: UnitTestTestManager }
+        { name: 'unittest', class: UnitTestTestManager },
     ].forEach((item) => {
         suite(item.name, () => {
             let testManager: ITestManager;
@@ -94,40 +91,40 @@ suite('Unit Tests - Base Test Manager', () => {
                 const messageService = mock(TestMessageService);
 
                 when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
-                    instance(configService)
+                    instance(configService),
                 );
                 when(serviceContainer.get<Disposable[]>(IDisposableRegistry)).thenReturn([]);
                 when(serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL)).thenReturn(
-                    instance(outputChannel)
+                    instance(outputChannel),
                 );
                 when(serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService)).thenReturn(
-                    instance(storageService)
+                    instance(storageService),
                 );
                 when(serviceContainer.get<ITestResultsService>(ITestResultsService)).thenReturn(
-                    instance(resultsService)
+                    instance(resultsService),
                 );
                 when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
                 when(serviceContainer.get<ITestDiagnosticService>(ITestDiagnosticService)).thenReturn(
-                    instance(diagnosticService)
+                    instance(diagnosticService),
                 );
                 when(serviceContainer.get<ITestsStatusUpdaterService>(ITestsStatusUpdaterService)).thenReturn(
-                    instance(statusUpdater)
+                    instance(statusUpdater),
                 );
                 when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(commandManager));
 
                 when(serviceContainer.get<IArgumentsService>(IArgumentsService, anything())).thenReturn(
-                    instance(argsService)
+                    instance(argsService),
                 );
                 when(serviceContainer.get<ITestsHelper>(ITestsHelper)).thenReturn(instance(testsHelper));
                 when(serviceContainer.get<ITestManagerRunner>(ITestManagerRunner, anything())).thenReturn(
-                    instance(runner)
+                    instance(runner),
                 );
                 when(serviceContainer.get<ITestMessageService>(ITestMessageService, anything())).thenReturn(
-                    instance(messageService)
+                    instance(messageService),
                 );
 
                 when(serviceContainer.get<ITestDiscoveryService>(ITestDiscoveryService, anything())).thenReturn(
-                    instance(testDiscoveryService)
+                    instance(testDiscoveryService),
                 );
                 when(serviceContainer.get<IInstaller>(IInstaller)).thenReturn(instance(installer));
 
@@ -149,7 +146,6 @@ suite('Unit Tests - Base Test Manager', () => {
             });
             test('When failing to discover tests prompt to install test framework', async function () {
                 if (item.name === 'unittest') {
-                    // tslint:disable-next-line: no-invalid-this
                     return this.skip();
                 }
 
@@ -166,7 +162,6 @@ suite('Unit Tests - Base Test Manager', () => {
             });
             test('When failing to discover tests do not prompt to install test framework', async function () {
                 if (item.name === 'unittest') {
-                    // tslint:disable-next-line: no-invalid-this
                     return this.skip();
                 }
 
@@ -183,7 +178,6 @@ suite('Unit Tests - Base Test Manager', () => {
             });
             test('When failing to discover tests do not prompt to install test framework if installed', async function () {
                 if (item.name === 'unittest') {
-                    // tslint:disable-next-line: no-invalid-this
                     return this.skip();
                 }
 

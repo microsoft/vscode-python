@@ -20,7 +20,6 @@ suite('Debugging - Configuration Provider FastAPI', () => {
     let provider: TestFastAPILaunchDebugConfigurationProvider;
     let input: MultiStepInput<DebugConfigurationState>;
     class TestFastAPILaunchDebugConfigurationProvider extends FastAPILaunchDebugConfigurationProvider {
-        // tslint:disable-next-line:no-unnecessary-override
         public async getApplicationPath(folder: WorkspaceFolder): Promise<string | undefined> {
             return super.getApplicationPath(folder);
         }
@@ -62,7 +61,7 @@ suite('Debugging - Configuration Provider FastAPI', () => {
             request: 'launch',
             module: 'uvicorn',
             args: ['main:app'],
-            jinja: true
+            jinja: true,
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -82,7 +81,7 @@ suite('Debugging - Configuration Provider FastAPI', () => {
             request: 'launch',
             module: 'uvicorn',
             args: ['main:app'],
-            jinja: true
+            jinja: true,
         };
 
         expect(state.config).to.be.deep.equal(config);

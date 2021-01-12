@@ -1,9 +1,8 @@
+/* eslint-disable max-classes-per-file */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 'use strict';
-
-// tslint:disable:no-require-imports
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
@@ -18,7 +17,6 @@ import {
 import { IServiceContainer } from '../../../../ioc/types';
 import { BaseVirtualEnvService } from './baseVirtualEnvService';
 
-// tslint:disable-next-line: no-var-requires
 const untildify = require('untildify');
 
 @injectable()
@@ -26,7 +24,7 @@ export class WorkspaceVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
         @inject(IVirtualEnvironmentsSearchPathProvider)
         @named('workspace')
-            workspaceVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
+        workspaceVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IInterpreterWatcherBuilder) private readonly builder: IInterpreterWatcherBuilder,
     ) {

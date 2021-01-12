@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:max-func-body-length no-any
-
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
@@ -52,7 +50,7 @@ suite('PythonExecutableService', () => {
             .returns(() => Promise.resolve(undefined));
         envActivationService
             .setup((e) =>
-                e.getActivatedEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                e.getActivatedEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             )
             .returns(() => Promise.resolve(undefined));
         serviceContainer

@@ -19,8 +19,6 @@ import { ShellIdentificationTelemetry, TerminalShellType } from '../../../../cli
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { OSType } from '../../../../client/common/utils/platform';
 
-// tslint:disable:max-func-body-length no-any
-
 suite('Shell Detectors', () => {
     let platformService: IPlatformService;
     let currentProcess: CurrentProcess;
@@ -53,7 +51,7 @@ suite('Shell Detectors', () => {
         shellIdentificationSource: 'default',
         terminalProvided: false,
         hasCustomShell: undefined,
-        hasShellInEnv: undefined
+        hasShellInEnv: undefined,
     };
 
     setup(() => {
@@ -67,7 +65,7 @@ suite('Shell Detectors', () => {
         expect(new VSCEnvironmentShellDetector(instance(appEnv)).priority).to.equal(3);
         expect(new SettingsShellDetector(instance(workspaceService), instance(platformService)).priority).to.equal(2);
         expect(new UserEnvironmentShellDetector(instance(currentProcess), instance(platformService)).priority).to.equal(
-            1
+            1,
         );
     });
     test('Test identification of Terminal Shells (base class method)', async () => {
@@ -75,7 +73,7 @@ suite('Shell Detectors', () => {
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
             expect(shellDetector.identifyShellFromShellPath(shellPath)).to.equal(
                 shellType,
-                `Incorrect Shell Type for path '${shellPath}'`
+                `Incorrect Shell Type for path '${shellPath}'`,
             );
         });
     });
@@ -84,13 +82,13 @@ suite('Shell Detectors', () => {
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
             expect(shellDetector.identify(telemetryProperties, { name: shellPath } as any)).to.equal(
                 shellType,
-                `Incorrect Shell Type for name '${shellPath}'`
+                `Incorrect Shell Type for name '${shellPath}'`,
             );
         });
 
         expect(shellDetector.identify(telemetryProperties, undefined)).to.equal(
             undefined,
-            'Should be undefined when there is no temrinal'
+            'Should be undefined when there is no temrinal',
         );
     });
     test('Identify shell based on VSC Environment', async () => {
@@ -99,14 +97,14 @@ suite('Shell Detectors', () => {
             when(appEnv.shell).thenReturn(shellPath);
             expect(shellDetector.identify(telemetryProperties, { name: shellPath } as any)).to.equal(
                 shellType,
-                `Incorrect Shell Type from identifyShellByTerminalName, for path '${shellPath}'`
+                `Incorrect Shell Type from identifyShellByTerminalName, for path '${shellPath}'`,
             );
         });
 
         when(appEnv.shell).thenReturn(undefined as any);
         expect(shellDetector.identify(telemetryProperties, undefined)).to.equal(
             undefined,
-            'Should be undefined when vscode.env.shell is undefined'
+            'Should be undefined when vscode.env.shell is undefined',
         );
     });
     test('Identify shell based on VSC Settings', async () => {
@@ -116,7 +114,7 @@ suite('Shell Detectors', () => {
             shellDetector.getTerminalShellPath = () => shellPath;
             expect(shellDetector.identify(telemetryProperties, {} as any)).to.equal(
                 shellType,
-                `Incorrect Shell Type for path '${shellPath}'`
+                `Incorrect Shell Type for path '${shellPath}'`,
             );
         });
     });
@@ -146,7 +144,7 @@ suite('Shell Detectors', () => {
             shellDetector.getDefaultPlatformShell = () => shellPath;
             expect(shellDetector.identify(telemetryProperties, {} as any)).to.equal(
                 shellType,
-                `Incorrect Shell Type for path '${shellPath}'`
+                `Incorrect Shell Type for path '${shellPath}'`,
             );
         });
     });

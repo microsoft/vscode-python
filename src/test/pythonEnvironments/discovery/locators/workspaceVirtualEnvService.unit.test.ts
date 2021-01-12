@@ -3,12 +3,8 @@
 
 'use strict';
 
-// tslint:disable:no-any max-classes-per-file max-func-body-length
-
 import { expect } from 'chai';
-import {
-    anything, instance, mock, verify, when,
-} from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IInterpreterWatcher } from '../../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../../client/ioc/container';
@@ -20,12 +16,13 @@ suite('Interpreters - Workspace VirtualEnv Service', () => {
         const serviceContainer = mock(ServiceContainer);
         const builder = mock(InterpreterWatcherBuilder);
         const locator = new (class extends WorkspaceVirtualEnvService {
-            // tslint:disable-next-line:no-unnecessary-override
             public async getInterpreterWatchers(resource: Uri | undefined): Promise<IInterpreterWatcher[]> {
                 return super.getInterpreterWatchers(resource);
             }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         })(undefined as any, instance(serviceContainer), instance(builder));
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const watchers = 1 as any;
         when(builder.getWorkspaceVirtualEnvInterpreterWatcher(anything())).thenResolve(watchers);
 

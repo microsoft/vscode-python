@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { expect } from 'chai';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { ChildProcessAttachEventHandler } from '../../../../client/debugger/extension/hooks/childProcessAttachHandler';
@@ -51,7 +49,7 @@ suite('Debug - Child Process', () => {
             type: 'python',
             request: 'attach',
             port: 1234,
-            subProcessId: 2
+            subProcessId: 2,
         };
         const session: any = {};
         when(attachService.attach(body, session)).thenThrow(new Error('Kaboom'));

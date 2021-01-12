@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-var-requires
-
 import { injectable } from 'inversify';
 import { env, Uri } from 'vscode';
 import { IBrowserService } from '../types';

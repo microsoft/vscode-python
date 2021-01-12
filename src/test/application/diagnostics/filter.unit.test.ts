@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DiagnosticFilterService, FilterKeys } from '../../../client/application/diagnostics/filter';
@@ -22,8 +20,8 @@ suite('Application Diagnostics - Filter', () => {
             name: 'Workspace',
             scope: DiagnosticScope.WorkspaceFolder,
             state: () => workspaceState,
-            otherState: () => globalState
-        }
+            otherState: () => globalState,
+        },
     ].forEach((item) => {
         let serviceContainer: typemoq.IMock<IServiceContainer>;
         let filterService: IDiagnosticFilterService;
@@ -39,16 +37,16 @@ suite('Application Diagnostics - Filter', () => {
                 .setup((f) =>
                     f.createGlobalPersistentState<string[]>(
                         typemoq.It.isValue(FilterKeys.GlobalDiagnosticFilter),
-                        typemoq.It.isValue([])
-                    )
+                        typemoq.It.isValue([]),
+                    ),
                 )
                 .returns(() => globalState.object);
             stateFactory
                 .setup((f) =>
                     f.createWorkspacePersistentState<string[]>(
                         typemoq.It.isValue(FilterKeys.WorkspaceDiagnosticFilter),
-                        typemoq.It.isValue([])
-                    )
+                        typemoq.It.isValue([]),
+                    ),
                 )
                 .returns(() => workspaceState.object);
             serviceContainer

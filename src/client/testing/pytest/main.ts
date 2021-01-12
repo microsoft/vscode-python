@@ -11,7 +11,7 @@ import {
     TestDiscoveryOptions,
     TestRunOptions,
     Tests,
-    TestsToRun
+    TestsToRun,
 } from '../common/types';
 import { IArgumentsService, IPythonTestMessage, ITestManagerRunner, TestFilter } from '../types';
 
@@ -30,7 +30,7 @@ export class TestManager extends BaseTestManager {
         this.runner = this.serviceContainer.get<ITestManagerRunner>(ITestManagerRunner, this.testProvider);
         this.testMessageService = this.serviceContainer.get<ITestMessageService>(
             ITestMessageService,
-            this.testProvider
+            this.testProvider,
         );
     }
     public getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions {
@@ -41,14 +41,14 @@ export class TestManager extends BaseTestManager {
             args,
             token: this.testDiscoveryCancellationToken!,
             ignoreCache,
-            outChannel: this.outputChannel
+            outChannel: this.outputChannel,
         };
     }
     public async runTestImpl(
         tests: Tests,
         testsToRun?: TestsToRun,
         runFailedTests?: boolean,
-        debug?: boolean
+        debug?: boolean,
     ): Promise<Tests> {
         let args: string[];
 
@@ -56,12 +56,12 @@ export class TestManager extends BaseTestManager {
         if (debug) {
             args = this.argsService.filterArguments(
                 this.settings.testing.pytestArgs,
-                runAllTests ? TestFilter.debugAll : TestFilter.debugSpecific
+                runAllTests ? TestFilter.debugAll : TestFilter.debugSpecific,
             );
         } else {
             args = this.argsService.filterArguments(
                 this.settings.testing.pytestArgs,
-                runAllTests ? TestFilter.runAll : TestFilter.runSpecific
+                runAllTests ? TestFilter.runAll : TestFilter.runSpecific,
             );
         }
 
@@ -76,12 +76,12 @@ export class TestManager extends BaseTestManager {
             testsToRun,
             debug,
             token: this.testRunnerCancellationToken!,
-            outChannel: this.outputChannel
+            outChannel: this.outputChannel,
         };
         const testResults = await this.runner.runTest(this.testResultsService, options, this);
         const messages: IPythonTestMessage[] = await this.testMessageService.getFilteredTestMessages(
             this.rootDirectory,
-            testResults
+            testResults,
         );
         await this.updateDiagnostics(tests, messages);
         return testResults;

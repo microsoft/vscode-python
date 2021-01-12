@@ -41,14 +41,14 @@ export class BackgroundRequestLooper implements IDisposable {
     constructor(
         opts: {
             runDefault?: RunFunc | null;
-        } = {}
+        } = {},
     ) {
         this.opts = {
             runDefault:
                 opts.runDefault ??
                 (async () => {
                     throw Error('no default operation provided');
-                })
+                }),
         };
     }
 
@@ -166,7 +166,7 @@ export class BackgroundRequestLooper implements IDisposable {
             // [RunFunc, "done" promise, NotifyFunc]
             run ?? this.opts.runDefault,
             running.promise,
-            () => running.resolve()
+            () => running.resolve(),
         ];
         this.queue.push(reqID);
         if (this.queue.length === 1) {
@@ -188,7 +188,7 @@ export class BackgroundRequestLooper implements IDisposable {
                 // These are the competing operations.
                 // Note that the losers keep running in the background.
                 this.done.promise.then(() => 0),
-                this.waitUntilReady.promise.then(() => 1)
+                this.waitUntilReady.promise.then(() => 1),
             ];
             return Promise.race(promises);
         };

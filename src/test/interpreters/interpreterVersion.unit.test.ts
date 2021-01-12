@@ -19,7 +19,7 @@ suite('InterpreterVersionService', () => {
     setup(() => {
         const processFactory = typeMoq.Mock.ofType<IProcessServiceFactory>();
         processService = typeMoq.Mock.ofType<IProcessService>();
-        // tslint:disable-next-line:no-any
+
         processService.setup((p: any) => p.then).returns(() => undefined);
 
         processFactory.setup((p) => p.create()).returns(() => Promise.resolve(processService.object));
@@ -35,8 +35,8 @@ suite('InterpreterVersionService', () => {
                     p.exec(
                         typeMoq.It.isValue(pythonPath),
                         typeMoq.It.isValue([isolated, 'pip', '--version']),
-                        typeMoq.It.isAny()
-                    )
+                        typeMoq.It.isAny(),
+                    ),
                 )
                 .returns(() => Promise.resolve({ stdout: pipVersion }))
                 .verifiable(typeMoq.Times.once());
@@ -52,8 +52,8 @@ suite('InterpreterVersionService', () => {
                     p.exec(
                         typeMoq.It.isValue(pythonPath),
                         typeMoq.It.isValue([isolated, 'pip', '--version']),
-                        typeMoq.It.isAny()
-                    )
+                        typeMoq.It.isAny(),
+                    ),
                 )
                 .returns(() => Promise.reject('error'))
                 .verifiable(typeMoq.Times.once());

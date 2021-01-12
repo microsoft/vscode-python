@@ -11,7 +11,6 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILanguageClientFactory } from '../types';
 
-// tslint:disable:no-require-imports no-require-imports no-var-requires max-classes-per-file
 const languageClientName = 'Python Tools';
 
 @injectable()
@@ -21,7 +20,7 @@ export class JediLanguageClientFactory implements ILanguageClientFactory {
     public async createLanguageClient(
         resource: Resource,
         _interpreter: PythonEnvironment | undefined,
-        clientOptions: LanguageClientOptions
+        clientOptions: LanguageClientOptions,
     ): Promise<LanguageClient> {
         // Just run the language server using a module
         const jediServerModulePath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'runJediLanguageServer.py');
@@ -30,15 +29,16 @@ export class JediLanguageClientFactory implements ILanguageClientFactory {
         const args = [jediServerModulePath];
         const serverOptions: ServerOptions = {
             command: pythonPath,
-            args
+            args,
         };
 
+        // eslint-disable-next-line global-require
         const vscodeLanguageClient = require('vscode-languageclient/node') as typeof import('vscode-languageclient/node'); // NOSONAR
         return new vscodeLanguageClient.LanguageClient(
             PYTHON_LANGUAGE,
             languageClientName,
             serverOptions,
-            clientOptions
+            clientOptions,
         );
     }
 }

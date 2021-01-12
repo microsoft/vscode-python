@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CompletionItem, ProviderResult } from 'vscode';
-// tslint:disable-next-line: import-name
+
 import ProtocolCompletionItem from 'vscode-languageclient/lib/common/protocolCompletionItem';
 import { CompletionResolveRequest } from 'vscode-languageclient/node';
 import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../../common/application/types';
@@ -32,7 +32,7 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment
+        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
     ) {
         super(manager, workspace, fs, configurationService);
     }
@@ -58,7 +58,7 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
 
     private async handleResolveCompletionItem(
         item: CompletionItem,
-        token: CancellationToken
+        token: CancellationToken,
     ): Promise<CompletionItem | undefined> {
         const languageClient = this.getLanguageClient();
 

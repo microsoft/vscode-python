@@ -18,7 +18,7 @@ abstract class AbstractSystemVariables implements ISystemVariables {
     public resolve(value: IStringDictionary<string>): IStringDictionary<string>;
     public resolve(value: IStringDictionary<string[]>): IStringDictionary<string[]>;
     public resolve(value: IStringDictionary<IStringDictionary<string>>): IStringDictionary<IStringDictionary<string>>;
-    // tslint:disable-next-line:no-any
+
     public resolve(value: any): any {
         if (Types.isString(value)) {
             return this.__resolveString(value);
@@ -32,7 +32,7 @@ abstract class AbstractSystemVariables implements ISystemVariables {
     }
 
     public resolveAny<T>(value: T): T;
-    // tslint:disable-next-line:no-any
+
     public resolveAny(value: any): any {
         if (Types.isString(value)) {
             return this.__resolveString(value);
@@ -48,7 +48,6 @@ abstract class AbstractSystemVariables implements ISystemVariables {
     private __resolveString(value: string): string {
         const regexp = /\$\{(.*?)\}/g;
         return value.replace(regexp, (match: string, name: string) => {
-            // tslint:disable-next-line:no-any
             const newValue = (<any>this)[name];
             if (Types.isString(newValue)) {
                 return newValue;
@@ -59,24 +58,24 @@ abstract class AbstractSystemVariables implements ISystemVariables {
     }
 
     private __resolveLiteral(
-        values: IStringDictionary<string | IStringDictionary<string> | string[]>
+        values: IStringDictionary<string | IStringDictionary<string> | string[]>,
     ): IStringDictionary<string | IStringDictionary<string> | string[]> {
         const result: IStringDictionary<string | IStringDictionary<string> | string[]> = Object.create(null);
         Object.keys(values).forEach((key) => {
             const value = values[key];
-            // tslint:disable-next-line:no-any
+
             result[key] = <any>this.resolve(<any>value);
         });
         return result;
     }
 
     private __resolveAnyLiteral<T>(values: T): T;
-    // tslint:disable-next-line:no-any
+
     private __resolveAnyLiteral(values: any): any {
         const result: IStringDictionary<string | IStringDictionary<string> | string[]> = Object.create(null);
         Object.keys(values).forEach((key) => {
             const value = values[key];
-            // tslint:disable-next-line:no-any
+
             result[key] = <any>this.resolveAny(<any>value);
         });
         return result;
@@ -87,7 +86,7 @@ abstract class AbstractSystemVariables implements ISystemVariables {
     }
 
     private __resolveAnyArray<T>(value: T[]): T[];
-    // tslint:disable-next-line:no-any
+
     private __resolveAnyArray(value: any[]): any[] {
         return value.map((s) => this.resolveAny(s));
     }
@@ -105,7 +104,7 @@ export class SystemVariables extends AbstractSystemVariables {
         file: Uri | undefined,
         rootFolder: string | undefined,
         workspace?: IWorkspaceService,
-        documentManager?: IDocumentManager
+        documentManager?: IDocumentManager,
     ) {
         super();
         const workspaceFolder = workspace && file ? workspace.getWorkspaceFolder(file) : undefined;
@@ -117,8 +116,8 @@ export class SystemVariables extends AbstractSystemVariables {
             this._selectedText = documentManager.activeTextEditor.document.getText(
                 new Range(
                     documentManager.activeTextEditor.selection.start,
-                    documentManager.activeTextEditor.selection.end
-                )
+                    documentManager.activeTextEditor.selection.end,
+                ),
             );
         }
         this._execPath = process.execPath;

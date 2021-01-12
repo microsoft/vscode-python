@@ -19,7 +19,7 @@ import {
     ILanguageServerFolderService,
     ILanguageServerManager,
     ILanguageServerProxy,
-    LanguageServerType
+    LanguageServerType,
 } from '../types';
 
 @injectable()
@@ -39,18 +39,18 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(ILanguageServerFolderService)
         private readonly folderService: ILanguageServerFolderService,
-        @inject(ICommandManager) commandManager: ICommandManager
+        @inject(ICommandManager) commandManager: ICommandManager,
     ) {
         this.disposables.push(
             commandManager.registerCommand(Commands.RestartLS, () => {
                 this.restartLanguageServer().ignoreErrors();
-            })
+            }),
         );
     }
 
     private static versionTelemetryProps(instance: NodeLanguageServerManager) {
         return {
-            lsVersion: instance.lsVersion
+            lsVersion: instance.lsVersion,
         };
     }
 
@@ -110,7 +110,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         undefined,
         true,
         undefined,
-        NodeLanguageServerManager.versionTelemetryProps
+        NodeLanguageServerManager.versionTelemetryProps,
     )
     @traceDecorators.verbose('Starting language server')
     protected async startLanguageServer(): Promise<void> {
@@ -121,7 +121,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
             this.serviceContainer,
             LanguageServerType.Node,
             () => this.languageServerProxy?.languageClient,
-            this.lsVersion
+            this.lsVersion,
         );
 
         // Make sure the middleware is connected if we restart and we we're already connected.

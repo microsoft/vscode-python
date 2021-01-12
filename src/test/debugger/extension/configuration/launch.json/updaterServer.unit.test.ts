@@ -15,7 +15,7 @@ import { WorkspaceService } from '../../../../../client/common/application/works
 import { PythonDebugConfigurationService } from '../../../../../client/debugger/extension/configuration/debugConfigurationService';
 import {
     LaunchJsonUpdaterService,
-    LaunchJsonUpdaterServiceHelper
+    LaunchJsonUpdaterServiceHelper,
 } from '../../../../../client/debugger/extension/configuration/launch.json/updaterService';
 import { IDebugConfigurationService } from '../../../../../client/debugger/extension/types';
 
@@ -24,7 +24,6 @@ type LaunchJsonSchema = {
     configurations: DebugConfiguration[];
 };
 
-// tslint:disable:no-any no-multiline-string max-func-body-length
 suite('Debugging - launch.json Updater Service', () => {
     let helper: LaunchJsonUpdaterServiceHelper;
     let commandManager: ICommandManager;
@@ -42,7 +41,7 @@ suite('Debugging - launch.json Updater Service', () => {
             instance(commandManager),
             instance(workspace),
             instance(documentManager),
-            instance(debugConfigService)
+            instance(debugConfigService),
         );
     });
     teardown(() => sandbox.restore());
@@ -52,15 +51,15 @@ suite('Debugging - launch.json Updater Service', () => {
             [],
             instance(workspace),
             instance(documentManager),
-            instance(debugConfigService)
+            instance(debugConfigService),
         );
         await service.activate();
         verify(
             commandManager.registerCommand(
                 'python.SelectAndInsertDebugConfiguration',
                 helper.selectAndInsertDebugConfig,
-                helper
-            )
+                helper,
+            ),
         );
     });
 
@@ -68,7 +67,7 @@ suite('Debugging - launch.json Updater Service', () => {
         const document = typemoq.Mock.ofType<TextDocument>();
         const config: LaunchJsonSchema = {
             version: '',
-            configurations: []
+            configurations: [],
         };
         document.setup((doc) => doc.getText(typemoq.It.isAny())).returns(() => JSON.stringify(config));
 
@@ -83,9 +82,9 @@ suite('Debugging - launch.json Updater Service', () => {
                 {
                     name: '',
                     request: 'launch',
-                    type: 'python'
-                }
-            ]
+                    type: 'python',
+                },
+            ],
         };
         document.setup((doc) => doc.getText(typemoq.It.isAny())).returns(() => JSON.stringify(config));
 
@@ -100,9 +99,9 @@ suite('Debugging - launch.json Updater Service', () => {
                 {
                     name: '',
                     request: 'launch',
-                    type: 'python'
-                }
-            ]
+                    type: 'python',
+                },
+            ],
         };
         document.setup((doc) => doc.getText(typemoq.It.isAny())).returns(() => JSON.stringify(config));
         document.setup((doc) => doc.offsetAt(typemoq.It.isAny())).returns(() => 10);

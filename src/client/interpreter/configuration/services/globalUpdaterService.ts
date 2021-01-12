@@ -7,7 +7,7 @@ export class GlobalPythonPathUpdaterService implements IPythonPathUpdaterService
     constructor(
         private readonly inDeprecatePythonPathExperiment: boolean,
         private readonly workspaceService: IWorkspaceService,
-        private readonly interpreterPathService: IInterpreterPathService
+        private readonly interpreterPathService: IInterpreterPathService,
     ) {}
     public async updatePythonPath(pythonPath: string | undefined): Promise<void> {
         const pythonConfig = this.workspaceService.getConfiguration('python');

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any no-unused-expression chai-vague-errors no-unnecessary-override max-func-body-length max-classes-per-file
-
 import { expect } from 'chai';
 import * as fs from 'fs';
 import { ConfigurationTarget, Disposable } from 'vscode';
@@ -18,7 +16,7 @@ suite('Source Map Support', () => {
         const stubInfo = {
             configValueRetrieved: false,
             configValueUpdated: false,
-            messageDisplayed: false
+            messageDisplayed: false,
         };
         const vscode = {
             workspace: {
@@ -39,17 +37,17 @@ suite('Source Map Support', () => {
                             ) {
                                 stubInfo.configValueUpdated = true;
                             }
-                        }
+                        },
                     };
-                }
+                },
             },
             window: {
                 showWarningMessage: () => {
                     stubInfo.messageDisplayed = true;
                     return Promise.resolve(selectDisableButton ? Diagnostics.disableSourceMaps() : undefined);
-                }
+                },
             },
-            ConfigurationTarget: ConfigurationTarget
+            ConfigurationTarget: ConfigurationTarget,
         };
         return { stubInfo, vscode };
     }
@@ -70,7 +68,7 @@ suite('Source Map Support', () => {
         disposables.push(jsFile);
         const mapFile = `${jsFile.filePath}.map`;
         disposables.push({
-            dispose: () => fs.unlinkSync(mapFile)
+            dispose: () => fs.unlinkSync(mapFile),
         });
         await fileSystem.writeFile(mapFile, 'ABC');
         expect(await fileSystem.fileExists(mapFile)).to.be.true;

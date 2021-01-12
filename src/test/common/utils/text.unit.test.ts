@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any no-require-imports no-var-requires
-
 import { expect } from 'chai';
 import { Position, Range } from 'vscode';
 import { parsePosition, parseRange } from '../../../client/common/utils/text';
@@ -23,12 +21,12 @@ suite('parseRange()', () => {
                 '1:3-',
                 new Range(
                     new Position(1, 3),
-                    new Position(0, 0) // ???
-                )
+                    new Position(0, 0), // ???
+                ),
             ],
             ['1:3', new Range(new Position(1, 3), new Position(1, 3))],
             ['', new Range(new Position(0, 0), new Position(0, 0))],
-            ['3-1', new Range(new Position(3, 0), new Position(1, 0))]
+            ['3-1', new Range(new Position(3, 0), new Position(1, 0))],
         ];
         for (const [raw, expected] of tests) {
             const result = parseRange(raw);
@@ -64,7 +62,7 @@ suite('parseRange()', () => {
             'a-b',
             'a',
             'a:1',
-            'a:b'
+            'a:b',
         ];
         for (const raw of tests) {
             expect(() => parseRange(raw)).to.throw();
@@ -77,7 +75,7 @@ suite('parsePosition()', () => {
         const tests: [string, Position][] = [
             ['1:5', new Position(1, 5)],
             ['1', new Position(1, 0)],
-            ['', new Position(0, 0)]
+            ['', new Position(0, 0)],
         ];
         for (const [raw, expected] of tests) {
             const result = parsePosition(raw);

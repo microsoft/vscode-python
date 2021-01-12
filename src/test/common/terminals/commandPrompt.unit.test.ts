@@ -9,7 +9,7 @@ import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget } from 'vscode';
 import {
     getCommandPromptLocation,
-    useCommandPromptAsDefaultShell
+    useCommandPromptAsDefaultShell,
 } from '../../../client/common/terminal/commandPrompt';
 import { IConfigurationService, ICurrentProcess } from '../../../client/common/types';
 
@@ -60,8 +60,8 @@ suite('Terminal Command Prompt', () => {
                     TypeMoq.It.isValue('integrated.shell.windows'),
                     TypeMoq.It.isValue(cmdPromptPath),
                     TypeMoq.It.isAny(),
-                    TypeMoq.It.isValue(ConfigurationTarget.Global)
-                )
+                    TypeMoq.It.isValue(ConfigurationTarget.Global),
+                ),
             )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());

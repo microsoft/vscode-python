@@ -1,11 +1,8 @@
-// tslint:disable-next-line: no-single-line-block-comment
 /* eslint-disable max-classes-per-file */
 
 import { inject, injectable } from 'inversify';
 import { flatten } from 'lodash';
-import {
-    Disposable, Event, EventEmitter, Uri,
-} from 'vscode';
+import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { traceDecorators } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
 import { IDisposableRegistry } from '../../../common/types';
@@ -17,6 +14,7 @@ import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
+    GetInterpreterLocatorOptions,
     GLOBAL_VIRTUAL_ENV_SERVICE,
     IComponentAdapter,
     IInterpreterLocatorHelper,
@@ -28,20 +26,11 @@ import {
 } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { PythonEnvInfo } from '../../base/info';
-import {
-    ILocator,
-    IPythonEnvsIterator,
-    NOOP_ITERATOR,
-    PythonLocatorQuery,
-} from '../../base/locator';
-import {
-    combineIterators,
-    Locators,
-} from '../../base/locators';
+import { ILocator, IPythonEnvsIterator, NOOP_ITERATOR, PythonLocatorQuery } from '../../base/locator';
+import { combineIterators, Locators } from '../../base/locators';
 import { LazyResourceBasedLocator } from '../../base/locators/common/resourceBasedLocator';
 import { PythonEnvironment } from '../../info';
 import { isHiddenInterpreter } from './services/interpreterFilter';
-import { GetInterpreterLocatorOptions } from './types';
 
 /**
  * A wrapper around all locators used by the extension.
@@ -64,9 +53,9 @@ type WorkspaceLocatorFactory = (root: Uri) => WorkspaceLocatorFactoryResult[];
 type RootURI = string;
 
 export type WatchRootsArgs = {
-    initRoot(root:Uri): void;
-    addRoot(root:Uri): void;
-    removeRoot(root:Uri): void;
+    initRoot(root: Uri): void;
+    addRoot(root: Uri): void;
+    removeRoot(root: Uri): void;
 };
 type WatchRootsFunc = (args: WatchRootsArgs) => IDisposable;
 
@@ -82,10 +71,7 @@ export class WorkspaceLocators extends LazyResourceBasedLocator {
 
     private readonly roots: Record<RootURI, Uri> = {};
 
-    constructor(
-        private readonly watchRoots: WatchRootsFunc,
-        private readonly factories: WorkspaceLocatorFactory[],
-    ) {
+    constructor(private readonly watchRoots: WatchRootsFunc, private readonly factories: WorkspaceLocatorFactory[]) {
         super();
     }
 
@@ -217,8 +203,9 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
 
     private readonly _hasInterpreters: Deferred<boolean>;
 
-    private readonly onLocatingEmitter:EventEmitter<Promise<PythonEnvironment[]>> =
-        new EventEmitter<Promise<PythonEnvironment[]>>();
+    private readonly onLocatingEmitter: EventEmitter<Promise<PythonEnvironment[]>> = new EventEmitter<
+        Promise<PythonEnvironment[]>
+    >();
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -257,7 +244,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      *
      * Called by VS Code to indicate it is done with the resource.
      */
-    public dispose():void {
+    public dispose(): void {
         this.disposables.forEach((disposable) => disposable.dispose());
     }
 

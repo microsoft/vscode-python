@@ -22,7 +22,6 @@ import { ITestManagementService } from '../../../client/testing/types';
 
 suite('Language Server - LanguageServer', () => {
     class LanguageServerTest extends DotNetLanguageServerProxy {
-        // tslint:disable-next-line:no-unnecessary-override
         public async registerTestServices() {
             return super.registerTestServices();
         }
@@ -98,7 +97,7 @@ suite('Language Server - LanguageServer', () => {
             .verifiable(typemoq.Times.once());
         client
             .setup((c) =>
-                c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs))
+                c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs)),
             )
             .returns(() => Promise.resolve(undefined) as any);
 
@@ -151,7 +150,7 @@ suite('Language Server - LanguageServer', () => {
             .verifiable(typemoq.Times.once());
         client
             .setup((c) =>
-                c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs))
+                c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs)),
             )
             .returns(() => Promise.resolve(undefined) as any);
 

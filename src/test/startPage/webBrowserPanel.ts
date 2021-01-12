@@ -14,7 +14,6 @@ import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 
-// tslint:disable: no-any no-console no-require-imports no-var-requires
 const nocache = require('nocache');
 
 export interface IWebServer extends IDisposable {
@@ -105,17 +104,14 @@ export class WebServer implements IWebServer {
         });
 
         // Display a message if this env variable is set (used when debugging).
-        // tslint:disable-next-line: no-http-string
+
         const url = `http:///localhost:${port}/index.html`;
         if (process.env.VSC_PYTHON_DS_UI_PROMPT) {
-            window
-                // tslint:disable-next-line: messages-must-be-localized
-                .showInformationMessage(`Open browser to '${url}'`, 'Copy')
-                .then((selection) => {
-                    if (selection === 'Copy') {
-                        env.clipboard.writeText(url).then(noop, noop);
-                    }
-                }, noop);
+            window.showInformationMessage(`Open browser to '${url}'`, 'Copy').then((selection) => {
+                if (selection === 'Copy') {
+                    env.clipboard.writeText(url).then(noop, noop);
+                }
+            }, noop);
         }
 
         return port;
@@ -137,12 +133,12 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
     private loadFailedEmitter = new EventEmitter<void>();
     constructor(
         private readonly disposableRegistry: IDisposableRegistry,
-        private readonly options: IWebviewPanelOptions
+        private readonly options: IWebviewPanelOptions,
     ) {
         this.disposableRegistry.push(this);
         const webViewOptions: WebviewOptions = {
             enableScripts: true,
-            localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd)]
+            localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd)],
         };
         if (options.webViewPanel) {
             this.panel = options.webViewPanel;
@@ -155,8 +151,8 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
                 {
                     retainContextWhenHidden: true,
                     enableFindWidget: true,
-                    ...webViewOptions
-                }
+                    ...webViewOptions,
+                },
             );
         }
 
@@ -166,17 +162,14 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
             this.panel.onDidDispose(() => {
                 this.panel = undefined;
                 this.options.listener.dispose().ignoreErrors();
-            })
+            }),
         );
 
         this.launchServer(this.options.cwd, this.options.rootPath)
             .then((p) => {
                 this.serverUrl = p;
             })
-            .catch((ex) =>
-                // tslint:disable-next-line: no-console
-                console.error('Failed to start Web Browser Panel', ex)
-            );
+            .catch((ex) => console.error('Failed to start Web Browser Panel', ex));
     }
 
     public get loadFailed(): Event<void> {
@@ -238,13 +231,11 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
 
         const port = await this.server.launchServer(cwd, resourcesRoot, portToUse);
         if (this.panel?.webview) {
-            // tslint:disable-next-line: no-http-string
             const url = `http:///localhost:${port}/index.html`;
             this.panel.webview.html = `<!DOCTYPE html><html><html><body><h1>${url}</h1></body>`;
         }
         await this.server.waitForConnection();
 
-        // tslint:disable-next-line: no-http-string
         return `http://localhost:${port}`;
     }
 }

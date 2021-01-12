@@ -18,15 +18,13 @@ import {
     TextEditorViewColumnChangeEvent,
     Uri,
     ViewColumn,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 
 import { IDocumentManager } from '../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { MockDocument } from './mockDocument';
 import { MockEditor } from './mockTextEditor';
-
-// tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 
 export class MockDocumentManager implements IDocumentManager {
     public textDocuments: TextDocument[] = [];
@@ -71,7 +69,7 @@ export class MockDocumentManager implements IDocumentManager {
     public showTextDocument(
         _document: TextDocument,
         _column?: ViewColumn,
-        _preserveFocus?: boolean
+        _preserveFocus?: boolean,
     ): Thenable<TextEditor>;
     public showTextDocument(_document: TextDocument | Uri, _options?: TextDocumentShowOptions): Thenable<TextEditor>;
     public showTextDocument(document: any, _column?: any, _preserveFocus?: any): Thenable<TextEditor> {
@@ -115,12 +113,12 @@ export class MockDocumentManager implements IDocumentManager {
                     range: c.range,
                     rangeOffset: startOffset,
                     rangeLength: endOffset - startOffset,
-                    text: c.newText
+                    text: c.newText,
                 };
             });
             const ev: TextDocumentChangeEvent = {
                 document: doc,
-                contentChanges
+                contentChanges,
             };
             // Changes are applied to the doc before it's sent.
             ev.contentChanges.forEach(doc.edit.bind(doc));

@@ -26,7 +26,7 @@ import { createDeferred, createDeferredFromPromise } from '../../client/common/u
 import { InterpreterSecurityService } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterSecurityService
+    IInterpreterSecurityService,
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
@@ -34,18 +34,16 @@ import * as EnvFileTelemetry from '../../client/telemetry/envFileTelemetry';
 import { sleep } from '../core';
 
 suite('Activation Manager', () => {
-    // tslint:disable:max-func-body-length no-any
     suite('Language Server Activation - ActivationManager', () => {
         class ExtensionActivationManagerTest extends ExtensionActivationManager {
-            // tslint:disable-next-line:no-unnecessary-override
             public addHandlers() {
                 return super.addHandlers();
             }
-            // tslint:disable-next-line:no-unnecessary-override
+
             public async initialize() {
                 return super.initialize();
             }
-            // tslint:disable-next-line:no-unnecessary-override
+
             public addRemoveDocOpenedHandlers() {
                 super.addRemoveDocOpenedHandlers();
             }
@@ -91,7 +89,7 @@ suite('Activation Manager', () => {
                 instance(activeResourceService),
                 instance(experiments),
                 interpreterPathService.object,
-                instance(interpreterSecurityService)
+                instance(interpreterSecurityService),
             );
 
             sinon.stub(EnvFileTelemetry, 'sendActivationTelemetry').resolves();
@@ -300,7 +298,7 @@ suite('Activation Manager', () => {
         test('If doc opened is not python, return', async () => {
             const doc = {
                 uri: Uri.parse('doc'),
-                languageId: 'NOT PYTHON'
+                languageId: 'NOT PYTHON',
             };
 
             managerTest.onDocOpened(doc as any);
@@ -310,7 +308,7 @@ suite('Activation Manager', () => {
         test('If we have opened a doc that does not belong to workspace, then do nothing', async () => {
             const doc = {
                 uri: Uri.parse('doc'),
-                languageId: PYTHON_LANGUAGE
+                languageId: PYTHON_LANGUAGE,
             };
             when(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).thenReturn('');
             when(workspaceService.hasWorkspaceFolders).thenReturn(true);
@@ -324,7 +322,7 @@ suite('Activation Manager', () => {
         test('If workspace corresponding to the doc has already been activated, then do nothing', async () => {
             const doc = {
                 uri: Uri.parse('doc'),
-                languageId: PYTHON_LANGUAGE
+                languageId: PYTHON_LANGUAGE,
             };
             when(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).thenReturn('key');
             managerTest.activatedWorkspaces.add('key');
@@ -446,7 +444,7 @@ suite('Activation Manager', () => {
                 instance(activeResourceService),
                 instance(experiments),
                 interpreterPathService.object,
-                instance(interpreterSecurityService)
+                instance(interpreterSecurityService),
             );
             managerTest.evaluateAutoSelectedInterpreterSafety = () => Promise.resolve();
         });
@@ -528,7 +526,7 @@ suite('Activation Manager', () => {
                 instance(activeResourceService),
                 instance(experiments),
                 instance(interpreterPathService),
-                instance(interpreterSecurityService)
+                instance(interpreterSecurityService),
             );
         });
 
@@ -542,7 +540,7 @@ suite('Activation Manager', () => {
                 .verifiable(typemoq.Times.once());
             when(interpreterPathService.get(resource)).thenReturn('python');
             when(
-                interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)
+                interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource),
             ).thenResolve();
             await managerTest.evaluateAutoSelectedInterpreterSafety(resource);
             autoSelection.verifyAll();
@@ -560,12 +558,12 @@ suite('Activation Manager', () => {
                     .verifiable(typemoq.Times.once());
                 when(interpreterPathService.get(resource)).thenReturn(setting);
                 when(
-                    interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)
+                    interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource),
                 ).thenResolve();
                 await managerTest.evaluateAutoSelectedInterpreterSafety(resource);
                 autoSelection.verifyAll();
                 verify(
-                    interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)
+                    interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource),
                 ).once();
             });
         });
@@ -580,7 +578,7 @@ suite('Activation Manager', () => {
                 .verifiable(typemoq.Times.once());
             when(interpreterPathService.get(resource)).thenReturn('python');
             when(
-                interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)
+                interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource),
             ).thenResolve();
             await managerTest.evaluateAutoSelectedInterpreterSafety(resource);
             autoSelection.verifyAll();
@@ -604,10 +602,10 @@ suite('Activation Manager', () => {
             autoSelection.setup((a) => a.getAutoSelectedInterpreter(resource)).returns(() => interpreter as any);
             when(interpreterPathService.get(resource)).thenReturn('python');
             when(
-                interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)
+                interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource),
             ).thenReturn(evaluateIfInterpreterIsSafeDeferred.promise);
             const deferredPromise = createDeferredFromPromise(
-                managerTest.evaluateAutoSelectedInterpreterSafety(resource)
+                managerTest.evaluateAutoSelectedInterpreterSafety(resource),
             );
             expect(deferredPromise.completed).to.equal(false, 'Promise should not be resolved yet');
             reset(interpreterPathService);

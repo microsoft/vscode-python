@@ -11,7 +11,7 @@ import { IActiveResourceService, IDocumentManager, IWorkspaceService } from './t
 export class ActiveResourceService implements IActiveResourceService {
     constructor(
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
     ) {}
 
     public getActiveResource(): Resource {

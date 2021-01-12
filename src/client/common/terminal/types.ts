@@ -13,7 +13,7 @@ export enum TerminalActivationProviders {
     commandPromptAndPowerShell = 'commandPromptAndPowerShell',
     pyenv = 'pyenv',
     conda = 'conda',
-    pipenv = 'pipenv'
+    pipenv = 'pipenv',
 }
 export enum TerminalShellType {
     powershell = 'powershell',
@@ -28,7 +28,7 @@ export enum TerminalShellType {
     tcshell = 'tshell',
     wsl = 'wsl',
     xonsh = 'xonsh',
-    other = 'other'
+    other = 'other',
 }
 
 export interface ITerminalService extends IDisposable {
@@ -47,7 +47,7 @@ export interface ITerminalService extends IDisposable {
         command: string,
         args: string[],
         cancel?: CancellationToken,
-        swallowExceptions?: boolean
+        swallowExceptions?: boolean,
     ): Promise<void>;
     sendText(text: string): Promise<void>;
     show(preserveFocus?: boolean): Promise<void>;
@@ -117,12 +117,12 @@ export interface ITerminalHelper {
     getEnvironmentActivationCommands(
         terminalShellType: TerminalShellType,
         resource?: Uri,
-        interpreter?: PythonEnvironment
+        interpreter?: PythonEnvironment,
     ): Promise<string[] | undefined>;
     getEnvironmentActivationShellCommands(
         resource: Resource,
         shell: TerminalShellType,
-        interpreter?: PythonEnvironment
+        interpreter?: PythonEnvironment,
     ): Promise<string[] | undefined>;
 }
 
@@ -149,7 +149,7 @@ export interface ITerminalActivationCommandProvider {
     getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined>;
     getActivationCommandsForInterpreter(
         pythonPath: string,
-        targetShell: TerminalShellType
+        targetShell: TerminalShellType,
     ): Promise<string[] | undefined>;
 }
 
@@ -159,7 +159,7 @@ export interface ITerminalActivationHandler {
         terminal: Terminal,
         resource: Uri | undefined,
         preserveFocus: boolean,
-        activated: boolean
+        activated: boolean,
     ): Promise<void>;
 }
 

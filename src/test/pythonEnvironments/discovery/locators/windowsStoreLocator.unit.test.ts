@@ -8,12 +8,19 @@ import * as fsWatcher from '../../../../client/common/platform/fileSystemWatcher
 import { ExecutionResult } from '../../../../client/common/process/types';
 import * as platformApis from '../../../../client/common/utils/platform';
 import {
-    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION,
+    PythonEnvInfo,
+    PythonEnvKind,
+    PythonReleaseLevel,
+    PythonVersion,
+    UNKNOWN_PYTHON_VERSION,
 } from '../../../../client/pythonEnvironments/base/info';
 import { InterpreterInformation } from '../../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
 import * as externalDep from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { getWindowsStorePythonExes, WindowsStoreLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
+import {
+    getWindowsStorePythonExes,
+    WindowsStoreLocator,
+} from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
 import { getEnvs } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
@@ -52,12 +59,15 @@ suite('Windows Store', () => {
 
         const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
         const testStoreAppRoot = path.join(testLocalAppData, 'Microsoft', 'WindowsApps');
-        const pathToData = new Map<string, {
-            versionInfo:(string|number)[],
-            sysPrefix: string,
-            sysVersion: string,
-            is64Bit: boolean
-        }>();
+        const pathToData = new Map<
+            string,
+            {
+                versionInfo: (string | number)[];
+                sysPrefix: string;
+                sysVersion: string;
+                is64Bit: boolean;
+            }
+        >();
 
         const python383data = {
             versionInfo: [3, 8, 3, 'final', 0],
@@ -80,9 +90,9 @@ suite('Windows Store', () => {
             executable: string,
             sysVersion?: string,
             sysPrefix?: string,
-            versionStr?:string,
+            versionStr?: string,
         ): InterpreterInformation {
-            let version:PythonVersion;
+            let version: PythonVersion;
             try {
                 version = parseVersion(versionStr ?? path.basename(executable));
                 if (sysVersion) {
@@ -105,7 +115,7 @@ suite('Windows Store', () => {
 
         setup(async () => {
             stubShellExec = sinon.stub(externalDep, 'shellExecute');
-            stubShellExec.callsFake((command:string) => {
+            stubShellExec.callsFake((command: string) => {
                 if (command.indexOf('notpython.exe') > 0) {
                     return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
                 }
@@ -119,7 +129,11 @@ suite('Windows Store', () => {
             getEnvVar.withArgs('LOCALAPPDATA').returns(testLocalAppData);
 
             watchLocationForPatternStub = sinon.stub(fsWatcher, 'watchLocationForPattern');
-            watchLocationForPatternStub.returns({ dispose: () => { /* do nothing */ } });
+            watchLocationForPatternStub.returns({
+                dispose: () => {
+                    /* do nothing */
+                },
+            });
 
             locator = new WindowsStoreLocator();
         });
@@ -134,7 +148,7 @@ suite('Windows Store', () => {
         test('iterEnvs()', async () => {
             const expectedEnvs = [...pathToData.keys()]
                 .sort((a: string, b: string) => a.localeCompare(b))
-                .map((k): PythonEnvInfo|undefined => {
+                .map((k): PythonEnvInfo | undefined => {
                     const data = pathToData.get(k);
                     if (data) {
                         return {
@@ -151,8 +165,9 @@ suite('Windows Store', () => {
                 });
 
             const iterator = locator.iterEnvs();
-            const actualEnvs = (await getEnvs(iterator))
-                .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+            const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
+                a.executable.filename.localeCompare(b.executable.filename),
+            );
 
             assertEnvsEqual(actualEnvs, expectedEnvs);
         });
@@ -187,7 +202,7 @@ suite('Windows Store', () => {
             };
 
             // Partially filled in env info object
-            const input:PythonEnvInfo = {
+            const input: PythonEnvInfo = {
                 name: '',
                 location: '',
                 defaultDisplayName: undefined,

@@ -7,7 +7,6 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { getExtensionSettings } from '../../common';
 import { initialize } from '../../initialize';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Configuration Service', () => {
     let serviceContainer: IServiceContainer;
     suiteSetup(async () => {
@@ -28,7 +27,7 @@ suite('Configuration Service', () => {
             dispose(): Promise<void> {
                 disposed = true;
                 return Promise.resolve();
-            }
+            },
         };
         asyncRegistry.push(disposable);
         await asyncRegistry.dispose();

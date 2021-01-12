@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:max-func-body-length
-
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
@@ -18,7 +16,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
     [
         'c:/programfiles/python/python',
         'c:/program files/python/python',
-        'c:\\users\\windows paths\\conda\\python.exe'
+        'c:\\users\\windows paths\\conda\\python.exe',
     ].forEach((pythonPath) => {
         const hasSpaces = pythonPath.indexOf(' ') > 0;
         const resource = Uri.file('a');
@@ -64,21 +62,21 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                                     case TerminalShellType.powershell: {
                                         expect(supported).to.be.equal(
                                             true,
-                                            `${shellType.name} shell not supported (it should be)`
+                                            `${shellType.name} shell not supported (it should be)`,
                                         );
                                         break;
                                     }
                                     default: {
                                         expect(supported).to.be.equal(
                                             false,
-                                            `${shellType.name} incorrectly supported (should not be)`
+                                            `${shellType.name} incorrectly supported (should not be)`,
                                         );
                                     }
                                 }
                             });
                         });
                     });
-                }
+                },
             );
 
             suite('and script file is activate.bat', () => {
@@ -203,7 +201,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
 
                     expect(command).to.be.deep.equal(
                         [],
-                        'Invalid command (running powershell files are not supported on command prompt)'
+                        'Invalid command (running powershell files are not supported on command prompt)',
                     );
                 });
 
@@ -219,7 +217,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
 
                     expect(command).to.be.deep.equal(
                         [`& ${pathToScriptFile.fileToCommandArgument()}`.trim()],
-                        'Invalid command'
+                        'Invalid command',
                     );
                 });
 
@@ -235,7 +233,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
 
                     expect(command).to.be.deep.equal(
                         [`& ${pathToScriptFile.fileToCommandArgument()}`.trim()],
-                        'Invalid command'
+                        'Invalid command',
                     );
                 });
             });

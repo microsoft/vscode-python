@@ -15,7 +15,7 @@ import {
     ExtensionContext,
     OutputChannel,
     Uri,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
 import { LogLevel } from '../logging/levels';
@@ -69,7 +69,7 @@ export type ExecutionInfo = {
 export enum InstallerResponse {
     Installed,
     Disabled,
-    Ignore
+    Ignore,
 }
 
 export enum ProductType {
@@ -79,7 +79,7 @@ export enum ProductType {
     RefactoringLibrary = 'RefactoringLibrary',
     WorkspaceSymbols = 'WorkspaceSymbols',
     DataScience = 'DataScience',
-    TensorBoard = 'TensorBoard'
+    TensorBoard = 'TensorBoard',
 }
 
 export enum Product {
@@ -106,12 +106,12 @@ export enum Product {
     kernelspec = 21,
     nbconvert = 22,
     pandas = 23,
-    tensorboard = 24
+    tensorboard = 24,
 }
 
 export enum ModuleNamePurpose {
     install = 1,
-    run = 2
+    run = 2,
 }
 
 export const IInstaller = Symbol('IInstaller');
@@ -120,14 +120,13 @@ export interface IInstaller {
     promptToInstall(
         product: Product,
         resource?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
     ): Promise<InstallerResponse>;
     install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 
-// tslint:disable-next-line:no-suspicious-comment
 // TODO: Drop IPathUtils in favor of IFileSystemPathUtils.
 // See https://github.com/microsoft/vscode-python/issues/8542.
 export const IPathUtils = Symbol('IPathUtils');
@@ -222,7 +221,7 @@ export interface IPycodestyleCategorySeverity {
     readonly W: DiagnosticSeverity;
     readonly E: DiagnosticSeverity;
 }
-// tslint:disable-next-line:interface-name
+
 export interface Flake8CategorySeverity {
     readonly F: DiagnosticSeverity;
     readonly E: DiagnosticSeverity;
@@ -321,7 +320,7 @@ export interface IExperiments {
 export enum AnalysisSettingsLogLevel {
     Information = 'Information',
     Error = 'Error',
-    Warning = 'Warning'
+    Warning = 'Warning',
 }
 
 export type LanguageServerDownloadChannels = 'stable' | 'beta' | 'daily';
@@ -353,7 +352,7 @@ export interface IConfigurationService {
         setting: string,
         value?: {},
         resource?: Uri,
-        configTarget?: ConfigurationTarget
+        configTarget?: ConfigurationTarget,
     ): Promise<void>;
 }
 
@@ -427,7 +426,7 @@ export interface IExtensions {
     /**
      * All extensions currently known to the system.
      */
-    // tslint:disable-next-line:no-any
+
     readonly all: readonly Extension<any>[];
 
     /**
@@ -442,7 +441,7 @@ export interface IExtensions {
      * @param extensionId An extension identifier.
      * @return An extension or `undefined`.
      */
-    // tslint:disable-next-line:no-any
+
     getExtension(extensionId: string): Extension<any> | undefined;
 
     /**
@@ -521,7 +520,7 @@ export interface ICryptoUtils {
     createHash<E extends keyof IHashFormat>(
         data: string,
         hashFormat: E,
-        algorithm?: 'SHA512' | 'SHA256' | 'FNV'
+        algorithm?: 'SHA512' | 'SHA256' | 'FNV',
     ): IHashFormat[E];
 }
 

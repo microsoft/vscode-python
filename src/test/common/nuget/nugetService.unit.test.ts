@@ -21,13 +21,13 @@ suite('Nuget Service', () => {
         const service = new NugetService();
         expect(service.getVersionFromPackageFileName('Something-xyz.0.0.1.nupkg').compare(parse('0.0.1')!)).to.equal(
             0,
-            'incorrect'
+            'incorrect',
         );
         expect(
-            service.getVersionFromPackageFileName('Something-xyz.0.0.1.1234.nupkg').compare(parse('0.0.1-1234')!)
+            service.getVersionFromPackageFileName('Something-xyz.0.0.1.1234.nupkg').compare(parse('0.0.1-1234')!),
         ).to.equal(0, 'incorrect');
         expect(
-            service.getVersionFromPackageFileName('Something-xyz.0.0.1-preview.nupkg').compare(parse('0.0.1-preview')!)
+            service.getVersionFromPackageFileName('Something-xyz.0.0.1-preview.nupkg').compare(parse('0.0.1-preview')!),
         ).to.equal(0, 'incorrect');
     });
 });

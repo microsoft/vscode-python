@@ -16,7 +16,6 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { noop, sleep } from '../../core';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Terminal Service (synchronous)', () => {
     let service: SynchronousTerminalService;
     let fs: IFileSystem;
@@ -107,8 +106,8 @@ suite('Terminal Service (synchronous)', () => {
             verify(
                 terminalService.sendCommand(
                     'python',
-                    deepEqual([isolated, shellExecFile, 'cmd', '1', '2', tmpFile.filePath.fileToCommandArgument()])
-                )
+                    deepEqual([isolated, shellExecFile, 'cmd', '1', '2', tmpFile.filePath.fileToCommandArgument()]),
+                ),
             ).once();
         }).timeout(1_000);
         test('run sendCommand in terminalService should complete when command completes', async () => {
@@ -143,8 +142,8 @@ suite('Terminal Service (synchronous)', () => {
             verify(
                 terminalService.sendCommand(
                     'python',
-                    deepEqual([isolated, shellExecFile, 'cmd', '1', '2', tmpFile.filePath.fileToCommandArgument()])
-                )
+                    deepEqual([isolated, shellExecFile, 'cmd', '1', '2', tmpFile.filePath.fileToCommandArgument()]),
+                ),
             ).once();
         }).timeout(2_000);
     });

@@ -17,14 +17,14 @@ const defaultOSShells = {
     [OSType.Linux]: TerminalShellType.bash,
     [OSType.OSX]: TerminalShellType.bash,
     [OSType.Windows]: TerminalShellType.commandPrompt,
-    [OSType.Unknown]: TerminalShellType.other
+    [OSType.Unknown]: TerminalShellType.other,
 };
 
 @injectable()
 export class ShellDetector {
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
-        @multiInject(IShellDetector) private readonly shellDetectors: IShellDetector[]
+        @multiInject(IShellDetector) private readonly shellDetectors: IShellDetector[],
     ) {}
     /**
      * Logic is as follows:
@@ -45,7 +45,7 @@ export class ShellDetector {
             shellIdentificationSource: 'default',
             terminalProvided: !!terminal,
             hasCustomShell: undefined,
-            hasShellInEnv: undefined
+            hasShellInEnv: undefined,
         };
 
         // Sort in order of priority and then identify the shell.
@@ -54,7 +54,7 @@ export class ShellDetector {
         for (const detector of shellDetectors) {
             shell = detector.identify(telemetryProperties, terminal);
             traceVerbose(
-                `${detector}. Shell identified as ${shell} ${terminal ? `(Terminal name is ${terminal.name})` : ''}`
+                `${detector}. Shell identified as ${shell} ${terminal ? `(Terminal name is ${terminal.name})` : ''}`,
             );
             if (shell && shell !== TerminalShellType.other) {
                 break;

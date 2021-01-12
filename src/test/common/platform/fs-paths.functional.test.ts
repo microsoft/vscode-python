@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length chai-vague-errors
-
 import { expect } from 'chai';
 import * as os from 'os';
 import * as path from 'path';
@@ -110,7 +108,7 @@ suite('FileSystem - Paths', () => {
                 // Be explicit here to ensure our assumptions are correct
                 // about the relationship between "sep" and "join()".
                 path.sep === '\\' ? 'y\\z' : 'y/z',
-                'spam.py'
+                'spam.py',
             );
 
             expect(result).to.equal(expected);

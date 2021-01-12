@@ -29,13 +29,13 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         @named(WORKSPACE_VIRTUAL_ENV_SERVICE)
         private readonly workspaceVirtualEnvInterpreterLocator: IInterpreterLocatorService,
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
-        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService
+        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
     ) {
         super(AutoSelectionRule.workspaceVirtualEnvs, fs, stateFactory);
     }
     protected async onAutoSelectInterpreter(
         resource: Resource,
-        manager?: IInterpreterAutoSelectionService
+        manager?: IInterpreterAutoSelectionService,
     ): Promise<NextAction> {
         const workspacePath = this.helper.getActiveWorkspaceUri(resource);
         if (!workspacePath) {
@@ -52,7 +52,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
             return NextAction.runNextRule;
         }
         const virtualEnvPromise = createDeferredFromPromise(
-            this.getWorkspaceVirtualEnvInterpreters(workspacePath.folderUri)
+            this.getWorkspaceVirtualEnvInterpreters(workspacePath.folderUri),
         );
 
         const interpreters = await virtualEnvPromise.promise;
@@ -69,7 +69,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         traceVerbose(
             `Selected Interpreter from ${this.ruleName}, ${
                 bestInterpreter ? JSON.stringify(bestInterpreter) : 'Nothing Selected'
-            }`
+            }`,
         );
         return NextAction.runNextRule;
     }
@@ -83,7 +83,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         }
         // Now check virtual environments under the workspace root
         const interpreters = await this.workspaceVirtualEnvInterpreterLocator.getInterpreters(resource, {
-            ignoreCache: true
+            ignoreCache: true,
         });
         const workspacePath =
             this.platform.osType === OSType.Windows

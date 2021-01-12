@@ -19,20 +19,20 @@ export class CurrentPathInterpretersAutoSelectionRule extends BaseRuleService {
         @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory,
         @inject(IInterpreterLocatorService)
         @named(CURRENT_PATH_SERVICE)
-        private readonly currentPathInterpreterLocator: IInterpreterLocatorService
+        private readonly currentPathInterpreterLocator: IInterpreterLocatorService,
     ) {
         super(AutoSelectionRule.currentPath, fs, stateFactory);
     }
     protected async onAutoSelectInterpreter(
         resource: Resource,
-        manager?: IInterpreterAutoSelectionService
+        manager?: IInterpreterAutoSelectionService,
     ): Promise<NextAction> {
         const interpreters = await this.currentPathInterpreterLocator.getInterpreters(resource);
         const bestInterpreter = this.helper.getBestInterpreter(interpreters);
         traceVerbose(
             `Selected Interpreter from ${this.ruleName}, ${
                 bestInterpreter ? JSON.stringify(bestInterpreter) : 'Nothing Selected'
-            }`
+            }`,
         );
         return (await this.setGlobalInterpreter(bestInterpreter, manager)) ? NextAction.exit : NextAction.runNextRule;
     }

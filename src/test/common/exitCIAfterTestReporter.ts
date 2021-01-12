@@ -7,7 +7,6 @@
 // This is a hack, however for some reason the process running the tests do not exit.
 // The hack is to force it to die when tests are done, if this doesn't work we've got a bigger problem on our hands.
 
-// tslint:disable:no-var-requires no-require-imports no-any no-console no-unnecessary-class no-default-export
 import * as fs from 'fs-extra';
 import * as net from 'net';
 import * as path from 'path';

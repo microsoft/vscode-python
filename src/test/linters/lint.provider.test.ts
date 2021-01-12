@@ -18,12 +18,12 @@ import {
     IPersistentStateFactory,
     IPythonSettings,
     Product,
-    WORKSPACE_MEMENTO
+    WORKSPACE_MEMENTO,
 } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -36,7 +36,6 @@ import { initialize } from '../initialize';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockMemento } from '../mocks/mementos';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Linting - Provider', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let engine: TypeMoq.IMock<ILintingEngine>;
@@ -62,7 +61,7 @@ suite('Linting - Provider', () => {
 
         fs = TypeMoq.Mock.ofType<IFileSystem>();
         fs.setup((x) => x.fileExists(TypeMoq.It.isAny())).returns(
-            () => new Promise<boolean>((resolve, _reject) => resolve(true))
+            () => new Promise<boolean>((resolve, _reject) => resolve(true)),
         );
         fs.setup((x) => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fs.object);
@@ -104,11 +103,11 @@ suite('Linting - Provider', () => {
         serviceManager.add(IAvailableLinterActivator, AvailableLinterActivator);
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
         serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
             IInterpreterAutoSeletionProxyService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
         serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
         serviceManager.addSingleton<vscode.Memento>(IMemento, MockMemento, GLOBAL_MEMENTO);

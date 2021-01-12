@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any
-
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
@@ -45,9 +43,7 @@ suite('Interpreters Known Paths', () => {
         pathUtils.setup((p) => p.delimiter).returns(() => pathDelimiter);
         platformService.setup((p) => p.isWindows).returns(() => true);
         platformService.setup((p) => p.pathVariableName).returns(() => 'PATH');
-        currentProcess
-            .setup((p) => p.env)
-            .returns(() => ({ PATH: pathsInPATHVar.join(pathDelimiter) }));
+        currentProcess.setup((p) => p.env).returns(() => ({ PATH: pathsInPATHVar.join(pathDelimiter) }));
 
         const expectedPaths = [...pathsInPATHVar].filter((item) => item.length > 0);
 
@@ -63,9 +59,7 @@ suite('Interpreters Known Paths', () => {
         pathUtils.setup((p) => p.home).returns(() => homeDir);
         platformService.setup((p) => p.isWindows).returns(() => false);
         platformService.setup((p) => p.pathVariableName).returns(() => 'PATH');
-        currentProcess
-            .setup((p) => p.env)
-            .returns(() => ({ PATH: '' }));
+        currentProcess.setup((p) => p.env).returns(() => ({ PATH: '' }));
 
         const expectedPaths: string[] = [];
         ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin'].forEach((p) => {
@@ -89,9 +83,7 @@ suite('Interpreters Known Paths', () => {
         pathUtils.setup((p) => p.home).returns(() => homeDir);
         platformService.setup((p) => p.isWindows).returns(() => false);
         platformService.setup((p) => p.pathVariableName).returns(() => 'PATH');
-        currentProcess
-            .setup((p) => p.env)
-            .returns(() => ({ PATH: pathsInPATHVar.join(pathDelimiter) }));
+        currentProcess.setup((p) => p.env).returns(() => ({ PATH: pathsInPATHVar.join(pathDelimiter) }));
 
         const expectedPaths = [...pathsInPATHVar].filter((item) => item.length > 0);
         ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin'].forEach((p) => {

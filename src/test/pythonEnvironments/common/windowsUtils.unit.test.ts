@@ -22,7 +22,9 @@ suite('Windows Utils tests', () => {
     ];
 
     testParams.forEach((testParam) => {
-        test(`Python executable check ${testParam.expected ? 'should match' : 'should not match'} this path: ${testParam.path}`, () => {
+        test(`Python executable check ${testParam.expected ? 'should match' : 'should not match'} this path: ${
+            testParam.path
+        }`, () => {
             assert.deepEqual(isWindowsPythonExe(testParam.path), testParam.expected);
         });
     });

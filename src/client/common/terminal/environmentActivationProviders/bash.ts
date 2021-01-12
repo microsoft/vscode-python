@@ -18,7 +18,7 @@ const SCRIPTS: ActivationScripts = ({
     [TerminalShellType.tcshell]: ['activate.csh'],
     [TerminalShellType.cshell]: ['activate.csh'],
     // Group 3
-    [TerminalShellType.fish]: ['activate.fish']
+    [TerminalShellType.fish]: ['activate.fish'],
 } as unknown) as ActivationScripts;
 
 export function getAllScripts(): string[] {
@@ -40,7 +40,7 @@ export class Bash extends VenvBaseActivationCommandProvider {
 
     public async getActivationCommandsForInterpreter(
         pythonPath: string,
-        targetShell: TerminalShellType
+        targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
         const scriptFile = await this.findScriptFile(pythonPath, targetShell);
         if (!scriptFile) {

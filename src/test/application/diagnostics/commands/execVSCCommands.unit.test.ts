@@ -29,7 +29,7 @@ suite('Application Diagnostics - Exec VSC Commands', () => {
 
         const command = commandFactory.createCommand(diagnostic.object, {
             type: 'executeVSCCommand',
-            options: 'editor.action.formatDocument'
+            options: 'editor.action.formatDocument',
         });
         expect(command).to.be.instanceOf(ExecuteVSCCommand);
     });
@@ -43,7 +43,7 @@ suite('Application Diagnostics - Exec VSC Commands', () => {
 
         const command = commandFactory.createCommand(diagnostic.object, {
             type: 'executeVSCCommand',
-            options: 'editor.action.formatDocument'
+            options: 'editor.action.formatDocument',
         });
         await command.invoke();
 

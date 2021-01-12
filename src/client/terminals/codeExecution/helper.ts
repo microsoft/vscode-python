@@ -50,7 +50,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                 ? internalScripts.normalizeSelection()
                 : internalScripts.normalizeForInterpreter();
             const observable = processService.execObservable(interpreter?.path || 'python', args, {
-                throwOnStdErr: true
+                throwOnStdErr: true,
             });
             const normalizeOutput = createDeferred<string>();
 
@@ -64,14 +64,14 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                 },
                 complete: () => {
                     normalizeOutput.resolve(normalized);
-                }
+                },
             });
 
             // The normalization script expects a serialized JSON object, with the selection under the "code" key.
             // We're using a JSON object so that we don't have to worry about encoding, or escaping non-ASCII characters.
             const input = JSON.stringify({ code });
-            observable.proc?.stdin.write(input);
-            observable.proc?.stdin.end();
+            observable.proc?.stdin?.write(input);
+            observable.proc?.stdin?.end();
 
             // We expect a serialized JSON object back, with the normalized code under the "normalized" key.
             const result = await normalizeOutput.promise;
@@ -162,7 +162,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
         const fullTextRange = new Range(
             new Position(selection.start.line, 0),
-            new Position(selection.end.line, textEditor.document.lineAt(selection.end.line).text.length)
+            new Position(selection.end.line, textEditor.document.lineAt(selection.end.line).text.length),
         );
         const fullText = textEditor.document.getText(fullTextRange);
 
@@ -190,7 +190,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         const fullStartLineText = textEditor.document.lineAt(selection.start.line).text;
         const selectionFirstLineRange = new Range(
             selection.start,
-            new Position(selection.start.line, fullStartLineText.length)
+            new Position(selection.start.line, fullStartLineText.length),
         );
         const selectionFirstLineText = textEditor.document.getText(selectionFirstLineRange);
 

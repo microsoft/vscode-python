@@ -21,7 +21,7 @@ export class StableBuildInstaller implements IExtensionBuildInstaller {
     constructor(
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
     ) {}
 
     @traceDecorators.error('Installing stable build of extension failed')
@@ -42,7 +42,7 @@ export class InsidersBuildInstaller implements IExtensionBuildInstaller {
         @inject(IFileDownloader) private readonly fileDownloader: IFileDownloader,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
     ) {}
 
     @traceDecorators.error('Installing insiders build of extension failed')
@@ -63,7 +63,7 @@ export class InsidersBuildInstaller implements IExtensionBuildInstaller {
         const downloadOptions = {
             extension: vsixFileExtension,
             outputChannel: this.output,
-            progressMessagePrefix: ExtensionChannels.downloadingInsidersMessage()
+            progressMessagePrefix: ExtensionChannels.downloadingInsidersMessage(),
         };
         return this.fileDownloader.downloadFile(developmentBuildUri, downloadOptions).then((file) => {
             this.output.appendLine(ExtensionChannels.downloadCompletedOutputMessage());

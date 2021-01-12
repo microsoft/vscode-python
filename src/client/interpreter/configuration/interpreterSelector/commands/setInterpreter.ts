@@ -14,7 +14,7 @@ import {
     IMultiStepInput,
     IMultiStepInputFactory,
     InputStep,
-    IQuickPickParameters
+    IQuickPickParameters,
 } from '../../../../common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
@@ -34,31 +34,31 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
     ) {
         super(pythonPathUpdaterService, commandManager, applicationShell, workspaceService);
     }
 
     public async activate() {
         this.disposables.push(
-            this.commandManager.registerCommand(Commands.Set_Interpreter, this.setInterpreter.bind(this))
+            this.commandManager.registerCommand(Commands.Set_Interpreter, this.setInterpreter.bind(this)),
         );
     }
 
     public async _pickInterpreter(
         input: IMultiStepInput<InterpreterStateArgs>,
-        state: InterpreterStateArgs
+        state: InterpreterStateArgs,
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         const interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
         const enterInterpreterPathSuggestion = {
             label: InterpreterQuickPickList.enterPath.label(),
             detail: InterpreterQuickPickList.enterPath.detail(),
-            alwaysShow: true
+            alwaysShow: true,
         };
         const suggestions = [enterInterpreterPathSuggestion, ...interpreterSuggestions];
         const currentPythonPath = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
-            state.workspace ? state.workspace.fsPath : undefined
+            state.workspace ? state.workspace.fsPath : undefined,
         );
 
         state.path = undefined;
@@ -70,7 +70,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             items: suggestions,
             activeItem: suggestions[1],
             matchOnDetail: true,
-            matchOnDescription: true
+            matchOnDescription: true,
         });
 
         if (selection === undefined) {
@@ -85,19 +85,19 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     @captureTelemetry(EventName.SELECT_INTERPRETER_ENTER_BUTTON)
     public async _enterOrBrowseInterpreterPath(
         input: IMultiStepInput<InterpreterStateArgs>,
-        state: InterpreterStateArgs
+        state: InterpreterStateArgs,
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         const items: QuickPickItem[] = [
             {
                 label: InterpreterQuickPickList.browsePath.label(),
-                detail: InterpreterQuickPickList.browsePath.detail()
-            }
+                detail: InterpreterQuickPickList.browsePath.detail(),
+            },
         ];
 
         const selection = await input.showQuickPick({
             placeholder: InterpreterQuickPickList.enterPath.placeholder(),
             items,
-            acceptFilterBoxTextAsSelection: true
+            acceptFilterBoxTextAsSelection: true,
         });
 
         if (typeof selection === 'string') {
@@ -113,7 +113,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 filters: this.platformService.isWindows ? filtersObject : undefined,
                 openLabel: InterpreterQuickPickList.browsePath.openButtonLabel(),
                 canSelectMany: false,
-                title: InterpreterQuickPickList.browsePath.title()
+                title: InterpreterQuickPickList.browsePath.title(),
             });
             if (uris && uris.length > 0) {
                 state.path = uris[0].fsPath;

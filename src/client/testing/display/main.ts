@@ -32,7 +32,6 @@ export class TestResultDisplay implements ITestResultDisplay {
         return this.didChange.event;
     }
 
-    // tslint:disable-next-line:no-any
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.statusBar = this.appShell.createStatusBarItem(StatusBarAlignment.Left);
@@ -58,7 +57,7 @@ export class TestResultDisplay implements ITestResultDisplay {
         this.displayProgress(
             'Running Tests',
             'Running Tests (Click to Stop)',
-            constants.Commands.Tests_Ask_To_Stop_Test
+            constants.Commands.Tests_Ask_To_Stop_Test,
         );
         testRunResult
             .then((tests) => this.updateTestRunWithSuccess(tests, debug))
@@ -70,7 +69,7 @@ export class TestResultDisplay implements ITestResultDisplay {
         this.displayProgress(
             'Discovering Tests',
             'Discovering tests (click to stop)',
-            constants.Commands.Tests_Ask_To_Stop_Discovery
+            constants.Commands.Tests_Ask_To_Stop_Discovery,
         );
         return testDiscovery
             .then((tests) => {
@@ -116,7 +115,6 @@ export class TestResultDisplay implements ITestResultDisplay {
         return tests;
     }
 
-    // tslint:disable-next-line:no-any
     private updateTestRunWithFailure(reason: any): Promise<any> {
         this.clearProgressTicker();
         this.statusBar.command = constants.Commands.Tests_View_UI;
@@ -146,7 +144,6 @@ export class TestResultDisplay implements ITestResultDisplay {
     }
     private clearProgressTicker() {
         if (this.progressTimeout) {
-            // tslint:disable-next-line: no-any
             clearInterval(this.progressTimeout);
         }
         this.progressTimeout = null;
@@ -154,14 +151,13 @@ export class TestResultDisplay implements ITestResultDisplay {
     }
 
     @captureTelemetry(EventName.UNITTEST_DISABLE)
-    // tslint:disable-next-line:no-any
     private async disableTests(): Promise<any> {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const settingsToDisable = [
             'testing.promptToConfigure',
             'testing.pytestEnabled',
             'testing.unittestEnabled',
-            'testing.nosetestsEnabled'
+            'testing.nosetestsEnabled',
         ];
 
         for (const setting of settingsToDisable) {
@@ -186,7 +182,7 @@ export class TestResultDisplay implements ITestResultDisplay {
                 .showInformationMessage(
                     'No tests discovered, please check the configuration settings for the tests.',
                     Testing.disableTests(),
-                    Testing.configureTests()
+                    Testing.configureTests(),
                 )
                 .then((item) => {
                     if (item === Testing.disableTests()) {
@@ -200,7 +196,6 @@ export class TestResultDisplay implements ITestResultDisplay {
         }
     }
 
-    // tslint:disable-next-line:no-any
     private updateWithDiscoverFailure(reason: any) {
         this.clearProgressTicker();
         this.statusBar.text = '$(zap) Discover Tests';
@@ -210,14 +205,13 @@ export class TestResultDisplay implements ITestResultDisplay {
         if (reason !== CANCELLATION_REASON) {
             this.statusBar.text = '$(alert) Test discovery failed';
             this.statusBar.tooltip = "Discovering Tests failed (view 'Python Test Log' output panel for details)";
-            // tslint:disable-next-line:no-suspicious-comment
+
             // TODO: ignore this quitemode, always display the error message (inform the user).
             if (!isNotInstalledError(reason)) {
-                // tslint:disable-next-line:no-suspicious-comment
                 // TODO: show an option that will invoke a command 'python.test.configureTest' or similar.
                 // This will be hanlded by main.ts that will capture input from user and configure the tests.
                 this.appShell.showErrorMessage(
-                    'Test discovery error, please check the configuration settings for the tests.'
+                    'Test discovery error, please check the configuration settings for the tests.',
                 );
             }
         }

@@ -41,7 +41,7 @@ export class PipEnvServiceHelper implements IPipEnvServiceHelper {
         await this.state.updateValue(values);
     }
 
-    protected async initializeStateStore() {
+    protected async initializeStateStore(): Promise<void> {
         if (this.initialized) {
             return;
         }

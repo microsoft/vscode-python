@@ -9,7 +9,7 @@ import { LanguageServerDownloadChannel } from '../../../client/activation/common
 import {
     BetaDotNetLanguageServerPackageRepository,
     DailyDotNetLanguageServerPackageRepository,
-    StableDotNetLanguageServerPackageRepository
+    StableDotNetLanguageServerPackageRepository,
 } from '../../../client/activation/languageServer/languageServerPackageRepository';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -55,19 +55,19 @@ suite('Language Server Download Channels', () => {
     test('Stable', () => {
         expect(getPackageInfo(LanguageServerDownloadChannel.stable)).to.be.deep.equal([
             'https://pvsc.azureedge.net',
-            'python-language-server-stable'
+            'python-language-server-stable',
         ]);
     });
     test('Beta', () => {
         expect(getPackageInfo(LanguageServerDownloadChannel.beta)).to.be.deep.equal([
             'https://pvsc.azureedge.net',
-            'python-language-server-beta'
+            'python-language-server-beta',
         ]);
     });
     test('Daily', () => {
         expect(getPackageInfo(LanguageServerDownloadChannel.daily)).to.be.deep.equal([
             'https://pvsc.azureedge.net',
-            'python-language-server-daily'
+            'python-language-server-daily',
         ]);
     });
 });

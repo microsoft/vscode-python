@@ -34,7 +34,7 @@ export class DebugConfigurationProviderFactory implements IDebugConfigurationPro
         remoteAttachProvider: IDebugConfigurationProvider,
         @inject(IDebugConfigurationProvider)
         @named(DebugConfigurationType.pidAttach)
-        pidAttachProvider: IDebugConfigurationProvider
+        pidAttachProvider: IDebugConfigurationProvider,
     ) {
         this.providers = new Map<DebugConfigurationType, IDebugConfigurationProvider>();
         this.providers.set(DebugConfigurationType.launchDjango, djangoProvider);

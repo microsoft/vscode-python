@@ -23,7 +23,7 @@ import { BaseShellDetector } from './baseShellDetector';
 export class SettingsShellDetector extends BaseShellDetector {
     constructor(
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IPlatformService) private readonly platform: IPlatformService
+        @inject(IPlatformService) private readonly platform: IPlatformService,
     ) {
         super(2);
     }
@@ -51,7 +51,7 @@ export class SettingsShellDetector extends BaseShellDetector {
     }
     public identify(
         telemetryProperties: ShellIdentificationTelemetry,
-        _terminal?: Terminal
+        _terminal?: Terminal,
     ): TerminalShellType | undefined {
         const shellPath = this.getTerminalShellPath();
         telemetryProperties.hasCustomShell = !!shellPath;

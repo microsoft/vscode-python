@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import * as assert from 'assert';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
@@ -22,7 +20,7 @@ import {
     ExtensionChannels,
     IExtensionChannelRule,
     IExtensionChannelService,
-    IInsiderExtensionPrompt
+    IInsiderExtensionPrompt,
 } from '../../../client/common/insidersBuild/types';
 import { InsidersBuildInstaller } from '../../../client/common/installer/extensionBuildInstaller';
 import { IExtensionBuildInstaller } from '../../../client/common/installer/types';
@@ -55,7 +53,7 @@ suite('Insiders Extension Service - Handle channel', () => {
             instance(cmdManager),
             instance(serviceContainer),
             instance(insidersInstaller),
-            []
+            [],
         );
     });
 
@@ -79,7 +77,7 @@ suite('Insiders Extension Service - Handle channel', () => {
     test('If insiders is required to be installed, handling channel installs the build and prompts user', async () => {
         const channelRule = TypeMoq.Mock.ofType<IExtensionChannelRule>();
         when(serviceContainer.get<IExtensionChannelRule>(IExtensionChannelRule, 'weekly')).thenReturn(
-            channelRule.object
+            channelRule.object,
         );
         channelRule
             .setup((c) => c.shouldLookForInsidersBuild(false))
@@ -94,7 +92,6 @@ suite('Insiders Extension Service - Handle channel', () => {
     });
 });
 
-// tslint:disable-next-line: max-func-body-length
 suite('Insiders Extension Service - Activation', () => {
     let appEnvironment: IApplicationEnvironment;
     let serviceContainer: IServiceContainer;
@@ -139,7 +136,7 @@ suite('Insiders Extension Service - Activation', () => {
             instance(cmdManager),
             instance(serviceContainer),
             instance(insidersInstaller),
-            []
+            [],
         );
         when(extensionChannelService.getChannel()).thenReturn('daily');
         when(extensionChannelService.isChannelUsingDefaultConfiguration).thenReturn(false);
@@ -165,7 +162,7 @@ suite('Insiders Extension Service - Activation', () => {
             instance(cmdManager),
             instance(serviceContainer),
             instance(insidersInstaller),
-            []
+            [],
         );
         when(extensionChannelService.getChannel()).thenReturn('daily');
         when(extensionChannelService.isChannelUsingDefaultConfiguration).thenReturn(false);
@@ -192,7 +189,7 @@ suite('Insiders Extension Service - Activation', () => {
             instance(cmdManager),
             instance(serviceContainer),
             instance(insidersInstaller),
-            []
+            [],
         );
         when(extensionChannelService.getChannel()).thenReturn('daily');
         when(extensionChannelService.isChannelUsingDefaultConfiguration).thenReturn(false);
@@ -214,7 +211,6 @@ suite('Insiders Extension Service - Activation', () => {
     });
 });
 
-// tslint:disable-next-line: max-func-body-length
 suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     let appEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -242,7 +238,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             cmdManager.object,
             serviceContainer.object,
             insidersInstaller.object,
-            []
+            [],
         );
 
         insidersPrompt
@@ -293,9 +289,9 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 // prompt to enroll
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: false,
-                isChannelUsingDefaultConfiguration: true
+                isChannelUsingDefaultConfiguration: true,
             },
-            true
+            true,
         );
 
         await insidersExtensionService.handleEdgeCases(true);
@@ -310,40 +306,40 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 installChannel: 'daily',
                 // skip enroll
                 vscodeChannel: 'insiders',
-                hasUserBeenNotified: true
+                hasUserBeenNotified: true,
             },
             {
                 installChannel: 'daily',
                 // skip enroll
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: false,
-                isChannelUsingDefaultConfiguration: false
+                isChannelUsingDefaultConfiguration: false,
             },
             {
                 installChannel: 'daily',
                 // skip enroll
-                vscodeChannel: 'stable'
+                vscodeChannel: 'stable',
             },
             {
                 installChannel: 'off',
                 // skip enroll
                 vscodeChannel: 'insiders',
-                hasUserBeenNotified: true
+                hasUserBeenNotified: true,
             },
             {
                 installChannel: 'off',
                 isChannelUsingDefaultConfiguration: true,
                 // skip enroll
                 vscodeChannel: 'insiders',
-                hasUserBeenNotified: true
+                hasUserBeenNotified: true,
             },
             {
                 // skip re-enroll
                 installChannel: 'off',
                 isChannelUsingDefaultConfiguration: true,
                 // skip enroll
-                vscodeChannel: 'stable'
-            }
+                vscodeChannel: 'stable',
+            },
         ];
 
         setup(() => {
@@ -362,7 +358,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 setState(testParams, false);
 
                 await insidersExtensionService.handleEdgeCases(
-                    testParams.isChannelUsingDefaultConfiguration || testParams.installChannel === 'off'
+                    testParams.isChannelUsingDefaultConfiguration || testParams.installChannel === 'off',
                 );
 
                 verifyAll();
@@ -376,7 +372,6 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     });
 });
 
-// tslint:disable-next-line: max-func-body-length
 suite('Insiders Extension Service - Function registerCommandsAndHandlers()', () => {
     let appEnvironment: IApplicationEnvironment;
     let serviceContainer: IServiceContainer;
@@ -404,7 +399,7 @@ suite('Insiders Extension Service - Function registerCommandsAndHandlers()', () 
             instance(cmdManager),
             instance(serviceContainer),
             instance(insidersInstaller),
-            []
+            [],
         );
     });
 

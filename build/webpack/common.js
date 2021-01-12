@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 const glob = require('glob');
 const path = require('path');
+// eslint-disable-next-line camelcase
 const webpack_bundle_analyzer = require('webpack-bundle-analyzer');
 const constants = require('../constants');
+
 exports.nodeModulesToExternalize = [
     'unicode/category/Lu',
     'unicode/category/Ll',
@@ -24,7 +27,7 @@ exports.nodeModulesToExternalize = [
     'diff-match-patch',
     'sudo-prompt',
     'node-stream-zip',
-    'xml2js'
+    'xml2js',
 ];
 exports.nodeModulesToReplacePaths = [...exports.nodeModulesToExternalize];
 function getDefaultPlugins(name) {
@@ -37,8 +40,8 @@ function getDefaultPlugins(name) {
                 reportFilename: `${name}.analyzer.html`,
                 generateStatsFile: true,
                 statsFilename: `${name}.stats.json`,
-                openAnalyzer: false // Open file manually if you want to see it :)
-            })
+                openAnalyzer: false, // Open file manually if you want to see it :)
+            }),
         );
     }
     return plugins;

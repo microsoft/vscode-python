@@ -5,14 +5,12 @@
 
 'use strict';
 
-// tslint:disable:rule1 no-any no-unnecessary-callback-wrapper jsdoc-format no-for-in prefer-const no-increment-decrement
-
 const _typeof = {
     number: 'number',
     string: 'string',
     undefined: 'undefined',
     object: 'object',
-    function: 'function'
+    function: 'function',
 };
 
 /**

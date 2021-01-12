@@ -16,7 +16,7 @@ import { IApplicationShell, ICommandManager } from '../types';
 export class ReloadVSCodeCommandHandler implements IExtensionSingleActivationService {
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
     ) {}
     public async activate(): Promise<void> {
         this.commandManager.registerCommand('python.reloadVSCode', this.onReloadVSCode, this);

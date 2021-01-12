@@ -13,12 +13,11 @@ import {
     TestFunction,
     Tests,
     TestStatus,
-    TestSuite
+    TestSuite,
 } from '../../../../client/testing/common/types';
 import { TestDataItemType } from '../../../../client/testing/types';
 import { createMockTestDataItem } from '../testUtils.unit.test';
 
-// tslint:disable:no-any max-func-body-length
 suite('Unit Tests - Storage Service', () => {
     let testData1: Tests;
     let testData2: Tests;
@@ -43,23 +42,23 @@ suite('Unit Tests - Storage Service', () => {
         suite2.functions.push(fn3);
         const flattendSuite1: FlattenedTestSuite = {
             testSuite: suite1,
-            xmlClassName: suite1.xmlName
+            xmlClassName: suite1.xmlName,
         } as any;
         const flattendSuite2: FlattenedTestSuite = {
             testSuite: suite2,
-            xmlClassName: suite2.xmlName
+            xmlClassName: suite2.xmlName,
         } as any;
         const flattendFn1: FlattenedTestFunction = {
             testFunction: fn1,
-            xmlClassName: fn1.name
+            xmlClassName: fn1.name,
         } as any;
         const flattendFn2: FlattenedTestFunction = {
             testFunction: fn2,
-            xmlClassName: fn2.name
+            xmlClassName: fn2.name,
         } as any;
         const flattendFn3: FlattenedTestFunction = {
             testFunction: fn3,
-            xmlClassName: fn3.name
+            xmlClassName: fn3.name,
         } as any;
         testData1 = {
             rootTestFolders: [folder1],
@@ -67,7 +66,7 @@ suite('Unit Tests - Storage Service', () => {
             testFiles: [file1],
             testFolders: [folder1],
             testFunctions: [flattendFn1, flattendFn2, flattendFn3],
-            testSuites: [flattendSuite1, flattendSuite2]
+            testSuites: [flattendSuite1, flattendSuite2],
         };
     }
 
@@ -87,23 +86,23 @@ suite('Unit Tests - Storage Service', () => {
         suite2.functions.push(fn3);
         const flattendSuite1: FlattenedTestSuite = {
             testSuite: suite1,
-            xmlClassName: suite1.xmlName
+            xmlClassName: suite1.xmlName,
         } as any;
         const flattendSuite2: FlattenedTestSuite = {
             testSuite: suite2,
-            xmlClassName: suite2.xmlName
+            xmlClassName: suite2.xmlName,
         } as any;
         const flattendFn1: FlattenedTestFunction = {
             testFunction: fn1,
-            xmlClassName: fn1.name
+            xmlClassName: fn1.name,
         } as any;
         const flattendFn2: FlattenedTestFunction = {
             testFunction: fn2,
-            xmlClassName: fn2.name
+            xmlClassName: fn2.name,
         } as any;
         const flattendFn3: FlattenedTestFunction = {
             testFunction: fn3,
-            xmlClassName: fn3.name
+            xmlClassName: fn3.name,
         } as any;
         testData2 = {
             rootTestFolders: [folder1],
@@ -111,7 +110,7 @@ suite('Unit Tests - Storage Service', () => {
             testFiles: [file1],
             testFolders: [folder1],
             testFunctions: [flattendFn1, flattendFn2, flattendFn3],
-            testSuites: [flattendSuite1, flattendSuite2]
+            testSuites: [flattendSuite1, flattendSuite2],
         };
     }
 

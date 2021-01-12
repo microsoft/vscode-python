@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-invalid-template-strings no-any no-object-literal-type-assertion
-
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
@@ -84,7 +82,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 diagnosticsService.object,
                 platformService.object,
                 configService.object,
-                debugEnvHelper.object
+                debugEnvHelper.object,
             );
         }
 
@@ -109,16 +107,16 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         const launch: LaunchRequestArguments = {
             name: 'Python launch',
             type: 'python',
-            request: 'launch'
+            request: 'launch',
         };
 
         async function resolveDebugConfiguration(
             workspaceFolder: WorkspaceFolder | undefined,
-            launchConfig: Partial<LaunchRequestArguments>
+            launchConfig: Partial<LaunchRequestArguments>,
         ) {
             let config = await debugProvider.resolveDebugConfiguration!(
                 workspaceFolder,
-                launchConfig as DebugConfiguration
+                launchConfig as DebugConfiguration,
             );
             if (config === undefined || config === null) {
                 return config;
@@ -163,7 +161,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(debugConfig).to.have.property('envFile');
             expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env2').toLowerCase());
             expect(debugConfig).to.have.property('env');
-            // tslint:disable-next-line:no-any
+
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
 
@@ -175,7 +173,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
-                noDebug: true
+                noDebug: true,
             });
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
@@ -191,7 +189,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(debugConfig).to.have.property('envFile');
             expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env2').toLowerCase());
             expect(debugConfig).to.have.property('env');
-            // tslint:disable-next-line:no-any
+
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
 
@@ -218,7 +216,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(debugConfig).to.have.property('envFile');
             expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env2').toLowerCase());
             expect(debugConfig).to.have.property('env');
-            // tslint:disable-next-line:no-any
+
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
 
@@ -241,7 +239,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(debugConfig).not.to.have.property('cwd');
             expect(debugConfig).not.to.have.property('envFile');
             expect(debugConfig).to.have.property('env');
-            // tslint:disable-next-line:no-any
+
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
 
@@ -265,7 +263,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(debugConfig).not.to.have.property('cwd');
             expect(debugConfig).not.to.have.property('envFile');
             expect(debugConfig).to.have.property('env');
-            // tslint:disable-next-line:no-any
+
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
 
@@ -293,7 +291,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(debugConfig).to.have.property('envFile');
             expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env2').toLowerCase());
             expect(debugConfig).to.have.property('env');
-            // tslint:disable-next-line:no-any
+
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
         });
 
@@ -305,7 +303,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             const port = 12341234;
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
-                port
+                port,
             });
 
             expect(debugConfig).to.have.property('port', port);
@@ -320,7 +318,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const localRoot = `Debug_PythonPath_${new Date().toString()}`;
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
-                localRoot
+                localRoot,
             });
 
             expect(debugConfig).to.have.property('localRoot', localRoot);
@@ -335,7 +333,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const remoteRoot = `Debug_PythonPath_${new Date().toString()}`;
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
-                remoteRoot
+                remoteRoot,
             });
 
             expect(debugConfig).to.have.property('remoteRoot', remoteRoot);
@@ -352,7 +350,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
                 localRoot,
-                remoteRoot
+                remoteRoot,
             });
 
             expect(debugConfig!.pathMappings).to.be.equal(undefined, 'unexpected pathMappings');
@@ -366,11 +364,11 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             const expected = {
                 localRoot: `Debug_PythonPath_Local_Root_${new Date().toString()}`,
-                remoteRoot: `Debug_PythonPath_Remote_Root_${new Date().toString()}`
+                remoteRoot: `Debug_PythonPath_Remote_Root_${new Date().toString()}`,
             };
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
-                pathMappings: [expected]
+                pathMappings: [expected],
             });
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
@@ -388,17 +386,17 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 pathMappings: [
                     {
                         localRoot: '${workspaceFolder}/spam',
-                        remoteRoot: '${workspaceFolder}/spam'
-                    }
-                ]
+                        remoteRoot: '${workspaceFolder}/spam',
+                    },
+                ],
             });
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
             expect(pathMappings).to.be.deep.equal([
                 {
                     localRoot: `${workspaceFolder.uri.fsPath}/spam`,
-                    remoteRoot: '${workspaceFolder}/spam'
-                }
+                    remoteRoot: '${workspaceFolder}/spam',
+                },
             ]);
         });
 
@@ -411,7 +409,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
-                localRoot: localRoot
+                localRoot: localRoot,
             });
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
@@ -428,7 +426,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
                 localRoot: localRoot,
-                pathMappings: []
+                pathMappings: [],
             });
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
@@ -448,9 +446,9 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 pathMappings: [
                     {
                         localRoot: '/spam',
-                        remoteRoot: '.'
-                    }
-                ]
+                        remoteRoot: '.',
+                    },
+                ],
             });
 
             expect(debugConfig).to.have.property('localRoot', localRoot);
@@ -458,14 +456,13 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(pathMappings).to.be.deep.equal([
                 {
                     localRoot: '/spam',
-                    remoteRoot: '.'
-                }
+                    remoteRoot: '.',
+                },
             ]);
         });
 
         test('Ensure drive letter is lower cased for local path mappings on Windows when with existing path mappings', async function () {
             if (getOSType() !== OSType.Windows || osType !== OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
             const workspaceFolder = createMoqWorkspaceFolder(path.join('C:', 'Debug', 'Python_Path'));
@@ -479,9 +476,9 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 pathMappings: [
                     {
                         localRoot,
-                        remoteRoot: '/app/'
-                    }
-                ]
+                        remoteRoot: '/app/',
+                    },
+                ],
             });
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
@@ -489,14 +486,13 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(pathMappings).to.deep.equal([
                 {
                     localRoot: expected,
-                    remoteRoot: '/app/'
-                }
+                    remoteRoot: '/app/',
+                },
             ]);
         });
 
         test('Ensure drive letter is not lower cased for local path mappings on non-Windows when with existing path mappings', async function () {
             if (getOSType() === OSType.Windows || osType === OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
             const workspaceFolder = createMoqWorkspaceFolder(path.join('USR', 'Debug', 'Python_Path'));
@@ -510,17 +506,17 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 pathMappings: [
                     {
                         localRoot,
-                        remoteRoot: '/app/'
-                    }
-                ]
+                        remoteRoot: '/app/',
+                    },
+                ],
             });
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
             expect(pathMappings).to.deep.equal([
                 {
                     localRoot,
-                    remoteRoot: '/app/'
-                }
+                    remoteRoot: '/app/',
+                },
             ]);
         });
 
@@ -535,17 +531,17 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 pathMappings: [
                     {
                         localRoot: '/spam',
-                        remoteRoot: '.'
-                    }
-                ]
+                        remoteRoot: '.',
+                    },
+                ],
             });
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
             expect(pathMappings).to.deep.equal([
                 {
                     localRoot: '/spam',
-                    remoteRoot: '.'
-                }
+                    remoteRoot: '.',
+                },
             ]);
         });
 
@@ -560,7 +556,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
-                pythonPath: '${command:python.interpreterPath}'
+                pythonPath: '${command:python.interpreterPath}',
             });
 
             expect(debugConfig).to.not.have.property('pythonPath');
@@ -580,7 +576,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
-                python: '${command:python.interpreterPath}'
+                python: '${command:python.interpreterPath}',
             });
 
             expect(debugConfig).to.not.have.property('pythonPath');
@@ -601,7 +597,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const debugPythonPath = `Debug_PythonPath_${new Date().toString()}`;
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
-                pythonPath: debugPythonPath
+                pythonPath: debugPythonPath,
             });
 
             expect(debugConfig).to.not.have.property('pythonPath');
@@ -622,7 +618,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const debugPythonPath = `Debug_PythonPath_${new Date().toString()}`;
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
-                python: debugPythonPath
+                python: debugPythonPath,
             });
 
             expect(debugConfig).to.not.have.property('pythonPath');
@@ -643,7 +639,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const debugPythonPath = `Debug_PythonPath_${new Date().toString()}`;
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
-                debugAdapterPython: debugPythonPath
+                debugAdapterPython: debugPythonPath,
             });
 
             expect(debugConfig).to.not.have.property('pythonPath');
@@ -664,7 +660,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const debugPythonPath = `Debug_PythonPath_${new Date().toString()}`;
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
-                debugLauncherPython: debugPythonPath
+                debugLauncherPython: debugPythonPath,
             });
 
             expect(debugConfig).to.not.have.property('pythonPath');
@@ -681,7 +677,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
-                ...launch
+                ...launch,
             });
 
             expect(debugConfig).to.have.property('console', 'integratedTerminal');
@@ -706,7 +702,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
-                ...launch
+                ...launch,
             });
 
             expect(debugConfig).to.have.property('stopOnEntry', false);
@@ -725,7 +721,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
                 redirectOutput: true,
-                justMyCode: false
+                justMyCode: false,
             });
 
             expect(debugConfig).to.have.property('console', 'integratedTerminal');
@@ -737,7 +733,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const expectedOptions = [
                 DebugOptions.DebugStdLib,
                 DebugOptions.ShowReturnValue,
-                DebugOptions.RedirectOutput
+                DebugOptions.RedirectOutput,
             ];
             if (osType === OSType.Windows) {
                 expectedOptions.push(DebugOptions.FixFilePathCase);
@@ -749,48 +745,48 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             {
                 justMyCode: false,
                 debugStdLib: true,
-                expectedResult: false
+                expectedResult: false,
             },
             {
                 justMyCode: false,
                 debugStdLib: false,
-                expectedResult: false
+                expectedResult: false,
             },
             {
                 justMyCode: false,
                 debugStdLib: undefined,
-                expectedResult: false
+                expectedResult: false,
             },
             {
                 justMyCode: true,
                 debugStdLib: false,
-                expectedResult: true
+                expectedResult: true,
             },
             {
                 justMyCode: true,
                 debugStdLib: true,
-                expectedResult: true
+                expectedResult: true,
             },
             {
                 justMyCode: true,
                 debugStdLib: undefined,
-                expectedResult: true
+                expectedResult: true,
             },
             {
                 justMyCode: undefined,
                 debugStdLib: false,
-                expectedResult: true
+                expectedResult: true,
             },
             {
                 justMyCode: undefined,
                 debugStdLib: true,
-                expectedResult: false
+                expectedResult: false,
             },
             {
                 justMyCode: undefined,
                 debugStdLib: undefined,
-                expectedResult: true
-            }
+                expectedResult: true,
+            },
         ];
         test('Ensure justMyCode property is correctly derived from debugStdLib', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
@@ -802,7 +798,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                     ...launch,
                     debugStdLib: testParams.debugStdLib,
-                    justMyCode: testParams.justMyCode
+                    justMyCode: testParams.justMyCode,
                 });
                 expect(debugConfig).to.have.property('justMyCode', testParams.expectedResult);
             });
@@ -812,48 +808,48 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             {
                 console: 'internalConsole',
                 redirectOutput: undefined,
-                expectedRedirectOutput: true
+                expectedRedirectOutput: true,
             },
             {
                 console: 'integratedTerminal',
                 redirectOutput: undefined,
-                expectedRedirectOutput: undefined
+                expectedRedirectOutput: undefined,
             },
             {
                 console: 'externalTerminal',
                 redirectOutput: undefined,
-                expectedRedirectOutput: undefined
+                expectedRedirectOutput: undefined,
             },
             {
                 console: 'internalConsole',
                 redirectOutput: false,
-                expectedRedirectOutput: false
+                expectedRedirectOutput: false,
             },
             {
                 console: 'integratedTerminal',
                 redirectOutput: false,
-                expectedRedirectOutput: false
+                expectedRedirectOutput: false,
             },
             {
                 console: 'externalTerminal',
                 redirectOutput: false,
-                expectedRedirectOutput: false
+                expectedRedirectOutput: false,
             },
             {
                 console: 'internalConsole',
                 redirectOutput: true,
-                expectedRedirectOutput: true
+                expectedRedirectOutput: true,
             },
             {
                 console: 'integratedTerminal',
                 redirectOutput: true,
-                expectedRedirectOutput: true
+                expectedRedirectOutput: true,
             },
             {
                 console: 'externalTerminal',
                 redirectOutput: true,
-                expectedRedirectOutput: true
-            }
+                expectedRedirectOutput: true,
+            },
         ];
         test('Ensure redirectOutput property is correctly derived from console type', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
@@ -865,7 +861,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                     ...launch,
                     console: testParams.console as any,
-                    redirectOutput: testParams.redirectOutput
+                    redirectOutput: testParams.redirectOutput,
                 });
                 expect(debugConfig).to.have.property('redirectOutput', testParams.expectedRedirectOutput);
                 if (testParams.expectedRedirectOutput) {
@@ -883,7 +879,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
-                ...launch
+                ...launch,
             });
             if (osType === OSType.Windows) {
                 expect(debugConfig).to.have.property('debugOptions').contains(DebugOptions.FixFilePathCase);
@@ -904,7 +900,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
                 debugOptions: [DebugOptions.Pyramid],
-                pyramid: true
+                pyramid: true,
             });
 
             expect(debugConfig).to.have.property('debugOptions');
@@ -920,7 +916,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
-                module: 'flask'
+                module: 'flask',
             });
 
             expect(debugConfig).to.have.property('debugOptions');
@@ -942,8 +938,8 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     h.validatePythonPath(
                         TypeMoq.It.isValue(pythonPath),
                         PythonPathSource.launchJson,
-                        TypeMoq.It.isAny()
-                    )
+                        TypeMoq.It.isAny(),
+                    ),
                 )
                 // Invalid
                 .returns(() => Promise.resolve(false));
@@ -952,8 +948,8 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     h.validatePythonPath(
                         TypeMoq.It.isValue(debugLauncherPython),
                         PythonPathSource.launchJson,
-                        TypeMoq.It.isAny()
-                    )
+                        TypeMoq.It.isAny(),
+                    ),
                 )
                 .returns(() => Promise.resolve(true));
             diagnosticsService
@@ -961,8 +957,8 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     h.validatePythonPath(
                         TypeMoq.It.isValue(debugAdapterPython),
                         PythonPathSource.launchJson,
-                        TypeMoq.It.isAny()
-                    )
+                        TypeMoq.It.isAny(),
+                    ),
                 )
                 .returns(() => Promise.resolve(true));
 
@@ -971,7 +967,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 redirectOutput: false,
                 python: pythonPath,
                 debugLauncherPython,
-                debugAdapterPython
+                debugAdapterPython,
             });
 
             diagnosticsService.verifyAll();
@@ -993,8 +989,8 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     h.validatePythonPath(
                         TypeMoq.It.isValue(pythonPath),
                         PythonPathSource.launchJson,
-                        TypeMoq.It.isAny()
-                    )
+                        TypeMoq.It.isAny(),
+                    ),
                 )
                 .returns(() => Promise.resolve(true));
             diagnosticsService
@@ -1002,8 +998,8 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     h.validatePythonPath(
                         TypeMoq.It.isValue(debugLauncherPython),
                         PythonPathSource.launchJson,
-                        TypeMoq.It.isAny()
-                    )
+                        TypeMoq.It.isAny(),
+                    ),
                 )
                 // Invalid
                 .returns(() => Promise.resolve(false));
@@ -1012,8 +1008,8 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     h.validatePythonPath(
                         TypeMoq.It.isValue(debugAdapterPython),
                         PythonPathSource.launchJson,
-                        TypeMoq.It.isAny()
-                    )
+                        TypeMoq.It.isAny(),
+                    ),
                 )
                 .returns(() => Promise.resolve(true));
 
@@ -1022,7 +1018,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 redirectOutput: false,
                 python: pythonPath,
                 debugLauncherPython,
-                debugAdapterPython
+                debugAdapterPython,
             });
 
             diagnosticsService.verifyAll();
@@ -1044,8 +1040,8 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     h.validatePythonPath(
                         TypeMoq.It.isValue(pythonPath),
                         PythonPathSource.launchJson,
-                        TypeMoq.It.isAny()
-                    )
+                        TypeMoq.It.isAny(),
+                    ),
                 )
                 .returns(() => Promise.resolve(true));
             diagnosticsService
@@ -1053,8 +1049,8 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     h.validatePythonPath(
                         TypeMoq.It.isValue(debugLauncherPython),
                         PythonPathSource.launchJson,
-                        TypeMoq.It.isAny()
-                    )
+                        TypeMoq.It.isAny(),
+                    ),
                 )
                 .returns(() => Promise.resolve(true));
             diagnosticsService
@@ -1062,8 +1058,8 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     h.validatePythonPath(
                         TypeMoq.It.isValue(debugAdapterPython),
                         PythonPathSource.launchJson,
-                        TypeMoq.It.isAny()
-                    )
+                        TypeMoq.It.isAny(),
+                    ),
                 )
                 // Invalid
                 .returns(() => Promise.resolve(false));
@@ -1073,7 +1069,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 redirectOutput: false,
                 python: pythonPath,
                 debugLauncherPython,
-                debugAdapterPython
+                debugAdapterPython,
             });
 
             diagnosticsService.verifyAll();
@@ -1093,8 +1089,8 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     h.validatePythonPath(
                         TypeMoq.It.isValue(pythonPath),
                         PythonPathSource.launchJson,
-                        TypeMoq.It.isAny()
-                    )
+                        TypeMoq.It.isAny(),
+                    ),
                 )
                 .returns(() => Promise.resolve(true))
                 .verifiable(TypeMoq.Times.atLeastOnce());
@@ -1102,7 +1098,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                 ...launch,
                 redirectOutput: false,
-                python: pythonPath
+                python: pythonPath,
             });
 
             diagnosticsService.verifyAll();
@@ -1121,7 +1117,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             diagnosticsService.reset();
             diagnosticsService
                 .setup((h) =>
-                    h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                    h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                 )
                 .returns(() => Promise.resolve(true));
 
@@ -1129,7 +1125,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 ...launch,
                 redirectOutput: false,
                 pythonPath,
-                envFile: path.join('${workspaceFolder}', 'wow.envFile')
+                envFile: path.join('${workspaceFolder}', 'wow.envFile'),
             });
 
             expect(debugConfig!.envFile).to.be.equal(expectedEnvFilePath);
@@ -1139,21 +1135,21 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             requestType: 'launch' | 'attach',
             settings: Record<string, boolean>,
             debugOptionName: DebugOptions,
-            mustHaveDebugOption: boolean
+            mustHaveDebugOption: boolean,
         ) {
             setupIoc('pythonPath');
             let debugConfig: DebugConfiguration = {
                 request: requestType,
                 type: 'python',
                 name: '',
-                ...settings
+                ...settings,
             };
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
 
             debugConfig = (await debugProvider.resolveDebugConfiguration!(workspaceFolder, debugConfig))!;
             debugConfig = (await debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(
                 workspaceFolder,
-                debugConfig
+                debugConfig,
             ))!;
 
             if (mustHaveDebugOption) {

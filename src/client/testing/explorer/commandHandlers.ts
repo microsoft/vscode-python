@@ -22,7 +22,7 @@ type NavigationCommands =
 const testNavigationCommandMapping: { [key: string]: NavigationCommands } = {
     [TestDataItemType.file]: Commands.navigateToTestFile,
     [TestDataItemType.function]: Commands.navigateToTestFunction,
-    [TestDataItemType.suite]: Commands.navigateToTestSuite
+    [TestDataItemType.suite]: Commands.navigateToTestSuite,
 };
 
 @injectable()
@@ -30,13 +30,13 @@ export class TestExplorerCommandHandler implements ITestExplorerCommandHandler {
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
-        @inject(ITestDataItemResource) private readonly testResource: ITestDataItemResource
+        @inject(ITestDataItemResource) private readonly testResource: ITestDataItemResource,
     ) {}
     public register(): void {
         this.disposables.push(this.cmdManager.registerCommand(Commands.runTestNode, this.onRunTestNode, this));
         this.disposables.push(this.cmdManager.registerCommand(Commands.debugTestNode, this.onDebugTestNode, this));
         this.disposables.push(
-            this.cmdManager.registerCommand(Commands.openTestNodeInEditor, this.onOpenTestNodeInEditor, this)
+            this.cmdManager.registerCommand(Commands.openTestNodeInEditor, this.onOpenTestNodeInEditor, this),
         );
     }
     public dispose(): void {

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
-
 import { assert, expect } from 'chai';
 import * as path from 'path';
 import { instance, mock, when } from 'ts-mockito';
@@ -37,7 +35,7 @@ suite('Extension API', () => {
         interpreterService = mock(InterpreterService);
 
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
-            instance(configurationService)
+            instance(configurationService),
         );
         when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
     });
@@ -49,7 +47,7 @@ suite('Extension API', () => {
         const execDetails = buildApi(
             Promise.resolve(),
             instance(serviceManager),
-            instance(serviceContainer)
+            instance(serviceContainer),
         ).settings.getExecutionDetails(resource);
 
         assert.deepEqual(execDetails, { execCommand: ['settingValue'] });
@@ -62,7 +60,7 @@ suite('Extension API', () => {
         const execDetails = buildApi(
             Promise.resolve(),
             instance(serviceManager),
-            instance(serviceContainer)
+            instance(serviceContainer),
         ).settings.getExecutionDetails(resource);
 
         assert.deepEqual(execDetails, { execCommand: undefined });
@@ -84,7 +82,7 @@ suite('Extension API', () => {
         const args = await buildApi(
             Promise.resolve(),
             instance(serviceManager),
-            instance(serviceContainer)
+            instance(serviceContainer),
         ).debug.getRemoteLauncherCommand(debuggerHost, debuggerPort, waitForAttach);
         const expectedArgs = [debuggerPath.fileToCommandArgument(), '--listen', `${debuggerHost}:${debuggerPort}`];
 
@@ -97,13 +95,13 @@ suite('Extension API', () => {
         const args = await buildApi(
             Promise.resolve(),
             instance(serviceManager),
-            instance(serviceContainer)
+            instance(serviceContainer),
         ).debug.getRemoteLauncherCommand(debuggerHost, debuggerPort, waitForAttach);
         const expectedArgs = [
             debuggerPath.fileToCommandArgument(),
             '--listen',
             `${debuggerHost}:${debuggerPort}`,
-            '--wait-for-client'
+            '--wait-for-client',
         ];
 
         expect(args).to.be.deep.equal(expectedArgs);
@@ -113,7 +111,7 @@ suite('Extension API', () => {
         const pkgPath = await buildApi(
             Promise.resolve(),
             instance(serviceManager),
-            instance(serviceContainer)
+            instance(serviceContainer),
         ).debug.getDebuggerPackagePath();
 
         assert.equal(pkgPath, debuggerPath);

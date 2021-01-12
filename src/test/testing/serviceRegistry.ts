@@ -10,7 +10,7 @@ import { InterpreterSecurityStorage } from '../../client/interpreter/autoSelecti
 import {
     IInterpreterEvaluation,
     IInterpreterSecurityService,
-    IInterpreterSecurityStorage
+    IInterpreterSecurityStorage,
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
@@ -42,7 +42,7 @@ import {
     ITestsStatusUpdaterService,
     ITestVisitor,
     IUnitTestSocketServer,
-    TestProvider
+    TestProvider,
 } from '../../client/testing/common/types';
 import { TestManager as NoseTestManager } from '../../client/testing/nosetest/main';
 import { TestDiscoveryService as NoseTestDiscoveryService } from '../../client/testing/nosetest/services/discoveryService';
@@ -77,7 +77,7 @@ export class UnitTestIocContainer extends IocContainer {
         this.serviceManager.add<ITestVisitor>(ITestVisitor, TestResultResetVisitor, 'TestResultResetVisitor');
         this.serviceManager.addSingleton<ITestsStatusUpdaterService>(
             ITestsStatusUpdaterService,
-            TestsStatusUpdaterService
+            TestsStatusUpdaterService,
         );
         this.serviceManager.addSingleton<ITestContextService>(ITestContextService, TestContextService);
     }
@@ -85,7 +85,7 @@ export class UnitTestIocContainer extends IocContainer {
     public registerTestStorage() {
         this.serviceManager.addSingleton<ITestCollectionStorageService>(
             ITestCollectionStorageService,
-            TestCollectionStorageService
+            TestCollectionStorageService,
         );
     }
 
@@ -106,17 +106,17 @@ export class UnitTestIocContainer extends IocContainer {
         this.serviceManager.add<ITestDiscoveryService>(
             ITestDiscoveryService,
             UnitTestTestDiscoveryService,
-            UNITTEST_PROVIDER
+            UNITTEST_PROVIDER,
         );
         this.serviceManager.add<ITestDiscoveryService>(
             ITestDiscoveryService,
             PytestTestDiscoveryService,
-            PYTEST_PROVIDER
+            PYTEST_PROVIDER,
         );
         this.serviceManager.add<ITestDiscoveryService>(
             ITestDiscoveryService,
             NoseTestDiscoveryService,
-            NOSETEST_PROVIDER
+            NOSETEST_PROVIDER,
         );
         this.serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, TestsDiscoveryService, 'common');
         this.serviceManager.add<ITestDiscoveredTestParser>(ITestDiscoveredTestParser, TestDiscoveredTestParser);

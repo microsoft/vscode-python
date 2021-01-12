@@ -3,13 +3,9 @@
 
 'use strict';
 
-// tslint:disable:no-any max-classes-per-file max-func-body-length
-
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import {
-    instance, mock, verify, when,
-} from 'ts-mockito';
+import { instance, mock, verify, when } from 'ts-mockito';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { InterpreterHashProvider } from '../../../../client/pythonEnvironments/discovery/locators/services/hashProvider';

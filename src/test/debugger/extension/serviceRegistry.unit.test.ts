@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-unnecessary-override no-invalid-template-strings max-func-body-length no-any
-
 import { instance, mock, verify } from 'ts-mockito';
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { DebugAdapterActivator } from '../../../client/debugger/extension/adapter/activator';
@@ -31,7 +29,7 @@ import { AttachConfigurationResolver } from '../../../client/debugger/extension/
 import { LaunchConfigurationResolver } from '../../../client/debugger/extension/configuration/resolvers/launch';
 import {
     IDebugConfigurationProviderFactory,
-    IDebugConfigurationResolver
+    IDebugConfigurationResolver,
 } from '../../../client/debugger/extension/configuration/types';
 import { ChildProcessAttachEventHandler } from '../../../client/debugger/extension/hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from '../../../client/debugger/extension/hooks/childProcessAttachService';
@@ -44,7 +42,7 @@ import {
     IDebugConfigurationService,
     IDebuggerBanner,
     IDebugSessionLoggingFactory,
-    IOutdatedDebuggerPromptFactory
+    IOutdatedDebuggerPromptFactory,
 } from '../../../client/debugger/extension/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../../client/debugger/types';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
@@ -62,158 +60,158 @@ suite('Debugging - Service Registry', () => {
         verify(
             serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
-                InterpreterPathCommand
-            )
+                InterpreterPathCommand,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugConfigurationService>(
                 IDebugConfigurationService,
-                PythonDebugConfigurationService
-            )
+                PythonDebugConfigurationService,
+            ),
         ).once();
         verify(serviceManager.addSingleton<IDebuggerBanner>(IDebuggerBanner, DebuggerBanner)).once();
         verify(
             serviceManager.addSingleton<IChildProcessAttachService>(
                 IChildProcessAttachService,
-                ChildProcessAttachService
-            )
+                ChildProcessAttachService,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
-                LaunchJsonCompletionProvider
-            )
+                LaunchJsonCompletionProvider,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
-                LaunchJsonUpdaterService
-            )
+                LaunchJsonUpdaterService,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
-                DebugAdapterActivator
-            )
+                DebugAdapterActivator,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugAdapterDescriptorFactory>(
                 IDebugAdapterDescriptorFactory,
-                DebugAdapterDescriptorFactory
-            )
+                DebugAdapterDescriptorFactory,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugSessionEventHandlers>(
                 IDebugSessionEventHandlers,
-                ChildProcessAttachEventHandler
-            )
+                ChildProcessAttachEventHandler,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugConfigurationResolver<LaunchRequestArguments>>(
                 IDebugConfigurationResolver,
                 LaunchConfigurationResolver,
-                'launch'
-            )
+                'launch',
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugConfigurationResolver<AttachRequestArguments>>(
                 IDebugConfigurationResolver,
                 AttachConfigurationResolver,
-                'attach'
-            )
+                'attach',
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugConfigurationProviderFactory>(
                 IDebugConfigurationProviderFactory,
-                DebugConfigurationProviderFactory
-            )
+                DebugConfigurationProviderFactory,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugConfigurationProvider>(
                 IDebugConfigurationProvider,
                 FileLaunchDebugConfigurationProvider,
-                DebugConfigurationType.launchFile
-            )
+                DebugConfigurationType.launchFile,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugConfigurationProvider>(
                 IDebugConfigurationProvider,
                 DjangoLaunchDebugConfigurationProvider,
-                DebugConfigurationType.launchDjango
-            )
+                DebugConfigurationType.launchDjango,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugConfigurationProvider>(
                 IDebugConfigurationProvider,
                 FastAPILaunchDebugConfigurationProvider,
-                DebugConfigurationType.launchFastAPI
-            )
+                DebugConfigurationType.launchFastAPI,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugConfigurationProvider>(
                 IDebugConfigurationProvider,
                 FlaskLaunchDebugConfigurationProvider,
-                DebugConfigurationType.launchFlask
-            )
+                DebugConfigurationType.launchFlask,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugConfigurationProvider>(
                 IDebugConfigurationProvider,
                 RemoteAttachDebugConfigurationProvider,
-                DebugConfigurationType.remoteAttach
-            )
+                DebugConfigurationType.remoteAttach,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugConfigurationProvider>(
                 IDebugConfigurationProvider,
                 ModuleLaunchDebugConfigurationProvider,
-                DebugConfigurationType.launchModule
-            )
+                DebugConfigurationType.launchModule,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugConfigurationProvider>(
                 IDebugConfigurationProvider,
                 PyramidLaunchDebugConfigurationProvider,
-                DebugConfigurationType.launchPyramid
-            )
+                DebugConfigurationType.launchPyramid,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugConfigurationProvider>(
                 IDebugConfigurationProvider,
                 PidAttachDebugConfigurationProvider,
-                DebugConfigurationType.pidAttach
-            )
+                DebugConfigurationType.pidAttach,
+            ),
         ).once();
 
         verify(
             serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
-                DebugAdapterActivator
-            )
+                DebugAdapterActivator,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugAdapterDescriptorFactory>(
                 IDebugAdapterDescriptorFactory,
-                DebugAdapterDescriptorFactory
-            )
+                DebugAdapterDescriptorFactory,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IDebugSessionLoggingFactory>(
                 IDebugSessionLoggingFactory,
-                DebugSessionLoggingFactory
-            )
+                DebugSessionLoggingFactory,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IOutdatedDebuggerPromptFactory>(
                 IOutdatedDebuggerPromptFactory,
-                OutdatedDebuggerPromptFactory
-            )
+                OutdatedDebuggerPromptFactory,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IAttachProcessProviderFactory>(
                 IAttachProcessProviderFactory,
-                AttachProcessProviderFactory
-            )
+                AttachProcessProviderFactory,
+            ),
         ).once();
     });
 });

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
-
 import { expect } from 'chai';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';
@@ -28,7 +26,7 @@ suite('Debug - Attach to Child Process', () => {
         attachService = new ChildProcessAttachService(
             instance(shell),
             instance(debugService),
-            instance(workspaceService)
+            instance(workspaceService),
         );
     });
 
@@ -38,7 +36,7 @@ suite('Debug - Attach to Child Process', () => {
             type: 'python',
             request: 'attach',
             port: 1234,
-            subProcessId: 2
+            subProcessId: 2,
         };
         const session: any = {};
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
@@ -57,7 +55,7 @@ suite('Debug - Attach to Child Process', () => {
             type: 'python',
             request: 'attach',
             port: 1234,
-            subProcessId: 2
+            subProcessId: 2,
         };
 
         const session: any = {};
@@ -82,7 +80,7 @@ suite('Debug - Attach to Child Process', () => {
             request: 'attach',
             port: 1234,
             subProcessId: 2,
-            workspaceFolder: rightWorkspaceFolder.uri.fsPath
+            workspaceFolder: rightWorkspaceFolder.uri.fsPath,
         };
 
         const session: any = {};
@@ -107,7 +105,7 @@ suite('Debug - Attach to Child Process', () => {
             request: 'attach',
             port: 1234,
             subProcessId: 2,
-            workspaceFolder: rightWorkspaceFolder.uri.fsPath
+            workspaceFolder: rightWorkspaceFolder.uri.fsPath,
         };
 
         const session: any = {};
@@ -128,7 +126,7 @@ suite('Debug - Attach to Child Process', () => {
             name: 'Attach',
             port: 1234,
             subProcessId: 2,
-            host: 'localhost'
+            host: 'localhost',
         };
 
         const debugConfig = JSON.parse(JSON.stringify(data));
@@ -151,7 +149,7 @@ suite('Debug - Attach to Child Process', () => {
         const data: AttachRequestArguments = {
             type: 'python',
             request: 'attach',
-            name: ''
+            name: '',
         };
         const session: any = {};
         const debugConfig = JSON.parse(JSON.stringify(data));
@@ -175,7 +173,7 @@ suite('Debug - Attach to Child Process', () => {
             name: 'Attach',
             host: '123.123.123.123',
             port: 1234,
-            subProcessId: 2
+            subProcessId: 2,
         };
 
         const debugConfig = JSON.parse(JSON.stringify(data));

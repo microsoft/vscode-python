@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import * as fs from 'fs-extra';
@@ -32,14 +33,13 @@ let formattedYapf = '';
 let formattedBlack = '';
 let formattedAutoPep8 = '';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Formatting - General', () => {
     let ioc: UnitTestIocContainer;
 
     suiteSetup(async function () {
         // https://github.com/microsoft/vscode-python/issues/12564
         // Skipping one test in the file is resulting in the next one failing, so skipping the entire suiteuntil further investigation.
-        // tslint:disable-next-line: no-invalid-this
+
         return this.skip();
         await initialize();
         initializeDI();
@@ -98,7 +98,7 @@ suite('Formatting - General', () => {
             if (args.indexOf('--diff') >= 0) {
                 callback({
                     out: fs.readFileSync(path.join(formatFilesPath, outputFileName), 'utf8'),
-                    source: 'stdout'
+                    source: 'stdout',
                 });
             }
         });
@@ -108,13 +108,13 @@ suite('Formatting - General', () => {
         formatter: AutoPep8Formatter | BlackFormatter | YapfFormatter,
         formattedContents: string,
         fileToFormat: string,
-        outputFileName: string
+        outputFileName: string,
     ) {
         const textDocument = await workspace.openTextDocument(fileToFormat);
         const textEditor = await window.showTextDocument(textDocument);
         const options = {
             insertSpaces: textEditor.options.insertSpaces! as boolean,
-            tabSize: textEditor.options.tabSize! as number
+            tabSize: textEditor.options.tabSize! as number,
         };
 
         await injectFormatOutput(outputFileName);
@@ -128,30 +128,30 @@ suite('Formatting - General', () => {
 
     test('AutoPep8', async function () {
         // https://github.com/microsoft/vscode-python/issues/12564
-        // tslint:disable-next-line: no-invalid-this
+
         return this.skip();
         await testFormatting(
             new AutoPep8Formatter(ioc.serviceContainer),
             formattedAutoPep8,
             autoPep8FileToFormat,
-            'autopep8.output'
+            'autopep8.output',
         );
     });
-    // tslint:disable-next-line:no-function-expression
+
     test('Black', async function () {
         // https://github.com/microsoft/vscode-python/issues/12564
-        // tslint:disable-next-line: no-invalid-this
+
         return this.skip();
         if (!(await formattingTestIsBlackSupported())) {
             // Skip for versions of python below 3.6, as Black doesn't support them at all.
-            // tslint:disable-next-line:no-invalid-this
+
             return this.skip();
         }
         await testFormatting(
             new BlackFormatter(ioc.serviceContainer),
             formattedBlack,
             blackFileToFormat,
-            'black.output'
+            'black.output',
         );
     });
     test('Yapf', async () =>

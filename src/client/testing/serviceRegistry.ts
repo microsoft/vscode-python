@@ -42,7 +42,7 @@ import {
     IUnitTestSocketServer,
     IWorkspaceTestManagerService,
     IXUnitParser,
-    TestProvider
+    TestProvider,
 } from './common/types';
 import { UpdateTestSettingService } from './common/updateTestSettings';
 import { XUnitParser } from './common/xUnitParser';
@@ -80,7 +80,7 @@ import {
     ITestManagerRunner,
     ITestResultDisplay,
     ITestTreeViewProvider,
-    IUnitTestHelper
+    IUnitTestHelper,
 } from './types';
 import { UnitTestHelper } from './unittest/helper';
 import { TestManager as UnitTestTestManager } from './unittest/main';
@@ -95,11 +95,11 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestDebugLauncher>(ITestDebugLauncher, DebugLauncher);
     serviceManager.addSingleton<ITestCollectionStorageService>(
         ITestCollectionStorageService,
-        TestCollectionStorageService
+        TestCollectionStorageService,
     );
     serviceManager.addSingleton<IWorkspaceTestManagerService>(
         IWorkspaceTestManagerService,
-        WorkspaceTestManagerService
+        WorkspaceTestManagerService,
     );
 
     serviceManager.add<ITestsHelper>(ITestsHelper, TestsHelper);
@@ -140,7 +140,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestConfigSettingsService>(ITestConfigSettingsService, TestConfigSettingsService);
     serviceManager.addSingleton<ITestConfigurationManagerFactory>(
         ITestConfigurationManagerFactory,
-        TestConfigurationManagerFactory
+        TestConfigurationManagerFactory,
     );
 
     serviceManager.addSingleton<ITestDiagnosticService>(ITestDiagnosticService, UnitTestDiagnosticService);
@@ -151,11 +151,11 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, TreeViewService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        FailedTestHandler
+        FailedTestHandler,
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        EnablementTracker
+        EnablementTracker,
     );
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, UpdateTestSettingService);
 

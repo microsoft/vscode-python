@@ -11,7 +11,7 @@ import {
     IMemento,
     IPersistentState,
     IPersistentStateFactory,
-    WORKSPACE_MEMENTO
+    WORKSPACE_MEMENTO,
 } from './types';
 
 export class PersistentState<T> implements IPersistentState<T> {
@@ -19,7 +19,7 @@ export class PersistentState<T> implements IPersistentState<T> {
         private storage: Memento,
         private key: string,
         private defaultValue?: T,
-        private expiryDurationMs?: number
+        private expiryDurationMs?: number,
     ) {}
 
     public get value(): T {
@@ -48,19 +48,19 @@ export class PersistentState<T> implements IPersistentState<T> {
 export class PersistentStateFactory implements IPersistentStateFactory {
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceState: Memento
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceState: Memento,
     ) {}
     public createGlobalPersistentState<T>(
         key: string,
         defaultValue?: T,
-        expiryDurationMs?: number
+        expiryDurationMs?: number,
     ): IPersistentState<T> {
         return new PersistentState<T>(this.globalState, key, defaultValue, expiryDurationMs);
     }
     public createWorkspacePersistentState<T>(
         key: string,
         defaultValue?: T,
-        expiryDurationMs?: number
+        expiryDurationMs?: number,
     ): IPersistentState<T> {
         return new PersistentState<T>(this.workspaceState, key, defaultValue, expiryDurationMs);
     }
@@ -87,6 +87,6 @@ export function getGlobalStorage<T>(context: IExtensionContext, key: string): IP
         },
         set(value: T) {
             return raw.updateValue(value);
-        }
+        },
     };
 }

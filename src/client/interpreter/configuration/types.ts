@@ -19,7 +19,7 @@ export interface IPythonPathUpdaterServiceManager {
         pythonPath: string | undefined,
         configTarget: ConfigurationTarget,
         trigger: 'ui' | 'shebang' | 'load',
-        wkspace?: Uri
+        wkspace?: Uri,
     ): Promise<void>;
 }
 

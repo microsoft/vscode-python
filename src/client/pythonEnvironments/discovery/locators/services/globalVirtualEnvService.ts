@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -13,7 +14,6 @@ import { IVirtualEnvironmentManager } from '../../../../interpreter/virtualEnvs/
 import { IServiceContainer } from '../../../../ioc/types';
 import { BaseVirtualEnvService } from './baseVirtualEnvService';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
 const untildify: (value: string) => string = require('untildify');
 
 @injectable()
@@ -21,7 +21,7 @@ export class GlobalVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
         @inject(IVirtualEnvironmentsSearchPathProvider)
         @named('global')
-            globalVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
+        globalVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
     ) {
         super(globalVirtualEnvPathProvider, serviceContainer, 'VirtualEnvService');
@@ -59,7 +59,6 @@ export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvi
             folders.push(untildify(workonHomePath));
         }
 
-        // tslint:disable-next-line:no-string-literal
         const pyenvRoot = await this.virtualEnvMgr.getPyEnvRoot(resource);
         if (pyenvRoot) {
             folders.push(pyenvRoot);

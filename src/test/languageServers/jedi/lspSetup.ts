@@ -15,9 +15,9 @@ fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, undefined, ' '));
 // Modify settings.json so that it turns on the LSP experiment
 const settingsJsonPath = path.join(__dirname, '..', '..', '..', '..', 'src', 'test', '.vscode', 'settings.json');
 const settingsJsonPromise = import('../../.vscode/settings.json');
-// tslint:disable-next-line: no-floating-promises
+
 settingsJsonPromise.then((settingsJson) => {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (<any>settingsJson)['python.experiments.optInto'] = [JediLSP.experiment];
     return fs.writeFile(settingsJsonPath, JSON.stringify(settingsJson, undefined, ' '));
 });

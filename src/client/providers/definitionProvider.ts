@@ -17,7 +17,7 @@ export class PythonDefinitionProvider implements vscode.DefinitionProvider {
                 definition.range.startLine,
                 definition.range.startColumn,
                 definition.range.endLine,
-                definition.range.endColumn
+                definition.range.endColumn,
             );
             return new vscode.Location(definitionResource, range);
         }
@@ -26,7 +26,7 @@ export class PythonDefinitionProvider implements vscode.DefinitionProvider {
     public async provideDefinition(
         document: vscode.TextDocument,
         position: vscode.Position,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<vscode.Definition | undefined> {
         const filename = document.fileName;
         if (document.lineAt(position.line).text.match(/^\s*\/\//)) {
@@ -45,7 +45,7 @@ export class PythonDefinitionProvider implements vscode.DefinitionProvider {
             command: proxy.CommandType.Definitions,
             fileName: filename,
             columnIndex: columnIndex,
-            lineIndex: position.line
+            lineIndex: position.line,
         };
         if (document.isDirty) {
             cmd.source = document.getText();

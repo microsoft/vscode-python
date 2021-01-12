@@ -14,7 +14,7 @@ export class NodeLanguageServerPackageService extends LanguageServerPackageServi
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IApplicationEnvironment) appEnv: IApplicationEnvironment,
-        @inject(IPlatformService) platform: IPlatformService
+        @inject(IPlatformService) platform: IPlatformService,
     ) {
         super(serviceContainer, appEnv, platform);
     }

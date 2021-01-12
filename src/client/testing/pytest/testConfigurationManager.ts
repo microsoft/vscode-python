@@ -31,7 +31,7 @@ export class ConfigurationManager extends TestConfigurationManager {
         if (configFiles.length === 1 && configFiles[0] === 'setup.cfg') {
             options.push({
                 label: configFileOptionLabel,
-                description: 'setup.cfg'
+                description: 'setup.cfg',
             });
         }
         const subDirs = await this.getTestDirs(wkspace.fsPath);
@@ -48,7 +48,7 @@ export class ConfigurationManager extends TestConfigurationManager {
     private async getConfigFiles(rootDir: string): Promise<string[]> {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         const promises = ['pytest.ini', 'tox.ini', 'setup.cfg'].map(async (cfg) =>
-            (await fs.fileExists(path.join(rootDir, cfg))) ? cfg : ''
+            (await fs.fileExists(path.join(rootDir, cfg))) ? cfg : '',
         );
         const values = await Promise.all(promises);
         return values.filter((exists) => exists.length > 0);

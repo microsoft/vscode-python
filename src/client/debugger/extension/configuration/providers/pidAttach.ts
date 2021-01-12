@@ -17,15 +17,15 @@ export class PidAttachDebugConfigurationProvider implements IDebugConfigurationP
     @captureTelemetry(
         EventName.DEBUGGER_CONFIGURATION_PROMPTS,
         { configurationType: DebugConfigurationType.pidAttach },
-        false
+        false,
     )
     public async buildConfiguration(_input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
         const config: Partial<AttachRequestArguments> = {
             name: DebugConfigStrings.attachPid.snippet.name(),
             type: DebuggerTypeName,
             request: 'attach',
-            // tslint:disable-next-line:no-invalid-template-strings
-            processId: '${command:pickProcess}'
+
+            processId: '${command:pickProcess}',
         };
         Object.assign(state.config, config);
     }

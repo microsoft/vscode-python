@@ -12,7 +12,7 @@ import {
     flaggedWorkspacesKeysStorageKey,
     safeInterpretersKey,
     unsafeInterpreterPromptKey,
-    unsafeInterpretersKey
+    unsafeInterpretersKey,
 } from '../constants';
 import { IInterpreterSecurityStorage } from '../types';
 
@@ -36,30 +36,30 @@ export class InterpreterSecurityStorage implements IInterpreterSecurityStorage {
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposable[]
+        @inject(IDisposableRegistry) private readonly disposables: IDisposable[],
     ) {
         this._unsafeInterpreterPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(
             unsafeInterpreterPromptKey,
-            true
+            true,
         );
         this._unsafeInterpreters = this.persistentStateFactory.createGlobalPersistentState<string[]>(
             unsafeInterpretersKey,
-            []
+            [],
         );
         this._safeInterpreters = this.persistentStateFactory.createGlobalPersistentState<string[]>(
             safeInterpretersKey,
-            []
+            [],
         );
         this.flaggedWorkspacesKeysStorage = this.persistentStateFactory.createGlobalPersistentState<string[]>(
             flaggedWorkspacesKeysStorageKey,
-            []
+            [],
         );
     }
 
     public hasUserApprovedWorkspaceInterpreters(resource: Uri): IPersistentState<boolean | undefined> {
         return this.persistentStateFactory.createGlobalPersistentState<boolean | undefined>(
             this._getKeyForWorkspace(resource),
-            undefined
+            undefined,
         );
     }
 
@@ -67,8 +67,8 @@ export class InterpreterSecurityStorage implements IInterpreterSecurityStorage {
         this.disposables.push(
             this.commandManager.registerCommand(
                 Commands.ResetInterpreterSecurityStorage,
-                this.resetInterpreterSecurityStorage.bind(this)
-            )
+                this.resetInterpreterSecurityStorage.bind(this),
+            ),
         );
     }
 

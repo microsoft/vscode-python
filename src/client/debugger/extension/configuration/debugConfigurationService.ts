@@ -10,7 +10,7 @@ import {
     IMultiStepInput,
     IMultiStepInputFactory,
     InputStep,
-    IQuickPickParameters
+    IQuickPickParameters,
 } from '../../../common/utils/multiStepInput';
 import { AttachRequestArguments, DebugConfigurationArguments, LaunchRequestArguments } from '../../types';
 import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationService } from '../types';
@@ -27,12 +27,12 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         private readonly launchResolver: IDebugConfigurationResolver<LaunchRequestArguments>,
         @inject(IDebugConfigurationProviderFactory)
         private readonly providerFactory: IDebugConfigurationProviderFactory,
-        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory
+        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
     ) {}
 
     public async provideDebugConfigurations(
         folder: WorkspaceFolder | undefined,
-        token?: CancellationToken
+        token?: CancellationToken,
     ): Promise<DebugConfiguration[] | undefined> {
         const config: Partial<DebugConfigurationArguments> = {};
         const state = { config, folder, token };
@@ -51,13 +51,13 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
     public async resolveDebugConfiguration(
         folder: WorkspaceFolder | undefined,
         debugConfiguration: DebugConfiguration,
-        token?: CancellationToken
+        token?: CancellationToken,
     ): Promise<DebugConfiguration | undefined> {
         if (debugConfiguration.request === 'attach') {
             return this.attachResolver.resolveDebugConfiguration(
                 folder,
                 debugConfiguration as AttachRequestArguments,
-                token
+                token,
             );
         } else if (debugConfiguration.request === 'test') {
             throw Error("Please use the command 'Python: Debug Unit Tests'");
@@ -74,7 +74,7 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
             return this.launchResolver.resolveDebugConfiguration(
                 folder,
                 debugConfiguration as LaunchRequestArguments,
-                token
+                token,
             );
         }
     }
@@ -82,7 +82,7 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
     public async resolveDebugConfigurationWithSubstitutedVariables(
         folder: WorkspaceFolder | undefined,
         debugConfiguration: DebugConfiguration,
-        token?: CancellationToken
+        token?: CancellationToken,
     ): Promise<DebugConfiguration | undefined> {
         function resolve<T extends DebugConfiguration>(resolver: IDebugConfigurationResolver<T>) {
             return resolver.resolveDebugConfigurationWithSubstitutedVariables(folder, debugConfiguration as T, token);
@@ -92,50 +92,50 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
 
     protected async pickDebugConfiguration(
         input: IMultiStepInput<DebugConfigurationState>,
-        state: DebugConfigurationState
+        state: DebugConfigurationState,
     ): Promise<InputStep<DebugConfigurationState> | void> {
         type DebugConfigurationQuickPickItem = QuickPickItem & { type: DebugConfigurationType };
         const items: DebugConfigurationQuickPickItem[] = [
             {
                 label: DebugConfigStrings.file.selectConfiguration.label(),
                 type: DebugConfigurationType.launchFile,
-                description: DebugConfigStrings.file.selectConfiguration.description()
+                description: DebugConfigStrings.file.selectConfiguration.description(),
             },
             {
                 label: DebugConfigStrings.module.selectConfiguration.label(),
                 type: DebugConfigurationType.launchModule,
-                description: DebugConfigStrings.module.selectConfiguration.description()
+                description: DebugConfigStrings.module.selectConfiguration.description(),
             },
             {
                 label: DebugConfigStrings.attach.selectConfiguration.label(),
                 type: DebugConfigurationType.remoteAttach,
-                description: DebugConfigStrings.attach.selectConfiguration.description()
+                description: DebugConfigStrings.attach.selectConfiguration.description(),
             },
             {
                 label: DebugConfigStrings.attachPid.selectConfiguration.label(),
                 type: DebugConfigurationType.pidAttach,
-                description: DebugConfigStrings.attachPid.selectConfiguration.description()
+                description: DebugConfigStrings.attachPid.selectConfiguration.description(),
             },
             {
                 label: DebugConfigStrings.django.selectConfiguration.label(),
                 type: DebugConfigurationType.launchDjango,
-                description: DebugConfigStrings.django.selectConfiguration.description()
+                description: DebugConfigStrings.django.selectConfiguration.description(),
             },
             {
                 label: DebugConfigStrings.fastapi.selectConfiguration.label(),
                 type: DebugConfigurationType.launchFastAPI,
-                description: DebugConfigStrings.fastapi.selectConfiguration.description()
+                description: DebugConfigStrings.fastapi.selectConfiguration.description(),
             },
             {
                 label: DebugConfigStrings.flask.selectConfiguration.label(),
                 type: DebugConfigurationType.launchFlask,
-                description: DebugConfigStrings.flask.selectConfiguration.description()
+                description: DebugConfigStrings.flask.selectConfiguration.description(),
             },
             {
                 label: DebugConfigStrings.pyramid.selectConfiguration.label(),
                 type: DebugConfigurationType.launchPyramid,
-                description: DebugConfigStrings.pyramid.selectConfiguration.description()
-            }
+                description: DebugConfigStrings.pyramid.selectConfiguration.description(),
+            },
         ];
         state.config = {};
         const pick = await input.showQuickPick<
@@ -145,7 +145,7 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
             title: DebugConfigStrings.selectConfiguration.title(),
             placeholder: DebugConfigStrings.selectConfiguration.placeholder(),
             activeItem: items[0],
-            items: items
+            items: items,
         });
         if (pick) {
             const provider = this.providerFactory.create(pick.type);

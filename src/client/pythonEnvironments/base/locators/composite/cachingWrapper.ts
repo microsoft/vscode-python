@@ -5,11 +5,7 @@ import { Event } from 'vscode';
 import { createDeferred } from '../../../../common/utils/async';
 import { PythonEnvsCache } from '../../envsCache';
 import { PythonEnvInfo } from '../../info';
-import {
-    ILocator,
-    IPythonEnvsIterator,
-    PythonLocatorQuery,
-} from '../../locator';
+import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { getEnvs as getFinalEnvs } from '../../locatorUtils';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
@@ -30,15 +26,13 @@ export class CachingLocatorWrapper extends LazyResourceBasedLocator {
 
     private readonly cache = new PythonEnvsCache();
 
-    constructor(
-        private readonly wrapped: ILocator,
-    ) {
+    constructor(private readonly wrapped: ILocator) {
         super();
         this.onChanged = this.watcher.onChanged;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    protected async* doIterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator {
+    protected async *doIterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator {
         yield* this.cache.getEnvs();
     }
 
@@ -61,12 +55,9 @@ export class CachingLocatorWrapper extends LazyResourceBasedLocator {
                 // The wrapped locator noticed changes while we're
                 // already refreshing, so trigger another refresh
                 // when that finishes.
-                this.refreshing
-                    .then(() => this.refresh(event))
-                    .ignoreErrors();
+                this.refreshing.then(() => this.refresh(event)).ignoreErrors();
             } else {
-                this.refresh(event)
-                    .ignoreErrors();
+                this.refresh(event).ignoreErrors();
             }
         });
         this.disposables.push(listener);
@@ -75,9 +66,7 @@ export class CachingLocatorWrapper extends LazyResourceBasedLocator {
     /**
      * Update the cache using the values iterated from the wrapped locator.
      */
-    private async refresh(
-        event?: PythonEnvsChangedEvent,
-    ): Promise<void> {
+    private async refresh(event?: PythonEnvsChangedEvent): Promise<void> {
         if (this.refreshing !== undefined) {
             await this.refreshing;
             return;

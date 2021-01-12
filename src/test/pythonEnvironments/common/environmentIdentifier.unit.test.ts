@@ -39,10 +39,23 @@ suite('Environment Identifier', () => {
         });
 
         test('Path to a global pipenv environment', async () => {
-            const expectedDotProjectFile = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'globalEnvironments', 'project2-vnNIWe9P', '.project');
+            const expectedDotProjectFile = path.join(
+                TEST_LAYOUT_ROOT,
+                'pipenv',
+                'globalEnvironments',
+                'project2-vnNIWe9P',
+                '.project',
+            );
             const expectedProjectFile = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project2');
             readFile.withArgs(expectedDotProjectFile).resolves(expectedProjectFile);
-            const interpreterPath: string = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'globalEnvironments', 'project2-vnNIWe9P', 'bin', 'python');
+            const interpreterPath: string = path.join(
+                TEST_LAYOUT_ROOT,
+                'pipenv',
+                'globalEnvironments',
+                'project2-vnNIWe9P',
+                'bin',
+                'python',
+            );
 
             const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
 
@@ -51,7 +64,14 @@ suite('Environment Identifier', () => {
 
         test('Path to a local pipenv environment with a custom Pipfile name', async () => {
             getEnvVar.withArgs('PIPENV_PIPFILE').returns('CustomPipfileName');
-            const interpreterPath: string = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project1', '.venv', 'Scripts', 'python.exe');
+            const interpreterPath: string = path.join(
+                TEST_LAYOUT_ROOT,
+                'pipenv',
+                'project1',
+                '.venv',
+                'Scripts',
+                'python.exe',
+            );
 
             const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
 
@@ -152,11 +172,18 @@ suite('Environment Identifier', () => {
 
         test('PYENV_ROOT is not set on non-Windows, fallback to the default value ~/.pyenv', async function () {
             if (getOSTypeForTest() === OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
 
-            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'pyenv1', '.pyenv', 'versions', '3.6.9', 'bin', 'python');
+            const interpreterPath = path.join(
+                TEST_LAYOUT_ROOT,
+                'pyenv1',
+                '.pyenv',
+                'versions',
+                '3.6.9',
+                'bin',
+                'python',
+            );
 
             getUserHomeDirStub.returns(path.join(TEST_LAYOUT_ROOT, 'pyenv1'));
             getEnvVarStub.withArgs('PYENV_ROOT').returns(undefined);
@@ -169,11 +196,19 @@ suite('Environment Identifier', () => {
 
         test('PYENV is not set on Windows, fallback to the default value %USERPROFILE%\\.pyenv\\pyenv-win', async function () {
             if (getOSTypeForTest() !== OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
 
-            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'pyenv2', '.pyenv', 'pyenv-win', 'versions', '3.6.9', 'bin', 'python.exe');
+            const interpreterPath = path.join(
+                TEST_LAYOUT_ROOT,
+                'pyenv2',
+                '.pyenv',
+                'pyenv-win',
+                'versions',
+                '3.6.9',
+                'bin',
+                'python.exe',
+            );
 
             getUserHomeDirStub.returns(path.join(TEST_LAYOUT_ROOT, 'pyenv2'));
             getEnvVarStub.withArgs('PYENV').returns(undefined);
@@ -187,7 +222,6 @@ suite('Environment Identifier', () => {
 
         test('PYENV_ROOT is set to a custom value on non-Windows', async function () {
             if (getOSTypeForTest() === OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
 
@@ -203,7 +237,6 @@ suite('Environment Identifier', () => {
 
         test('PYENV is set to a custom value on Windows', async function () {
             if (getOSTypeForTest() !== OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
 
@@ -253,11 +286,17 @@ suite('Environment Identifier', () => {
 
         test('WORKON_HOME is set to its default value ~/.virtualenvs on non-Windows', async function () {
             if (getOSTypeForTest() === OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
 
-            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'virtualenvwrapper1', '.virtualenvs', 'myenv', 'bin', 'python');
+            const interpreterPath = path.join(
+                TEST_LAYOUT_ROOT,
+                'virtualenvwrapper1',
+                '.virtualenvs',
+                'myenv',
+                'bin',
+                'python',
+            );
 
             getEnvVarStub.withArgs('WORKON_HOME').returns(undefined);
 
@@ -269,11 +308,17 @@ suite('Environment Identifier', () => {
 
         test('WORKON_HOME is set to its default value %USERPROFILE%\\Envs on Windows', async function () {
             if (getOSTypeForTest() !== OSType.Windows) {
-                // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
 
-            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'virtualenvwrapper1', 'Envs', 'myenv', 'Scripts', 'python');
+            const interpreterPath = path.join(
+                TEST_LAYOUT_ROOT,
+                'virtualenvwrapper1',
+                'Envs',
+                'myenv',
+                'Scripts',
+                'python',
+            );
 
             getEnvVarStub.withArgs('WORKON_HOME').returns(undefined);
             getOsTypeStub.returns(platformApis.OSType.Windows);

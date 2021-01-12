@@ -3,7 +3,6 @@
 
 import { Product } from '../types';
 
-// tslint:disable-next-line:variable-name
 export const ProductNames = new Map<Product, string>();
 ProductNames.set(Product.autopep8, 'autopep8');
 ProductNames.set(Product.bandit, 'bandit');

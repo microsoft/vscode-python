@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as fs from 'fs';
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -52,8 +53,8 @@ export function isParentPath(filePath: string, parentPath: string): boolean {
     return normCasePath(filePath).startsWith(normCasePath(parentPath));
 }
 
-export function listDir(dirname: string): Promise<string[]> {
-    return fsapi.readdir(dirname);
+export function listDir(dirname: string): Promise<fs.Dirent[]> {
+    return fs.promises.readdir(dirname, { withFileTypes: true });
 }
 
 export async function isDirectory(filename: string): Promise<boolean> {
@@ -73,7 +74,7 @@ export function arePathsSame(path1: string, path2: string): boolean {
     return normCasePath(path1) === normCasePath(path2);
 }
 
-export async function getFileInfo(filePath: string): Promise<{ ctime: number, mtime: number }> {
+export async function getFileInfo(filePath: string): Promise<{ ctime: number; mtime: number }> {
     try {
         const data = await fsapi.lstat(filePath);
         return {
@@ -96,7 +97,7 @@ export async function resolveSymbolicLink(filepath: string): Promise<string> {
     return filepath;
 }
 
-export async function* getSubDirs(root:string): AsyncIterableIterator<string> {
+export async function* getSubDirs(root: string): AsyncIterableIterator<string> {
     const dirContents = await fsapi.readdir(root);
     const generators = dirContents.map((item) => {
         async function* generator() {

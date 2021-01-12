@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable: no-any
-
 import { instance, mock, verify } from 'ts-mockito';
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../../client/activation/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
@@ -28,7 +26,7 @@ import {
     IInterpreterAutoSeletionProxyService,
     IInterpreterEvaluation,
     IInterpreterSecurityService,
-    IInterpreterSecurityStorage
+    IInterpreterSecurityStorage,
 } from '../../client/interpreter/autoSelection/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
 import { ResetInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/resetInterpreter';
@@ -41,7 +39,7 @@ import {
     IInterpreterComparer,
     IInterpreterSelector,
     IPythonPathUpdaterServiceFactory,
-    IPythonPathUpdaterServiceManager
+    IPythonPathUpdaterServiceManager,
 } from '../../client/interpreter/configuration/types';
 import {
     IInterpreterDisplay,
@@ -49,7 +47,7 @@ import {
     IInterpreterLocatorProgressHandler,
     IInterpreterService,
     IInterpreterVersionService,
-    IShebangCodeLensProvider
+    IShebangCodeLensProvider,
 } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { InterpreterSelectionTip } from '../../client/interpreter/display/interpreterSelectionTip';
@@ -103,12 +101,12 @@ suite('Interpreters - Service Registry', () => {
             [
                 IInterpreterAutoSelectionRule,
                 WindowsRegistryInterpretersAutoSelectionRule,
-                AutoSelectionRule.windowsRegistry
+                AutoSelectionRule.windowsRegistry,
             ],
             [
                 IInterpreterAutoSelectionRule,
                 WorkspaceVirtualEnvInterpretersAutoSelectionRule,
-                AutoSelectionRule.workspaceVirtualEnvs
+                AutoSelectionRule.workspaceVirtualEnvs,
             ],
             [IInterpreterAutoSelectionRule, CachedInterpretersAutoSelectionRule, AutoSelectionRule.cachedInterpreters],
             [IInterpreterAutoSelectionRule, SettingsInterpretersAutoSelectionRule, AutoSelectionRule.settings],
@@ -118,7 +116,7 @@ suite('Interpreters - Service Registry', () => {
             [EnvironmentActivationService, EnvironmentActivationService],
             [TerminalEnvironmentActivationService, TerminalEnvironmentActivationService],
             [IEnvironmentActivationService, EnvironmentActivationService],
-            [IExtensionActivationService, CondaInheritEnvPrompt]
+            [IExtensionActivationService, CondaInheritEnvPrompt],
         ].forEach((mapping) => {
             verify(serviceManager.addSingleton.apply(serviceManager, mapping as any)).once();
         });

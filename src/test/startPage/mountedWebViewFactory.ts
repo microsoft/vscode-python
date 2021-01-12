@@ -9,7 +9,7 @@ export const IMountedWebViewFactory = Symbol('IMountedWebViewFactory');
 
 export interface IMountedWebViewFactory {
     get(id: string): IMountedWebView;
-    // tslint:disable-next-line: no-any
+
     create(id: string, mount: () => ReactWrapper<any, Readonly<{}>, React.Component>): IMountedWebView;
 }
 
@@ -33,7 +33,6 @@ export class MountedWebViewFactory implements IMountedWebViewFactory, IDisposabl
         return obj;
     }
 
-    // tslint:disable-next-line: no-any
     public create(id: string, mount: () => ReactWrapper<any, Readonly<{}>, React.Component>): IMountedWebView {
         if (this.map.has(id)) {
             throw new Error(`Mounted web view already exists for id ${id}`);

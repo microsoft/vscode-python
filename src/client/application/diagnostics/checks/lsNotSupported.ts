@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
-
+// eslint-disable-next-line max-classes-per-file
 import { inject, named } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import { ILanguageServerCompatibilityService } from '../../../activation/types';
@@ -22,7 +21,7 @@ export class LSNotSupportedDiagnostic extends BaseDiagnostic {
             message,
             DiagnosticSeverity.Warning,
             DiagnosticScope.Global,
-            resource
+            resource,
         );
     }
 }
@@ -37,17 +36,18 @@ export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
         @inject(IDiagnosticHandlerService)
         @named(DiagnosticCommandPromptHandlerServiceId)
         protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
         super([DiagnosticCodes.LSNotSupportedDiagnostic], serviceContainer, disposableRegistry, false);
     }
+
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (await this.lsCompatibility.isSupported()) {
             return [];
-        } else {
-            return [new LSNotSupportedDiagnostic(Diagnostics.lsNotSupported(), resource)];
         }
+        return [new LSNotSupportedDiagnostic(Diagnostics.lsNotSupported(), resource)];
     }
+
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         if (diagnostics.length === 0 || !this.canHandle(diagnostics[0])) {
             return;
@@ -62,13 +62,13 @@ export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
                 prompt: 'More Info',
                 command: commandFactory.createCommand(diagnostic, {
                     type: 'launch',
-                    options: 'https://aka.ms/pythonlsrequirements'
-                })
+                    options: 'https://aka.ms/pythonlsrequirements',
+                }),
             },
             {
                 prompt: 'Do not show again',
-                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global })
-            }
+                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global }),
+            },
         ];
 
         await this.messageService.handle(diagnostic, { commandPrompts: options });

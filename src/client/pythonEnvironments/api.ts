@@ -4,9 +4,7 @@
 import { Event } from 'vscode';
 import { Disposables, IDisposable } from '../common/utils/resourceLifecycle';
 import { PythonEnvInfo } from './base/info';
-import {
-    ILocator, IPythonEnvsIterator, PythonLocatorQuery,
-} from './base/locator';
+import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from './base/locator';
 import { GetLocatorFunc, LazyWrappingLocator } from './base/locators/common/wrappingLocator';
 import { PythonEnvsChangedEvent } from './base/watcher';
 

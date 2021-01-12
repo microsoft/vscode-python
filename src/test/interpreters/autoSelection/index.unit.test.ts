@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-unnecessary-override no-any max-func-body-length no-invalid-this
-
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
@@ -28,7 +26,7 @@ import { WorkspaceVirtualEnvInterpretersAutoSelectionRule } from '../../../clien
 import {
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSeletionProxyService,
-    IInterpreterSecurityService
+    IInterpreterSecurityService,
 } from '../../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper } from '../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
@@ -90,7 +88,7 @@ suite('Interpreters - Auto Selection', () => {
             instance(workspaceInterpreter),
             instance(proxy),
             instance(helper),
-            instance(interpreterSecurityService)
+            instance(interpreterSecurityService),
         );
     });
 
@@ -119,7 +117,7 @@ suite('Interpreters - Auto Selection', () => {
             currentPathInterpreter,
             systemInterpreter,
             workspaceInterpreter,
-            cachedPaths
+            cachedPaths,
         ];
         for (const service of allRules) {
             verify(service.autoSelectInterpreter(undefined)).once();
@@ -154,8 +152,8 @@ suite('Interpreters - Auto Selection', () => {
         when(
             stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
                 preferredGlobalInterpreter,
-                undefined
-            )
+                undefined,
+            ),
         ).thenReturn(instance(state));
 
         await autoSelectionService.initializeStore(undefined);
@@ -170,8 +168,8 @@ suite('Interpreters - Auto Selection', () => {
         when(
             stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
                 preferredGlobalInterpreter,
-                undefined
-            )
+                undefined,
+            ),
         ).thenReturn(instance(state));
         when(state.value).thenReturn(interpreterInfo);
         when(fs.fileExists(pythonPath)).thenResolve(false);
@@ -189,8 +187,8 @@ suite('Interpreters - Auto Selection', () => {
         when(
             stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
                 preferredGlobalInterpreter,
-                undefined
-            )
+                undefined,
+            ),
         ).thenReturn(instance(state));
         when(state.value).thenReturn(interpreterInfo);
         when(fs.fileExists(pythonPath)).thenResolve(true);
@@ -210,8 +208,8 @@ suite('Interpreters - Auto Selection', () => {
         when(
             stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
                 preferredGlobalInterpreter,
-                undefined
-            )
+                undefined,
+            ),
         ).thenReturn(instance(state));
         autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
 
@@ -240,8 +238,8 @@ suite('Interpreters - Auto Selection', () => {
         when(
             stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
                 preferredGlobalInterpreter,
-                undefined
-            )
+                undefined,
+            ),
         ).thenReturn(instance(state));
         autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
         when(state.value).thenReturn(interpreterInfoInState);
@@ -264,8 +262,8 @@ suite('Interpreters - Auto Selection', () => {
         when(
             stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
                 preferredGlobalInterpreter,
-                undefined
-            )
+                undefined,
+            ),
         ).thenReturn(instance(state));
         autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
         when(state.value).thenReturn(interpreterInfoInState);
@@ -285,8 +283,8 @@ suite('Interpreters - Auto Selection', () => {
         when(
             stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
                 preferredGlobalInterpreter,
-                undefined
-            )
+                undefined,
+            ),
         ).thenReturn(instance(state));
         when(workspaceService.getWorkspaceFolderIdentifier(undefined, anything())).thenReturn('');
 
@@ -305,8 +303,8 @@ suite('Interpreters - Auto Selection', () => {
         when(
             stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
                 preferredGlobalInterpreter,
-                undefined
-            )
+                undefined,
+            ),
         ).thenReturn(instance(state));
         when(workspaceService.getWorkspaceFolder(resource)).thenReturn({ name: '', index: 0, uri: resource });
         autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
@@ -327,8 +325,8 @@ suite('Interpreters - Auto Selection', () => {
         when(
             stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
                 preferredGlobalInterpreter,
-                undefined
-            )
+                undefined,
+            ),
         ).thenReturn(instance(state));
         when(workspaceService.getWorkspaceFolder(resource)).thenReturn({ name: '', index: 0, uri: resource });
         when(workspaceService.getWorkspaceFolderIdentifier(anything(), anything())).thenReturn('');
@@ -350,8 +348,8 @@ suite('Interpreters - Auto Selection', () => {
         when(
             stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
                 preferredGlobalInterpreter,
-                undefined
-            )
+                undefined,
+            ),
         ).thenReturn(instance(state));
         when(workspaceService.getWorkspaceFolder(resource)).thenReturn({ name: '', index: 0, uri: resource });
         when(workspaceService.getWorkspaceFolderIdentifier(undefined, anything())).thenReturn('');
@@ -370,8 +368,8 @@ suite('Interpreters - Auto Selection', () => {
         when(
             stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
                 preferredGlobalInterpreter,
-                undefined
-            )
+                undefined,
+            ),
         ).thenReturn(instance(state));
         const globalInterpreterInfo = { path: 'global Value' };
         when(state.value).thenReturn(globalInterpreterInfo as any);
@@ -385,7 +383,7 @@ suite('Interpreters - Auto Selection', () => {
 
         const anotherResourceOfAnotherWorkspace = Uri.parse('Some other workspace');
         when(workspaceService.getWorkspaceFolderIdentifier(anotherResourceOfAnotherWorkspace, anything())).thenReturn(
-            '2'
+            '2',
         );
 
         const selectedInterpreter = autoSelectionService.getAutoSelectedInterpreter(anotherResourceOfAnotherWorkspace);

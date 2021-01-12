@@ -24,7 +24,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory
+        @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
     ) {}
 
     /**
@@ -67,7 +67,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
     public async promptToConfigureAvailableLinter(linterInfo: ILinterInfo): Promise<boolean> {
         const notificationPromptEnabled = this.persistentStateFactory.createWorkspacePersistentState(
             doNotDisplayPromptStateKey,
-            true
+            true,
         );
         if (!notificationPromptEnabled.value) {
             return false;
@@ -77,11 +77,11 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
         const telemetrySelections: ['enable', 'ignore', 'disablePrompt'] = ['enable', 'ignore', 'disablePrompt'];
         const pick = await this.appShell.showInformationMessage(
             Linters.enablePylint().format(linterInfo.id),
-            ...optButtons
+            ...optButtons,
         );
         sendTelemetryEvent(EventName.CONFIGURE_AVAILABLE_LINTER_PROMPT, undefined, {
             tool: linterInfo.id,
-            action: pick ? telemetrySelections[optButtons.indexOf(pick)] : undefined
+            action: pick ? telemetrySelections[optButtons.indexOf(pick)] : undefined,
         });
         if (pick === optButtons[0]) {
             await linterInfo.enableAsync(true);

@@ -3,7 +3,6 @@
 
 import { getOSType, OSType } from '../../../../common/utils/platform';
 
-// tslint:disable-next-line:no-suspicious-comment
 // TODO: Add tests for 'isMacDefaultPythonPath' when working on the locator
 
 /**

@@ -12,7 +12,7 @@ import { Architecture, OSType } from '../utils/platform';
 
 export enum RegistryHive {
     HKCU,
-    HKLM
+    HKLM,
 }
 
 export const IRegistry = Symbol('IRegistry');
@@ -189,7 +189,6 @@ export interface IFileSystemUtils {
     fileExistsSync(path: string): boolean;
 }
 
-// tslint:disable-next-line:no-suspicious-comment
 // TODO: Later we will drop IFileSystem, switching usage to IFileSystemUtils.
 // See https://github.com/microsoft/vscode-python/issues/8542.
 

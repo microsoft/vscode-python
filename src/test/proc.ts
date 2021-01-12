@@ -69,7 +69,7 @@ export class Proc {
         }
         this.result = {
             exitCode: this.raw.exitCode,
-            stdout: this.output.stdout
+            stdout: this.output.stdout,
         };
         return this.result;
     }

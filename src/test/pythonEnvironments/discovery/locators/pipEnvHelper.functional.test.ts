@@ -21,10 +21,23 @@ suite('Pipenv utils', () => {
 
     test('Global pipenv environment is associated with a project whose Pipfile lies at 3 levels above the project', async () => {
         getEnvVar.withArgs('PIPENV_MAX_DEPTH').returns('5');
-        const expectedDotProjectFile = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'globalEnvironments', 'project3-2s1eXEJ2', '.project');
+        const expectedDotProjectFile = path.join(
+            TEST_LAYOUT_ROOT,
+            'pipenv',
+            'globalEnvironments',
+            'project3-2s1eXEJ2',
+            '.project',
+        );
         const project = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project3');
         readFile.withArgs(expectedDotProjectFile).resolves(project);
-        const interpreterPath: string = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'globalEnvironments', 'project3-2s1eXEJ2', 'Scripts', 'python.exe');
+        const interpreterPath: string = path.join(
+            TEST_LAYOUT_ROOT,
+            'pipenv',
+            'globalEnvironments',
+            'project3-2s1eXEJ2',
+            'Scripts',
+            'python.exe',
+        );
         const folder = path.join(project, 'parent', 'child', 'folder');
 
         const isRelated = await isPipenvEnvironmentRelatedToFolder(interpreterPath, folder);

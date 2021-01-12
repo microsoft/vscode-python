@@ -10,13 +10,12 @@ import { IFileSystem, IPlatformService } from '../../../../common/platform/types
 import { IProcessServiceFactory } from '../../../../common/process/types';
 import { IConfigurationService, ICurrentProcess } from '../../../../common/types';
 import { StopWatch } from '../../../../common/utils/stopWatch';
-import { IInterpreterHelper, IPipEnvService } from '../../../../interpreter/contracts';
+import { GetInterpreterLocatorOptions, IInterpreterHelper, IPipEnvService } from '../../../../interpreter/contracts';
 import { IPipEnvServiceHelper } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
-import { GetInterpreterLocatorOptions } from '../types';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
 const pipEnvFileNameVariable = 'PIPENV_PIPFILE';
@@ -45,7 +44,6 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         this.pipEnvServiceHelper = this.serviceContainer.get<IPipEnvServiceHelper>(IPipEnvServiceHelper);
     }
 
-    // tslint:disable-next-line:no-empty
     public dispose(): void {
         // No body
     }
@@ -155,7 +153,6 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             }
             const pythonPath = await this.invokePipenv('--py', cwd);
             return pythonPath && (await this.fs.fileExists(pythonPath)) ? pythonPath : undefined;
-            // tslint:disable-next-line:no-empty
         } catch (error) {
             traceError('PipEnv identification failed', error);
             if (ignoreErrors) {
@@ -191,7 +188,6 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
                 }
                 return stdout;
             }
-            // tslint:disable-next-line:no-empty
         } catch (error) {
             const platformService = this.serviceContainer.get<IPlatformService>(IPlatformService);
             const currentProc = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
@@ -199,7 +195,8 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
                 LC_ALL: currentProc.env.LC_ALL,
                 LANG: currentProc.env.LANG,
             };
-            enviromentVariableValues[platformService.pathVariableName] = currentProc.env[platformService.pathVariableName];
+            enviromentVariableValues[platformService.pathVariableName] =
+                currentProc.env[platformService.pathVariableName];
 
             traceWarning('Error in invoking PipEnv', error);
             traceWarning(`Relevant Environment Variables ${JSON.stringify(enviromentVariableValues, undefined, 4)}`);

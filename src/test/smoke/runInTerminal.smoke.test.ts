@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-this
-
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -19,6 +17,7 @@ suite('Smoke Test: Run Python File In Terminal', () => {
             return this.skip();
         }
         await initialize();
+        return undefined;
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -30,14 +29,14 @@ suite('Smoke Test: Run Python File In Terminal', () => {
             'src',
             'testMultiRootWkspc',
             'smokeTests',
-            'testExecInTerminal.py'
+            'testExecInTerminal.py',
         );
         const outputFile = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
             'testMultiRootWkspc',
             'smokeTests',
-            'testExecInTerminal.log'
+            'testExecInTerminal.log',
         );
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);

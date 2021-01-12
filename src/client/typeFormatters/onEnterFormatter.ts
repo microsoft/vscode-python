@@ -7,7 +7,7 @@ import {
     OnTypeFormattingEditProvider,
     Position,
     TextDocument,
-    TextEdit
+    TextEdit,
 } from 'vscode';
 import { LineFormatter } from '../formatters/lineFormatter';
 import { TokenizerMode, TokenType } from '../language/types';
@@ -21,7 +21,7 @@ export class OnEnterFormatter implements OnTypeFormattingEditProvider {
         position: Position,
         _ch: string,
         _options: FormattingOptions,
-        _cancellationToken: CancellationToken
+        _cancellationToken: CancellationToken,
     ): TextEdit[] {
         if (position.line === 0) {
             return [];

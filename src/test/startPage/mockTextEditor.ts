@@ -15,7 +15,7 @@ import {
     TextEditorEdit,
     TextEditorOptions,
     TextEditorRevealType,
-    ViewColumn
+    ViewColumn,
 } from 'vscode';
 
 import { noop } from '../../client/common/utils/misc';
@@ -29,8 +29,8 @@ class MockEditorEdit implements TextEditorEdit {
         this._documentManager.changeDocument(this._document.fileName, [
             {
                 range: location as Range,
-                newText: value
-            }
+                newText: value,
+            },
         ]);
     }
 
@@ -38,8 +38,8 @@ class MockEditorEdit implements TextEditorEdit {
         this._documentManager.changeDocument(this._document.fileName, [
             {
                 range: new Range(location, location),
-                newText: value
-            }
+                newText: value,
+            },
         ]);
     }
     public delete(_location: Selection | Range): void {
@@ -74,7 +74,7 @@ export class MockEditor implements TextEditor {
     }
     public edit(
         callback: (editBuilder: TextEditorEdit) => void,
-        _options?: { undoStopBefore: boolean; undoStopAfter: boolean } | undefined
+        _options?: { undoStopBefore: boolean; undoStopAfter: boolean } | undefined,
     ): Thenable<boolean> {
         return new Promise((r) => {
             const editor = new MockEditorEdit(this._documentManager, this._document);
@@ -85,13 +85,13 @@ export class MockEditor implements TextEditor {
     public insertSnippet(
         _snippet: SnippetString,
         _location?: Range | Position | Range[] | Position[] | undefined,
-        _options?: { undoStopBefore: boolean; undoStopAfter: boolean } | undefined
+        _options?: { undoStopBefore: boolean; undoStopAfter: boolean } | undefined,
     ): Thenable<boolean> {
         throw new Error('Method not implemented.');
     }
     public setDecorations(
         _decorationType: TextEditorDecorationType,
-        _rangesOrOptions: Range[] | DecorationOptions[]
+        _rangesOrOptions: Range[] | DecorationOptions[],
     ): void {
         throw new Error('Method not implemented.');
     }

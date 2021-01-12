@@ -5,15 +5,16 @@ import { uniq } from 'lodash';
 import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
-import {
-    getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
-} from '../../../../common/utils/platform';
+import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import {
-    findInterpretersInDir, getEnvironmentDirFromPath, getPythonVersionFromPath, isStandardPythonBinary
+    findInterpretersInDir,
+    getEnvironmentDirFromPath,
+    getPythonVersionFromPath,
+    isStandardPythonBinary,
 } from '../../../common/commonUtils';
 import { getFileInfo, pathExists } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from './pipEnvHelper';
@@ -87,7 +88,7 @@ async function buildSimpleVirtualEnvInfo(executablePath: string, kind: PythonEnv
     const location = getEnvironmentDirFromPath(executablePath);
     envInfo.location = location;
     envInfo.name = path.basename(location);
-    // tslint:disable-next-line:no-suspicious-comment
+
     // TODO: Call a general display name provider here to build display name.
     const fileData = await getFileInfo(executablePath);
     envInfo.executable.ctime = fileData.ctime;

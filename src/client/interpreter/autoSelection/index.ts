@@ -20,7 +20,7 @@ import {
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService,
     IInterpreterAutoSeletionProxyService,
-    IInterpreterSecurityService
+    IInterpreterSecurityService,
 } from './types';
 
 const preferredGlobalInterpreter = 'preferredGlobalPyInterpreter';
@@ -57,7 +57,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         workspaceInterpreter: IInterpreterAutoSelectionRule,
         @inject(IInterpreterAutoSeletionProxyService) proxy: IInterpreterAutoSeletionProxyService,
         @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
-        @inject(IInterpreterSecurityService) private readonly interpreterSecurityService: IInterpreterSecurityService
+        @inject(IInterpreterSecurityService) private readonly interpreterSecurityService: IInterpreterSecurityService,
     ) {
         // It is possible we area always opening the same workspace folder, but we still need to determine and cache
         // the best available interpreters based on other rules (cache for furture use).
@@ -68,8 +68,8 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
                 systemInterpreter,
                 cachedPaths,
                 userDefinedInterpreter,
-                workspaceInterpreter
-            ]
+                workspaceInterpreter,
+            ],
         );
         proxy.registerInstance!(this);
         // Rules are as follows in order

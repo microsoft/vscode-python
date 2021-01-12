@@ -20,7 +20,6 @@ const EXTENSION_ROOT_DIR =
 const formattedMessage = Symbol.for('message');
 
 export function isConsoleTransport(transport: unknown): boolean {
-    // tslint:disable-next-line:no-any
     return (transport as any).isConsole;
 }
 
@@ -28,29 +27,22 @@ export function isConsoleTransport(transport: unknown): boolean {
 // We do not use transports.ConsoleTransport because it cannot
 // adapt to our custom log levels very well.
 class ConsoleTransport extends Transport {
-    // tslint:disable:no-console
     private static funcByLevel: { [K in LogLevel]: (...args: Arguments) => void } = {
         [LogLevel.Error]: console.error,
         [LogLevel.Warn]: console.warn,
         [LogLevel.Info]: console.info,
         [LogLevel.Debug]: console.debug,
-        [LogLevel.Trace]: console.trace
+        [LogLevel.Trace]: console.trace,
     };
     private static defaultFunc = console.log;
-    // tslint:enable:no-console
 
     // This is used to identify the type.
     public readonly isConsole = true;
 
-    constructor(
-        // tslint:disable-next-line:no-any
-        options?: any,
-        private readonly levels?: winston.config.AbstractConfigSetLevels
-    ) {
+    constructor(options?: any, private readonly levels?: winston.config.AbstractConfigSetLevels) {
         super(options);
     }
 
-    // tslint:disable-next-line:no-any
     public log?(info: { level: string; message: string; [formattedMessage]: string }, next: () => void): any {
         setImmediate(() => this.emit('logged', info));
         const level = resolveLevel(info.level, this.levels);
@@ -74,16 +66,15 @@ class ConsoleTransport extends Transport {
 export function getConsoleTransport(formatter: logform.Format): Transport {
     return new ConsoleTransport({
         // We minimize customization.
-        format: formatter
+        format: formatter,
     });
 }
 
 class PythonOutputChannelTransport extends Transport {
-    // tslint:disable-next-line: no-any
     constructor(private readonly channel: OutputChannel, options?: any) {
         super(options);
     }
-    // tslint:disable-next-line: no-any
+
     public log?(info: { message: string; [formattedMessage]: string }, next: () => void): any {
         setImmediate(() => this.emit('logged', info));
         this.channel.appendLine(info[formattedMessage] || info.message);
@@ -97,7 +88,7 @@ class PythonOutputChannelTransport extends Transport {
 export function getPythonOutputChannelTransport(channel: OutputChannel, formatter: logform.Format) {
     return new PythonOutputChannelTransport(channel, {
         // We minimize customization.
-        format: formatter
+        format: formatter,
     });
 }
 
@@ -109,6 +100,6 @@ export function getFileTransport(logfile: string, formatter: logform.Format): Tr
     return new winston.transports.File({
         format: formatter,
         filename: logfile,
-        handleExceptions: true
+        handleExceptions: true,
     });
 }

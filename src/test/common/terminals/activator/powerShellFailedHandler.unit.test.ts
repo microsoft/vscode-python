@@ -11,11 +11,10 @@ import { PowershellTerminalActivationFailedHandler } from '../../../../client/co
 import {
     ITerminalActivationHandler,
     ITerminalHelper,
-    TerminalShellType
+    TerminalShellType,
 } from '../../../../client/common/terminal/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Terminal Activation Powershell Failed Handler', () => {
     let psHandler: ITerminalActivationHandler;
     let helper: TypeMoq.IMock<ITerminalHelper>;
@@ -27,7 +26,7 @@ suite('Terminal Activation Powershell Failed Handler', () => {
         isWindows: boolean,
         activatedSuccessfully: boolean,
         shellType: TerminalShellType,
-        cmdPromptHasActivationCommands: boolean
+        cmdPromptHasActivationCommands: boolean,
     ) {
         platform.setup((p) => p.isWindows).returns(() => isWindows);
         helper.setup((p) => p.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => shellType);
@@ -36,8 +35,8 @@ suite('Terminal Activation Powershell Failed Handler', () => {
             .setup((h) =>
                 h.getEnvironmentActivationCommands(
                     TypeMoq.It.isValue(TerminalShellType.commandPrompt),
-                    TypeMoq.It.isAny()
-                )
+                    TypeMoq.It.isAny(),
+                ),
             )
             .returns(() => Promise.resolve(cmdPromptCommands));
 
@@ -49,7 +48,7 @@ suite('Terminal Activation Powershell Failed Handler', () => {
             TypeMoq.Mock.ofType<Terminal>().object,
             undefined,
             false,
-            activatedSuccessfully
+            activatedSuccessfully,
         );
     }
 
@@ -78,7 +77,7 @@ suite('Terminal Activation Powershell Failed Handler', () => {
                                                 psHandler = new PowershellTerminalActivationFailedHandler(
                                                     helper.object,
                                                     platform.object,
-                                                    diagnosticService.object
+                                                    diagnosticService.object,
                                                 );
                                             });
                                             const isPs =
@@ -94,15 +93,15 @@ suite('Terminal Activation Powershell Failed Handler', () => {
                                                     isWindows,
                                                     activatedSuccessfully,
                                                     shell.value,
-                                                    hasCommandPromptActivations
+                                                    hasCommandPromptActivations,
                                                 );
                                                 helper.verifyAll();
                                                 diagnosticService.verifyAll();
                                             });
-                                        }
+                                        },
                                     );
                                 });
-                            }
+                            },
                         );
                     });
                 });

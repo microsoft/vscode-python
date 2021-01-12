@@ -3,6 +3,7 @@
 import { exec, execSync, spawn } from 'child_process';
 import { EventEmitter } from 'events';
 import { Observable } from 'rxjs/Observable';
+import { Readable } from 'stream';
 
 import { IDisposable } from '../types';
 import { createDeferred } from '../utils/async';
@@ -16,10 +17,9 @@ import {
     Output,
     ShellOptions,
     SpawnOptions,
-    StdErrError
+    StdErrError,
 } from './types';
 
-// tslint:disable:no-any
 export class ProcessService extends EventEmitter implements IProcessService {
     private processesToKill = new Set<IDisposable>();
     constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) {
@@ -62,7 +62,6 @@ export class ProcessService extends EventEmitter implements IProcessService {
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
         const disposable: IDisposable = {
-            // tslint:disable-next-line: no-function-expression
             dispose: function () {
                 if (proc && !proc.killed && !procExited) {
                     ProcessService.kill(proc.pid);
@@ -70,16 +69,16 @@ export class ProcessService extends EventEmitter implements IProcessService {
                 if (proc) {
                     proc.unref();
                 }
-            }
+            },
         };
         this.processesToKill.add(disposable);
 
         const output = new Observable<Output<string>>((subscriber) => {
             const disposables: IDisposable[] = [];
 
-            const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
-                ee.on(name, fn as any);
-                disposables.push({ dispose: () => ee.removeListener(name, fn as any) as any });
+            const on = (ee: Readable | null, name: string, fn: Function) => {
+                ee?.on(name, fn as any);
+                disposables.push({ dispose: () => ee?.removeListener(name, fn as any) as any });
             };
 
             if (options.token) {
@@ -89,7 +88,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
                             proc.kill();
                             procExited = true;
                         }
-                    })
+                    }),
                 );
             }
 
@@ -127,7 +126,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
         return {
             proc,
             out: output,
-            dispose: disposable.dispose
+            dispose: disposable.dispose,
         };
     }
     public exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
@@ -140,14 +139,14 @@ export class ProcessService extends EventEmitter implements IProcessService {
                 if (!proc.killed && !deferred.completed) {
                     proc.kill();
                 }
-            }
+            },
         };
         this.processesToKill.add(disposable);
         const disposables: IDisposable[] = [];
 
-        const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
-            ee.on(name, fn as any);
-            disposables.push({ dispose: () => ee.removeListener(name, fn as any) as any });
+        const on = (ee: Readable | null, name: string, fn: Function) => {
+            ee?.on(name, fn as any);
+            disposables.push({ dispose: () => ee?.removeListener(name, fn as any) as any });
         };
 
         if (options.token) {
@@ -209,7 +208,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
                     if (!proc.killed) {
                         proc.kill();
                     }
-                }
+                },
             };
             this.processesToKill.add(disposable);
         });

@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
-
+// eslint-disable-next-line max-classes-per-file
 import { inject, injectable } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import '../../../common/extensions';
@@ -20,14 +19,14 @@ import {
     IDiagnostic,
     IDiagnosticCommand,
     IDiagnosticHandlerService,
-    IDiagnosticMessageOnCloseHandler
+    IDiagnosticMessageOnCloseHandler,
 } from '../types';
 
 const messages = {
     [DiagnosticCodes.NoPythonInterpretersDiagnostic]:
         'Python is not installed. Please download and install Python before using the extension.',
     [DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic]:
-        'No Python interpreter is selected. You need to select a Python interpreter to enable features such as IntelliSense, linting, and debugging.'
+        'No Python interpreter is selected. You need to select a Python interpreter to enable features such as IntelliSense, linting, and debugging.',
 };
 
 export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
@@ -35,7 +34,7 @@ export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
         code:
             | DiagnosticCodes.NoPythonInterpretersDiagnostic
             | DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
-        resource: Resource
+        resource: Resource,
     ) {
         super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource);
     }
@@ -47,18 +46,19 @@ export const InvalidPythonInterpreterServiceId = 'InvalidPythonInterpreterServic
 export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
         super(
             [
                 DiagnosticCodes.NoPythonInterpretersDiagnostic,
-                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic
+                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
             ],
             serviceContainer,
             disposableRegistry,
-            false
+            false,
         );
     }
+
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const settings = configurationService.getSettings(resource);
@@ -85,20 +85,21 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
             return [
                 new InvalidPythonInterpreterDiagnostic(
                     DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
-                    resource
-                )
+                    resource,
+                ),
             ];
         }
 
         return [];
     }
+
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         if (diagnostics.length === 0) {
             return;
         }
         const messageService = this.serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
             IDiagnosticHandlerService,
-            DiagnosticCommandPromptHandlerServiceId
+            DiagnosticCommandPromptHandlerServiceId,
         );
         await Promise.all(
             diagnostics.map(async (diagnostic) => {
@@ -106,11 +107,12 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
                     return;
                 }
                 const commandPrompts = this.getCommandPrompts(diagnostic);
-                const onClose = this.getOnCloseHandler(diagnostic);
-                return messageService.handle(diagnostic, { commandPrompts, message: diagnostic.message, onClose });
-            })
+                const onClose = getOnCloseHandler(diagnostic);
+                await messageService.handle(diagnostic, { commandPrompts, message: diagnostic.message, onClose });
+            }),
         );
     }
+
     private getCommandPrompts(diagnostic: IDiagnostic): { prompt: string; command?: IDiagnosticCommand }[] {
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
         switch (diagnostic.code) {
@@ -120,9 +122,9 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
                         prompt: 'Download',
                         command: commandFactory.createCommand(diagnostic, {
                             type: 'launch',
-                            options: 'https://www.python.org/downloads'
-                        })
-                    }
+                            options: 'https://www.python.org/downloads',
+                        }),
+                    },
                 ];
             }
             case DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic: {
@@ -131,9 +133,9 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
                         prompt: 'Select Python Interpreter',
                         command: commandFactory.createCommand(diagnostic, {
                             type: 'executeVSCCommand',
-                            options: 'python.setInterpreter'
-                        })
-                    }
+                            options: 'python.setInterpreter',
+                        }),
+                    },
                 ];
             }
             default: {
@@ -141,15 +143,15 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
             }
         }
     }
-    private getOnCloseHandler(diagnostic: IDiagnostic): IDiagnosticMessageOnCloseHandler | undefined {
-        if (diagnostic.code === DiagnosticCodes.NoPythonInterpretersDiagnostic) {
-            return (response?: string) => {
-                sendTelemetryEvent(EventName.PYTHON_NOT_INSTALLED_PROMPT, undefined, {
-                    selection: response ? 'Download' : 'Ignore'
-                });
-            };
-        }
+}
 
-        return;
+function getOnCloseHandler(diagnostic: IDiagnostic): IDiagnosticMessageOnCloseHandler | undefined {
+    if (diagnostic.code === DiagnosticCodes.NoPythonInterpretersDiagnostic) {
+        return (response?: string) => {
+            sendTelemetryEvent(EventName.PYTHON_NOT_INSTALLED_PROMPT, undefined, {
+                selection: response ? 'Download' : 'Ignore',
+            });
+        };
     }
+    return undefined;
 }

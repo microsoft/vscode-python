@@ -37,7 +37,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
-        @inject(IInterpreterSecurityService) private readonly interpreterSecurityService: IInterpreterSecurityService
+        @inject(IInterpreterSecurityService) private readonly interpreterSecurityService: IInterpreterSecurityService,
     ) {}
 
     public dispose() {
@@ -55,7 +55,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         // Activate all activation services together.
         await Promise.all([
             Promise.all(this.singleActivationServices.map((item) => item.activate())),
-            this.activateWorkspace(this.activeResourceService.getActiveResource())
+            this.activateWorkspace(this.activeResourceService.getActiveResource()),
         ]);
         await this.autoSelection.autoSelectInterpreter(undefined);
     }
@@ -114,7 +114,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
                     this.isInterpreterSetForWorkspacePromises.set(workspaceKey, isInterpreterSetForWorkspace);
                     await Promise.race([
                         isInterpreterSetForWorkspace.promise,
-                        this.interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter, resource)
+                        this.interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter, resource),
                     ]);
                 }
             } else {
@@ -131,7 +131,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     protected addHandlers() {
         this.disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
         this.disposables.push(
-            this.interpreterPathService.onDidChange((i) => this.evaluateAutoSelectedInterpreterSafety(i.uri))
+            this.interpreterPathService.onDidChange((i) => this.evaluateAutoSelectedInterpreterSafety(i.uri)),
         );
     }
     protected addRemoveDocOpenedHandlers() {
@@ -149,7 +149,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     protected onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, delete its key
         const workspaceKeys = this.workspaceService.workspaceFolders!.map((workspaceFolder) =>
-            this.getWorkspaceKey(workspaceFolder.uri)
+            this.getWorkspaceKey(workspaceFolder.uri),
         );
         const activatedWkspcKeys = Array.from(this.activatedWorkspaces.keys());
         const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter((item) => workspaceKeys.indexOf(item) < 0);

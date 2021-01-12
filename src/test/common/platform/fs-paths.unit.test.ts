@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:max-func-body-length
-
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
@@ -35,7 +33,7 @@ suite('FileSystem - Path Utils', () => {
             // It's simpler to just use one mock for all 3 dependencies.
             deps.object,
             deps.object,
-            deps.object
+            deps.object,
         );
     });
     function verifyAll() {
@@ -64,7 +62,7 @@ suite('FileSystem - Path Utils', () => {
                     // no upper-case
                     'c:\\users\\peter smith\\my documents\\test.txt',
                     // some upper-case
-                    'c:\\USERS\\Peter Smith\\my documents\\test.TXT'
+                    'c:\\USERS\\Peter Smith\\my documents\\test.TXT',
                 ].forEach((path1) => {
                     test(`True if paths are identical (type: ${item.name}) - ${path1}`, () => {
                         path1 = setNormCase(path1, 2);

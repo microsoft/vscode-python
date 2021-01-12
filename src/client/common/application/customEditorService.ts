@@ -19,7 +19,7 @@ export class CustomEditorService implements ICustomEditorService {
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(UseCustomEditorApi) private readonly useCustomEditorApi: boolean,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IExtensionContext) private readonly extensionContext: IExtensionContext
+        @inject(IExtensionContext) private readonly extensionContext: IExtensionContext,
     ) {
         this.enableCustomEditors().catch((e) => traceError(`Error setting up custom editors: `, e));
     }
@@ -30,10 +30,9 @@ export class CustomEditorService implements ICustomEditorService {
         options?: {
             readonly webviewOptions?: vscode.WebviewPanelOptions;
             readonly supportsMultipleEditorsPerDocument?: boolean;
-        }
+        },
     ): vscode.Disposable {
         if (this.useCustomEditorApi) {
-            // tslint:disable-next-line: no-any
             return (vscode.window as any).registerCustomEditorProvider(viewType, provider, options);
         } else {
             return { dispose: noop };
@@ -46,7 +45,6 @@ export class CustomEditorService implements ICustomEditorService {
         }
     }
 
-    // tslint:disable-next-line: no-any
     private async enableCustomEditors() {
         // This code is temporary.
         const settings = this.workspace.getConfiguration('workbench', undefined);
@@ -64,11 +62,11 @@ export class CustomEditorService implements ICustomEditorService {
         ) {
             editorAssociations.push({
                 viewType: ViewType,
-                filenamePattern: '*.ipynb'
+                filenamePattern: '*.ipynb',
             });
             await Promise.all([
                 this.extensionContext.globalState.update(EditorAssociationUpdatedKey, true),
-                settings.update('editorAssociations', editorAssociations, vscode.ConfigurationTarget.Global)
+                settings.update('editorAssociations', editorAssociations, vscode.ConfigurationTarget.Global),
             ]);
         }
 
@@ -82,7 +80,7 @@ export class CustomEditorService implements ICustomEditorService {
             const updatedSettings = editorAssociations.filter((item) => item.viewType !== ViewType);
             await Promise.all([
                 this.extensionContext.globalState.update(EditorAssociationUpdatedKey, false),
-                settings.update('editorAssociations', updatedSettings, vscode.ConfigurationTarget.Global)
+                settings.update('editorAssociations', updatedSettings, vscode.ConfigurationTarget.Global),
             ]);
         }
     }

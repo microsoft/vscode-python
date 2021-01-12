@@ -24,7 +24,7 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IDebugService) private readonly debugService: IDebugService,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
     ) {}
 
     @captureTelemetry(EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS)
@@ -39,7 +39,7 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
     }
 
     private getRelatedWorkspaceFolder(
-        config: AttachRequestArguments & DebugConfiguration
+        config: AttachRequestArguments & DebugConfiguration,
     ): WorkspaceFolder | undefined {
         const workspaceFolder = config.workspaceFolder;
         if (!this.workspaceService.hasWorkspaceFolders || !workspaceFolder) {

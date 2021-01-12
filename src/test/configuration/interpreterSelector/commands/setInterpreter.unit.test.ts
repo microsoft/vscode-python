@@ -15,15 +15,14 @@ import { InterpreterQuickPickList, Interpreters } from '../../../../client/commo
 import { IMultiStepInput, IMultiStepInputFactory } from '../../../../client/common/utils/multiStepInput';
 import {
     InterpreterStateArgs,
-    SetInterpreterCommand
+    SetInterpreterCommand,
 } from '../../../../client/interpreter/configuration/interpreterSelector/commands/setInterpreter';
 import {
     IInterpreterQuickPickItem,
     IInterpreterSelector,
-    IPythonPathUpdaterServiceManager
+    IPythonPathUpdaterServiceManager,
 } from '../../../../client/interpreter/configuration/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Set Interpreter Command', () => {
     let workspace: TypeMoq.IMock<IWorkspaceService>;
     let interpreterSelector: TypeMoq.IMock<IInterpreterSelector>;
@@ -61,7 +60,7 @@ suite('Set Interpreter Command', () => {
             multiStepInputFactory.object,
             platformService.object,
             interpreterSelector.object,
-            workspace.object
+            workspace.object,
         );
     });
 
@@ -70,26 +69,25 @@ suite('Set Interpreter Command', () => {
     });
 
     suite('Test method _pickInterpreter()', async () => {
-        // tslint:disable-next-line: no-any
         let _enterOrBrowseInterpreterPath: sinon.SinonStub<any>;
         const item: IInterpreterQuickPickItem = {
             description: '',
             detail: '',
             label: '',
             path: 'This is the selected Python path',
-            // tslint:disable-next-line: no-any
-            interpreter: {} as any
+
+            interpreter: {} as any,
         };
         const expectedEnterInterpreterPathSuggestion = {
             label: InterpreterQuickPickList.enterPath.label(),
             detail: InterpreterQuickPickList.enterPath.detail(),
-            alwaysShow: true
+            alwaysShow: true,
         };
         const currentPythonPath = 'python';
         setup(() => {
             _enterOrBrowseInterpreterPath = sinon.stub(
                 SetInterpreterCommand.prototype,
-                '_enterOrBrowseInterpreterPath'
+                '_enterOrBrowseInterpreterPath',
             );
             _enterOrBrowseInterpreterPath.resolves();
             interpreterSelector
@@ -105,7 +103,7 @@ suite('Set Interpreter Command', () => {
                 multiStepInputFactory.object,
                 platformService.object,
                 interpreterSelector.object,
-                workspace.object
+                workspace.object,
             );
         });
         teardown(() => {
@@ -117,7 +115,7 @@ suite('Set Interpreter Command', () => {
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             multiStepInput
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
-                // tslint:disable-next-line: no-any
+
                 .returns(() => Promise.resolve(undefined as any));
 
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
@@ -134,11 +132,11 @@ suite('Set Interpreter Command', () => {
                 items: suggestions,
                 activeItem: item,
                 matchOnDetail: true,
-                matchOnDescription: true
+                matchOnDescription: true,
             };
             multiStepInput
                 .setup((i) => i.showQuickPick(expectedParameters))
-                // tslint:disable-next-line: no-any
+
                 .returns(() => Promise.resolve(undefined as any))
                 .verifiable(TypeMoq.Times.once());
 
@@ -152,7 +150,7 @@ suite('Set Interpreter Command', () => {
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             multiStepInput
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
-                // tslint:disable-next-line: no-any
+
                 .returns(() => Promise.resolve(item as any));
 
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
@@ -165,7 +163,7 @@ suite('Set Interpreter Command', () => {
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             multiStepInput
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
-                // tslint:disable-next-line: no-any
+
                 .returns(() => Promise.resolve(expectedEnterInterpreterPathSuggestion as any));
 
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
@@ -173,8 +171,8 @@ suite('Set Interpreter Command', () => {
             assert(
                 _enterOrBrowseInterpreterPath.calledOnceWith(multiStepInput.object, {
                     path: undefined,
-                    workspace: undefined
-                })
+                    workspace: undefined,
+                }),
             );
         });
     });
@@ -183,13 +181,13 @@ suite('Set Interpreter Command', () => {
         const items: QuickPickItem[] = [
             {
                 label: InterpreterQuickPickList.browsePath.label(),
-                detail: InterpreterQuickPickList.browsePath.detail()
-            }
+                detail: InterpreterQuickPickList.browsePath.detail(),
+            },
         ];
         const expectedParameters = {
             placeholder: InterpreterQuickPickList.enterPath.placeholder(),
             items,
-            acceptFilterBoxTextAsSelection: true
+            acceptFilterBoxTextAsSelection: true,
         };
 
         test('Picker should be displayed with expected items', async () => {
@@ -197,7 +195,7 @@ suite('Set Interpreter Command', () => {
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             multiStepInput
                 .setup((i) => i.showQuickPick(expectedParameters))
-                // tslint:disable-next-line: no-any
+
                 .returns(() => Promise.resolve(undefined as any))
                 .verifiable(TypeMoq.Times.once());
 
@@ -211,7 +209,7 @@ suite('Set Interpreter Command', () => {
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             multiStepInput
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
-                // tslint:disable-next-line: no-any
+
                 .returns(() => Promise.resolve('enteredPath' as any));
 
             await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
@@ -225,7 +223,7 @@ suite('Set Interpreter Command', () => {
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             multiStepInput
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
-                // tslint:disable-next-line: no-any
+
                 .returns(() => Promise.resolve(items[0] as any));
             appShell
                 .setup((a) => a.showOpenDialog(TypeMoq.It.isAny()))
@@ -245,17 +243,14 @@ suite('Set Interpreter Command', () => {
                 filters: filtersObject,
                 openLabel: InterpreterQuickPickList.browsePath.openButtonLabel(),
                 canSelectMany: false,
-                title: InterpreterQuickPickList.browsePath.title()
+                title: InterpreterQuickPickList.browsePath.title(),
             };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             multiStepInput
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
-                // tslint:disable-next-line: no-any
+
                 .returns(() => Promise.resolve(items[0] as any));
-            appShell
-                // tslint:disable-next-line: no-any
-                .setup((a) => a.showOpenDialog(expectedParams as any))
-                .verifiable(TypeMoq.Times.once());
+            appShell.setup((a) => a.showOpenDialog(expectedParams as any)).verifiable(TypeMoq.Times.once());
             platformService.setup((p) => p.isWindows).returns(() => true);
 
             await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
@@ -270,11 +265,11 @@ suite('Set Interpreter Command', () => {
                 filters: undefined,
                 openLabel: InterpreterQuickPickList.browsePath.openButtonLabel(),
                 canSelectMany: false,
-                title: InterpreterQuickPickList.browsePath.title()
+                title: InterpreterQuickPickList.browsePath.title(),
             };
             multiStepInput
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
-                // tslint:disable-next-line: no-any
+
                 .returns(() => Promise.resolve(items[0] as any));
             appShell.setup((a) => a.showOpenDialog(expectedParams)).verifiable(TypeMoq.Times.once());
             platformService.setup((p) => p.isWindows).returns(() => false);
@@ -284,7 +279,7 @@ suite('Set Interpreter Command', () => {
             appShell.verifyAll();
         });
     });
-    // tslint:disable-next-line: max-func-body-length
+
     suite('Test method setInterpreter()', async () => {
         test('Update Global settings when there are no workspaces', async () => {
             pythonSettings.setup((p) => p.pythonPath).returns(() => 'python');
@@ -293,23 +288,22 @@ suite('Set Interpreter Command', () => {
                 detail: '',
                 label: '',
                 path: 'This is the selected Python path',
-                // tslint:disable-next-line: no-any
-                interpreter: {} as any
+
+                interpreter: {} as any,
             };
 
             workspace.setup((w) => w.workspaceFolders).returns(() => undefined);
 
             interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
             const multiStepInput = {
-                // tslint:disable-next-line: no-any
                 run: (_: any, state: InterpreterStateArgs) => {
                     state.path = selectedItem.path;
                     return Promise.resolve();
-                }
+                },
             };
             multiStepInputFactory
                 .setup((f) => f.create())
-                // tslint:disable-next-line: no-any
+
                 .returns(() => multiStepInput as any);
             pythonPathUpdater
                 .setup((p) =>
@@ -317,8 +311,8 @@ suite('Set Interpreter Command', () => {
                         TypeMoq.It.isValue(selectedItem.path),
                         TypeMoq.It.isValue(ConfigurationTarget.Global),
                         TypeMoq.It.isValue('ui'),
-                        TypeMoq.It.isValue(undefined)
-                    )
+                        TypeMoq.It.isValue(undefined),
+                    ),
                 )
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
@@ -336,8 +330,8 @@ suite('Set Interpreter Command', () => {
                 detail: '',
                 label: '',
                 path: 'This is the selected Python path',
-                // tslint:disable-next-line: no-any
-                interpreter: {} as any
+
+                interpreter: {} as any,
             };
 
             const folder = { name: 'one', uri: Uri.parse('one'), index: 0 };
@@ -346,15 +340,14 @@ suite('Set Interpreter Command', () => {
             interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
 
             const multiStepInput = {
-                // tslint:disable-next-line: no-any
                 run: (_: any, state: InterpreterStateArgs) => {
                     state.path = selectedItem.path;
                     return Promise.resolve();
-                }
+                },
             };
             multiStepInputFactory
                 .setup((f) => f.create())
-                // tslint:disable-next-line: no-any
+
                 .returns(() => multiStepInput as any);
 
             pythonPathUpdater
@@ -363,8 +356,8 @@ suite('Set Interpreter Command', () => {
                         TypeMoq.It.isValue(selectedItem.path),
                         TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder),
                         TypeMoq.It.isValue('ui'),
-                        TypeMoq.It.isValue(folder.uri)
-                    )
+                        TypeMoq.It.isValue(folder.uri),
+                    ),
                 )
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
@@ -381,8 +374,8 @@ suite('Set Interpreter Command', () => {
                 detail: '',
                 label: '',
                 path: 'This is the selected Python path',
-                // tslint:disable-next-line: no-any
-                interpreter: {} as any
+
+                interpreter: {} as any,
             };
 
             workspace.setup((w) => w.workspaceFolders).returns(() => [folder1, folder2]);
@@ -390,31 +383,30 @@ suite('Set Interpreter Command', () => {
                 {
                     label: 'one',
                     description: path.dirname(folder1.uri.fsPath),
-                    uri: folder1.uri
+                    uri: folder1.uri,
                 },
                 {
                     label: 'two',
                     description: path.dirname(folder2.uri.fsPath),
-                    uri: folder2.uri
+                    uri: folder2.uri,
                 },
                 {
                     label: Interpreters.entireWorkspace(),
-                    uri: folder1.uri
-                }
+                    uri: folder1.uri,
+                },
             ];
 
             interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
 
             const multiStepInput = {
-                // tslint:disable-next-line: no-any
                 run: (_: any, state: InterpreterStateArgs) => {
                     state.path = selectedItem.path;
                     return Promise.resolve();
-                }
+                },
             };
             multiStepInputFactory
                 .setup((f) => f.create())
-                // tslint:disable-next-line: no-any
+
                 .returns(() => multiStepInput as any);
             appShell
                 .setup((s) => s.showQuickPick(TypeMoq.It.isValue(expectedItems), TypeMoq.It.isAny()))
@@ -422,8 +414,8 @@ suite('Set Interpreter Command', () => {
                     Promise.resolve({
                         label: 'two',
                         description: path.dirname(folder2.uri.fsPath),
-                        uri: folder2.uri
-                    })
+                        uri: folder2.uri,
+                    }),
                 )
                 .verifiable(TypeMoq.Times.once());
             pythonPathUpdater
@@ -432,8 +424,8 @@ suite('Set Interpreter Command', () => {
                         TypeMoq.It.isValue(selectedItem.path),
                         TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder),
                         TypeMoq.It.isValue('ui'),
-                        TypeMoq.It.isValue(folder2.uri)
-                    )
+                        TypeMoq.It.isValue(folder2.uri),
+                    ),
                 )
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
@@ -451,8 +443,8 @@ suite('Set Interpreter Command', () => {
                 detail: '',
                 label: '',
                 path: 'This is the selected Python path',
-                // tslint:disable-next-line: no-any
-                interpreter: {} as any
+
+                interpreter: {} as any,
             };
 
             workspace.setup((w) => w.workspaceFolders).returns(() => [folder1, folder2]);
@@ -460,40 +452,39 @@ suite('Set Interpreter Command', () => {
                 {
                     label: 'one',
                     description: path.dirname(folder1.uri.fsPath),
-                    uri: folder1.uri
+                    uri: folder1.uri,
                 },
                 {
                     label: 'two',
                     description: path.dirname(folder2.uri.fsPath),
-                    uri: folder2.uri
+                    uri: folder2.uri,
                 },
                 {
                     label: Interpreters.entireWorkspace(),
-                    uri: folder1.uri
-                }
+                    uri: folder1.uri,
+                },
             ];
 
             interpreterSelector
                 .setup((i) => i.getSuggestions(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([selectedItem]));
             const multiStepInput = {
-                // tslint:disable-next-line: no-any
                 run: (_: any, state: InterpreterStateArgs) => {
                     state.path = selectedItem.path;
                     return Promise.resolve();
-                }
+                },
             };
             multiStepInputFactory
                 .setup((f) => f.create())
-                // tslint:disable-next-line: no-any
+
                 .returns(() => multiStepInput as any);
             appShell
                 .setup((s) => s.showQuickPick(TypeMoq.It.isValue(expectedItems), TypeMoq.It.isAny()))
                 .returns(() =>
                     Promise.resolve({
                         label: Interpreters.entireWorkspace(),
-                        uri: folder1.uri
-                    })
+                        uri: folder1.uri,
+                    }),
                 )
                 .verifiable(TypeMoq.Times.once());
             pythonPathUpdater
@@ -502,8 +493,8 @@ suite('Set Interpreter Command', () => {
                         TypeMoq.It.isValue(selectedItem.path),
                         TypeMoq.It.isValue(ConfigurationTarget.Workspace),
                         TypeMoq.It.isValue('ui'),
-                        TypeMoq.It.isValue(folder1.uri)
-                    )
+                        TypeMoq.It.isValue(folder1.uri),
+                    ),
                 )
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
@@ -520,24 +511,24 @@ suite('Set Interpreter Command', () => {
             interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
             multiStepInputFactory
                 .setup((f) => f.create())
-                // tslint:disable-next-line: no-any
+
                 .verifiable(TypeMoq.Times.never());
 
             const expectedItems = [
                 {
                     label: 'one',
                     description: path.dirname(folder1.uri.fsPath),
-                    uri: folder1.uri
+                    uri: folder1.uri,
                 },
                 {
                     label: 'two',
                     description: path.dirname(folder2.uri.fsPath),
-                    uri: folder2.uri
+                    uri: folder2.uri,
                 },
                 {
                     label: Interpreters.entireWorkspace(),
-                    uri: folder1.uri
-                }
+                    uri: folder1.uri,
+                },
             ];
 
             appShell
@@ -546,7 +537,7 @@ suite('Set Interpreter Command', () => {
                 .verifiable(TypeMoq.Times.once());
             pythonPathUpdater
                 .setup((p) =>
-                    p.updatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                    p.updatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                 )
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.never());
@@ -569,7 +560,7 @@ suite('Set Interpreter Command', () => {
                 multiStepInputFactory.object,
                 platformService.object,
                 interpreterSelector.object,
-                workspace.object
+                workspace.object,
             );
             let inputStep!: Function;
             pythonSettings.setup((p) => p.pythonPath).returns(() => 'python');
@@ -578,24 +569,23 @@ suite('Set Interpreter Command', () => {
                 detail: '',
                 label: '',
                 path: 'This is the selected Python path',
-                // tslint:disable-next-line: no-any
-                interpreter: {} as any
+
+                interpreter: {} as any,
             };
 
             workspace.setup((w) => w.workspaceFolders).returns(() => undefined);
 
             interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
             const multiStepInput = {
-                // tslint:disable-next-line: no-any
                 run: (inputStepArg: any, state: InterpreterStateArgs) => {
                     inputStep = inputStepArg;
                     state.path = selectedItem.path;
                     return Promise.resolve();
-                }
+                },
             };
             multiStepInputFactory
                 .setup((f) => f.create())
-                // tslint:disable-next-line: no-any
+
                 .returns(() => multiStepInput as any);
             pythonPathUpdater
                 .setup((p) =>
@@ -603,8 +593,8 @@ suite('Set Interpreter Command', () => {
                         TypeMoq.It.isValue(selectedItem.path),
                         TypeMoq.It.isValue(ConfigurationTarget.Global),
                         TypeMoq.It.isValue('ui'),
-                        TypeMoq.It.isValue(undefined)
-                    )
+                        TypeMoq.It.isValue(undefined),
+                    ),
                 )
                 .returns(() => Promise.resolve());
 

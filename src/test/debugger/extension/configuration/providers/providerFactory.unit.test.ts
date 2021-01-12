@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { expect } from 'chai';
 import { getNamesAndValues } from '../../../../../client/common/utils/enum';
 import { DebugConfigurationProviderFactory } from '../../../../../client/debugger/extension/configuration/providers/providerFactory';
@@ -27,7 +25,7 @@ suite('Debugging - Configuration Provider Factory', () => {
             mappedProviders.get(DebugConfigurationType.launchFile)!,
             mappedProviders.get(DebugConfigurationType.launchPyramid)!,
             mappedProviders.get(DebugConfigurationType.remoteAttach)!,
-            mappedProviders.get(DebugConfigurationType.pidAttach)!
+            mappedProviders.get(DebugConfigurationType.pidAttach)!,
         );
     });
     getNamesAndValues<DebugConfigurationType>(DebugConfigurationType).forEach((item) => {

@@ -22,7 +22,7 @@ interface IPathModule {
 type OSTestInfo = [
     string, // os name
     OSType,
-    IPathModule
+    IPathModule,
 ];
 
 // For each supported OS, provide a set of helpers to use in tests.

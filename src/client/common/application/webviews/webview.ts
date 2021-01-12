@@ -29,7 +29,6 @@ export class Webview implements IWebview {
         }
     }
 
-    // tslint:disable-next-line:no-any
     protected async generateLocalReactHtml(): Promise<string> {
         let webview: vscodeWebview;
         if (!this.webview) {
@@ -52,8 +51,8 @@ export class Webview implements IWebview {
         const fontAwesomePath = webview
             .asWebviewUri(
                 Uri.file(
-                    path.join(this.options.rootPath, 'node_modules', 'font-awesome', 'css', 'font-awesome.min.css')
-                )
+                    path.join(this.options.rootPath, 'node_modules', 'font-awesome', 'css', 'font-awesome.min.css'),
+                ),
             )
             .toString();
         return `<!doctype html>

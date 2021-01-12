@@ -21,7 +21,7 @@ import {
     IProcessLogger,
     IProcessService,
     IProcessServiceFactory,
-    IPythonExecutionService
+    IPythonExecutionService,
 } from '../../../client/common/process/types';
 import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
@@ -35,15 +35,13 @@ import { CondaService } from '../../../client/pythonEnvironments/discovery/locat
 import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
-// tslint:disable:no-any max-func-body-length chai-vague-errors
-
 const pythonInterpreter: PythonEnvironment = {
     path: '/foo/bar/python.exe',
     version: new SemVer('3.6.6-final'),
     sysVersion: '1.0.0.0',
     sysPrefix: 'Python',
     envType: EnvironmentType.Unknown,
-    architecture: Architecture.x64
+    architecture: Architecture.x64,
 };
 
 function title(resource?: Uri, interpreter?: PythonEnvironment) {
@@ -54,7 +52,7 @@ async function verifyCreateActivated(
     factory: PythonExecutionFactory,
     activationHelper: IEnvironmentActivationService,
     resource?: Uri,
-    interpreter?: PythonEnvironment
+    interpreter?: PythonEnvironment,
 ): Promise<IPythonExecutionService> {
     when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve();
 
@@ -70,7 +68,7 @@ suite('Process - PythonExecutionFactory', () => {
         { resource: undefined, interpreter: undefined },
         { resource: undefined, interpreter: pythonInterpreter },
         { resource: Uri.parse('x'), interpreter: undefined },
-        { resource: Uri.parse('x'), interpreter: pythonInterpreter }
+        { resource: Uri.parse('x'), interpreter: pythonInterpreter },
     ].forEach((item) => {
         const resource = item.resource;
         const interpreter = item.interpreter;
@@ -102,22 +100,22 @@ suite('Process - PythonExecutionFactory', () => {
                     .setup((p) =>
                         p.on('exec', () => {
                             return;
-                        })
+                        }),
                     )
                     .returns(() => processService.object);
                 processService.setup((p: any) => p.then).returns(() => undefined);
                 interpreterService = mock(InterpreterService);
                 when(interpreterService.getInterpreterDetails(anything())).thenResolve({
-                    version: { major: 3 }
+                    version: { major: 3 },
                 } as any);
                 const serviceContainer = mock(ServiceContainer);
                 when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
                 when(serviceContainer.get<IProcessLogger>(IProcessLogger)).thenReturn(processLogger);
                 when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(
-                    instance(interpreterService)
+                    instance(interpreterService),
                 );
                 when(serviceContainer.tryGet<IInterpreterService>(IInterpreterService)).thenReturn(
-                    instance(interpreterService)
+                    instance(interpreterService),
                 );
                 factory = new PythonExecutionFactory(
                     instance(serviceContainer),
@@ -126,7 +124,7 @@ suite('Process - PythonExecutionFactory', () => {
                     instance(configService),
                     instance(condaService),
                     instance(bufferDecoder),
-                    instance(windowsStoreInterpreter)
+                    instance(windowsStoreInterpreter),
                 );
             });
             teardown(() => sinon.restore());
@@ -191,7 +189,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const pythonSettings = mock(PythonSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
-                    x: '1'
+                    x: '1',
                 });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
@@ -223,7 +221,6 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
-                // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
                 const pythonPath = 'path/to/python';
@@ -236,7 +233,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
                 when(condaService.getCondaEnvironment(pythonPath)).thenResolve({
                     name: 'foo',
-                    path: 'path/to/foo/env'
+                    path: 'path/to/foo/env',
                 });
                 when(condaService.getCondaFile()).thenResolve('conda');
 
@@ -251,7 +248,6 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure `create` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function () {
-                // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
                 const pythonPath = 'path/to/python';
@@ -273,7 +269,6 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure `createActivatedEnvironment` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
-                // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
                 const pythonPath = 'path/to/python';
@@ -282,13 +277,13 @@ suite('Process - PythonExecutionFactory', () => {
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
-                    x: '1'
+                    x: '1',
                 });
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
                 when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
                 when(condaService.getCondaEnvironment(anyString())).thenResolve({
                     name: 'foo',
-                    path: 'path/to/foo/env'
+                    path: 'path/to/foo/env',
                 });
                 when(condaService.getCondaFile()).thenResolve('conda');
 
@@ -306,7 +301,6 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure `createActivatedEnvironment` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function () {
-                // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
                 let createInvoked = false;
@@ -319,7 +313,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const pythonSettings = mock(PythonSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
-                    x: '1'
+                    x: '1',
                 });
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
@@ -342,7 +336,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const pythonPath = 'path/to/python';
                 when(condaService.getCondaEnvironment(pythonPath)).thenResolve({
                     name: 'foo',
-                    path: 'path/to/foo/env'
+                    path: 'path/to/foo/env',
                 });
                 when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
                 when(condaService.getCondaFile()).thenResolve('conda');
@@ -360,7 +354,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(condaService.getCondaEnvironment(pythonPath)).thenResolve({
                     name: 'foo',
-                    path: 'path/to/foo/env'
+                    path: 'path/to/foo/env',
                 });
                 when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
                 when(condaService.getCondaFile()).thenResolve('conda');
@@ -383,7 +377,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 expect(result).to.be.equal(
                     undefined,
-                    'createCondaExecutionService should return undefined if not in a conda environment'
+                    'createCondaExecutionService should return undefined if not in a conda environment',
                 );
                 verify(condaService.getCondaVersion()).once();
                 verify(condaService.getCondaEnvironment(pythonPath)).once();
@@ -398,7 +392,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 expect(result).to.be.equal(
                     undefined,
-                    'createCondaExecutionService should return undefined if not in a conda environment'
+                    'createCondaExecutionService should return undefined if not in a conda environment',
                 );
                 verify(condaService.getCondaVersion()).once();
                 verify(condaService.getCondaEnvironment(pythonPath)).once();

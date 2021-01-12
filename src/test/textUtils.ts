@@ -22,6 +22,6 @@ export function compareFiles(expectedContent: string, actualContent: string) {
         actualLines.length,
         expectedLines.length > actualLines.length
             ? 'Actual contains more lines than expected'
-            : 'Expected contains more lines than the actual'
+            : 'Expected contains more lines than the actual',
     ).to.be.equal(expectedLines.length);
 }

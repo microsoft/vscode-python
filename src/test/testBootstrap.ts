@@ -13,8 +13,6 @@ import { initializeLogger } from './testLogger';
 
 initializeLogger();
 
-// tslint:disable:no-console
-
 /*
 This is a simple work around for tests tasks not completing on Azure Pipelines.
 What's been happening is, the tests run however for some readon the Node propcess (VS Code) does not exit.

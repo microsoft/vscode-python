@@ -26,14 +26,12 @@ import { TestMessageService } from '../../../client/testing/pytest/services/test
 import {
     ILocationStackFrameDetails,
     IPythonTestMessage,
-    PythonTestMessageSeverity
+    PythonTestMessageSeverity,
 } from '../../../client/testing/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { ITestDetails, testScenarios } from './pytest_run_tests_data';
-
-// tslint:disable:max-func-body-length
 
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
 const PYTEST_RESULTS_PATH = path.join(
@@ -43,7 +41,7 @@ const PYTEST_RESULTS_PATH = path.join(
     'pythonFiles',
     'testFiles',
     'pytestFiles',
-    'results'
+    'results',
 );
 
 const filterdTestScenarios = testScenarios.filter((ts) => {
@@ -54,7 +52,7 @@ async function testMessageProperties(
     message: IPythonTestMessage,
     expectedMessage: IPythonTestMessage,
     imported: boolean = false,
-    status: TestStatus
+    status: TestStatus,
 ) {
     assert.equal(message.code, expectedMessage.code, 'IPythonTestMessage code');
     assert.equal(message.message, expectedMessage.message, 'IPythonTestMessage message');
@@ -67,35 +65,35 @@ async function testMessageProperties(
         assert.equal(
             message.locationStack![0].lineText,
             expectedMessage.locationStack![0].lineText,
-            'IPythonTestMessage line text'
+            'IPythonTestMessage line text',
         );
         assert.equal(
             message.locationStack![0].location.uri.fsPath,
             expectedMessage.locationStack![0].location.uri.fsPath,
-            'IPythonTestMessage locationStack fsPath'
+            'IPythonTestMessage locationStack fsPath',
         );
         if (status !== TestStatus.Skipped) {
             assert.equal(
                 message.locationStack![1].lineText,
                 expectedMessage.locationStack![1].lineText,
-                'IPythonTestMessage line text'
+                'IPythonTestMessage line text',
             );
             assert.equal(
                 message.locationStack![1].location.uri.fsPath,
                 expectedMessage.locationStack![1].location.uri.fsPath,
-                'IPythonTestMessage locationStack fsPath'
+                'IPythonTestMessage locationStack fsPath',
             );
         }
         if (imported) {
             assert.equal(
                 message.locationStack![2].lineText,
                 expectedMessage.locationStack![2].lineText,
-                'IPythonTestMessage imported line text'
+                'IPythonTestMessage imported line text',
             );
             assert.equal(
                 message.locationStack![2].location.uri.fsPath,
                 expectedMessage.locationStack![2].location.uri.fsPath,
-                'IPythonTestMessage imported location fsPath'
+                'IPythonTestMessage imported location fsPath',
             );
         }
     }
@@ -109,7 +107,7 @@ async function testMessageProperties(
  * @param testDetails Test details for a specific test.
  */
 async function getExpectedLocationStackFromTestDetails(
-    testDetails: ITestDetails
+    testDetails: ITestDetails,
 ): Promise<ILocationStackFrameDetails[]> {
     const locationStack: ILocationStackFrameDetails[] = [];
     const testFilePath = path.join(UNITTEST_TEST_FILES_PATH, testDetails.fileName);
@@ -123,23 +121,22 @@ async function getExpectedLocationStackFromTestDetails(
         // Stack should include the class furthest down the chain from the file that was executed.
         locationStack.push({
             location: new vscode.Location(testFileUri, testDetails.classDefRange!),
-            lineText: testDetails.simpleClassName!
+            lineText: testDetails.simpleClassName!,
         });
     }
     locationStack.push({
         location: new vscode.Location(expectedSourceTestFileUri, testDetails.testDefRange!),
-        lineText: testDetails.sourceTestName
+        lineText: testDetails.sourceTestName,
     });
     if (testDetails.status !== TestStatus.Skipped) {
         locationStack.push({
             location: new vscode.Location(expectedSourceTestFileUri, testDetails.issueRange!),
-            lineText: testDetails.issueLineText!
+            lineText: testDetails.issueLineText!,
         });
     }
     return locationStack;
 }
 
-// tslint:disable-next-line: max-func-body-length
 suite('Unit Tests - PyTest - TestMessageService', () => {
     let ioc: UnitTestIocContainer;
     const filesystem = new FileSystem();
@@ -160,7 +157,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(
             IInterpreterService,
-            instance(mock(InterpreterService))
+            instance(mock(InterpreterService)),
         );
     }
     // Build tests for the test data that is relevant for this platform.
@@ -181,7 +178,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                     ignoreCache: true,
                     outChannel: outChannel.object,
                     token: cancelToken.object,
-                    workspaceFolder: vscode.Uri.file(__dirname)
+                    workspaceFolder: vscode.Uri.file(__dirname),
                 };
                 // Setup the parser.
                 const workspaceService = ioc.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -190,7 +187,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                     .readFileSync(path.join(PYTEST_RESULTS_PATH, scenario.discoveryOutput), 'utf8')
                     .replace(
                         /\/Users\/donjayamanne\/.vscode-insiders\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles/g,
-                        path.dirname(UNITTEST_TEST_FILES_PATH)
+                        path.dirname(UNITTEST_TEST_FILES_PATH),
                     )
                     .replace(/\\/g, '/');
                 const discoveredTest: DiscoveredTests[] = JSON.parse(discoveryOutput);
@@ -199,7 +196,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                 const xUnitParser = new XUnitParser(filesystem);
                 await xUnitParser.updateResultsFromXmlLogFile(
                     parsedTests,
-                    path.join(PYTEST_RESULTS_PATH, scenario.runOutput)
+                    path.join(PYTEST_RESULTS_PATH, scenario.runOutput),
                 );
                 const testResultsService = new TestResultsService(testVisitor.object);
                 testResultsService.updateResults(parsedTests);
@@ -232,7 +229,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                             testTime: 0,
                             status: td.status,
                             locationStack: expectedLocationStack,
-                            testFilePath: path.join(UNITTEST_TEST_FILES_PATH, td.fileName)
+                            testFilePath: path.join(UNITTEST_TEST_FILES_PATH, td.fileName),
                         };
                         testMessage = testMessages.find((tm) => tm.code === td.nameToRun)!;
                     });

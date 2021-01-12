@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-require-imports no-var-requires import-name no-function-expression no-any prefer-template no-console no-var-self
 // Most of the source is in node_modules/vscode/lib/testrunner.js
 
 'use strict';
@@ -22,7 +21,7 @@ if (!tty.getWindowSize) {
 
 let mocha = new Mocha(<any>{
     ui: 'tdd',
-    colors: true
+    colors: true,
 });
 
 export type SetupOptions = Mocha.MochaOptions & {
@@ -82,14 +81,14 @@ export async function run(): Promise<void> {
                     initializationScript()
                         .then(() =>
                             mocha.run((failures) =>
-                                failures > 0 ? reject(new Error(`${failures} total failures`)) : resolve()
-                            )
+                                failures > 0 ? reject(new Error(`${failures} total failures`)) : resolve(),
+                            ),
                         )
                         .catch(reject);
                 } catch (error) {
                     return reject(error);
                 }
-            }
+            },
         );
     });
 }

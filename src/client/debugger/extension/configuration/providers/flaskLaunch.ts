@@ -32,10 +32,10 @@ export class FlaskLaunchDebugConfigurationProvider implements IDebugConfiguratio
             env: {
                 FLASK_APP: application || 'app.py',
                 FLASK_ENV: 'development',
-                FLASK_DEBUG: '0'
+                FLASK_DEBUG: '0',
             },
             args: ['run', '--no-debugger'],
-            jinja: true
+            jinja: true,
         };
 
         if (!application) {
@@ -47,8 +47,8 @@ export class FlaskLaunchDebugConfigurationProvider implements IDebugConfiguratio
                     Promise.resolve(
                         value && value.trim().length > 0
                             ? undefined
-                            : DebugConfigStrings.flask.enterAppPathOrNamePath.invalid()
-                    )
+                            : DebugConfigStrings.flask.enterAppPathOrNamePath.invalid(),
+                    ),
             });
             if (selectedApp) {
                 manuallyEnteredAValue = true;
@@ -59,7 +59,7 @@ export class FlaskLaunchDebugConfigurationProvider implements IDebugConfiguratio
         sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
             configurationType: DebugConfigurationType.launchFlask,
             autoDetectedFlaskAppPyPath: !!application,
-            manuallyEnteredAValue
+            manuallyEnteredAValue,
         });
         Object.assign(state.config, config);
     }

@@ -72,10 +72,10 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             const options: ProgressOptions = {
                 location: ProgressLocation.Notification,
                 cancellable: true,
-                title: Products.installingModule().format(name)
+                title: Products.installingModule().format(name),
             };
             await shell.withProgress(options, async (_, token: CancellationToken) =>
-                install(wrapCancellationTokens(token, cancel))
+                install(wrapCancellationTokens(token, cancel)),
             );
         } else {
             await install(cancel);
@@ -85,14 +85,14 @@ export abstract class ModuleInstaller implements IModuleInstaller {
 
     protected elevatedInstall(execPath: string, args: string[]) {
         const options = {
-            name: 'VS Code Python'
+            name: 'VS Code Python',
         };
         const outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;
 
         outputChannel.appendLine('');
         outputChannel.appendLine(`[Elevated] ${command}`);
-        // tslint:disable-next-line:no-require-imports no-var-requires
+
         const sudo = require('sudo-prompt');
 
         sudo.exec(command, options, async (error: string, stdout: string, stderr: string) => {

@@ -16,14 +16,14 @@ import {
     FolderVersionPair,
     IDownloadChannelRule,
     ILanguageServerFolderService,
-    ILanguageServerPackageService
+    ILanguageServerPackageService,
 } from '../types';
 
 @injectable()
 export abstract class LanguageServerFolderService implements ILanguageServerFolderService {
     constructor(
         @inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer,
-        @unmanaged() protected readonly languageServerFolder: string
+        @unmanaged() protected readonly languageServerFolder: string,
     ) {}
 
     public async skipDownload(): Promise<boolean> {
@@ -57,7 +57,7 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
     public getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined> {
         const minVersion = this.getMinimalLanguageServerVersion();
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(
-            ILanguageServerPackageService
+            ILanguageServerPackageService,
         );
         return lsPackageService.getLatestNugetPackageVersion(resource, minVersion);
     }
@@ -108,7 +108,7 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
 
     private getDownloadChannel() {
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(
-            ILanguageServerPackageService
+            ILanguageServerPackageService,
         );
         return lsPackageService.getLanguageServerDownloadChannel();
     }

@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable-next-line:max-func-body-length
-
 import { expect, use } from 'chai';
 import * as chaipromise from 'chai-as-promised';
 import * as typeMoq from 'typemoq';
@@ -17,14 +15,13 @@ import {
     ITestsParser,
     Options,
     TestDiscoveryOptions,
-    Tests
+    Tests,
 } from '../../../client/testing/common/types';
 import { TestDiscoveryService } from '../../../client/testing/nosetest/services/discoveryService';
 import { IArgumentsService, TestFilter } from '../../../client/testing/types';
 
 use(chaipromise);
 
-// tslint:disable-next-line: max-func-body-length
 suite('Unit Tests - nose - Discovery', () => {
     let discoveryService: ITestDiscoveryService;
     let argsService: typeMoq.IMock<IArgumentsService>;
@@ -54,7 +51,7 @@ suite('Unit Tests - nose - Discovery', () => {
             testFunctions: [],
             testSuites: [],
             rootTestFolders: [],
-            testFolders: []
+            testFolders: [],
         };
         argsService
             .setup((a) => a.filterArguments(typeMoq.It.isValue(args), typeMoq.It.isValue(TestFilter.discovery)))
@@ -95,7 +92,7 @@ suite('Unit Tests - nose - Discovery', () => {
             testFunctions: [],
             testSuites: [],
             rootTestFolders: [],
-            testFolders: []
+            testFolders: [],
         };
         argsService
             .setup((a) => a.filterArguments(typeMoq.It.isValue(args), typeMoq.It.isValue(TestFilter.discovery)))

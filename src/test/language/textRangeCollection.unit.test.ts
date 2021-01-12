@@ -6,7 +6,6 @@ import * as assert from 'assert';
 import { TextRangeCollection } from '../../client/language/textRangeCollection';
 import { TextRange } from '../../client/language/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Language.TextRangeCollection', () => {
     test('Empty', async () => {
         const items: TextRange[] = [];

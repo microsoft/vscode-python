@@ -23,14 +23,14 @@ suite('Common variables Service Registry', () => {
         verify(
             serviceManager.addSingleton<IEnvironmentVariablesService>(
                 IEnvironmentVariablesService,
-                EnvironmentVariablesService
-            )
+                EnvironmentVariablesService,
+            ),
         ).once();
         verify(
             serviceManager.addSingleton<IEnvironmentVariablesProvider>(
                 IEnvironmentVariablesProvider,
-                EnvironmentVariablesProvider
-            )
+                EnvironmentVariablesProvider,
+            ),
         ).once();
     });
 });
