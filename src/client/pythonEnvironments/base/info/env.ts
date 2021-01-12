@@ -121,24 +121,28 @@ export function getEnvDisplayString(env: PythonEnvInfo): string {
 }
 
 function buildEnvDisplayString(env: PythonEnvInfo): string {
+    // main parts
     const displayNameParts: string[] = ['Python'];
-    const envSuffixParts: string[] = [];
-
-    if (!isVersionEmpty(env.version)) {
+    if (env.version && !isVersionEmpty(env.version)) {
         displayNameParts.push(getVersionDisplayString(env.version));
     }
-    if (env.arch !== Architecture.Unknown) {
-        displayNameParts.push(getArchitectureDisplayName(env.arch));
+    const archName = getArchitectureDisplayName(env.arch);
+    if (archName !== '') {
+        displayNameParts.push(archName);
     }
-    if (env.name !== '') {
+
+    // "suffix"
+    const envSuffixParts: string[] = [];
+    if (env.name && env.name !== '') {
         envSuffixParts.push(`'${env.name}'`);
     }
     const kindName = getKindDisplayName(env.kind);
     if (kindName !== '') {
         envSuffixParts.push(kindName);
     }
-
     const envSuffix = envSuffixParts.length === 0 ? '' : `(${envSuffixParts.join(': ')})`;
+
+    // Pull it all together.
     return `${displayNameParts.join(' ')} ${envSuffix}`.trim();
 }
 
