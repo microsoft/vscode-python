@@ -131,6 +131,8 @@ function buildEnvDisplayString(env: PythonEnvInfo): string {
         displayNameParts.push(archName);
     }
 
+    // Note that currently we do not use env.distro in the display name.
+
     // "suffix"
     const envSuffixParts: string[] = [];
     if (env.name && env.name !== '') {
