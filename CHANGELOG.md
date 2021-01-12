@@ -1,5 +1,103 @@
 # Changelog
 
+## 2021.1.0-rc (12 January 2021)
+
+### Enhancements
+
+1. Remove code snippets (you can copy the
+   [old snippets](https://github.com/microsoft/vscode-python/blob/2020.12.424452561/snippets/python.json)
+   and use them as
+   [your own snippets](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_create-your-own-snippets)).
+   ([#14781](https://github.com/Microsoft/vscode-python/issues/14781))
+1. Add PYTHONPATH to the language server settings response.
+   ([#15106](https://github.com/Microsoft/vscode-python/issues/15106))
+1. Integration with the bandit linter will highlight the variable, function or method for an issue instead of the entire line.
+   Requires latest version of the bandit package to be installed.
+   (thanks [Anthony Shaw](https://github.com/tonybaloney))
+   ([#15003](https://github.com/Microsoft/vscode-python/issues/15003))
+1. Translated some more of the Python Extension messages in Simplified Chinese.
+   (thanks [Shinoyasan](https://github.com/shinoyasan/))
+   ([#15079](https://github.com/Microsoft/vscode-python/issues/15079))
+1. Update Simplified Chinese translation.
+   (thanks [Fiftysixtimes7](https://github.com/FiftysixTimes7))
+   ([#14997](https://github.com/Microsoft/vscode-python/issues/14997))
+
+### Fixes
+
+1. Fix environment variables not refreshing on env file edits.
+   ([#3805](https://github.com/Microsoft/vscode-python/issues/3805))
+1. fix npm audit[high]: [Remote Code Execution](npmjs.com/advisories/1548)
+   ([#14640](https://github.com/Microsoft/vscode-python/issues/14640))
+1. Ignore false positives when scraping environment variables.
+   ([#14812](https://github.com/Microsoft/vscode-python/issues/14812))
+1. Fix unittest discovery when using VS Code Insiders by using Inversify's `skipBaseClassChecks` option.
+   ([#14962](https://github.com/Microsoft/vscode-python/issues/14962))
+1. Make filtering in findInterpretersInDir() faster.
+   ([#14983](https://github.com/Microsoft/vscode-python/issues/14983))
+1. Remove the Buffer() is deprecated warning from Developer tools. ([#15045](https://github.com/microsoft/vscode-python/issues/15045))
+   ([#15045](https://github.com/Microsoft/vscode-python/issues/15045))
+1. Add support for pytest 6 options.
+   ([#15094](https://github.com/Microsoft/vscode-python/issues/15094))
+
+### Code Health
+
+1. Update to Node 12.20.0.
+   ([#15046](https://github.com/Microsoft/vscode-python/issues/15046))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2020.12.2 (15 December 2020)
 
 ### Fixes
