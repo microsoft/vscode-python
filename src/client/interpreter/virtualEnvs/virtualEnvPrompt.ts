@@ -49,14 +49,12 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
             return;
         }
         const watcher = await this.builder.getWorkspaceVirtualEnvInterpreterWatcher(resource);
-        this.disposableRegistry.push(
-            watcher.onDidCreate(
-                () => {
-                    this.handleNewEnvironment(resource).ignoreErrors();
-                },
-                this,
-                this.disposableRegistry,
-            ),
+        watcher.onDidCreate(
+            () => {
+                this.handleNewEnvironment(resource).ignoreErrors();
+            },
+            this,
+            this.disposableRegistry,
         );
     }
 
