@@ -9,14 +9,12 @@ import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PythonInterpreterTelemetry } from '../../telemetry/types';
-import { IComponentAdapter, IInterpreterVersionService } from '../contracts';
+import { IComponentAdapter } from '../contracts';
 import { IPythonPathUpdaterServiceFactory, IPythonPathUpdaterServiceManager } from './types';
 
 @injectable()
 export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManager {
     private readonly pythonPathSettingsUpdaterFactory: IPythonPathUpdaterServiceFactory;
-
-    private readonly interpreterVersionService: IInterpreterVersionService;
 
     private readonly executionFactory: IPythonExecutionFactory;
 
@@ -26,7 +24,6 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         this.pythonPathSettingsUpdaterFactory = serviceContainer.get<IPythonPathUpdaterServiceFactory>(
             IPythonPathUpdaterServiceFactory,
         );
-        this.interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
         this.executionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         this.componentAdapter = serviceContainer.get<IComponentAdapter>(IComponentAdapter);
     }
@@ -80,14 +77,6 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
                 if (info && info.version) {
                     telemetryProperties.pythonVersion = info.version.raw;
                 }
-            }
-
-            const pipVersion = await this.interpreterVersionService
-                .getPipVersion(pythonPath)
-                .then((value) => (value.length === 0 ? undefined : value))
-                .catch<string>(() => '');
-            if (pipVersion) {
-                telemetryProperties.pipVersion = pipVersion;
             }
         }
 

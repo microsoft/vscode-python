@@ -932,12 +932,6 @@ export interface IEventNamePropertyMapping {
          * @type {string}
          */
         pythonVersion?: string;
-        /**
-         * The version of pip module installed in the python interpreter
-         *
-         * @type {string}
-         */
-        pipVersion?: string;
     };
     [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: {
         /**
