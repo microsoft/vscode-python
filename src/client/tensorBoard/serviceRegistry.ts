@@ -10,6 +10,7 @@ import { TensorBoardUsageTracker } from './tensorBoardUsageTracker';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 import { TensorBoardSessionProvider } from './tensorBoardSessionProvider';
 import { TensorBoardNbextensionCodeLensProvider } from './nbextensionCodeLensProvider';
+import { TerminalWatcher } from './terminalWatcher';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<TensorBoardSessionProvider>(TensorBoardSessionProvider, TensorBoardSessionProvider);
@@ -35,4 +36,5 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IExtensionSingleActivationService,
         TensorBoardCodeActionProvider,
     );
+    serviceManager.addSingleton(IExtensionSingleActivationService, TerminalWatcher);
 }

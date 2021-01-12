@@ -1813,4 +1813,8 @@ export interface IEventNamePropertyMapping {
      * Used for A/B testing codeaction vs codelens.
      */
     [EventName.TENSORBOARD_IMPORT_CODELENS_CLICKED]: never | undefined;
+    /**
+     * Telemetry event sent when we find an active integrated terminal running tensorboard.
+     */
+    [EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL]: never | undefined;
 }
