@@ -46,6 +46,9 @@ export function initializeGlobals(
     };
 }
 
+/**
+ * Registers standard utils like experiment and platform code which are fundamental to the extension.
+ */
 export function initializeStandard(ext: ExtensionState): void {
     const { serviceManager } = ext.legacyIOC;
     // Core registrations (non-feature specific).
