@@ -18,9 +18,7 @@ import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './c
 import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { traceError } from './common/logger';
-import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
-import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { StartPage } from './common/startPage/startPage';
 import { IStartPage } from './common/startPage/types';
 import {
@@ -119,10 +117,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
-
-    // Core registrations (non-feature specific).
-    platformRegisterTypes(serviceManager);
-    processRegisterTypes(serviceManager);
 
     // We need to setup this property before any telemetry is sent
     const fs = serviceManager.get<IFileSystem>(IFileSystem);

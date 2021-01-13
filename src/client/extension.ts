@@ -34,7 +34,7 @@ import { IAsyncDisposableRegistry, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
 import { activateComponents } from './extensionActivation';
-import { initializeCommon, initializeComponents, initializeGlobals } from './extensionInit';
+import { initializeStandard, initializeComponents, initializeGlobals } from './extensionInit';
 import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 
@@ -99,7 +99,9 @@ async function activateUnsafe(
     // First we initialize.
     const ext = initializeGlobals(context);
     activatedServiceContainer = ext.legacyIOC.serviceContainer;
-    initializeCommon(ext);
+    // Note standard utils especially experiment and platform code are fundamental to the extension
+    // and should be available before we activate anything else.Hence register them first.
+    initializeStandard(ext);
     const components = initializeComponents(ext);
 
     // Then we finish activating.

@@ -6,6 +6,8 @@
 import { Container } from 'inversify';
 import { Disposable, Memento } from 'vscode';
 
+import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
+import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from './common/types';
 import { ExtensionState } from './components';
@@ -44,9 +46,12 @@ export function initializeGlobals(
     };
 }
 
-export function initializeCommon(ext: ExtensionState): void {
+export function initializeStandard(ext: ExtensionState): void {
+    const { serviceManager } = ext.legacyIOC;
     // Core registrations (non-feature specific).
-    commonRegisterTypes(ext.legacyIOC.serviceManager);
+    commonRegisterTypes(serviceManager);
+    platformRegisterTypes(serviceManager);
+    processRegisterTypes(serviceManager);
 
     // We will be pulling other code over from activateLegacy().
 }
