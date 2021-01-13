@@ -72,7 +72,7 @@ export class ImportTracker implements IExtensionSingleActivationService {
 
     private onOpenedOrSavedDocument(document: TextDocument) {
         // Make sure this is a Python file.
-        if (path.extname(document.fileName) === '.py') {
+        if (path.extname(document.fileName).toLowerCase() === '.py') {
             this.scheduleDocument(document);
         }
     }

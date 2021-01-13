@@ -5,7 +5,8 @@ import { injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { DiscoveryVariants } from '../common/experiments/groups';
-import { IDisposableRegistry } from '../common/types';
+import { FileChangeType } from '../common/platform/fileSystemWatcher';
+import { IDisposableRegistry, Resource } from '../common/types';
 import { getVersionString, parseVersion } from '../common/utils/version';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -36,7 +37,7 @@ import { ILocator, PythonLocatorQuery } from './base/locator';
 import { isMacDefaultPythonPath } from './base/locators/lowLevel/macDefaultLocator';
 import { getEnvs } from './base/locatorUtils';
 import { getEnvironmentDirFromPath } from './common/commonUtils';
-import { inExperiment } from './common/externalDependencies';
+import { inExperiment, isParentPath } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
@@ -78,6 +79,7 @@ const convertedKinds = new Map(
         [PythonEnvKind.VirtualEnv]: EnvironmentType.VirtualEnv,
         [PythonEnvKind.Pipenv]: EnvironmentType.Pipenv,
         [PythonEnvKind.Venv]: EnvironmentType.Venv,
+        [PythonEnvKind.VirtualEnvWrapper]: EnvironmentType.VirtualEnvWrapper,
     }),
 );
 
@@ -166,7 +168,28 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         );
     }
 
-    // IInterpreterLocatorProgressHandler
+    // For use in VirtualEnvironmentPrompt.activate()
+
+    // Call callback if an environment gets created within the resource provided.
+    public onDidCreate(resource: Resource, callback: () => void): vscode.Disposable | undefined {
+        if (!this.enabled) {
+            return undefined;
+        }
+        const workspaceFolder = resource ? vscode.workspace.getWorkspaceFolder(resource) : undefined;
+        return this.api.onChanged((e) => {
+            if (!workspaceFolder || !e.searchLocation) {
+                return;
+            }
+            if (
+                e.type === FileChangeType.Created &&
+                isParentPath(e.searchLocation.fsPath, workspaceFolder.uri.fsPath)
+            ) {
+                callback();
+            }
+        });
+    }
+
+    // Implements IInterpreterLocatorProgressHandler
 
     // A result of `undefined` means "Fall back to the old code!"
     public get onRefreshing(): vscode.Event<void> | undefined {
@@ -177,7 +200,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return this.enabled ? this.refreshed.event : undefined;
     }
 
-    // IInterpreterHelper
+    // Implements IInterpreterHelper
 
     // A result of `undefined` means "Fall back to the old code!"
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
@@ -203,7 +226,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return isMacDefaultPythonPath(pythonPath);
     }
 
-    // IInterpreterService
+    // Implements IInterpreterService
 
     // We use the same getInterpreters() here as for IInterpreterLocatorService.
 
@@ -229,7 +252,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return convertEnvInfo(env);
     }
 
-    // ICondaService
+    // Implements ICondaService
 
     // A result of `undefined` means "Fall back to the old code!"
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined> {
@@ -262,7 +285,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return { name: '', path: location };
     }
 
-    // IWindowsStoreInterpreter
+    // Implements IWindowsStoreInterpreter
 
     // A result of `undefined` means "Fall back to the old code!"
     public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined> {
@@ -274,7 +297,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return isWindowsStoreEnvironment(pythonPath);
     }
 
-    // IInterpreterLocatorService
+    // Implements IInterpreterLocatorService
 
     // A result of `undefined` means "Fall back to the old code!"
     public get hasInterpreters(): Promise<boolean | undefined> {

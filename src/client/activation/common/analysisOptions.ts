@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, WorkspaceFolder } from 'vscode';
 import { DocumentFilter, LanguageClientOptions, RevealOutputChannelOn } from 'vscode-languageclient/node';
 
@@ -12,31 +11,21 @@ import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILanguageServerAnalysisOptions, ILanguageServerOutputChannel } from '../types';
 
-@injectable()
 export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServerAnalysisOptions {
-    protected disposables: Disposable[] = [];
     protected readonly didChange = new EventEmitter<void>();
-    private envPythonPath: string = '';
     private readonly output: IOutputChannel;
 
-    protected constructor(
-        private readonly envVarsProvider: IEnvironmentVariablesProvider,
-        lsOutputChannel: ILanguageServerOutputChannel,
-    ) {
+    protected constructor(lsOutputChannel: ILanguageServerOutputChannel) {
         this.output = lsOutputChannel.channel;
     }
 
-    public async initialize(_resource: Resource, _interpreter: PythonEnvironment | undefined) {
-        const disposable = this.envVarsProvider.onDidEnvironmentVariablesChange(this.onEnvVarChange, this);
-        this.disposables.push(disposable);
-    }
+    public async initialize(_resource: Resource, _interpreter: PythonEnvironment | undefined) {}
 
     public get onDidChange(): Event<void> {
         return this.didChange.event;
     }
 
     public dispose(): void {
-        this.disposables.forEach((d) => d.dispose());
         this.didChange.dispose();
     }
 
@@ -67,6 +56,28 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
 
     protected async getInitializationOptions(): Promise<any> {
         return undefined;
+    }
+}
+
+export abstract class LanguageServerAnalysisOptionsWithEnv extends LanguageServerAnalysisOptionsBase {
+    protected disposables: Disposable[] = [];
+    private envPythonPath: string = '';
+
+    protected constructor(
+        private readonly envVarsProvider: IEnvironmentVariablesProvider,
+        lsOutputChannel: ILanguageServerOutputChannel,
+    ) {
+        super(lsOutputChannel);
+    }
+
+    public async initialize(_resource: Resource, _interpreter: PythonEnvironment | undefined) {
+        const disposable = this.envVarsProvider.onDidEnvironmentVariablesChange(this.onEnvVarChange, this);
+        this.disposables.push(disposable);
+    }
+
+    public dispose(): void {
+        super.dispose();
+        this.disposables.forEach((d) => d.dispose());
     }
 
     protected async getEnvPythonPath(): Promise<string> {

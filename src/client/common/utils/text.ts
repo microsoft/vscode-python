@@ -139,6 +139,9 @@ export function getDedentedLines(text: string): string[] {
         throw Error('expected actual first line to be blank');
     }
     lines.shift();
+    if (lines.length === 0) {
+        return [];
+    }
 
     if (lines[0] === '') {
         throw Error('expected "first" line to not be blank');

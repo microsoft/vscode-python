@@ -102,7 +102,7 @@ suite('Formatting - Test Arguments', () => {
         formatter: BaseFormatter,
         formattingSettings: IFormattingSettings,
     ): Promise<ExecutionInfo> {
-        const token = new CancellationTokenSource().token;
+        const { token } = new CancellationTokenSource();
         when(settings.formatting).thenReturn(formattingSettings);
         when(pythonToolExecutionService.exec(anything(), anything(), anything())).thenResolve({ stdout: '' });
 

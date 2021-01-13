@@ -223,8 +223,8 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         });
 
         // ... then send isort the document content ...
-        observableResult.proc?.stdin.write(inputText);
-        observableResult.proc?.stdin.end();
+        observableResult.proc?.stdin?.write(inputText);
+        observableResult.proc?.stdin?.end();
 
         // .. and finally wait for isort to do its thing
         await isortOutput.promise;

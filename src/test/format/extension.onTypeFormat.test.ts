@@ -38,7 +38,7 @@ function testFormatting(
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
         })
-        .then((_editor) => {
+        .then(() => {
             return provider.provideOnTypeFormattingEdits(
                 textDocument,
                 position,

@@ -1,17 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { Dirent } from 'fs';
 import * as path from 'path';
-import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
+import { logError } from '../../logging';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
 import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from '../discovery/locators/services/condaLocator';
 import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/virtualEnvironmentIdentifier';
-import { isDirectory, listDir } from './externalDependencies';
+import { listDir } from './externalDependencies';
 import { isPosixPythonBin } from './posixUtils';
 import { isWindowsPythonExe } from './windowsUtils';
+
+type FileFilterFunc = (filename: string) => boolean;
 
 /**
  * Searches recursively under the given `root` directory for python interpreters.
@@ -19,45 +22,100 @@ import { isWindowsPythonExe } from './windowsUtils';
  * @param recurseLevels : Number of levels to search for from the root directory.
  * @param filter : Callback that identifies directories to ignore.
  */
-export async function* findInterpretersInDir(
+export function findInterpretersInDir(
     root: string,
-    recurseLevels?: number,
-    filter?: (x: string) => boolean,
+    recurseLevel?: number,
+    filterSubDir?: FileFilterFunc,
+    ignoreErrors?: boolean,
 ): AsyncIterableIterator<string> {
-    const os = getOSType();
-    const checkBin = os === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
-    const itemFilter = filter ?? (() => true);
+    const cfg = {
+        filterSubDir,
+        maxDepth: recurseLevel,
+        ignoreErrors: ignoreErrors || false,
+    };
+    // We use an initial depth of 1.
+    return iterExecutables(root, 1, cfg);
+}
 
-    let dirContents: string[];
+// This function helps simplify the recursion case.
+async function* iterExecutables(
+    root: string,
+    // "currentDepth" is the depth of the current level of recursion.
+    currentDepth: number,
+    cfg: {
+        filterSubDir: FileFilterFunc | undefined;
+        maxDepth: number | undefined;
+        ignoreErrors: boolean;
+    },
+): AsyncIterableIterator<string> {
+    let entries: Dirent[];
     try {
-        dirContents = (await listDir(root))
-            // Build the full filename.
-            .map((c) => path.join(root, c))
-            // Apply the filter.
-            .filter(itemFilter);
+        entries = await listDir(root);
     } catch (err) {
         // Treat a missing directory as empty.
         if (err.code === 'ENOENT') {
             return;
         }
+        if (cfg.ignoreErrors) {
+            logError(`listDir() failed for "${root}" (${err})`);
+            return;
+        }
         throw err; // re-throw
     }
 
-    const generators = dirContents.map((fullPath) => {
-        async function* generator() {
-            if (await isDirectory(fullPath)) {
-                if (recurseLevels && recurseLevels > 0) {
-                    yield* findInterpretersInDir(fullPath, recurseLevels - 1, filter);
+    // "checkBin" is a local variable rather than global
+    // so we can stub it out during unit testing.
+    const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
+    for (const entry of entries) {
+        const filename = path.join(root, entry.name);
+        // (FYI)
+        // Normally we would have to do an extra (expensive) `fs.lstat()`
+        // here for each file to determine its file type.  However,
+        // we were able to avoid this by using `listDir()` above.
+        // It is light wrapper around `fs.listDir()` with the
+        // "withFileTypes" option set to true.  So the file type
+        // of each entry is preserved for free.  If we needed more
+        // information than just the file type then we would be forced
+        // to incur the extra cost of `fs.lstat()`.
+        if (entry.isDirectory()) {
+            if (cfg.maxDepth && currentDepth <= cfg.maxDepth) {
+                if (matchFile(filename, cfg.filterSubDir, cfg.ignoreErrors)) {
+                    yield* iterExecutables(filename, currentDepth + 1, cfg);
                 }
-            } else if (checkBin(fullPath)) {
-                yield fullPath;
             }
+        } else if (entry.isFile()) {
+            if (checkBin(filename)) {
+                yield filename;
+            }
+        } else if (entry.isSymbolicLink()) {
+            if (checkBin(filename)) {
+                yield filename;
+            }
+        } else {
+            // We ignore all other file types.
         }
+    }
+}
 
-        return generator();
-    });
-
-    yield* iterable(chain(generators));
+function matchFile(
+    filename: string,
+    filterFile: FileFilterFunc | undefined,
+    // If "ignoreErrors" is true then We treat a failed filter
+    // as though it returned `false`.
+    ignoreErrors: boolean,
+): boolean {
+    if (filterFile === undefined) {
+        return true;
+    }
+    try {
+        return filterFile(filename);
+    } catch (err) {
+        if (ignoreErrors) {
+            logError(`filter failed for "${filename}" (${err})`);
+            return false;
+        }
+        throw err; // re-throw
+    }
 }
 
 /**
@@ -123,15 +181,23 @@ export function isStandardPythonBinary(executable: string): boolean {
  * environment directory.
  * @param envDir Absolute path to the environment directory
  */
-export async function getInterpreterPathFromDir(envDir: string): Promise<string | undefined> {
+export async function getInterpreterPathFromDir(
+    envDir: string,
+    opt: {
+        ignoreErrors?: boolean;
+    } = {},
+): Promise<string | undefined> {
+    const recurseLevel = 2;
+
     // Ignore any folders or files that not directly python binary related.
-    function filter(str: string): boolean {
-        const lower = str.toLowerCase();
-        return ['bin', 'scripts'].includes(lower) || lower.search('python') >= 0;
+    function filterDir(dirname: string): boolean {
+        const lower = path.basename(dirname).toLowerCase();
+        return ['bin', 'scripts'].includes(lower);
     }
 
     // Search in the sub-directories for python binary
-    for await (const bin of findInterpretersInDir(envDir, 2, filter)) {
+    const executables = findInterpretersInDir(envDir, recurseLevel, filterDir, opt.ignoreErrors);
+    for await (const bin of executables) {
         if (isStandardPythonBinary(bin)) {
             return bin;
         }

@@ -8,6 +8,7 @@ import { ILinterManager, LinterId } from '../../linters/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { TensorBoardPromptSelection } from '../../tensorBoard/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { LinterInstallationPromptVariants } from '../experiments/groups';
@@ -574,10 +575,20 @@ export class TensorBoardInstaller extends DataScienceInstaller {
         resource: Uri,
         cancel: CancellationToken,
     ): Promise<InstallerResponse> {
+        sendTelemetryEvent(EventName.TENSORBOARD_INSTALL_PROMPT_SHOWN);
         // Show a prompt message specific to TensorBoard
         const yes = Common.bannerLabelYes();
         const no = Common.bannerLabelNo();
         const selection = await this.appShell.showErrorMessage(TensorBoard.installPrompt(), ...[yes, no]);
+        let telemetrySelection = TensorBoardPromptSelection.None;
+        if (selection === yes) {
+            telemetrySelection = TensorBoardPromptSelection.Yes;
+        } else if (selection === no) {
+            telemetrySelection = TensorBoardPromptSelection.No;
+        }
+        sendTelemetryEvent(EventName.TENSORBOARD_INSTALL_PROMPT_SELECTION, undefined, {
+            selection: telemetrySelection,
+        });
         return selection === yes ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
     }
 }

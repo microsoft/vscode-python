@@ -1,10 +1,5 @@
 # The following files were grandfathered out of eslint. They can be removed as time permits.
 
-src/test/mocks/mementos.ts
-src/test/mocks/process.ts
-src/test/mocks/moduleInstaller.ts
-src/test/mocks/proc.ts
-src/test/mocks/autoSelector.ts
 src/test/mocks/vsc/extHostedTypes.ts
 src/test/mocks/vsc/uuid.ts
 src/test/mocks/vsc/strings.ts
@@ -264,13 +259,6 @@ src/test/common/insidersBuild/insidersExtensionService.unit.test.ts
 
 src/test/pythonFiles/formatting/dummy.ts
 
-src/test/format/extension.format.native.vscode.test.ts
-src/test/format/extension.onTypeFormat.test.ts
-src/test/format/extension.lineFormatter.test.ts
-src/test/format/extension.sort.test.ts
-src/test/format/extension.onEnterFormat.test.ts
-src/test/format/extension.format.test.ts
-src/test/format/formatter.unit.test.ts
 
 src/test/debugger/extension/configuration/debugConfigurationService.unit.test.ts
 src/test/debugger/extension/configuration/providers/fileLaunch.unit.test.ts

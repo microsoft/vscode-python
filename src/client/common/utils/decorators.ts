@@ -1,11 +1,9 @@
 import { ProgressLocation, ProgressOptions, window } from 'vscode';
 import '../../common/extensions';
-import { IServiceContainer } from '../../ioc/types';
 import { isTestExecution } from '../constants';
 import { traceError, traceVerbose } from '../logger';
-import { Resource } from '../types';
 import { createDeferred, Deferred } from './async';
-import { getCacheKeyFromFunctionArgs, getGlobalCacheStore, InMemoryInterpreterSpecificCache } from './cacheUtils';
+import { getCacheKeyFromFunctionArgs, getGlobalCacheStore } from './cacheUtils';
 import { TraceInfo, tracing } from './misc';
 
 const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
@@ -120,18 +118,6 @@ export function makeDebounceAsyncDecorator(wait?: number) {
             return deferred.promise;
         };
     };
-}
-
-type VSCodeType = typeof import('vscode');
-
-export function clearCachedResourceSpecificIngterpreterData(
-    key: string,
-    resource: Resource,
-    serviceContainer: IServiceContainer,
-    vscode: VSCodeType = require('vscode'),
-) {
-    const cacheStore = new InMemoryInterpreterSpecificCache(key, 0, [resource], serviceContainer, vscode);
-    cacheStore.clear();
 }
 
 type PromiseFunctionWithAnyArgs = (...any: any) => Promise<any>;

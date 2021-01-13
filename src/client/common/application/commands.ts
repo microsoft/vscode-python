@@ -5,6 +5,7 @@
 
 import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as LSCommands } from '../../activation/commands';
+import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../tensorBoard/constants';
 import { CommandSource } from '../../testing/common/constants';
 import { TestFunction, TestsToRun } from '../../testing/common/types';
 import { TestDataItem, TestWorkspaceFolder } from '../../testing/types';
@@ -51,7 +52,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.OpenStartPage]: [];
     [LSCommands.ClearAnalyisCache]: [];
     [LSCommands.RestartLS]: [];
-    [Commands.LaunchTensorBoard]: [];
 }
 
 /**
@@ -126,4 +126,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.navigateToTestFile]: [Uri, TestDataItem, boolean];
     [Commands.navigateToTestFunction]: [Uri, TestDataItem, boolean];
     [Commands.navigateToTestSuite]: [Uri, TestDataItem, boolean];
+    [Commands.LaunchTensorBoard]: [TensorBoardEntrypoint, TensorBoardEntrypointTrigger];
 }

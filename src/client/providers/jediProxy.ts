@@ -222,7 +222,7 @@ export class JediProxy implements Disposable {
         const payload = this.createPayload(executionCmd);
         executionCmd.deferred = createDeferred<T>();
         try {
-            this.proc.stdin.write(`${JSON.stringify(payload)}\n`);
+            this.proc.stdin?.write(`${JSON.stringify(payload)}\n`);
             this.commands.set(executionCmd.id, executionCmd);
             this.commandQueue.push(executionCmd.id);
         } catch (ex) {

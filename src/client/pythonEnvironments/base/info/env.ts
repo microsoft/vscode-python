@@ -6,8 +6,9 @@ import * as path from 'path';
 import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
+import { getPrioritizedEnvKinds } from './envKind';
 import { parseVersionFromExecutable } from './executable';
-import { areEqualVersions, areEquivalentVersions, isVersionEmpty } from './pythonVersion';
+import { areIdenticalVersion, areSimilarVersions, isVersionEmpty } from './pythonVersion';
 
 import { FileInfo, PythonDistroInfo, PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion } from '.';
 
@@ -276,14 +277,28 @@ export function areSameEnv(
         const rightVersion = typeof right === 'string' ? undefined : right.version;
         if (leftVersion && rightVersion) {
             if (
-                areEqualVersions(leftVersion, rightVersion) ||
-                (allowPartialMatch && areEquivalentVersions(leftVersion, rightVersion))
+                areIdenticalVersion(leftVersion, rightVersion) ||
+                (allowPartialMatch && areSimilarVersions(leftVersion, rightVersion))
             ) {
                 return true;
             }
         }
     }
     return false;
+}
+
+/**
+ * Selects an environment based on the environment selection priority. This should
+ * match the priority in the environment identifier.
+ */
+export function sortByPriority(...envs: PythonEnvInfo[]): PythonEnvInfo[] {
+    // tslint:disable-next-line: no-suspicious-comment
+    // TODO: When we consolidate the PythonEnvKind and EnvironmentType we should have
+    // one location where we define priority and
+    const envKindByPriority: PythonEnvKind[] = getPrioritizedEnvKinds();
+    return envs.sort(
+        (a: PythonEnvInfo, b: PythonEnvInfo) => envKindByPriority.indexOf(a.kind) - envKindByPriority.indexOf(b.kind),
+    );
 }
 
 /**

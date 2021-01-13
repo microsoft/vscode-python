@@ -6,7 +6,7 @@ import { ConfigurationTarget, Disposable, Uri } from 'vscode';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
-import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
+import { IDisposableRegistry, IPersistentStateFactory, Resource } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { Common, Interpreters } from '../../common/utils/localize';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -14,11 +14,16 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IPythonPathUpdaterServiceManager } from '../configuration/types';
 import {
+    IComponentAdapter,
     IInterpreterHelper,
     IInterpreterLocatorService,
     IInterpreterWatcherBuilder,
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../contracts';
+
+interface IComponent {
+    onDidCreate(resource: Resource, callback: () => void): Disposable | undefined;
+}
 
 const doNotDisplayPromptStateKey = 'MESSAGE_KEY_FOR_VIRTUAL_ENV';
 @injectable()
@@ -34,9 +39,15 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         private readonly locator: IInterpreterLocatorService,
         @inject(IDisposableRegistry) private readonly disposableRegistry: Disposable[],
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
     ) {}
 
     public async activate(resource: Uri): Promise<void> {
+        const disposable = this.pyenvs.onDidCreate(resource, () => this.handleNewEnvironment(resource));
+        if (disposable) {
+            this.disposableRegistry.push(disposable);
+            return;
+        }
         const watcher = await this.builder.getWorkspaceVirtualEnvInterpreterWatcher(resource);
         watcher.onDidCreate(
             () => {

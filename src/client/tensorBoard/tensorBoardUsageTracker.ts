@@ -3,35 +3,27 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Event, EventEmitter, TextEditor } from 'vscode';
+import { TextEditor } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import { IDisposableRegistry } from '../common/types';
 import { getDocumentLines } from '../telemetry/importTracker';
+import { TensorBoardEntrypointTrigger } from './constants';
 import { containsTensorBoardImport } from './helpers';
-import { ITensorBoardImportTracker } from './types';
+import { TensorBoardPrompt } from './tensorBoardPrompt';
 
 const testExecution = isTestExecution();
+
+// Prompt the user to start an integrated TensorBoard session whenever the active Python file or Python notebook
+// contains a valid TensorBoard import.
 @injectable()
-export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExtensionSingleActivationService {
-    private pendingChecks = new Map<string, NodeJS.Timer | number>();
-
-    private _onDidImportTensorBoard = new EventEmitter<void>();
-
+export class TensorBoardUsageTracker implements IExtensionSingleActivationService {
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
+        @inject(TensorBoardPrompt) private prompt: TensorBoardPrompt,
     ) {}
-
-    // Fires when the active text editor contains a tensorboard import.
-    public get onDidImportTensorBoard(): Event<void> {
-        return this._onDidImportTensorBoard.event;
-    }
-
-    public dispose(): void {
-        this.pendingChecks.clear();
-    }
 
     public async activate(): Promise<void> {
         if (testExecution) {
@@ -52,18 +44,16 @@ export class TensorBoardImportTracker implements ITensorBoardImportTracker, IExt
         );
     }
 
-    private onChangedActiveTextEditor(editor: TextEditor | undefined) {
+    private onChangedActiveTextEditor(editor: TextEditor | undefined): void {
         if (!editor || !editor.document) {
             return;
         }
         const { document } = editor;
-        if (
-            (path.extname(document.fileName) === '.ipynb' && document.languageId === 'python') ||
-            path.extname(document.fileName) === '.py'
-        ) {
+        const extName = path.extname(document.fileName).toLowerCase();
+        if (extName === '.py' || (extName === '.ipynb' && document.languageId === 'python')) {
             const lines = getDocumentLines(document);
             if (containsTensorBoardImport(lines)) {
-                this._onDidImportTensorBoard.fire();
+                this.prompt.showNativeTensorBoardPrompt(TensorBoardEntrypointTrigger.fileimport).ignoreErrors();
             }
         }
     }

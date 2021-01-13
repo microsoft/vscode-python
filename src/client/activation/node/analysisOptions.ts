@@ -2,17 +2,13 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 
-import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
 import { ILanguageServerOutputChannel } from '../types';
 
 @injectable()
 export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsBase {
-    constructor(
-        @inject(IEnvironmentVariablesProvider) envVarsProvider: IEnvironmentVariablesProvider,
-        @inject(ILanguageServerOutputChannel) lsOutputChannel: ILanguageServerOutputChannel,
-    ) {
-        super(envVarsProvider, lsOutputChannel);
+    constructor(@inject(ILanguageServerOutputChannel) lsOutputChannel: ILanguageServerOutputChannel) {
+        super(lsOutputChannel);
     }
 
     protected async getInitializationOptions() {

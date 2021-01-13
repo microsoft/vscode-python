@@ -1,13 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { Uri } from 'vscode';
+import * as path from 'path';
 import { DiscoveryVariants } from '../../../../common/experiments/groups';
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
+import { getEnvironmentDirFromPath } from '../../../common/commonUtils';
 import { inExperiment } from '../../../common/externalDependencies';
 import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
 import { PythonEnvKind } from '../../info';
 import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
+
+export enum FSWatcherKind {
+    Global, // Watcher observes a global location such as ~/.envs, %LOCALAPPDATA%/Microsoft/WindowsApps.
+    Workspace, // Watchers observes directory in the user's currently open workspace.
+}
 
 /**
  * The base for Python envs locators who watch the file system.
@@ -22,7 +30,7 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
          */
         private readonly getRoots: () => Promise<string[]> | string | string[],
         /**
-         * Returns the kind of environment specific to locator given the path to exectuable.
+         * Returns the kind of environment specific to locator given the path to executable.
          */
         private readonly getKind: (executable: string) => Promise<PythonEnvKind>,
         private readonly opts: {
@@ -34,20 +42,35 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
              * Time to wait before handling an environment-created event.
              */
             delayOnCreated?: number; // milliseconds
+            /**
+             * Location affected by the event. If not provided, a default search location is used.
+             */
+            searchLocation?: string;
         } = {},
+        private readonly watcherKind: FSWatcherKind = FSWatcherKind.Global,
     ) {
         super();
     }
 
     protected async initWatchers(): Promise<void> {
-        if (await inExperiment(DiscoveryVariants.discoverWithFileWatching)) {
-            // Start the FS watchers.
-            let roots = await this.getRoots();
-            if (typeof roots === 'string') {
-                roots = [roots];
-            }
-            roots.forEach((root) => this.startWatcher(root));
+        // Start the FS watchers.
+        let roots = await this.getRoots();
+        if (typeof roots === 'string') {
+            roots = [roots];
         }
+
+        // Enable all workspace watchers.
+        let enableGlobalWatchers = true;
+        if (this.watcherKind === FSWatcherKind.Global) {
+            // Enable global watchers only if the experiment allows it.
+            enableGlobalWatchers = await inExperiment(DiscoveryVariants.discoverWithFileWatching);
+        }
+
+        roots.forEach((root) => {
+            if (enableGlobalWatchers) {
+                this.startWatcher(root);
+            }
+        });
     }
 
     private startWatcher(root: string): void {
@@ -62,7 +85,18 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
             // Fetching kind after deletion normally fails because the file structure around the
             // executable is no longer available, so ignore the errors.
             const kind = await this.getKind(executable).catch(() => undefined);
-            this.emitter.fire({ type, kind });
+            // By default, search location particularly for virtual environments is intended as the
+            // directory in which the environment was found in. For eg. the default search location
+            // for an env containing 'bin' or 'Scripts' directory is:
+            //
+            // searchLocation <--- Default search location directory
+            // |__ env
+            //    |__ bin or Scripts
+            //        |__ python  <--- executable
+            const searchLocation = Uri.file(
+                this.opts.searchLocation ?? path.dirname(getEnvironmentDirFromPath(executable)),
+            );
+            this.emitter.fire({ type, kind, searchLocation });
         };
         this.disposables.push(watchLocationForPythonBinaries(root, callback, this.opts.executableBaseGlob));
     }

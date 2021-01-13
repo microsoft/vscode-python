@@ -14,6 +14,7 @@ import { Common } from '../../../client/common/utils/localize';
 import { PythonPathUpdaterService } from '../../../client/interpreter/configuration/pythonPathUpdaterService';
 import { IPythonPathUpdaterServiceManager } from '../../../client/interpreter/configuration/types';
 import {
+    IComponentAdapter,
     IInterpreterHelper,
     IInterpreterLocatorService,
     IInterpreterWatcherBuilder,
@@ -58,6 +59,7 @@ suite('Virtual Environment Prompt', () => {
             instance(locator),
             [instance(disposable)],
             instance(appShell),
+            instance(mock(IComponentAdapter)),
         );
     });
 

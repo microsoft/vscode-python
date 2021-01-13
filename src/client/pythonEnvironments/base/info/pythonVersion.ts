@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { traceError } from '../../../common/logger';
-import { EMPTY_VERSION, isVersionInfoEmpty, parseBasicVersionInfo } from '../../../common/utils/version';
+import * as basic from '../../../common/utils/version';
 
 import { PythonReleaseLevel, PythonVersion, PythonVersionRelease, UNKNOWN_PYTHON_VERSION } from '.';
+
+// XXX getPythonVersionFromPath() should go away in favor of parseVersionFromExecutable().
 
 export function getPythonVersionFromPath(exe: string): PythonVersion {
     let version = UNKNOWN_PYTHON_VERSION;
@@ -91,7 +94,7 @@ export function parseRelease(text: string): [PythonVersionRelease | undefined, s
 export function parseBasicVersion(versionStr: string): [PythonVersion, string] {
     // We set a prefix (which will be ignored) to make sure "plain"
     // versions are fully parsed.
-    const parsed = parseBasicVersionInfo<PythonVersion>(`ignored-${versionStr}`);
+    const parsed = basic.parseBasicVersionInfo<PythonVersion>(`ignored-${versionStr}`);
     if (!parsed) {
         if (versionStr === '') {
             return [getEmptyVersion(), ''];
@@ -119,7 +122,7 @@ export function parseBasicVersion(versionStr: string): [PythonVersion, string] {
  * Get a new version object with all properties "zeroed out".
  */
 export function getEmptyVersion(): PythonVersion {
-    return { ...EMPTY_VERSION };
+    return cloneDeep(basic.EMPTY_VERSION);
 }
 
 /**
@@ -128,33 +131,188 @@ export function getEmptyVersion(): PythonVersion {
 export function isVersionEmpty(version: PythonVersion): boolean {
     // We really only care the `version.major` is -1.  However, using
     // generic util is better in the long run.
-    return isVersionInfoEmpty(version);
+    return basic.isVersionInfoEmpty(version);
 }
 
 /**
- * Checks if all the fields in the version object match.
- * @param {PythonVersion} left
- * @param {PythonVersion} right
- * @returns {boolean}
+ * Make an as-is (deep) copy of the given info.
  */
-export function areEqualVersions(left: PythonVersion, right: PythonVersion): boolean {
-    return left === right;
+export function copyVersion(info: PythonVersion): PythonVersion {
+    return cloneDeep(info);
 }
 
 /**
- * Checks if major and minor version fields match. True here means that the python ABI is the
- * same, but the micro version could be different. But for the purpose this is being used
- * it does not matter.
- * @param {PythonVersion} left
- * @param {PythonVersion} right
- * @returns {boolean}
+ * Make a copy with all appropriate properties set (and normalized).
  */
-export function areEquivalentVersions(left: PythonVersion, right: PythonVersion): boolean {
-    if (left.major === 2 && right.major === 2) {
-        // We are going to assume that if the major version is 2 then the version is 2.7
-        return true;
+export function normalizeVersion(info: PythonVersion): PythonVersion {
+    const norm = basic.normalizeVersionInfo(info);
+    if (info.release !== undefined) {
+        norm.release = normalizeRelease(info.release);
+    }
+    if (!info.sysVersion || info.sysVersion === '') {
+        norm.sysVersion = undefined;
+    }
+    return norm;
+}
+
+/**
+ * Make a copy and set all the properties properly.
+ */
+function normalizeRelease(info: PythonVersionRelease): PythonVersionRelease {
+    const norm = {
+        level: info.level,
+        serial: info.serial,
+    };
+
+    if (!norm.serial || norm.serial < 0) {
+        norm.serial = 0;
     }
 
-    // In the case of 3.* if major and minor match we assume that they are equivalent versions
-    return left.major === right.major && left.minor === right.minor;
+    if (!norm.level || (norm.level as string) === '') {
+        norm.level = PythonReleaseLevel.Final;
+    } else if ((norm.level as string) === 'c' || (norm.level as string) === 'rc') {
+        norm.level = PythonReleaseLevel.Candidate;
+    } else if ((norm.level as string) === 'b') {
+        norm.level = PythonReleaseLevel.Beta;
+    } else if ((norm.level as string) === 'a') {
+        norm.level = PythonReleaseLevel.Alpha;
+    }
+    // Otherwise we leave it as-is and let validateRelease() pick it up.
+
+    return norm;
+}
+
+/**
+ * Fail if any properties are not set properly.
+ *
+ * Optional properties that are not set are ignored.
+ *
+ * This assumes that the info has already been normalized.
+ */
+export function validateVersion(info: PythonVersion): void {
+    basic.validateVersionInfo(info);
+    if (info.release !== undefined) {
+        validateRelease(info.release);
+    }
+}
+
+/**
+ * Fail if any properties are not set properly.
+ *
+ * Optional properties that are not set are ignored.
+ *
+ * This assumes that the info has already been normalized.
+ */
+function validateRelease(info: PythonVersionRelease): void {
+    const supportedLevels = [
+        PythonReleaseLevel.Alpha,
+        PythonReleaseLevel.Beta,
+        PythonReleaseLevel.Candidate,
+        PythonReleaseLevel.Final,
+    ];
+    if (!supportedLevels.includes(info.level)) {
+        throw Error(`unsupported Python release level "${info.level}"`);
+    }
+
+    if (info.level === PythonReleaseLevel.Final) {
+        if (info.serial !== 0) {
+            throw Error(`invalid serial ${info.serial} for final release`);
+        }
+    }
+}
+
+/**
+ * Convert the info to a simple string.
+ */
+export function getShortVersionString(ver: PythonVersion): string {
+    let verStr = basic.getVersionString(ver);
+    if (ver.release === undefined) {
+        return verStr;
+    }
+    if (ver.release.level === PythonReleaseLevel.Final) {
+        return verStr;
+    }
+    if (ver.release.level === PythonReleaseLevel.Candidate) {
+        verStr = `${verStr}rc${ver.release.serial}`;
+    } else if (ver.release.level === PythonReleaseLevel.Beta) {
+        verStr = `${verStr}b${ver.release.serial}`;
+    } else if (ver.release.level === PythonReleaseLevel.Alpha) {
+        verStr = `${verStr}a${ver.release.serial}`;
+    } else {
+        throw Error(`unsupported release level ${ver.release.level}`);
+    }
+    return verStr;
+}
+
+/**
+ * Checks if all the important properties of the version objects match.
+ *
+ * Only major, minor, micro, and release are compared.
+ */
+export function areIdenticalVersion(left: PythonVersion, right: PythonVersion): boolean {
+    return basic.areIdenticalVersion(left, right, compareVersionRelease);
+}
+
+/**
+ * Checks if the versions are identical or one is more complete than other (and otherwise the same).
+ *
+ * A `true` result means the Python executables are strictly compatible.
+ * For Python 3+, at least the minor version must be set. `(2, -1, -1)`
+ * implies 2.7, so in that case only the major version must be set (to 2).
+ */
+export function areSimilarVersions(left: PythonVersion, right: PythonVersion): boolean {
+    if (!basic.areSimilarVersions(left, right, compareVersionRelease)) {
+        return false;
+    }
+    if (left.major === 2) {
+        return true;
+    }
+    return left.minor > -1 && right.minor > -1;
+}
+
+function compareVersionRelease(left: PythonVersion, right: PythonVersion): [number, string] {
+    if (left.release === undefined) {
+        if (right.release === undefined) {
+            return [0, ''];
+        }
+        return [1, 'level'];
+    }
+    if (right.release === undefined) {
+        return [-1, 'level'];
+    }
+
+    // Compare the level.
+    if (left.release.level < right.release.level) {
+        return [1, 'level'];
+    }
+    if (left.release.level > right.release.level) {
+        return [-1, 'level'];
+    }
+    if (left.release.level === PythonReleaseLevel.Final) {
+        // We ignore "serial".
+        return [0, ''];
+    }
+
+    // Compare the serial.
+    if (left.release.serial < right.release.serial) {
+        return [1, 'serial'];
+    }
+    if (left.release.serial > right.release.serial) {
+        return [-1, 'serial'];
+    }
+
+    return [0, ''];
+}
+
+/**
+ * Build a new version based on the given objects.
+ *
+ * "version" is copied if it is later than "other" or if the two are
+ * similar and "other" does not have more info.  Otherwise "other"
+ * is used.
+ */
+export function copyBestVersion(version: PythonVersion, other: PythonVersion): PythonVersion {
+    const [result] = basic.compareVersions(version, other, compareVersionRelease);
+    const winner = result > 0 ? other : version;
+    return cloneDeep(winner);
 }

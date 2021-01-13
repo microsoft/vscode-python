@@ -2,12 +2,15 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import { once } from 'lodash';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { NativeTensorBoard } from '../common/experiments/groups';
-import { IDisposableRegistry, IExperimentService, IPersistentState, IPersistentStateFactory } from '../common/types';
+import { IExperimentService, IPersistentState, IPersistentStateFactory } from '../common/types';
 import { Common, TensorBoard } from '../common/utils/localize';
-import { ITensorBoardImportTracker } from './types';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
+import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger, TensorBoardPromptSelection } from './constants';
 
 enum TensorBoardPromptStateKeys {
     ShowNativeTensorBoardPrompt = 'showNativeTensorBoardPrompt',
@@ -17,7 +20,7 @@ enum TensorBoardPromptStateKeys {
 export class TensorBoardPrompt {
     private state: IPersistentState<boolean>;
 
-    private enabled: Promise<boolean>;
+    private enabled: boolean;
 
     private inExperiment: Promise<boolean>;
 
@@ -25,11 +28,16 @@ export class TensorBoardPrompt {
 
     private waitingForUserSelection = false;
 
+    private sendTelemetryOnce = once((trigger) => {
+        sendTelemetryEvent(EventName.TENSORBOARD_ENTRYPOINT_SHOWN, undefined, {
+            entrypoint: TensorBoardEntrypoint.prompt,
+            trigger,
+        });
+    });
+
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(ICommandManager) private commandManager: ICommandManager,
-        @inject(ITensorBoardImportTracker) private importTracker: ITensorBoardImportTracker,
-        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
         @inject(IExperimentService) private experimentService: IExperimentService,
     ) {
@@ -39,13 +47,12 @@ export class TensorBoardPrompt {
         );
         this.enabled = this.isPromptEnabled();
         this.inExperiment = this.isInExperiment();
-        this.importTracker.onDidImportTensorBoard(this.showNativeTensorBoardPrompt, this, this.disposableRegistry);
     }
 
-    public async showNativeTensorBoardPrompt(): Promise<void> {
+    public async showNativeTensorBoardPrompt(trigger: TensorBoardEntrypointTrigger): Promise<void> {
         if (
             (await this.inExperiment) &&
-            (await this.enabled) &&
+            this.enabled &&
             this.enabledInCurrentSession &&
             !this.waitingForUserSelection
         ) {
@@ -54,26 +61,40 @@ export class TensorBoardPrompt {
             const doNotAskAgain = Common.doNotShowAgain();
             const options = [yes, no, doNotAskAgain];
             this.waitingForUserSelection = true;
+            this.sendTelemetryOnce(trigger);
             const selection = await this.applicationShell.showInformationMessage(
                 TensorBoard.nativeTensorBoardPrompt(),
                 ...options,
             );
             this.waitingForUserSelection = false;
             this.enabledInCurrentSession = false;
+            let telemetrySelection = TensorBoardPromptSelection.None;
             switch (selection) {
                 case yes:
-                    await this.commandManager.executeCommand(Commands.LaunchTensorBoard);
+                    telemetrySelection = TensorBoardPromptSelection.Yes;
+                    await this.commandManager.executeCommand(
+                        Commands.LaunchTensorBoard,
+                        TensorBoardEntrypoint.prompt,
+                        trigger,
+                    );
                     break;
                 case doNotAskAgain:
+                    telemetrySelection = TensorBoardPromptSelection.DoNotAskAgain;
                     await this.disablePrompt();
+                    break;
+                case no:
+                    telemetrySelection = TensorBoardPromptSelection.No;
                     break;
                 default:
                     break;
             }
+            sendTelemetryEvent(EventName.TENSORBOARD_LAUNCH_PROMPT_SELECTION, undefined, {
+                selection: telemetrySelection,
+            });
         }
     }
 
-    private async isPromptEnabled(): Promise<boolean> {
+    private isPromptEnabled(): boolean {
         return this.state.value;
     }
 

@@ -134,7 +134,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
 
         // Cache only if successful, else keep trying & failing if necessary.
-        const cache = new InMemoryCache<NodeJS.ProcessEnv | undefined>(cacheDuration, '');
+        const cache = new InMemoryCache<NodeJS.ProcessEnv | undefined>(cacheDuration);
         return this.getActivatedEnvironmentVariablesImpl(resource, interpreter, allowExceptions).then((vars) => {
             cache.data = vars;
             this.activatedEnvVariablesCache.set(cacheKey, cache);

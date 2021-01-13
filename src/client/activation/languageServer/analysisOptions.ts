@@ -11,11 +11,11 @@ import { IConfigurationService, IExtensionContext, IPathUtils, Resource } from '
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
+import { LanguageServerAnalysisOptionsWithEnv } from '../common/analysisOptions';
 import { ILanguageServerFolderService, ILanguageServerOutputChannel } from '../types';
 
 @injectable()
-export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsBase {
+export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsWithEnv {
     private resource: Resource;
     private interpreter: PythonEnvironment | undefined;
     private languageServerFolder: string = '';

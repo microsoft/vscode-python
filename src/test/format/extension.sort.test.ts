@@ -28,15 +28,13 @@ suite('Sorting', () => {
     let sorter: ISortImportsEditingProvider;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
     suiteSetup(async function () {
-        const pythonVersion = process.env.CI_PYTHON_VERSION // GHA uses this
-            ? parseFloat(process.env.CI_PYTHON_VERSION)
-            : process.env.PythonVersion // Azdo uses this
-            ? parseFloat(process.env.PythonVersion)
-            : undefined;
+        const pythonVersion = process.env.CI_PYTHON_VERSION ? parseFloat(process.env.CI_PYTHON_VERSION) : undefined;
         if (pythonVersion && pythonVersion < 3) {
             return this.skip();
         }
         await initialize();
+
+        return undefined;
     });
     suiteTeardown(async () => {
         fs.writeFileSync(fileToFormatWithConfig, fs.readFileSync(originalFileToFormatWithConfig));

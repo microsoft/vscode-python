@@ -138,7 +138,10 @@ export class WindowsStoreLocator extends FSWatchingLocator {
     private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
 
     constructor() {
-        super(getWindowsStoreAppsRoot, async () => this.kind, { executableBaseGlob: pythonExeGlob });
+        super(getWindowsStoreAppsRoot, async () => this.kind, {
+            executableBaseGlob: pythonExeGlob,
+            searchLocation: getWindowsStoreAppsRoot(),
+        });
     }
 
     protected doIterEnvs(): IPythonEnvsIterator {
