@@ -53,6 +53,7 @@
     "Pylance.pylanceNotInstalledMessage": "Pylance extension is not installed.",
     "Pylance.pylanceInstalledReloadPromptMessage": "Pylance extension is now installed. Reload window to activate?",
     "Experiments.inGroup": "User belongs to experiment group '{0}'",
+    "Experiments.optedOutOf": "User opted out of experiment group '{0}'",
     "Interpreters.RefreshingInterpreters": "Refreshing Python Interpreters",
     "Interpreters.entireWorkspace": "Entire workspace",
     "Interpreters.pythonInterpreterPath": "Python interpreter path: {0}",

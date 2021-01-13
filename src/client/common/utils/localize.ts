@@ -234,6 +234,7 @@ export namespace Http {
 }
 export namespace Experiments {
     export const inGroup = localize('Experiments.inGroup', "User belongs to experiment group '{0}'");
+    export const optedOutOf = localize('Experiments.optedOutOf', "User opted out of experiment group '{0}'");
 }
 export namespace Interpreters {
     export const loading = localize('Interpreters.LoadingInterpreters', 'Loading Python Interpreters');
