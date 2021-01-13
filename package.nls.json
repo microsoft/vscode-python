@@ -167,7 +167,7 @@
     "debug.flaskEnterAppPathOrNamePathPrompt": "Enter the path to the application, e.g. 'app.py' or 'app'",
     "debug.flaskEnterAppPathOrNamePathInvalidNameError": "Enter a valid name",
     "debug.debugPyramidConfigurationLabel": "Pyramid",
-    "debug.debugPyramidConfigurationDescription": "Web Application",
+    "debug.debugPyramidConfigurationDescription": "Launch and debug a Pyramid web application",
     "debug.pyramidEnterDevelopmentIniPathTitle": "Debug Pyramid",
     "debug.pyramidEnterDevelopmentIniPathPrompt": "`Enter the path to development.ini ('${workspaceFolderToken}' points to the root of the current workspace folder)`",
     "debug.pyramidEnterDevelopmentIniPathInvalidFilePathError": "Enter a valid file path",
