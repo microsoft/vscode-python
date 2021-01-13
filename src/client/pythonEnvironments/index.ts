@@ -60,12 +60,16 @@ export async function initialize(ext: ExtensionState): Promise<PythonEnvironment
  * Make use of the component (e.g. register with VS Code).
  */
 export async function activate(api: PythonEnvironments): Promise<ActivationResult> {
-    if (await isComponentEnabled()) {
-        // Force an initial background refresh of the environments.
-        getEnvs(api.iterEnvs())
-            // Don't wait for it to finish.
-            .ignoreErrors();
+    if (!(await isComponentEnabled())) {
+        return {
+            fullyReady: Promise.resolve(),
+        };
     }
+
+    // Force an initial background refresh of the environments.
+    getEnvs(api.iterEnvs())
+        // Don't wait for it to finish.
+        .ignoreErrors();
 
     // Registration with VS Code will go here.
 

@@ -58,7 +58,7 @@ import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegist
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 
 // components
-// import * as pythonEnvironments from './pythonEnvironments';
+import * as pythonEnvironments from './pythonEnvironments';
 
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
@@ -66,8 +66,7 @@ import { Components } from './extensionInit';
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
     ext: ExtensionState,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _components: Components,
+    components: Components,
 ): Promise<ActivationResult[]> {
     // Note that each activation returns a promise that resolves
     // when that activation completes.  However, it might have started
@@ -79,12 +78,7 @@ export async function activateComponents(
     // activation resolves `ActivationResult`, which can safely wrap
     // the "inner" promise.
     const promises: Promise<ActivationResult>[] = [
-        // TODO: For now the extension should only interact with the component via the component adapter,
-        // which takes care of putting the component behind the experiment flag. It already activates the
-        // component among other things, hence the following is not needed.
-        // pythonEnvironments.activate(components.pythonEnvs),
-        // If we need to activate, we need to use the adapter:
-        // https://github.com/microsoft/vscode-python/issues/14984
+        pythonEnvironments.activate(components.pythonEnvs),
         // These will go away eventually.
         activateLegacy(ext),
     ];
