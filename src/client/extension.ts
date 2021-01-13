@@ -34,7 +34,7 @@ import { IAsyncDisposableRegistry, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
 import { activateComponents } from './extensionActivation';
-import { initializeCommon, initializeComponents, initializeGlobals } from './extensionInit';
+import { initializeComponents, initializeGlobals, initializeLegacy } from './extensionInit';
 import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 
@@ -99,7 +99,10 @@ async function activateUnsafe(
     // First we initialize.
     const ext = initializeGlobals(context);
     activatedServiceContainer = ext.legacyIOC.serviceContainer;
-    initializeCommon(ext);
+    initializeLegacy(ext);
+
+    // IMPORTANT: Note initializeComponents expect utils like the experiment framework and all its dependencies
+    // to be initialized already, so this initialization comes after all legacy initializations.
     const components = initializeComponents(ext);
 
     // Then we finish activating.
