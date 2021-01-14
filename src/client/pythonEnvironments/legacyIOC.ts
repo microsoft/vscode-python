@@ -131,12 +131,20 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     return env;
 }
 
+export async function isComponentEnabled(): Promise<boolean> {
+    const results = await Promise.all([
+        inExperiment(DiscoveryVariants.discoverWithFileWatching),
+        inExperiment(DiscoveryVariants.discoveryWithoutFileWatching),
+    ]);
+    return results.includes(true);
+}
+
 export interface IPythonEnvironments extends ILocator {}
 
 @injectable()
 class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationService {
     // this will be set based on experiment
-    private enabled?: boolean;
+    public enabled = false;
 
     private readonly refreshing = new vscode.EventEmitter<void>();
 
@@ -150,12 +158,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     ) {}
 
     public async activate(): Promise<void> {
-        this.enabled = (
-            await Promise.all([
-                inExperiment(DiscoveryVariants.discoverWithFileWatching),
-                inExperiment(DiscoveryVariants.discoveryWithoutFileWatching),
-            ])
-        ).includes(true);
+        this.enabled = await isComponentEnabled();
         this.disposables.push(
             this.api.onChanged((e) => {
                 const query = {
@@ -346,13 +349,16 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     }
 }
 
-export function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): void {
+export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): Promise<void> {
+    const inDiscoveryExperiment = await isComponentEnabled();
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
-    serviceManager.addSingleton<IInterpreterLocatorService>(
-        IInterpreterLocatorService,
-        PythonInterpreterLocatorService,
-        INTERPRETER_LOCATOR_SERVICE,
-    );
+    if (!inDiscoveryExperiment) {
+        serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            PythonInterpreterLocatorService,
+            INTERPRETER_LOCATOR_SERVICE,
+        );
+    }
     serviceManager.addSingleton<IInterpreterLocatorProgressService>(
         IInterpreterLocatorProgressService,
         InterpreterLocatorProgressService,

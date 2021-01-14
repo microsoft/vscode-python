@@ -102,7 +102,7 @@ async function activateUnsafe(
     // Note standard utils especially experiment and platform code are fundamental to the extension
     // and should be available before we activate anything else.Hence register them first.
     initializeStandard(ext);
-    const components = initializeComponents(ext);
+    const components = await initializeComponents(ext);
 
     // Then we finish activating.
     const componentsActivated = await activateComponents(ext, components);

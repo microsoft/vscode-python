@@ -85,8 +85,8 @@ export type Components = {
 /**
  * Initialize all components in the extension.
  */
-export function initializeComponents(ext: ExtensionState): Components {
-    const pythonEnvs = pythonEnvironments.initialize(ext);
+export async function initializeComponents(ext: ExtensionState): Promise<Components> {
+    const pythonEnvs = await pythonEnvironments.initialize(ext);
 
     // Other component initializers go here.
     // We will be factoring them out of activateLegacy().
