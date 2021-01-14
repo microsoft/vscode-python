@@ -194,7 +194,9 @@ export class JupyterExtensionIntegration {
                 }
                 return undefined;
             },
-            registerInterpreterStatusFilter: this.interpreterDisplay.registerVisibilityFilter,
+            registerInterpreterStatusFilter: this.interpreterDisplay.registerVisibilityFilter.bind(
+                this.interpreterDisplay,
+            ),
         });
         return undefined;
     }
