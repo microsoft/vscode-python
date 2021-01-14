@@ -49,6 +49,12 @@ export function initializeGlobals(
     serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
     serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, context);
 
+    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
+    addOutputChannelLogging(standardOutputChannel);
+    const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
+    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
+    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
+
     return {
         context,
         disposables,
@@ -65,12 +71,6 @@ export function initializeStandard(ext: ExtensionState): void {
     commonRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
-
-    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
-    addOutputChannelLogging(standardOutputChannel);
-    const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
 
     // We will be pulling other code over from activateLegacy().
 }
