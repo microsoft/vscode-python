@@ -28,7 +28,6 @@ import {
     IFeatureDeprecationManager,
     IOutputChannel,
 } from './common/types';
-import { OutputChannelNames } from './common/utils/localize';
 import { noop } from './common/utils/misc';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { DebuggerTypeName } from './debugger/constants';
