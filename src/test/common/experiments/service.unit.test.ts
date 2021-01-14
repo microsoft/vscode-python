@@ -10,9 +10,7 @@ import * as tasClient from 'vscode-tas-client';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { Channel, IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
-import { ConfigurationService } from '../../../client/common/configuration/service';
 import { ExperimentService } from '../../../client/common/experiments/service';
-import { IConfigurationService } from '../../../client/common/types';
 import { Experiments } from '../../../client/common/utils/localize';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
@@ -23,14 +21,12 @@ import { MockMemento } from '../../mocks/mementos';
 suite('Experimentation service', () => {
     const extensionVersion = '1.2.3';
 
-    let configurationService: IConfigurationService;
     let workspaceService: IWorkspaceService;
     let appEnvironment: IApplicationEnvironment;
     let globalMemento: MockMemento;
     let outputChannel: MockOutputChannel;
 
     setup(() => {
-        configurationService = mock(ConfigurationService);
         appEnvironment = mock(ApplicationEnvironment);
         workspaceService = mock(WorkspaceService);
         globalMemento = new MockMemento();
@@ -43,13 +39,6 @@ suite('Experimentation service', () => {
     });
 
     function configureSettings(enabled: boolean, optInto: string[], optOutFrom: string[]) {
-        when(configurationService.getSettings(undefined)).thenReturn({
-            experiments: {
-                enabled,
-                optInto,
-                optOutFrom,
-            },
-        } as any);
         when(workspaceService.getConfiguration('python')).thenReturn({
             get: (key: string) => {
                 if (key === 'experiments.enabled') {
