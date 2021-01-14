@@ -111,7 +111,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     // register "services"
 
-    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
+    const standardOutputChannel = serviceManager.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
 
     // We need to setup this property before any telemetry is sent
     const fs = serviceManager.get<IFileSystem>(IFileSystem);
