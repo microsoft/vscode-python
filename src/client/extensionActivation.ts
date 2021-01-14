@@ -43,11 +43,10 @@ import {
     IInterpreterLocatorProgressService,
     IInterpreterService,
 } from './interpreter/contracts';
-import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { getLanguageConfiguration } from './language/languageConfiguration';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
-import { addOutputChannelLogging, setLoggingLevel } from './logging';
+import { setLoggingLevel } from './logging';
 import { PythonCodeActionProvider } from './providers/codeActionProvider/pythonCodeActionProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { ReplProvider } from './providers/replProvider';
@@ -59,10 +58,10 @@ import { setExtensionInstallTelemetryProperties } from './telemetry/extensionIns
 import { registerTypes as tensorBoardRegisterTypes } from './tensorBoard/serviceRegistry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
-import { TEST_OUTPUT_CHANNEL } from './testing/common/constants';
 import { ITestContextService } from './testing/common/types';
 import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from './testing/navigation/types';
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
+import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 
 // components
 // import * as pythonEnvironments from './pythonEnvironments';
@@ -113,10 +112,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     // register "services"
 
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
-    addOutputChannelLogging(standardOutputChannel);
-    const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
 
     // We need to setup this property before any telemetry is sent
     const fs = serviceManager.get<IFileSystem>(IFileSystem);
