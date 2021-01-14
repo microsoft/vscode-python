@@ -88,6 +88,7 @@ export interface IInterpreterService {
 export const IInterpreterDisplay = Symbol('IInterpreterDisplay');
 export interface IInterpreterDisplay {
     refresh(resource?: Uri): Promise<void>;
+    registerVisibilityFilter(filter: IInterpreterStatusbarVisibilityFilter): void;
 }
 
 export const IShebangCodeLensProvider = Symbol('IShebangCodeLensProvider');
