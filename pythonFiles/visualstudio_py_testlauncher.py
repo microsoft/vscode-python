@@ -345,7 +345,6 @@ def main():
                                     break
                         except Exception as err:
                             errorMessage = traceback.format_exc()
-                            pass
                 if tests is None:
                     tests = suite
             if tests is None and suite is None:
