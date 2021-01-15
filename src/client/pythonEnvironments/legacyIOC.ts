@@ -358,6 +358,35 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
             PythonInterpreterLocatorService,
             INTERPRETER_LOCATOR_SERVICE,
         );
+        serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            CondaEnvFileService,
+            CONDA_ENV_FILE_SERVICE,
+        );
+        serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            CondaEnvService,
+            CONDA_ENV_SERVICE,
+        );
+        serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            GlobalVirtualEnvService,
+            GLOBAL_VIRTUAL_ENV_SERVICE,
+        );
+        serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
+            IVirtualEnvironmentsSearchPathProvider,
+            GlobalVirtualEnvironmentsSearchPathProvider,
+            'global',
+        );
+        serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            KnownPathsService,
+            KNOWN_PATH_SERVICE,
+        );
+        serviceManager.addSingleton<IKnownSearchPathsForInterpreters>(
+            IKnownSearchPathsForInterpreters,
+            KnownSearchPathsForInterpreters,
+        );
     }
     serviceManager.addSingleton<IInterpreterLocatorProgressService>(
         IInterpreterLocatorProgressService,
@@ -365,23 +394,12 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
-        CondaEnvFileService,
-        CONDA_ENV_FILE_SERVICE,
-    );
-    serviceManager.addSingleton<IInterpreterLocatorService>(
-        IInterpreterLocatorService,
-        CondaEnvService,
-        CONDA_ENV_SERVICE,
-    );
-    serviceManager.addSingleton<IInterpreterLocatorService>(
-        IInterpreterLocatorService,
         CurrentPathService,
         CURRENT_PATH_SERVICE,
     );
-    serviceManager.addSingleton<IInterpreterLocatorService>(
-        IInterpreterLocatorService,
-        GlobalVirtualEnvService,
-        GLOBAL_VIRTUAL_ENV_SERVICE,
+    serviceManager.addSingleton<IPythonInPathCommandProvider>(
+        IPythonInPathCommandProvider,
+        PythonInPathCommandProvider,
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
@@ -395,17 +413,8 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
         WindowsRegistryService,
         WINDOWS_REGISTRY_SERVICE,
     );
-    serviceManager.addSingleton<IInterpreterLocatorService>(
-        IInterpreterLocatorService,
-        KnownPathsService,
-        KNOWN_PATH_SERVICE,
-    );
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
-    serviceManager.addSingleton<IPythonInPathCommandProvider>(
-        IPythonInPathCommandProvider,
-        PythonInPathCommandProvider,
-    );
 
     serviceManager.add<IInterpreterWatcher>(
         IInterpreterWatcher,
@@ -420,17 +429,8 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
     );
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
         IVirtualEnvironmentsSearchPathProvider,
-        GlobalVirtualEnvironmentsSearchPathProvider,
-        'global',
-    );
-    serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
-        IVirtualEnvironmentsSearchPathProvider,
         WorkspaceVirtualEnvironmentsSearchPathProvider,
         'workspace',
-    );
-    serviceManager.addSingleton<IKnownSearchPathsForInterpreters>(
-        IKnownSearchPathsForInterpreters,
-        KnownSearchPathsForInterpreters,
     );
     serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
 }
