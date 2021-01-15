@@ -5,6 +5,7 @@ import { injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { DiscoveryVariants } from '../common/experiments/groups';
+import { traceError } from '../common/logger';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { IDisposableRegistry, Resource } from '../common/types';
 import { getVersionString, parseVersion } from '../common/utils/version';
@@ -350,7 +351,14 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
 }
 
 export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): Promise<void> {
-    const inDiscoveryExperiment = await isComponentEnabled().catch(() => false);
+    const inDiscoveryExperiment = await isComponentEnabled().catch((ex) => {
+        // This is mainly to support old tests, where IExperimentService was registered
+        // out of sequence / or not registered, so this throws an error. But we do not
+        // care about that error as we don't care about IExperimentService in old tests.
+        // But if this fails in other cases, it's a major error. Hence log it anyways.
+        traceError('Failed to not register old code when in Discovery experiment', ex);
+        return false;
+    });
     if (!inDiscoveryExperiment) {
         serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
         serviceManager.addSingleton<IInterpreterLocatorService>(
