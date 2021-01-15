@@ -138,7 +138,7 @@ suite('Installer', () => {
     setup(async () => {
         await initializeTest();
         await resetSettings();
-        initializeDI();
+        await initializeDI();
     });
     suiteTeardown(async () => {
         await closeActiveWindows();
@@ -149,7 +149,7 @@ suite('Installer', () => {
         await closeActiveWindows();
     });
 
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerUnitTestTypes();
         ioc.registerFileSystemTypes();

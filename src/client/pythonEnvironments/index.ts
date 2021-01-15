@@ -31,7 +31,7 @@ import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
 /**
  * Set up the Python environments component (during extension activation).'
  */
-export function initialize(ext: ExtensionState): PythonEnvironments {
+export async function initialize(ext: ExtensionState): Promise<PythonEnvironments> {
     const environmentsSecurity = new EnvironmentsSecurity();
     const api = new PythonEnvironments(
         () => createLocators(ext, environmentsSecurity),
@@ -41,8 +41,6 @@ export function initialize(ext: ExtensionState): PythonEnvironments {
 
     // Any other initialization goes here.
 
-    // Deal with legacy IOC.
-    registerLegacyDiscoveryForIOC(ext.legacyIOC.serviceManager);
     initializeLegacyExternalDependencies(ext.legacyIOC.serviceContainer);
     registerNewDiscoveryForIOC(
         // These are what get wrapped in the legacy adapter.
@@ -51,6 +49,8 @@ export function initialize(ext: ExtensionState): PythonEnvironments {
         environmentsSecurity,
         ext.disposables,
     );
+    // Deal with legacy IOC.
+    await registerLegacyDiscoveryForIOC(ext.legacyIOC.serviceManager);
 
     return api;
 }

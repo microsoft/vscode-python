@@ -57,7 +57,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             await fs.remove(cachePath);
         }
         await initializeTest();
-        initializeDI();
+        await initializeDI();
         await ignoreTestLauncher();
     });
     teardown(async () => {
@@ -84,7 +84,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     }
     const cliSwitches = buildTestCliSwitches();
 
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();
@@ -113,7 +113,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             IInterpreterService,
             instance(mock(InterpreterService)),
         );
-        registerForIOC(ioc.serviceManager, ioc.serviceContainer);
+        await registerForIOC(ioc.serviceManager, ioc.serviceContainer);
         ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 

@@ -439,7 +439,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
         console.timeEnd('Pytest before all hook');
     });
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
         ioc.registerUnitTestTypes();
@@ -454,7 +454,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         );
         ioc.serviceManager.rebind<IPythonExecutionFactory>(IPythonExecutionFactory, ExecutionFactory);
 
-        registerForIOC(ioc.serviceManager, ioc.serviceContainer);
+        await registerForIOC(ioc.serviceManager, ioc.serviceContainer);
         ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 
@@ -512,7 +512,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
 
                 this.timeout(TEST_TIMEOUT * 2);
                 await initializeTest();
-                initializeDI();
+                await initializeDI();
                 await injectTestDiscoveryOutput(scenario.discoveryOutput);
                 await injectTestRunOutput(scenario.runOutput);
                 if (scenario.shouldRunFailed === true) {

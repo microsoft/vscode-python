@@ -350,7 +350,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
 }
 
 export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): Promise<void> {
-    const inDiscoveryExperiment = await isComponentEnabled();
+    const inDiscoveryExperiment = await isComponentEnabled().catch(() => false);
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
     if (!inDiscoveryExperiment) {
         serviceManager.addSingleton<IInterpreterLocatorService>(
