@@ -116,7 +116,8 @@ export class ExperimentService implements IExperimentService {
             // short circuit and return. So, printing out additional experiment info might cause
             // confusion. So skip printing out any specific experiment details to the log.
             return;
-        } else if (this._optInto.includes('All')) {
+        }
+        if (this._optInto.includes('All')) {
             // Only if 'All' is not in optOut then check if it is in Opt In.
             this.output.appendLine(Experiments.inGroup().format('All'));
 
