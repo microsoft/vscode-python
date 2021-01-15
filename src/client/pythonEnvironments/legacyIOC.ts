@@ -52,7 +52,7 @@ import {
     GlobalVirtualEnvService,
 } from './discovery/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from './discovery/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from './discovery/locators/services/hashProviderFactory';
+import { InterpreterHashProviderFactory } from './discovery/locators/services/hashProviderFactory';
 import { InterpreterWatcherBuilder } from './discovery/locators/services/interpreterWatcherBuilder';
 import { KnownPathsService, KnownSearchPathsForInterpreters } from './discovery/locators/services/KnownPathsService';
 import { PipEnvService } from './discovery/locators/services/pipEnvService';
@@ -431,9 +431,9 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
     );
     serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
     serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-    serviceManager.addSingleton<InterpeterHashProviderFactory>(
-        InterpeterHashProviderFactory,
-        InterpeterHashProviderFactory,
+    serviceManager.addSingleton<InterpreterHashProviderFactory>(
+        InterpreterHashProviderFactory,
+        InterpreterHashProviderFactory,
     );
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
         IVirtualEnvironmentsSearchPathProvider,

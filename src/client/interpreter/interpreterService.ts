@@ -20,7 +20,7 @@ import {
 } from '../common/types';
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
-import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
+import { InterpreterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { inDiscoveryExperiment } from '../pythonEnvironments/legacyIOC';
 import { captureTelemetry } from '../telemetry';
@@ -84,7 +84,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory,
+        @inject(InterpreterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory,
         @inject(IComponentAdapter) private readonly pyenvs: IComponent,
     ) {
         this.persistentStateFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
