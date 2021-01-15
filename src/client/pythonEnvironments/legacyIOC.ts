@@ -395,12 +395,12 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
             IKnownSearchPathsForInterpreters,
             KnownSearchPathsForInterpreters,
         );
+        serviceManager.addSingleton<IInterpreterLocatorProgressService>(
+            IInterpreterLocatorProgressService,
+            InterpreterLocatorProgressService,
+        );
+        serviceManager.addBinding(IInterpreterLocatorProgressService, IExtensionSingleActivationService);
     }
-    serviceManager.addSingleton<IInterpreterLocatorProgressService>(
-        IInterpreterLocatorProgressService,
-        InterpreterLocatorProgressService,
-    );
-    serviceManager.addBinding(IInterpreterLocatorProgressService, IExtensionSingleActivationService);
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
         CurrentPathService,
