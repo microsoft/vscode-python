@@ -118,7 +118,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     await setExtensionInstallTelemetryProperties(fs);
 
     const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
-    const {enableProposedApi} = applicationEnv.packageJson;
+    const { enableProposedApi } = applicationEnv.packageJson;
     serviceManager.addSingletonInstance<boolean>(UseProposedApi, enableProposedApi);
     // Feature specific registrations.
     variableRegisterTypes(serviceManager);
