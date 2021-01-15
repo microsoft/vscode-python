@@ -400,6 +400,7 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
         IInterpreterLocatorProgressService,
         InterpreterLocatorProgressService,
     );
+    serviceManager.addBinding(IInterpreterLocatorProgressService, IExtensionSingleActivationService);
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
         CurrentPathService,

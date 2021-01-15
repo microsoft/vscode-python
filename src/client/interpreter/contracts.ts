@@ -1,5 +1,6 @@
 import { SemVer } from 'semver';
 import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { Resource } from '../common/types';
 import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/discovery/locators/services/conda';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
@@ -132,10 +133,9 @@ export interface IInterpreterLocatorProgressHandler {
 }
 
 export const IInterpreterLocatorProgressService = Symbol('IInterpreterLocatorProgressService');
-export interface IInterpreterLocatorProgressService {
+export interface IInterpreterLocatorProgressService extends IExtensionSingleActivationService {
     readonly onRefreshing: Event<void>;
     readonly onRefreshed: Event<void>;
-    register(): void;
 }
 
 export const IInterpreterStatusbarVisibilityFilter = Symbol('IInterpreterStatusbarVisibilityFilter');

@@ -46,7 +46,7 @@ suite('Interpreters - Locator Progress', () => {
         const locator = new Locator();
         when(serviceContainer.getAll(anything())).thenReturn([locator]);
         const progress = new InterpreterLocatorProgressService(instance(serviceContainer), []);
-        progress.register();
+        await progress.activate();
 
         let refreshingInvoked = false;
         progress.onRefreshing(() => {
@@ -67,7 +67,7 @@ suite('Interpreters - Locator Progress', () => {
         const locator = new Locator();
         when(serviceContainer.getAll(anything())).thenReturn([locator]);
         const progress = new InterpreterLocatorProgressService(instance(serviceContainer), []);
-        progress.register();
+        await progress.activate();
 
         let refreshingInvoked = false;
         progress.onRefreshing(() => {
@@ -93,7 +93,7 @@ suite('Interpreters - Locator Progress', () => {
         const locator3 = new Locator();
         when(serviceContainer.getAll(anything())).thenReturn([locator1, locator2, locator3]);
         const progress = new InterpreterLocatorProgressService(instance(serviceContainer), []);
-        progress.register();
+        await progress.activate();
 
         let refreshingInvoked = false;
         progress.onRefreshing(() => {

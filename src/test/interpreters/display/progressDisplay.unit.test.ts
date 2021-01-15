@@ -29,8 +29,8 @@ suite('Interpreters - Display Progress', () => {
             refreshedCallback = listener;
             return { dispose: noop };
         },
-        register(): void {
-            noop();
+        activate(): Promise<void> {
+            return Promise.resolve();
         },
     };
 
