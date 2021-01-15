@@ -21,7 +21,7 @@ suite('Language Server: Definition Navigation', () => {
 
     suiteSetup(async () => {
         await initialize();
-        initializeDI();
+        await initializeDI();
         isPython2 = (await ioc.getPythonMajorVersion(rootWorkspaceUri!)) === 2;
     });
     setup(initializeTest);
@@ -31,13 +31,13 @@ suite('Language Server: Definition Navigation', () => {
         await ioc.dispose();
     });
 
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
         ioc.registerInterpreterStorageTypes();
-        ioc.registerMockInterpreterTypes();
+        await ioc.registerMockInterpreterTypes();
     }
 
     const assertFile = (expectedLocation: string, location: vscode.Uri) => {

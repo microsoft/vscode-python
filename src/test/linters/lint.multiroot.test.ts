@@ -33,7 +33,7 @@ suite('Multiroot Linting', () => {
         return initialize();
     });
     setup(async () => {
-        initializeDI();
+        await initializeDI();
         await initializeTest();
     });
     suiteTeardown(closeActiveWindows);
@@ -43,14 +43,14 @@ suite('Multiroot Linting', () => {
         PythonSettings.dispose();
     });
 
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes(false);
         ioc.registerProcessTypes();
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
         ioc.registerFileSystemTypes();
-        ioc.registerMockInterpreterTypes();
+        await ioc.registerMockInterpreterTypes();
         ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
         ioc.serviceManager.addSingleton<IProductPathService>(

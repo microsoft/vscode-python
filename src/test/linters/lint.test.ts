@@ -41,7 +41,7 @@ suite('Linting Settings', () => {
         await initialize();
     });
     setup(async () => {
-        initializeDI();
+        await initializeDI();
         await initializeTest();
     });
     suiteTeardown(closeActiveWindows);
@@ -51,7 +51,7 @@ suite('Linting Settings', () => {
         await resetSettings();
     });
 
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes(false);
         ioc.registerProcessTypes();

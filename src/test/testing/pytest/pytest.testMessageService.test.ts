@@ -147,7 +147,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
         await initialize();
         await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
     });
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
         ioc.registerUnitTestTypes();
@@ -166,7 +166,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
             let testMessages: IPythonTestMessage[];
             suiteSetup(async () => {
                 await initializeTest();
-                initializeDI();
+                await initializeDI();
                 // Setup the service container for use by the parser.
                 const testVisitor = typeMoq.Mock.ofType<ITestVisitor>();
                 const outChannel = typeMoq.Mock.ofType<vscode.OutputChannel>();

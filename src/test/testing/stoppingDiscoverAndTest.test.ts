@@ -36,11 +36,11 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
     suiteSetup(initialize);
     setup(async () => {
         await initializeTest();
-        initializeDI();
+        await initializeDI();
     });
     teardown(() => ioc.dispose());
 
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
         ioc.registerProcessTypes();
@@ -53,7 +53,7 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
         ioc.registerTestsHelper();
         ioc.registerTestDiagnosticServices();
         ioc.registerInterpreterStorageTypes();
-        ioc.registerMockInterpreterTypes();
+        await ioc.registerMockInterpreterTypes();
     }
 
     test('Running tests should not stop existing discovery', async () => {

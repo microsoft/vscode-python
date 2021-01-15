@@ -163,7 +163,7 @@ suite('Module Installer', () => {
         suiteSetup(initializeTest);
         setup(async () => {
             chai_should();
-            initializeDI();
+            await initializeDI();
             await initializeTest();
             await resetSettings();
         });
@@ -175,7 +175,7 @@ suite('Module Installer', () => {
             await closeActiveWindows();
         });
 
-        function initializeDI() {
+        async function initializeDI() {
             ioc = new UnitTestIocContainer();
             ioc.registerUnitTestTypes();
             ioc.registerVariableTypes();
@@ -218,7 +218,7 @@ suite('Module Installer', () => {
             ioc.registerMockProcessTypes();
             ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
 
-            ioc.registerMockInterpreterTypes();
+            await ioc.registerMockInterpreterTypes();
             condaService = TypeMoq.Mock.ofType<ICondaService>();
             ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, condaService.object);
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();

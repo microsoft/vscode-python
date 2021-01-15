@@ -23,7 +23,7 @@ suite('Language Server: Autocomplete PEP 526', () => {
         }
 
         await initialize();
-        initializeDI();
+        await initializeDI();
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -31,7 +31,7 @@ suite('Language Server: Autocomplete PEP 526', () => {
         await closeActiveWindows();
         await ioc.dispose();
     });
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();

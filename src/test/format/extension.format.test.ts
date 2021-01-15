@@ -42,7 +42,7 @@ suite('Formatting - General', () => {
 
         return this.skip();
         await initialize();
-        initializeDI();
+        await initializeDI();
         [autoPep8FileToFormat, blackFileToFormat, yapfFileToFormat].forEach((file) => {
             fs.copySync(originalUnformattedFile, file, { overwrite: true });
         });
@@ -85,7 +85,7 @@ suite('Formatting - General', () => {
 
         // Mocks.
         ioc.registerMockProcessTypes();
-        ioc.registerMockInterpreterTypes();
+        await ioc.registerMockInterpreterTypes();
 
         await registerForIOC(ioc.serviceManager, ioc.serviceContainer);
     }

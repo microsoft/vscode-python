@@ -24,8 +24,8 @@ suite('Interpreters from Conda Environments', () => {
     let condaService: TypeMoq.IMock<ICondaService>;
     let interpreterHelper: TypeMoq.IMock<InterpreterHelper>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
-    setup(() => {
-        initializeDI();
+    setup(async () => {
+        await initializeDI();
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
         serviceContainer
@@ -47,7 +47,7 @@ suite('Interpreters from Conda Environments', () => {
         );
     });
     teardown(() => ioc.dispose());
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();

@@ -19,7 +19,7 @@ suite('Language Server: Autocomplete PEP 484', () => {
     let ioc: UnitTestIocContainer;
     suiteSetup(async function () {
         await initialize();
-        initializeDI();
+        await initializeDI();
         isPython2 = (await ioc.getPythonMajorVersion(rootWorkspaceUri!)) === 2;
         if (isPython2) {
             this.skip();
@@ -32,13 +32,13 @@ suite('Language Server: Autocomplete PEP 484', () => {
         await closeActiveWindows();
         await ioc.dispose();
     });
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
         ioc.registerInterpreterStorageTypes();
-        ioc.registerMockInterpreterTypes();
+        await ioc.registerMockInterpreterTypes();
     }
 
     test('argument', async () => {

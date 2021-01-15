@@ -67,7 +67,7 @@ suite('Variable Extraction', () => {
         return closeActiveWindows();
     });
     setup(async () => {
-        initializeDI();
+        await initializeDI();
         refactorTargetFile = path.join(refactorTargetFileDir, `refactor${new Date().getTime()}.py`);
         fs.copySync(refactorSourceFile, refactorTargetFile, { overwrite: true });
         await initializeTest();
@@ -80,13 +80,13 @@ suite('Variable Extraction', () => {
         } catch {}
         await closeActiveWindows();
     });
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
         ioc.registerProcessTypes();
         ioc.registerVariableTypes();
         ioc.registerInterpreterStorageTypes();
-        ioc.registerMockInterpreterTypes();
+        await ioc.registerMockInterpreterTypes();
     }
     function createPythonExecGetter(workspaceRoot: string): () => Promise<IPythonExecutionService> {
         return async () => {

@@ -32,7 +32,7 @@ suite('Resolving Environment Variables when Debugging', () => {
     });
 
     setup(async () => {
-        initializeDI();
+        await initializeDI();
         await initializeTest();
         const envParser = ioc.serviceContainer.get<IEnvironmentVariablesService>(IEnvironmentVariablesService);
         const pathUtils = ioc.serviceContainer.get<IPathUtils>(IPathUtils);
@@ -46,7 +46,7 @@ suite('Resolving Environment Variables when Debugging', () => {
         await closeActiveWindows();
     });
 
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerProcessTypes();
         ioc.registerFileSystemTypes();

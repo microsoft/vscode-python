@@ -61,7 +61,7 @@ suite('Unit Tests - debugging', () => {
         this.timeout(TEST_TIMEOUT * 2); // This hook requires more timeout as we're deleting files as well
         await deleteDirectory(path.join(testFilesPath, '.cache'));
         await initializeTest();
-        initializeDI();
+        await initializeDI();
     });
     teardown(async function () {
         // It's been observed that each call to `updateSetting` can take upto 20 seconds on Windows, hence increasing timeout.
@@ -75,7 +75,7 @@ suite('Unit Tests - debugging', () => {
         ]);
     });
 
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
         ioc.registerProcessTypes();
@@ -91,7 +91,7 @@ suite('Unit Tests - debugging', () => {
         ioc.registerTestManagers();
         ioc.registerMockUnitTestSocketServer();
         ioc.registerInterpreterStorageTypes();
-        ioc.registerMockInterpreterTypes();
+        await ioc.registerMockInterpreterTypes();
         ioc.serviceManager.add<IArgumentsHelper>(IArgumentsHelper, ArgumentsHelper);
         ioc.serviceManager.add<ITestRunner>(ITestRunner, TestRunner);
         ioc.serviceManager.add<IXUnitParser>(IXUnitParser, XUnitParser);

@@ -296,10 +296,10 @@ export class IocContainer {
         );
     }
 
-    public registerMockInterpreterTypes() {
+    public async registerMockInterpreterTypes() {
         this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
         this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
-        registerForIOC(this.serviceManager, this.serviceContainer);
+        await registerForIOC(this.serviceManager, this.serviceContainer);
     }
 
     public registerMockProcess() {

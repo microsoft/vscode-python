@@ -33,7 +33,7 @@ suite('Language Server: Autocomplete Base Tests', function () {
 
         this.timeout(60000);
         await initialize();
-        initializeDI();
+        await initializeDI();
         skipTest = isOs(OSType.Windows) && (await isPythonVersion('3.8', '3.9'));
     });
     setup(initializeTest);
@@ -42,7 +42,7 @@ suite('Language Server: Autocomplete Base Tests', function () {
         await closeActiveWindows();
         await ioc.dispose();
     });
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();

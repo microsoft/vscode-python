@@ -30,7 +30,7 @@ suite('Unit Tests re-discovery', () => {
         await deleteDirectory(path.join(testFilesPath, '.cache'));
         await resetSettings();
         await initializeTest();
-        initializeDI();
+        await initializeDI();
     });
     teardown(async function () {
         // This is doing a lot more than what a teardown does normally, so increasing the timeout.
@@ -48,14 +48,14 @@ suite('Unit Tests re-discovery', () => {
         await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
     }
 
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
         ioc.registerProcessTypes();
         ioc.registerVariableTypes();
         ioc.registerUnitTestTypes();
         ioc.registerInterpreterStorageTypes();
-        ioc.registerMockInterpreterTypes();
+        await ioc.registerMockInterpreterTypes();
         ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
         ioc.serviceManager.rebindInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
     }
