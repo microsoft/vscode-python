@@ -44,7 +44,6 @@ import {
 import {
     IInterpreterDisplay,
     IInterpreterHelper,
-    IInterpreterLocatorProgressHandler,
     IInterpreterService,
     IInterpreterVersionService,
     IShebangCodeLensProvider,
@@ -94,7 +93,7 @@ suite('Interpreters - Service Registry', () => {
             [IInterpreterHelper, InterpreterHelper],
             [IInterpreterComparer, InterpreterComparer],
 
-            [IInterpreterLocatorProgressHandler, InterpreterLocatorProgressStatubarHandler],
+            [IExtensionSingleActivationService, InterpreterLocatorProgressStatubarHandler],
 
             [IInterpreterAutoSelectionRule, CurrentPathInterpretersAutoSelectionRule, AutoSelectionRule.currentPath],
             [IInterpreterAutoSelectionRule, SystemWideInterpretersAutoSelectionRule, AutoSelectionRule.systemWide],

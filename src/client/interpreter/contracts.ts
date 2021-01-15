@@ -127,11 +127,6 @@ export interface IInterpreterWatcherBuilder {
     getWorkspaceVirtualEnvInterpreterWatcher(resource: Resource): Promise<IInterpreterWatcher>;
 }
 
-export const IInterpreterLocatorProgressHandler = Symbol('IInterpreterLocatorProgressHandler');
-export interface IInterpreterLocatorProgressHandler {
-    register(): void;
-}
-
 export const IInterpreterLocatorProgressService = Symbol('IInterpreterLocatorProgressService');
 export interface IInterpreterLocatorProgressService extends IExtensionSingleActivationService {
     readonly onRefreshing: Event<void>;

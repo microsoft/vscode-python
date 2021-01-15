@@ -117,7 +117,7 @@ function createNonWorkspaceLocators(ext: ExtensionState): ILocator[] {
             // Windows specific locators go here.
             new WindowsRegistryLocator(),
             new WindowsStoreLocator(),
-            new WindowsPathEnvVarLocator(),
+            // new WindowsPathEnvVarLocator(),
         ];
     } else {
         locators = [
