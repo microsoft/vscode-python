@@ -30,7 +30,6 @@ export interface IVirtualEnvironmentsSearchPathProvider {
 
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
-    readonly enabled: boolean;
     // VirtualEnvPrompt
     onDidCreate(resource: Resource, callback: () => void): Disposable | undefined;
     // IInterpreterLocatorService

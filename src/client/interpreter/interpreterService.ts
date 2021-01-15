@@ -22,6 +22,7 @@ import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
+import { inDiscoveryExperiment } from '../pythonEnvironments/legacyIOC';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import {
@@ -40,7 +41,6 @@ const EXPITY_DURATION = 24 * 60 * 60 * 1000;
 
 // The parts of IComponentAdapter used here.
 interface IComponent {
-    readonly enabled: boolean;
     hasInterpreters: Promise<boolean | undefined>;
     getInterpreterDetails(pythonPath: string): Promise<undefined | PythonEnvironment>;
     getInterpreters(resource?: Uri): Promise<PythonEnvironment[] | undefined>;
@@ -161,13 +161,15 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public dispose(): void {
-        if (!this.pyenvs.enabled) {
-            const locator = this.serviceContainer.get<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                INTERPRETER_LOCATOR_SERVICE,
-            );
-            locator.dispose();
-        }
+        inDiscoveryExperiment().then((inExp) => {
+            if (!inExp) {
+                const locator = this.serviceContainer.get<IInterpreterLocatorService>(
+                    IInterpreterLocatorService,
+                    INTERPRETER_LOCATOR_SERVICE,
+                );
+                locator.dispose();
+            }
+        });
         this.didChangeInterpreterEmitter.dispose();
         this.didChangeInterpreterInformation.dispose();
     }

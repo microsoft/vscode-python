@@ -132,7 +132,7 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     return env;
 }
 
-export async function isComponentEnabled(): Promise<boolean> {
+export async function inDiscoveryExperiment(): Promise<boolean> {
     const results = await Promise.all([
         inExperiment(DiscoveryVariants.discoverWithFileWatching),
         inExperiment(DiscoveryVariants.discoveryWithoutFileWatching),
@@ -145,7 +145,7 @@ export interface IPythonEnvironments extends ILocator {}
 @injectable()
 class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationService {
     // this will be set based on experiment
-    public enabled = false;
+    private enabled = false;
 
     private readonly refreshing = new vscode.EventEmitter<void>();
 
@@ -159,7 +159,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     ) {}
 
     public async activate(): Promise<void> {
-        this.enabled = await isComponentEnabled();
+        this.enabled = await inDiscoveryExperiment();
         this.disposables.push(
             this.api.onChanged((e) => {
                 const query = {
@@ -351,7 +351,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
 }
 
 export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): Promise<void> {
-    const inDiscoveryExperiment = await isComponentEnabled().catch((ex) => {
+    const inExp = await inDiscoveryExperiment().catch((ex) => {
         // This is mainly to support old tests, where IExperimentService was registered
         // out of sequence / or not registered, so this throws an error. But we do not
         // care about that error as we don't care about IExperimentService in old tests.
@@ -359,7 +359,7 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
         traceError('Failed to not register old code when in Discovery experiment', ex);
         return false;
     });
-    if (!inDiscoveryExperiment) {
+    if (!inExp) {
         serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
         serviceManager.addSingleton<IInterpreterLocatorService>(
             IInterpreterLocatorService,
