@@ -58,9 +58,9 @@ import { WorkspaceVirtualEnvWatcherService } from '../../client/pythonEnvironmen
 import { registerLegacyDiscoveryForIOC } from '../../client/pythonEnvironments/legacyIOC';
 
 suite('Interpreters - Service Registry', () => {
-    test('Registrations', () => {
+    test('Registrations', async () => {
         const serviceManager = mock(ServiceManager);
-        registerLegacyDiscoveryForIOC(instance(serviceManager));
+        await registerLegacyDiscoveryForIOC(instance(serviceManager));
         verify(serviceManager.addSingleton(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters)).once();
         verify(
             serviceManager.addSingleton(
