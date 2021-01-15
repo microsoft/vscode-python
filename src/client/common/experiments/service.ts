@@ -22,6 +22,7 @@ export class ExperimentService implements IExperimentService {
      * Experiments the user requested to opt into manually.
      */
     public _optInto: string[] = [];
+
     /**
      * Experiments the user requested to opt out from manually.
      */
@@ -100,18 +101,56 @@ export class ExperimentService implements IExperimentService {
 
     public async getExperimentValue<T extends boolean | number | string>(experiment: string): Promise<T | undefined> {
         if (!this.experimentationService || this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
-            return;
+            return undefined;
         }
 
         return this.experimentationService.getTreatmentVariableAsync('vscode', experiment);
     }
 
     private logExperiments() {
+        if (this._optOutFrom.includes('All')) {
+            // We prioritize opt out first
+            this.output.appendLine(Experiments.optedOutOf().format('All'));
+
+            // Since we are in the Opt Out all case, this means when checking for experiment we
+            // short circuit and return. So, printing out additional experiment info might cause
+            // confusion. So skip printing out any specific experiment details to the log.
+            return;
+        }
+        if (this._optInto.includes('All')) {
+            // Only if 'All' is not in optOut then check if it is in Opt In.
+            this.output.appendLine(Experiments.inGroup().format('All'));
+
+            // Similar to the opt out case. If user is opting into to all experiments we short
+            // circuit the experiment checks. So, skip printing any additional details to the logs.
+            return;
+        }
+
         const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
 
+        // Log experiments that users manually opt out, these are experiments which are added using the exp framework.
+        this._optOutFrom
+            .filter((exp) => exp !== 'All' && exp.toLowerCase().startsWith('python'))
+            .forEach((exp) => {
+                this.output.appendLine(Experiments.optedOutOf().format(exp));
+            });
+
+        // Log experiments that users manually opt into, these are experiments which are added using the exp framework.
+        this._optInto
+            .filter((exp) => exp !== 'All' && exp.toLowerCase().startsWith('python'))
+            .forEach((exp) => {
+                this.output.appendLine(Experiments.inGroup().format(exp));
+            });
+
+        // Log experiments that users are added to by the exp framework
         experiments.features.forEach((exp) => {
-            // Filter out experiments groups that are not from the Python extension.
-            if (exp.toLowerCase().startsWith('python')) {
+            // Filter out experiment groups that are not from the Python extension.
+            // Filter out experiment groups that are not already opted out or opted into.
+            if (
+                exp.toLowerCase().startsWith('python') &&
+                !this._optOutFrom.includes(exp) &&
+                !this._optInto.includes(exp)
+            ) {
                 this.output.appendLine(Experiments.inGroup().format(exp));
             }
         });

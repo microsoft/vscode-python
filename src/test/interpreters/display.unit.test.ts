@@ -117,7 +117,8 @@ suite('Interpreters Display', () => {
         createInterpreterDisplay();
     });
     function createInterpreterDisplay(filters: IInterpreterStatusbarVisibilityFilter[] = []) {
-        interpreterDisplay = new InterpreterDisplay(serviceContainer.object, filters);
+        interpreterDisplay = new InterpreterDisplay(serviceContainer.object);
+        filters.forEach((f) => interpreterDisplay.registerVisibilityFilter(f));
     }
     function setupWorkspaceFolder(resource: Uri, workspaceFolder?: Uri) {
         if (workspaceFolder) {

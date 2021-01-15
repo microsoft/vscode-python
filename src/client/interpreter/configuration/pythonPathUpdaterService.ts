@@ -9,21 +9,25 @@ import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PythonInterpreterTelemetry } from '../../telemetry/types';
-import { IInterpreterVersionService } from '../contracts';
+import { IComponentAdapter } from '../contracts';
 import { IPythonPathUpdaterServiceFactory, IPythonPathUpdaterServiceManager } from './types';
 
 @injectable()
 export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManager {
     private readonly pythonPathSettingsUpdaterFactory: IPythonPathUpdaterServiceFactory;
-    private readonly interpreterVersionService: IInterpreterVersionService;
+
     private readonly executionFactory: IPythonExecutionFactory;
+
+    private readonly componentAdapter: IComponentAdapter;
+
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.pythonPathSettingsUpdaterFactory = serviceContainer.get<IPythonPathUpdaterServiceFactory>(
             IPythonPathUpdaterServiceFactory,
         );
-        this.interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
         this.executionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        this.componentAdapter = serviceContainer.get<IComponentAdapter>(IComponentAdapter);
     }
+
     public async updatePythonPath(
         pythonPath: string | undefined,
         configTarget: ConfigurationTarget,
@@ -47,6 +51,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
             traceError('Python Extension: sendTelemetry', ex),
         );
     }
+
     private async sendTelemetry(
         duration: number,
         failed: boolean,
@@ -58,27 +63,26 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
             trigger,
         };
         if (!failed && pythonPath) {
-            const processService = await this.executionFactory.create({ pythonPath });
-            const infoPromise = processService
-                .getInterpreterInformation()
-                .catch<InterpreterInformation | undefined>(() => undefined);
-            const pipVersionPromise = this.interpreterVersionService
-                .getPipVersion(pythonPath)
-                .then((value) => (value.length === 0 ? undefined : value))
-                .catch<string>(() => '');
-            const [info, pipVersion] = await Promise.all([infoPromise, pipVersionPromise]);
-            if (info) {
-                telemetryProperties.architecture = info.architecture;
-                if (info.version) {
+            // Ask for info using the new discovery code first.
+            // If it returns undefined, fallback on the old code.
+            const interpreterInfo = await this.componentAdapter.getInterpreterInformation(pythonPath);
+            if (interpreterInfo && interpreterInfo.version) {
+                telemetryProperties.pythonVersion = interpreterInfo.version.raw;
+            } else {
+                const processService = await this.executionFactory.create({ pythonPath });
+                const info = await processService
+                    .getInterpreterInformation()
+                    .catch<InterpreterInformation | undefined>(() => undefined);
+
+                if (info && info.version) {
                     telemetryProperties.pythonVersion = info.version.raw;
                 }
             }
-            if (pipVersion) {
-                telemetryProperties.pipVersion = pipVersion;
-            }
         }
+
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER, duration, telemetryProperties);
     }
+
     private getPythonUpdaterService(configTarget: ConfigurationTarget, wkspace?: Uri) {
         switch (configTarget) {
             case ConfigurationTarget.Global: {

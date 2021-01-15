@@ -11,7 +11,6 @@ import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID
 import { traceError, traceInfo } from '../common/logger';
 import { Telemetry } from '../common/startPage/constants';
 import type { TerminalShellType } from '../common/terminal/types';
-import { Architecture } from '../common/utils/platform';
 import { StopWatch } from '../common/utils/stopWatch';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
@@ -933,18 +932,6 @@ export interface IEventNamePropertyMapping {
          * @type {string}
          */
         pythonVersion?: string;
-        /**
-         * The version of pip module installed in the python interpreter
-         *
-         * @type {string}
-         */
-        pipVersion?: string;
-        /**
-         * The bit-ness of the python interpreter represented using architecture.
-         *
-         * @type {Architecture}
-         */
-        architecture?: Architecture;
     };
     [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: {
         /**

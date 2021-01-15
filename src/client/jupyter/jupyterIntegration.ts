@@ -24,7 +24,11 @@ import { isResource } from '../common/utils/misc';
 import { getDebugpyPackagePath } from '../debugger/extension/adapter/remoteLaunchers';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
-import { IInterpreterService } from '../interpreter/contracts';
+import {
+    IInterpreterDisplay,
+    IInterpreterService,
+    IInterpreterStatusbarVisibilityFilter,
+} from '../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../interpreter/locators/types';
 import { WindowsStoreInterpreter } from '../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { PythonEnvironment } from '../pythonEnvironments/info';
@@ -109,6 +113,10 @@ type PythonApiForJupyterExtension = {
      * @param resource file that determines which connection to return
      */
     getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined>;
+    /**
+     * Registers a visibility filter for the interpreter status bar.
+     */
+    registerInterpreterStatusFilter(filter: IInterpreterStatusbarVisibilityFilter): void;
 };
 
 export type JupyterExtensionApi = {
@@ -143,6 +151,7 @@ export class JupyterExtensionIntegration {
         @inject(IEnvironmentActivationService) private readonly envActivation: IEnvironmentActivationService,
         @inject(ILanguageServerCache) private readonly languageServerCache: ILanguageServerCache,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
+        @inject(IInterpreterDisplay) private interpreterDisplay: IInterpreterDisplay,
     ) {}
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
@@ -185,6 +194,9 @@ export class JupyterExtensionIntegration {
                 }
                 return undefined;
             },
+            registerInterpreterStatusFilter: this.interpreterDisplay.registerVisibilityFilter.bind(
+                this.interpreterDisplay,
+            ),
         });
         return undefined;
     }
