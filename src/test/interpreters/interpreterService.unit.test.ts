@@ -43,7 +43,7 @@ import {
     INTERPRETER_LOCATOR_SERVICE,
 } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { IInterpreterHashProvider, IInterpreterHashProviderFactory } from '../../client/interpreter/locators/types';
+import { IInterpreterHashProvider } from '../../client/interpreter/locators/types';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -73,7 +73,7 @@ suite('Interpreters service', () => {
     let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
     let experimentService: TypeMoq.IMock<IExperimentService>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
-    let hashProviderFactory: TypeMoq.IMock<IInterpreterHashProviderFactory>;
+    let hashProvider: TypeMoq.IMock<IInterpreterHashProvider>;
 
     function setupSuite() {
         const cont = new Container();
@@ -96,7 +96,7 @@ suite('Interpreters service', () => {
         pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
         pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
-        hashProviderFactory = TypeMoq.Mock.ofType<IInterpreterHashProviderFactory>();
+        hashProvider = TypeMoq.Mock.ofType<IInterpreterHashProvider>();
 
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         pythonSettings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
@@ -174,7 +174,7 @@ suite('Interpreters service', () => {
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.once());
 
-                const service = new InterpreterService(serviceContainer, hashProviderFactory.object, pyenvs.object);
+                const service = new InterpreterService(serviceContainer, hashProvider.object, pyenvs.object);
                 await service.refresh(resource);
 
                 interpreterDisplay.verifyAll();
@@ -186,7 +186,7 @@ suite('Interpreters service', () => {
                     .returns(() => Promise.resolve([]))
                     .verifiable(TypeMoq.Times.once());
 
-                const service = new InterpreterService(serviceContainer, hashProviderFactory.object, pyenvs.object);
+                const service = new InterpreterService(serviceContainer, hashProvider.object, pyenvs.object);
                 await service.getInterpreters(resource);
 
                 locator.verifyAll();
@@ -194,7 +194,7 @@ suite('Interpreters service', () => {
         });
 
         test('Changes to active document should invoke interpreter.refresh method', async () => {
-            const service = new InterpreterService(serviceContainer, hashProviderFactory.object, pyenvs.object);
+            const service = new InterpreterService(serviceContainer, hashProvider.object, pyenvs.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
             experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
@@ -224,7 +224,7 @@ suite('Interpreters service', () => {
         });
 
         test('If there is no active document then interpreter.refresh should not be invoked', async () => {
-            const service = new InterpreterService(serviceContainer, hashProviderFactory.object, pyenvs.object);
+            const service = new InterpreterService(serviceContainer, hashProvider.object, pyenvs.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
             experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
@@ -249,7 +249,7 @@ suite('Interpreters service', () => {
         });
 
         test('If user belongs to Deprecate Pythonpath experiment, register the correct handler', async () => {
-            const service = new InterpreterService(serviceContainer, hashProviderFactory.object, pyenvs.object);
+            const service = new InterpreterService(serviceContainer, hashProvider.object, pyenvs.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
             experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
@@ -295,7 +295,7 @@ suite('Interpreters service', () => {
         });
 
         test('If stored setting is an empty string, refresh the interpreter display', async () => {
-            const service = new InterpreterService(serviceContainer, hashProviderFactory.object, pyenvs.object);
+            const service = new InterpreterService(serviceContainer, hashProvider.object, pyenvs.object);
             const resource = Uri.parse('a');
             service._pythonPathSetting = '';
             configService.reset();
@@ -309,7 +309,7 @@ suite('Interpreters service', () => {
         });
 
         test('If stored setting is not equal to current interpreter path setting, refresh the interpreter display', async () => {
-            const service = new InterpreterService(serviceContainer, hashProviderFactory.object, pyenvs.object);
+            const service = new InterpreterService(serviceContainer, hashProvider.object, pyenvs.object);
             const resource = Uri.parse('a');
             service._pythonPathSetting = 'stored setting';
             configService.reset();
@@ -323,7 +323,7 @@ suite('Interpreters service', () => {
         });
 
         test('If stored setting is equal to current interpreter path setting, do not refresh the interpreter display', async () => {
-            const service = new InterpreterService(serviceContainer, hashProviderFactory.object, pyenvs.object);
+            const service = new InterpreterService(serviceContainer, hashProvider.object, pyenvs.object);
             const resource = Uri.parse('a');
             service._pythonPathSetting = 'setting';
             configService.reset();
@@ -342,7 +342,7 @@ suite('Interpreters service', () => {
         [undefined, Uri.file('some workspace')].forEach((resource) => {
             test(`Ensure undefined is returned if we're unable to retrieve interpreter info (Resource is ${resource})`, async () => {
                 const pythonPath = 'SOME VALUE';
-                const service = new InterpreterService(serviceContainer, hashProviderFactory.object, pyenvs.object);
+                const service = new InterpreterService(serviceContainer, hashProvider.object, pyenvs.object);
                 locator
                     .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve([]))
@@ -396,7 +396,7 @@ suite('Interpreters service', () => {
                 })
                 .verifiable(TypeMoq.Times.once());
 
-            const service = new InterpreterService(serviceContainer, hashProviderFactory.object, pyenvs.object);
+            const service = new InterpreterService(serviceContainer, hashProvider.object, pyenvs.object);
             const displayName = await service.getDisplayName(interpreterInfo, undefined);
 
             expect(displayName).to.equal(expectedDisplayName);
@@ -406,11 +406,6 @@ suite('Interpreters service', () => {
             const pythonPath = '1234';
             const interpreterInfo: Partial<PythonEnvironment> = { path: pythonPath };
             const fileHash = 'File_Hash';
-            const hashProvider = TypeMoq.Mock.ofType<IInterpreterHashProvider>();
-            hashProviderFactory
-                .setup((factory) => factory.create(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve(hashProvider.object))
-                .verifiable(TypeMoq.Times.atLeastOnce());
             hashProvider
                 .setup((provider) => provider.getInterpreterHash(TypeMoq.It.isValue(pythonPath)))
                 .returns(() => Promise.resolve(fileHash))
@@ -428,11 +423,10 @@ suite('Interpreters service', () => {
                 })
                 .verifiable(TypeMoq.Times.once());
 
-            const service = new InterpreterService(serviceContainer, hashProviderFactory.object, pyenvs.object);
+            const service = new InterpreterService(serviceContainer, hashProvider.object, pyenvs.object);
             const displayName = await service.getDisplayName(interpreterInfo, undefined).catch(() => '');
 
             expect(displayName).to.not.equal(expectedDisplayName);
-            hashProviderFactory.verifyAll();
             hashProvider.verifyAll();
             persistentStateFactory.verifyAll();
         });
@@ -510,7 +504,7 @@ suite('Interpreters service', () => {
 
                                                 const service = new InterpreterService(
                                                     serviceContainer,
-                                                    hashProviderFactory.object,
+                                                    hashProvider.object,
                                                     pyenvs.object,
                                                 );
                                                 const expectedDisplayName = buildDisplayName(interpreterInfo);
@@ -577,11 +571,6 @@ suite('Interpreters service', () => {
         test('Ensure cache is returned', async () => {
             const fileHash = 'file_hash';
             const pythonPath = 'Some Python Path';
-            const hashProvider = TypeMoq.Mock.ofType<IInterpreterHashProvider>();
-            hashProviderFactory
-                .setup((factory) => factory.create(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve(hashProvider.object))
-                .verifiable(TypeMoq.Times.atLeastOnce());
             hashProvider
                 .setup((provider) => provider.getInterpreterHash(TypeMoq.It.isValue(pythonPath)))
                 .returns(() => Promise.resolve(fileHash))
@@ -609,24 +598,18 @@ suite('Interpreters service', () => {
                 .returns(() => state.object)
                 .verifiable(TypeMoq.Times.once());
 
-            const service = new InterpreterService(serviceContainer, hashProviderFactory.object, pyenvs.object);
+            const service = new InterpreterService(serviceContainer, hashProvider.object, pyenvs.object);
 
             const store = await service.getInterpreterCache(pythonPath);
 
             expect(store.value).to.deep.equal({ fileHash, info });
             state.verifyAll();
             persistentStateFactory.verifyAll();
-            hashProviderFactory.verifyAll();
             hashProvider.verifyAll();
         });
         test('Ensure cache is cleared if file hash is different', async () => {
             const fileHash = 'file_hash';
             const pythonPath = 'Some Python Path';
-            const hashProvider = TypeMoq.Mock.ofType<IInterpreterHashProvider>();
-            hashProviderFactory
-                .setup((factory) => factory.create(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve(hashProvider.object))
-                .verifiable(TypeMoq.Times.atLeastOnce());
             hashProvider
                 .setup((provider) => provider.getInterpreterHash(TypeMoq.It.isValue(pythonPath)))
                 .returns(() => Promise.resolve('different value'))
@@ -654,14 +637,13 @@ suite('Interpreters service', () => {
                 .returns(() => state.object)
                 .verifiable(TypeMoq.Times.once());
 
-            const service = new InterpreterService(serviceContainer, hashProviderFactory.object, pyenvs.object);
+            const service = new InterpreterService(serviceContainer, hashProvider.object, pyenvs.object);
 
             const store = await service.getInterpreterCache(pythonPath);
 
             expect(store.value.info).to.deep.equal(info);
             state.verifyAll();
             persistentStateFactory.verifyAll();
-            hashProviderFactory.verifyAll();
             hashProvider.verifyAll();
         });
     });

@@ -16,23 +16,12 @@ export interface IPipEnvServiceHelper {
 }
 
 /**
- * Factory to create a hash provider.
- * Getting the hash of an interpreter can vary based on the type of the interpreter.
- *
- * @export
- * @interface IInterpreterHashProviderFactory
- */
-export const IInterpreterHashProviderFactory = Symbol('IInterpreterHashProviderFactory');
-export interface IInterpreterHashProviderFactory {
-    create(options: { pythonPath: string } | { resource: Uri }): Promise<IInterpreterHashProvider>;
-}
-
-/**
  * Provides the ability to get the has of a given interpreter.
  *
  * @export
  * @interface IInterpreterHashProvider
  */
+export const IInterpreterHashProvider = Symbol('IInterpreterHashProvider');
 export interface IInterpreterHashProvider {
     /**
      * Gets the hash of a given Python Interpreter.

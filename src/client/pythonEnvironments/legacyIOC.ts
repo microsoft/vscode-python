@@ -30,7 +30,11 @@ import {
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../interpreter/contracts';
-import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
+import {
+    IInterpreterHashProvider,
+    IPipEnvServiceHelper,
+    IPythonInPathCommandProvider,
+} from '../interpreter/locators/types';
 import { IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
 import { buildEnvInfo } from './base/info/env';
@@ -52,7 +56,6 @@ import {
     GlobalVirtualEnvService,
 } from './discovery/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from './discovery/locators/services/hashProvider';
-import { InterpreterHashProviderFactory } from './discovery/locators/services/hashProviderFactory';
 import { InterpreterWatcherBuilder } from './discovery/locators/services/interpreterWatcherBuilder';
 import { KnownPathsService, KnownSearchPathsForInterpreters } from './discovery/locators/services/KnownPathsService';
 import { PipEnvService } from './discovery/locators/services/pipEnvService';
@@ -430,11 +433,8 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
         WORKSPACE_VIRTUAL_ENV_SERVICE,
     );
     serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-    serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-    serviceManager.addSingleton<InterpreterHashProviderFactory>(
-        InterpreterHashProviderFactory,
-        InterpreterHashProviderFactory,
-    );
+    serviceManager.addSingleton<IInterpreterHashProvider>(IInterpreterHashProvider, InterpreterHashProvider);
+
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
         IVirtualEnvironmentsSearchPathProvider,
         WorkspaceVirtualEnvironmentsSearchPathProvider,

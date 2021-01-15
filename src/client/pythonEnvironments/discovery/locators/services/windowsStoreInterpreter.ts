@@ -4,14 +4,8 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { traceDecorators } from '../../../../common/logger';
-import { IFileSystem } from '../../../../common/platform/types';
-import { IPythonExecutionFactory } from '../../../../common/process/types';
-import { IPersistentStateFactory } from '../../../../common/types';
 import { IComponentAdapter } from '../../../../interpreter/contracts';
-import { IInterpreterHashProvider, IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
-import { IServiceContainer } from '../../../../ioc/types';
+import { IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
 
 /**
  * When using Windows Store interpreter the path that should be used is under
@@ -58,16 +52,10 @@ interface IComponent {
  * @export
  * @class WindowsStoreInterpreter
  * @implements {IWindowsStoreInterpreter}
- * @implements {IInterpreterHashProvider}
  */
 @injectable()
-export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInterpreterHashProvider {
-    constructor(
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IPersistentStateFactory) private readonly persistentFactory: IPersistentStateFactory,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
-    ) {}
+export class WindowsStoreInterpreter implements IWindowsStoreInterpreter {
+    constructor(@inject(IComponentAdapter) private readonly pyenvs: IComponent) {}
 
     /**
      * Whether this is a Windows Store/App Interpreter.
@@ -100,47 +88,5 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
     // eslint-disable-next-line class-methods-use-this
     public isHiddenInterpreter(pythonPath: string): boolean {
         return isRestrictedWindowsStoreInterpreterPath(pythonPath);
-    }
-
-    /**
-     * Gets the hash of the Python interpreter (installed from the windows store).
-     * We need to use a special way to get the hash for these, by first resolving the
-     * path to the actual executable and then calculating the hash on that file.
-     *
-     * Using fs.lstat or similar nodejs functions do not work, as these are some weird form of symbolic linked files.
-     *
-     * Note: Store the hash in a temporary state store (as we're spawning processes here).
-     * Spawning processes to get a hash of a terminal is expensive.
-     * Hence to minimize resource usage (just to get a file hash), we will cache the generated hash for 1hr.
-     * (why 1hr, simple, why 2hrs, or 3hrs.)
-     * If user installs/updates/uninstalls Windows Store Python apps, 1hr is enough time to get things rolling again.
-     *
-     * @param {string} pythonPath
-     * @returns {Promise<string>}
-     * @memberof InterpreterHelper
-     */
-    @traceDecorators.error('Get Windows Store Interpreter Hash')
-    public async getInterpreterHash(pythonPath: string): Promise<string> {
-        const key = `WINDOWS_STORE_INTERPRETER_HASH_${pythonPath}`;
-        const stateStore = this.persistentFactory.createGlobalPersistentState<string | undefined>(
-            key,
-            undefined,
-            60 * 60 * 1000,
-        );
-
-        if (stateStore.value) {
-            return stateStore.value;
-        }
-        const executionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        const pythonService = await executionFactory.create({ pythonPath });
-        const executablePath = await pythonService.getExecutablePath();
-        // If we are unable to get file hash of executable, then get hash of parent directory.
-        // Its likely it will fail for the executable (fails during development, but try nevertheless - in case things start working).
-        const hash = await this.fs
-            .getFileHash(executablePath)
-            .catch(() => this.fs.getFileHash(path.dirname(executablePath)));
-        await stateStore.updateValue(hash);
-
-        return hash;
     }
 }

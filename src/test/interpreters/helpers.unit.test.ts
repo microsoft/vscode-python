@@ -10,7 +10,7 @@ import { ConfigurationTarget, TextDocument, TextEditor, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { IComponentAdapter } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
-import { IInterpreterHashProviderFactory } from '../../client/interpreter/locators/types';
+import { IInterpreterHashProvider } from '../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 suite('Interpreters Display Helper', () => {
@@ -18,13 +18,13 @@ suite('Interpreters Display Helper', () => {
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let helper: InterpreterHelper;
-    let hashProviderFactory: TypeMoq.IMock<IInterpreterHashProviderFactory>;
+    let hashProvider: TypeMoq.IMock<IInterpreterHashProvider>;
     let pyenvs: TypeMoq.IMock<IComponentAdapter>;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
-        hashProviderFactory = TypeMoq.Mock.ofType<IInterpreterHashProviderFactory>();
+        hashProvider = TypeMoq.Mock.ofType<IInterpreterHashProvider>();
         pyenvs = TypeMoq.Mock.ofType<IComponentAdapter>();
 
         serviceContainer
@@ -34,7 +34,7 @@ suite('Interpreters Display Helper', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IDocumentManager)))
             .returns(() => documentManager.object);
 
-        helper = new InterpreterHelper(serviceContainer.object, hashProviderFactory.object, pyenvs.object);
+        helper = new InterpreterHelper(serviceContainer.object, hashProvider.object, pyenvs.object);
     });
     test('getActiveWorkspaceUri should return undefined if there are no workspaces', () => {
         workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
