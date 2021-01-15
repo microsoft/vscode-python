@@ -200,7 +200,6 @@ src/test/common/terminals/environmentActivationProviders/pipEnvActivationProvide
 src/test/common/terminals/environmentActivationProviders/terminalActivation.testvirtualenvs.ts
 src/test/common/socketStream.test.ts
 src/test/common/configSettings.test.ts
-src/test/common/experiments/service.unit.test.ts
 src/test/common/experiments/manager.unit.test.ts
 src/test/common/experiments/telemetry.unit.test.ts
 src/test/common/platform/filesystem.unit.test.ts
@@ -373,7 +372,6 @@ src/client/interpreter/display/interpreterSelectionTip.ts
 
 src/client/api.ts
 src/client/extension.ts
-src/client/extensionActivation.ts
 src/client/sourceMapSupport.ts
 src/client/startupTelemetry.ts
 
@@ -553,7 +551,6 @@ src/client/common/markdown/restTextConverter.ts
 src/client/common/featureDeprecationManager.ts
 src/client/common/experiments/manager.ts
 src/client/common/experiments/telemetry.ts
-src/client/common/experiments/service.ts
 src/client/common/refBool.ts
 src/client/common/open.ts
 src/client/common/platform/serviceRegistry.ts
@@ -611,7 +608,6 @@ src/client/common/dotnet/services/linuxCompatibilityService.ts
 src/client/common/dotnet/services/windowsCompatibilityService.ts
 src/client/common/types.ts
 src/client/common/logger.ts
-src/client/common/configSettings.ts
 src/client/common/constants.ts
 src/client/common/variables/serviceRegistry.ts
 src/client/common/variables/environment.ts

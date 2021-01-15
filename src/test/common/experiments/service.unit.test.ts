@@ -1,3 +1,4 @@
+/* eslint-disable no-new */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -43,12 +44,16 @@ suite('Experimentation service', () => {
             get: (key: string) => {
                 if (key === 'experiments.enabled') {
                     return enabled;
-                } else if (key === 'experiments.optInto') {
+                }
+                if (key === 'experiments.optInto') {
                     return optInto;
-                } else if (key === 'experiments.optOutFrom') {
+                }
+                if (key === 'experiments.optOutFrom') {
                     return optOutFrom;
                 }
+                return undefined;
             },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
     }
 
@@ -65,6 +70,7 @@ suite('Experimentation service', () => {
             configureSettings(true, [], []);
             configureApplicationEnvironment('stable', extensionVersion);
 
+            // eslint-disable-next-line no-new
             new ExperimentService(instance(workspaceService), instance(appEnvironment), globalMemento, outputChannel);
 
             sinon.assert.calledWithExactly(
@@ -83,6 +89,7 @@ suite('Experimentation service', () => {
             configureSettings(true, [], []);
             configureApplicationEnvironment('insiders', extensionVersion);
 
+            // eslint-disable-next-line no-new
             new ExperimentService(instance(workspaceService), instance(appEnvironment), globalMemento, outputChannel);
 
             sinon.assert.calledWithExactly(
@@ -132,6 +139,7 @@ suite('Experimentation service', () => {
             configureSettings(true, [], []);
             configureApplicationEnvironment('stable', extensionVersion);
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             when(globalMemento.get(anything(), anything())).thenReturn({ features: experiments } as any);
 
             new ExperimentService(
@@ -148,14 +156,14 @@ suite('Experimentation service', () => {
 
     suite('In-experiment check', () => {
         const experiment = 'Test Experiment - experiment';
-        let telemetryEvents: { eventName: string; properties: object }[] = [];
+        let telemetryEvents: { eventName: string; properties: Record<string, unknown> }[] = [];
         let isCachedFlightEnabledStub: sinon.SinonStub;
         let sendTelemetryEventStub: sinon.SinonStub;
 
         setup(() => {
             sendTelemetryEventStub = sinon
                 .stub(Telemetry, 'sendTelemetryEvent')
-                .callsFake((eventName: string, _, properties: object) => {
+                .callsFake((eventName: string, _, properties: Record<string, unknown>) => {
                     const telemetry = { eventName, properties };
                     telemetryEvents.push(telemetry);
                 });
@@ -163,7 +171,7 @@ suite('Experimentation service', () => {
             isCachedFlightEnabledStub = sinon.stub().returns(Promise.resolve(true));
             sinon.stub(tasClient, 'getExperimentationService').returns({
                 isCachedFlightEnabled: isCachedFlightEnabledStub,
-            } as any);
+            } as never);
 
             configureApplicationEnvironment('stable', extensionVersion);
         });
@@ -293,7 +301,7 @@ suite('Experimentation service', () => {
             getTreatmentVariableAsyncStub = sinon.stub().returns(Promise.resolve('value'));
             sinon.stub(tasClient, 'getExperimentationService').returns({
                 getTreatmentVariableAsync: getTreatmentVariableAsyncStub,
-            } as any);
+            } as never);
 
             configureApplicationEnvironment('stable', extensionVersion);
         });

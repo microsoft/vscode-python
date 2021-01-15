@@ -71,6 +71,7 @@ import { Components } from './extensionInit';
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
     ext: ExtensionState,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _components: Components,
 ): Promise<ActivationResult[]> {
     // Note that each activation returns a promise that resolves
@@ -95,7 +96,7 @@ export async function activateComponents(
     return Promise.all(promises);
 }
 
-/////////////////////////////
+/// //////////////////////////
 // old activation code
 
 // TODO: Gradually move simple initialization
@@ -117,7 +118,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     await setExtensionInstallTelemetryProperties(fs);
 
     const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
-    const enableProposedApi = applicationEnv.packageJson.enableProposedApi;
+    const {enableProposedApi} = applicationEnv.packageJson;
     serviceManager.addSingletonInstance<boolean>(UseProposedApi, enableProposedApi);
     // Feature specific registrations.
     variableRegisterTypes(serviceManager);

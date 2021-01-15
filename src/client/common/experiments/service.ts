@@ -22,6 +22,7 @@ export class ExperimentService implements IExperimentService {
      * Experiments the user requested to opt into manually.
      */
     public _optInto: string[] = [];
+
     /**
      * Experiments the user requested to opt out from manually.
      */
@@ -100,7 +101,7 @@ export class ExperimentService implements IExperimentService {
 
     public async getExperimentValue<T extends boolean | number | string>(experiment: string): Promise<T | undefined> {
         if (!this.experimentationService || this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
-            return;
+            return undefined;
         }
 
         return this.experimentationService.getTreatmentVariableAsync('vscode', experiment);
