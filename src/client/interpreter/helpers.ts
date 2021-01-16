@@ -89,7 +89,7 @@ export class InterpreterHelper implements IInterpreterHelper {
 
         const fileHash = await this.hashProvider.getInterpreterHash(pythonPath).catch((ex) => {
             traceError(`Failed to create File hash for interpreter ${pythonPath}`, ex);
-            return '';
+            return undefined;
         });
 
         const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(
@@ -111,6 +111,12 @@ export class InterpreterHelper implements IInterpreterHelper {
             if (!info) {
                 return;
             }
+
+            // If hash value is undefined then don't store it.
+            if (!fileHash) {
+                return info;
+            }
+
             const details = {
                 ...info,
                 fileHash,
