@@ -30,7 +30,7 @@
     "python.command.python.execSelectionInDjangoShell.title": "Run Selection/Line in Django Shell",
     "python.command.python.goToPythonObject.title": "Go to Python Object",
     "python.command.python.setLinter.title": "Select Linter",
-    "python.command.python.enableLinting.title": "Enable Linting",
+    "python.command.python.enableLinting.title": "Enable/Disable Linting",
     "python.command.python.runLinting.title": "Run Linting",
     "python.command.python.enableSourceMapSupport.title": "Enable Source Map Support For Extension Debugging",
     "python.command.python.startPage.open.title": "Open Start Page",

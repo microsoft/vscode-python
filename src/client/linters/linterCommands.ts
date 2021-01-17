@@ -81,7 +81,7 @@ export class LinterCommands implements IDisposable {
     }
 
     public async enableLintingAsync(): Promise<void> {
-        const options = ['on', 'off'];
+        const options = ['Enable', 'Disable'];
         const current = (await this.linterManager.isLintingEnabled(true, this.settingsUri)) ? options[0] : options[1];
 
         const quickPickOptions: QuickPickOptions = {
@@ -91,8 +91,9 @@ export class LinterCommands implements IDisposable {
         };
 
         const selection = await this.appShell.showQuickPick(options, quickPickOptions);
+
         if (selection !== undefined) {
-            const enable = selection === options[0];
+            const enable: boolean = selection === options[0];
             await this.linterManager.enableLintingAsync(enable, this.settingsUri);
         }
     }
