@@ -60,9 +60,7 @@ src/test/interpreters/interpreterService.unit.test.ts
 src/test/interpreters/activation/service.unit.test.ts
 src/test/interpreters/activation/wrapperEnvironmentActivationService.unit.test.ts
 src/test/interpreters/helpers.unit.test.ts
-src/test/interpreters/serviceRegistry.unit.test.ts
 src/test/interpreters/currentPathService.unit.test.ts
-src/test/interpreters/display/progressDisplay.unit.test.ts
 src/test/interpreters/display/interpreterSelectionTip.unit.test.ts
 src/test/interpreters/display.unit.test.ts
 
@@ -367,7 +365,6 @@ src/client/interpreter/activation/preWarmVariables.ts
 src/client/interpreter/activation/service.ts
 src/client/interpreter/display/shebangCodeLensProvider.ts
 src/client/interpreter/display/index.ts
-src/client/interpreter/display/progressDisplay.ts
 src/client/interpreter/display/interpreterSelectionTip.ts
 
 src/client/api.ts

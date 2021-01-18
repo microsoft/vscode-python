@@ -117,7 +117,8 @@ suite('Interpreters - Service Registry', () => {
             [IEnvironmentActivationService, EnvironmentActivationService],
             [IExtensionActivationService, CondaInheritEnvPrompt],
         ].forEach((mapping) => {
-            verify(serviceManager.addSingleton.apply(serviceManager, mapping as any)).once();
+            // eslint-disable-next-line prefer-spread
+            verify(serviceManager.addSingleton.apply(serviceManager, mapping as never)).once();
         });
     });
 });

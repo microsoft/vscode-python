@@ -22,7 +22,9 @@ export interface IComponent {
 @injectable()
 export class InterpreterLocatorProgressStatubarHandler implements IExtensionSingleActivationService {
     private deferred: Deferred<void> | undefined;
+
     private isFirstTimeLoadingInterpreters = true;
+
     constructor(
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IServiceContainer)
@@ -30,7 +32,8 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
         @inject(IDisposableRegistry) private readonly disposables: Disposable[],
         @inject(IComponentAdapter) private readonly pyenvs: IComponent,
     ) {}
-    public async activate() {
+
+    public async activate(): Promise<void> {
         let onRefreshing: Event<void>;
         let onRefreshed: Event<void>;
         if (this.pyenvs.onRefreshing && this.pyenvs.onRefreshed) {
@@ -46,12 +49,14 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
         onRefreshing(() => this.showProgress(), this, this.disposables);
         onRefreshed(() => this.hideProgress(), this, this.disposables);
     }
+
     @traceDecorators.verbose('Display locator refreshing progress')
     private showProgress(): void {
         if (!this.deferred) {
             this.createProgress();
         }
     }
+
     @traceDecorators.verbose('Hide locator refreshing progress')
     private hideProgress(): void {
         if (this.deferred) {
@@ -59,6 +64,7 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
             this.deferred = undefined;
         }
     }
+
     private createProgress() {
         const progressOptions: ProgressOptions = {
             location: ProgressLocation.Window,

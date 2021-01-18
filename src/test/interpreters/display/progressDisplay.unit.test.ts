@@ -20,14 +20,14 @@ type ProgressTask<R> = (
 ) => Thenable<R>;
 
 suite('Interpreters - Display Progress', () => {
-    let refreshingCallback: (e: void) => any | undefined;
-    let refreshedCallback: (e: void) => any | undefined;
+    let refreshingCallback: (e: void) => unknown | undefined;
+    let refreshedCallback: (e: void) => unknown | undefined;
     const progressService: IInterpreterLocatorProgressService = {
-        onRefreshing(listener: (e: void) => any): Disposable {
+        onRefreshing(listener: (e: void) => unknown): Disposable {
             refreshingCallback = listener;
             return { dispose: noop };
         },
-        onRefreshed(listener: (e: void) => any): Disposable {
+        onRefreshed(listener: (e: void) => unknown): Disposable {
             refreshedCallback = listener;
             return { dispose: noop };
         },
@@ -57,7 +57,7 @@ suite('Interpreters - Display Progress', () => {
         await statusBar.activate();
         refreshingCallback(undefined);
 
-        const options = capture(shell.withProgress as any).last()[0] as ProgressOptions;
+        const options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
         expect(options.title).to.be.equal(Common.loadingExtension());
     });
 
@@ -74,12 +74,12 @@ suite('Interpreters - Display Progress', () => {
         await statusBar.activate();
         refreshingCallback(undefined);
 
-        let options = capture(shell.withProgress as any).last()[0] as ProgressOptions;
+        let options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
         expect(options.title).to.be.equal(Common.loadingExtension());
 
         refreshingCallback(undefined);
 
-        options = capture(shell.withProgress as any).last()[0] as ProgressOptions;
+        options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
         expect(options.title).to.be.equal(Interpreters.refreshing());
     });
 
@@ -96,9 +96,9 @@ suite('Interpreters - Display Progress', () => {
         await statusBar.activate();
         refreshingCallback(undefined);
 
-        const options = capture(shell.withProgress as any).last()[0] as ProgressOptions;
-        const callback = capture(shell.withProgress as any).last()[1] as ProgressTask<void>;
-        const promise = callback(undefined as any, undefined as any);
+        const options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
+        const callback = capture(shell.withProgress as never).last()[1] as ProgressTask<void>;
+        const promise = callback(undefined as never, undefined as never);
 
         expect(options.title).to.be.equal(Common.loadingExtension());
 
