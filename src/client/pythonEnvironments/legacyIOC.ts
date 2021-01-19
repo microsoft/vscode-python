@@ -352,7 +352,7 @@ export class ComponentAdapter implements IComponentAdapter, IExtensionSingleActi
         if (!this.enabled) {
             return undefined;
         }
-        const workspaceFolder = resource ? vscode.workspace.getWorkspaceFolder(resource) : undefined;
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(resource);
         if (!workspaceFolder) {
             return [];
         }
