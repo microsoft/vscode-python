@@ -65,11 +65,7 @@ async function* iterExecutables(
                     yield* iterExecutables(filename, currentDepth + 1, cfg);
                 }
             }
-        } else if (filetype === FileType.File) {
-            if (checkBin(filename)) {
-                yield filename;
-            }
-        } else if (filetype === FileType.SymbolicLink) {
+        } else if (filetype === FileType.File || filetype === FileType.SymbolicLink) {
             if (checkBin(filename)) {
                 yield filename;
             }
