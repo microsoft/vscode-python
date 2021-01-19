@@ -41,7 +41,7 @@
         "editor.formatOnSave": true
     },
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
-    "python.linting.enabled": true,
+    "python.linting.enabled": false,
     "python.testing.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
     "python.formatting.provider": "black",

@@ -53,12 +53,15 @@ suite('Linting - Linter Commands', () => {
         expect(result).to.be.equal('Hello');
     });
 
-    async function testEnableLintingWithCurrentState(currentState: boolean, selectedState: 'on' | 'off' | undefined) {
+    async function testEnableLintingWithCurrentState(
+        currentState: boolean,
+        selectedState: 'Enabled' | 'Disabled' | undefined,
+    ) {
         when(manager.isLintingEnabled(true, anything())).thenResolve(currentState);
         const expectedQuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
-            placeHolder: `current: ${currentState ? 'on' : 'off'}`,
+            placeHolder: `current: ${currentState ? 'Enabled' : 'Disabled'}`,
         };
         when(shell.showQuickPick(anything(), anything())).thenResolve(selectedState as any);
 
@@ -67,29 +70,33 @@ suite('Linting - Linter Commands', () => {
         verify(shell.showQuickPick(anything(), anything())).once();
         const options = capture(shell.showQuickPick).last()[0];
         const quickPickOptions = capture(shell.showQuickPick).last()[1];
-        expect(options).to.deep.equal(['on', 'off']);
+        expect(options).to.deep.equal(['Enabled', 'Disabled']);
         expect(quickPickOptions).to.deep.equal(expectedQuickPickOptions);
 
         if (selectedState) {
-            verify(manager.enableLintingAsync(selectedState === 'on', anything())).once();
+            verify(manager.enableLintingAsync(selectedState === 'Enabled', anything())).once();
         } else {
             verify(manager.enableLintingAsync(anything(), anything())).never();
         }
     }
-    test("Enable linting should check if linting is enabled, and display current state of 'on' and select nothing", async () => {
+    test("Enable linting should check if linting is enabled, and display current state of 'Enabled' and select nothing", async () => {
         await testEnableLintingWithCurrentState(true, undefined);
     });
-    test("Enable linting should check if linting is enabled, and display current state of 'on' and select 'on'", async () => {
-        await testEnableLintingWithCurrentState(true, 'on');
+
+    test("Enable linting should check if linting is enabled, and display current state of 'Enabled' and select 'Enabled'", async () => {
+        await testEnableLintingWithCurrentState(true, 'Enabled');
     });
-    test("Enable linting should check if linting is enabled, and display current state of 'on' and select 'off'", async () => {
-        await testEnableLintingWithCurrentState(true, 'off');
+
+    test("Enable linting should check if linting is enabled, and display current state of 'Enabled' and select 'Disabled'", async () => {
+        await testEnableLintingWithCurrentState(true, 'Disabled');
     });
-    test("Enable linting should check if linting is enabled, and display current state of 'off' and select 'on'", async () => {
-        await testEnableLintingWithCurrentState(true, 'on');
+
+    test("Enable linting should check if linting is enabled, and display current state of 'Disabled' and select 'Enabled'", async () => {
+        await testEnableLintingWithCurrentState(true, 'Enabled');
     });
-    test("Enable linting should check if linting is enabled, and display current state of 'off' and select 'off'", async () => {
-        await testEnableLintingWithCurrentState(true, 'off');
+
+    test("Enable linting should check if linting is enabled, and display current state of 'Disabled' and select 'Disabled'", async () => {
+        await testEnableLintingWithCurrentState(true, 'Disabled');
     });
 
     test('Set Linter should display a quickpick', async () => {
