@@ -33,8 +33,8 @@ import {
     IInterpreterService,
     INTERPRETER_LOCATOR_SERVICE,
 } from './contracts';
-import { IInterpreterHashProvider } from './locators/types';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
+import { getInterpreterHash } from '../pythonEnvironments/discovery/locators/services/hashProvider';
 
 const EXPIRY_DURATION = 24 * 60 * 60 * 1000;
 
@@ -94,7 +94,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IInterpreterHashProvider) private readonly hashProvider: IInterpreterHashProvider,
         @inject(IComponentAdapter) private readonly pyenvs: IComponent,
     ) {
         this.persistentStateFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
@@ -280,8 +279,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (!info.cachedEntry && info.path && this.inMemoryCacheOfDisplayNames.has(info.path)) {
             return this.inMemoryCacheOfDisplayNames.get(info.path)!;
         }
-        const fileHash = (info.path ? await this.getInterpreterFileHash(info.path).catch(() => '') : '') || '';
-        // Do not include dipslay name into hash as that changes.
+        const fileHash = (info.path ? await getInterpreterHash(info.path).catch(() => '') : '') || '';
+        // Do not include display name into hash as that changes.
         const interpreterHash = `${fileHash}-${md5(JSON.stringify({ ...info, displayName: '' }))}`;
         const store = this.persistentStateFactory.createGlobalPersistentState<{ hash: string; displayName: string }>(
             `${info.path}.interpreter.displayName.v7`,
@@ -307,7 +306,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
     public async getInterpreterCache(
         pythonPath: string,
     ): Promise<IPersistentState<{ fileHash: string; info?: PythonEnvironment }>> {
-        const fileHash = (pythonPath ? await this.getInterpreterFileHash(pythonPath).catch(() => '') : '') || '';
+        const fileHash = (pythonPath ? await getInterpreterHash(pythonPath).catch(() => '') : '') || '';
         const store = this.persistentStateFactory.createGlobalPersistentState<{
             fileHash: string;
             info?: PythonEnvironment;
@@ -329,10 +328,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
             interpreterDisplay.refresh().catch((ex) => traceError('Python Extension: display.refresh', ex));
         }
     };
-
-    protected async getInterpreterFileHash(pythonPath: string): Promise<string> {
-        return this.hashProvider.getInterpreterHash(pythonPath);
-    }
 
     protected async updateCachedInterpreterInformation(info: PythonEnvironment, resource: Resource): Promise<void> {
         const key = JSON.stringify(info);

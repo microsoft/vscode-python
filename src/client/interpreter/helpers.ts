@@ -7,6 +7,7 @@ import { IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { isMacDefaultPythonPath } from '../pythonEnvironments/discovery';
+import { getInterpreterHash } from '../pythonEnvironments/discovery/locators/services/hashProvider';
 import {
     EnvironmentType,
     getEnvironmentTypeName,
@@ -15,7 +16,6 @@ import {
     sortInterpreters,
 } from '../pythonEnvironments/info';
 import { IComponentAdapter, IInterpreterHelper, WorkspacePythonPath } from './contracts';
-import { IInterpreterHashProvider } from './locators/types';
 
 const EXPIRY_DURATION = 24 * 60 * 60 * 1000;
 type CachedPythonInterpreter = Partial<PythonEnvironment> & { fileHash: string };
@@ -50,7 +50,6 @@ export class InterpreterHelper implements IInterpreterHelper {
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IInterpreterHashProvider) private readonly hashProvider: IInterpreterHashProvider,
         @inject(IComponentAdapter) private readonly pyenvs: IComponent,
     ) {
         this.persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
@@ -87,7 +86,7 @@ export class InterpreterHelper implements IInterpreterHelper {
             return found;
         }
 
-        const fileHash = await this.hashProvider.getInterpreterHash(pythonPath).catch((ex) => {
+        const fileHash = await getInterpreterHash(pythonPath).catch((ex) => {
             traceError(`Failed to create File hash for interpreter ${pythonPath}`, ex);
             return undefined;
         });
