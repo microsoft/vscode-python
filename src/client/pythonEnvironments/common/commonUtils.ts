@@ -5,8 +5,9 @@ import { Dirent } from 'fs';
 import * as path from 'path';
 import { convertFileType } from '../../common/platform/fileSystem';
 import { FileType } from '../../common/platform/types';
+import { waitForPromise } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
-import { logError } from '../../logging';
+import { logError, logVerbose } from '../../logging';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
 import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
@@ -93,11 +94,15 @@ async function readDir(
     dirname: string,
     opts: {
         ignoreErrors?: boolean;
+        timeoutMs?: number;
     } = {},
 ): Promise<DirEntry[]> {
-    let entries: Dirent[];
+    let entries: Dirent[] | null;
     try {
-        entries = await listDir(dirname);
+        entries = await waitForPromise(
+            listDir(dirname),
+            opts.timeoutMs || 1_000, // 1 second
+        );
     } catch (err) {
         // Treat a missing directory as empty.
         if (err.code === 'ENOENT') {
@@ -108,6 +113,10 @@ async function readDir(
             return [];
         }
         throw err; // re-throw
+    }
+    if (entries === null) {
+        logVerbose(`listDir() timeout after ${opts.timeoutMs}ms for "${dirname}"`);
+        return [];
     }
     return entries.map((entry) => {
         const filename = path.join(dirname, entry.name);
