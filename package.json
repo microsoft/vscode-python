@@ -1269,6 +1269,12 @@
                     "description": "Whether to lint Python files.",
                     "scope": "resource"
                 },
+                "python.linting.cwd": {
+                    "type": "string",
+                    "default": null,
+                    "description": "Optional working directory for linters.",
+                    "scope": "resource"
+                },
                 "python.linting.flake8Args": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",

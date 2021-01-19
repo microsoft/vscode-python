@@ -54,6 +54,7 @@ export class MockStatusBarItem implements vscode.StatusBarItem {
 
 export class MockLintingSettings implements ILintingSettings {
     public enabled!: boolean;
+    public cwd!: string;
     public ignorePatterns!: string[];
     public prospectorEnabled!: boolean;
     public prospectorArgs!: string[];

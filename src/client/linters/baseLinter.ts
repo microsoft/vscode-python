@@ -138,7 +138,10 @@ export abstract class BaseLinter implements ILinter {
             return [];
         }
         const executionInfo = this.info.getExecutionInfo(args, document.uri);
-        const cwd = this.getWorkspaceRootPath(document);
+        const cwd =
+            this._pythonSettings.linting.cwd && this._pythonSettings.linting.cwd.length > 0
+                ? this._pythonSettings.linting.cwd
+                : this.getWorkspaceRootPath(document);
         const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(
             IPythonToolExecutionService,
         );

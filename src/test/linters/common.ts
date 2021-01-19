@@ -70,6 +70,7 @@ export function throwUnknownProduct(product: Product) {
 
 export class LintingSettings {
     public enabled: boolean;
+    public cwd: string;
     public ignorePatterns: string[];
     public prospectorEnabled: boolean;
     public prospectorArgs: string[];
@@ -107,6 +108,7 @@ export class LintingSettings {
         // mostly from configSettings.ts
 
         this.enabled = true;
+        this.cwd = '';
         this.ignorePatterns = [];
         this.lintOnSave = false;
         this.maxNumberOfProblems = 100;

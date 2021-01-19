@@ -258,6 +258,7 @@ export interface ILintingSettings {
     readonly pycodestyleCategorySeverity: IPycodestyleCategorySeverity;
     readonly flake8CategorySeverity: Flake8CategorySeverity;
     readonly mypyCategorySeverity: IMypyCategorySeverity;
+    cwd: string;
     prospectorPath: string;
     pylintPath: string;
     pycodestylePath: string;

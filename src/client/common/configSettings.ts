@@ -316,6 +316,10 @@ export class PythonSettings implements IPythonSettings {
             this.linting = lintingSettings;
         }
 
+        if (this.linting.cwd) {
+            this.linting.cwd = getAbsolutePath(systemVariables.resolveAny(this.linting.cwd), workspaceRoot);
+        }
+
         const analysisSettings = systemVariables.resolveAny(pythonSettings.get<IAnalysisSettings>('analysis'))!;
         if (this.analysis) {
             Object.assign<IAnalysisSettings, IAnalysisSettings>(this.analysis, analysisSettings);
@@ -339,6 +343,7 @@ export class PythonSettings implements IPythonSettings {
             ? this.linting
             : {
                   enabled: false,
+                  cwd: '',
                   ignorePatterns: [],
                   flake8Args: [],
                   flake8Enabled: false,
