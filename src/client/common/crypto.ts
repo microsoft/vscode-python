@@ -31,8 +31,7 @@ export class CryptoUtils implements ICryptoUtils {
         }
         if (hashFormat === 'number') {
             const result = parseInt(hash, 16);
-            // eslint-disable-next-line no-restricted-globals
-            if (isNaN(result)) {
+            if (Number.isNaN(result)) {
                 traceError(`Number hash for data '${data}' is NaN`);
             }
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
