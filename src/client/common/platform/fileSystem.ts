@@ -79,7 +79,6 @@ function filterByFileType(
     return files.filter(([_file, ft]) => (ft & fileType) > 0);
 }
 
-//= =========================================
 // "raw" filesystem
 
 // This is the parts of the vscode.workspace.fs API that we use here.
@@ -284,7 +283,6 @@ export class RawFileSystem implements IRawFileSystem {
         });
     }
 
-    //* ***************************
     // non-async
 
     // VS Code has decided to never support any sync functions (aside
@@ -321,7 +319,6 @@ export class RawFileSystem implements IRawFileSystem {
     }
 }
 
-//= =========================================
 // filesystem "utils"
 
 // High-level filesystem operations used by the extension.
@@ -354,7 +351,6 @@ export class FileSystemUtils implements IFileSystemUtils {
         );
     }
 
-    //* ***************************
     // aliases
 
     public async createDirectory(directoryPath: string): Promise<void> {
@@ -369,7 +365,6 @@ export class FileSystemUtils implements IFileSystemUtils {
         return this.raw.rmfile(filename);
     }
 
-    //* ***************************
     // helpers
 
     public async pathExists(
@@ -476,7 +471,6 @@ export class FileSystemUtils implements IFileSystemUtils {
         return Array.isArray(found) ? found : [];
     }
 
-    //* ***************************
     // helpers (non-async)
 
     public fileExistsSync(filePath: string): boolean {
@@ -500,7 +494,6 @@ export function getHashString(data: string): string {
     return hash.digest('hex');
 }
 
-//= =========================================
 // legacy filesystem API
 
 // more aliases (to cause less churn)
