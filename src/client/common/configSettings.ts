@@ -316,10 +316,6 @@ export class PythonSettings implements IPythonSettings {
             this.linting = lintingSettings;
         }
 
-        if (this.linting.cwd) {
-            this.linting.cwd = getAbsolutePath(systemVariables.resolveAny(this.linting.cwd), workspaceRoot);
-        }
-
         const analysisSettings = systemVariables.resolveAny(pythonSettings.get<IAnalysisSettings>('analysis'))!;
         if (this.analysis) {
             Object.assign<IAnalysisSettings, IAnalysisSettings>(this.analysis, analysisSettings);
@@ -413,6 +409,10 @@ export class PythonSettings implements IPythonSettings {
         );
         this.linting.mypyPath = getAbsolutePath(systemVariables.resolveAny(this.linting.mypyPath), workspaceRoot);
         this.linting.banditPath = getAbsolutePath(systemVariables.resolveAny(this.linting.banditPath), workspaceRoot);
+
+        if (this.linting.cwd && this.linting.cwd.length > 0) {
+            this.linting.cwd = getAbsolutePath(systemVariables.resolveAny(this.linting.cwd), workspaceRoot);
+        }
 
         const formattingSettings = systemVariables.resolveAny(pythonSettings.get<IFormattingSettings>('formatting'))!;
         if (this.formatting) {
