@@ -62,7 +62,7 @@ import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs
 import { VirtualEnvironmentPrompt } from '../../client/interpreter/virtualEnvs/virtualEnvPrompt';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 
-suite('Interpreters - Service Registry', () => {
+suite('zInterpreters - Service Registry', () => {
     test('Registrations', () => {
         const serviceManager = mock(ServiceManager);
         registerTypes(instance(serviceManager));
