@@ -56,15 +56,6 @@ async function* iterExecutables(
     // so we can stub it out during unit testing.
     const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
     for (const { filename, filetype } of entries) {
-        // (FYI)
-        // Normally we would have to do an extra (expensive) `fs.lstat()`
-        // here for each file to determine its file type.  However,
-        // we were able to avoid this by using `listDir()` above.
-        // It is light wrapper around `fs.listDir()` with the
-        // "withFileTypes" option set to true.  So the file type
-        // of each entry is preserved for free.  If we needed more
-        // information than just the file type then we would be forced
-        // to incur the extra cost of `fs.lstat()`.
         if (filetype === FileType.Directory) {
             if (cfg.maxDepth && currentDepth <= cfg.maxDepth) {
                 if (matchFile(filename, cfg.filterSubDir, cfg.ignoreErrors)) {
@@ -118,6 +109,15 @@ async function readDir(
         logVerbose(`listDir() timeout after ${opts.timeoutMs}ms for "${dirname}"`);
         return [];
     }
+    // (FYI)
+    // Normally we would have to do an extra (expensive) `fs.lstat()`
+    // here for each file to determine its file type.  However,
+    // we were able to avoid this by using `listDir()` above.
+    // It is light wrapper around `fs.listDir()` with the
+    // "withFileTypes" option set to true.  So the file type
+    // of each entry is preserved for free.  If we needed more
+    // information than just the file type then we would be forced
+    // to incur the extra cost of `fs.lstat()`.
     return entries.map((entry) => {
         const filename = path.join(dirname, entry.name);
         const filetype = convertFileType(entry);
