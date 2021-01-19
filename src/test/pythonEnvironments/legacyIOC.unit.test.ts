@@ -3,8 +3,11 @@
 
 'use strict';
 
-import { instance, mock, verify } from 'ts-mockito';
+import { instance, mock, verify, when } from 'ts-mockito';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
+import { DiscoveryVariants } from '../../client/common/experiments/groups';
+import { ExperimentService } from '../../client/common/experiments/service';
+import { IExperimentService } from '../../client/common/types';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -25,7 +28,9 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../client/interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
+import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
+import { initializeExternalDependencies } from '../../client/pythonEnvironments/common/externalDependencies';
 import { PythonInterpreterLocatorService } from '../../client/pythonEnvironments/discovery/locators';
 import { InterpreterLocatorHelper } from '../../client/pythonEnvironments/discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from '../../client/pythonEnvironments/discovery/locators/progressService';
@@ -59,6 +64,11 @@ import { registerLegacyDiscoveryForIOC } from '../../client/pythonEnvironments/l
 suite('Interpreters - Service Registry', () => {
     test('Registrations', async function () {
         const serviceManager = mock(ServiceManager);
+        const serviceContainer = mock(ServiceContainer);
+        const experimentService = mock(ExperimentService);
+        when(serviceContainer.get<IExperimentService>(IExperimentService)).thenReturn(instance(experimentService));
+        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
+        initializeExternalDependencies(instance(serviceContainer));
         await registerLegacyDiscoveryForIOC(instance(serviceManager));
 
         verify(
