@@ -4,6 +4,7 @@
 # 2) pip-compile --generate-hashes requirements.in
 
 # IntelliSense via Jedi
+jedi<0.18.0; python_version == '2.7'  # Requires a manual edit of the resulting requirements.txt file!
 jedi-language-server; python_version >= '3.6'
 # Sort Imports
 isort==5.6.3; python_version >= '3.6'
