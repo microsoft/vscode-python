@@ -30,8 +30,15 @@ import { InterpreterAutoSelectionService } from '../../../../client/interpreter/
 import { BaseRuleService } from '../../../../client/interpreter/autoSelection/rules/baseRule';
 import { WorkspaceVirtualEnvInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/workspaceEnv';
 import { IInterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection/types';
-import { IInterpreterHelper, IInterpreterLocatorService } from '../../../../client/interpreter/contracts';
+import {
+    IComponentAdapter,
+    IInterpreterHelper,
+    IInterpreterLocatorService,
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
+} from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
+import { ServiceContainer } from '../../../../client/ioc/container';
+import { IServiceContainer } from '../../../../client/ioc/types';
 import { KnownPathsService } from '../../../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
@@ -44,6 +51,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
     let helper: IInterpreterHelper;
     let platform: IPlatformService;
     let virtualEnvLocator: IInterpreterLocatorService;
+    let serviceContainer: IServiceContainer;
     let workspaceService: IWorkspaceService;
     let experimentsManager: IExperimentsManager;
     let interpreterPathService: IInterpreterPathService;
@@ -71,7 +79,11 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         helper = mock(InterpreterHelper);
         platform = mock(PlatformService);
         workspaceService = mock(WorkspaceService);
+        serviceContainer = mock(ServiceContainer);
         virtualEnvLocator = mock(KnownPathsService);
+        when(
+            serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE),
+        ).thenReturn(instance(virtualEnvLocator));
         experimentsManager = mock(ExperimentsManager);
         interpreterPathService = mock(InterpreterPathService);
 
@@ -84,9 +96,10 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             instance(stateFactory),
             instance(platform),
             instance(workspaceService),
-            instance(virtualEnvLocator),
+            instance(serviceContainer),
             instance(experimentsManager),
             instance(interpreterPathService),
+            instance(mock(IComponentAdapter)),
         );
     });
     test('Invoke next rule if there is no workspace', async () => {

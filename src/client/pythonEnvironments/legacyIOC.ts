@@ -347,6 +347,24 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         this.refreshed.fire(); // Notify all locators have completed locating.
         return legacyEnvs;
     }
+
+    public async getWorkspaceVirtualEnvInterpreters(resource: vscode.Uri): Promise<PythonEnvironment[] | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
+        const workspaceFolder = resource ? vscode.workspace.getWorkspaceFolder(resource) : undefined;
+        if (!workspaceFolder) {
+            return [];
+        }
+        const query: PythonLocatorQuery = {
+            searchLocations: {
+                roots: [workspaceFolder.uri],
+            },
+        };
+        const iterator = this.api.iterEnvs(query);
+        const envs = await getEnvs(iterator);
+        return envs.map(convertEnvInfo);
+    }
 }
 
 export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): Promise<void> {
