@@ -16,7 +16,7 @@ jedi-language-server==0.22.0 ; python_version >= "3.6" \
     --hash=sha256:90d6613e044b97c1278334fd3e2b6c88281ad06fb8eed650d620c115c318f430 \
     --hash=sha256:df291db5a5aff262c305948735a837c5406fb0157c85805ee90cf4bd6b36234d
     # via -r requirements.in
-jedi=<0.18.0; python_version == "2.7"  # via -r requirements.in
+jedi<0.18.0; python_version == "2.7"  # via -r requirements.in
 jedi==0.18.0; python_version >= "3.6" \
     --hash=sha256:18456d83f65f400ab0c2d3319e48520420ef43b23a086fdc05dff34132f0fb93 \
     --hash=sha256:92550a404bad8afed881a137ec9a461fed49eca661414be45059329614ed0707
