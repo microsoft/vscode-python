@@ -4,7 +4,7 @@
 import { Dirent } from 'fs';
 import * as path from 'path';
 import { convertFileType } from '../../common/platform/fileSystem';
-import { FileType } from '../../common/platform/types';
+import { DirEntry, FileType } from '../../common/platform/types';
 import { waitForPromise } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { logError, logVerbose } from '../../logging';
@@ -78,11 +78,6 @@ async function* iterExecutables(
         }
     }
 }
-
-type DirEntry = {
-    filename: string;
-    filetype: FileType;
-};
 
 async function readDir(
     dirname: string,

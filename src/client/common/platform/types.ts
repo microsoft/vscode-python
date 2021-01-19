@@ -95,6 +95,11 @@ export import FileStat = vscode.FileStat;
 export type ReadStream = fs.ReadStream;
 export type WriteStream = fs.WriteStream;
 
+export type DirEntry = {
+    filename: string;
+    filetype: FileType;
+};
+
 // The low-level filesystem operations on which the extension depends.
 export interface IRawFileSystem {
     // Get information about a file (resolve symlinks).

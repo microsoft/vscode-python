@@ -4,11 +4,16 @@
 // tslint:disable-next-line:no-single-line-block-comment
 /* eslint-disable max-classes-per-file */
 
+import * as fs from 'fs';
 import { uniq } from 'lodash';
+import * as path from 'path';
 import { Event } from 'vscode';
+import { convertFileType } from '../../../../common/platform/fileSystem';
+import { DirEntry, FileType } from '../../../../common/platform/types';
 import { getSearchPathEntries } from '../../../../common/utils/exec';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { isStandardPythonBinary } from '../../../common/commonUtils';
+import { findInterpretersInDir } from '../../../common/commonUtils';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../info';
 import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { Locators } from '../../locators';
@@ -60,7 +65,9 @@ function getDirFilesLocator(
     dirname: string,
     kind: PythonEnvKind,
 ): ILocator & IDisposable {
-    const locator = new DirFilesLocator(dirname, kind);
+    const iterExecutables = (d: string) => findInterpretersInDir(d, 0, undefined, false, onTimeout);
+    const locator = new DirFilesLocator(dirname, kind, iterExecutables);
+
     // Really we should be checking for symlinks or something more
     // sophisticated.  Also, this should be done in ReducingLocator
     // rather than in each low-level locator.  In the meantime we
@@ -98,4 +105,38 @@ function getDirFilesLocator(
         onChanged: locator.onChanged,
         dispose: () => locator.dispose(),
     };
+}
+
+const TYPICAL_PYTHONS = [
+    'python.exe',
+    // There may be others.
+];
+
+// On Windows some directories are really big,
+// so we fall back to known Python executables.
+async function onTimeout(dirname: string): Promise<DirEntry[]> {
+    const results = await Promise.all(
+        TYPICAL_PYTHONS.map(async (basename: string) => {
+            const filename = path.join(dirname, basename);
+            const filetype = await getFileType(filename);
+            if (filetype === undefined) {
+                return undefined;
+            }
+            return { filename, filetype };
+        }),
+    );
+    return results.filter((entry) => entry) as DirEntry[];
+}
+
+async function getFileType(filename: string): Promise<FileType | undefined> {
+    let info: fs.Stats;
+    try {
+        info = await fs.promises.stat(filename);
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            return undefined;
+        }
+        return FileType.Unknown;
+    }
+    return convertFileType(info);
 }
