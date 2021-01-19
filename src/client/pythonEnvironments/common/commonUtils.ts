@@ -30,9 +30,11 @@ export function findInterpretersInDir(
     recurseLevel?: number,
     filterSubDir?: FileFilterFunc,
     ignoreErrors?: boolean,
+    onTimeout?: (dirname: string) => Promise<DirEntry[]>,
 ): AsyncIterableIterator<string> {
     const cfg = {
         filterSubDir,
+        onTimeout,
         maxDepth: recurseLevel,
         ignoreErrors: ignoreErrors || false,
     };
@@ -48,6 +50,7 @@ async function* iterExecutables(
     cfg: {
         filterSubDir: FileFilterFunc | undefined;
         maxDepth: number | undefined;
+        onTimeout?: (dirname: string) => Promise<DirEntry[]>;
         ignoreErrors: boolean;
     },
 ): AsyncIterableIterator<string> {
@@ -84,8 +87,9 @@ type DirEntry = {
 async function readDir(
     dirname: string,
     opts: {
-        ignoreErrors?: boolean;
         timeoutMs?: number;
+        onTimeout?: (dirname: string) => Promise<DirEntry[]>;
+        ignoreErrors?: boolean;
     } = {},
 ): Promise<DirEntry[]> {
     let entries: Dirent[] | null;
@@ -107,6 +111,17 @@ async function readDir(
     }
     if (entries === null) {
         logVerbose(`listDir() timeout after ${opts.timeoutMs}ms for "${dirname}"`);
+        if (opts.onTimeout !== undefined) {
+            try {
+                return opts.onTimeout(dirname);
+            } catch (err) {
+                if (opts.ignoreErrors) {
+                    logError(`onTimeout() failed for "${dirname}" (${err})`);
+                    return [];
+                }
+                throw err; // re-throw
+            }
+        }
         return [];
     }
     // (FYI)
