@@ -3,6 +3,8 @@
 
 import { Dirent } from 'fs';
 import * as path from 'path';
+import { convertFileType } from '../../common/platform/fileSystem';
+import { FileType } from '../../common/platform/types';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { logError } from '../../logging';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
@@ -48,26 +50,11 @@ async function* iterExecutables(
         ignoreErrors: boolean;
     },
 ): AsyncIterableIterator<string> {
-    let entries: Dirent[];
-    try {
-        entries = await listDir(root);
-    } catch (err) {
-        // Treat a missing directory as empty.
-        if (err.code === 'ENOENT') {
-            return;
-        }
-        if (cfg.ignoreErrors) {
-            logError(`listDir() failed for "${root}" (${err})`);
-            return;
-        }
-        throw err; // re-throw
-    }
-
+    const entries = await readDir(root, cfg);
     // "checkBin" is a local variable rather than global
     // so we can stub it out during unit testing.
     const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
-    for (const entry of entries) {
-        const filename = path.join(root, entry.name);
+    for (const { filename, filetype } of entries) {
         // (FYI)
         // Normally we would have to do an extra (expensive) `fs.lstat()`
         // here for each file to determine its file type.  However,
@@ -77,17 +64,17 @@ async function* iterExecutables(
         // of each entry is preserved for free.  If we needed more
         // information than just the file type then we would be forced
         // to incur the extra cost of `fs.lstat()`.
-        if (entry.isDirectory()) {
+        if (filetype === FileType.Directory) {
             if (cfg.maxDepth && currentDepth <= cfg.maxDepth) {
                 if (matchFile(filename, cfg.filterSubDir, cfg.ignoreErrors)) {
                     yield* iterExecutables(filename, currentDepth + 1, cfg);
                 }
             }
-        } else if (entry.isFile()) {
+        } else if (filetype === FileType.File) {
             if (checkBin(filename)) {
                 yield filename;
             }
-        } else if (entry.isSymbolicLink()) {
+        } else if (filetype === FileType.SymbolicLink) {
             if (checkBin(filename)) {
                 yield filename;
             }
@@ -95,6 +82,38 @@ async function* iterExecutables(
             // We ignore all other file types.
         }
     }
+}
+
+type DirEntry = {
+    filename: string;
+    filetype: FileType;
+};
+
+async function readDir(
+    dirname: string,
+    opts: {
+        ignoreErrors?: boolean;
+    } = {},
+): Promise<DirEntry[]> {
+    let entries: Dirent[];
+    try {
+        entries = await listDir(dirname);
+    } catch (err) {
+        // Treat a missing directory as empty.
+        if (err.code === 'ENOENT') {
+            return [];
+        }
+        if (opts.ignoreErrors) {
+            logError(`listDir() failed for "${dirname}" (${err})`);
+            return [];
+        }
+        throw err; // re-throw
+    }
+    return entries.map((entry) => {
+        const filename = path.join(dirname, entry.name);
+        const filetype = convertFileType(entry);
+        return { filename, filetype };
+    });
 }
 
 function matchFile(
