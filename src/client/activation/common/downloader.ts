@@ -29,6 +29,7 @@ const downloadFileExtension = '.nupkg';
 @injectable()
 export class LanguageServerDownloader implements ILanguageServerDownloader {
     private output: IOutputChannel;
+
     constructor(
         @inject(ILanguageServerOutputChannel) private readonly lsOutputChannel: ILanguageServerOutputChannel,
         @inject(IFileDownloader) private readonly fileDownloader: IFileDownloader,
@@ -41,10 +42,12 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         this.output = this.lsOutputChannel.channel;
     }
 
-    public async getDownloadInfo(resource: Resource) {
+    public async getDownloadInfo(
+        resource: Resource,
+    ): Promise<{ downloadUri: string; lsVersion: string; lsName: string }> {
         const info = await this.lsFolderService.getLatestLanguageServerVersion(resource).then((item) => item!);
 
-        let uri = info.uri;
+        let { uri } = info;
         if (uri.startsWith('https:')) {
             const cfg = this.workspace.getConfiguration('http', resource);
             if (!cfg.get<boolean>('proxyStrictSSL', true)) {
@@ -52,7 +55,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             }
         }
         const lsNameTrimmed = info.package.split('.')[0];
-        return [uri, info.version.raw, lsNameTrimmed];
+        return { downloadUri: uri, lsVersion: info.version.raw, lsName: lsNameTrimmed };
     }
 
     public async downloadLanguageServer(destinationFolder: string, resource: Resource): Promise<void> {
@@ -62,9 +65,9 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             return;
         }
 
-        const [downloadUri, lsVersion, lsName] = await this.getDownloadInfo(resource);
+        const { downloadUri, lsVersion, lsName } = await this.getDownloadInfo(resource);
         const timer: StopWatch = new StopWatch();
-        let success: boolean = true;
+        let success = true;
         let localTempFilePath = '';
 
         try {
@@ -119,7 +122,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         }
     }
 
-    public async showMessageAndOptionallyShowOutput(message: string) {
+    public async showMessageAndOptionallyShowOutput(message: string): Promise<void> {
         const selection = await this.appShell.showErrorMessage(message, Common.openOutputPanel());
         if (selection !== Common.openOutputPanel()) {
             return;
@@ -150,6 +153,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
                 location: ProgressLocation.Window,
             },
             (progress) => {
+                // eslint-disable-next-line global-require
                 const StreamZip = require('node-stream-zip');
                 const zip = new StreamZip({
                     file: tempFilePath,
@@ -163,6 +167,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
                     if (!(await this.fs.directoryExists(destinationFolder))) {
                         await this.fs.createDirectory(destinationFolder);
                     }
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     zip.extract(null, destinationFolder, (err: any) => {
                         if (err) {
                             deferred.reject(err);
@@ -176,6 +181,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
                         extractedFiles += 1;
                         progress.report({ message: `${title}${Math.round((100 * extractedFiles) / totalFiles)}%` });
                     })
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .on('error', (e: any) => {
                         deferred.reject(e);
                     });
@@ -188,8 +194,10 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             try {
                 const platformData = this.services.get<IPlatformData>(IPlatformData);
                 const executablePath = path.join(destinationFolder, platformData.engineExecutableName);
-                await this.fs.chmod(executablePath, '0764'); // -rwxrw-r--
-            } catch {}
+                await this.fs.chmod(executablePath, '0764'); // -rwxrw-r--  // NOSONAR
+            } catch {
+                // Do nothing
+            }
         }
 
         this.output.appendLine(LanguageService.extractionDoneOutputMessage());
