@@ -6,19 +6,21 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
-import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { anything, deepEqual, instance, mock, reset, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
-import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
+import { DeprecatePythonPath, DiscoveryVariants } from '../../../../client/common/experiments/groups';
 import { ExperimentsManager } from '../../../../client/common/experiments/manager';
+import { ExperimentService } from '../../../../client/common/experiments/service';
 import { InterpreterPathService } from '../../../../client/common/interpreterPathService';
 import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { PlatformService } from '../../../../client/common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
 import {
+    IExperimentService,
     IExperimentsManager,
     IInterpreterPathService,
     IPersistentStateFactory,
@@ -39,8 +41,10 @@ import {
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { ServiceContainer } from '../../../../client/ioc/container';
 import { IServiceContainer } from '../../../../client/ioc/types';
+import { initializeExternalDependencies } from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { KnownPathsService } from '../../../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
+import { ComponentAdapter } from '../../../../client/pythonEnvironments/legacyIOC';
 
 suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
     type PythonPathInConfig = { workspaceFolderValue: string; workspaceValue: string };
@@ -53,6 +57,8 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
     let virtualEnvLocator: IInterpreterLocatorService;
     let serviceContainer: IServiceContainer;
     let workspaceService: IWorkspaceService;
+    let experimentService: IExperimentService;
+    let componentAdapter: IComponentAdapter;
     let experimentsManager: IExperimentsManager;
     let interpreterPathService: IInterpreterPathService;
     class WorkspaceVirtualEnvInterpretersAutoSelectionRuleTest extends WorkspaceVirtualEnvInterpretersAutoSelectionRule {
@@ -80,12 +86,17 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         platform = mock(PlatformService);
         workspaceService = mock(WorkspaceService);
         serviceContainer = mock(ServiceContainer);
+        experimentService = mock(ExperimentService);
         virtualEnvLocator = mock(KnownPathsService);
         when(
             serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE),
         ).thenReturn(instance(virtualEnvLocator));
+        when(serviceContainer.get<IExperimentService>(IExperimentService)).thenReturn(instance(experimentService));
+        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
+        initializeExternalDependencies(instance(serviceContainer));
         experimentsManager = mock(ExperimentsManager);
         interpreterPathService = mock(InterpreterPathService);
+        componentAdapter = mock(ComponentAdapter);
 
         when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
             instance(state),
@@ -99,7 +110,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             instance(serviceContainer),
             instance(experimentsManager),
             instance(interpreterPathService),
-            instance(mock(IComponentAdapter)),
+            instance(componentAdapter),
         );
     });
     test('Invoke next rule if there is no workspace', async () => {
@@ -332,5 +343,42 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         expect(nextInvoked.completed).to.be.equal(true, 'Next rule not invoked');
         verify(helper.getActiveWorkspaceUri(resource)).atLeast(1);
         verify(manager.setWorkspaceInterpreter(folderUri, interpreterInfo)).once();
+    });
+
+    test('Use component adapter to fetch workspace envs when in discovery experiment', async () => {
+        reset(experimentService);
+        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(true);
+        const folderPath = path.join('one', 'two', 'three');
+        const interpreter2 = { path: path.join(folderPath, 'venv', 'bin', 'python.exe') };
+        const interpreter3 = { path: path.join(path.join('one', 'two', 'THREE'), 'venv', 'bin', 'python.exe') };
+        const folderUri = Uri.file(folderPath);
+        const pythonPathInConfig = typemoq.Mock.ofType<PythonPathInConfig>();
+        const pythonPath = { inspect: () => pythonPathInConfig.object };
+        pythonPathInConfig
+            .setup((p) => p.workspaceFolderValue)
+            .returns(() => undefined as any)
+            .verifiable(typemoq.Times.once());
+        pythonPathInConfig
+            .setup((p) => p.workspaceValue)
+            .returns(() => undefined as any)
+            .verifiable(typemoq.Times.once());
+        when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as any);
+        when(workspaceService.getConfiguration('python', folderUri)).thenReturn(pythonPath as any);
+
+        const resource = Uri.file('x');
+        // Return interpreters using the component adapter instead
+        when(componentAdapter.getWorkspaceVirtualEnvInterpreters(folderUri)).thenResolve([
+            interpreter2,
+            interpreter3,
+        ] as any);
+        const manager = mock(InterpreterAutoSelectionService);
+        const nextInvoked = createDeferred();
+        rule.next = () => Promise.resolve(nextInvoked.resolve());
+        when(helper.getBestInterpreter(deepEqual([interpreter2, interpreter3] as any))).thenReturn(interpreter2 as any);
+        rule.cacheSelectedInterpreter = () => Promise.resolve();
+
+        await rule.autoSelectInterpreter(resource, instance(manager));
+
+        verify(manager.setWorkspaceInterpreter(folderUri, interpreter2 as any)).once();
     });
 });

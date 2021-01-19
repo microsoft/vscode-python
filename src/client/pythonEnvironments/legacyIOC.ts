@@ -142,7 +142,7 @@ export async function inDiscoveryExperiment(): Promise<boolean> {
 export interface IPythonEnvironments extends ILocator {}
 
 @injectable()
-class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationService {
+export class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationService {
     // this will be set based on experiment
     private enabled = false;
 

@@ -13,6 +13,7 @@ import { IExperimentsManager, IInterpreterPathService, IPersistentStateFactory, 
 import { OSType } from '../../../common/utils/platform';
 import { IServiceContainer } from '../../../ioc/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { inDiscoveryExperiment } from '../../../pythonEnvironments/legacyIOC';
 import {
     IComponentAdapter,
     IInterpreterHelper,
@@ -62,9 +63,8 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         }
 
         let interpreters: PythonEnvironment[] | undefined = [];
-        const envs = await this.pyenvs.getWorkspaceVirtualEnvInterpreters(workspacePath.folderUri);
-        if (envs !== undefined) {
-            interpreters = envs;
+        if (await inDiscoveryExperiment()) {
+            interpreters = await this.pyenvs.getWorkspaceVirtualEnvInterpreters(workspacePath.folderUri);
         } else {
             interpreters = await this.getWorkspaceVirtualEnvInterpreters(workspacePath.folderUri);
         }
