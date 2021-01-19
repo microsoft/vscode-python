@@ -108,7 +108,7 @@ async function readDir(
         logVerbose(`listDir() timeout after ${opts.timeoutMs}ms for "${dirname}"`);
         if (opts.onTimeout !== undefined) {
             try {
-                return opts.onTimeout(dirname);
+                return await opts.onTimeout(dirname);
             } catch (err) {
                 if (opts.ignoreErrors) {
                     logError(`onTimeout() failed for "${dirname}" (${err})`);
