@@ -10,7 +10,7 @@ import { IFileSystem } from '../../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../../common/process/types';
 import { IPersistentStateFactory } from '../../../../common/types';
 import { IComponentAdapter } from '../../../../interpreter/contracts';
-import { IInterpreterHashProvider, IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
+import { IInterpreterHashProvider } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
 
 /**
@@ -20,6 +20,7 @@ import { IServiceContainer } from '../../../../ioc/types';
  * that instance of the store interpreter are restricted to system. Paths under
  * %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation* are also ok
  * to use. But currently this results in duplicate entries.
+ * Interpreters that fall into this category will not be displayed to the users.
  *
  * @param {string} pythonPath
  * @returns {boolean}
@@ -32,9 +33,26 @@ export function isRestrictedWindowsStoreInterpreterPath(pythonPath: string): boo
     );
 }
 
-// The parts of IComponentAdapter used here.
-interface IComponent {
-    isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined>;
+/**
+ * Whether this is a Windows Store/App Interpreter.
+ *
+ * @param {string} pythonPath
+ * @param {IComponentAdapter} pyenvs
+ * @returns {boolean}
+ * @memberof WindowsStoreInterpreter
+ */
+export async function isWindowsStoreInterpreter(pythonPath: string, pyenvs: IComponentAdapter): Promise<boolean> {
+    const result = await pyenvs.isWindowsStoreInterpreter(pythonPath);
+    if (result !== undefined) {
+        return result;
+    }
+
+    const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
+    return (
+        pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\'.toUpperCase()) ||
+        pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
+        pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
+    );
 }
 
 /**
@@ -57,50 +75,15 @@ interface IComponent {
  *
  * @export
  * @class WindowsStoreInterpreter
- * @implements {IWindowsStoreInterpreter}
  * @implements {IInterpreterHashProvider}
  */
 @injectable()
-export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInterpreterHashProvider {
+export class WindowsStoreInterpreter implements IInterpreterHashProvider {
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IPersistentStateFactory) private readonly persistentFactory: IPersistentStateFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
     ) {}
-
-    /**
-     * Whether this is a Windows Store/App Interpreter.
-     *
-     * @param {string} pythonPath
-     * @returns {boolean}
-     * @memberof WindowsStoreInterpreter
-     */
-    public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean> {
-        const result = await this.pyenvs.isWindowsStoreInterpreter(pythonPath);
-        if (result !== undefined) {
-            return result;
-        }
-        const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
-        return (
-            pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\'.toUpperCase()) ||
-            pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
-            pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
-        );
-    }
-
-    /**
-     * Whether this is a python executable in a windows app store folder that is internal and can be hidden from users.
-     * Interpreters that fall into this category will not be displayed to the users.
-     *
-     * @param {string} pythonPath
-     * @returns {Promise<boolean>}
-     * @memberof IInterpreterHelper
-     */
-    // eslint-disable-next-line class-methods-use-this
-    public isHiddenInterpreter(pythonPath: string): boolean {
-        return isRestrictedWindowsStoreInterpreterPath(pythonPath);
-    }
 
     /**
      * Gets the hash of the Python interpreter (installed from the windows store).

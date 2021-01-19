@@ -289,8 +289,6 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return { name: '', path: location };
     }
 
-    // Implements IWindowsStoreInterpreter
-
     // A result of `undefined` means "Fall back to the old code!"
     public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined> {
         if (!this.enabled) {

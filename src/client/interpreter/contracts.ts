@@ -43,7 +43,6 @@ export interface IComponentAdapter {
     // ICondaService
     isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined>;
     getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
-    // IWindowsStoreInterpreter
     isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined>;
 }
 

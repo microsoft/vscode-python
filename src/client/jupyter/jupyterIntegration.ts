@@ -25,14 +25,14 @@ import { getDebugpyPackagePath } from '../debugger/extension/adapter/remoteLaunc
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import {
+    IComponentAdapter,
     IInterpreterDisplay,
     IInterpreterService,
     IInterpreterStatusbarVisibilityFilter,
 } from '../interpreter/contracts';
-import { IWindowsStoreInterpreter } from '../interpreter/locators/types';
-import { WindowsStoreInterpreter } from '../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './types';
+import { isWindowsStoreInterpreter as isWinStoreInterpreter } from '../pythonEnvironments';
 
 export interface ILanguageServer extends Disposable {
     readonly connection: ILanguageServerConnection;
@@ -88,9 +88,6 @@ type PythonApiForJupyterExtension = {
         allowExceptions?: boolean,
     ): Promise<NodeJS.ProcessEnv | undefined>;
     isWindowsStoreInterpreter(pythonPath: string): Promise<boolean>;
-    /**
-     * IWindowsStoreInterpreter
-     */
     getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]>;
     /**
      * IInstaller
@@ -146,12 +143,12 @@ export class JupyterExtensionIntegration {
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
-        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IEnvironmentActivationService) private readonly envActivation: IEnvironmentActivationService,
         @inject(ILanguageServerCache) private readonly languageServerCache: ILanguageServerCache,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IInterpreterDisplay) private interpreterDisplay: IInterpreterDisplay,
+        @inject(IComponentAdapter) private pyenvs: IComponentAdapter,
     ) {}
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
@@ -168,7 +165,7 @@ export class JupyterExtensionIntegration {
                 allowExceptions?: boolean,
             ) => this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions),
             isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> =>
-                this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath),
+                isWinStoreInterpreter(pythonPath, this.pyenvs),
             getSuggestions: async (resource: Resource): Promise<IInterpreterQuickPickItem[]> =>
                 this.interpreterSelector.getSuggestions(resource),
             install: async (

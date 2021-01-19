@@ -4,14 +4,13 @@ import { traceError } from '../../../../common/logger';
 import { IFileSystem, IPlatformService, IRegistry, RegistryHive } from '../../../../common/platform/types';
 import { IPathUtils } from '../../../../common/types';
 import { Architecture } from '../../../../common/utils/platform';
-import { IInterpreterHelper } from '../../../../interpreter/contracts';
-import { IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
+import { IComponentAdapter, IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { parsePythonVersion } from '../../../info/pythonVersion';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
-import { WindowsStoreInterpreter } from './windowsStoreInterpreter';
+import { isWindowsStoreInterpreter, isRestrictedWindowsStoreInterpreterPath } from './windowsStoreInterpreter';
 
 const flatten = require('lodash/flatten');
 
@@ -35,15 +34,17 @@ export class WindowsRegistryService extends CacheableLocatorService {
 
     private readonly fs: IFileSystem;
 
+    private readonly pyenvs: IComponentAdapter;
+
     constructor(
         @inject(IRegistry) private registry: IRegistry,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
     ) {
         super('WindowsRegistryService', serviceContainer);
         this.pathUtils = serviceContainer.get<IPathUtils>(IPathUtils);
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
+        this.pyenvs = serviceContainer.get<IComponentAdapter>(IComponentAdapter);
     }
 
     public dispose(): void {
@@ -166,7 +167,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                         ? interpreterInfo.executablePath
                         : path.join(interpreterInfo.installPath, DefaultPythonExecutable);
 
-                if (this.windowsStoreInterpreter.isHiddenInterpreter(executablePath)) {
+                if (isRestrictedWindowsStoreInterpreterPath(executablePath)) {
                     return undefined;
                 }
                 const helper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
@@ -186,7 +187,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                     // Give preference to what we have retrieved from getInterpreterInformation.
                     version: details.version || parsePythonVersion(version),
                     companyDisplayName: interpreterInfo.companyDisplayName,
-                    envType: (await this.windowsStoreInterpreter.isWindowsStoreInterpreter(executablePath))
+                    envType: (await isWindowsStoreInterpreter(executablePath, this.pyenvs))
                         ? EnvironmentType.WindowsStore
                         : EnvironmentType.Unknown,
                 } as PythonEnvironment;

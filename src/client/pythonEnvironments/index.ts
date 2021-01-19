@@ -6,6 +6,7 @@ import { getGlobalStorage } from '../common/persistentState';
 import { getOSType, OSType } from '../common/utils/platform';
 import { IDisposable } from '../common/utils/resourceLifecycle';
 import { ActivationResult, ExtensionState } from '../components';
+import { IComponentAdapter } from '../interpreter/contracts';
 import { PythonEnvironments } from './api';
 import { getPersistentCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
@@ -27,6 +28,7 @@ import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreL
 import { EnvironmentInfoService } from './info/environmentInfoService';
 import { registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
 import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
+import { isWindowsStoreInterpreter as isWinStoreInterpreter } from './discovery/locators/services/windowsStoreInterpreter';
 
 /**
  * Set up the Python environments component (during extension activation).'
@@ -177,4 +179,8 @@ async function createCachingLocator(
         (env: PythonEnvInfo) => envInfoService.isInfoProvided(env.executable.filename), // "isComplete"
     );
     return new CachingLocator(cache, locators);
+}
+
+export async function isWindowsStoreInterpreter(pythonPath: string, pyenvs: IComponentAdapter): Promise<boolean> {
+    return isWinStoreInterpreter(pythonPath, pyenvs);
 }

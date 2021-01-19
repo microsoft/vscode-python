@@ -5,11 +5,10 @@ import { gte } from 'semver';
 
 import { Uri } from 'vscode';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { ICondaService } from '../../interpreter/contracts';
-import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
+import { IComponentAdapter, ICondaService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
-import { WindowsStoreInterpreter } from '../../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
+import { isWindowsStoreInterpreter } from '../../pythonEnvironments';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IFileSystem } from '../platform/types';
@@ -43,7 +42,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
-        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
@@ -62,7 +61,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             processService,
             this.fileSystem,
             undefined,
-            await this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath),
+            await isWindowsStoreInterpreter(pythonPath, this.pyenvs),
         );
     }
 
