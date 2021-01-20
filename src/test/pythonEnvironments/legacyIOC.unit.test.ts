@@ -47,7 +47,6 @@ import {
 import { PipEnvService } from '../../client/pythonEnvironments/discovery/locators/services/pipEnvService';
 import { PipEnvServiceHelper } from '../../client/pythonEnvironments/discovery/locators/services/pipEnvServiceHelper';
 import { WindowsRegistryService } from '../../client/pythonEnvironments/discovery/locators/services/windowsRegistryService';
-import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
     WorkspaceVirtualEnvService,
@@ -120,8 +119,6 @@ suite('Interpreters - Service Registry', () => {
         verify(
             serviceManager.addSingleton(IInterpreterLocatorProgressService, InterpreterLocatorProgressService),
         ).once();
-
-        verify(serviceManager.addSingleton(WindowsStoreInterpreter, WindowsStoreInterpreter)).once();
 
         verify(
             serviceManager.add<IInterpreterWatcher>(

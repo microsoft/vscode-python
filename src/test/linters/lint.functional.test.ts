@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import * as assert from 'assert';
-import * as child_process from 'child_process';
+import * as childProcess from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
@@ -626,7 +627,7 @@ class TestFixture extends BaseTestFixture {
         processLogger
             .setup((p) => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
-                return;
+                /** No body */
             });
         serviceContainer
             .setup((s) => s.get(TypeMoq.It.isValue(IProcessLogger), TypeMoq.It.isAny()))
@@ -704,7 +705,7 @@ class TestFixture extends BaseTestFixture {
         processLogger
             .setup((p) => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
-                return;
+                /** No body */
             });
         const procServiceFactory = new ProcessServiceFactory(
             envVarsService.object,
@@ -724,20 +725,23 @@ class TestFixture extends BaseTestFixture {
         );
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public makeDocument(filename: string): TextDocument {
         const doc = newMockDocument(filename);
+
         doc.setup((d) => d.lineAt(TypeMoq.It.isAny())).returns((lno) => {
             const lines = fs.readFileSync(filename).toString().split(os.EOL);
             const textline = TypeMoq.Mock.ofType<TextLine>(undefined, TypeMoq.MockBehavior.Strict);
             textline.setup((t) => t.text).returns(() => lines[lno]);
             return textline.object;
         });
+
         return doc.object;
     }
 }
 
 suite('Linting Functional Tests', () => {
-    const pythonPath = child_process.execSync(`${PYTHON_PATH} -c "import sys;print(sys.executable)"`);
+    const pythonPath = childProcess.execSync(`${PYTHON_PATH} -c "import sys;print(sys.executable)"`);
 
     console.log(`Testing linter with python ${pythonPath}`);
 
@@ -762,12 +766,10 @@ suite('Linting Functional Tests', () => {
 
         if (messagesToBeReceived.length === 0) {
             assert.equal(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
-        } else {
-            if (fixture.output.indexOf('ENOENT') === -1) {
-                // Pylint for Python Version 2.7 could return 80 linter messages, where as in 3.5 it might only return 1.
-                // Looks like pylint stops linting as soon as it comes across any ERRORS.
-                assert.notEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
-            }
+        } else if (fixture.output.indexOf('ENOENT') === -1) {
+            // Pylint for Python Version 2.7 could return 80 linter messages, where as in 3.5 it might only return 1.
+            // Looks like pylint stops linting as soon as it comes across any ERRORS.
+            assert.notEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
         }
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
@@ -779,6 +781,8 @@ suite('Linting Functional Tests', () => {
             const fixture = new TestFixture();
             const messagesToBeReturned = getMessages(product);
             await testLinterMessages(fixture, product, fileToLint, messagesToBeReturned);
+
+            return undefined;
         });
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
@@ -809,6 +813,8 @@ suite('Linting Functional Tests', () => {
             } finally {
                 await cleanUp();
             }
+
+            return undefined;
         });
     }
 

@@ -34,7 +34,7 @@ import { IComponentAdapter, ICondaService, IInterpreterService } from '../../cli
 import { IServiceContainer } from '../../client/ioc/types';
 import { RefactorProxy } from '../../client/refactor/proxy';
 import { PYTHON_PATH } from '../common';
-import { closeActiveWindows, initialize, initializeTest } from './../initialize';
+import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 type RenameResponse = {
     results: [{ diff: string }];
@@ -95,10 +95,12 @@ suite('Refactor Rename', () => {
                 () =>
                     new PythonExecutionFactory(
                         serviceContainer.object,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         undefined as any,
                         processServiceFactory.object,
                         configService.object,
                         condaService.object,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         undefined as any,
                         instance(pyenvs),
                     ),
@@ -107,7 +109,7 @@ suite('Refactor Rename', () => {
         processLogger
             .setup((p) => p.logProcess(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => {
-                return;
+                /** No body */
             });
         serviceContainer
             .setup((s) => s.get(typeMoq.It.isValue(IProcessLogger), typeMoq.It.isAny()))

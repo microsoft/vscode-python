@@ -56,7 +56,6 @@ import { KnownPathsService, KnownSearchPathsForInterpreters } from './discovery/
 import { PipEnvService } from './discovery/locators/services/pipEnvService';
 import { PipEnvServiceHelper } from './discovery/locators/services/pipEnvServiceHelper';
 import { WindowsRegistryService } from './discovery/locators/services/windowsRegistryService';
-import { WindowsStoreInterpreter } from './discovery/locators/services/windowsStoreInterpreter';
 import { isWindowsStoreEnvironment } from './discovery/locators/services/windowsStoreLocator';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
@@ -425,7 +424,6 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
         WorkspaceVirtualEnvWatcherService,
         WORKSPACE_VIRTUAL_ENV_SERVICE,
     );
-    serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
 
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
         IVirtualEnvironmentsSearchPathProvider,

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
+
 import * as assert from 'assert';
 import { expect } from 'chai';
 import { SemVer } from 'semver';
@@ -16,7 +18,6 @@ import { ProcessLogger } from '../../../client/common/process/logger';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
 import { CONDA_RUN_VERSION, PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import {
-    ExecutionFactoryCreationOptions,
     IBufferDecoder,
     IProcessLogger,
     IProcessService,
@@ -68,8 +69,8 @@ suite('Process - PythonExecutionFactory', () => {
         { resource: Uri.parse('x'), interpreter: undefined },
         { resource: Uri.parse('x'), interpreter: pythonInterpreter },
     ].forEach((item) => {
-        const resource = item.resource;
-        const interpreter = item.interpreter;
+        const { resource } = item;
+        const { interpreter } = item;
         suite(title(resource, interpreter), () => {
             let factory: PythonExecutionFactory;
             let activationHelper: IEnvironmentActivationService;
@@ -96,20 +97,23 @@ suite('Process - PythonExecutionFactory', () => {
                     .returns(() => Promise.resolve(true));
 
                 executionService = typemoq.Mock.ofType<IPythonExecutionService>();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 executionService.setup((p: any) => p.then).returns(() => undefined);
                 when(processLogger.logProcess('', [], {})).thenReturn();
                 processService = typemoq.Mock.ofType<IProcessService>();
                 processService
                     .setup((p) =>
                         p.on('exec', () => {
-                            return;
+                            /** No body */
                         }),
                     )
                     .returns(() => processService.object);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 processService.setup((p: any) => p.then).returns(() => undefined);
                 interpreterService = mock(InterpreterService);
                 when(interpreterService.getInterpreterDetails(anything())).thenResolve({
                     version: { major: 3 },
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any);
                 const serviceContainer = mock(ServiceContainer);
                 when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
@@ -154,8 +158,9 @@ suite('Process - PythonExecutionFactory', () => {
 
                 let createInvoked = false;
                 const mockExecService = 'something';
-                factory.create = async (_options: ExecutionFactoryCreationOptions) => {
+                factory.create = async () => {
                     createInvoked = true;
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     return Promise.resolve((mockExecService as any) as IPythonExecutionService);
                 };
 
@@ -173,8 +178,9 @@ suite('Process - PythonExecutionFactory', () => {
 
                 let createInvoked = false;
                 const mockExecService = 'something';
-                factory.create = async (_options: ExecutionFactoryCreationOptions) => {
+                factory.create = async () => {
                     createInvoked = true;
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     return Promise.resolve((mockExecService as any) as IPythonExecutionService);
                 };
 
@@ -185,8 +191,9 @@ suite('Process - PythonExecutionFactory', () => {
             test('PythonExecutionService is created', async () => {
                 let createInvoked = false;
                 const mockExecService = 'something';
-                factory.create = async (_options: ExecutionFactoryCreationOptions) => {
+                factory.create = async () => {
                     createInvoked = true;
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     return Promise.resolve((mockExecService as any) as IPythonExecutionService);
                 };
 
@@ -297,8 +304,7 @@ suite('Process - PythonExecutionFactory', () => {
                     verify(pythonSettings.pythonPath).once();
                     verify(condaService.getCondaEnvironment(pythonPath)).once();
                 } else {
-                    // @ts-ignore
-                    verify(condaService.getCondaEnvironment(interpreter.path)).once();
+                    verify(condaService.getCondaEnvironment(interpreter!.path)).once();
                 }
             });
 
@@ -308,8 +314,9 @@ suite('Process - PythonExecutionFactory', () => {
                 let createInvoked = false;
                 const pythonPath = 'path/to/python';
                 const mockExecService = 'mockService';
-                factory.create = async (_options: ExecutionFactoryCreationOptions) => {
+                factory.create = async () => {
                     createInvoked = true;
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     return Promise.resolve((mockExecService as any) as IPythonExecutionService);
                 };
 
