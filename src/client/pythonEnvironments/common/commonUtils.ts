@@ -32,9 +32,13 @@ export function findInterpretersInDir(
     ignoreErrors?: boolean,
     onTimeout?: (dirname: string) => Promise<DirEntry[]>,
 ): AsyncIterableIterator<string> {
+    // "checkBin" is a local variable rather than global
+    // so we can stub it out during unit testing.
+    const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
     const cfg = {
         filterSubDir,
         onTimeout,
+        filterFile: checkBin,
         maxDepth: recurseLevel,
         ignoreErrors: ignoreErrors || false,
     };
@@ -49,15 +53,13 @@ async function* iterExecutables(
     currentDepth: number,
     cfg: {
         filterSubDir: FileFilterFunc | undefined;
+        filterFile: FileFilterFunc | undefined;
         maxDepth: number | undefined;
         onTimeout?: (dirname: string) => Promise<DirEntry[]>;
         ignoreErrors: boolean;
     },
 ): AsyncIterableIterator<string> {
     const entries = await readDir(root, cfg);
-    // "checkBin" is a local variable rather than global
-    // so we can stub it out during unit testing.
-    const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
     for (const { filename, filetype } of entries) {
         if (filetype === FileType.Directory) {
             if (cfg.maxDepth && currentDepth <= cfg.maxDepth) {
@@ -66,7 +68,7 @@ async function* iterExecutables(
                 }
             }
         } else if (filetype === FileType.File || filetype === FileType.SymbolicLink) {
-            if (checkBin(filename)) {
+            if (matchFile(filename, cfg.filterFile, cfg.ignoreErrors)) {
                 yield filename;
             }
         } else {
