@@ -19,7 +19,7 @@ django
 isort
 
 # Integrated TensorBoard tests
-tb-nightly # Nightly build required until TensorBoard releases 2.5.0
+tensorboard
 
 # Python 2.7 support.
 pytest==4.6.9 ; python_version == '2.7'

@@ -34,7 +34,7 @@ suite('InterpreterVersionService', () => {
                 .setup((p) =>
                     p.exec(
                         typeMoq.It.isValue(pythonPath),
-                        typeMoq.It.isValue([isolated, 'pip', '--version']),
+                        typeMoq.It.isValue([isolated, '-c', 'import pip; print(pip.__version__)']),
                         typeMoq.It.isAny(),
                     ),
                 )
@@ -51,7 +51,7 @@ suite('InterpreterVersionService', () => {
                 .setup((p) =>
                     p.exec(
                         typeMoq.It.isValue(pythonPath),
-                        typeMoq.It.isValue([isolated, 'pip', '--version']),
+                        typeMoq.It.isValue([isolated, '-c', 'import pip; print(pip.__version__)']),
                         typeMoq.It.isAny(),
                     ),
                 )

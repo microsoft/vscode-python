@@ -17,7 +17,11 @@ suite('TensorBoard session creation', async () => {
     let applicationShell: IApplicationShell;
     let commandManager: ICommandManager;
 
-    setup(async () => {
+    setup(async function () {
+        if (process.env.CI_PYTHON_VERSION === '2.7') {
+            // TensorBoard 2.4.1 not available for Python 2.7
+            this.skip();
+        }
         sandbox = sinon.createSandbox();
         ({ serviceManager } = await initialize());
         // Pretend to be in experiment
@@ -67,7 +71,7 @@ suite('TensorBoard session creation', async () => {
     });
     test('When user selects file picker, display file picker', async () => {
         // Stub user selections
-        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.selectAFolder() });
+        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.selectAnotherFolder() });
         const filePickerStub = sandbox.stub(applicationShell, 'showOpenDialog');
 
         // Create session

@@ -298,7 +298,11 @@ suite('Module Installer', () => {
                         }
                         getModuleNamesForTesting().forEach((product) => {
                             const moduleName = product.moduleName;
-                            async function installModuleAndVerifyCommand(command: string, expectedArgs: string[]) {
+                            async function installModuleAndVerifyCommand(
+                                command: string,
+                                expectedArgs: string[],
+                                isUpgrade?: boolean,
+                            ) {
                                 terminalService
                                     .setup((t) =>
                                         t.sendCommand(
@@ -310,7 +314,7 @@ suite('Module Installer', () => {
                                     .returns(() => Promise.resolve())
                                     .verifiable(TypeMoq.Times.once());
 
-                                await installer.installModule(moduleName, resource);
+                                await installer.installModule(moduleName, resource, undefined, isUpgrade);
                                 terminalService.verifyAll();
                             }
 
@@ -550,29 +554,39 @@ suite('Module Installer', () => {
                                 });
                             }
                             if (installerClass === PipEnvInstaller) {
-                                test(`Test args (${product.name})`, async () => {
-                                    setActiveInterpreter();
-                                    const expectedArgs = ['install', moduleName, '--dev'];
-                                    if (moduleName === 'black') {
-                                        expectedArgs.push('--pre');
-                                    }
-                                    await installModuleAndVerifyCommand(pipenvName, expectedArgs);
+                                [false, true].forEach((isUpgrade) => {
+                                    test(`Test args (${product.name})`, async () => {
+                                        setActiveInterpreter();
+                                        const expectedArgs = ['install', moduleName, '--dev'];
+                                        if (isUpgrade) {
+                                            expectedArgs.push('--upgrade');
+                                        }
+                                        if (moduleName === 'black') {
+                                            expectedArgs.push('--pre');
+                                        }
+                                        await installModuleAndVerifyCommand(pipenvName, expectedArgs);
+                                    });
                                 });
                             }
                             if (installerClass === CondaInstaller) {
-                                test(`Test args (${product.name})`, async () => {
-                                    setActiveInterpreter();
-                                    const expectedArgs = ['install'];
-                                    if (condaEnvInfo && condaEnvInfo.name) {
-                                        expectedArgs.push('--name');
-                                        expectedArgs.push(condaEnvInfo.name.toCommandArgument());
-                                    } else if (condaEnvInfo && condaEnvInfo.path) {
-                                        expectedArgs.push('--prefix');
-                                        expectedArgs.push(condaEnvInfo.path.fileToCommandArgument());
-                                    }
-                                    expectedArgs.push(moduleName);
-                                    expectedArgs.push('-y');
-                                    await installModuleAndVerifyCommand(condaExecutable, expectedArgs);
+                                [false, true].forEach((isUpgrade) => {
+                                    test(`Test args (${product.name})`, async () => {
+                                        setActiveInterpreter();
+                                        const expectedArgs = [isUpgrade ? 'update' : 'install'];
+                                        if (product.name === 'tensorboard') {
+                                            expectedArgs.push('-c', 'conda-forge');
+                                        }
+                                        if (condaEnvInfo && condaEnvInfo.name) {
+                                            expectedArgs.push('--name');
+                                            expectedArgs.push(condaEnvInfo.name.toCommandArgument());
+                                        } else if (condaEnvInfo && condaEnvInfo.path) {
+                                            expectedArgs.push('--prefix');
+                                            expectedArgs.push(condaEnvInfo.path.fileToCommandArgument());
+                                        }
+                                        expectedArgs.push(moduleName);
+                                        expectedArgs.push('-y');
+                                        await installModuleAndVerifyCommand(condaExecutable, expectedArgs);
+                                    });
                                 });
                             }
                         });
