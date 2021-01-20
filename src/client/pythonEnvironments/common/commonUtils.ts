@@ -15,6 +15,8 @@ import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/vi
 import { isPosixPythonBin } from './posixUtils';
 import { isWindowsPythonExe } from './windowsUtils';
 
+const matchPythonExecutable = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
+
 type FileFilterFunc = (filename: string) => boolean;
 
 /**
@@ -50,6 +52,29 @@ export async function* findInterpretersInDir(
     }
 }
 
+/**
+ * Find all Python executables in the given directory.
+ */
+export async function* iterPythonExecutablesInDir(
+    dirname: string,
+    opts: {
+        ignoreErrors?: boolean;
+    } = {},
+): AsyncIterableIterator<DirEntry> {
+    const readDirOpts = {
+        ...opts,
+        filterFile: matchPythonExecutable,
+    };
+    const entries = await readDirEntries(dirname, readDirOpts);
+    for (const entry of entries) {
+        const { filetype } = entry;
+        if (filetype === FileType.File || filetype === FileType.SymbolicLink) {
+            yield entry;
+        }
+        // We ignore all other file types.
+    }
+}
+
 // This function helps simplify the recursion case.
 async function* walkSubTree(
     subRoot: string,
@@ -79,19 +104,49 @@ async function* walkSubTree(
 async function readDirEntries(
     dirname: string,
     opts: {
+        filterFilename?: FileFilterFunc;
         ignoreErrors?: boolean;
     } = {},
 ): Promise<DirEntry[]> {
-    let entries: fs.Dirent[];
+    const ignoreErrors = opts.ignoreErrors || false;
+    if (opts.filterFilename && getOSType() === OSType.Windows) {
+        // Since `readdir()` using "withFileTypes" is not efficient
+        // on Windows, we take advantage of the filter.
+        let basenames: string[];
+        try {
+            basenames = await fs.promises.readdir(dirname);
+        } catch (err) {
+            // Treat a missing directory as empty.
+            if (err.code === 'ENOENT') {
+                return [];
+            }
+            if (ignoreErrors) {
+                logError(`readdir() failed for "${dirname}" (${err})`);
+                return [];
+            }
+            throw err; // re-throw
+        }
+        const filenames = basenames
+            .map((b) => path.join(dirname, b))
+            .filter((f) => matchFile(f, opts.filterFilename, ignoreErrors));
+        return Promise.all(
+            filenames.map(async (filename) => {
+                const filetype = (await getFileType(filename, opts)) || FileType.Unknown;
+                return { filename, filetype };
+            }),
+        );
+    }
+
+    let raw: fs.Dirent[];
     try {
-        entries = await fs.promises.readdir(dirname, { withFileTypes: true });
+        raw = await fs.promises.readdir(dirname, { withFileTypes: true });
     } catch (err) {
         // Treat a missing directory as empty.
         if (err.code === 'ENOENT') {
             return [];
         }
-        if (opts.ignoreErrors) {
-            logError(`readDir() failed for "${dirname}" (${err})`);
+        if (ignoreErrors) {
+            logError(`readdir() failed for "${dirname}" (${err})`);
             return [];
         }
         throw err; // re-throw
@@ -106,11 +161,37 @@ async function readDirEntries(
     // if we needed more information than just the file type
     // then we would be forced to incur the extra cost
     // of `lstat()` anyway.
-    return entries.map((entry) => {
+    const entries = raw.map((entry) => {
         const filename = path.join(dirname, entry.name);
         const filetype = convertFileType(entry);
         return { filename, filetype };
     });
+    if (opts.filterFilename) {
+        return entries.filter((e) => matchFile(e.filename, opts.filterFilename, ignoreErrors));
+    }
+    return entries;
+}
+
+async function getFileType(
+    filename: string,
+    opts: {
+        ignoreErrors?: boolean;
+    } = {},
+): Promise<FileType | undefined> {
+    let stat: fs.Stats;
+    try {
+        stat = await fs.promises.lstat(filename);
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            return undefined;
+        }
+        if (opts.ignoreErrors) {
+            logError(`lstat() failed for "${filename}" (${err})`);
+            return FileType.Unknown;
+        }
+        throw err; // re-throw
+    }
+    return convertFileType(stat);
 }
 
 function matchFile(
