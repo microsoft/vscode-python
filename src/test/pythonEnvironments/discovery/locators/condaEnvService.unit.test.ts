@@ -392,7 +392,7 @@ suite('Interpreters from Conda Environments', () => {
 
     async function includeDefaultPrefixIntoListOfInterpreters(isWindows: boolean) {
         const info = {
-            defaultPrefix: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
+            default_prefix: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
         };
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
@@ -400,8 +400,8 @@ suite('Interpreters from Conda Environments', () => {
                 isWindows ? path.join(environmentPath, 'python.exe') : path.join(environmentPath, 'bin', 'python'),
             );
         const pythonPath = isWindows
-            ? path.join(info.defaultPrefix, 'python.exe')
-            : path.join(info.defaultPrefix, 'bin', 'python');
+            ? path.join(info.default_prefix, 'python.exe')
+            : path.join(info.default_prefix, 'bin', 'python');
         fileSystem.setup((fs) => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         interpreterHelper
             .setup((i) => i.getInterpreterInformation(TypeMoq.It.isAny()))
@@ -415,7 +415,7 @@ suite('Interpreters from Conda Environments', () => {
         );
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
 
-        const path1 = path.join(info.defaultPrefix, isWindows ? 'python.exe' : path.join('bin', 'python'));
+        const path1 = path.join(info.default_prefix, isWindows ? 'python.exe' : path.join('bin', 'python'));
         assert.equal(interpreters[0].path, path1, 'Incorrect path for first env');
         assert.equal(
             interpreters[0].companyDisplayName,

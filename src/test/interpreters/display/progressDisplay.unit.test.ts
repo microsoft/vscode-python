@@ -11,6 +11,8 @@ import { Common, Interpreters } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { IComponentAdapter, IInterpreterLocatorProgressService } from '../../../client/interpreter/contracts';
 import { InterpreterLocatorProgressStatubarHandler } from '../../../client/interpreter/display/progressDisplay';
+import { ServiceContainer } from '../../../client/ioc/container';
+import { IServiceContainer } from '../../../client/ioc/types';
 
 type ProgressTask<R> = (
     progress: Progress<{ message?: string; increment?: number }>,
@@ -18,36 +20,44 @@ type ProgressTask<R> = (
 ) => Thenable<R>;
 
 suite('Interpreters - Display Progress', () => {
-    let refreshingCallback: (e: void) => any | undefined;
-    let refreshedCallback: (e: void) => any | undefined;
+    let refreshingCallback: (e: void) => unknown | undefined;
+    let refreshedCallback: (e: void) => unknown | undefined;
     const progressService: IInterpreterLocatorProgressService = {
-        onRefreshing(listener: (e: void) => any): Disposable {
+        onRefreshing(listener: (e: void) => unknown): Disposable {
             refreshingCallback = listener;
             return { dispose: noop };
         },
-        onRefreshed(listener: (e: void) => any): Disposable {
+        onRefreshed(listener: (e: void) => unknown): Disposable {
             refreshedCallback = listener;
             return { dispose: noop };
         },
-        register(): void {
-            noop();
+        activate(): Promise<void> {
+            return Promise.resolve();
         },
     };
+    let serviceContainer: IServiceContainer;
+
+    setup(() => {
+        serviceContainer = mock(ServiceContainer);
+        when(serviceContainer.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService)).thenReturn(
+            progressService,
+        );
+    });
 
     test('Display loading message when refreshing interpreters for the first time', async () => {
         const shell = mock(ApplicationShell);
         const statusBar = new InterpreterLocatorProgressStatubarHandler(
             instance(shell),
-            progressService,
+            instance(serviceContainer),
             [],
             instance(mock(IComponentAdapter)),
         );
         when(shell.withProgress(anything(), anything())).thenResolve();
 
-        statusBar.register();
+        await statusBar.activate();
         refreshingCallback(undefined);
 
-        const options = capture(shell.withProgress as any).last()[0] as ProgressOptions;
+        const options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
         expect(options.title).to.be.equal(Common.loadingExtension());
     });
 
@@ -55,21 +65,21 @@ suite('Interpreters - Display Progress', () => {
         const shell = mock(ApplicationShell);
         const statusBar = new InterpreterLocatorProgressStatubarHandler(
             instance(shell),
-            progressService,
+            instance(serviceContainer),
             [],
             instance(mock(IComponentAdapter)),
         );
         when(shell.withProgress(anything(), anything())).thenResolve();
 
-        statusBar.register();
+        await statusBar.activate();
         refreshingCallback(undefined);
 
-        let options = capture(shell.withProgress as any).last()[0] as ProgressOptions;
+        let options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
         expect(options.title).to.be.equal(Common.loadingExtension());
 
         refreshingCallback(undefined);
 
-        options = capture(shell.withProgress as any).last()[0] as ProgressOptions;
+        options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
         expect(options.title).to.be.equal(Interpreters.refreshing());
     });
 
@@ -77,18 +87,18 @@ suite('Interpreters - Display Progress', () => {
         const shell = mock(ApplicationShell);
         const statusBar = new InterpreterLocatorProgressStatubarHandler(
             instance(shell),
-            progressService,
+            instance(serviceContainer),
             [],
             instance(mock(IComponentAdapter)),
         );
         when(shell.withProgress(anything(), anything())).thenResolve();
 
-        statusBar.register();
+        await statusBar.activate();
         refreshingCallback(undefined);
 
-        const options = capture(shell.withProgress as any).last()[0] as ProgressOptions;
-        const callback = capture(shell.withProgress as any).last()[1] as ProgressTask<void>;
-        const promise = callback(undefined as any, undefined as any);
+        const options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
+        const callback = capture(shell.withProgress as never).last()[1] as ProgressTask<void>;
+        const promise = callback(undefined as never, undefined as never);
 
         expect(options.title).to.be.equal(Common.loadingExtension());
 

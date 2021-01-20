@@ -44,7 +44,6 @@ import {
 import {
     IInterpreterDisplay,
     IInterpreterHelper,
-    IInterpreterLocatorProgressHandler,
     IInterpreterService,
     IInterpreterVersionService,
     IShebangCodeLensProvider,
@@ -94,7 +93,7 @@ suite('Interpreters - Service Registry', () => {
             [IInterpreterHelper, InterpreterHelper],
             [IInterpreterComparer, InterpreterComparer],
 
-            [IInterpreterLocatorProgressHandler, InterpreterLocatorProgressStatubarHandler],
+            [IExtensionSingleActivationService, InterpreterLocatorProgressStatubarHandler],
 
             [IInterpreterAutoSelectionRule, CurrentPathInterpretersAutoSelectionRule, AutoSelectionRule.currentPath],
             [IInterpreterAutoSelectionRule, SystemWideInterpretersAutoSelectionRule, AutoSelectionRule.systemWide],
@@ -118,7 +117,8 @@ suite('Interpreters - Service Registry', () => {
             [IEnvironmentActivationService, EnvironmentActivationService],
             [IExtensionActivationService, CondaInheritEnvPrompt],
         ].forEach((mapping) => {
-            verify(serviceManager.addSingleton.apply(serviceManager, mapping as any)).once();
+            // eslint-disable-next-line prefer-spread
+            verify(serviceManager.addSingleton.apply(serviceManager, mapping as never)).once();
         });
     });
 });

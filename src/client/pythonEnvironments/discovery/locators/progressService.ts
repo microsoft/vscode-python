@@ -38,7 +38,7 @@ export class InterpreterLocatorProgressService implements IInterpreterLocatorPro
         return this.refreshed.event;
     }
 
-    public register(): void {
+    public async activate(): Promise<void> {
         this.locators.forEach((locator) => {
             locator.onLocating(this.handleProgress, this, this.disposables);
         });

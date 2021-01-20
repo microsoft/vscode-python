@@ -5,36 +5,56 @@
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { instance, mock, verify, when } from 'ts-mockito';
-import { FileSystem } from '../../../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../../../client/common/platform/types';
-import { InterpreterHashProvider } from '../../../../client/pythonEnvironments/discovery/locators/services/hashProvider';
+import * as sinon from 'sinon';
+import * as fsapi from 'fs-extra';
+import * as hashApi from '../../../../client/common/platform/fileSystem';
+import { getInterpreterHash } from '../../../../client/pythonEnvironments/discovery/locators/services/hashProvider';
 
 use(chaiAsPromised);
 
 suite('Interpreters - Interpreter Hash Provider', () => {
-    let hashProvider: InterpreterHashProvider;
-    let fs: IFileSystem;
+    let fsLStatStub: sinon.SinonStub;
+    let hashStub: sinon.SinonStub;
     setup(() => {
-        fs = mock(FileSystem);
-        hashProvider = new InterpreterHashProvider(instance(fs));
+        fsLStatStub = sinon.stub(fsapi, 'lstat');
+        hashStub = sinon.stub(hashApi, 'getHashString');
+        hashStub.resolves('hash');
+    });
+    teardown(() => {
+        fsLStatStub.restore();
+        hashStub.restore();
     });
     test('Get hash from fs', async () => {
-        const pythonPath = 'WindowsInterpreterPath';
-        when(fs.getFileHash(pythonPath)).thenResolve('hash');
-
-        const hash = await hashProvider.getInterpreterHash(pythonPath);
+        const pythonPath = 'some/python.exe';
+        const now = Date.now();
+        fsLStatStub.withArgs(pythonPath).resolves({
+            ctime: now,
+            mtime: now,
+        });
+        const hash = await getInterpreterHash(pythonPath);
 
         expect(hash).to.equal('hash');
-        verify(fs.getFileHash(pythonPath)).once();
+        expect(fsLStatStub.calledOnceWith(pythonPath)).to.equal(true);
     });
-    test('Exceptios from fs.getFilehash will be bubbled up', async () => {
-        const pythonPath = 'WindowsInterpreterPath';
-        when(fs.getFileHash(pythonPath)).thenReject(new Error('Kaboom'));
+    test('Get hash from fs for windows store python', async () => {
+        const pythonPath = 'winstore/python.exe';
+        const now = Date.now();
+        fsLStatStub.withArgs(pythonPath).throws({ code: 'UNKNOWN' });
+        fsLStatStub.withArgs('winstore').resolves({
+            ctime: now,
+            mtime: now,
+        });
+        const hash = await getInterpreterHash(pythonPath);
 
-        const promise = hashProvider.getInterpreterHash(pythonPath);
+        expect(hash).to.equal('hash');
+        expect(fsLStatStub.calledTwice).to.equal(true);
+    });
+    test('Exception from getInterpreterHash will be bubbled up', async () => {
+        const pythonPath = 'winstore/python.exe';
+        fsLStatStub.withArgs(pythonPath).rejects({ code: 'UNKNOWN' });
+        fsLStatStub.withArgs('winstore').rejects(new Error('Kaboom'));
+        const promise = getInterpreterHash(pythonPath);
 
-        verify(fs.getFileHash(pythonPath)).once();
         await expect(promise).to.eventually.be.rejectedWith('Kaboom');
     });
 });

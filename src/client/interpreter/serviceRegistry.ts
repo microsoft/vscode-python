@@ -45,7 +45,6 @@ import {
 import {
     IInterpreterDisplay,
     IInterpreterHelper,
-    IInterpreterLocatorProgressHandler,
     IInterpreterService,
     IInterpreterVersionService,
     IShebangCodeLensProvider,
@@ -117,8 +116,8 @@ export function registerInterpreterTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<IInterpreterComparer>(IInterpreterComparer, InterpreterComparer);
 
-    serviceManager.addSingleton<IInterpreterLocatorProgressHandler>(
-        IInterpreterLocatorProgressHandler,
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
         InterpreterLocatorProgressStatubarHandler,
     );
 

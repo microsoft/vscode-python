@@ -60,9 +60,7 @@ src/test/interpreters/interpreterService.unit.test.ts
 src/test/interpreters/activation/service.unit.test.ts
 src/test/interpreters/activation/wrapperEnvironmentActivationService.unit.test.ts
 src/test/interpreters/helpers.unit.test.ts
-src/test/interpreters/serviceRegistry.unit.test.ts
 src/test/interpreters/currentPathService.unit.test.ts
-src/test/interpreters/display/progressDisplay.unit.test.ts
 src/test/interpreters/display/interpreterSelectionTip.unit.test.ts
 src/test/interpreters/display.unit.test.ts
 
@@ -103,7 +101,6 @@ src/test/activation/languageServer/languageServerFolderService.unit.test.ts
 src/test/activation/languageServer/languageServerPackageRepository.unit.test.ts
 src/test/activation/languageServer/manager.unit.test.ts
 src/test/activation/languageServer/analysisOptions.unit.test.ts
-src/test/activation/languageServer/downloader.unit.test.ts
 src/test/activation/languageServer/languageServerExtension.unit.test.ts
 src/test/activation/languageServer/languageClientFactory.unit.test.ts
 src/test/activation/languageServer/outputChannel.unit.test.ts
@@ -362,7 +359,6 @@ src/client/interpreter/activation/preWarmVariables.ts
 src/client/interpreter/activation/service.ts
 src/client/interpreter/display/shebangCodeLensProvider.ts
 src/client/interpreter/display/index.ts
-src/client/interpreter/display/progressDisplay.ts
 src/client/interpreter/display/interpreterSelectionTip.ts
 
 src/client/api.ts
@@ -428,7 +424,6 @@ src/client/activation/common/languageServerChangeHandler.ts
 src/client/activation/common/activatorBase.ts
 src/client/activation/common/languageServerFolderService.ts
 src/client/activation/common/languageServerPackageService.ts
-src/client/activation/common/downloader.ts
 src/client/activation/common/packageRepository.ts
 src/client/activation/common/analysisOptions.ts
 src/client/activation/common/downloadChannelRules.ts
@@ -554,7 +549,6 @@ src/client/common/platform/fs-temp.ts
 src/client/common/platform/fs-paths.ts
 src/client/common/platform/platformService.ts
 src/client/common/platform/types.ts
-src/client/common/platform/fileSystem.ts
 src/client/common/platform/registry.ts
 src/client/common/platform/pathUtils.ts
 src/client/common/persistentState.ts
@@ -593,7 +587,6 @@ src/client/common/utils/misc.ts
 src/client/common/utils/logging.ts
 src/client/common/utils/cacheUtils.ts
 src/client/common/utils/workerPool.ts
-src/client/common/crypto.ts
 src/client/common/extensions.ts
 src/client/common/dotnet/compatibilityService.ts
 src/client/common/dotnet/serviceRegistry.ts
@@ -664,7 +657,6 @@ src/client/common/process/types.ts
 src/client/common/process/logger.ts
 src/client/common/process/baseDaemon.ts
 src/client/common/process/pythonProcess.ts
-src/client/common/process/proc.ts
 src/client/common/process/pythonEnvironment.ts
 src/client/common/process/decoder.ts
 src/client/common/insidersBuild/insidersExtensionPrompt.ts
@@ -762,7 +754,6 @@ src/startPage-ui/react-common/image.tsx
 src/startPage-ui/react-common/locReactSide.ts
 src/startPage-ui/react-common/logger.ts
 src/startPage-ui/react-common/postOffice.ts
-src/startPage-ui/react-common/themeDetector.ts
 src/startPage-ui/startPage/index.tsx
 src/startPage-ui/startPage/startPage.tsx
 src/test/startPage/startPageIocContainer.ts

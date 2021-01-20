@@ -4,45 +4,18 @@
 'use strict';
 
 import { expect } from 'chai';
-import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
-import { FileSystem } from '../../../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../../../client/common/platform/types';
-import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../client/common/process/types';
-import { IPersistentStateFactory } from '../../../../client/common/types';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { IComponentAdapter } from '../../../../client/interpreter/contracts';
-import { ServiceContainer } from '../../../../client/ioc/container';
-import { IServiceContainer } from '../../../../client/ioc/types';
 import {
-    WindowsStoreInterpreter,
     isWindowsStoreInterpreter,
     isRestrictedWindowsStoreInterpreterPath,
 } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 
 suite('Interpreters - Windows Store Interpreter', () => {
-    let windowsStoreInterpreter: WindowsStoreInterpreter;
     let pyenvs: IComponentAdapter;
-    let fs: IFileSystem;
-    let persistanceStateFactory: IPersistentStateFactory;
-    let executionFactory: IPythonExecutionFactory;
-    let serviceContainer: IServiceContainer;
-
     setup(() => {
         pyenvs = mock<IComponentAdapter>();
-        fs = mock(FileSystem);
-        persistanceStateFactory = mock(PersistentStateFactory);
-        executionFactory = mock(PythonExecutionFactory);
-        serviceContainer = mock(ServiceContainer);
-        when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(
-            instance(executionFactory),
-        );
-        when(pyenvs.isWindowsStoreInterpreter(anything())).thenResolve(undefined);
-        windowsStoreInterpreter = new WindowsStoreInterpreter(
-            instance(serviceContainer),
-            instance(persistanceStateFactory),
-            instance(fs),
-        );
+        when(pyenvs.isWindowsStoreInterpreter(anything())).thenReturn(Promise.resolve(undefined));
     });
 
     const windowsStoreInterpreters = [
@@ -191,57 +164,5 @@ suite('Interpreters - Windows Store Interpreter', () => {
                 expect(isRestrictedWindowsStoreInterpreterPath(interpreter)).to.equal(false, 'Must be true');
             });
         }
-    });
-
-    test('Getting hash should get hash of python executable', async () => {
-        const pythonPath = 'WindowsInterpreterPath';
-
-        const stateStore = mock<PersistentState<string | undefined>>(PersistentState);
-        const key = `WINDOWS_STORE_INTERPRETER_HASH_${pythonPath}`;
-        const pythonService = mock<IPythonExecutionService>();
-        const pythonServiceInstance = instance(pythonService);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (pythonServiceInstance as any).then = undefined;
-        const oneHour = 60 * 60 * 1000;
-
-        when(
-            persistanceStateFactory.createGlobalPersistentState<string | undefined>(key, undefined, oneHour),
-        ).thenReturn(instance(stateStore));
-        when(stateStore.value).thenReturn();
-        when(executionFactory.create(deepEqual({ pythonPath }))).thenResolve(pythonServiceInstance);
-        when(pythonService.getExecutablePath()).thenResolve('FullyQualifiedPathToPythonExec');
-        when(fs.getFileHash('FullyQualifiedPathToPythonExec')).thenResolve('hash');
-        when(stateStore.updateValue('hash')).thenResolve();
-
-        const hash = await windowsStoreInterpreter.getInterpreterHash(pythonPath);
-
-        verify(persistanceStateFactory.createGlobalPersistentState(key, undefined, oneHour)).once();
-        verify(stateStore.value).once();
-        verify(executionFactory.create(deepEqual({ pythonPath }))).once();
-        verify(pythonService.getExecutablePath()).once();
-        verify(fs.getFileHash('FullyQualifiedPathToPythonExec')).once();
-        verify(stateStore.updateValue('hash')).once();
-        expect(hash).to.equal('hash');
-    });
-
-    test('Getting hash from cache', async () => {
-        const pythonPath = 'WindowsInterpreterPath';
-
-        const stateStore = mock<PersistentState<string | undefined>>(PersistentState);
-        const key = `WINDOWS_STORE_INTERPRETER_HASH_${pythonPath}`;
-        const oneHour = 60 * 60 * 1000;
-
-        when(
-            persistanceStateFactory.createGlobalPersistentState<string | undefined>(key, undefined, oneHour),
-        ).thenReturn(instance(stateStore));
-        when(stateStore.value).thenReturn('fileHash');
-        const hash = await windowsStoreInterpreter.getInterpreterHash(pythonPath);
-
-        verify(persistanceStateFactory.createGlobalPersistentState(key, undefined, oneHour)).once();
-        verify(stateStore.value).atLeast(1);
-        verify(executionFactory.create(anything())).never();
-        verify(fs.getFileHash(anything())).never();
-        verify(stateStore.updateValue(anything())).never();
-        expect(hash).to.equal('fileHash');
     });
 });

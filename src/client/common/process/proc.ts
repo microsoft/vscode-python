@@ -22,9 +22,11 @@ import {
 
 export class ProcessService extends EventEmitter implements IProcessService {
     private processesToKill = new Set<IDisposable>();
+
     constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) {
         super();
     }
+
     public static isAlive(pid: number): boolean {
         try {
             process.kill(pid, 0);
@@ -33,11 +35,12 @@ export class ProcessService extends EventEmitter implements IProcessService {
             return false;
         }
     }
+
     public static kill(pid: number): void {
         try {
             if (process.platform === 'win32') {
                 // Windows doesn't support SIGTERM, so execute taskkill to kill the process
-                execSync(`taskkill /pid ${pid} /T /F`);
+                execSync(`taskkill /pid ${pid} /T /F`); // NOSONAR
             } else {
                 process.kill(pid);
             }
@@ -45,7 +48,8 @@ export class ProcessService extends EventEmitter implements IProcessService {
             // Ignore.
         }
     }
-    public dispose() {
+
+    public dispose(): void {
         this.removeAllListeners();
         this.processesToKill.forEach((p) => {
             try {
@@ -62,7 +66,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
         const disposable: IDisposable = {
-            dispose: function () {
+            dispose() {
                 if (proc && !proc.killed && !procExited) {
                     ProcessService.kill(proc.pid);
                 }
@@ -76,8 +80,11 @@ export class ProcessService extends EventEmitter implements IProcessService {
         const output = new Observable<Output<string>>((subscriber) => {
             const disposables: IDisposable[] = [];
 
+            // eslint-disable-next-line @typescript-eslint/ban-types
             const on = (ee: Readable | null, name: string, fn: Function) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 ee?.on(name, fn as any);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 disposables.push({ dispose: () => ee?.removeListener(name, fn as any) as any });
             };
 
@@ -97,7 +104,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
                 if (source === 'stderr' && options.throwOnStdErr) {
                     subscriber.error(new StdErrError(out));
                 } else {
-                    subscriber.next({ source, out: out });
+                    subscriber.next({ source, out });
                 }
             };
 
@@ -129,6 +136,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
             dispose: disposable.dispose,
         };
     }
+
     public exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
         const spawnOptions = this.getDefaultOptions(options);
         const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
@@ -144,8 +152,11 @@ export class ProcessService extends EventEmitter implements IProcessService {
         this.processesToKill.add(disposable);
         const disposables: IDisposable[] = [];
 
+        // eslint-disable-next-line @typescript-eslint/ban-types
         const on = (ee: Readable | null, name: string, fn: Function) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ee?.on(name, fn as any);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             disposables.push({ dispose: () => ee?.removeListener(name, fn as any) as any });
         };
 
@@ -200,9 +211,9 @@ export class ProcessService extends EventEmitter implements IProcessService {
                 } else {
                     // Make sure stderr is undefined if we actually had none. This is checked
                     // elsewhere because that's how exec behaves.
-                    resolve({ stderr: stderr && stderr.length > 0 ? stderr : undefined, stdout: stdout });
+                    resolve({ stderr: stderr && stderr.length > 0 ? stderr : undefined, stdout });
                 }
-            });
+            }); // NOSONAR
             const disposable: IDisposable = {
                 dispose: () => {
                     if (!proc.killed) {
@@ -218,10 +229,11 @@ export class ProcessService extends EventEmitter implements IProcessService {
         const defaultOptions = { ...options };
         const execOptions = defaultOptions as SpawnOptions;
         if (execOptions) {
-            const encoding = (execOptions.encoding =
+            execOptions.encoding =
                 typeof execOptions.encoding === 'string' && execOptions.encoding.length > 0
                     ? execOptions.encoding
-                    : DEFAULT_ENCODING);
+                    : DEFAULT_ENCODING;
+            const { encoding } = execOptions;
             delete execOptions.encoding;
             execOptions.encoding = encoding;
         }

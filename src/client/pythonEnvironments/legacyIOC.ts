@@ -42,18 +42,15 @@ import { inExperiment, isParentPath } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
-import { CondaEnvironmentInfo } from './discovery/locators/services/conda';
+import { CondaEnvironmentInfo, isCondaEnvironment } from './discovery/locators/services/conda';
 import { CondaEnvFileService } from './discovery/locators/services/condaEnvFileService';
 import { CondaEnvService } from './discovery/locators/services/condaEnvService';
-import { isCondaEnvironment } from './discovery/locators/services/condaLocator';
 import { CondaService } from './discovery/locators/services/condaService';
 import { CurrentPathService, PythonInPathCommandProvider } from './discovery/locators/services/currentPathService';
 import {
     GlobalVirtualEnvironmentsSearchPathProvider,
     GlobalVirtualEnvService,
 } from './discovery/locators/services/globalVirtualEnvService';
-import { InterpreterHashProvider } from './discovery/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from './discovery/locators/services/hashProviderFactory';
 import { InterpreterWatcherBuilder } from './discovery/locators/services/interpreterWatcherBuilder';
 import { KnownPathsService, KnownSearchPathsForInterpreters } from './discovery/locators/services/KnownPathsService';
 import { PipEnvService } from './discovery/locators/services/pipEnvService';
@@ -393,11 +390,12 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
             IKnownSearchPathsForInterpreters,
             KnownSearchPathsForInterpreters,
         );
+        serviceManager.addSingleton<IInterpreterLocatorProgressService>(
+            IInterpreterLocatorProgressService,
+            InterpreterLocatorProgressService,
+        );
+        serviceManager.addBinding(IInterpreterLocatorProgressService, IExtensionSingleActivationService);
     }
-    serviceManager.addSingleton<IInterpreterLocatorProgressService>(
-        IInterpreterLocatorProgressService,
-        InterpreterLocatorProgressService,
-    );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
         CurrentPathService,
@@ -428,11 +426,7 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
         WORKSPACE_VIRTUAL_ENV_SERVICE,
     );
     serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-    serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-    serviceManager.addSingleton<InterpeterHashProviderFactory>(
-        InterpeterHashProviderFactory,
-        InterpeterHashProviderFactory,
-    );
+
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
         IVirtualEnvironmentsSearchPathProvider,
         WorkspaceVirtualEnvironmentsSearchPathProvider,
