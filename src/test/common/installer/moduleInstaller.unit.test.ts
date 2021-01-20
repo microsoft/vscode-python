@@ -557,12 +557,7 @@ suite('Module Installer', () => {
                                 [false, true].forEach((isUpgrade) => {
                                     test(`Test args (${product.name})`, async () => {
                                         setActiveInterpreter();
-                                        // Upgrade flag is only passed through for TensorBoardInstaller
-                                        const expectedArgs = [
-                                            isUpgrade && product.name === 'tensorboard' ? 'update' : 'install',
-                                            moduleName,
-                                            '--dev',
-                                        ];
+                                        const expectedArgs = [isUpgrade ? 'update' : 'install', moduleName, '--dev'];
                                         if (moduleName === 'black') {
                                             expectedArgs.push('--pre');
                                         }
@@ -574,10 +569,7 @@ suite('Module Installer', () => {
                                 [false, true].forEach((isUpgrade) => {
                                     test(`Test args (${product.name})`, async () => {
                                         setActiveInterpreter();
-                                        // Upgrade flag is only passed through for TensorBoardInstaller
-                                        const expectedArgs = [
-                                            isUpgrade && product.name === 'tensorboard' ? 'update' : 'install',
-                                        ];
+                                        const expectedArgs = [isUpgrade ? 'update' : 'install'];
                                         if (product.name === 'tensorboard') {
                                             expectedArgs.push('-c', 'conda-forge');
                                         }
