@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import Sinon, * as sinon from 'sinon';
 import { IApplicationShell, ICommandManager } from '../../client/common/application/types';
-import { IExperimentService, IInstaller, InstallerResponse } from '../../client/common/types';
+import { IExperimentService, IInstaller, InstallerResponse, ModuleInstallStatus } from '../../client/common/types';
 import { TensorBoard } from '../../client/common/utils/localize';
 import { IServiceManager } from '../../client/ioc/types';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../client/tensorBoard/constants';
@@ -95,7 +95,7 @@ suite('TensorBoard session creation', async () => {
     });
     test('If TensorBoard is not installed and user chooses not to install, do not show error', async () => {
         const installer = serviceManager.get<IInstaller>(IInstaller);
-        sandbox.stub(installer, 'isInstalled').resolves(false);
+        sandbox.stub(installer, 'isModuleVersionCompatible').resolves(ModuleInstallStatus.NotInstalled);
         sandbox.stub(installer, 'promptToInstall').resolves(InstallerResponse.Ignore);
 
         await commandManager.executeCommand(
