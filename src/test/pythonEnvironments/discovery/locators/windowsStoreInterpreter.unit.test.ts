@@ -11,27 +11,25 @@ import { IFileSystem } from '../../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../client/common/process/types';
 import { IPersistentStateFactory } from '../../../../client/common/types';
+import { IComponentAdapter } from '../../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../../client/ioc/container';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { WindowsStoreInterpreter } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
-
-// We use this for mocking.
-class ComponentAdapter {
-    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-    public async isWindowsStoreInterpreter(_pythonPath: string): Promise<boolean | undefined> {
-        return undefined;
-    }
-}
+import {
+    WindowsStoreInterpreter,
+    isWindowsStoreInterpreter,
+    isRestrictedWindowsStoreInterpreterPath,
+} from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 
 suite('Interpreters - Windows Store Interpreter', () => {
     let windowsStoreInterpreter: WindowsStoreInterpreter;
-    let pyenvs: ComponentAdapter;
+    let pyenvs: IComponentAdapter;
     let fs: IFileSystem;
     let persistanceStateFactory: IPersistentStateFactory;
     let executionFactory: IPythonExecutionFactory;
     let serviceContainer: IServiceContainer;
+
     setup(() => {
-        pyenvs = mock(ComponentAdapter);
+        pyenvs = mock<IComponentAdapter>();
         fs = mock(FileSystem);
         persistanceStateFactory = mock(PersistentStateFactory);
         executionFactory = mock(PythonExecutionFactory);
@@ -39,14 +37,14 @@ suite('Interpreters - Windows Store Interpreter', () => {
         when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(
             instance(executionFactory),
         );
-        when(pyenvs.isWindowsStoreInterpreter(anything())).thenReturn(Promise.resolve(undefined));
+        when(pyenvs.isWindowsStoreInterpreter(anything())).thenResolve(undefined);
         windowsStoreInterpreter = new WindowsStoreInterpreter(
             instance(serviceContainer),
             instance(persistanceStateFactory),
             instance(fs),
-            instance(pyenvs),
         );
     });
+
     const windowsStoreInterpreters = [
         '\\\\Program Files\\WindowsApps\\Something\\Python.exe',
         '..\\Program Files\\WindowsApps\\Something\\Python.exe',
@@ -59,34 +57,43 @@ suite('Interpreters - Windows Store Interpreter', () => {
         'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe',
     ];
 
-    async function isWindowsStoreInterpreter(interpreter: string) {
-        return windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter);
-    }
+    windowsStoreInterpreters.forEach((interpreter) => {
+        suite(`${interpreter} should be identified correctly as a Windows store interpreter`, () => {
+            let pyenvsInstance: IComponentAdapter;
 
-    function isHiddenInterpreter(interpreter: string) {
-        return windowsStoreInterpreter.isHiddenInterpreter(interpreter);
-    }
+            setup(() => {
+                pyenvsInstance = instance(pyenvs);
+            });
 
-    for (const interpreter of windowsStoreInterpreters) {
-        test(`${interpreter} must be identified as a Windows Store interpreter`, async () => {
-            expect(await isWindowsStoreInterpreter(interpreter)).to.equal(true, 'Must be true');
+            test(`${interpreter} must be identified as a Windows Store interpreter`, async () => {
+                expect(await isWindowsStoreInterpreter(interpreter, pyenvsInstance)).to.equal(true, 'Must be true');
+            });
+
+            test(`${interpreter.toLowerCase()} must be identified as a Windows Store interpreter (lower case)`, async () => {
+                expect(await isWindowsStoreInterpreter(interpreter.toLowerCase(), pyenvsInstance)).to.equal(
+                    true,
+                    'Must be true',
+                );
+                expect(await isWindowsStoreInterpreter(interpreter.toUpperCase(), pyenvsInstance)).to.equal(
+                    true,
+                    'Must be true',
+                );
+            });
+
+            const otherDrive = `D${interpreter.substring(1)}`;
+            test(`${otherDrive} must be identified as a Windows Store interpreter (ignoring driver letter)`, async () => {
+                expect(await isWindowsStoreInterpreter(otherDrive, pyenvsInstance)).to.equal(true, 'Must be true');
+            });
+
+            const ignorePathSeparator = interpreter.replace(/\\/g, '/');
+            test(`${ignorePathSeparator} must be identified as a Windows Store interpreter (ignoring path separator)`, async () => {
+                expect(await isWindowsStoreInterpreter(ignorePathSeparator, pyenvsInstance)).to.equal(
+                    true,
+                    'Must be true',
+                );
+            });
         });
-
-        test(`${interpreter.toLowerCase()} must be identified as a Windows Store interpreter (lower case)`, async () => {
-            expect(await isWindowsStoreInterpreter(interpreter.toLowerCase())).to.equal(true, 'Must be true');
-            expect(await isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(true, 'Must be true');
-        });
-
-        const otherDrive = `D${interpreter.substring(1)}`;
-        test(`${otherDrive} must be identified as a Windows Store interpreter (ignoring driver letter)`, async () => {
-            expect(await isWindowsStoreInterpreter(otherDrive)).to.equal(true, 'Must be true');
-        });
-
-        const ignorePathSeparator = interpreter.replace(/\\/g, '/');
-        test(`${ignorePathSeparator} must be identified as a Windows Store interpreter (ignoring path separator)`, async () => {
-            expect(await isWindowsStoreInterpreter(ignorePathSeparator)).to.equal(true, 'Must be true');
-        });
-    }
+    });
 
     const nonWindowsStoreInterpreters = [
         '..\\Program Filess\\WindowsApps\\Something\\Python.exe',
@@ -102,51 +109,89 @@ suite('Interpreters - Windows Store Interpreter', () => {
         '..\\apps\\Python.exe',
         'C:\\Apps\\Python.exe',
     ];
-    for (const interpreter of nonWindowsStoreInterpreters) {
-        test(`${interpreter} must not be identified as a Windows Store interpreter`, async () => {
-            const ignorePathSeparator = interpreter.replace(/\\/g, '/');
 
-            expect(isHiddenInterpreter(interpreter)).to.equal(false, 'Must be false');
-            expect(isHiddenInterpreter(ignorePathSeparator)).to.equal(false, 'Must be false');
+    nonWindowsStoreInterpreters.forEach((interpreter) => {
+        suite(`${interpreter} should be identified correctly as a non-Windows store interpreter`, () => {
+            let pyenvsInstance: IComponentAdapter;
 
-            expect(await isWindowsStoreInterpreter(interpreter)).to.equal(false, 'Must be false');
-            expect(await isWindowsStoreInterpreter(ignorePathSeparator)).to.equal(false, 'Must be false');
+            setup(() => {
+                pyenvsInstance = instance(pyenvs);
+            });
 
-            expect(isHiddenInterpreter(interpreter.toLowerCase())).to.equal(false, 'Must be false');
-            expect(await isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(false, 'Must be false');
-            expect(await isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(false, 'Must be false');
-        });
-    }
-    const windowsStoreHiddenInterpreters = [
-        'C:\\Program Files\\WindowsApps\\Something\\Python.exe',
-        'C:\\Program Files\\WindowsApps\\Python.exe',
-        'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
-        'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe',
-    ];
-    for (const interpreter of windowsStoreHiddenInterpreters) {
-        test(`${interpreter} must be identified as a Windows Store (hidden) interpreter`, () => {
-            expect(isHiddenInterpreter(interpreter)).to.equal(true, 'Must be true');
-        });
+            test(`${interpreter} must not be identified as a Windows Store interpreter`, async () => {
+                const ignorePathSeparator = interpreter.replace(/\\/g, '/');
 
-        test(`${interpreter.toLowerCase()} must be identified as a Windows Store (hidden) interpreter (ignoring case)`, () => {
-            expect(isHiddenInterpreter(interpreter.toLowerCase())).to.equal(true, 'Must be true');
-            expect(isHiddenInterpreter(interpreter.toUpperCase())).to.equal(true, 'Must be true');
-        });
+                expect(isRestrictedWindowsStoreInterpreterPath(interpreter)).to.equal(false, 'Must be false');
+                expect(isRestrictedWindowsStoreInterpreterPath(ignorePathSeparator)).to.equal(false, 'Must be false');
 
-        const otherDrive = `D${interpreter.substring(1)}`;
-        test(`${otherDrive} must be identified as a Windows Store (hidden) interpreter (ignoring driver letter)`, () => {
-            expect(isHiddenInterpreter(otherDrive)).to.equal(true, 'Must be true');
+                expect(await isWindowsStoreInterpreter(interpreter, pyenvsInstance)).to.equal(false, 'Must be false');
+                expect(await isWindowsStoreInterpreter(ignorePathSeparator, pyenvsInstance)).to.equal(
+                    false,
+                    'Must be false',
+                );
+            });
+
+            test(`${interpreter.toLowerCase()} must not be identified as a Windows Store interpreter (ignoring case)`, async () => {
+                expect(isRestrictedWindowsStoreInterpreterPath(interpreter.toLowerCase())).to.equal(
+                    false,
+                    'Must be false',
+                );
+
+                expect(await isWindowsStoreInterpreter(interpreter.toUpperCase(), pyenvsInstance)).to.equal(
+                    false,
+                    'Must be false',
+                );
+            });
+
+            const otherDrive = `D${interpreter.substring(1)}`;
+            test(`${otherDrive} must be identified as a Windows Store interpreter (ignoring driver letter)`, async () => {
+                expect(await isWindowsStoreInterpreter(otherDrive, pyenvsInstance)).to.equal(false, 'Must be false');
+            });
         });
-    }
-    const nonWindowsStoreHiddenInterpreters = [
-        'C:\\Microsofts\\WindowsApps\\Something\\Python.exe',
-        'C:\\Microsoft\\WindowsAppss\\Python.exe',
-    ];
-    for (const interpreter of nonWindowsStoreHiddenInterpreters) {
-        test(`${interpreter} must not be identified as a Windows Store (hidden) interpreter`, () => {
-            expect(isHiddenInterpreter(interpreter)).to.equal(false, 'Must be true');
-        });
-    }
+    });
+
+    suite('Hidden Windows store interpreters should be identified correctly', () => {
+        const windowsStoreHiddenInterpreters = [
+            'C:\\Program Files\\WindowsApps\\Something\\Python.exe',
+            'C:\\Program Files\\WindowsApps\\Python.exe',
+            'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
+            'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe',
+        ];
+
+        for (const interpreter of windowsStoreHiddenInterpreters) {
+            test(`${interpreter} must be identified as a Windows Store (hidden) interpreter`, () => {
+                expect(isRestrictedWindowsStoreInterpreterPath(interpreter)).to.equal(true, 'Must be true');
+            });
+
+            test(`${interpreter.toLowerCase()} must be identified as a Windows Store (hidden) interpreter (ignoring case)`, () => {
+                expect(isRestrictedWindowsStoreInterpreterPath(interpreter.toLowerCase())).to.equal(
+                    true,
+                    'Must be true',
+                );
+                expect(isRestrictedWindowsStoreInterpreterPath(interpreter.toUpperCase())).to.equal(
+                    true,
+                    'Must be true',
+                );
+            });
+
+            const otherDrive = `D${interpreter.substring(1)}`;
+            test(`${otherDrive} must be identified as a Windows Store (hidden) interpreter (ignoring driver letter)`, () => {
+                expect(isRestrictedWindowsStoreInterpreterPath(otherDrive)).to.equal(true, 'Must be true');
+            });
+        }
+    });
+
+    suite('Hidden non-Windows store interpreters should be identified correctly', () => {
+        const nonWindowsStoreHiddenInterpreters = [
+            'C:\\Microsofts\\WindowsApps\\Something\\Python.exe',
+            'C:\\Microsoft\\WindowsAppss\\Python.exe',
+        ];
+        for (const interpreter of nonWindowsStoreHiddenInterpreters) {
+            test(`${interpreter} must not be identified as a Windows Store (hidden) interpreter`, () => {
+                expect(isRestrictedWindowsStoreInterpreterPath(interpreter)).to.equal(false, 'Must be true');
+            });
+        }
+    });
 
     test('Getting hash should get hash of python executable', async () => {
         const pythonPath = 'WindowsInterpreterPath';

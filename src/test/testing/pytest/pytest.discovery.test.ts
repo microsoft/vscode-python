@@ -20,11 +20,10 @@ import {
 } from '../../../client/common/process/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
+import { IComponentAdapter, ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { ITestManagerFactory } from '../../../client/testing/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
@@ -70,8 +69,8 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
             @inject(IConfigurationService) private readonly _configService: IConfigurationService,
             @inject(ICondaService) condaService: ICondaService,
-            @inject(WindowsStoreInterpreter) windowsStoreInterpreter: WindowsStoreInterpreter,
             @inject(IBufferDecoder) decoder: IBufferDecoder,
+            @inject(IComponentAdapter) pyenvs: IComponentAdapter,
         ) {
             super(
                 _serviceContainer,
@@ -80,7 +79,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 _configService,
                 condaService,
                 decoder,
-                windowsStoreInterpreter,
+                pyenvs,
             );
         }
         public async createActivatedEnvironment(

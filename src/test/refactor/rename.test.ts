@@ -30,9 +30,8 @@ import {
 } from '../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
-import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
+import { IComponentAdapter, ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
-import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { RefactorProxy } from '../../client/refactor/proxy';
 import { PYTHON_PATH } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from './../initialize';
@@ -88,7 +87,7 @@ suite('Refactor Rename', () => {
         serviceContainer
             .setup((s) => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
             .returns(() => envActivationService.object);
-        const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
+        const pyenvs: IComponentAdapter = mock(IComponentAdapter);
 
         serviceContainer
             .setup((s) => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
@@ -101,7 +100,7 @@ suite('Refactor Rename', () => {
                         configService.object,
                         condaService.object,
                         undefined as any,
-                        instance(windowsStoreInterpreter),
+                        instance(pyenvs),
                     ),
             );
         const processLogger = typeMoq.Mock.ofType<IProcessLogger>();
