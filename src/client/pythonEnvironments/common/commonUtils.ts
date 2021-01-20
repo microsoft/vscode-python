@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Dirent } from 'fs';
+import * as fs from 'fs';
 import * as path from 'path';
 import { convertFileType } from '../../common/platform/fileSystem';
 import { DirEntry, FileType } from '../../common/platform/types';
@@ -12,7 +12,6 @@ import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from '../discovery/locators/services/conda';
 import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/virtualEnvironmentIdentifier';
-import { listDir } from './externalDependencies';
 import { isPosixPythonBin } from './posixUtils';
 import { isWindowsPythonExe } from './windowsUtils';
 
@@ -80,9 +79,9 @@ async function readDir(
         ignoreErrors?: boolean;
     } = {},
 ): Promise<DirEntry[]> {
-    let entries: Dirent[];
+    let entries: fs.Dirent[];
     try {
-        entries = await listDir(dirname);
+        entries = await fs.promises.readdir(dirname, { withFileTypes: true });
     } catch (err) {
         // Treat a missing directory as empty.
         if (err.code === 'ENOENT') {

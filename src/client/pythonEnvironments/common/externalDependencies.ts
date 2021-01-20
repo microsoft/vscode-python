@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fs from 'fs';
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -51,10 +50,6 @@ export function readFile(filePath: string): Promise<string> {
  */
 export function isParentPath(filePath: string, parentPath: string): boolean {
     return normCasePath(filePath).startsWith(normCasePath(parentPath));
-}
-
-export function listDir(dirname: string): Promise<fs.Dirent[]> {
-    return fs.promises.readdir(dirname, { withFileTypes: true });
 }
 
 export async function isDirectory(filename: string): Promise<boolean> {
