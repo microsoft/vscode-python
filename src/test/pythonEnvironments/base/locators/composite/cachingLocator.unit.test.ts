@@ -165,7 +165,7 @@ suite('Python envs locator - CachingLocator', () => {
 
             assert.deepEqual(actualEnvs, [], 'Cached envs should be iterated');
 
-            // The sublocators now return a different environment list, still we expect that only cached envs are returned
+            // The sublocators now return a different environment list
             subLocator.iterEnvs = () => {
                 const iterator: IPythonEnvsIterator = (async function* () {
                     yield env2;
@@ -185,7 +185,7 @@ suite('Python envs locator - CachingLocator', () => {
 
             assert.deepEqual(actualEnvs, [], 'Cached envs should be iterated');
 
-            // The sublocators now return a different environment list, still we expect that only cached envs are returned
+            // The sublocators now return a different environment list
             subLocator.iterEnvs = () => {
                 const iterator: IPythonEnvsIterator = (async function* () {
                     yield env2;
