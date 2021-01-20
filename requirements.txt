@@ -19,12 +19,16 @@ jedi-language-server==0.21.0 ; python_version >= "3.6" \
 jedi==0.17.2 \
     --hash=sha256:86ed7d9b750603e4ba582ea8edc678657fb4007894a12bcf6f4bb97892f31d20 \
     --hash=sha256:98cc583fa0f2f8304968199b01b6b4b94f469a1f4a74c1560506ca2a211378b5
-    # via jedi-language-server
+    # via
+    #   -r requirements.in
+    #   jedi-language-server
 parso==0.7.1 \
     --hash=sha256:97218d9159b2520ff45eb78028ba8b50d2bc61dcc062a9682666f2dc4bd331ea \
     --hash=sha256:caba44724b994a8a5e086460bb212abc5a8bc46951bf4a9a1210745953622eb9
     # via jedi
-pygls==0.9.1 \
+pygls==0.9.1 ; python_version >= "3.6" \
     --hash=sha256:89b4361e0ba38effdfc735e25ae207c8af2f4d4ce26961e8628b600f19b16ed4 \
     --hash=sha256:c21c942415457315f316c0b6c19d4c743fd2974d457e02a85472154c8f1b6399
-    # via jedi-language-server
+    # via
+    #   -r requirements.in
+    #   jedi-language-server
