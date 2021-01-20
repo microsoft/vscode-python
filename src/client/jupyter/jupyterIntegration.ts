@@ -32,7 +32,8 @@ import {
 } from '../interpreter/contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './types';
-import { isWindowsStoreInterpreter } from '../pythonEnvironments';
+import { inDiscoveryExperiment } from '../pythonEnvironments/legacyIOC';
+import { isWindowsStoreInterpreter } from '../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 
 export interface ILanguageServer extends Disposable {
     readonly connection: ILanguageServerConnection;
@@ -164,8 +165,12 @@ export class JupyterExtensionIntegration {
                 interpreter?: PythonEnvironment,
                 allowExceptions?: boolean,
             ) => this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions),
-            isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> =>
-                isWindowsStoreInterpreter(pythonPath, this.pyenvs),
+            isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> => {
+                if (inDiscoveryExperiment()) {
+                    return this.pyenvs.isWindowsStoreInterpreter(pythonPath) && false;
+                }
+                return isWindowsStoreInterpreter(pythonPath);
+            },
             getSuggestions: async (resource: Resource): Promise<IInterpreterQuickPickItem[]> =>
                 this.interpreterSelector.getSuggestions(resource),
             install: async (

@@ -8,7 +8,7 @@ import { IEnvironmentActivationService } from '../../interpreter/activation/type
 import { IComponentAdapter, ICondaService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
-import { isWindowsStoreInterpreter } from '../../pythonEnvironments';
+import { inDiscoveryExperiment } from '../../pythonEnvironments/legacyIOC';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IFileSystem } from '../platform/types';
@@ -26,6 +26,7 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService,
 } from './types';
+import { isWindowsStoreInterpreter } from '../../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 
 // Minimum version number of conda required to be able to use 'conda run'
 export const CONDA_RUN_VERSION = '4.6.0';
@@ -60,12 +61,16 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
         processService.on('exec', this.logger.logProcess.bind(this.logger));
 
+        const windowsStoreInterpreterCheck = inDiscoveryExperiment()
+            ? this.pyenvs.isWindowsStoreInterpreter
+            : isWindowsStoreInterpreter;
+
         return createPythonService(
             pythonPath,
             processService,
             this.fileSystem,
             undefined,
-            await isWindowsStoreInterpreter(pythonPath, this.pyenvs),
+            await windowsStoreInterpreterCheck(pythonPath),
         );
     }
 

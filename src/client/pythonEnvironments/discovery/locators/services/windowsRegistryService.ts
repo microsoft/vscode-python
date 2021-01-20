@@ -4,7 +4,7 @@ import { traceError } from '../../../../common/logger';
 import { IFileSystem, IPlatformService, IRegistry, RegistryHive } from '../../../../common/platform/types';
 import { IPathUtils } from '../../../../common/types';
 import { Architecture } from '../../../../common/utils/platform';
-import { IComponentAdapter, IInterpreterHelper } from '../../../../interpreter/contracts';
+import { IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { parsePythonVersion } from '../../../info/pythonVersion';
@@ -34,8 +34,6 @@ export class WindowsRegistryService extends CacheableLocatorService {
 
     private readonly fs: IFileSystem;
 
-    private readonly pyenvs: IComponentAdapter;
-
     constructor(
         @inject(IRegistry) private registry: IRegistry,
         @inject(IPlatformService) private readonly platform: IPlatformService,
@@ -44,7 +42,6 @@ export class WindowsRegistryService extends CacheableLocatorService {
         super('WindowsRegistryService', serviceContainer);
         this.pathUtils = serviceContainer.get<IPathUtils>(IPathUtils);
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
-        this.pyenvs = serviceContainer.get<IComponentAdapter>(IComponentAdapter);
     }
 
     public dispose(): void {
@@ -187,7 +184,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                     // Give preference to what we have retrieved from getInterpreterInformation.
                     version: details.version || parsePythonVersion(version),
                     companyDisplayName: interpreterInfo.companyDisplayName,
-                    envType: (await isWindowsStoreInterpreter(executablePath, this.pyenvs))
+                    envType: (await isWindowsStoreInterpreter(executablePath))
                         ? EnvironmentType.WindowsStore
                         : EnvironmentType.Unknown,
                 } as PythonEnvironment;
