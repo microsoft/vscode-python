@@ -52,7 +52,6 @@ src/test/interpreters/autoSelection/rules/cached.unit.test.ts
 src/test/interpreters/autoSelection/rules/winRegistry.unit.test.ts
 src/test/interpreters/autoSelection/rules/base.unit.test.ts
 src/test/interpreters/autoSelection/rules/currentPath.unit.test.ts
-src/test/interpreters/autoSelection/rules/workspaceEnv.unit.test.ts
 src/test/interpreters/autoSelection/rules/system.unit.test.ts
 src/test/interpreters/virtualEnvManager.unit.test.ts
 src/test/interpreters/pythonPathUpdaterFactory.unit.test.ts
@@ -352,7 +351,6 @@ src/client/interpreter/autoSelection/rules/winRegistry.ts
 src/client/interpreter/autoSelection/rules/settings.ts
 src/client/interpreter/autoSelection/rules/currentPath.ts
 src/client/interpreter/autoSelection/rules/cached.ts
-src/client/interpreter/autoSelection/rules/workspaceEnv.ts
 src/client/interpreter/autoSelection/rules/system.ts
 src/client/interpreter/autoSelection/index.ts
 src/client/interpreter/activation/wrapperEnvironmentActivationService.ts

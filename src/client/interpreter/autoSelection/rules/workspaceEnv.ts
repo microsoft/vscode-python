@@ -43,6 +43,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
     ) {
         super(AutoSelectionRule.workspaceVirtualEnvs, fs, stateFactory);
     }
+
     protected async onAutoSelectInterpreter(
         resource: Resource,
         manager?: IInterpreterAutoSelectionService,
@@ -85,13 +86,14 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         );
         return NextAction.runNextRule;
     }
+
     protected async getWorkspaceVirtualEnvInterpreters(resource: Resource): Promise<PythonEnvironment[] | undefined> {
         if (!resource) {
-            return;
+            return undefined;
         }
         const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
         if (!workspaceFolder) {
-            return;
+            return undefined;
         }
         // Now check virtual environments under the workspace root
         const workspaceVirtualEnvInterpreterLocator = this.serviceContainer.get<IInterpreterLocatorService>(
@@ -107,7 +109,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
                 : workspaceFolder.uri.fsPath;
 
         return interpreters.filter((interpreter) => {
-            const fsPath = Uri.file(interpreter.path).fsPath;
+            const { fsPath } = Uri.file(interpreter.path);
             const fsPathToCompare = this.platform.osType === OSType.Windows ? fsPath.toUpperCase() : fsPath;
             return fsPathToCompare.startsWith(workspacePath);
         });
