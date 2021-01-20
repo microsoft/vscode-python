@@ -33,6 +33,7 @@ import { InterpreterService } from '../../../client/interpreter/interpreterServi
 import { ServiceContainer } from '../../../client/ioc/container';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import * as PythonEnvironments from '../../../client/pythonEnvironments';
 
 const pythonInterpreter: PythonEnvironment = {
     path: '/foo/bar/python.exe',
@@ -81,8 +82,10 @@ suite('Process - PythonExecutionFactory', () => {
             let processLogger: IProcessLogger;
             let processService: typemoq.IMock<IProcessService>;
             let interpreterService: IInterpreterService;
+            let pyenvs: IComponentAdapter;
             let executionService: typemoq.IMock<IPythonExecutionService>;
-            let pyenvs: typemoq.IMock<IComponentAdapter>;
+            let isWindowsStoreInterpreterStub: sinon.SinonStub;
+
             setup(() => {
                 bufferDecoder = mock(BufferDecoder);
                 activationHelper = mock(EnvironmentActivationService);
@@ -90,11 +93,7 @@ suite('Process - PythonExecutionFactory', () => {
                 configService = mock(ConfigurationService);
                 condaService = mock(CondaService);
                 processLogger = mock(ProcessLogger);
-
-                pyenvs = typemoq.Mock.ofType<IComponentAdapter>();
-                pyenvs
-                    .setup((p) => p.isWindowsStoreInterpreter(typemoq.It.isAnyString()))
-                    .returns(() => Promise.resolve(true));
+                pyenvs = mock<IComponentAdapter>();
 
                 executionService = typemoq.Mock.ofType<IPythonExecutionService>();
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -131,10 +130,15 @@ suite('Process - PythonExecutionFactory', () => {
                     instance(configService),
                     instance(condaService),
                     instance(bufferDecoder),
-                    pyenvs.object,
+                    instance(pyenvs),
                 );
+
+                isWindowsStoreInterpreterStub = sinon.stub(PythonEnvironments, 'isWindowsStoreInterpreter');
+                isWindowsStoreInterpreterStub.resolves(true);
             });
+
             teardown(() => sinon.restore());
+
             test('Ensure PythonExecutionService is created', async () => {
                 const pythonSettings = mock(PythonSettings);
                 when(processFactory.create(resource)).thenResolve(processService.object);
@@ -226,7 +230,8 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(service).to.not.equal(undefined);
                 verify(processFactory.create(resource)).once();
                 verify(pythonSettings.pythonPath).once();
-                pyenvs.verify((p) => p.isWindowsStoreInterpreter(pythonPath), typemoq.Times.once());
+                sinon.assert.calledOnce(isWindowsStoreInterpreterStub);
+                sinon.assert.calledWith(isWindowsStoreInterpreterStub, pythonPath);
             });
 
             test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {

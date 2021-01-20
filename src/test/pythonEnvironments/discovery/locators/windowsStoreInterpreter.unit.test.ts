@@ -4,7 +4,7 @@
 'use strict';
 
 import { expect } from 'chai';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { anyString, instance, mock, when } from 'ts-mockito';
 import { IComponentAdapter } from '../../../../client/interpreter/contracts';
 import {
     isWindowsStoreInterpreter,
@@ -15,7 +15,7 @@ suite('Interpreters - Windows Store Interpreter', () => {
     let pyenvs: IComponentAdapter;
     setup(() => {
         pyenvs = mock<IComponentAdapter>();
-        when(pyenvs.isWindowsStoreInterpreter(anything())).thenReturn(Promise.resolve(undefined));
+        when(pyenvs.isWindowsStoreInterpreter(anyString())).thenReturn(Promise.resolve(undefined));
     });
 
     const windowsStoreInterpreters = [
