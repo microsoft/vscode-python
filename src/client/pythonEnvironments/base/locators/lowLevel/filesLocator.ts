@@ -5,7 +5,7 @@
 /* eslint-disable max-classes-per-file */
 
 import { Event, EventEmitter } from 'vscode';
-import { findInterpretersInDir } from '../../../common/commonUtils';
+import { iterPythonExecutablesInDir } from '../../../common/commonUtils';
 import { normalizePath } from '../../../common/externalDependencies';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { getFastEnvInfo } from '../../info/env';
@@ -73,7 +73,7 @@ export class DirFilesLocator extends FSWatchingLocator {
     constructor(
         dirname: string,
         kind: PythonEnvKind,
-        getExecutables: (dir: string) => AsyncIterableIterator<string> = findInterpretersInDir,
+        getExecutables: (dir: string) => AsyncIterableIterator<string> = getExecutablesDefault,
     ) {
         super(
             () => [dirname],
@@ -92,5 +92,11 @@ export class DirFilesLocator extends FSWatchingLocator {
 
     protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         return this.subLocator.resolveEnv(env);
+    }
+}
+
+async function* getExecutablesDefault(dirname: string): AsyncIterableIterator<string> {
+    for await (const entry of iterPythonExecutablesInDir(dirname)) {
+        yield entry.filename;
     }
 }
