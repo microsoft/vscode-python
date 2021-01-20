@@ -557,10 +557,12 @@ suite('Module Installer', () => {
                                 [false, true].forEach((isUpgrade) => {
                                     test(`Test args (${product.name})`, async () => {
                                         setActiveInterpreter();
-                                        const expectedArgs = ['install', moduleName, '--dev'];
-                                        if (isUpgrade) {
-                                            expectedArgs.push('--upgrade');
-                                        }
+                                        // Upgrade flag is only passed through for TensorBoardInstaller
+                                        const expectedArgs = [
+                                            isUpgrade && product.name === 'tensorboard' ? 'update' : 'install',
+                                            moduleName,
+                                            '--dev',
+                                        ];
                                         if (moduleName === 'black') {
                                             expectedArgs.push('--pre');
                                         }
@@ -572,7 +574,10 @@ suite('Module Installer', () => {
                                 [false, true].forEach((isUpgrade) => {
                                     test(`Test args (${product.name})`, async () => {
                                         setActiveInterpreter();
-                                        const expectedArgs = [isUpgrade ? 'update' : 'install'];
+                                        // Upgrade flag is only passed through for TensorBoardInstaller
+                                        const expectedArgs = [
+                                            isUpgrade && product.name === 'tensorboard' ? 'update' : 'install',
+                                        ];
                                         if (product.name === 'tensorboard') {
                                             expectedArgs.push('-c', 'conda-forge');
                                         }

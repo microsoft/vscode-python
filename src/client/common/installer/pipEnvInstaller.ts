@@ -44,10 +44,7 @@ export class PipEnvInstaller extends ModuleInstaller {
         _resource?: InterpreterUri,
         isUpgrade?: boolean,
     ): Promise<ExecutionInfo> {
-        const args = ['install', moduleName, '--dev'];
-        if (isUpgrade) {
-            args.push('--upgrade');
-        }
+        const args = [isUpgrade ? 'update' : 'install', moduleName, '--dev'];
         if (moduleName === 'black') {
             args.push('--pre');
         }
