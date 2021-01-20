@@ -17,11 +17,14 @@ suite('TensorBoard session creation', async () => {
     let applicationShell: IApplicationShell;
     let commandManager: ICommandManager;
 
-    setup(async function () {
+    suiteSetup(function () {
         if (process.env.CI_PYTHON_VERSION === '2.7') {
             // TensorBoard 2.4.1 not available for Python 2.7
             this.skip();
         }
+    });
+
+    setup(async function () {
         sandbox = sinon.createSandbox();
         ({ serviceManager } = await initialize());
         // Pretend to be in experiment
