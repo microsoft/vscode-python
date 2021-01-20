@@ -17,6 +17,7 @@
  */
 export function isRestrictedWindowsStoreInterpreterPath(pythonPath: string): boolean {
     const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
+
     return (
         pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
         pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())

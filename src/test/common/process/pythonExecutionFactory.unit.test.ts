@@ -241,6 +241,7 @@ suite('Process - PythonExecutionFactory', () => {
                 sinon.assert.calledOnce(inDiscoveryExperimentStub);
                 sinon.assert.notCalled(isWindowsStoreInterpreterStub);
             });
+
             test("Ensure `create` returns a WindowsStorePythonProcess instance if it's a windows store intepreter path and we're not in the discovery experiment", async () => {
                 const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);
