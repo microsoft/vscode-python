@@ -12,9 +12,9 @@ import {
     QuickPickItem,
     ViewColumn,
     WebviewPanel,
-    window,
+    window
 } from 'vscode';
-import { ICommandManager, IWorkspaceService } from '../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';
 import { traceError, traceInfo } from '../common/logger';
 import { tensorboardLauncher } from '../common/process/internal/scripts';
@@ -63,6 +63,7 @@ export class TensorBoardSession {
         private readonly processServiceFactory: IProcessServiceFactory,
         private readonly commandManager: ICommandManager,
         private readonly disposables: IDisposableRegistry,
+        private readonly applicationShell: IApplicationShell,
     ) {}
 
     public async initialize(): Promise<void> {
@@ -123,7 +124,7 @@ export class TensorBoardSession {
 
     // eslint-disable-next-line class-methods-use-this
     private async showFilePicker(): Promise<string | undefined> {
-        const selection = await window.showOpenDialog({
+        const selection = await this.applicationShell.showOpenDialog({
             canSelectFiles: false,
             canSelectFolders: true,
             canSelectMany: false,
@@ -165,7 +166,7 @@ export class TensorBoardSession {
         const selectAFolder = TensorBoard.selectAFolder();
         const selectAnotherFolder = TensorBoard.selectAnotherFolder();
         const items: QuickPickItem[] = this.getQuickPickItems(logDir);
-        const item = await window.showQuickPick(items, {
+        const item = await this.applicationShell.showQuickPick(items, {
             canPickMany: false,
             ignoreFocusOut: false,
             placeHolder: logDir ? TensorBoard.currentDirectory().format(logDir) : undefined,
@@ -207,7 +208,7 @@ export class TensorBoardSession {
         const sessionStartStopwatch = new StopWatch();
         const observable = processService.execObservable(pythonExecutable.path, args);
 
-        const result = await window.withProgress(
+        const result = await this.applicationShell.withProgress(
             progressOptions,
             (_progress: Progress<unknown>, token: CancellationToken) => {
                 traceInfo(`Starting TensorBoard with log directory ${logDir}...`);

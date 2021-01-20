@@ -1,6 +1,5 @@
 import { assert } from 'chai';
 import Sinon, * as sinon from 'sinon';
-import { window } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../client/common/application/types';
 import { IExperimentService, IInstaller, InstallerResponse } from '../../client/common/types';
 import { TensorBoard } from '../../client/common/utils/localize';
@@ -8,7 +7,7 @@ import { IServiceManager } from '../../client/ioc/types';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../client/tensorBoard/constants';
 import { TensorBoardSession } from '../../client/tensorBoard/tensorBoardSession';
 import { TensorBoardSessionProvider } from '../../client/tensorBoard/tensorBoardSessionProvider';
-import { initialize } from '../initialize';
+import { closeActiveWindows, initialize } from '../initialize';
 
 suite('TensorBoard session creation', async () => {
     let serviceManager: IServiceManager;
@@ -32,13 +31,14 @@ suite('TensorBoard session creation', async () => {
         commandManager = serviceManager.get<ICommandManager>(ICommandManager);
     });
 
-    teardown(() => {
+    teardown(async () => {
+        await closeActiveWindows();
         sandbox.restore();
     });
 
     test('Golden path: TensorBoard session starts successfully and webview is shown', async () => {
         // Stub user selections
-        sandbox.stub(window, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
 
         const session = (await commandManager.executeCommand(
             'python.launchTensorBoard',
@@ -51,7 +51,7 @@ suite('TensorBoard session creation', async () => {
     });
     test('When webview is closed, session is killed', async () => {
         // Stub user selections
-        sandbox.stub(window, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
 
         const session = (await commandManager.executeCommand(
             'python.launchTensorBoard',
@@ -67,8 +67,8 @@ suite('TensorBoard session creation', async () => {
     });
     test('When user selects file picker, display file picker', async () => {
         // Stub user selections
-        sandbox.stub(window, 'showQuickPick').resolves({ label: TensorBoard.selectAFolder() });
-        const filePickerStub = sandbox.stub(window, 'showOpenDialog');
+        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.selectAFolder() });
+        const filePickerStub = sandbox.stub(applicationShell, 'showOpenDialog');
 
         // Create session
         await commandManager.executeCommand(
@@ -81,8 +81,8 @@ suite('TensorBoard session creation', async () => {
     });
     test('If user does not select a logdir, do not show error', async () => {
         // Stub user selections
-        sandbox.stub(window, 'showQuickPick').resolves({ label: TensorBoard.selectAFolder() });
-        sandbox.stub(window, 'showOpenDialog').resolves(undefined);
+        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.selectAFolder() });
+        sandbox.stub(applicationShell, 'showOpenDialog').resolves(undefined);
 
         // Create session
         await commandManager.executeCommand(
@@ -107,8 +107,8 @@ suite('TensorBoard session creation', async () => {
         assert.ok(errorMessageStub.notCalled, 'User opted not to install and error was shown');
     });
     test('If user cancels starting TensorBoard session, do not show error', async () => {
-        sandbox.stub(window, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-        sandbox.stub(window, 'withProgress').resolves('canceled');
+        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+        sandbox.stub(applicationShell, 'withProgress').resolves('canceled');
 
         await commandManager.executeCommand(
             'python.launchTensorBoard',
@@ -119,8 +119,8 @@ suite('TensorBoard session creation', async () => {
         assert.ok(errorMessageStub.notCalled, 'User canceled session start and error was shown');
     });
     test('If starting TensorBoard times out, show error', async () => {
-        sandbox.stub(window, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-        sandbox.stub(window, 'withProgress').resolves(60_000);
+        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+        sandbox.stub(applicationShell, 'withProgress').resolves(60_000);
 
         await commandManager.executeCommand(
             'python.launchTensorBoard',

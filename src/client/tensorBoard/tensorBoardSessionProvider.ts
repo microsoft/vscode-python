@@ -78,6 +78,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                 this.processServiceFactory,
                 this.commandManager,
                 this.disposables,
+                this.applicationShell,
             );
             await newSession.initialize();
             return newSession;
