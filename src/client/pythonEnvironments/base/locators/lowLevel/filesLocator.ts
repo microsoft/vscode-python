@@ -67,23 +67,37 @@ async function* iterMinimalEnvsFromExecutables(
 /**
  * A locator for executables in a single directory.
  */
-export class DirFilesLocator extends FSWatchingLocator {
-    private readonly subLocator: ILocator;
-
+export class DirFilesLocator extends FoundFilesLocator {
     constructor(
         dirname: string,
         kind: PythonEnvKind,
         getExecutables: (dir: string) => AsyncIterableIterator<string> = getExecutablesDefault,
     ) {
         super(
-            () => [dirname],
-            async () => kind,
-        );
-        this.subLocator = new FoundFilesLocator(
             kind,
             // a wrapper
             () => getExecutables(dirname),
         );
+    }
+}
+
+/**
+ * A locator for executables in a single directory.
+ */
+export class DirFilesWatchingLocator extends FSWatchingLocator {
+    private readonly subLocator: ILocator;
+
+    constructor(
+        dirname: string,
+        kind: PythonEnvKind,
+        // The default is defined by DirFilesLocator.
+        getExecutables?: (dir: string) => AsyncIterableIterator<string>,
+    ) {
+        super(
+            () => [dirname],
+            async () => kind,
+        );
+        this.subLocator = new DirFilesLocator(dirname, kind, getExecutables);
     }
 
     protected doIterEnvs(query: PythonLocatorQuery): IPythonEnvsIterator {
