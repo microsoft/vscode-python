@@ -33,8 +33,11 @@ export const CONDA_RUN_VERSION = '4.6.0';
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
     private readonly disposables: IDisposableRegistry;
+
     private readonly logger: IProcessLogger;
+
     private readonly fileSystem: IFileSystem;
+
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
@@ -49,6 +52,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         this.logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
+
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath
             ? options.pythonPath
@@ -90,6 +94,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
         return createPythonService(pythonPath, processService, this.fileSystem);
     }
+
     // Not using this function for now because there are breaking issues with conda run (conda 4.8, PVSC 2020.1).
     // See https://github.com/microsoft/vscode-python/issues/9490
     public async createCondaExecutionService(

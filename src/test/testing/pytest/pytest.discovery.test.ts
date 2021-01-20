@@ -82,6 +82,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 pyenvs,
             );
         }
+
         public async createActivatedEnvironment(
             options: ExecutionFactoryCreateWithEnvironmentOptions,
         ): Promise<IPythonExecutionService> {
@@ -94,6 +95,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             const fileSystem = this._serviceContainer.get<IFileSystem>(IFileSystem);
             const env = createPythonEnv(pythonPath, procService, fileSystem);
             const procs = createPythonProcessService(procService, env);
+
             return {
                 getInterpreterInformation: () => env.getInterpreterInformation(),
                 getExecutablePath: () => env.getExecutablePath(),
