@@ -5,16 +5,19 @@
 /* eslint-disable max-classes-per-file */
 
 import { uniq } from 'lodash';
+import * as path from 'path';
 import { Event } from 'vscode';
 import { getSearchPathEntries } from '../../../../common/utils/exec';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
+import { logVerbose } from '../../../../logging';
 import { isStandardPythonBinary } from '../../../common/commonUtils';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../info';
 import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { Locators } from '../../locators';
 import { getEnvs } from '../../locatorUtils';
 import { PythonEnvsChangedEvent } from '../../watcher';
-import { DirFilesLocator } from './filesLocator';
+import * as fsWatching from './fsWatchingLocator';
+import { DirFilesLocator, DirFilesWatchingLocator } from './filesLocator';
 
 /**
  * A locator for Windows locators found under the $PATH env var.
@@ -55,12 +58,41 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
     }
 }
 
+const DO_NOT_WATCH = [
+    '\\WINDOWS\\SYSTEM32',
+    // There are probably a few more worth adding here.
+];
+
+function isDirWatchable(dirname: string): boolean {
+    const norm = path.normalize(dirname).toUpperCase().split(':')[1];
+    for (const bad of DO_NOT_WATCH) {
+        if (bad === norm) {
+            return false;
+        }
+    }
+    try {
+        return fsWatching.isDirWatchable(dirname);
+    } catch (err) {
+        logVerbose(`failed in isDirWatchable("${dirname}"): ${err}`);
+        return false;
+    }
+}
+
 function getDirFilesLocator(
     // These are passed through to DirFilesLocator.
     dirname: string,
     kind: PythonEnvKind,
 ): ILocator & IDisposable {
-    const locator = new DirFilesLocator(dirname, kind);
+    let locator: ILocator;
+    let dispose: () => Promise<void>;
+    if (isDirWatchable(dirname)) {
+        const watchingLocator = new DirFilesWatchingLocator(dirname, kind);
+        locator = watchingLocator;
+        dispose = () => watchingLocator.dispose();
+    } else {
+        locator = new DirFilesLocator(dirname, kind);
+        dispose = async () => undefined;
+    }
 
     // Really we should be checking for symlinks or something more
     // sophisticated.  Also, this should be done in ReducingLocator
@@ -96,7 +128,7 @@ function getDirFilesLocator(
     return {
         iterEnvs,
         resolveEnv,
+        dispose,
         onChanged: locator.onChanged,
-        dispose: () => locator.dispose(),
     };
 }
