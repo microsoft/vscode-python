@@ -12,7 +12,7 @@ import {
     QuickPickItem,
     ViewColumn,
     WebviewPanel,
-    window
+    window,
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';

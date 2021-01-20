@@ -358,9 +358,9 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 undefined,
             );
             const cmd = ({} as any) as IDiagnosticCommand;
-            const diagnosticServiceMock = (typemoq.Mock.ofInstance(
-                diagnosticService,
-            ) as any) as typemoq.IMock<InvalidPythonInterpreterService>;
+            const diagnosticServiceMock = (typemoq.Mock.ofInstance(diagnosticService) as any) as typemoq.IMock<
+                InvalidPythonInterpreterService
+            >;
 
             diagnosticServiceMock.setup((f) => f.canHandle(typemoq.It.isAny())).returns(() => Promise.resolve(false));
             messageHandler
