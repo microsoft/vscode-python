@@ -37,7 +37,6 @@ import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
 import { isMacDefaultPythonPath } from './base/locators/lowLevel/macDefaultLocator';
 import { getEnvs } from './base/locatorUtils';
-import { getEnvironmentDirFromPath } from './common/commonUtils';
 import { inExperiment, isParentPath } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
@@ -275,15 +274,16 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         if (!(await isCondaEnvironment(interpreterPath))) {
             return undefined;
         }
-        // For Conda we assume we don't set name for environments if they're prefix conda environments, similarly
-        // we don't have 'path' set if they're non-prefix conda environments.
-        // So we don't have a helper function yet to give us a conda env's name (if it has one). So for
-        // now we always set `path` (and never `name`).  Once we have such a helper we will use it.
 
-        // TODO: Expose these two properties via a helper in the Conda locator on a temporary basis.
-        const location = getEnvironmentDirFromPath(interpreterPath);
-        // else
-        return { name: '', path: location };
+        // The API getCondaEnvironment() is not called automatically, unless user attempts to install or activate environments
+        // So calling resolveEnv() which although runs python unnecessarily, is not that expensive here.
+        const env = await this.api.resolveEnv(interpreterPath);
+
+        if (!env) {
+            return undefined;
+        }
+
+        return { name: env.name, path: env.location };
     }
 
     // Implements IWindowsStoreInterpreter
