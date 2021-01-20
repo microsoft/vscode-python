@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Uri } from 'vscode';
+import * as fs from 'fs';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { DiscoveryVariants } from '../../../../common/experiments/groups';
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
@@ -15,6 +16,25 @@ import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
 export enum FSWatcherKind {
     Global, // Watcher observes a global location such as ~/.envs, %LOCALAPPDATA%/Microsoft/WindowsApps.
     Workspace, // Watchers observes directory in the user's currently open workspace.
+}
+
+/**
+ * Determine if the directory is watchable.
+ */
+export function isDirWatchable(dirname: string): boolean {
+    let names: string[];
+    try {
+        names = fs.readdirSync(dirname);
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            // We treat a missing directory as watchable since it should
+            // be watchable if created later.
+            return true;
+        }
+        throw err; // re-throw
+    }
+    // The limit here is an educated guess.
+    return names.length > 200;
 }
 
 /**
@@ -74,6 +94,10 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
     }
 
     private startWatcher(root: string): void {
+        if (!isDirWatchable(root)) {
+            throw Error(`dir "${root}" is not watchable`);
+        }
+
         const callback = async (type: FileChangeType, executable: string) => {
             if (type === FileChangeType.Created) {
                 if (this.opts.delayOnCreated !== undefined) {
