@@ -87,7 +87,7 @@ suite('Refactor Rename', () => {
         serviceContainer
             .setup((s) => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
             .returns(() => envActivationService.object);
-        const pyenvs: IComponentAdapter = mock(IComponentAdapter);
+        const pyenvs: IComponentAdapter = mock<IComponentAdapter>();
 
         serviceContainer
             .setup((s) => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
