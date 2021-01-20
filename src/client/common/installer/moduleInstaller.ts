@@ -28,10 +28,15 @@ export abstract class ModuleInstaller implements IModuleInstaller {
 
     constructor(protected serviceContainer: IServiceContainer) {}
 
-    public async installModule(name: string, resource?: InterpreterUri, cancel?: CancellationToken): Promise<void> {
+    public async installModule(
+        name: string,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken,
+        isUpgrade?: boolean,
+    ): Promise<void> {
         sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName });
         const uri = isResource(resource) ? resource : undefined;
-        const executionInfo = await this.getExecutionInfo(name, resource);
+        const executionInfo = await this.getExecutionInfo(name, resource, isUpgrade);
         const terminalService = this.serviceContainer
             .get<ITerminalServiceFactory>(ITerminalServiceFactory)
             .getTerminalService(uri);
@@ -112,7 +117,11 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             }
         });
     }
-    protected abstract getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo>;
+    protected abstract getExecutionInfo(
+        moduleName: string,
+        resource?: InterpreterUri,
+        isUpgrade?: boolean,
+    ): Promise<ExecutionInfo>;
     private async processInstallArgs(args: string[], resource?: InterpreterUri): Promise<string[]> {
         const indexOfPylint = args.findIndex((arg) => arg.toUpperCase() === 'PYLINT');
         if (indexOfPylint === -1) {

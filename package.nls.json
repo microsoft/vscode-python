@@ -234,6 +234,7 @@
     "TensorBoard.selectAnotherFolderDetail": "Use the file explorer to select another folder",
     "TensorBoard.useCurrentWorkingDirectoryDetail": "TensorBoard will search for tfevent files in all subdirectories of the current working directory",
     "TensorBoard.installPrompt": "The package TensorBoard is required to launch a TensorBoard session. Would you like to install it?",
+    "TensorBoard.upgradePrompt": "Integrated TensorBoard support is only available for TensorBoard >= 2.4.1. Would you like to upgrade your copy of TensorBoard?",
     "TensorBoard.launchNativeTensorBoardSessionCodeAction": "Launch TensorBoard session",
     "TensorBoard.launchNativeTensorBoardSessionCodeLens": "▶ Launch TensorBoard Session"
 }

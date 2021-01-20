@@ -39,8 +39,15 @@ export class PipEnvInstaller extends ModuleInstaller {
             return resource.envType === EnvironmentType.Pipenv;
         }
     }
-    protected async getExecutionInfo(moduleName: string, _resource?: InterpreterUri): Promise<ExecutionInfo> {
+    protected async getExecutionInfo(
+        moduleName: string,
+        _resource?: InterpreterUri,
+        isUpgrade?: boolean,
+    ): Promise<ExecutionInfo> {
         const args = ['install', moduleName, '--dev'];
+        if (isUpgrade) {
+            args.push('--upgrade');
+        }
         if (moduleName === 'black') {
             args.push('--pre');
         }

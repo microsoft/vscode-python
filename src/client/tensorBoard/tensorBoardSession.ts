@@ -19,7 +19,7 @@ import { createPromiseFromCancellation } from '../common/cancellation';
 import { traceError, traceInfo } from '../common/logger';
 import { tensorboardLauncher } from '../common/process/internal/scripts';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../common/process/types';
-import { IDisposableRegistry, IInstaller, InstallerResponse, Product } from '../common/types';
+import { IDisposableRegistry, IInstaller, InstallerResponse, ModuleInstallStatus, Product } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { TensorBoard } from '../common/utils/localize';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -98,7 +98,8 @@ export class TensorBoardSession {
         if (!interpreter) {
             return false;
         }
-        if (await this.installer.isInstalled(Product.tensorboard, interpreter)) {
+        const status = await this.installer.isModuleVersionCompatible(Product.tensorboard, '>= 2.4.1', interpreter);
+        if (status === ModuleInstallStatus.Installed) {
             return true;
         }
         const tokenSource = new CancellationTokenSource();
@@ -109,7 +110,12 @@ export class TensorBoardSession {
             token: installerToken,
         });
         const response = await Promise.race([
-            this.installer.promptToInstall(Product.tensorboard, interpreter, installerToken),
+            this.installer.promptToInstall(
+                Product.tensorboard,
+                interpreter,
+                installerToken,
+                status === ModuleInstallStatus.NeedsUpgrade,
+            ),
             cancellationPromise,
         ]);
         return response === InstallerResponse.Installed;

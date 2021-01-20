@@ -1789,6 +1789,7 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.TENSORBOARD_INSTALL_PROMPT_SELECTION]: {
         selection: TensorBoardPromptSelection;
+        operationType: 'install' | 'upgrade';
     };
     /**
      * Telemetry event indicating the codeaction on a tensorboard import was clicked.

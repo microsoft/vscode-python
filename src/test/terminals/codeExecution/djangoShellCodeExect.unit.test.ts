@@ -210,6 +210,7 @@ suite('Terminal - Django Shell Code Execution', () => {
             getInterpreterInformation: env.getInterpreterInformation,
             getExecutablePath: env.getExecutablePath,
             isModuleInstalled: env.isModuleInstalled,
+            getModuleVersion: env.getModuleVersion,
             getExecutionInfo: env.getExecutionInfo,
             execObservable: procs.execObservable,
             execModuleObservable: procs.execModuleObservable,

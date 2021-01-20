@@ -422,6 +422,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                 getExecutablePath: () => env.getExecutablePath(),
                 isModuleInstalled: (m) => env.isModuleInstalled(m),
                 getExecutionInfo: (a) => env.getExecutionInfo(a),
+                getModuleVersion: (m) => env.getModuleVersion(m),
                 execObservable: (a, o) => procs.execObservable(a, o),
                 execModuleObservable: (m, a, o) => procs.execModuleObservable(m, a, o),
                 exec: (a, o) => procs.exec(a, o),

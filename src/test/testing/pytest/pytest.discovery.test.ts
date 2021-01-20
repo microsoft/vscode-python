@@ -99,6 +99,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 getInterpreterInformation: () => env.getInterpreterInformation(),
                 getExecutablePath: () => env.getExecutablePath(),
                 isModuleInstalled: (m) => env.isModuleInstalled(m),
+                getModuleVersion: (m) => env.getModuleVersion(m),
                 getExecutionInfo: (a) => env.getExecutionInfo(a),
                 execObservable: (a, o) => procs.execObservable(a, o),
                 execModuleObservable: (m, a, o) => procs.execModuleObservable(m, a, o),

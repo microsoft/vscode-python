@@ -1,5 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
+import { coerce, satisfies } from 'semver';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -23,6 +24,7 @@ import {
     InstallerResponse,
     IOutputChannel,
     IPersistentStateFactory,
+    ModuleInstallStatus,
     ModuleNamePurpose,
     Product,
     ProductType,
@@ -61,6 +63,7 @@ export abstract class BaseInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
+        isUpgrade?: boolean,
     ): Promise<InstallerResponse> {
         // If this method gets called twice, while previous promise has not been resolved, then return that same promise.
         // E.g. previous promise is not resolved as a message has been displayed to the user, so no point displaying
@@ -71,7 +74,7 @@ export abstract class BaseInstaller {
         if (BaseInstaller.PromptPromises.has(key)) {
             return BaseInstaller.PromptPromises.get(key)!;
         }
-        const promise = this.promptToInstallImplementation(product, resource, cancel);
+        const promise = this.promptToInstallImplementation(product, resource, cancel, isUpgrade);
         BaseInstaller.PromptPromises.set(key, promise);
         promise.then(() => BaseInstaller.PromptPromises.delete(key)).ignoreErrors();
         promise.catch(() => BaseInstaller.PromptPromises.delete(key)).ignoreErrors();
@@ -104,6 +107,48 @@ export abstract class BaseInstaller {
         );
     }
 
+    public async isModuleVersionCompatible(
+        product: Product,
+        semVerRequirement: string,
+        resource?: InterpreterUri,
+    ): Promise<ModuleInstallStatus> {
+        const interpreter = isResource(resource) ? undefined : resource;
+        const uri = isResource(resource) ? resource : undefined;
+        const executableName = this.getExecutableNameFromSettings(product, uri);
+
+        const isModule = this.isExecutableAModule(product, uri);
+        try {
+            let version: string | undefined | null;
+            if (isModule) {
+                const pythonProcess = await this.serviceContainer
+                    .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+                    .createActivatedEnvironment({ resource: uri, interpreter, allowEnvironmentFetchExceptions: true });
+                version = await pythonProcess.getModuleVersion(executableName);
+            } else {
+                const process = await this.serviceContainer
+                    .get<IProcessServiceFactory>(IProcessServiceFactory)
+                    .create(uri);
+                const result = await process.exec(executableName, ['--version'], { mergeStdOutErr: true });
+                version = result.stdout.trim();
+            }
+            if (!version) {
+                return ModuleInstallStatus.NotInstalled;
+            }
+            const coercedVersion = coerce(version);
+            if (!coercedVersion) {
+                return ModuleInstallStatus.NotInstalled;
+            }
+            if (satisfies(coercedVersion, semVerRequirement)) {
+                return ModuleInstallStatus.Installed;
+            } else {
+                return ModuleInstallStatus.NeedsUpgrade;
+            }
+        } catch (e) {
+            traceInfo(e);
+        }
+        return ModuleInstallStatus.NotInstalled;
+    }
+
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
         if (product === Product.unittest) {
             return true;
@@ -132,6 +177,7 @@ export abstract class BaseInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
+        isUpgrade?: boolean,
     ): Promise<InstallerResponse>;
     protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
         const productType = this.productService.getProductType(product);
@@ -511,6 +557,7 @@ export class DataScienceInstaller extends BaseInstaller {
         product: Product,
         interpreterUri?: InterpreterUri,
         cancel?: CancellationToken,
+        isUpgrade?: boolean,
     ): Promise<InstallerResponse> {
         // Precondition
         if (isResource(interpreterUri)) {
@@ -540,7 +587,7 @@ export class DataScienceInstaller extends BaseInstaller {
         }
 
         await installerModule
-            .installModule(moduleName, interpreter, cancel)
+            .installModule(moduleName, interpreter, cancel, isUpgrade)
             .catch((ex) => traceError(`Error in installing the module '${moduleName}', ${ex}`));
 
         return this.isInstalled(product, interpreter).then((isInstalled) =>
@@ -574,12 +621,14 @@ export class TensorBoardInstaller extends DataScienceInstaller {
         product: Product,
         resource: Uri,
         cancel: CancellationToken,
+        isUpgrade?: boolean,
     ): Promise<InstallerResponse> {
         sendTelemetryEvent(EventName.TENSORBOARD_INSTALL_PROMPT_SHOWN);
         // Show a prompt message specific to TensorBoard
         const yes = Common.bannerLabelYes();
         const no = Common.bannerLabelNo();
-        const selection = await this.appShell.showErrorMessage(TensorBoard.installPrompt(), ...[yes, no]);
+        const message = isUpgrade ? TensorBoard.upgradePrompt() : TensorBoard.installPrompt();
+        const selection = await this.appShell.showErrorMessage(message, ...[yes, no]);
         let telemetrySelection = TensorBoardPromptSelection.None;
         if (selection === yes) {
             telemetrySelection = TensorBoardPromptSelection.Yes;
@@ -588,8 +637,9 @@ export class TensorBoardInstaller extends DataScienceInstaller {
         }
         sendTelemetryEvent(EventName.TENSORBOARD_INSTALL_PROMPT_SELECTION, undefined, {
             selection: telemetrySelection,
+            operationType: isUpgrade ? 'upgrade' : 'install',
         });
-        return selection === yes ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
+        return selection === yes ? this.install(product, resource, cancel, isUpgrade) : InstallerResponse.Ignore;
     }
 }
 
@@ -611,6 +661,7 @@ export class ProductInstaller implements IInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
+        isUpgrade?: boolean,
     ): Promise<InstallerResponse> {
         const currentInterpreter = isResource(resource)
             ? await this.interpreterService.getActiveInterpreter(resource)
@@ -618,7 +669,14 @@ export class ProductInstaller implements IInstaller {
         if (!currentInterpreter) {
             return InstallerResponse.Ignore;
         }
-        return this.createInstaller(product).promptToInstall(product, resource, cancel);
+        return this.createInstaller(product).promptToInstall(product, resource, cancel, isUpgrade);
+    }
+    public async isModuleVersionCompatible(
+        product: Product,
+        semVerRequirement: string,
+        resource?: InterpreterUri,
+    ): Promise<ModuleInstallStatus> {
+        return this.createInstaller(product).isModuleVersionCompatible(product, semVerRequirement, resource);
     }
     public async install(
         product: Product,

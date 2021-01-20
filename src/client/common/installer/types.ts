@@ -23,7 +23,12 @@ export interface IModuleInstaller {
      * @returns {Promise<void>}
      * @memberof IModuleInstaller
      */
-    installModule(name: string, resource?: InterpreterUri, cancel?: CancellationToken): Promise<void>;
+    installModule(
+        name: string,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken,
+        isUpgrade?: boolean,
+    ): Promise<void>;
     isSupported(resource?: InterpreterUri): Promise<boolean>;
 }
 

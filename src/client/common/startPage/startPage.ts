@@ -31,7 +31,8 @@ const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'startPage-ui', 'viewe
 // Class that opens, disposes and handles messages and actions for the Python Extension Start Page.
 // It also runs when the extension activates.
 @injectable()
-export class StartPage extends WebviewPanelHost<IStartPageMapping>
+export class StartPage
+    extends WebviewPanelHost<IStartPageMapping>
     implements IStartPage, IExtensionSingleActivationService {
     protected closedEvent: EventEmitter<IStartPage> = new EventEmitter<IStartPage>();
     private timer: StopWatch;
