@@ -713,7 +713,7 @@ class TestFixture extends BaseTestFixture {
             decoder,
             disposableRegistry,
         );
-        const pyenvs: IComponentAdapter = mock(IComponentAdapter);
+        const pyenvs: IComponentAdapter = mock<IComponentAdapter>();
         return new PythonExecutionFactory(
             serviceContainer.object,
             envActivationService.object,
