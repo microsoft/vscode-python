@@ -5,9 +5,8 @@ import { Dirent } from 'fs';
 import * as path from 'path';
 import { convertFileType } from '../../common/platform/fileSystem';
 import { DirEntry, FileType } from '../../common/platform/types';
-import { waitForPromise } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
-import { logError, logVerbose } from '../../logging';
+import { logError } from '../../logging';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
 import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
@@ -30,14 +29,12 @@ export function findInterpretersInDir(
     recurseLevel?: number,
     filterSubDir?: FileFilterFunc,
     ignoreErrors?: boolean,
-    onTimeout?: (dirname: string) => Promise<DirEntry[]>,
 ): AsyncIterableIterator<string> {
     // "checkBin" is a local variable rather than global
     // so we can stub it out during unit testing.
     const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
     const cfg = {
         filterSubDir,
-        onTimeout,
         filterFile: checkBin,
         maxDepth: recurseLevel,
         ignoreErrors: ignoreErrors || false,
@@ -80,17 +77,12 @@ async function* iterExecutables(
 async function readDir(
     dirname: string,
     opts: {
-        timeoutMs?: number;
-        onTimeout?: (dirname: string) => Promise<DirEntry[]>;
         ignoreErrors?: boolean;
     } = {},
 ): Promise<DirEntry[]> {
-    let entries: Dirent[] | null;
+    let entries: Dirent[];
     try {
-        entries = await waitForPromise(
-            listDir(dirname),
-            opts.timeoutMs || 1_000, // 1 second
-        );
+        entries = await listDir(dirname);
     } catch (err) {
         // Treat a missing directory as empty.
         if (err.code === 'ENOENT') {
@@ -101,21 +93,6 @@ async function readDir(
             return [];
         }
         throw err; // re-throw
-    }
-    if (entries === null) {
-        logVerbose(`listDir() timeout after ${opts.timeoutMs}ms for "${dirname}"`);
-        if (opts.onTimeout !== undefined) {
-            try {
-                return await opts.onTimeout(dirname);
-            } catch (err) {
-                if (opts.ignoreErrors) {
-                    logError(`onTimeout() failed for "${dirname}" (${err})`);
-                    return [];
-                }
-                throw err; // re-throw
-            }
-        }
-        return [];
     }
     // (FYI)
     // Normally we would have to do an extra (expensive) `fs.lstat()`
