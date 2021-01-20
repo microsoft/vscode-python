@@ -33,7 +33,8 @@ import { InterpreterService } from '../../../client/interpreter/interpreterServi
 import { ServiceContainer } from '../../../client/ioc/container';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import * as PythonEnvironments from '../../../client/pythonEnvironments';
+import * as LegacyIOC from '../../../client/pythonEnvironments/legacyIOC';
+import * as WindowsStoreInterpreter from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 
 const pythonInterpreter: PythonEnvironment = {
     path: '/foo/bar/python.exe',
@@ -85,6 +86,7 @@ suite('Process - PythonExecutionFactory', () => {
             let pyenvs: IComponentAdapter;
             let executionService: typemoq.IMock<IPythonExecutionService>;
             let isWindowsStoreInterpreterStub: sinon.SinonStub;
+            let inDiscoveryExperimentStub: sinon.SinonStub;
 
             setup(() => {
                 bufferDecoder = mock(BufferDecoder);
@@ -93,7 +95,9 @@ suite('Process - PythonExecutionFactory', () => {
                 configService = mock(ConfigurationService);
                 condaService = mock(CondaService);
                 processLogger = mock(ProcessLogger);
+
                 pyenvs = mock<IComponentAdapter>();
+                when(pyenvs.isWindowsStoreInterpreter(anyString())).thenResolve(true);
 
                 executionService = typemoq.Mock.ofType<IPythonExecutionService>();
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -133,8 +137,10 @@ suite('Process - PythonExecutionFactory', () => {
                     instance(pyenvs),
                 );
 
-                isWindowsStoreInterpreterStub = sinon.stub(PythonEnvironments, 'isWindowsStoreInterpreter');
+                isWindowsStoreInterpreterStub = sinon.stub(WindowsStoreInterpreter, 'isWindowsStoreInterpreter');
                 isWindowsStoreInterpreterStub.resolves(true);
+
+                inDiscoveryExperimentStub = sinon.stub(LegacyIOC, 'inDiscoveryExperiment');
             });
 
             teardown(() => sinon.restore());
@@ -217,19 +223,40 @@ suite('Process - PythonExecutionFactory', () => {
                 assert.equal(createInvoked, false);
             });
 
-            test("Ensure `create` returns a WindowsStorePythonProcess instance if it's a windows store intepreter path", async () => {
+            test("Ensure `create` returns a WindowsStorePythonProcess instance if it's a windows store intepreter path and we're in the discovery experiment", async () => {
                 const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);
 
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
+                inDiscoveryExperimentStub.resolves(true);
 
                 const service = await factory.create({ resource });
 
                 expect(service).to.not.equal(undefined);
                 verify(processFactory.create(resource)).once();
                 verify(pythonSettings.pythonPath).once();
+                verify(pyenvs.isWindowsStoreInterpreter(pythonPath)).once();
+                sinon.assert.calledOnce(inDiscoveryExperimentStub);
+                sinon.assert.notCalled(isWindowsStoreInterpreterStub);
+            });
+            test("Ensure `create` returns a WindowsStorePythonProcess instance if it's a windows store intepreter path and we're not in the discovery experiment", async () => {
+                const pythonPath = 'path/to/python';
+                const pythonSettings = mock(PythonSettings);
+
+                when(processFactory.create(resource)).thenResolve(processService.object);
+                when(pythonSettings.pythonPath).thenReturn(pythonPath);
+                when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
+                inDiscoveryExperimentStub.resolves(false);
+
+                const service = await factory.create({ resource });
+
+                expect(service).to.not.equal(undefined);
+                verify(processFactory.create(resource)).once();
+                verify(pythonSettings.pythonPath).once();
+                verify(pyenvs.isWindowsStoreInterpreter(pythonPath)).never();
+                sinon.assert.calledOnce(inDiscoveryExperimentStub);
                 sinon.assert.calledOnce(isWindowsStoreInterpreterStub);
                 sinon.assert.calledWith(isWindowsStoreInterpreterStub, pythonPath);
             });

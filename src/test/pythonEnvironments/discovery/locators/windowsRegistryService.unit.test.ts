@@ -23,6 +23,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
     let fs: TypeMoq.IMock<IFileSystem>;
     let isRestrictedWindowsInterpreterStub: sinon.SinonStub;
     let isWindowsStoreInterpreterStub: sinon.SinonStub;
+
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
