@@ -23,57 +23,60 @@ type FileFilterFunc = (filename: string) => boolean;
  * @param recurseLevels : Number of levels to search for from the root directory.
  * @param filter : Callback that identifies directories to ignore.
  */
-export function findInterpretersInDir(
+export async function* findInterpretersInDir(
     root: string,
     recurseLevel?: number,
     filterSubDir?: FileFilterFunc,
-    ignoreErrors?: boolean,
+    ignoreErrors = false,
 ): AsyncIterableIterator<string> {
     // "checkBin" is a local variable rather than global
     // so we can stub it out during unit testing.
     const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
     const cfg = {
+        ignoreErrors,
         filterSubDir,
         filterFile: checkBin,
-        maxDepth: recurseLevel,
-        ignoreErrors: ignoreErrors || false,
+        // Make no-recursion the default for backward compatibility.
+        maxDepth: recurseLevel || 0,
     };
     // We use an initial depth of 1.
-    return iterExecutables(root, 1, cfg);
+    for await (const { filename, filetype } of walkSubTree(root, 1, cfg)) {
+        if (filetype === FileType.File || filetype === FileType.SymbolicLink) {
+            if (matchFile(filename, checkBin, ignoreErrors || false)) {
+                yield filename;
+            }
+        }
+        // We ignore all other file types.
+    }
 }
 
 // This function helps simplify the recursion case.
-async function* iterExecutables(
-    root: string,
+async function* walkSubTree(
+    subRoot: string,
     // "currentDepth" is the depth of the current level of recursion.
     currentDepth: number,
     cfg: {
         filterSubDir: FileFilterFunc | undefined;
-        filterFile: FileFilterFunc | undefined;
-        maxDepth: number | undefined;
-        onTimeout?: (dirname: string) => Promise<DirEntry[]>;
+        maxDepth: number;
         ignoreErrors: boolean;
     },
-): AsyncIterableIterator<string> {
-    const entries = await readDir(root, cfg);
-    for (const { filename, filetype } of entries) {
+): AsyncIterableIterator<DirEntry> {
+    const entries = await readDirEntries(subRoot, cfg);
+    for (const entry of entries) {
+        yield entry;
+
+        const { filename, filetype } = entry;
         if (filetype === FileType.Directory) {
-            if (cfg.maxDepth && currentDepth <= cfg.maxDepth) {
+            if (cfg.maxDepth < 0 || currentDepth <= cfg.maxDepth) {
                 if (matchFile(filename, cfg.filterSubDir, cfg.ignoreErrors)) {
-                    yield* iterExecutables(filename, currentDepth + 1, cfg);
+                    yield* walkSubTree(filename, currentDepth + 1, cfg);
                 }
             }
-        } else if (filetype === FileType.File || filetype === FileType.SymbolicLink) {
-            if (matchFile(filename, cfg.filterFile, cfg.ignoreErrors)) {
-                yield filename;
-            }
-        } else {
-            // We ignore all other file types.
         }
     }
 }
 
-async function readDir(
+async function readDirEntries(
     dirname: string,
     opts: {
         ignoreErrors?: boolean;
@@ -88,20 +91,21 @@ async function readDir(
             return [];
         }
         if (opts.ignoreErrors) {
-            logError(`listDir() failed for "${dirname}" (${err})`);
+            logError(`readDir() failed for "${dirname}" (${err})`);
             return [];
         }
         throw err; // re-throw
     }
     // (FYI)
     // Normally we would have to do an extra (expensive) `fs.lstat()`
-    // here for each file to determine its file type.  However,
-    // we were able to avoid this by using `listDir()` above.
-    // It is light wrapper around `fs.listDir()` with the
-    // "withFileTypes" option set to true.  So the file type
-    // of each entry is preserved for free.  If we needed more
-    // information than just the file type then we would be forced
-    // to incur the extra cost of `fs.lstat()`.
+    // here for each file to determine its file type.  However, we
+    // avoid this by using the "withFileTypes" option to `readdir()`
+    // above.  On non-Windows the file type of each entry is preserved
+    // for free.  Unfortunately, on Windows it actually does an
+    // `lstat()` under the hood, so it isn't a win.  Regardless,
+    // if we needed more information than just the file type
+    // then we would be forced to incur the extra cost
+    // of `lstat()` anyway.
     return entries.map((entry) => {
         const filename = path.join(dirname, entry.name);
         const filetype = convertFileType(entry);
