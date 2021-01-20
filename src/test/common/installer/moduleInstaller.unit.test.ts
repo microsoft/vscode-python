@@ -566,7 +566,7 @@ suite('Module Installer', () => {
                                         if (moduleName === 'black') {
                                             expectedArgs.push('--pre');
                                         }
-                                        await installModuleAndVerifyCommand(pipenvName, expectedArgs);
+                                        await installModuleAndVerifyCommand(pipenvName, expectedArgs, isUpgrade);
                                     });
                                 });
                             }
@@ -590,7 +590,7 @@ suite('Module Installer', () => {
                                         }
                                         expectedArgs.push(moduleName);
                                         expectedArgs.push('-y');
-                                        await installModuleAndVerifyCommand(condaExecutable, expectedArgs);
+                                        await installModuleAndVerifyCommand(condaExecutable, expectedArgs, isUpgrade);
                                     });
                                 });
                             }
