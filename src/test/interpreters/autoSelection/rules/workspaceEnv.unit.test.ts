@@ -44,7 +44,6 @@ import { ServiceContainer } from '../../../../client/ioc/container';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { KnownPathsService } from '../../../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
-import { ComponentAdapter } from '../../../../client/pythonEnvironments/legacyIOC';
 
 suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
     type PythonPathInConfig = { workspaceFolderValue: string; workspaceValue: string };
@@ -97,7 +96,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
         experimentsManager = mock(ExperimentsManager);
         interpreterPathService = mock(InterpreterPathService);
-        componentAdapter = mock(ComponentAdapter);
+        componentAdapter = mock<IComponentAdapter>();
 
         when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
             instance(state),
