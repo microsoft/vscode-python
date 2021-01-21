@@ -34,7 +34,7 @@ export function isDirWatchable(dirname: string): boolean {
         throw err; // re-throw
     }
     // The limit here is an educated guess.
-    return names.length > 200;
+    return names.length < 200;
 }
 
 /**
