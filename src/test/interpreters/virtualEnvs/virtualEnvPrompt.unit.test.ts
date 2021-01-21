@@ -88,10 +88,10 @@ suite('Virtual Environment Prompt', () => {
         const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
 
-        when(locator.getInterpreters(resource)).thenResolve([interpreter1, interpreter2] as never);
-        when(helper.getBestInterpreter(deepEqual([interpreter1, interpreter2] as never))).thenReturn(
-            interpreter2 as never,
-        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when(locator.getInterpreters(resource)).thenResolve([interpreter1, interpreter2] as any);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when(helper.getBestInterpreter(deepEqual([interpreter1, interpreter2] as any))).thenReturn(interpreter2 as any);
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
             notificationPromptEnabled.object,
         );
@@ -116,10 +116,10 @@ suite('Virtual Environment Prompt', () => {
         when(componentAdapter.getWorkspaceVirtualEnvInterpreters(resource)).thenResolve([
             interpreter1,
             interpreter2,
-        ] as never);
-        when(helper.getBestInterpreter(deepEqual([interpreter1, interpreter2] as never))).thenReturn(
-            interpreter2 as never,
-        );
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ] as any);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when(helper.getBestInterpreter(deepEqual([interpreter1, interpreter2] as any))).thenReturn(interpreter2 as any);
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
             notificationPromptEnabled.object,
         );
@@ -140,7 +140,8 @@ suite('Virtual Environment Prompt', () => {
             notificationPromptEnabled.object,
         );
         notificationPromptEnabled.setup((n) => n.value).returns(() => true);
-        when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[0] as never);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[0] as any);
         when(
             pythonPathUpdaterService.updatePythonPath(
                 interpreter1.path,
@@ -150,7 +151,8 @@ suite('Virtual Environment Prompt', () => {
             ),
         ).thenResolve();
 
-        await environmentPrompt.notifyUser(interpreter1 as never, resource);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await environmentPrompt.notifyUser(interpreter1 as any, resource);
 
         verify(persistentStateFactory.createWorkspacePersistentState(anything(), true)).once();
         verify(appShell.showInformationMessage(anything(), ...prompts)).once();
@@ -173,7 +175,8 @@ suite('Virtual Environment Prompt', () => {
             notificationPromptEnabled.object,
         );
         notificationPromptEnabled.setup((n) => n.value).returns(() => true);
-        when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[1] as never);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[1] as any);
         when(
             pythonPathUpdaterService.updatePythonPath(
                 interpreter1.path,
@@ -187,7 +190,8 @@ suite('Virtual Environment Prompt', () => {
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
 
-        await environmentPrompt.notifyUser(interpreter1 as never, resource);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await environmentPrompt.notifyUser(interpreter1 as any, resource);
 
         verify(persistentStateFactory.createWorkspacePersistentState(anything(), true)).once();
         verify(appShell.showInformationMessage(anything(), ...prompts)).once();
@@ -211,13 +215,15 @@ suite('Virtual Environment Prompt', () => {
             notificationPromptEnabled.object,
         );
         notificationPromptEnabled.setup((n) => n.value).returns(() => true);
-        when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[2] as never);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[2] as any);
         notificationPromptEnabled
             .setup((n) => n.updateValue(false))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
 
-        await environmentPrompt.notifyUser(interpreter1 as never, resource);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await environmentPrompt.notifyUser(interpreter1 as any, resource);
 
         verify(persistentStateFactory.createWorkspacePersistentState(anything(), true)).once();
         verify(appShell.showInformationMessage(anything(), ...prompts)).once();
@@ -233,9 +239,11 @@ suite('Virtual Environment Prompt', () => {
             notificationPromptEnabled.object,
         );
         notificationPromptEnabled.setup((n) => n.value).returns(() => false);
-        when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[0] as never);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[0] as any);
 
-        await environmentPrompt.notifyUser(interpreter1 as never, resource);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await environmentPrompt.notifyUser(interpreter1 as any, resource);
 
         verify(persistentStateFactory.createWorkspacePersistentState(anything(), true)).once();
         verify(appShell.showInformationMessage(anything(), ...prompts)).never();
