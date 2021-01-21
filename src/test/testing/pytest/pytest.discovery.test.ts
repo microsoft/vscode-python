@@ -18,7 +18,7 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService,
 } from '../../../client/common/process/types';
-import { IConfigurationService } from '../../../client/common/types';
+import { IConfigurationService, IExperimentService } from '../../../client/common/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IComponentAdapter, ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
@@ -71,6 +71,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             @inject(ICondaService) condaService: ICondaService,
             @inject(IBufferDecoder) decoder: IBufferDecoder,
             @inject(IComponentAdapter) pyenvs: IComponentAdapter,
+            @inject(IExperimentService) experimentService: IExperimentService,
         ) {
             super(
                 _serviceContainer,
@@ -80,6 +81,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 condaService,
                 decoder,
                 pyenvs,
+                experimentService,
             );
         }
 

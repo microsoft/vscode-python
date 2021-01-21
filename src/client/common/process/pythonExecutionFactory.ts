@@ -8,11 +8,11 @@ import { IEnvironmentActivationService } from '../../interpreter/activation/type
 import { IComponentAdapter, ICondaService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
-// import { inDiscoveryExperiment } from '../../pythonEnvironments/legacyIOC';
+import { inDiscoveryExperiment } from '../experiments/helpers';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IFileSystem } from '../platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../types';
+import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../types';
 import { ProcessService } from './proc';
 import { createCondaEnv, createPythonEnv, createWindowsStoreEnv } from './pythonEnvironment';
 import { createPythonProcessService } from './pythonProcess';
@@ -47,6 +47,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
@@ -61,11 +62,9 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
         processService.on('exec', this.logger.logProcess.bind(this.logger));
 
-        // let windowsStoreInterpreterCheck = (await inDiscoveryExperiment())
-        //     ? this.pyenvs.isWindowsStoreInterpreter
-        //     : isWindowsStoreInterpreter;'
-        console.warn(`test ${this.pyenvs}`);
-        const windowsStoreInterpreterCheck = isWindowsStoreInterpreter;
+        const windowsStoreInterpreterCheck = (await inDiscoveryExperiment(this.experimentService))
+            ? this.pyenvs.isWindowsStoreInterpreter
+            : isWindowsStoreInterpreter;
 
         return createPythonService(
             pythonPath,

@@ -13,6 +13,7 @@ import { JUPYTER_EXTENSION_ID } from '../common/constants';
 import { InterpreterUri } from '../common/installer/types';
 import {
     GLOBAL_MEMENTO,
+    IExperimentService,
     IExtensions,
     IInstaller,
     IMemento,
@@ -32,7 +33,7 @@ import {
 } from '../interpreter/contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './types';
-import { inDiscoveryExperiment } from '../pythonEnvironments/legacyIOC';
+import { inDiscoveryExperiment } from '../common/experiments/helpers';
 import { isWindowsStoreInterpreter } from '../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 
 export interface ILanguageServer extends Disposable {
@@ -150,6 +151,7 @@ export class JupyterExtensionIntegration {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IInterpreterDisplay) private interpreterDisplay: IInterpreterDisplay,
         @inject(IComponentAdapter) private pyenvs: IComponentAdapter,
+        @inject(IExperimentService) private experimentService: IExperimentService,
     ) {}
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
@@ -166,7 +168,7 @@ export class JupyterExtensionIntegration {
                 allowExceptions?: boolean,
             ) => this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions),
             isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> => {
-                if (await inDiscoveryExperiment()) {
+                if (await inDiscoveryExperiment(this.experimentService)) {
                     return this.pyenvs.isWindowsStoreInterpreter(pythonPath) && false;
                 }
                 return isWindowsStoreInterpreter(pythonPath);

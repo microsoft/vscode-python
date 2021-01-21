@@ -26,7 +26,7 @@ import {
     IPythonExecutionFactory,
     IPythonToolExecutionService,
 } from '../../client/common/process/types';
-import { IConfigurationService, IDisposableRegistry } from '../../client/common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IComponentAdapter, ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
@@ -35,7 +35,7 @@ import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { ILintMessage, LinterId, LintMessageSeverity } from '../../client/linters/types';
 import { deleteFile, PYTHON_PATH } from '../common';
 import { BaseTestFixture, getLinterID, getProductName, newMockDocument, throwUnknownProduct } from './common';
-import * as LegacyIOC from '../../client/pythonEnvironments/legacyIOC';
+import * as ExperimentHelpers from '../../client/common/experiments/helpers';
 
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const workspaceUri = Uri.file(workspaceDir);
@@ -717,7 +717,9 @@ class TestFixture extends BaseTestFixture {
         );
         const pyenvs: IComponentAdapter = mock<IComponentAdapter>();
 
-        const inDiscoveryExperimentStub = sinon.stub(LegacyIOC, 'inDiscoveryExperiment');
+        const experimentService = TypeMoq.Mock.ofType<IExperimentService>(undefined, TypeMoq.MockBehavior.Strict);
+
+        const inDiscoveryExperimentStub = sinon.stub(ExperimentHelpers, 'inDiscoveryExperiment');
         inDiscoveryExperimentStub.resolves(false);
 
         return new PythonExecutionFactory(
@@ -728,6 +730,7 @@ class TestFixture extends BaseTestFixture {
             condaService.object,
             decoder,
             instance(pyenvs),
+            experimentService.object,
         );
     }
 

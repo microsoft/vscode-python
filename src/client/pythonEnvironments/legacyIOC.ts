@@ -128,6 +128,7 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     return env;
 }
 
+// Shouldn't be used outside of the discovery component.
 export async function inDiscoveryExperiment(): Promise<boolean> {
     const results = await Promise.all([
         inExperiment(DiscoveryVariants.discoverWithFileWatching),

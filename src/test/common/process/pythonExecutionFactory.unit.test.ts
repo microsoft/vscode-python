@@ -24,7 +24,7 @@ import {
     IProcessServiceFactory,
     IPythonExecutionService,
 } from '../../../client/common/process/types';
-import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
@@ -33,8 +33,9 @@ import { InterpreterService } from '../../../client/interpreter/interpreterServi
 import { ServiceContainer } from '../../../client/ioc/container';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import * as LegacyIOC from '../../../client/pythonEnvironments/legacyIOC';
+import * as ExperimentHelpers from '../../../client/common/experiments/helpers';
 import * as WindowsStoreInterpreter from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
+import { ExperimentService } from '../../../client/common/experiments/service';
 
 const pythonInterpreter: PythonEnvironment = {
     path: '/foo/bar/python.exe',
@@ -84,6 +85,7 @@ suite('Process - PythonExecutionFactory', () => {
             let processService: typemoq.IMock<IProcessService>;
             let interpreterService: IInterpreterService;
             let pyenvs: IComponentAdapter;
+            let experimentService: IExperimentService;
             let executionService: typemoq.IMock<IPythonExecutionService>;
             let isWindowsStoreInterpreterStub: sinon.SinonStub;
             let inDiscoveryExperimentStub: sinon.SinonStub;
@@ -95,6 +97,7 @@ suite('Process - PythonExecutionFactory', () => {
                 configService = mock(ConfigurationService);
                 condaService = mock(CondaService);
                 processLogger = mock(ProcessLogger);
+                experimentService = mock(ExperimentService);
 
                 pyenvs = mock<IComponentAdapter>();
                 when(pyenvs.isWindowsStoreInterpreter(anyString())).thenResolve(true);
@@ -135,12 +138,13 @@ suite('Process - PythonExecutionFactory', () => {
                     instance(condaService),
                     instance(bufferDecoder),
                     instance(pyenvs),
+                    instance(experimentService),
                 );
 
                 isWindowsStoreInterpreterStub = sinon.stub(WindowsStoreInterpreter, 'isWindowsStoreInterpreter');
                 isWindowsStoreInterpreterStub.resolves(true);
 
-                inDiscoveryExperimentStub = sinon.stub(LegacyIOC, 'inDiscoveryExperiment');
+                inDiscoveryExperimentStub = sinon.stub(ExperimentHelpers, 'inDiscoveryExperiment');
             });
 
             teardown(() => sinon.restore());

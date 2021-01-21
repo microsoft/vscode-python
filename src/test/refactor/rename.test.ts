@@ -28,7 +28,7 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService,
 } from '../../client/common/process/types';
-import { IConfigurationService, IPythonSettings } from '../../client/common/types';
+import { IConfigurationService, IExperimentService, IPythonSettings } from '../../client/common/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IComponentAdapter, ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -56,6 +56,7 @@ suite('Refactor Rename', () => {
         const configService = typeMoq.Mock.ofType<IConfigurationService>();
         configService.setup((c) => c.getSettings(typeMoq.It.isAny())).returns(() => pythonSettings.object);
         const condaService = typeMoq.Mock.ofType<ICondaService>();
+        const experimentService = typeMoq.Mock.ofType<IExperimentService>();
         const processServiceFactory = typeMoq.Mock.ofType<IProcessServiceFactory>();
         processServiceFactory
             .setup((p) => p.create(typeMoq.It.isAny()))
@@ -87,6 +88,7 @@ suite('Refactor Rename', () => {
         serviceContainer
             .setup((s) => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
             .returns(() => envActivationService.object);
+
         const pyenvs: IComponentAdapter = mock<IComponentAdapter>();
 
         serviceContainer
@@ -103,6 +105,7 @@ suite('Refactor Rename', () => {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         undefined as any,
                         instance(pyenvs),
+                        experimentService.object,
                     ),
             );
         const processLogger = typeMoq.Mock.ofType<IProcessLogger>();
