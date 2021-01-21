@@ -319,7 +319,29 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         if (!this.enabled) {
             return undefined;
         }
-        this.refreshing.fire(); // Notify locators are locating.
+        // Notify locators are locating.
+        this.refreshing.fire();
+
+        const legacyEnvs = await this.getInterpretersViaAPI(resource, options).catch((ex) => {
+            traceError('Fetching environments via the new API failed', ex);
+            return <PythonEnvironment[]>[];
+        });
+
+        // Notify all locators have completed locating. Note it's crucial to notify this even when getInterpretersViaAPI
+        // fails, to ensure "Python extension loading..." text disappears.
+        this.refreshed.fire();
+        return legacyEnvs;
+    }
+
+    private async getInterpretersViaAPI(
+        resource?: vscode.Uri,
+        options?: GetInterpreterOptions,
+        // Currently we have no plans to support GetInterpreterLocatorOptions:
+        // {
+        //     ignoreCache?: boolean
+        //     onSuggestion?: boolean;
+        // }
+    ): Promise<PythonEnvironment[]> {
         if (options?.onSuggestion) {
             // For now, until we have the concept of trusted workspaces, we assume all interpreters as safe
             // to run once user has triggered discovery, i.e interacted with the extension.
@@ -338,9 +360,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
 
         const iterator = this.api.iterEnvs(query);
         const envs = await getEnvs(iterator);
-        const legacyEnvs = envs.map(convertEnvInfo);
-        this.refreshed.fire(); // Notify all locators have completed locating.
-        return legacyEnvs;
+        return envs.map(convertEnvInfo);
     }
 }
 
