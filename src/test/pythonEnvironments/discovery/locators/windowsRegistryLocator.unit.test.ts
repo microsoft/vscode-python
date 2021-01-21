@@ -12,6 +12,7 @@ import {
     PythonVersion,
     UNKNOWN_PYTHON_VERSION,
 } from '../../../../client/pythonEnvironments/base/info';
+import { buildEnvInfo } from '../../../../client/pythonEnvironments/base/info/env';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as winreg from '../../../../client/pythonEnvironments/common/windowsRegistry';
@@ -236,22 +237,16 @@ suite('Windows Registry', () => {
             version = UNKNOWN_PYTHON_VERSION;
         }
 
-        return {
-            name: '',
+        return buildEnvInfo({
             location: '',
             kind: PythonEnvKind.OtherGlobal,
-            executable: {
-                filename: data.interpreterPath,
-                sysPrefix: '',
-                ctime: -1,
-                mtime: -1,
-            },
+            executable: data.interpreterPath,
             version,
             arch: data.bitnessStr === '32bit' ? Architecture.x86 : Architecture.x64,
-            distro: { org: data.distroOrgName ?? '' },
+            org: data.distroOrgName ?? '',
             defaultDisplayName: data.displayName,
             source: ['windows registry'],
-        };
+        });
     }
 
     async function getExpectedDataFromKey({ arch, hive, key }: winreg.Options, org: string): Promise<PythonEnvInfo> {

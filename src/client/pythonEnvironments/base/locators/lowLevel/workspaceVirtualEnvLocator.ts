@@ -138,7 +138,7 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
     // eslint-disable-next-line class-methods-use-this
     protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
-        const source = typeof env === 'string' ? ['path'] : uniq(['path', ...env.source]);
+        const source = typeof env === 'string' ? ['other'] : uniq(['other', ...env.source]);
         if (isParentPath(executablePath, this.root) && (await pathExists(executablePath))) {
             // We should extract the kind here to avoid doing is*Environment()
             // check multiple times. Those checks are file system heavy and

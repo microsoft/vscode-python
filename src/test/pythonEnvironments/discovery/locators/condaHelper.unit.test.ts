@@ -646,6 +646,7 @@ suite('Conda and its environments are located correctly', () => {
                         mtime: -1,
                         sysPrefix: '',
                     },
+                    source: ['conda'],
                 };
             }
 
