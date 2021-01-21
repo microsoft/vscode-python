@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.1.0-rc (12 January 2021)
+## 2021.1.0 (21 January 2021)
 
 ### Enhancements
 
