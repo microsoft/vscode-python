@@ -8,7 +8,7 @@ import { IEnvironmentActivationService } from '../../interpreter/activation/type
 import { IComponentAdapter, ICondaService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
-import { inDiscoveryExperiment } from '../../pythonEnvironments/legacyIOC';
+// import { inDiscoveryExperiment } from '../../pythonEnvironments/legacyIOC';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IFileSystem } from '../platform/types';
@@ -61,10 +61,11 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
         processService.on('exec', this.logger.logProcess.bind(this.logger));
 
-        let windowsStoreInterpreterCheck = (await inDiscoveryExperiment())
-            ? this.pyenvs.isWindowsStoreInterpreter
-            : isWindowsStoreInterpreter;
-        windowsStoreInterpreterCheck = isWindowsStoreInterpreter;
+        // let windowsStoreInterpreterCheck = (await inDiscoveryExperiment())
+        //     ? this.pyenvs.isWindowsStoreInterpreter
+        //     : isWindowsStoreInterpreter;'
+        console.warn(`test ${this.pyenvs}`);
+        const windowsStoreInterpreterCheck = isWindowsStoreInterpreter;
 
         return createPythonService(
             pythonPath,
