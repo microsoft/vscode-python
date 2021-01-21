@@ -8,6 +8,7 @@ import * as childProcess from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import { instance, mock } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, TextDocument, TextLine, Uri } from 'vscode';
@@ -34,6 +35,7 @@ import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { ILintMessage, LinterId, LintMessageSeverity } from '../../client/linters/types';
 import { deleteFile, PYTHON_PATH } from '../common';
 import { BaseTestFixture, getLinterID, getProductName, newMockDocument, throwUnknownProduct } from './common';
+import * as LegacyIOC from '../../client/pythonEnvironments/legacyIOC';
 
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const workspaceUri = Uri.file(workspaceDir);
@@ -714,6 +716,10 @@ class TestFixture extends BaseTestFixture {
             disposableRegistry,
         );
         const pyenvs: IComponentAdapter = mock<IComponentAdapter>();
+
+        const inDiscoveryExperimentStub = sinon.stub(LegacyIOC, 'inDiscoveryExperiment');
+        inDiscoveryExperimentStub.resolves(false);
+
         return new PythonExecutionFactory(
             serviceContainer.object,
             envActivationService.object,
@@ -741,6 +747,10 @@ class TestFixture extends BaseTestFixture {
 }
 
 suite('Linting Functional Tests', () => {
+    teardown(() => {
+        sinon.restore();
+    });
+
     const pythonPath = childProcess.execSync(`${PYTHON_PATH} -c "import sys;print(sys.executable)"`);
 
     console.log(`Testing linter with python ${pythonPath}`);
