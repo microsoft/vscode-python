@@ -170,6 +170,8 @@ async function createCachingLocator(ext: ExtensionState, locators: ILocator): Pr
             load: async () => storage.get(),
             store: async (e) => storage.set(e),
         },
+        // For now we assume that if when iteration is complete, the env is as complete as it's going to get.
+        // So no further check for complete environments is needed.
         () => true, // "isComplete"
     );
     return new CachingLocator(cache, locators);
