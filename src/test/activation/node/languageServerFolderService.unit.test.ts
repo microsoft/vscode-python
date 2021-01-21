@@ -3,27 +3,23 @@
 
 'use strict';
 
-import { assert, expect } from 'chai';
+import { assert, expect, use } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { Extension, Uri, WorkspaceConfiguration } from 'vscode';
+import { Extension, Uri } from 'vscode';
+import * as chaiAsPromised from 'chai-as-promised';
 import {
     ILanguageServerFolder,
     ILSExtensionApi,
     NodeLanguageServerFolderService,
 } from '../../../client/activation/node/languageServerFolderService';
-import { IWorkspaceService } from '../../../client/common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../../client/common/constants';
-import { IConfigurationService, IExtensions, IPythonSettings } from '../../../client/common/types';
-import { IServiceContainer } from '../../../client/ioc/types';
+import { IExtensions } from '../../../client/common/types';
+
+use(chaiAsPromised);
 
 suite('Node Language Server Folder Service', () => {
     const resource = Uri.parse('a');
 
-    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-    let pythonSettings: TypeMoq.IMock<IPythonSettings>;
-    let configService: TypeMoq.IMock<IConfigurationService>;
-    let workspaceConfiguration: TypeMoq.IMock<WorkspaceConfiguration>;
-    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let extensions: TypeMoq.IMock<IExtensions>;
 
     class TestService extends NodeLanguageServerFolderService {
@@ -33,97 +29,21 @@ suite('Node Language Server Folder Service', () => {
     }
 
     setup(() => {
-        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        configService = TypeMoq.Mock.ofType<IConfigurationService>();
-        pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-        configService.setup((c) => c.getSettings(undefined)).returns(() => pythonSettings.object);
-        workspaceConfiguration = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        workspaceService
-            .setup((ws) => ws.getConfiguration('python', TypeMoq.It.isAny()))
-            .returns(() => workspaceConfiguration.object);
         extensions = TypeMoq.Mock.ofType<IExtensions>();
     });
 
-    test('With packageName set', async () => {
-        pythonSettings.setup((p) => p.downloadLanguageServer).returns(() => true);
-        workspaceConfiguration.setup((wc) => wc.get('packageName')).returns(() => 'somePackageName');
-
-        const folderService = new TestService(
-            serviceContainer.object,
-            configService.object,
-            workspaceService.object,
-            extensions.object,
-        );
-
-        const lsf = await folderService.languageServerFolder();
-        expect(lsf).to.be.equal(undefined, 'expected languageServerFolder to be undefined');
-        expect(await folderService.skipDownload()).to.be.equal(false, 'skipDownload should be false');
-    });
-
-    test('Invalid version', async () => {
-        pythonSettings.setup((p) => p.downloadLanguageServer).returns(() => true);
-        workspaceConfiguration.setup((wc) => wc.get('packageName')).returns(() => undefined);
-
-        const folderService = new TestService(
-            serviceContainer.object,
-            configService.object,
-            workspaceService.object,
-            extensions.object,
-        );
-
-        const lsf = await folderService.languageServerFolder();
-        expect(lsf).to.be.equal(undefined, 'expected languageServerFolder to be undefined');
-        expect(await folderService.skipDownload()).to.be.equal(false, 'skipDownload should be false');
-    });
-
-    test('downloadLanguageServer set to false', async () => {
-        pythonSettings.setup((p) => p.downloadLanguageServer).returns(() => false);
-        workspaceConfiguration.setup((wc) => wc.get('packageName')).returns(() => undefined);
-
-        const folderService = new TestService(
-            serviceContainer.object,
-            configService.object,
-            workspaceService.object,
-            extensions.object,
-        );
-
-        const lsf = await folderService.languageServerFolder();
-        expect(lsf).to.be.equal(undefined, 'expected languageServerFolder to be undefined');
-        expect(await folderService.skipDownload()).to.be.equal(false, 'skipDownload should be false');
-    });
-
-    test('lsExtensionName is undefined', async () => {
-        pythonSettings.setup((p) => p.downloadLanguageServer).returns(() => true);
-        workspaceConfiguration.setup((wc) => wc.get('packageName')).returns(() => undefined);
-
-        const folderService = new TestService(
-            serviceContainer.object,
-            configService.object,
-            workspaceService.object,
-            extensions.object,
-        );
-
-        const lsf = await folderService.languageServerFolder();
-        expect(lsf).to.be.equal(undefined, 'expected languageServerFolder to be undefined');
-        expect(await folderService.skipDownload()).to.be.equal(false, 'skipDownload should be false');
-    });
-
-    test('lsExtension not installed', async () => {
-        pythonSettings.setup((p) => p.downloadLanguageServer).returns(() => true);
-        workspaceConfiguration.setup((wc) => wc.get('packageName')).returns(() => undefined);
+    test('Not installed', async () => {
         extensions.setup((e) => e.getExtension(PYLANCE_EXTENSION_ID)).returns(() => undefined);
 
-        const folderService = new TestService(
-            serviceContainer.object,
-            configService.object,
-            workspaceService.object,
-            extensions.object,
-        );
+        const folderService = new TestService(extensions.object);
 
         const lsf = await folderService.languageServerFolder();
         expect(lsf).to.be.equal(undefined, 'expected languageServerFolder to be undefined');
         expect(await folderService.skipDownload()).to.be.equal(false, 'skipDownload should be false');
+
+        await expect(folderService.getCurrentLanguageServerDirectory()).to.eventually.rejected;
+        await expect(folderService.getLanguageServerFolderName(resource)).to.eventually.rejected;
+        await expect(folderService.getLatestLanguageServerVersion(resource)).to.eventually.rejected;
     });
 
     suite('Valid configuration', () => {
@@ -143,15 +63,8 @@ suite('Node Language Server Folder Service', () => {
             extension = TypeMoq.Mock.ofType<Extension<ILSExtensionApi>>();
             extension.setup((e) => e.activate()).returns(() => Promise.resolve(extensionApi));
             extension.setup((e) => e.exports).returns(() => extensionApi);
-            pythonSettings.setup((p) => p.downloadLanguageServer).returns(() => true);
-            workspaceConfiguration.setup((wc) => wc.get('packageName')).returns(() => undefined);
             extensions.setup((e) => e.getExtension(PYLANCE_EXTENSION_ID)).returns(() => extension.object);
-            folderService = new TestService(
-                serviceContainer.object,
-                configService.object,
-                workspaceService.object,
-                extensions.object,
-            );
+            folderService = new TestService(extensions.object);
         });
 
         test('skipDownload is true', async () => {

@@ -70,7 +70,6 @@ export enum LanguageServerType {
 }
 
 export const DotNetLanguageServerFolder = 'languageServer';
-export const NodeLanguageServerFolder = 'nodeLanguageServer';
 
 export interface LanguageServerCommandHandler {
     clearAnalysisCache(): void;

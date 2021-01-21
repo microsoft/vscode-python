@@ -38,12 +38,6 @@ import { NodeLanguageServerActivator } from './node/activator';
 import { NodeLanguageServerAnalysisOptions } from './node/analysisOptions';
 import { NodeLanguageClientFactory } from './node/languageClientFactory';
 import { NodeLanguageServerFolderService } from './node/languageServerFolderService';
-import {
-    BetaNodeLanguageServerPackageRepository,
-    DailyNodeLanguageServerPackageRepository,
-    StableNodeLanguageServerPackageRepository,
-} from './node/languageServerPackageRepository';
-import { NodeLanguageServerPackageService } from './node/languageServerPackageService';
 import { NodeLanguageServerProxy } from './node/languageServerProxy';
 import { NodeLanguageServerManager } from './node/manager';
 import { NoLanguageServerExtensionActivator } from './none/activator';
@@ -134,31 +128,12 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
             NodeLanguageServerActivator,
             LanguageServerType.Node,
         );
-        serviceManager.addSingleton<INugetRepository>(
-            INugetRepository,
-            StableNodeLanguageServerPackageRepository,
-            LanguageServerDownloadChannel.stable,
-        );
-        serviceManager.addSingleton<INugetRepository>(
-            INugetRepository,
-            BetaNodeLanguageServerPackageRepository,
-            LanguageServerDownloadChannel.beta,
-        );
-        serviceManager.addSingleton<INugetRepository>(
-            INugetRepository,
-            DailyNodeLanguageServerPackageRepository,
-            LanguageServerDownloadChannel.daily,
-        );
         serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, NodeLanguageClientFactory);
         serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager);
         serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, NodeLanguageServerProxy);
         serviceManager.addSingleton<ILanguageServerFolderService>(
             ILanguageServerFolderService,
             NodeLanguageServerFolderService,
-        );
-        serviceManager.addSingleton<ILanguageServerPackageService>(
-            ILanguageServerPackageService,
-            NodeLanguageServerPackageService,
         );
     } else if (languageServerType === LanguageServerType.Jedi) {
         serviceManager.add<ILanguageServerActivator>(

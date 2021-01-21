@@ -7,23 +7,10 @@ import * as assert from 'assert';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { SemVer } from 'semver';
-import { IWorkspaceService } from '../../common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { NugetPackage } from '../../common/nuget/types';
-import { IConfigurationService, IExtensions, Resource } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
-import { LanguageServerFolderService } from '../common/languageServerFolderService';
-import { FolderVersionPair, ILanguageServerFolderService, NodeLanguageServerFolder } from '../types';
-
-class FallbackNodeLanguageServerFolderService extends LanguageServerFolderService {
-    constructor(serviceContainer: IServiceContainer) {
-        super(serviceContainer, NodeLanguageServerFolder);
-    }
-
-    protected getMinimalLanguageServerVersion(): string {
-        return '0.0.0';
-    }
-}
+import { IExtensions, Resource } from '../../common/types';
+import { FolderVersionPair, ILanguageServerFolderService } from '../types';
 
 // Exported for testing.
 export interface ILanguageServerFolder {
@@ -38,35 +25,26 @@ export interface ILSExtensionApi {
 
 @injectable()
 export class NodeLanguageServerFolderService implements ILanguageServerFolderService {
-    private readonly fallback: FallbackNodeLanguageServerFolderService;
-
-    constructor(
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IExtensions) readonly extensions: IExtensions,
-    ) {
-        this.fallback = new FallbackNodeLanguageServerFolderService(serviceContainer);
-    }
+    constructor(@inject(IExtensions) readonly extensions: IExtensions) {}
 
     public async skipDownload(): Promise<boolean> {
         return (await this.lsExtensionApi()) !== undefined;
     }
 
-    public async getLanguageServerFolderName(resource: Resource): Promise<string> {
+    public async getLanguageServerFolderName(_resource: Resource): Promise<string> {
         const lsf = await this.languageServerFolder();
         if (lsf) {
             assert.ok(path.isAbsolute(lsf.path));
             return lsf.path;
         }
-        return this.fallback.getLanguageServerFolderName(resource);
+        throw new Error(`${PYLANCE_EXTENSION_ID} not installed`);
     }
 
-    public async getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined> {
+    public async getLatestLanguageServerVersion(_resource: Resource): Promise<NugetPackage | undefined> {
         if (await this.lsExtensionApi()) {
             return undefined;
         }
-        return this.fallback.getLatestLanguageServerVersion(resource);
+        throw new Error(`${PYLANCE_EXTENSION_ID} not installed`);
     }
 
     public async getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined> {
@@ -78,7 +56,7 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
                 version: new SemVer(lsf.version),
             };
         }
-        return this.fallback.getCurrentLanguageServerDirectory();
+        throw new Error(`${PYLANCE_EXTENSION_ID} not installed`);
     }
 
     protected async languageServerFolder(): Promise<ILanguageServerFolder | undefined> {
@@ -90,16 +68,6 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
     }
 
     private async lsExtensionApi(): Promise<ILSExtensionApi | undefined> {
-        // downloadLanguageServer is a bit of a misnomer; if false then this indicates that a local
-        // development copy should be run instead of a "real" build, telemetry discarded, etc.
-        // So, we require it to be true, even though in the pinned case no real download happens.
-        if (
-            !this.configService.getSettings().downloadLanguageServer ||
-            this.workspaceService.getConfiguration('python').get<string>('packageName')
-        ) {
-            return undefined;
-        }
-
         const extension = this.extensions.getExtension<ILSExtensionApi>(PYLANCE_EXTENSION_ID);
         if (!extension) {
             return undefined;
