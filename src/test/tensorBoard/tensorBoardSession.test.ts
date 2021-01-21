@@ -113,6 +113,20 @@ suite('TensorBoard session creation', async () => {
 
         assert.ok(errorMessageStub.notCalled, 'User opted not to install and error was shown');
     });
+    test('If existing install of TensorBoard is outdated and user cancels installation, do not show error', async () => {
+        const installer = serviceManager.get<IInstaller>(IInstaller);
+        sandbox.stub(installer, 'isModuleVersionCompatible').resolves(ModuleInstallStatus.NeedsUpgrade);
+        sandbox.stub(installer, 'promptToInstall').resolves(InstallerResponse.Ignore);
+        const quickPickStub = sandbox.stub(applicationShell, 'showQuickPick');
+
+        await commandManager.executeCommand(
+            'python.launchTensorBoard',
+            TensorBoardEntrypoint.palette,
+            TensorBoardEntrypointTrigger.palette,
+        );
+
+        assert.ok(quickPickStub.notCalled, 'User opted not to upgrade and we proceeded to create session');
+    });
     test('If user cancels starting TensorBoard session, do not show error', async () => {
         sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
         sandbox.stub(applicationShell, 'withProgress').resolves('canceled');

@@ -110,7 +110,7 @@ export class TensorBoardSession {
             defaultValue: InstallerResponse.Ignore,
             token: installerToken,
         });
-        const response = await Promise.race([
+        await Promise.race([
             this.installer.promptToInstall(
                 Product.tensorboard,
                 interpreter,
@@ -119,7 +119,8 @@ export class TensorBoardSession {
             ),
             cancellationPromise,
         ]);
-        return response === InstallerResponse.Installed;
+        const newStatus = await this.installer.isModuleVersionCompatible(Product.tensorboard, '>= 2.4.1', interpreter);
+        return newStatus === ModuleInstallStatus.Installed;
     }
 
     // eslint-disable-next-line class-methods-use-this
