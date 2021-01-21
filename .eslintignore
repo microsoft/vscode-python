@@ -42,7 +42,6 @@ src/test/interpreters/mocks.ts
 src/test/interpreters/interpreterVersion.unit.test.ts
 src/test/interpreters/virtualEnvs/index.unit.test.ts
 src/test/interpreters/virtualEnvs/condaInheritEnvPrompt.unit.test.ts
-src/test/interpreters/virtualEnvs/virtualEnvPrompt.unit.test.ts
 src/test/interpreters/autoSelection/proxy.unit.test.ts
 src/test/interpreters/autoSelection/interpreterSecurity/interpreterEvaluation.unit.test.ts
 src/test/interpreters/autoSelection/interpreterSecurity/interpreterSecurityService.unit.test.ts
@@ -340,7 +339,6 @@ src/client/interpreter/serviceRegistry.ts
 src/client/interpreter/helpers.ts
 src/client/interpreter/virtualEnvs/condaInheritEnvPrompt.ts
 src/client/interpreter/virtualEnvs/types.ts
-src/client/interpreter/virtualEnvs/virtualEnvPrompt.ts
 src/client/interpreter/virtualEnvs/index.ts
 src/client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage.ts
 src/client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation.ts

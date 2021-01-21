@@ -1,14 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Disposable, Uri } from 'vscode';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
+import { inDiscoveryExperiment } from '../../common/experiments/helpers';
 import { traceDecorators } from '../../common/logger';
-import { IDisposableRegistry, IPersistentStateFactory, Resource } from '../../common/types';
+import { IDisposableRegistry, IExperimentService, IPersistentStateFactory } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { Common, Interpreters } from '../../common/utils/localize';
+import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -21,25 +23,19 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../contracts';
 
-interface IComponent {
-    onDidCreate(resource: Resource, callback: () => void): Disposable | undefined;
-}
-
 const doNotDisplayPromptStateKey = 'MESSAGE_KEY_FOR_VIRTUAL_ENV';
 @injectable()
 export class VirtualEnvironmentPrompt implements IExtensionActivationService {
     constructor(
-        @inject(IInterpreterWatcherBuilder) private readonly builder: IInterpreterWatcherBuilder,
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper,
         @inject(IPythonPathUpdaterServiceManager)
         private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
-        @inject(IInterpreterLocatorService)
-        @named(WORKSPACE_VIRTUAL_ENV_SERVICE)
-        private readonly locator: IInterpreterLocatorService,
         @inject(IDisposableRegistry) private readonly disposableRegistry: Disposable[],
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {}
 
     public async activate(resource: Uri): Promise<void> {
@@ -48,7 +44,8 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
             this.disposableRegistry.push(disposable);
             return;
         }
-        const watcher = await this.builder.getWorkspaceVirtualEnvInterpreterWatcher(resource);
+        const builder = this.serviceContainer.get<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder);
+        const watcher = await builder.getWorkspaceVirtualEnvInterpreterWatcher(resource);
         watcher.onDidCreate(
             () => {
                 this.handleNewEnvironment(resource).ignoreErrors();
@@ -62,13 +59,26 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
     protected async handleNewEnvironment(resource: Uri): Promise<void> {
         // Wait for a while, to ensure environment gets created and is accessible (as this is slow on Windows)
         await sleep(1000);
-        const interpreters = await this.locator.getInterpreters(resource);
-        const interpreter = this.helper.getBestInterpreter(interpreters);
+        let interpreters: PythonEnvironment[] | undefined = [];
+        if (await inDiscoveryExperiment(this.experimentService)) {
+            interpreters = await this.pyenvs.getWorkspaceVirtualEnvInterpreters(resource);
+        } else {
+            const workspaceVirtualEnvInterpreterLocator = this.serviceContainer.get<IInterpreterLocatorService>(
+                IInterpreterLocatorService,
+                WORKSPACE_VIRTUAL_ENV_SERVICE,
+            );
+            interpreters = await workspaceVirtualEnvInterpreterLocator.getInterpreters(resource);
+        }
+        const interpreter =
+            Array.isArray(interpreters) && interpreters.length > 0
+                ? this.helper.getBestInterpreter(interpreters)
+                : undefined;
         if (!interpreter) {
             return;
         }
         await this.notifyUser(interpreter, resource);
     }
+
     protected async notifyUser(interpreter: PythonEnvironment, resource: Uri): Promise<void> {
         const notificationPromptEnabled = this.persistentStateFactory.createWorkspacePersistentState(
             doNotDisplayPromptStateKey,

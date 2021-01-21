@@ -435,6 +435,22 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
             InterpreterLocatorProgressService,
         );
         serviceManager.addBinding(IInterpreterLocatorProgressService, IExtensionSingleActivationService);
+        serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            WorkspaceVirtualEnvService,
+            WORKSPACE_VIRTUAL_ENV_SERVICE,
+        );
+        serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
+            IVirtualEnvironmentsSearchPathProvider,
+            WorkspaceVirtualEnvironmentsSearchPathProvider,
+            'workspace',
+        );
+        serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
+        serviceManager.add<IInterpreterWatcher>(
+            IInterpreterWatcher,
+            WorkspaceVirtualEnvWatcherService,
+            WORKSPACE_VIRTUAL_ENV_SERVICE,
+        );
     }
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
@@ -445,11 +461,6 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
         IPythonInPathCommandProvider,
         PythonInPathCommandProvider,
     );
-    serviceManager.addSingleton<IInterpreterLocatorService>(
-        IInterpreterLocatorService,
-        WorkspaceVirtualEnvService,
-        WORKSPACE_VIRTUAL_ENV_SERVICE,
-    );
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
 
     serviceManager.addSingleton<IInterpreterLocatorService>(
@@ -459,20 +470,7 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
     );
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
-
-    serviceManager.add<IInterpreterWatcher>(
-        IInterpreterWatcher,
-        WorkspaceVirtualEnvWatcherService,
-        WORKSPACE_VIRTUAL_ENV_SERVICE,
-    );
     serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-
-    serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
-        IVirtualEnvironmentsSearchPathProvider,
-        WorkspaceVirtualEnvironmentsSearchPathProvider,
-        'workspace',
-    );
-    serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
 }
 
 export function registerNewDiscoveryForIOC(
