@@ -70,6 +70,10 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
              * Location affected by the event. If not provided, a default search location is used.
              */
             searchLocation?: string;
+            /**
+             * Whether or not we're watching a typical env tree.
+             */
+            noTree?: boolean;
         } = {},
         private readonly watcherKind: FSWatcherKind = FSWatcherKind.Global,
     ) {
@@ -129,8 +133,7 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
 
         const globs = resolvePythonExeGlobs(
             this.opts.executableBaseGlob,
-            // For now we always watch a standard structure.
-            PythonEnvStructure.Standard,
+            this.opts.noTree ? PythonEnvStructure.Flat : PythonEnvStructure.Standard,
         );
         const watchers = globs.map((g) => watchLocationForPythonBinaries(root, callback, g));
         this.disposables.push(...watchers);
