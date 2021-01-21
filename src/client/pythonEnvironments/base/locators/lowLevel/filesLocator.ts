@@ -96,6 +96,8 @@ export class DirFilesWatchingLocator extends FSWatchingLocator {
         super(
             () => [dirname],
             async () => kind,
+            // Watch just the directory.
+            { noTree: true },
         );
         this.subLocator = new DirFilesLocator(dirname, kind, getExecutables);
     }
