@@ -23,7 +23,7 @@ suite('Experiments - inDiscoveryExperiment()', () => {
     });
 
     test('Return true if in discoveryWithoutFileWatching experiment', async () => {
-        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(true);
+        when(experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching)).thenResolve(true);
         const result = await inDiscoveryExperiment(instance(experimentService));
         expect(result).to.equal(true);
     });
