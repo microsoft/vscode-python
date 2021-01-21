@@ -9,7 +9,11 @@ import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
 import { getEnvironmentDirFromPath } from '../../../common/commonUtils';
 import { inExperiment } from '../../../common/externalDependencies';
-import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
+import {
+    PythonEnvStructure,
+    resolvePythonExeGlobs,
+    watchLocationForPythonBinaries,
+} from '../../../common/pythonBinariesWatcher';
 import { PythonEnvKind } from '../../info';
 import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
 
@@ -88,12 +92,12 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
 
         roots.forEach((root) => {
             if (enableGlobalWatchers) {
-                this.startWatcher(root);
+                this.startWatchers(root);
             }
         });
     }
 
-    private startWatcher(root: string): void {
+    private startWatchers(root: string): void {
         if (!isDirWatchable(root)) {
             throw Error(`dir "${root}" is not watchable`);
         }
@@ -122,6 +126,13 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
             );
             this.emitter.fire({ type, kind, searchLocation });
         };
-        this.disposables.push(watchLocationForPythonBinaries(root, callback, this.opts.executableBaseGlob));
+
+        const globs = resolvePythonExeGlobs(
+            this.opts.executableBaseGlob,
+            // For now we always watch a standard structure.
+            PythonEnvStructure.Standard,
+        );
+        const watchers = globs.map((g) => watchLocationForPythonBinaries(root, callback, g));
+        this.disposables.push(...watchers);
     }
 }
