@@ -128,7 +128,7 @@ suite('Pyenv Locator Tests', () => {
             });
 
         const actualEnvs = (await getEnvs(locator.iterEnvs()))
-            // We sort for a stable comparision.
+            // We sort for a stable comparison.
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
@@ -162,6 +162,7 @@ suite('Pyenv Locator Tests', () => {
                 minor: -1,
                 micro: -1,
             },
+            source: [],
         };
 
         const actual = await locator.resolveEnv(input);

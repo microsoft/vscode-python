@@ -48,6 +48,7 @@ export class CondaEnvironmentLocator extends Locator {
                     kind: PythonEnvKind.Conda,
                     org: AnacondaCompanyName,
                     location: prefix,
+                    source: ['conda'],
                 });
                 if (name) {
                     info.name = name;

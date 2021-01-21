@@ -250,6 +250,7 @@ suite('Windows Registry', () => {
             arch: data.bitnessStr === '32bit' ? Architecture.x86 : Architecture.x64,
             distro: { org: data.distroOrgName ?? '' },
             defaultDisplayName: data.displayName,
+            source: ['windows registry'],
         };
     }
 
@@ -380,6 +381,7 @@ suite('Windows Registry', () => {
                 micro: -1,
                 release: { level: PythonReleaseLevel.Final, serial: -1 },
             },
+            source: [],
         };
 
         const actual = await locator.resolveEnv(input);

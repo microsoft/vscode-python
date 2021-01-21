@@ -51,6 +51,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
             arch: platformUtils.Architecture.Unknown,
             distro: { org: '' },
             searchLocation: undefined,
+            source: ['other'],
         };
     }
 
@@ -498,6 +499,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
                 mtime: -1,
             },
             version: UNKNOWN_PYTHON_VERSION,
+            source: [],
         };
 
         locator = new GlobalVirtualEnvironmentLocator();

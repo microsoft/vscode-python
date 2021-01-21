@@ -89,6 +89,7 @@ suite('Posix Known Path Locator', () => {
                         location: '',
                         kind: PythonEnvKind.OtherGlobal,
                         distro: { org: '' },
+                        source: ['path'],
                         ...createExpectedInterpreterInfo(path.join(location, binary)),
                     });
                 });
@@ -109,6 +110,7 @@ suite('Posix Known Path Locator', () => {
             location: '',
             kind: PythonEnvKind.OtherGlobal,
             distro: { org: '' },
+            source: ['path'],
             ...createExpectedInterpreterInfo(pythonPath),
         };
 
@@ -123,6 +125,7 @@ suite('Posix Known Path Locator', () => {
             location: '',
             kind: PythonEnvKind.OtherGlobal,
             distro: { org: '' },
+            source: ['path'],
             ...createExpectedInterpreterInfo(pythonPath),
         };
 
@@ -145,6 +148,7 @@ suite('Posix Known Path Locator', () => {
                 micro: -1,
                 release: { level: PythonReleaseLevel.Final, serial: -1 },
             },
+            source: [],
         };
 
         const actual = await locator.resolveEnv(input);

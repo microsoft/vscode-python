@@ -72,6 +72,9 @@ export type PythonEnvBaseInfo = {
     // * managed: boolean (if the env is "managed")
     // * parent: PythonEnvBaseInfo (the env from which this one was created)
     // * binDir: string (where env-installed executables are found)
+
+    // 'source' filed will contain source (i.e, the locator[s]) which found the environment.
+    source: string[];
 };
 
 /**

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { uniq } from 'lodash';
 import * as path from 'path';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
@@ -261,13 +262,6 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
             // without running python itself.
             const pythonVersion = await getPythonVersionFromPath(interpreterPath, versionStrings?.pythonVer);
 
-            const envInfo = buildEnvInfo({
-                kind: PythonEnvKind.Pyenv,
-                executable: interpreterPath,
-                location: envDir,
-                version: pythonVersion,
-            });
-
             // Pyenv environments can fall in to these three categories:
             // 1. Global Installs : These are environments that are created when you install
             //    a supported python distribution using `pyenv install <distro>` command.
@@ -285,14 +279,23 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
             // `pyenv local|global <env-name>` or `pyenv shell <env-name>`
             //
             // For the display name we are going to treat these as `pyenv` environments.
-            envInfo.defaultDisplayName = `${subDir}:pyenv`;
+            const defaultDisplayName = `${subDir}:pyenv`;
 
+            const org = versionStrings && versionStrings.distro ? versionStrings.distro : '';
+
+            const fileInfo = await getFileInfo(interpreterPath);
+
+            const envInfo = buildEnvInfo({
+                kind: PythonEnvKind.Pyenv,
+                executable: interpreterPath,
+                location: envDir,
+                version: pythonVersion,
+                source: ['pyenv'],
+                defaultDisplayName,
+                org,
+                fileInfo,
+            });
             envInfo.name = subDir;
-            envInfo.distro.org = versionStrings && versionStrings.distro ? versionStrings.distro : envInfo.distro.org;
-
-            const fileData = await getFileInfo(interpreterPath);
-            envInfo.executable.ctime = fileData.ctime;
-            envInfo.executable.mtime = fileData.mtime;
 
             yield envInfo;
         }
@@ -312,26 +315,26 @@ export class PyenvLocator extends FSWatchingLocator {
     // eslint-disable-next-line class-methods-use-this
     public async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
+        const source = typeof env === 'string' ? ['pyenv'] : uniq(['pyenv'].concat(env.source));
 
         if (await isPyenvEnvironment(executablePath)) {
+            const location = getEnvironmentDirFromPath(executablePath);
+            const name = path.basename(location);
+
+            const versionStrings = await parsePyenvVersion(name);
+
             const envInfo = buildEnvInfo({
                 kind: PythonEnvKind.Pyenv,
                 executable: executablePath,
+                source,
+                location,
+                defaultDisplayName: `${name}:pyenv`,
+                version: await getPythonVersionFromPath(executablePath, versionStrings?.pythonVer),
+                org: versionStrings && versionStrings.distro ? versionStrings.distro : '',
+                fileInfo: await getFileInfo(executablePath),
             });
 
-            const location = getEnvironmentDirFromPath(executablePath);
-            envInfo.location = location;
-            envInfo.name = path.basename(location);
-            envInfo.defaultDisplayName = `${envInfo.name}:pyenv`;
-
-            const versionStrings = await parsePyenvVersion(envInfo.name);
-            envInfo.version = await getPythonVersionFromPath(executablePath, versionStrings?.pythonVer);
-            envInfo.distro.org = versionStrings && versionStrings.distro ? versionStrings.distro : envInfo.distro.org;
-
-            const fileData = await getFileInfo(executablePath);
-            envInfo.executable.ctime = fileData.ctime;
-            envInfo.executable.mtime = fileData.mtime;
-
+            envInfo.name = name;
             return envInfo;
         }
         return undefined;

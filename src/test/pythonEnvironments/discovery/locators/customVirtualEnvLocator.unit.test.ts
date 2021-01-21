@@ -57,6 +57,7 @@ suite('CustomVirtualEnvironment Locator', () => {
             arch: platformUtils.Architecture.Unknown,
             distro: { org: '' },
             searchLocation: undefined,
+            source: ['other'],
         };
     }
 
@@ -414,6 +415,7 @@ suite('CustomVirtualEnvironment Locator', () => {
                 mtime: -1,
             },
             version: UNKNOWN_PYTHON_VERSION,
+            source: [],
         };
 
         const actual = await locator.resolveEnv(input);

@@ -47,6 +47,7 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
             arch: platformUtils.Architecture.Unknown,
             distro: { org: '' },
             searchLocation: Uri.file(path.dirname(location)),
+            source: ['other'],
         };
     }
 
@@ -187,6 +188,7 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
                 mtime: -1,
             },
             version: UNKNOWN_PYTHON_VERSION,
+            source: [],
         };
 
         const actual = await locator.resolveEnv(input);

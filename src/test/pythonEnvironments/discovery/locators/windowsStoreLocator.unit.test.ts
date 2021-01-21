@@ -158,6 +158,7 @@ suite('Windows Store', () => {
                             location: '',
                             kind: PythonEnvKind.WindowsStore,
                             distro: { org: 'Microsoft' },
+                            source: ['path'],
                             ...createExpectedInterpreterInfo(k),
                         };
                     }
@@ -181,6 +182,7 @@ suite('Windows Store', () => {
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
                 distro: { org: 'Microsoft' },
+                source: ['path'],
                 ...createExpectedInterpreterInfo(python38path),
             };
 
@@ -198,6 +200,7 @@ suite('Windows Store', () => {
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
                 distro: { org: 'Microsoft' },
+                source: ['path'],
                 ...createExpectedInterpreterInfo(python38path),
             };
 
@@ -222,6 +225,7 @@ suite('Windows Store', () => {
                     micro: -1,
                     release: { level: PythonReleaseLevel.Final, serial: -1 },
                 },
+                source: [],
             };
 
             const actual = await locator.resolveEnv(input);
@@ -237,6 +241,7 @@ suite('Windows Store', () => {
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
                 distro: { org: 'Microsoft' },
+                source: ['path'],
                 ...createExpectedInterpreterInfo(python38path),
             };
 

@@ -79,6 +79,7 @@ export class PosixKnownPathsLocator extends Locator {
             version,
             arch: Architecture.Unknown,
             distro: { org: '' },
+            source: ['path'],
         };
     }
 }

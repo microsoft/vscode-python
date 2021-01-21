@@ -85,6 +85,7 @@ async function buildSimpleVirtualEnvInfo(executablePath: string, kind: PythonEnv
         kind,
         version: await getPythonVersionFromPath(executablePath),
         executable: executablePath,
+        source: ['other'],
     });
     const location = getEnvironmentDirFromPath(executablePath);
     envInfo.location = location;
