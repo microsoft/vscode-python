@@ -61,9 +61,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
         processService.on('exec', this.logger.logProcess.bind(this.logger));
 
-        const windowsStoreInterpreterCheck = (await inDiscoveryExperiment())
+        let windowsStoreInterpreterCheck = (await inDiscoveryExperiment())
             ? this.pyenvs.isWindowsStoreInterpreter
             : isWindowsStoreInterpreter;
+        windowsStoreInterpreterCheck = isWindowsStoreInterpreter;
 
         return createPythonService(
             pythonPath,
