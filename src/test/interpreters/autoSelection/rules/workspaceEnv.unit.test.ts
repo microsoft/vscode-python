@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -161,9 +162,9 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
 
         rule.setNextRule(nextRule);
         when(platform.osType).thenReturn(OSType.OSX);
-        when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as never);
+        when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as any);
         when(nextRule.autoSelectInterpreter(someUri, manager)).thenResolve();
-        when(workspaceService.getConfiguration('python', folderUri)).thenReturn(pythonPath as never);
+        when(workspaceService.getConfiguration('python', folderUri)).thenReturn(pythonPath as any);
 
         rule.setNextRule(instance(nextRule));
         await rule.autoSelectInterpreter(someUri, manager);
@@ -188,9 +189,9 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
 
         rule.setNextRule(nextRule);
         when(platform.osType).thenReturn(OSType.OSX);
-        when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as never);
+        when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as any);
         when(nextRule.autoSelectInterpreter(someUri, manager)).thenResolve();
-        when(workspaceService.getConfiguration('python', folderUri)).thenReturn(pythonPath as never);
+        when(workspaceService.getConfiguration('python', folderUri)).thenReturn(pythonPath as any);
         when(experimentsManager.inExperiment(DeprecatePythonPath.experiment)).thenReturn(true);
         when(experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control)).thenReturn(undefined);
         when(interpreterPathService.inspect(folderUri)).thenReturn(pythonPathInConfig.object);
@@ -220,7 +221,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const resource = Uri.file('x');
         const options = { ignoreCache: true };
 
-        when(virtualEnvLocator.getInterpreters(resource, deepEqual(options))).thenResolve([interpreter1 as never]);
+        when(virtualEnvLocator.getInterpreters(resource, deepEqual(options))).thenResolve([interpreter1 as any]);
         when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
         when(platform.osType).thenReturn(OSType.Windows);
 
@@ -241,7 +242,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             interpreter1,
             interpreter2,
             interpreter3,
-        ] as never);
+        ] as any);
         when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
         when(platform.osType).thenReturn(OSType.Windows);
 
@@ -257,7 +258,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             const resource = Uri.file('x');
             const options = { ignoreCache: true };
 
-            when(virtualEnvLocator.getInterpreters(resource, deepEqual(options))).thenResolve([interpreter1 as never]);
+            when(virtualEnvLocator.getInterpreters(resource, deepEqual(options))).thenResolve([interpreter1 as any]);
             when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
             when(platform.osType).thenReturn(osType);
 
@@ -278,7 +279,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
                 interpreter1,
                 interpreter2,
                 interpreter3,
-            ] as never);
+            ] as any);
             when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
             when(platform.osType).thenReturn(osType);
 
@@ -319,18 +320,18 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const pythonPath = { inspect: () => pythonPathInConfig.object };
         pythonPathInConfig
             .setup((p) => p.workspaceFolderValue)
-            .returns(() => undefined as never)
+            .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
         pythonPathInConfig
             .setup((p) => p.workspaceValue)
-            .returns(() => undefined as never)
+            .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
-        when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as never);
-        when(workspaceService.getConfiguration('python', folderUri)).thenReturn(pythonPath as never);
+        when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as any);
+        when(workspaceService.getConfiguration('python', folderUri)).thenReturn(pythonPath as any);
 
         const resource = Uri.file('x');
         const manager = mock(InterpreterAutoSelectionService);
-        const interpreterInfo = { path: '1', version: new SemVer('1.0.0') } as never;
+        const interpreterInfo = { path: '1', version: new SemVer('1.0.0') } as any;
         const nextInvoked = createDeferred();
 
         rule.next = () => Promise.resolve(nextInvoked.resolve());
@@ -357,31 +358,29 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const pythonPath = { inspect: () => pythonPathInConfig.object };
         pythonPathInConfig
             .setup((p) => p.workspaceFolderValue)
-            .returns(() => undefined as never)
+            .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
         pythonPathInConfig
             .setup((p) => p.workspaceValue)
-            .returns(() => undefined as never)
+            .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
-        when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as never);
-        when(workspaceService.getConfiguration('python', folderUri)).thenReturn(pythonPath as never);
+        when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as any);
+        when(workspaceService.getConfiguration('python', folderUri)).thenReturn(pythonPath as any);
 
         const resource = Uri.file('x');
         // Return interpreters using the component adapter instead
         when(componentAdapter.getWorkspaceVirtualEnvInterpreters(folderUri)).thenResolve([
             interpreter2,
             interpreter3,
-        ] as never);
+        ] as any);
         const manager = mock(InterpreterAutoSelectionService);
         const nextInvoked = createDeferred();
         rule.next = () => Promise.resolve(nextInvoked.resolve());
-        when(helper.getBestInterpreter(deepEqual([interpreter2, interpreter3] as never))).thenReturn(
-            interpreter2 as never,
-        );
+        when(helper.getBestInterpreter(deepEqual([interpreter2, interpreter3] as any))).thenReturn(interpreter2 as any);
         rule.cacheSelectedInterpreter = () => Promise.resolve();
 
         await rule.autoSelectInterpreter(resource, instance(manager));
 
-        verify(manager.setWorkspaceInterpreter(folderUri, interpreter2 as never)).once();
+        verify(manager.setWorkspaceInterpreter(folderUri, interpreter2 as any)).once();
     });
 });
