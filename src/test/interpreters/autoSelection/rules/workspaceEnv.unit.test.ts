@@ -41,7 +41,6 @@ import {
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { ServiceContainer } from '../../../../client/ioc/container';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { initializeExternalDependencies } from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { KnownPathsService } from '../../../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { ComponentAdapter } from '../../../../client/pythonEnvironments/legacyIOC';
@@ -94,9 +93,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         when(
             serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE),
         ).thenReturn(instance(virtualEnvLocator));
-        when(serviceContainer.get<IExperimentService>(IExperimentService)).thenReturn(instance(experimentService));
         when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
-        initializeExternalDependencies(instance(serviceContainer));
         experimentsManager = mock(ExperimentsManager);
         interpreterPathService = mock(InterpreterPathService);
         componentAdapter = mock(ComponentAdapter);
@@ -114,6 +111,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             instance(experimentsManager),
             instance(interpreterPathService),
             instance(componentAdapter),
+            instance(experimentService),
         );
     });
     test('Invoke next rule if there is no workspace', async () => {

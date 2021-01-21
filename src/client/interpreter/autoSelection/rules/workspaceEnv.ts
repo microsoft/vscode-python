@@ -7,13 +7,19 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { DeprecatePythonPath } from '../../../common/experiments/groups';
+import { inDiscoveryExperiment } from '../../../common/experiments/helpers';
 import { traceVerbose } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
-import { IExperimentsManager, IInterpreterPathService, IPersistentStateFactory, Resource } from '../../../common/types';
+import {
+    IExperimentService,
+    IExperimentsManager,
+    IInterpreterPathService,
+    IPersistentStateFactory,
+    Resource,
+} from '../../../common/types';
 import { OSType } from '../../../common/utils/platform';
 import { IServiceContainer } from '../../../ioc/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { inDiscoveryExperiment } from '../../../pythonEnvironments/legacyIOC';
 import {
     IComponentAdapter,
     IInterpreterHelper,
@@ -22,11 +28,6 @@ import {
 } from '../../contracts';
 import { AutoSelectionRule, IInterpreterAutoSelectionService } from '../types';
 import { BaseRuleService, NextAction } from './baseRule';
-
-// The parts of IComponentAdapter used here.
-interface IComponent {
-    getWorkspaceVirtualEnvInterpreters(resource: Uri): Promise<PythonEnvironment[] | undefined>;
-}
 
 @injectable()
 export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleService {
@@ -39,7 +40,8 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
-        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         super(AutoSelectionRule.workspaceVirtualEnvs, fs, stateFactory);
     }
@@ -62,9 +64,8 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         if (pythonPathInConfig.workspaceFolderValue || pythonPathInConfig.workspaceValue) {
             return NextAction.runNextRule;
         }
-
         let interpreters: PythonEnvironment[] | undefined = [];
-        if (await inDiscoveryExperiment()) {
+        if (await inDiscoveryExperiment(this.experimentService)) {
             interpreters = await this.pyenvs.getWorkspaceVirtualEnvInterpreters(workspacePath.folderUri);
         } else {
             interpreters = await this.getWorkspaceVirtualEnvInterpreters(workspacePath.folderUri);
