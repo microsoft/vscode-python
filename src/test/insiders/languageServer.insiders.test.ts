@@ -95,7 +95,6 @@ suite('Insiders Test: Language Server', () => {
             );
             if (locations && locations.length > 0) {
                 expect(locations![0].uri.fsPath).to.contain(path.basename(notebookDefinitions));
-                tested = true;
 
                 // Insert a new cell
                 const activeEditor = vscode.notebook.activeNotebookEditor;
@@ -118,8 +117,44 @@ suite('Insiders Test: Language Server', () => {
                 await sleep(1_000);
 
                 // Make sure no error diagnostics
-                const diagnostics = vscode.languages.getDiagnostics(activeEditor!.document.uri);
+                let diagnostics = vscode.languages.getDiagnostics(activeEditor!.document.uri);
                 expect(diagnostics).to.have.lengthOf(0, 'Diagnostics found when shouldnt be');
+
+                // Move the cell
+                await activeEditor!.edit((edit) => {
+                    edit.replaceCells(0, 1, []);
+                    edit.replaceCells(1, 0, [
+                        {
+                            cellKind: vscode.CellKind.Code,
+                            language: PYTHON_LANGUAGE,
+                            source: 'x = 4',
+                            metadata: {
+                                hasExecutionOrder: false,
+                            },
+                            outputs: [],
+                        },
+                    ]);
+                });
+
+                // Wait a bit to get diagnostics
+                await sleep(1_000);
+
+                // Make sure no error diagnostics
+                diagnostics = vscode.languages.getDiagnostics(activeEditor!.document.uri);
+                expect(diagnostics).to.have.lengthOf(0, 'Diagnostics found when shouldnt be after move');
+
+                // Delete the cell
+                await activeEditor!.edit((edit) => {
+                    edit.replaceCells(1, 1, []);
+                });
+
+                // Wait a bit to get diagnostics
+                await sleep(1_000);
+
+                // Make sure no error diagnostics
+                diagnostics = vscode.languages.getDiagnostics(activeEditor!.document.uri);
+                expect(diagnostics).to.have.lengthOf(0, 'Diagnostics found when shouldnt be after delete');
+                tested = true;
 
                 break;
             } else {
@@ -128,7 +163,7 @@ suite('Insiders Test: Language Server', () => {
             }
         }
         if (!tested) {
-            assert.fail('Failled to test definitions');
+            assert.fail('Failled to test notebooks');
         }
     });
 });
