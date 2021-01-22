@@ -2,7 +2,21 @@
 // Licensed under the MIT License.
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Disposable, DocumentSelector, EndOfLine, Position, Range, TextDocument, TextLine, Uri } from 'vscode';
+import {
+    Disposable,
+    DocumentSelector,
+    EndOfLine,
+    Event,
+    EventEmitter,
+    Position,
+    Location,
+    Range,
+    TextDocument,
+    TextDocumentChangeEvent,
+    TextLine,
+    Uri,
+} from 'vscode';
+import { isEqual } from 'lodash';
 import { NotebookConcatTextDocument, NotebookCell, NotebookDocument } from 'vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
@@ -54,6 +68,10 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
         return this.notebook.cells.map((c) => c.document.lineCount).reduce((p, c) => p + c);
     }
 
+    public get onCellsChanged(): Event<TextDocumentChangeEvent> {
+        return this.onCellsChangedEmitter.event;
+    }
+
     public firedOpen = false;
 
     public firedClose = false;
@@ -68,6 +86,12 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
 
     private onDidChangeSubscription: Disposable;
 
+    private cellUris: Uri[] = [];
+
+    private cellLengths: number[] = [];
+
+    private onCellsChangedEmitter = new EventEmitter<TextDocumentChangeEvent>();
+
     constructor(public notebook: NotebookDocument, notebookApi: IVSCodeNotebook, selector: DocumentSelector) {
         const dir = path.dirname(notebook.uri.fsPath);
         // Note: Has to be different than the prefix for old notebook editor (HiddenFileFormat) so
@@ -76,6 +100,8 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
         this.dummyUri = Uri.file(this.dummyFilePath);
         this.concatDocument = notebookApi.createConcatTextDocument(notebook, selector);
         this.onDidChangeSubscription = this.concatDocument.onDidChange(this.onDidChange, this);
+        this.cellUris = notebook.cells.map((c) => c.uri);
+        this.cellLengths = notebook.cells.map((c) => c.document.getText().length + 1);
     }
 
     public dispose(): void {
@@ -141,5 +167,111 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
 
     private onDidChange() {
         this._version += 1;
+        const newUris = this.notebook.cells.map((c) => c.uri);
+
+        // See if number of cells or cell positions changed
+        if (this.cellUris.length < this.notebook.cells.length) {
+            this.raiseCellInsertion(newUris);
+        } else if (this.cellUris.length > this.notebook.cells.length) {
+            this.raiseCellDeletion(newUris);
+        } else if (!isEqual(this.cellUris, newUris)) {
+            this.raiseCellMovement(newUris);
+        }
+        this.cellUris = newUris;
+        this.cellLengths = this.notebook.cells.map((c) => c.document.getText().length + 1); // +1 for the /n between cells
+    }
+
+    private getPositionOfCell(cellUri: Uri): Position {
+        return this.concatDocument.positionAt(new Location(cellUri, new Position(0, 0)));
+    }
+
+    private raiseCellInsertion(newUris: Uri[]) {
+        // A cell was inserted. Figure out which one
+        const index = newUris.findIndex((p) => !this.cellUris.includes(p));
+        if (index >= 0) {
+            // Figure out the position of the item before. This is where we're inserting the cell
+            const position = index > 0 ? this.getPositionOfCell(newUris[index]) : new Position(0, 0);
+
+            // Text should be the contents of the new cell plus the '\n'
+            const text = `${this.notebook.cells[index].document.getText()}\n`;
+            // Turn this cell into a change event.
+            this.onCellsChangedEmitter.fire({
+                document: this,
+                contentChanges: [
+                    {
+                        text,
+                        range: new Range(position, position),
+                        rangeLength: 0,
+                        rangeOffset: 0,
+                    },
+                ],
+            });
+        }
+    }
+
+    private raiseCellDeletion(newUris: Uri[]) {
+        // A cell was deleted. Figure out which one
+        const index = this.cellUris.findIndex((p) => !newUris.includes(p));
+        if (index >= 0) {
+            // Figure out the position of the item in the new list
+            const position =
+                index < newUris.length - 1
+                    ? this.getPositionOfCell(newUris[index])
+                    : this.getPositionOfCell(newUris[newUris.length - 1]);
+
+            // Length should be old length
+            const length = this.cellLengths[index];
+
+            // Turn this cell into a change event.
+            this.onCellsChangedEmitter.fire({
+                document: this,
+                contentChanges: [
+                    {
+                        text: '',
+                        range: new Range(position, position),
+                        rangeLength: length,
+                        rangeOffset: 0,
+                    },
+                ],
+            });
+        }
+    }
+
+    private raiseCellMovement(newUris: Uri[]) {
+        const movedCells = this.cellUris
+            .map((u, i) => {
+                return {
+                    index: i,
+                    uri: u,
+                };
+            })
+            .filter((e) => newUris[e.index] !== e.uri);
+        if (movedCells && movedCells.length === 2) {
+            // Should be two changes. One for each cell
+            const position1 = this.getPositionOfCell(newUris[movedCells[1].index]);
+            const change1 = {
+                text: `${this.notebook.cells[movedCells[1].index].document.getText()}\n`,
+                range: new Range(position1, position1),
+                rangeLength: this.cellLengths[movedCells[0].index],
+                rangeOffset: 0,
+            };
+
+            // Second position is harder. From the language server's point of view we just
+            // inserted the second cell into where the first cell was. So now the position for
+            // new cell should be correct
+            const position2 = this.getPositionOfCell(newUris[movedCells[0].index]);
+            const change2 = {
+                text: `${this.notebook.cells[movedCells[0].index].document.getText()}\n`,
+                range: new Range(position2, position2),
+                rangeLength: this.cellLengths[movedCells[1].index],
+                rangeOffset: 0,
+            };
+
+            // Turn this cell into a change event.
+            this.onCellsChangedEmitter.fire({
+                document: this,
+                contentChanges: [change1, change2],
+            });
+        }
     }
 }

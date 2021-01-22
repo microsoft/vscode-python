@@ -76,6 +76,8 @@ import { NotebookConverter } from './notebookConverter';
 export class NotebookMiddlewareAddon implements Middleware, Disposable {
     private converter: NotebookConverter;
 
+    private didChangeCellsDisposable: Disposable;
+
     constructor(
         notebookApi: IVSCodeNotebook,
         private readonly getClient: () => LanguageClient | undefined,
@@ -84,9 +86,11 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         notebookFileRegex: RegExp,
     ) {
         this.converter = new NotebookConverter(notebookApi, fs, cellSelector, notebookFileRegex);
+        this.didChangeCellsDisposable = this.converter.onDidChangeCells(this.onDidChangeCells.bind(this));
     }
 
     public dispose(): void {
+        this.didChangeCellsDisposable.dispose();
         this.converter.dispose();
     }
 
@@ -480,5 +484,17 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         // Otherwise old messages for cells that didn't change this time won't go away.
         const newDiagMapping = this.converter.toIncomingDiagnosticsMap(uri, diagnostics);
         [...newDiagMapping.keys()].forEach((k) => next(k, newDiagMapping.get(k)!));
+    }
+
+    private onDidChangeCells(e: TextDocumentChangeEvent) {
+        // This event fires when the user moves, deletes, or inserts cells into the concatenated document
+        // Since this doesn't fire a change event (since a document wasn't changed), we have to make one ourselves.
+
+        // Note: The event should already be setup to be an outgoing event. It's from the point of view of the concatenated document.
+        const client = this.getClient();
+        if (client) {
+            const params = client.code2ProtocolConverter.asChangeTextDocumentParams(e);
+            client.sendNotification(DidChangeTextDocumentNotification.type, params);
+        }
     }
 }

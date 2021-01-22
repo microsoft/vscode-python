@@ -15,6 +15,8 @@ import {
     DocumentLink,
     DocumentSelector,
     DocumentSymbol,
+    Event,
+    EventEmitter,
     Hover,
     Location,
     LocationLink,
@@ -44,11 +46,17 @@ function toPosition(positionLike: Position): Position {
 */
 
 export class NotebookConverter implements Disposable {
+    public get onDidChangeCells(): Event<TextDocumentChangeEvent> {
+        return this.onDidChangeCellsEmitter.event;
+    }
+
     private activeDocuments: Map<string, NotebookConcatDocument> = new Map<string, NotebookConcatDocument>();
 
     private activeDocumentsOutgoingMap: Map<string, NotebookConcatDocument> = new Map<string, NotebookConcatDocument>();
 
     private disposables: Disposable[] = [];
+
+    private onDidChangeCellsEmitter = new EventEmitter<TextDocumentChangeEvent>();
 
     constructor(
         private api: IVSCodeNotebook,
@@ -627,6 +635,7 @@ export class NotebookConverter implements Disposable {
                 throw new Error(`Invalid uri, not a notebook: ${uri.fsPath}`);
             }
             result = new NotebookConcatDocument(doc, this.api, this.cellSelector);
+            result.onCellsChanged((e) => this.onDidChangeCellsEmitter.fire(e), undefined, this.disposables);
             this.activeDocuments.set(key, result);
             this.activeDocumentsOutgoingMap.set(NotebookConverter.getDocumentKey(result.uri), result);
         }
