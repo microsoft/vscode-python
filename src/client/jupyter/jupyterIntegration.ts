@@ -169,7 +169,7 @@ export class JupyterExtensionIntegration {
             ) => this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions),
             isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> => {
                 if (await inDiscoveryExperiment(this.experimentService)) {
-                    return this.pyenvs.isWindowsStoreInterpreter(pythonPath) && false;
+                    return this.pyenvs.isWindowsStoreInterpreter(pythonPath) && Promise.resolve(false);
                 }
                 return isWindowsStoreInterpreter(pythonPath);
             },
