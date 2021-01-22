@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as util from 'util';
 import * as platform from '../../../../client/common/utils/platform';
-import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
+import { PythonEnvKind, PythonEnvSource } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import * as windowsUtils from '../../../../client/pythonEnvironments/common/windowsUtils';
@@ -634,7 +634,7 @@ suite('Conda and its environments are located correctly', () => {
                 return {
                     name,
                     kind: PythonEnvKind.Conda,
-                    arch: 1,
+                    arch: platform.Architecture.Unknown,
                     defaultDisplayName: undefined,
                     searchLocation: undefined,
                     distro: { org: AnacondaCompanyName },
@@ -646,7 +646,7 @@ suite('Conda and its environments are located correctly', () => {
                         mtime: -1,
                         sysPrefix: '',
                     },
-                    source: ['conda'],
+                    source: [PythonEnvSource.Conda],
                 };
             }
 
