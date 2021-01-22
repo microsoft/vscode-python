@@ -92,6 +92,7 @@ export enum PythonEnvSource {
  * @prop executable - info about the env's Python binary
  * @prop name - the env's distro-specific name, if any
  * @prop location - the env's location (on disk), if relevant
+ * @prop source - the locator[s] which found the environment.
  */
 export type PythonEnvBaseInfo = {
     kind: PythonEnvKind;
@@ -104,7 +105,6 @@ export type PythonEnvBaseInfo = {
     // * parent: PythonEnvBaseInfo (the env from which this one was created)
     // * binDir: string (where env-installed executables are found)
 
-    // 'source' filed will contain source (i.e, the locator[s]) which found the environment.
     source: PythonEnvSource[];
 };
 
