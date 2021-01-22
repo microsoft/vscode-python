@@ -54,14 +54,15 @@ class PythonEnvironment {
     }
 
     public async getModuleVersion(moduleName: string): Promise<string | undefined> {
-        const [args] = internalPython.getModuleVersion(moduleName);
+        const [args, parse] = internalPython.getModuleVersion(moduleName);
         const info = this.getExecutionInfo(args);
+        let data: ExecutionResult<string>;
         try {
-            const data = await this.deps.exec(info.command, info.args);
-            return data.stdout.trim();
+            data = await this.deps.exec(info.command, info.args);
         } catch {
             return undefined;
         }
+        return parse(data.stdout);
     }
 
     public async isModuleInstalled(moduleName: string): Promise<boolean> {

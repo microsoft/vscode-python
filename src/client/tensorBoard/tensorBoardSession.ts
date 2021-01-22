@@ -19,7 +19,7 @@ import { createPromiseFromCancellation } from '../common/cancellation';
 import { traceError, traceInfo } from '../common/logger';
 import { tensorboardLauncher } from '../common/process/internal/scripts';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../common/process/types';
-import { IDisposableRegistry, IInstaller, InstallerResponse, ModuleInstallStatus, Product } from '../common/types';
+import { IDisposableRegistry, IInstaller, InstallerResponse, ProductInstallStatus, Product } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { TensorBoard } from '../common/utils/localize';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -99,8 +99,8 @@ export class TensorBoardSession {
         if (!interpreter) {
             return false;
         }
-        const status = await this.installer.isModuleVersionCompatible(Product.tensorboard, '>= 2.4.1', interpreter);
-        if (status === ModuleInstallStatus.Installed) {
+        const status = await this.installer.isProductVersionCompatible(Product.tensorboard, '>= 2.4.1', interpreter);
+        if (status === ProductInstallStatus.Installed) {
             return true;
         }
         const tokenSource = new CancellationTokenSource();
@@ -115,12 +115,12 @@ export class TensorBoardSession {
                 Product.tensorboard,
                 interpreter,
                 installerToken,
-                status === ModuleInstallStatus.NeedsUpgrade,
+                status === ProductInstallStatus.NeedsUpgrade,
             ),
             cancellationPromise,
         ]);
-        const newStatus = await this.installer.isModuleVersionCompatible(Product.tensorboard, '>= 2.4.1', interpreter);
-        return newStatus === ModuleInstallStatus.Installed;
+        const newStatus = await this.installer.isProductVersionCompatible(Product.tensorboard, '>= 2.4.1', interpreter);
+        return newStatus === ProductInstallStatus.Installed;
     }
 
     // eslint-disable-next-line class-methods-use-this

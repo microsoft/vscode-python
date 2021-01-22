@@ -69,6 +69,9 @@ export class CondaInstaller extends ModuleInstaller {
             : resource.path;
         const info = await condaService.getCondaEnvironment(pythonPath);
         const args = [isUpgrade ? 'update' : 'install'];
+
+        // Temporarily ensure tensorboard is installed from the conda-forge
+        // channel since 2.4.1 is not yet available in the default index
         if (moduleName === 'tensorboard') {
             args.push('-c', 'conda-forge');
         }

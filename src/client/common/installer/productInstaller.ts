@@ -1,6 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
-import { coerce, satisfies } from 'semver';
+import * as semver from 'semver';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -24,7 +24,7 @@ import {
     InstallerResponse,
     IOutputChannel,
     IPersistentStateFactory,
-    ModuleInstallStatus,
+    ProductInstallStatus,
     ModuleNamePurpose,
     Product,
     ProductType,
@@ -107,48 +107,61 @@ export abstract class BaseInstaller {
         );
     }
 
-    public async isModuleVersionCompatible(
+    /**
+     *
+     * @param product A product which supports SemVer versioning.
+     * @param semVerRequirement A SemVer version requirement.
+     * @param resource A URI or a PythonEnvironment.
+     */
+    public async isProductVersionCompatible(
         product: Product,
         semVerRequirement: string,
         resource?: InterpreterUri,
-    ): Promise<ModuleInstallStatus> {
+    ): Promise<ProductInstallStatus> {
+        const version = await this.getProductSemVer(product, resource);
+        if (!version) {
+            return ProductInstallStatus.NotInstalled;
+        }
+        if (semver.satisfies(version, semVerRequirement)) {
+            return ProductInstallStatus.Installed;
+        } else {
+            return ProductInstallStatus.NeedsUpgrade;
+        }
+    }
+
+    /**
+     *
+     * @param product A product which supports SemVer versioning.
+     * @param resource A URI or a PythonEnvironment.
+     */
+    private async getProductSemVer(product: Product, resource: InterpreterUri): Promise<semver.SemVer | null> {
         const interpreter = isResource(resource) ? undefined : resource;
         const uri = isResource(resource) ? resource : undefined;
         const executableName = this.getExecutableNameFromSettings(product, uri);
 
         const isModule = this.isExecutableAModule(product, uri);
-        try {
-            let version: string | undefined | null;
-            if (isModule) {
-                const pythonProcess = await this.serviceContainer
-                    .get<IPythonExecutionFactory>(IPythonExecutionFactory)
-                    .createActivatedEnvironment({ resource: uri, interpreter, allowEnvironmentFetchExceptions: true });
-                version = await pythonProcess.getModuleVersion(executableName);
-            } else {
-                const process = await this.serviceContainer
-                    .get<IProcessServiceFactory>(IProcessServiceFactory)
-                    .create(uri);
-                const result = await process.exec(executableName, ['--version'], { mergeStdOutErr: true });
-                version = result.stdout.trim();
-            }
-            if (!version) {
-                return ModuleInstallStatus.NotInstalled;
-            }
-            const coercedVersion = coerce(version);
-            if (!coercedVersion) {
-                return ModuleInstallStatus.NotInstalled;
-            }
-            if (satisfies(coercedVersion, semVerRequirement)) {
-                return ModuleInstallStatus.Installed;
-            } else {
-                return ModuleInstallStatus.NeedsUpgrade;
-            }
-        } catch (e) {
-            traceInfo(e);
-        }
-        return ModuleInstallStatus.NotInstalled;
-    }
 
+        let version;
+        if (isModule) {
+            const pythonProcess = await this.serviceContainer
+                .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+                .createActivatedEnvironment({ resource: uri, interpreter, allowEnvironmentFetchExceptions: true });
+            version = await pythonProcess.getModuleVersion(executableName);
+        } else {
+            const process = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(uri);
+            const result = await process.exec(executableName, ['--version'], { mergeStdOutErr: true });
+            version = result.stdout.trim();
+        }
+        if (!version) {
+            return null;
+        }
+        try {
+            return semver.coerce(version);
+        } catch (e) {
+            traceError(`Unable to parse version ${version} for product ${product}: `, e);
+            return null;
+        }
+    }
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
         if (product === Product.unittest) {
             return true;
@@ -671,12 +684,12 @@ export class ProductInstaller implements IInstaller {
         }
         return this.createInstaller(product).promptToInstall(product, resource, cancel, isUpgrade);
     }
-    public async isModuleVersionCompatible(
+    public async isProductVersionCompatible(
         product: Product,
         semVerRequirement: string,
         resource?: InterpreterUri,
-    ): Promise<ModuleInstallStatus> {
-        return this.createInstaller(product).isModuleVersionCompatible(product, semVerRequirement, resource);
+    ): Promise<ProductInstallStatus> {
+        return this.createInstaller(product).isProductVersionCompatible(product, semVerRequirement, resource);
     }
     public async install(
         product: Product,

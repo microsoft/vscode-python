@@ -72,7 +72,7 @@ export enum InstallerResponse {
     Ignore,
 }
 
-export enum ModuleInstallStatus {
+export enum ProductInstallStatus {
     Installed,
     NotInstalled,
     NeedsUpgrade,
@@ -131,11 +131,11 @@ export interface IInstaller {
     ): Promise<InstallerResponse>;
     install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined>;
-    isModuleVersionCompatible(
+    isProductVersionCompatible(
         product: Product,
         semVerRequirement: string,
         resource?: InterpreterUri,
-    ): Promise<ModuleInstallStatus | undefined>;
+    ): Promise<ProductInstallStatus | undefined>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 
