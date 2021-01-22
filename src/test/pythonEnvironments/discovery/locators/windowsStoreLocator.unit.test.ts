@@ -10,6 +10,7 @@ import * as platformApis from '../../../../client/common/utils/platform';
 import {
     PythonEnvInfo,
     PythonEnvKind,
+    PythonEnvSource,
     PythonReleaseLevel,
     PythonVersion,
     UNKNOWN_PYTHON_VERSION,
@@ -158,7 +159,7 @@ suite('Windows Store', () => {
                             location: '',
                             kind: PythonEnvKind.WindowsStore,
                             distro: { org: 'Microsoft' },
-                            source: ['path'],
+                            source: [PythonEnvSource.Path],
                             ...createExpectedInterpreterInfo(k),
                         };
                     }
@@ -182,7 +183,7 @@ suite('Windows Store', () => {
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
                 distro: { org: 'Microsoft' },
-                source: ['path'],
+                source: [PythonEnvSource.Path],
                 ...createExpectedInterpreterInfo(python38path),
             };
 
@@ -200,7 +201,7 @@ suite('Windows Store', () => {
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
                 distro: { org: 'Microsoft' },
-                source: ['path'],
+                source: [PythonEnvSource.Path],
                 ...createExpectedInterpreterInfo(python38path),
             };
 
@@ -241,7 +242,7 @@ suite('Windows Store', () => {
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
                 distro: { org: 'Microsoft' },
-                source: ['path'],
+                source: [PythonEnvSource.Path],
                 ...createExpectedInterpreterInfo(python38path),
             };
 

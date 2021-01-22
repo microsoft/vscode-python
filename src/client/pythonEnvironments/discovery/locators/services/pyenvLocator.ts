@@ -4,7 +4,7 @@
 import { uniq } from 'lodash';
 import * as path from 'path';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
@@ -290,7 +290,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
                 executable: interpreterPath,
                 location: envDir,
                 version: pythonVersion,
-                source: ['pyenv'],
+                source: [PythonEnvSource.Pyenv],
                 defaultDisplayName,
                 org,
                 fileInfo,
@@ -315,7 +315,8 @@ export class PyenvLocator extends FSWatchingLocator {
     // eslint-disable-next-line class-methods-use-this
     public async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
-        const source = typeof env === 'string' ? ['pyenv'] : uniq(['pyenv'].concat(env.source));
+        const source =
+            typeof env === 'string' ? [PythonEnvSource.Pyenv] : uniq([PythonEnvSource.Pyenv].concat(env.source));
 
         if (await isPyenvEnvironment(executablePath)) {
             const location = getEnvironmentDirFromPath(executablePath);

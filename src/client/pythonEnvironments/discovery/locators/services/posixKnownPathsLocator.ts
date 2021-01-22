@@ -6,7 +6,8 @@ import * as path from 'path';
 import { traceError, traceInfo } from '../../../../common/logger';
 
 import { Architecture } from '../../../../common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion } from '../../../base/info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, PythonReleaseLevel, PythonVersion } from '../../../base/info';
+import { buildEnvInfo } from '../../../base/info/env';
 import { parseVersion } from '../../../base/info/pythonVersion';
 import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getFileInfo, resolveSymbolicLink } from '../../../common/externalDependencies';
@@ -40,20 +41,20 @@ export class PosixKnownPathsLocator extends Locator {
     private kind: PythonEnvKind = PythonEnvKind.OtherGlobal;
 
     public iterEnvs(): IPythonEnvsIterator {
-        const buildEnvInfo = (bin: string) => this.buildEnvInfo(bin);
+        const buildPathEnvInfo = (bin: string) => this.buildPathEnvInfo(bin);
         const iterator = async function* () {
             const exes = await getPythonBinFromKnownPaths();
-            yield* exes.map(buildEnvInfo);
+            yield* exes.map(buildPathEnvInfo);
         };
         return iterator();
     }
 
     public resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
-        return this.buildEnvInfo(executablePath);
+        return this.buildPathEnvInfo(executablePath);
     }
 
-    private async buildEnvInfo(bin: string): Promise<PythonEnvInfo> {
+    private async buildPathEnvInfo(bin: string): Promise<PythonEnvInfo> {
         let version: PythonVersion;
         try {
             version = parseVersion(path.basename(bin));
@@ -67,19 +68,15 @@ export class PosixKnownPathsLocator extends Locator {
                 sysVersion: undefined,
             };
         }
-        return {
+        return buildEnvInfo({
             name: '',
             location: '',
             kind: this.kind,
-            executable: {
-                filename: bin,
-                sysPrefix: '',
-                ...(await getFileInfo(bin)),
-            },
+            executable: bin,
+            fileInfo: await getFileInfo(bin),
             version,
             arch: Architecture.Unknown,
-            distro: { org: '' },
-            source: ['path'],
-        };
+            source: [PythonEnvSource.Path],
+        });
     }
 }

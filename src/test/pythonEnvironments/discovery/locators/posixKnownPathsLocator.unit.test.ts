@@ -8,6 +8,7 @@ import { Architecture } from '../../../../client/common/utils/platform';
 import {
     PythonEnvInfo,
     PythonEnvKind,
+    PythonEnvSource,
     PythonReleaseLevel,
     PythonVersion,
 } from '../../../../client/pythonEnvironments/base/info';
@@ -89,7 +90,7 @@ suite('Posix Known Path Locator', () => {
                         location: '',
                         kind: PythonEnvKind.OtherGlobal,
                         distro: { org: '' },
-                        source: ['path'],
+                        source: [PythonEnvSource.Path],
                         ...createExpectedInterpreterInfo(path.join(location, binary)),
                     });
                 });
@@ -110,7 +111,7 @@ suite('Posix Known Path Locator', () => {
             location: '',
             kind: PythonEnvKind.OtherGlobal,
             distro: { org: '' },
-            source: ['path'],
+            source: [PythonEnvSource.Path],
             ...createExpectedInterpreterInfo(pythonPath),
         };
 
@@ -125,7 +126,7 @@ suite('Posix Known Path Locator', () => {
             location: '',
             kind: PythonEnvKind.OtherGlobal,
             distro: { org: '' },
-            source: ['path'],
+            source: [PythonEnvSource.Path],
             ...createExpectedInterpreterInfo(pythonPath),
         };
 

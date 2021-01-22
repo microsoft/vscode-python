@@ -6,7 +6,7 @@ import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { getUserHomeDir } from '../../../../common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
@@ -85,7 +85,7 @@ async function buildSimpleVirtualEnvInfo(executablePath: string, kind: PythonEnv
         kind,
         version: await getPythonVersionFromPath(executablePath),
         executable: executablePath,
-        source: ['other'],
+        source: [PythonEnvSource.Other],
     });
     const location = getEnvironmentDirFromPath(executablePath);
     envInfo.location = location;

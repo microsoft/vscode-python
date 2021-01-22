@@ -4,7 +4,13 @@
 import { uniq } from 'lodash';
 import { traceVerbose } from '../../../../common/logger';
 import { Architecture } from '../../../../common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind, PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
+import {
+    PythonEnvInfo,
+    PythonEnvKind,
+    PythonEnvSource,
+    PythonVersion,
+    UNKNOWN_PYTHON_VERSION,
+} from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { parseVersion } from '../../../base/info/pythonVersion';
 import { IPythonEnvsIterator, Locator } from '../../../base/locator';
@@ -62,7 +68,7 @@ export class WindowsRegistryLocator extends Locator {
             arch: getArchitecture(data),
             org: data.distroOrgName,
             defaultDisplayName: data.displayName,
-            source: ['windows registry'],
+            source: [PythonEnvSource.WindowsRegistry],
         });
     }
 }

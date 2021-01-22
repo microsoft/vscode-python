@@ -8,6 +8,7 @@ import { Architecture } from '../../../../client/common/utils/platform';
 import {
     PythonEnvInfo,
     PythonEnvKind,
+    PythonEnvSource,
     PythonReleaseLevel,
     PythonVersion,
     UNKNOWN_PYTHON_VERSION,
@@ -245,7 +246,7 @@ suite('Windows Registry', () => {
             arch: data.bitnessStr === '32bit' ? Architecture.x86 : Architecture.x64,
             org: data.distroOrgName ?? '',
             defaultDisplayName: data.displayName,
-            source: ['windows registry'],
+            source: [PythonEnvSource.WindowsRegistry],
         });
     }
 

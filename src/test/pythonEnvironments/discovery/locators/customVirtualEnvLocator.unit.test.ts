@@ -9,6 +9,7 @@ import * as platformUtils from '../../../../client/common/utils/platform';
 import {
     PythonEnvInfo,
     PythonEnvKind,
+    PythonEnvSource,
     PythonReleaseLevel,
     PythonVersion,
     UNKNOWN_PYTHON_VERSION,
@@ -57,7 +58,7 @@ suite('CustomVirtualEnvironment Locator', () => {
             arch: platformUtils.Architecture.Unknown,
             distro: { org: '' },
             searchLocation: undefined,
-            source: ['other'],
+            source: [PythonEnvSource.Other],
         };
     }
 
