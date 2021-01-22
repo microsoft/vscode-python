@@ -1,10 +1,11 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, window } from 'vscode';
+import { inDiscoveryExperiment } from '../../common/experiments/helpers';
 import { traceError } from '../../common/logger';
 import { IPythonExecutionFactory } from '../../common/process/types';
+import { IExperimentService } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { IServiceContainer } from '../../ioc/types';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -14,19 +15,13 @@ import { IPythonPathUpdaterServiceFactory, IPythonPathUpdaterServiceManager } fr
 
 @injectable()
 export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManager {
-    private readonly pythonPathSettingsUpdaterFactory: IPythonPathUpdaterServiceFactory;
-
-    private readonly executionFactory: IPythonExecutionFactory;
-
-    private readonly componentAdapter: IComponentAdapter;
-
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        this.pythonPathSettingsUpdaterFactory = serviceContainer.get<IPythonPathUpdaterServiceFactory>(
-            IPythonPathUpdaterServiceFactory,
-        );
-        this.executionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        this.componentAdapter = serviceContainer.get<IComponentAdapter>(IComponentAdapter);
-    }
+    constructor(
+        @inject(IPythonExecutionFactory)
+        private readonly pythonPathSettingsUpdaterFactory: IPythonPathUpdaterServiceFactory,
+        @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
+    ) {}
 
     public async updatePythonPath(
         pythonPath: string | undefined,
@@ -65,9 +60,11 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         if (!failed && pythonPath) {
             // Ask for info using the new discovery code first.
             // If it returns undefined, fallback on the old code.
-            const interpreterInfo = await this.componentAdapter.getInterpreterInformation(pythonPath);
-            if (interpreterInfo && interpreterInfo.version) {
-                telemetryProperties.pythonVersion = interpreterInfo.version.raw;
+            if (await inDiscoveryExperiment(this.experimentService)) {
+                const interpreterInfo = await this.pyenvs.getInterpreterInformation(pythonPath);
+                if (interpreterInfo) {
+                    telemetryProperties.pythonVersion = interpreterInfo.version?.raw;
+                }
             } else {
                 const processService = await this.executionFactory.create({ pythonPath });
                 const info = await processService
