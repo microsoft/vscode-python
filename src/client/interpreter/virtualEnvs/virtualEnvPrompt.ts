@@ -39,11 +39,15 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
     ) {}
 
     public async activate(resource: Uri): Promise<void> {
-        const disposable = this.pyenvs.onDidCreate(resource, () => this.handleNewEnvironment(resource));
-        if (disposable) {
-            this.disposableRegistry.push(disposable);
+        if (await inDiscoveryExperiment(this.experimentService)) {
+            const disposable = this.pyenvs.onDidCreate(resource, () => this.handleNewEnvironment(resource));
+            if (disposable) {
+                this.disposableRegistry.push(disposable);
+            }
+            // This is to prevent fallback
             return;
         }
+
         const builder = this.serviceContainer.get<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder);
         const watcher = await builder.getWorkspaceVirtualEnvInterpreterWatcher(resource);
         watcher.onDidCreate(
