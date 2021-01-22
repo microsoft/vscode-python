@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
+import { intersection } from 'lodash';
 import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { DiscoveryVariants } from '../common/experiments/groups';
@@ -32,7 +33,7 @@ import {
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
 import { IServiceManager } from '../ioc/types';
-import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, PythonReleaseLevel } from './base/info';
 import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
 import { isMacDefaultPythonPath } from './base/locators/lowLevel/macDefaultLocator';
@@ -316,6 +317,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         //     ignoreCache?: boolean
         //     onSuggestion?: boolean;
         // }
+        source?: PythonEnvSource[],
     ): Promise<PythonEnvironment[] | undefined> {
         if (!this.enabled) {
             return undefined;
@@ -323,7 +325,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         // Notify locators are locating.
         this.refreshing.fire();
 
-        const legacyEnvs = await this.getInterpretersViaAPI(resource, options).catch((ex) => {
+        const legacyEnvs = await this.getInterpretersViaAPI(resource, options, source).catch((ex) => {
             traceError('Fetching environments via the new API failed', ex);
             return <PythonEnvironment[]>[];
         });
@@ -342,6 +344,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         //     ignoreCache?: boolean
         //     onSuggestion?: boolean;
         // }
+        source?: PythonEnvSource[],
     ): Promise<PythonEnvironment[]> {
         if (options?.onSuggestion) {
             // For now, until we have the concept of trusted workspaces, we assume all interpreters as safe
@@ -360,7 +363,11 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         }
 
         const iterator = this.api.iterEnvs(query);
-        const envs = await getEnvs(iterator);
+        let envs = await getEnvs(iterator);
+        if (source) {
+            envs = envs.filter((env) => intersection(source, env.source).length > 0);
+        }
+
         return envs.map(convertEnvInfo);
     }
 
