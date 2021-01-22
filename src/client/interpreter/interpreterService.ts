@@ -12,6 +12,7 @@ import { IPythonExecutionFactory } from '../common/process/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IExperimentsManager,
     IInterpreterPathService,
     IPersistentState,
@@ -21,7 +22,6 @@ import {
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
-import { inDiscoveryExperiment } from '../pythonEnvironments/legacyIOC';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import {
@@ -35,6 +35,7 @@ import {
 } from './contracts';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 import { getInterpreterHash } from '../pythonEnvironments/discovery/locators/services/hashProvider';
+import { inDiscoveryExperiment } from '../common/experiments/helpers';
 
 const EXPIRY_DURATION = 24 * 60 * 60 * 1000;
 
@@ -48,9 +49,9 @@ interface IComponent {
 @injectable()
 export class InterpreterService implements Disposable, IInterpreterService {
     public get hasInterpreters(): Promise<boolean> {
-        return this.pyenvs.hasInterpreters.then((res) => {
-            if (res !== undefined) {
-                return res;
+        return inDiscoveryExperiment(this.experimentService).then((inExp) => {
+            if (inExp) {
+                return this.pyenvs.hasInterpreters && Promise.resolve(false);
             }
             const locator = this.serviceContainer.get<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
@@ -95,6 +96,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IComponentAdapter) private readonly pyenvs: IComponent,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         this.persistentStateFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -142,18 +144,15 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     @captureTelemetry(EventName.PYTHON_INTERPRETER_DISCOVERY, { locator: 'all' }, true)
     public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
-        let environments: PythonEnvironment[] = [];
-
-        const envs = await this.pyenvs.getInterpreters(resource);
-        if (envs !== undefined) {
-            environments = envs;
-        } else {
-            const locator = this.serviceContainer.get<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                INTERPRETER_LOCATOR_SERVICE,
-            );
-            environments = await locator.getInterpreters(resource, options);
+        if (await inDiscoveryExperiment(this.experimentService)) {
+            return this.pyenvs.getInterpreters(resource) && Promise.resolve([]);
         }
+
+        const locator = this.serviceContainer.get<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            INTERPRETER_LOCATOR_SERVICE,
+        );
+        const environments = await locator.getInterpreters(resource, options);
 
         await Promise.all(
             environments
@@ -170,7 +169,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public dispose(): void {
-        inDiscoveryExperiment().then((inExp) => {
+        inDiscoveryExperiment(this.experimentService).then((inExp) => {
             if (!inExp) {
                 const locator = this.serviceContainer.get<IInterpreterLocatorService>(
                     IInterpreterLocatorService,
