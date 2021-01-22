@@ -13,6 +13,7 @@ import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
+    GetInterpreterLocatorOptions,
     GetInterpreterOptions,
     GLOBAL_VIRTUAL_ENV_SERVICE,
     IComponentAdapter,
@@ -366,7 +367,10 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return envs.map(convertEnvInfo);
     }
 
-    public async getWorkspaceVirtualEnvInterpreters(resource: vscode.Uri): Promise<PythonEnvironment[] | undefined> {
+    public async getWorkspaceVirtualEnvInterpreters(
+        resource: vscode.Uri,
+        options?: GetInterpreterLocatorOptions,
+    ): Promise<PythonEnvironment[] | undefined> {
         if (!this.enabled) {
             return undefined;
         }
@@ -378,6 +382,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
             searchLocations: {
                 roots: [workspaceFolder.uri],
             },
+            ignoreCache: options?.ignoreCache,
         };
         const iterator = this.api.iterEnvs(query);
         const envs = await getEnvs(iterator);
