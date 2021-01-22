@@ -88,7 +88,7 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
 
     private cellUris: Uri[] = [];
 
-    private cellLengths: number[] = [];
+    private cellTexts: string[] = []; // Need full string so can compute the old range on delete
 
     private onCellsChangedEmitter = new EventEmitter<TextDocumentChangeEvent>();
 
@@ -101,7 +101,7 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
         this.concatDocument = notebookApi.createConcatTextDocument(notebook, selector);
         this.onDidChangeSubscription = this.concatDocument.onDidChange(this.onDidChange, this);
         this.cellUris = notebook.cells.map((c) => c.uri);
-        this.cellLengths = notebook.cells.map((c) => c.document.getText().length + 1);
+        this.cellTexts = notebook.cells.map((c) => `${c.document.getText()}\n`);
     }
 
     public dispose(): void {
@@ -178,11 +178,31 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
             this.raiseCellMovement(newUris);
         }
         this.cellUris = newUris;
-        this.cellLengths = this.notebook.cells.map((c) => c.document.getText().length + 1); // +1 for the /n between cells
+        this.cellTexts = this.notebook.cells.map((c) => `${c.document.getText()}\n`); // /n between cells
     }
 
     private getPositionOfCell(cellUri: Uri): Position {
         return this.concatDocument.positionAt(new Location(cellUri, new Position(0, 0)));
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    private getOffsetPosition(start: Position, text: string) {
+        // Split into lines
+        const lines = text.splitLines({ trim: false });
+        // Add line count (minus one for the final split)
+        const line = start.line + lines.length - 1;
+        // Character should always be 0 as the final line should have a single char
+        return new Position(line, 0);
+    }
+
+    public getEndPosition(): Position {
+        if (this.notebook.cells.length > 0) {
+            const finalCell = this.notebook.cells[this.notebook.cells.length - 1];
+            const start = this.getPositionOfCell(finalCell.uri);
+            const lines = finalCell.document.getText().splitLines({ trim: false });
+            return new Position(start.line + lines.length, 0);
+        }
+        return new Position(0, 0);
     }
 
     private raiseCellInsertion(newUris: Uri[]) {
@@ -215,12 +235,13 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
         if (index >= 0) {
             // Figure out the position of the item in the new list
             const position =
-                index < newUris.length - 1
-                    ? this.getPositionOfCell(newUris[index])
-                    : this.getPositionOfCell(newUris[newUris.length - 1]);
+                index < newUris.length - 1 ? this.getPositionOfCell(newUris[index]) : this.getEndPosition();
 
             // Length should be old length
-            const length = this.cellLengths[index];
+            const { length } = this.cellTexts[index];
+
+            // Range should go from new position to end of old position
+            const endPosition = this.getOffsetPosition(position, this.cellTexts[index]);
 
             // Turn this cell into a change event.
             this.onCellsChangedEmitter.fire({
@@ -228,7 +249,7 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
                 contentChanges: [
                     {
                         text: '',
-                        range: new Range(position, position),
+                        range: new Range(position, endPosition),
                         rangeLength: length,
                         rangeOffset: 0,
                     },
@@ -248,22 +269,24 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
             .filter((e) => newUris[e.index] !== e.uri);
         if (movedCells && movedCells.length === 2) {
             // Should be two changes. One for each cell
-            const position1 = this.getPositionOfCell(newUris[movedCells[1].index]);
+            const startPosition1 = this.getPositionOfCell(newUris[movedCells[1].index]);
+            const endPosition1 = this.getOffsetPosition(startPosition1, this.cellTexts[movedCells[0].index]);
             const change1 = {
                 text: `${this.notebook.cells[movedCells[1].index].document.getText()}\n`,
-                range: new Range(position1, position1),
-                rangeLength: this.cellLengths[movedCells[0].index],
+                range: new Range(startPosition1, endPosition1),
+                rangeLength: this.cellTexts[movedCells[0].index].length,
                 rangeOffset: 0,
             };
 
             // Second position is harder. From the language server's point of view we just
             // inserted the second cell into where the first cell was. So now the position for
             // new cell should be correct
-            const position2 = this.getPositionOfCell(newUris[movedCells[0].index]);
+            const startPosition2 = this.getPositionOfCell(newUris[movedCells[0].index]);
+            const endPosition2 = this.getOffsetPosition(startPosition2, this.cellTexts[movedCells[1].index]);
             const change2 = {
                 text: `${this.notebook.cells[movedCells[0].index].document.getText()}\n`,
-                range: new Range(position2, position2),
-                rangeLength: this.cellLengths[movedCells[1].index],
+                range: new Range(startPosition2, endPosition2),
+                rangeLength: this.cellTexts[movedCells[1].index].length,
                 rangeOffset: 0,
             };
 
