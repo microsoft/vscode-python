@@ -58,8 +58,6 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
             trigger,
         };
         if (!failed && pythonPath) {
-            // Ask for info using the new discovery code first.
-            // If it returns undefined, fallback on the old code.
             if (await inDiscoveryExperiment(this.experimentService)) {
                 const interpreterInfo = await this.pyenvs.getInterpreterInformation(pythonPath);
                 if (interpreterInfo) {
