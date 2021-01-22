@@ -7,6 +7,7 @@ import { expect } from 'chai';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
 import { CancellationToken, Disposable, Progress, ProgressOptions } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
+import { IExperimentService } from '../../../client/common/types';
 import { Common, Interpreters } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { IComponentAdapter, IInterpreterLocatorProgressService } from '../../../client/interpreter/contracts';
@@ -51,6 +52,7 @@ suite('Interpreters - Display Progress', () => {
             instance(serviceContainer),
             [],
             instance(mock(IComponentAdapter)),
+            instance(mock(IExperimentService)),
         );
         when(shell.withProgress(anything(), anything())).thenResolve();
 
@@ -68,6 +70,7 @@ suite('Interpreters - Display Progress', () => {
             instance(serviceContainer),
             [],
             instance(mock(IComponentAdapter)),
+            instance(mock(IExperimentService)),
         );
         when(shell.withProgress(anything(), anything())).thenResolve();
 
@@ -90,6 +93,7 @@ suite('Interpreters - Display Progress', () => {
             instance(serviceContainer),
             [],
             instance(mock(IComponentAdapter)),
+            instance(mock(IExperimentService)),
         );
         when(shell.withProgress(anything(), anything())).thenResolve();
 

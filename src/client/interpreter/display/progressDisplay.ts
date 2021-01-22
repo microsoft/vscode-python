@@ -7,8 +7,9 @@ import { inject, injectable } from 'inversify';
 import { Disposable, Event, ProgressLocation, ProgressOptions } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
+import { inDiscoveryExperiment } from '../../common/experiments/helpers';
 import { traceDecorators } from '../../common/logger';
-import { IDisposableRegistry } from '../../common/types';
+import { IDisposableRegistry, IExperimentService } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Common, Interpreters } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
@@ -31,12 +32,14 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
         private readonly serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) private readonly disposables: Disposable[],
         @inject(IComponentAdapter) private readonly pyenvs: IComponent,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {}
 
     public async activate(): Promise<void> {
-        let onRefreshing: Event<void>;
-        let onRefreshed: Event<void>;
-        if (this.pyenvs.onRefreshing && this.pyenvs.onRefreshed) {
+        let onRefreshing: Event<void> | undefined;
+        let onRefreshed: Event<void> | undefined;
+
+        if (await inDiscoveryExperiment(this.experimentService)) {
             onRefreshing = this.pyenvs.onRefreshing;
             onRefreshed = this.pyenvs.onRefreshed;
         } else {
@@ -46,8 +49,13 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
             onRefreshing = progressService.onRefreshing;
             onRefreshed = progressService.onRefreshed;
         }
-        onRefreshing(() => this.showProgress(), this, this.disposables);
-        onRefreshed(() => this.hideProgress(), this, this.disposables);
+
+        if (onRefreshing) {
+            onRefreshing(() => this.showProgress(), this, this.disposables);
+        }
+        if (onRefreshed) {
+            onRefreshed(() => this.hideProgress(), this, this.disposables);
+        }
     }
 
     @traceDecorators.verbose('Display locator refreshing progress')
