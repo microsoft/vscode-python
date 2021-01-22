@@ -19,13 +19,12 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService,
 } from '../../../client/common/process/types';
-import { IConfigurationService } from '../../../client/common/types';
+import { IConfigurationService, IExperimentService } from '../../../client/common/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
+import { IComponentAdapter, ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { UnitTestDiagnosticService } from '../../../client/testing/common/services/unitTestDiagnosticService';
 import {
@@ -41,7 +40,7 @@ import { TEST_TIMEOUT } from '../../constants';
 import { MockProcessService } from '../../mocks/proc';
 import { registerForIOC } from '../../pythonEnvironments/legacyIOC';
 import { UnitTestIocContainer } from '../serviceRegistry';
-import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
+import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
 import { ITestDetails, ITestScenarioDetails, testScenarios } from './pytest_run_tests_data';
 
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
@@ -104,13 +103,12 @@ async function getScenarioTestsToRun(scenario: ITestScenarioDetails, tests: Test
 async function getResultsFromTestManagerRunTest(
     testManager: ITestManager,
     testsToRun: TestsToRun,
-    failedRun: boolean = false,
+    failedRun = false,
 ): Promise<Tests> {
     if (failedRun) {
         return testManager.runTest(CommandSource.ui, undefined, true);
-    } else {
-        return testManager.runTest(CommandSource.ui, testsToRun);
     }
+    return testManager.runTest(CommandSource.ui, testsToRun);
 }
 
 /**
@@ -187,7 +185,7 @@ function getRelevantTestDetailsForFile(testDetails: ITestDetails[], fileName: st
 function getIssueCountFromRelevantTestDetails(
     testDetails: ITestDetails[],
     skippedTestDetails: ITestDetails[],
-    failedRun: boolean = false,
+    failedRun = false,
 ): number {
     const relevantIssueDetails = testDetails.filter((td) => {
         return td.status !== TestStatus.Pass && !(failedRun && td.passOnFailedRun);
@@ -392,8 +390,9 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
             @inject(IConfigurationService) private readonly _configService: IConfigurationService,
             @inject(ICondaService) condaService: ICondaService,
-            @inject(WindowsStoreInterpreter) windowsStoreInterpreter: WindowsStoreInterpreter,
             @inject(IBufferDecoder) decoder: IBufferDecoder,
+            @inject(IComponentAdapter) pyenvs: IComponentAdapter,
+            @inject(IExperimentService) experimentService: IExperimentService,
         ) {
             super(
                 _serviceContainer,
@@ -402,9 +401,11 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                 _configService,
                 condaService,
                 decoder,
-                windowsStoreInterpreter,
+                pyenvs,
+                experimentService,
             );
         }
+
         public async createActivatedEnvironment(
             options: ExecutionFactoryCreateWithEnvironmentOptions,
         ): Promise<IPythonExecutionService> {
@@ -475,7 +476,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             }
         });
     }
-    async function injectTestRunOutput(outputFileName: string, failedOutput: boolean = false) {
+    async function injectTestRunOutput(outputFileName: string, failedOutput = false) {
         const junitXmlArgs = '--junit-xml=';
         const procService = (await ioc.serviceContainer
             .get<IProcessServiceFactory>(IProcessServiceFactory)

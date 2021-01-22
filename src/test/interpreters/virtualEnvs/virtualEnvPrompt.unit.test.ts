@@ -3,13 +3,15 @@
 
 'use strict';
 
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, deepEqual, instance, mock, reset, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Disposable, Uri } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../client/common/application/types';
+import { DiscoveryVariants } from '../../../client/common/experiments/groups';
+import { ExperimentService } from '../../../client/common/experiments/service';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
-import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
+import { IExperimentService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { Common } from '../../../client/common/utils/localize';
 import { PythonPathUpdaterService } from '../../../client/interpreter/configuration/pythonPathUpdaterService';
 import { IPythonPathUpdaterServiceManager } from '../../../client/interpreter/configuration/types';
@@ -18,9 +20,12 @@ import {
     IInterpreterHelper,
     IInterpreterLocatorService,
     IInterpreterWatcherBuilder,
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
 import { VirtualEnvironmentPrompt } from '../../../client/interpreter/virtualEnvs/virtualEnvPrompt';
+import { ServiceContainer } from '../../../client/ioc/container';
+import { IServiceContainer } from '../../../client/ioc/types';
 import { CacheableLocatorService } from '../../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
 import { InterpreterWatcherBuilder } from '../../../client/pythonEnvironments/discovery/locators/services/interpreterWatcherBuilder';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
@@ -42,24 +47,37 @@ suite('Virtual Environment Prompt', () => {
     let locator: IInterpreterLocatorService;
     let disposable: Disposable;
     let appShell: IApplicationShell;
+    let serviceContainer: IServiceContainer;
+    let componentAdapter: IComponentAdapter;
+    let experimentService: IExperimentService;
     let environmentPrompt: VirtualEnvironmentPromptTest;
     setup(() => {
         builder = mock(InterpreterWatcherBuilder);
+        serviceContainer = mock(ServiceContainer);
         persistentStateFactory = mock(PersistentStateFactory);
         helper = mock(InterpreterHelper);
+        experimentService = mock(ExperimentService);
         pythonPathUpdaterService = mock(PythonPathUpdaterService);
         locator = mock(CacheableLocatorService);
+        componentAdapter = mock<IComponentAdapter>();
+        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
+        when(
+            serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE),
+        ).thenReturn(instance(locator));
+        when(serviceContainer.get<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder)).thenReturn(
+            instance(builder),
+        );
         disposable = mock(Disposable);
         appShell = mock(ApplicationShell);
         environmentPrompt = new VirtualEnvironmentPromptTest(
-            instance(builder),
+            instance(serviceContainer),
             instance(persistentStateFactory),
             instance(helper),
             instance(pythonPathUpdaterService),
-            instance(locator),
             [instance(disposable)],
             instance(appShell),
-            instance(mock(IComponentAdapter)),
+            instance(componentAdapter),
+            instance(experimentService),
         );
     });
 
@@ -70,8 +88,10 @@ suite('Virtual Environment Prompt', () => {
         const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(locator.getInterpreters(resource)).thenResolve([interpreter1, interpreter2] as any);
-        when(helper.getBestInterpreter(anything())).thenReturn(interpreter2 as any);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when(helper.getBestInterpreter(deepEqual([interpreter1, interpreter2] as any))).thenReturn(interpreter2 as any);
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
             notificationPromptEnabled.object,
         );
@@ -80,9 +100,34 @@ suite('Virtual Environment Prompt', () => {
 
         await environmentPrompt.handleNewEnvironment(resource);
 
-        verify(locator.getInterpreters(resource)).once();
-        verify(helper.getBestInterpreter(anything())).once();
-        verify(persistentStateFactory.createWorkspacePersistentState(anything(), true)).once();
+        verify(appShell.showInformationMessage(anything(), ...prompts)).once();
+    });
+
+    test('When in experiment, user is notified if interpreter exists and only python path to global interpreter is specified in settings', async () => {
+        const resource = Uri.file('a');
+        reset(experimentService);
+        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(true);
+        const interpreter1 = { path: 'path/to/interpreter1' };
+        const interpreter2 = { path: 'path/to/interpreter2' };
+        const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
+        const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+
+        // Return interpreters using the component adapter instead
+        when(componentAdapter.getWorkspaceVirtualEnvInterpreters(resource)).thenResolve([
+            interpreter1,
+            interpreter2,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ] as any);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when(helper.getBestInterpreter(deepEqual([interpreter1, interpreter2] as any))).thenReturn(interpreter2 as any);
+        when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
+            notificationPromptEnabled.object,
+        );
+        notificationPromptEnabled.setup((n) => n.value).returns(() => true);
+        when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve();
+
+        await environmentPrompt.handleNewEnvironment(resource);
+
         verify(appShell.showInformationMessage(anything(), ...prompts)).once();
     });
 
@@ -95,6 +140,7 @@ suite('Virtual Environment Prompt', () => {
             notificationPromptEnabled.object,
         );
         notificationPromptEnabled.setup((n) => n.value).returns(() => true);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[0] as any);
         when(
             pythonPathUpdaterService.updatePythonPath(
@@ -105,6 +151,7 @@ suite('Virtual Environment Prompt', () => {
             ),
         ).thenResolve();
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await environmentPrompt.notifyUser(interpreter1 as any, resource);
 
         verify(persistentStateFactory.createWorkspacePersistentState(anything(), true)).once();
@@ -128,6 +175,7 @@ suite('Virtual Environment Prompt', () => {
             notificationPromptEnabled.object,
         );
         notificationPromptEnabled.setup((n) => n.value).returns(() => true);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[1] as any);
         when(
             pythonPathUpdaterService.updatePythonPath(
@@ -142,6 +190,7 @@ suite('Virtual Environment Prompt', () => {
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await environmentPrompt.notifyUser(interpreter1 as any, resource);
 
         verify(persistentStateFactory.createWorkspacePersistentState(anything(), true)).once();
@@ -166,12 +215,14 @@ suite('Virtual Environment Prompt', () => {
             notificationPromptEnabled.object,
         );
         notificationPromptEnabled.setup((n) => n.value).returns(() => true);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[2] as any);
         notificationPromptEnabled
             .setup((n) => n.updateValue(false))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await environmentPrompt.notifyUser(interpreter1 as any, resource);
 
         verify(persistentStateFactory.createWorkspacePersistentState(anything(), true)).once();
@@ -188,8 +239,10 @@ suite('Virtual Environment Prompt', () => {
             notificationPromptEnabled.object,
         );
         notificationPromptEnabled.setup((n) => n.value).returns(() => false);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[0] as any);
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await environmentPrompt.notifyUser(interpreter1 as any, resource);
 
         verify(persistentStateFactory.createWorkspacePersistentState(anything(), true)).once();

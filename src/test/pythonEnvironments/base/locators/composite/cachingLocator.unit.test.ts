@@ -9,6 +9,7 @@ import { createDeferred } from '../../../../../client/common/utils/async';
 import { Disposables } from '../../../../../client/common/utils/resourceLifecycle';
 import { PythonEnvInfoCache } from '../../../../../client/pythonEnvironments/base/envsCache';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { IPythonEnvsIterator } from '../../../../../client/pythonEnvironments/base/locator';
 import { CachingLocator } from '../../../../../client/pythonEnvironments/base/locators/composite/cachingLocator';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
@@ -155,6 +156,46 @@ suite('Python envs locator - CachingLocator', () => {
 
             await eventDeferred.promise; // Event may or may not be fired yet, we have to wait
             assert.deepEqual(changeEvent, expected);
+        });
+
+        test('If iterEnvs is called again, cached envs are returned', async () => {
+            const [subLocator, locator] = await getInitializedLocator([]);
+
+            let actualEnvs = await getEnvs(locator.iterEnvs()); // Trigger the initial refresh
+
+            assert.deepEqual(actualEnvs, [], 'Cached envs should be iterated');
+
+            // The sublocators now return a different environment list
+            subLocator.iterEnvs = () => {
+                const iterator: IPythonEnvsIterator = (async function* () {
+                    yield env2;
+                })();
+                return iterator;
+            };
+
+            actualEnvs = await getEnvs(locator.iterEnvs()); // Call iterEnvs again
+
+            assert.deepEqual(actualEnvs, [], 'Cached envs should be iterated');
+        });
+
+        test('If iterEnvs is called again but with ignoreCache option set, fresh envs are returned', async () => {
+            const [subLocator, locator] = await getInitializedLocator([]);
+
+            let actualEnvs = await getEnvs(locator.iterEnvs()); // Trigger the initial refresh
+
+            assert.deepEqual(actualEnvs, [], 'Cached envs should be iterated');
+
+            // The sublocators now return a different environment list
+            subLocator.iterEnvs = () => {
+                const iterator: IPythonEnvsIterator = (async function* () {
+                    yield env2;
+                })();
+                return iterator;
+            };
+
+            actualEnvs = await getEnvs(locator.iterEnvs({ ignoreCache: true })); // Call iterEnvs again with ignoreCache option set
+
+            assert.deepEqual(actualEnvs, [env2], 'Fresh envs should be iterated');
         });
     });
 

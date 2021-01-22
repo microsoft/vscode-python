@@ -36,6 +36,8 @@ export interface IComponentAdapter {
     // IInterpreterLocatorService
     hasInterpreters: Promise<boolean | undefined>;
     getInterpreters(resource?: Uri): Promise<PythonEnvironment[] | undefined>;
+    // WorkspaceVirtualEnvInterpretersAutoSelectionRule
+    getWorkspaceVirtualEnvInterpreters(resource: Uri): Promise<PythonEnvironment[] | undefined>;
     // IInterpreterService
     getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment>;
     // IInterpreterHelper
@@ -44,7 +46,7 @@ export interface IComponentAdapter {
     // ICondaService
     isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined>;
     getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
-    // IWindowsStoreInterpreter
+
     isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined>;
 }
 

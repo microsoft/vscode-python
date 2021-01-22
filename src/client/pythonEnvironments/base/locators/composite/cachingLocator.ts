@@ -24,12 +24,18 @@ export class CachingLocator extends LazyResourceBasedLocator {
 
     private handleOnChanged?: (event: PythonEnvsChangedEvent) => void;
 
+    private refreshCache?: () => Promise<void>;
+
     constructor(private readonly cache: IEnvsCache, private readonly locator: ILocator) {
         super();
         this.onChanged = this.watcher.onChanged;
     }
 
     protected async *doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+        if (query?.ignoreCache) {
+            // Ignore current cache, refill it with fresh environments.
+            await this.refreshCache!();
+        }
         yield* this.iterFromCache(query);
     }
 
@@ -79,6 +85,7 @@ export class CachingLocator extends LazyResourceBasedLocator {
         looper.start();
         this.disposables.push(looper);
 
+        this.refreshCache = () => this.ensureRecentRefresh(looper);
         this.handleOnChanged = (event) => this.ensureCurrentRefresh(looper, event);
 
         // We assume that `getAllEnvs()` is cheap enough that calling

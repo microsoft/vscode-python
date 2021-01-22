@@ -4,6 +4,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import { Uri } from 'vscode';
 import * as fsWatcher from '../../../../../client/common/platform/fileSystemWatcher';
 import * as platformUtils from '../../../../../client/common/utils/platform';
 import {
@@ -45,7 +46,7 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
             version,
             arch: platformUtils.Architecture.Unknown,
             distro: { org: '' },
-            searchLocation: undefined,
+            searchLocation: Uri.file(path.dirname(location)),
         };
     }
 

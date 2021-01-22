@@ -37,7 +37,6 @@ import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
 import { isMacDefaultPythonPath } from './base/locators/lowLevel/macDefaultLocator';
 import { getEnvs } from './base/locatorUtils';
-import { getEnvironmentDirFromPath } from './common/commonUtils';
 import { inExperiment, isParentPath } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
@@ -56,7 +55,6 @@ import { KnownPathsService, KnownSearchPathsForInterpreters } from './discovery/
 import { PipEnvService } from './discovery/locators/services/pipEnvService';
 import { PipEnvServiceHelper } from './discovery/locators/services/pipEnvServiceHelper';
 import { WindowsRegistryService } from './discovery/locators/services/windowsRegistryService';
-import { WindowsStoreInterpreter } from './discovery/locators/services/windowsStoreInterpreter';
 import { isWindowsStoreEnvironment } from './discovery/locators/services/windowsStoreLocator';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
@@ -129,6 +127,7 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     return env;
 }
 
+// Shouldn't be used outside of the discovery component.
 export async function inDiscoveryExperiment(): Promise<boolean> {
     const results = await Promise.all([
         inExperiment(DiscoveryVariants.discoverWithFileWatching),
@@ -275,18 +274,17 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         if (!(await isCondaEnvironment(interpreterPath))) {
             return undefined;
         }
-        // For Conda we assume we don't set name for environments if they're prefix conda environments, similarly
-        // we don't have 'path' set if they're non-prefix conda environments.
-        // So we don't have a helper function yet to give us a conda env's name (if it has one). So for
-        // now we always set `path` (and never `name`).  Once we have such a helper we will use it.
 
-        // TODO: Expose these two properties via a helper in the Conda locator on a temporary basis.
-        const location = getEnvironmentDirFromPath(interpreterPath);
-        // else
-        return { name: '', path: location };
+        // The API getCondaEnvironment() is not called automatically, unless user attempts to install or activate environments
+        // So calling resolveEnv() which although runs python unnecessarily, is not that expensive here.
+        const env = await this.api.resolveEnv(interpreterPath);
+
+        if (!env) {
+            return undefined;
+        }
+
+        return { name: env.name, path: env.location };
     }
-
-    // Implements IWindowsStoreInterpreter
 
     // A result of `undefined` means "Fall back to the old code!"
     public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined> {
@@ -365,6 +363,24 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         const envs = await getEnvs(iterator);
         return envs.map(convertEnvInfo);
     }
+
+    public async getWorkspaceVirtualEnvInterpreters(resource: vscode.Uri): Promise<PythonEnvironment[] | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(resource);
+        if (!workspaceFolder) {
+            return [];
+        }
+        const query: PythonLocatorQuery = {
+            searchLocations: {
+                roots: [workspaceFolder.uri],
+            },
+        };
+        const iterator = this.api.iterEnvs(query);
+        const envs = await getEnvs(iterator);
+        return envs.map(convertEnvInfo);
+    }
 }
 
 export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): Promise<void> {
@@ -417,6 +433,22 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
             InterpreterLocatorProgressService,
         );
         serviceManager.addBinding(IInterpreterLocatorProgressService, IExtensionSingleActivationService);
+        serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            WorkspaceVirtualEnvService,
+            WORKSPACE_VIRTUAL_ENV_SERVICE,
+        );
+        serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
+            IVirtualEnvironmentsSearchPathProvider,
+            WorkspaceVirtualEnvironmentsSearchPathProvider,
+            'workspace',
+        );
+        serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
+        serviceManager.add<IInterpreterWatcher>(
+            IInterpreterWatcher,
+            WorkspaceVirtualEnvWatcherService,
+            WORKSPACE_VIRTUAL_ENV_SERVICE,
+        );
     }
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
@@ -427,11 +459,6 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
         IPythonInPathCommandProvider,
         PythonInPathCommandProvider,
     );
-    serviceManager.addSingleton<IInterpreterLocatorService>(
-        IInterpreterLocatorService,
-        WorkspaceVirtualEnvService,
-        WORKSPACE_VIRTUAL_ENV_SERVICE,
-    );
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
 
     serviceManager.addSingleton<IInterpreterLocatorService>(
@@ -441,20 +468,6 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
     );
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
-
-    serviceManager.add<IInterpreterWatcher>(
-        IInterpreterWatcher,
-        WorkspaceVirtualEnvWatcherService,
-        WORKSPACE_VIRTUAL_ENV_SERVICE,
-    );
-    serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-
-    serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
-        IVirtualEnvironmentsSearchPathProvider,
-        WorkspaceVirtualEnvironmentsSearchPathProvider,
-        'workspace',
-    );
-    serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
 }
 
 export function registerNewDiscoveryForIOC(

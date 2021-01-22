@@ -28,14 +28,13 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService,
 } from '../../client/common/process/types';
-import { IConfigurationService, IPythonSettings } from '../../client/common/types';
+import { IConfigurationService, IExperimentService, IPythonSettings } from '../../client/common/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
-import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
+import { IComponentAdapter, ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
-import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { RefactorProxy } from '../../client/refactor/proxy';
 import { PYTHON_PATH } from '../common';
-import { closeActiveWindows, initialize, initializeTest } from './../initialize';
+import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 type RenameResponse = {
     results: [{ diff: string }];
@@ -57,6 +56,7 @@ suite('Refactor Rename', () => {
         const configService = typeMoq.Mock.ofType<IConfigurationService>();
         configService.setup((c) => c.getSettings(typeMoq.It.isAny())).returns(() => pythonSettings.object);
         const condaService = typeMoq.Mock.ofType<ICondaService>();
+        const experimentService = typeMoq.Mock.ofType<IExperimentService>();
         const processServiceFactory = typeMoq.Mock.ofType<IProcessServiceFactory>();
         processServiceFactory
             .setup((p) => p.create(typeMoq.It.isAny()))
@@ -88,7 +88,8 @@ suite('Refactor Rename', () => {
         serviceContainer
             .setup((s) => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
             .returns(() => envActivationService.object);
-        const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
+
+        const pyenvs: IComponentAdapter = mock<IComponentAdapter>();
 
         serviceContainer
             .setup((s) => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
@@ -96,19 +97,22 @@ suite('Refactor Rename', () => {
                 () =>
                     new PythonExecutionFactory(
                         serviceContainer.object,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         undefined as any,
                         processServiceFactory.object,
                         configService.object,
                         condaService.object,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         undefined as any,
-                        instance(windowsStoreInterpreter),
+                        instance(pyenvs),
+                        experimentService.object,
                     ),
             );
         const processLogger = typeMoq.Mock.ofType<IProcessLogger>();
         processLogger
             .setup((p) => p.logProcess(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => {
-                return;
+                /** No body */
             });
         serviceContainer
             .setup((s) => s.get(typeMoq.It.isValue(IProcessLogger), typeMoq.It.isAny()))

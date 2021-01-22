@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import * as assert from 'assert';
-import * as child_process from 'child_process';
+import * as childProcess from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import { instance, mock } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, TextDocument, TextLine, Uri } from 'vscode';
@@ -24,16 +26,16 @@ import {
     IPythonExecutionFactory,
     IPythonToolExecutionService,
 } from '../../client/common/process/types';
-import { IConfigurationService, IDisposableRegistry } from '../../client/common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
-import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
+import { IComponentAdapter, ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { ILintMessage, LinterId, LintMessageSeverity } from '../../client/linters/types';
-import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { deleteFile, PYTHON_PATH } from '../common';
 import { BaseTestFixture, getLinterID, getProductName, newMockDocument, throwUnknownProduct } from './common';
+import * as ExperimentHelpers from '../../client/common/experiments/helpers';
 
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const workspaceUri = Uri.file(workspaceDir);
@@ -627,7 +629,7 @@ class TestFixture extends BaseTestFixture {
         processLogger
             .setup((p) => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
-                return;
+                /** No body */
             });
         serviceContainer
             .setup((s) => s.get(TypeMoq.It.isValue(IProcessLogger), TypeMoq.It.isAny()))
@@ -705,7 +707,7 @@ class TestFixture extends BaseTestFixture {
         processLogger
             .setup((p) => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
-                return;
+                /** No body */
             });
         const procServiceFactory = new ProcessServiceFactory(
             envVarsService.object,
@@ -713,7 +715,13 @@ class TestFixture extends BaseTestFixture {
             decoder,
             disposableRegistry,
         );
-        const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
+        const pyenvs: IComponentAdapter = mock<IComponentAdapter>();
+
+        const experimentService = TypeMoq.Mock.ofType<IExperimentService>(undefined, TypeMoq.MockBehavior.Strict);
+
+        const inDiscoveryExperimentStub = sinon.stub(ExperimentHelpers, 'inDiscoveryExperiment');
+        inDiscoveryExperimentStub.resolves(false);
+
         return new PythonExecutionFactory(
             serviceContainer.object,
             envActivationService.object,
@@ -721,24 +729,32 @@ class TestFixture extends BaseTestFixture {
             configService,
             condaService.object,
             decoder,
-            instance(windowsStoreInterpreter),
+            instance(pyenvs),
+            experimentService.object,
         );
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public makeDocument(filename: string): TextDocument {
         const doc = newMockDocument(filename);
+
         doc.setup((d) => d.lineAt(TypeMoq.It.isAny())).returns((lno) => {
             const lines = fs.readFileSync(filename).toString().split(os.EOL);
             const textline = TypeMoq.Mock.ofType<TextLine>(undefined, TypeMoq.MockBehavior.Strict);
             textline.setup((t) => t.text).returns(() => lines[lno]);
             return textline.object;
         });
+
         return doc.object;
     }
 }
 
 suite('Linting Functional Tests', () => {
-    const pythonPath = child_process.execSync(`${PYTHON_PATH} -c "import sys;print(sys.executable)"`);
+    teardown(() => {
+        sinon.restore();
+    });
+
+    const pythonPath = childProcess.execSync(`${PYTHON_PATH} -c "import sys;print(sys.executable)"`);
 
     console.log(`Testing linter with python ${pythonPath}`);
 
@@ -763,12 +779,10 @@ suite('Linting Functional Tests', () => {
 
         if (messagesToBeReceived.length === 0) {
             assert.equal(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
-        } else {
-            if (fixture.output.indexOf('ENOENT') === -1) {
-                // Pylint for Python Version 2.7 could return 80 linter messages, where as in 3.5 it might only return 1.
-                // Looks like pylint stops linting as soon as it comes across any ERRORS.
-                assert.notEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
-            }
+        } else if (fixture.output.indexOf('ENOENT') === -1) {
+            // Pylint for Python Version 2.7 could return 80 linter messages, where as in 3.5 it might only return 1.
+            // Looks like pylint stops linting as soon as it comes across any ERRORS.
+            assert.notEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
         }
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
@@ -780,6 +794,8 @@ suite('Linting Functional Tests', () => {
             const fixture = new TestFixture();
             const messagesToBeReturned = getMessages(product);
             await testLinterMessages(fixture, product, fileToLint, messagesToBeReturned);
+
+            return undefined;
         });
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
@@ -810,6 +826,8 @@ suite('Linting Functional Tests', () => {
             } finally {
                 await cleanUp();
             }
+
+            return undefined;
         });
     }
 

@@ -101,7 +101,6 @@ async function createLocators(
     const caching = await createCachingLocator(
         ext,
         // This is shared.
-        envInfoService,
         locators,
     );
     ext.disposables.push(caching);
@@ -164,18 +163,16 @@ function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators {
     return locators;
 }
 
-async function createCachingLocator(
-    ext: ExtensionState,
-    envInfoService: EnvironmentInfoService,
-    locators: ILocator,
-): Promise<CachingLocator> {
+async function createCachingLocator(ext: ExtensionState, locators: ILocator): Promise<CachingLocator> {
     const storage = getGlobalStorage<PythonEnvInfo[]>(ext.context, 'PYTHON_ENV_INFO_CACHE');
     const cache = await getPersistentCache(
         {
             load: async () => storage.get(),
             store: async (e) => storage.set(e),
         },
-        (env: PythonEnvInfo) => envInfoService.isInfoProvided(env.executable.filename), // "isComplete"
+        // For now we assume that if when iteration is complete, the env is as complete as it's going to get.
+        // So no further check for complete environments is needed.
+        () => true, // "isComplete"
     );
     return new CachingLocator(cache, locators);
 }

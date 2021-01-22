@@ -5,15 +5,14 @@ import { gte } from 'semver';
 
 import { Uri } from 'vscode';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { ICondaService } from '../../interpreter/contracts';
-import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
+import { IComponentAdapter, ICondaService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
-import { WindowsStoreInterpreter } from '../../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
+import { inDiscoveryExperiment } from '../experiments/helpers';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IFileSystem } from '../platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../types';
+import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../types';
 import { ProcessService } from './proc';
 import { createCondaEnv, createPythonEnv, createWindowsStoreEnv } from './pythonEnvironment';
 import { createPythonProcessService } from './pythonProcess';
@@ -27,6 +26,7 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService,
 } from './types';
+import { isWindowsStoreInterpreter } from '../../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 
 // Minimum version number of conda required to be able to use 'conda run'
 export const CONDA_RUN_VERSION = '4.6.0';
@@ -34,8 +34,11 @@ export const CONDA_RUN_VERSION = '4.6.0';
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
     private readonly disposables: IDisposableRegistry;
+
     private readonly logger: IProcessLogger;
+
     private readonly fileSystem: IFileSystem;
+
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
@@ -43,13 +46,15 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
-        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
+
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath
             ? options.pythonPath
@@ -57,12 +62,16 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
         processService.on('exec', this.logger.logProcess.bind(this.logger));
 
+        const windowsStoreInterpreterCheck = (await inDiscoveryExperiment(this.experimentService))
+            ? this.pyenvs.isWindowsStoreInterpreter
+            : isWindowsStoreInterpreter;
+
         return createPythonService(
             pythonPath,
             processService,
             this.fileSystem,
             undefined,
-            await this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath),
+            await windowsStoreInterpreterCheck(pythonPath),
         );
     }
 
@@ -91,6 +100,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
         return createPythonService(pythonPath, processService, this.fileSystem);
     }
+
     // Not using this function for now because there are breaking issues with conda run (conda 4.8, PVSC 2020.1).
     // See https://github.com/microsoft/vscode-python/issues/9490
     public async createCondaExecutionService(

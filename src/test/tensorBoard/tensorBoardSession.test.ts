@@ -8,6 +8,7 @@ import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../clien
 import { TensorBoardSession } from '../../client/tensorBoard/tensorBoardSession';
 import { TensorBoardSessionProvider } from '../../client/tensorBoard/tensorBoardSessionProvider';
 import { closeActiveWindows, initialize } from '../initialize';
+import * as ExperimentHelpers from '../../client/common/experiments/helpers';
 
 suite('TensorBoard session creation', async () => {
     let serviceManager: IServiceManager;
@@ -27,6 +28,7 @@ suite('TensorBoard session creation', async () => {
     setup(async function () {
         sandbox = sinon.createSandbox();
         ({ serviceManager } = await initialize());
+        sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(false);
         // Pretend to be in experiment
         const experimentService = serviceManager.get<IExperimentService>(IExperimentService);
         sandbox.stub(experimentService, 'inExperiment').resolves(true);
