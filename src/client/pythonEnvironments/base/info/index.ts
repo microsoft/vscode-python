@@ -147,6 +147,7 @@ type _PythonEnvInfo = PythonEnvBaseInfo & PythonBuildInfo;
  */
 export type PythonEnvInfo = _PythonEnvInfo & {
     distro: PythonDistroInfo;
+    display?: string;
     defaultDisplayName?: string;
     searchLocation?: Uri;
 };

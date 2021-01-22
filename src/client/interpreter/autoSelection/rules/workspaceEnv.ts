@@ -3,17 +3,29 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { DeprecatePythonPath } from '../../../common/experiments/groups';
+import { inDiscoveryExperiment } from '../../../common/experiments/helpers';
 import { traceVerbose } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
-import { IExperimentsManager, IInterpreterPathService, IPersistentStateFactory, Resource } from '../../../common/types';
-import { createDeferredFromPromise } from '../../../common/utils/async';
+import {
+    IExperimentService,
+    IExperimentsManager,
+    IInterpreterPathService,
+    IPersistentStateFactory,
+    Resource,
+} from '../../../common/types';
 import { OSType } from '../../../common/utils/platform';
+import { IServiceContainer } from '../../../ioc/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { IInterpreterHelper, IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../contracts';
+import {
+    IComponentAdapter,
+    IInterpreterHelper,
+    IInterpreterLocatorService,
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
+} from '../../contracts';
 import { AutoSelectionRule, IInterpreterAutoSelectionService } from '../types';
 import { BaseRuleService, NextAction } from './baseRule';
 
@@ -25,14 +37,15 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IInterpreterLocatorService)
-        @named(WORKSPACE_VIRTUAL_ENV_SERVICE)
-        private readonly workspaceVirtualEnvInterpreterLocator: IInterpreterLocatorService,
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         super(AutoSelectionRule.workspaceVirtualEnvs, fs, stateFactory);
     }
+
     protected async onAutoSelectInterpreter(
         resource: Resource,
         manager?: IInterpreterAutoSelectionService,
@@ -51,11 +64,12 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         if (pythonPathInConfig.workspaceFolderValue || pythonPathInConfig.workspaceValue) {
             return NextAction.runNextRule;
         }
-        const virtualEnvPromise = createDeferredFromPromise(
-            this.getWorkspaceVirtualEnvInterpreters(workspacePath.folderUri),
-        );
-
-        const interpreters = await virtualEnvPromise.promise;
+        let interpreters: PythonEnvironment[] | undefined = [];
+        if (await inDiscoveryExperiment(this.experimentService)) {
+            interpreters = await this.pyenvs.getWorkspaceVirtualEnvInterpreters(workspacePath.folderUri);
+        } else {
+            interpreters = await this.getWorkspaceVirtualEnvInterpreters(workspacePath.folderUri);
+        }
         const bestInterpreter =
             Array.isArray(interpreters) && interpreters.length > 0
                 ? this.helper.getBestInterpreter(interpreters)
@@ -73,16 +87,21 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         );
         return NextAction.runNextRule;
     }
+
     protected async getWorkspaceVirtualEnvInterpreters(resource: Resource): Promise<PythonEnvironment[] | undefined> {
         if (!resource) {
-            return;
+            return undefined;
         }
         const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
         if (!workspaceFolder) {
-            return;
+            return undefined;
         }
         // Now check virtual environments under the workspace root
-        const interpreters = await this.workspaceVirtualEnvInterpreterLocator.getInterpreters(resource, {
+        const workspaceVirtualEnvInterpreterLocator = this.serviceContainer.get<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            WORKSPACE_VIRTUAL_ENV_SERVICE,
+        );
+        const interpreters = await workspaceVirtualEnvInterpreterLocator.getInterpreters(resource, {
             ignoreCache: true,
         });
         const workspacePath =
@@ -91,7 +110,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
                 : workspaceFolder.uri.fsPath;
 
         return interpreters.filter((interpreter) => {
-            const fsPath = Uri.file(interpreter.path).fsPath;
+            const { fsPath } = Uri.file(interpreter.path);
             const fsPathToCompare = this.platform.osType === OSType.Windows ? fsPath.toUpperCase() : fsPath;
             return fsPathToCompare.startsWith(workspacePath);
         });

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import {
@@ -64,6 +65,15 @@ async function buildSimpleVirtualEnvInfo(executablePath: string, kind: PythonEnv
     const location = getEnvironmentDirFromPath(executablePath);
     envInfo.location = location;
     envInfo.name = path.basename(location);
+    // Search location particularly for virtual environments is intended as the
+    // directory in which the environment was found in. For eg. the default search location
+    // for an env containing 'bin' or 'Scripts' directory is:
+    //
+    // searchLocation <--- Default search location directory
+    // |__ env
+    //    |__ bin or Scripts
+    //        |__ python  <--- executable
+    envInfo.searchLocation = Uri.file(path.dirname(location));
 
     // TODO: Call a general display name provider here to build display name.
     const fileData = await getFileInfo(executablePath);

@@ -363,6 +363,24 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         const envs = await getEnvs(iterator);
         return envs.map(convertEnvInfo);
     }
+
+    public async getWorkspaceVirtualEnvInterpreters(resource: vscode.Uri): Promise<PythonEnvironment[] | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(resource);
+        if (!workspaceFolder) {
+            return [];
+        }
+        const query: PythonLocatorQuery = {
+            searchLocations: {
+                roots: [workspaceFolder.uri],
+            },
+        };
+        const iterator = this.api.iterEnvs(query);
+        const envs = await getEnvs(iterator);
+        return envs.map(convertEnvInfo);
+    }
 }
 
 export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): Promise<void> {
@@ -415,6 +433,22 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
             InterpreterLocatorProgressService,
         );
         serviceManager.addBinding(IInterpreterLocatorProgressService, IExtensionSingleActivationService);
+        serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            WorkspaceVirtualEnvService,
+            WORKSPACE_VIRTUAL_ENV_SERVICE,
+        );
+        serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
+            IVirtualEnvironmentsSearchPathProvider,
+            WorkspaceVirtualEnvironmentsSearchPathProvider,
+            'workspace',
+        );
+        serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
+        serviceManager.add<IInterpreterWatcher>(
+            IInterpreterWatcher,
+            WorkspaceVirtualEnvWatcherService,
+            WORKSPACE_VIRTUAL_ENV_SERVICE,
+        );
     }
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
@@ -425,11 +459,6 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
         IPythonInPathCommandProvider,
         PythonInPathCommandProvider,
     );
-    serviceManager.addSingleton<IInterpreterLocatorService>(
-        IInterpreterLocatorService,
-        WorkspaceVirtualEnvService,
-        WORKSPACE_VIRTUAL_ENV_SERVICE,
-    );
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
 
     serviceManager.addSingleton<IInterpreterLocatorService>(
@@ -439,19 +468,6 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
     );
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
-
-    serviceManager.add<IInterpreterWatcher>(
-        IInterpreterWatcher,
-        WorkspaceVirtualEnvWatcherService,
-        WORKSPACE_VIRTUAL_ENV_SERVICE,
-    );
-
-    serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
-        IVirtualEnvironmentsSearchPathProvider,
-        WorkspaceVirtualEnvironmentsSearchPathProvider,
-        'workspace',
-    );
-    serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
 }
 
 export function registerNewDiscoveryForIOC(

@@ -3,12 +3,13 @@
 
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
+import { getArchitectureDisplayName } from '../../../common/platform/registry';
 import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
-import { getPrioritizedEnvKinds } from './envKind';
+import { getKindDisplayName, getPrioritizedEnvKinds } from './envKind';
 import { parseVersionFromExecutable } from './executable';
-import { areIdenticalVersion, areSimilarVersions, isVersionEmpty } from './pythonVersion';
+import { areIdenticalVersion, areSimilarVersions, getVersionDisplayString, isVersionEmpty } from './pythonVersion';
 
 import { FileInfo, PythonDistroInfo, PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion } from '.';
 
@@ -99,6 +100,52 @@ function updateEnv(
     if (updates.version !== undefined) {
         env.version = updates.version;
     }
+}
+
+/**
+ * Convert the env info to a user-facing representation.
+ *
+ * The format is `Python <Version> <bitness> (<env name>: <env type>)`
+ * E.g. `Python 3.5.1 32-bit (myenv2: virtualenv)`
+ */
+export function getEnvDisplayString(env: PythonEnvInfo): string {
+    if (env.display === undefined || env.display === '') {
+        if (env.defaultDisplayName !== undefined && env.defaultDisplayName !== '') {
+            // XXX Normalize it?
+            env.display = env.defaultDisplayName;
+        } else {
+            env.display = buildEnvDisplayString(env);
+        }
+    }
+    return env.display;
+}
+
+function buildEnvDisplayString(env: PythonEnvInfo): string {
+    // main parts
+    const displayNameParts: string[] = ['Python'];
+    if (env.version && !isVersionEmpty(env.version)) {
+        displayNameParts.push(getVersionDisplayString(env.version));
+    }
+    const archName = getArchitectureDisplayName(env.arch);
+    if (archName !== '') {
+        displayNameParts.push(archName);
+    }
+
+    // Note that currently we do not use env.distro in the display name.
+
+    // "suffix"
+    const envSuffixParts: string[] = [];
+    if (env.name && env.name !== '') {
+        envSuffixParts.push(`'${env.name}'`);
+    }
+    const kindName = getKindDisplayName(env.kind);
+    if (kindName !== '') {
+        envSuffixParts.push(kindName);
+    }
+    const envSuffix = envSuffixParts.length === 0 ? '' : `(${envSuffixParts.join(': ')})`;
+
+    // Pull it all together.
+    return `${displayNameParts.join(' ')} ${envSuffix}`.trim();
 }
 
 /**
