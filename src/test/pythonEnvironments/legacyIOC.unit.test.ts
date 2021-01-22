@@ -172,7 +172,7 @@ suite('Interpreters - Service Registry', () => {
                 WorkspaceVirtualEnvWatcherService,
                 WORKSPACE_VIRTUAL_ENV_SERVICE,
             ),
-        ).once();        
+        ).once();
         verify(
             serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
                 IVirtualEnvironmentsSearchPathProvider,
