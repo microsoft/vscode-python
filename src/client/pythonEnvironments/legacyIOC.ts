@@ -148,6 +148,8 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
 
     private readonly refreshed = new vscode.EventEmitter<void>();
 
+    private allowOnSuggestionRefresh = false;
+
     constructor(
         // The adapter only wraps one thing: the component API.
         private readonly api: IPythonEnvironments,
@@ -346,13 +348,14 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         // }
         source?: PythonEnvSource[],
     ): Promise<PythonEnvironment[]> {
-        if (options?.onSuggestion && !this.environmentsSecurity.allEnvsSafe) {
+        if (options?.onSuggestion && this.allowOnSuggestionRefresh) {
             // For now, until we have the concept of trusted workspaces, we assume all interpreters as safe
             // to run once user has triggered discovery, i.e interacted with the extension.
             this.environmentsSecurity.markAllEnvsAsSafe();
             // We can now run certain executables to collect more information than what is currently in
             // cache, so trigger discovery for fresh envs in background.
             getEnvs(this.api.iterEnvs({ ignoreCache: true })).ignoreErrors();
+            this.allowOnSuggestionRefresh = false; // We only need to refresh on suggestion once every session.
         }
         const query: PythonLocatorQuery = { ignoreCache: options?.ignoreCache };
         if (resource !== undefined) {
