@@ -76,7 +76,7 @@ export class PosixKnownPathsLocator extends Locator {
             fileInfo: await getFileInfo(bin),
             version,
             arch: Architecture.Unknown,
-            source: [PythonEnvSource.Path],
+            source: [PythonEnvSource.PathEnvVar],
         });
     }
 }

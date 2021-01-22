@@ -159,7 +159,7 @@ suite('Windows Store', () => {
                             location: '',
                             kind: PythonEnvKind.WindowsStore,
                             distro: { org: 'Microsoft' },
-                            source: [PythonEnvSource.Path],
+                            source: [PythonEnvSource.PathEnvVar],
                             ...createExpectedInterpreterInfo(k),
                         };
                     }
@@ -183,7 +183,7 @@ suite('Windows Store', () => {
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
                 distro: { org: 'Microsoft' },
-                source: [PythonEnvSource.Path],
+                source: [PythonEnvSource.PathEnvVar],
                 ...createExpectedInterpreterInfo(python38path),
             };
 
@@ -201,7 +201,7 @@ suite('Windows Store', () => {
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
                 distro: { org: 'Microsoft' },
-                source: [PythonEnvSource.Path],
+                source: [PythonEnvSource.PathEnvVar],
                 ...createExpectedInterpreterInfo(python38path),
             };
 
@@ -242,7 +242,7 @@ suite('Windows Store', () => {
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
                 distro: { org: 'Microsoft' },
-                source: [PythonEnvSource.Path],
+                source: [PythonEnvSource.PathEnvVar],
                 ...createExpectedInterpreterInfo(python38path),
             };
 

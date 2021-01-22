@@ -155,7 +155,7 @@ export class WindowsStoreLocator extends FSWatchingLocator {
                     org: 'Microsoft',
                     arch: Architecture.x64,
                     fileInfo: await getFileInfo(executable),
-                    source: [PythonEnvSource.Path],
+                    source: [PythonEnvSource.PathEnvVar],
                 }),
             );
         };
@@ -164,7 +164,8 @@ export class WindowsStoreLocator extends FSWatchingLocator {
 
     protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
-        const source = typeof env === 'string' ? [PythonEnvSource.Path] : [PythonEnvSource.Path, ...env.source];
+        const source =
+            typeof env === 'string' ? [PythonEnvSource.PathEnvVar] : [PythonEnvSource.PathEnvVar, ...env.source];
         if (await isWindowsStoreEnvironment(executablePath)) {
             return buildEnvInfo({
                 kind: this.kind,

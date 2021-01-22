@@ -90,7 +90,7 @@ suite('Posix Known Path Locator', () => {
                         location: '',
                         kind: PythonEnvKind.OtherGlobal,
                         distro: { org: '' },
-                        source: [PythonEnvSource.Path],
+                        source: [PythonEnvSource.PathEnvVar],
                         ...createExpectedInterpreterInfo(path.join(location, binary)),
                     });
                 });
@@ -111,7 +111,7 @@ suite('Posix Known Path Locator', () => {
             location: '',
             kind: PythonEnvKind.OtherGlobal,
             distro: { org: '' },
-            source: [PythonEnvSource.Path],
+            source: [PythonEnvSource.PathEnvVar],
             ...createExpectedInterpreterInfo(pythonPath),
         };
 
@@ -126,7 +126,7 @@ suite('Posix Known Path Locator', () => {
             location: '',
             kind: PythonEnvKind.OtherGlobal,
             distro: { org: '' },
-            source: [PythonEnvSource.Path],
+            source: [PythonEnvSource.PathEnvVar],
             ...createExpectedInterpreterInfo(pythonPath),
         };
 

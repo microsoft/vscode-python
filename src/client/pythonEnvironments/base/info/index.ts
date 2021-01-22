@@ -57,11 +57,26 @@ export type PythonExecutableInfo = FileInfo & {
  * calculate the auto-select python.
  */
 export enum PythonEnvSource {
-    Path = 'path', // Environment was found via PATH env variable
-    Conda = 'conda', // Environment was found via conda binary or conda environments file
-    Pyenv = 'pyenv', // Environment was found at pyenv default location
-    WindowsRegistry = 'windows registry', // Environment was found in windows registry
-    Other = 'other', // Environment was found using other means
+    /**
+     * Environment was found via PATH env variable
+     */
+    PathEnvVar = 'path env var',
+    /**
+     * Environment was found via conda binary or conda environments file
+     */
+    Conda = 'conda',
+    /**
+     * Environment was found at pyenv default location
+     */
+    Pyenv = 'pyenv',
+    /**
+     * Environment was found in windows registry
+     */
+    WindowsRegistry = 'windows registry',
+    /**
+     * Environment was found using other means
+     */
+    Other = 'other',
     // If source turns out to be useful we will expand this enum to contain more details sources.
 }
 
