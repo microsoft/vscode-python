@@ -1,10 +1,11 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
+import { inDiscoveryExperiment } from '../common/experiments/helpers';
 import { traceError } from '../common/logger';
 import { FileSystemPaths } from '../common/platform/fs-paths';
 import { IPythonExecutionFactory } from '../common/process/types';
-import { IPersistentStateFactory, Resource } from '../common/types';
+import { IExperimentService, IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { isMacDefaultPythonPath } from '../pythonEnvironments/discovery';
 import { getInterpreterHash } from '../pythonEnvironments/discovery/locators/services/hashProvider';
@@ -51,6 +52,7 @@ export class InterpreterHelper implements IInterpreterHelper {
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IComponentAdapter) private readonly pyenvs: IComponent,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         this.persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }
@@ -81,9 +83,8 @@ export class InterpreterHelper implements IInterpreterHelper {
     }
 
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
-        const found = await this.pyenvs.getInterpreterInformation(pythonPath);
-        if (found !== undefined) {
-            return found;
+        if (await inDiscoveryExperiment(this.experimentService)) {
+            return this.pyenvs.getInterpreterInformation(pythonPath);
         }
 
         const fileHash = await getInterpreterHash(pythonPath).catch((ex) => {
@@ -128,10 +129,10 @@ export class InterpreterHelper implements IInterpreterHelper {
     }
 
     public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean> {
-        const result = await this.pyenvs.isMacDefaultPythonPath(pythonPath);
-        if (result !== undefined) {
-            return result;
+        if (await inDiscoveryExperiment(this.experimentService)) {
+            return this.pyenvs.isMacDefaultPythonPath(pythonPath) && Promise.resolve(false);
         }
+
         return isMacDefaultPythonPath(pythonPath);
     }
 
