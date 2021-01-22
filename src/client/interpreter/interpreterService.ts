@@ -43,7 +43,7 @@ const EXPIRY_DURATION = 24 * 60 * 60 * 1000;
 interface IComponent {
     hasInterpreters: Promise<boolean | undefined>;
     getInterpreterDetails(pythonPath: string): Promise<undefined | PythonEnvironment>;
-    getInterpreters(resource?: Uri): Promise<PythonEnvironment[] | undefined>;
+    getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[] | undefined>;
 }
 
 @injectable()
@@ -146,7 +146,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
     public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
         let environments: PythonEnvironment[] = [];
         if (await inDiscoveryExperiment(this.experimentService)) {
-            environments = (await this.pyenvs.getInterpreters(resource)) ?? [];
+            environments = (await this.pyenvs.getInterpreters(resource, options)) ?? [];
         } else {
             const locator = this.serviceContainer.get<IInterpreterLocatorService>(
                 IInterpreterLocatorService,

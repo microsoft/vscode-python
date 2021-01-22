@@ -14,7 +14,7 @@ import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
-    GetInterpreterOptions,
+    GetInterpreterLocatorOptions,
     GLOBAL_VIRTUAL_ENV_SERVICE,
     IComponentAdapter,
     ICondaService,
@@ -311,7 +311,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     // A result of `undefined` means "Fall back to the old code!"
     public async getInterpreters(
         resource?: vscode.Uri,
-        options?: GetInterpreterOptions,
+        options?: GetInterpreterLocatorOptions,
         // Currently we have no plans to support GetInterpreterLocatorOptions:
         // {
         //     ignoreCache?: boolean
@@ -338,7 +338,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
 
     private async getInterpretersViaAPI(
         resource?: vscode.Uri,
-        options?: GetInterpreterOptions,
+        options?: GetInterpreterLocatorOptions,
         // Currently we have no plans to support GetInterpreterLocatorOptions:
         // {
         //     ignoreCache?: boolean
@@ -346,12 +346,15 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         // }
         source?: PythonEnvSource[],
     ): Promise<PythonEnvironment[]> {
-        if (options?.onSuggestion) {
+        if (options?.onSuggestion && !this.environmentsSecurity.allEnvsSafe) {
             // For now, until we have the concept of trusted workspaces, we assume all interpreters as safe
             // to run once user has triggered discovery, i.e interacted with the extension.
             this.environmentsSecurity.markAllEnvsAsSafe();
+            // We can now run certain executables to collect more information than what is currently in
+            // cache, so trigger discovery for fresh envs in background.
+            getEnvs(this.api.iterEnvs({ ignoreCache: true })).ignoreErrors();
         }
-        const query: PythonLocatorQuery = {};
+        const query: PythonLocatorQuery = { ignoreCache: options?.ignoreCache };
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
             if (wsFolder !== undefined) {

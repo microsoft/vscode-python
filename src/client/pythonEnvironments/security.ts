@@ -10,11 +10,15 @@ import { isParentPath } from './common/externalDependencies';
  */
 export interface IEnvironmentsSecurity {
     /**
+     * Returns `true` if all environments are safe to execute, `false` otherwise.
+     */
+    readonly allEnvsSafe: boolean;
+    /**
      * Returns `true` the environment is safe to execute, `false` otherwise.
      */
     isEnvSafe(env: PythonEnvInfo): boolean;
     /**
-     * Mark all environments to be safe.
+     * Mark all environments to be safe to execute.
      */
     markAllEnvsAsSafe(): void;
 }
@@ -26,7 +30,7 @@ export class EnvironmentsSecurity implements IEnvironmentsSecurity {
     /**
      * Carries `true` if it's secure to run all environment executables, `false` otherwise.
      */
-    private allEnvsSafe = false;
+    public allEnvsSafe = false;
 
     public isEnvSafe(env: PythonEnvInfo): boolean {
         if (this.allEnvsSafe) {

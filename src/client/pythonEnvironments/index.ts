@@ -96,7 +96,8 @@ async function createLocators(
         locators,
         // These are shared.
         envInfoService,
-        environmentsSecurity.isEnvSafe,
+        // Class methods may depend on other properties which belong to the class, so bind the correct context.
+        environmentsSecurity.isEnvSafe.bind(environmentsSecurity),
     );
     const caching = await createCachingLocator(
         ext,
