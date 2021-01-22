@@ -192,7 +192,7 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
         } else if (this.cellTracking.length > this.notebook.cells.length) {
             this.raiseCellDeletion(newUris, oldUris);
         } else if (!isEqual(oldUris, newUris)) {
-            this.raiseCellMovement(newUris, oldUris);
+            this.raiseCellMovement();
         }
         this.updateCellTracking();
     }
@@ -263,51 +263,19 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
         }
     }
 
-    private raiseCellMovement(newUris: Uri[], oldUris: Uri[]) {
-        const movedCells = oldUris
-            .map((u, i) => {
-                return {
-                    index: i,
-                    uri: u,
-                };
-            })
-            .filter((e) => newUris[e.index] !== e.uri)
-            .map((e) => e.index)
-            .sort();
-        if (movedCells && movedCells.length === 2) {
-            // Should be two changes. One for each cell
-            const startPosition1 = this.getPositionOfCell(newUris[movedCells[0]]);
-            const endPosition1 = this.cellTracking[movedCells[1]].endPosition;
-            const change1 = {
-                text: `${this.notebook.cells[movedCells[0]].document.getText()}\n`,
-                range: new Range(startPosition1, endPosition1),
-                rangeLength: this.cellTracking[movedCells[1]].length,
-                rangeOffset: 0,
-            };
-
-            // Second position is harder. From the language server's point of view we just
-            // inserted the second cell into where the first cell was. So now the position for
-            // new cell should be correct. End position is not though. It's relative.
-            const startPosition2 = this.getPositionOfCell(newUris[movedCells[1]]);
-
-            // For end position, really need the number of lines that were in the old cell. We
-            // can use the previous end position to figure that out (as the second index has to be greater than zero)
-            const numberOfLines =
-                this.cellTracking[movedCells[0]].endPosition.line -
-                this.cellTracking[movedCells[0] - 1].endPosition.line;
-            const endPosition2 = new Position(startPosition2.line + numberOfLines, 0);
-            const change2 = {
-                text: `${this.notebook.cells[movedCells[1]].document.getText()}\n`,
-                range: new Range(startPosition2, endPosition2),
-                rangeLength: this.cellTracking[movedCells[0]].length,
-                rangeOffset: 0,
-            };
-
-            // Turn this cell into a change event.
-            this.onCellsChangedEmitter.fire({
-                document: this,
-                contentChanges: [change1, change2],
-            });
-        }
+    private raiseCellMovement() {
+        // When moving, just replace everything. Simpler this way. Might this
+        // cause unknown side effects? Don't think so.
+        this.onCellsChangedEmitter.fire({
+            document: this,
+            contentChanges: [
+                {
+                    text: this.concatDocument.getText(),
+                    range: new Range(new Position(0, 0), this.cellTracking[this.cellTracking.length - 1].endPosition),
+                    rangeLength: this.cellTracking.reduce((p, c) => p + c.length, 0),
+                    rangeOffset: 0,
+                },
+            ],
+        });
     }
 }
