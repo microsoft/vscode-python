@@ -7,6 +7,7 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { updateSetting } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { sleep } from '../core';
@@ -95,6 +96,31 @@ suite('Insiders Test: Language Server', () => {
             if (locations && locations.length > 0) {
                 expect(locations![0].uri.fsPath).to.contain(path.basename(notebookDefinitions));
                 tested = true;
+
+                // Insert a new cell
+                const activeEditor = vscode.notebook.activeNotebookEditor;
+                expect(activeEditor).not.to.be.equal(undefined, 'Active editor not found in notebook');
+                await activeEditor!.edit((edit) => {
+                    edit.replaceCells(0, 0, [
+                        {
+                            cellKind: vscode.CellKind.Code,
+                            language: PYTHON_LANGUAGE,
+                            source: 'x = 4',
+                            metadata: {
+                                hasExecutionOrder: false,
+                            },
+                            outputs: [],
+                        },
+                    ]);
+                });
+
+                // Wait a bit to get diagnostics
+                await sleep(1_000);
+
+                // Make sure no error diagnostics
+                const diagnostics = vscode.languages.getDiagnostics(activeEditor!.document.uri);
+                expect(diagnostics).to.have.lengthOf(0, 'Diagnostics found when shouldnt be');
+
                 break;
             } else {
                 // Wait for LS to start.

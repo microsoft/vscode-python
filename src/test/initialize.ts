@@ -86,7 +86,7 @@ async function closeWindowsInteral() {
         // Lets not waste too much time.
         const timer = setTimeout(() => {
             reject(new Error("Command 'workbench.action.closeAllEditors' timed out"));
-        }, 15000);
+        }, 2000);
         vscode.commands.executeCommand('workbench.action.closeAllEditors').then(
             () => {
                 clearTimeout(timer);
