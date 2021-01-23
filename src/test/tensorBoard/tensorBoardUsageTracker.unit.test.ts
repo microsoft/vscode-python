@@ -24,6 +24,12 @@ suite('TensorBoard usage tracker', () => {
         await tensorBoardImportTracker.activate();
         assert.ok(showNativeTensorBoardPrompt.calledOnce);
     });
+    test('Simple tensorboardX import in Python file', async () => {
+        const document = documentManager.addDocument('import tensorboardX', 'foo.py');
+        await documentManager.showTextDocument(document);
+        await tensorBoardImportTracker.activate();
+        assert.ok(showNativeTensorBoardPrompt.calledOnce);
+    });
     test('Simple tensorboard import in Python ipynb', async () => {
         const document = documentManager.addDocument('import tensorboard', 'foo.ipynb');
         await documentManager.showTextDocument(document);
@@ -38,6 +44,12 @@ suite('TensorBoard usage tracker', () => {
     });
     test('`from x.y import tensorboard` import', async () => {
         const document = documentManager.addDocument('from torch.utils import tensorboard', 'foo.py');
+        await documentManager.showTextDocument(document);
+        await tensorBoardImportTracker.activate();
+        assert.ok(showNativeTensorBoardPrompt.calledOnce);
+    });
+    test('`from tensorboardX import x` import', async () => {
+        const document = documentManager.addDocument('from tensorboardX import SummaryWriter', 'foo.py');
         await documentManager.showTextDocument(document);
         await tensorBoardImportTracker.activate();
         assert.ok(showNativeTensorBoardPrompt.calledOnce);

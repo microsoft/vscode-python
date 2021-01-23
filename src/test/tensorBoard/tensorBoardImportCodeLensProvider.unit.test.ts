@@ -16,16 +16,17 @@ suite('TensorBoard import code lens provider', () => {
         experimentService = mock(ExperimentService);
         codeLensProvider = new TensorBoardImportCodeLensProvider(experimentService, []);
     });
-
-    test('Provides code lens for Python files', () => {
-        const document = new MockDocument('import tensorboard', 'foo.py', async () => true);
-        const codeActions = codeLensProvider.provideCodeLenses(document);
-        assert.ok(codeActions.length > 0, 'Failed to provide code lens for file containing tensorboard import');
-    });
-    test('Provides code lens for Python ipynbs', () => {
-        const document = new MockDocument('import tensorboard', 'foo.ipynb', async () => true);
-        const codeActions = codeLensProvider.provideCodeLenses(document);
-        assert.ok(codeActions.length > 0, 'Failed to provide code lens for ipynb containing tensorboard import');
+    ['tensorboard', 'tensorboardX'].forEach((name) => {
+        test(`Provides code lens for Python files importing ${name}`, () => {
+            const document = new MockDocument(`import ${name}`, 'foo.py', async () => true);
+            const codeActions = codeLensProvider.provideCodeLenses(document);
+            assert.ok(codeActions.length > 0, `Failed to provide code lens for file containing ${name} import`);
+        });
+        test(`Provides code lens for Python ipynbs importing ${name}`, () => {
+            const document = new MockDocument(`import ${name}`, 'foo.ipynb', async () => true);
+            const codeActions = codeLensProvider.provideCodeLenses(document);
+            assert.ok(codeActions.length > 0, `Failed to provide code lens for ipynb containing ${name} import`);
+        });
     });
     test('Does not provide code lens if no matching import', () => {
         const document = new MockDocument('import foo', 'foo.ipynb', async () => true);

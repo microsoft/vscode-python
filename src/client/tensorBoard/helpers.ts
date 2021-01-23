@@ -27,8 +27,9 @@ export function containsTensorBoardImport(lines: (string | undefined)[]): boolea
                     // import package1, package2, ...
                     componentsToCheck = matches.groups.importImport.split(',');
                 }
-                for (const component of componentsToCheck) {
-                    if (component && component.trim() === 'tensorboard') {
+                for (let component of componentsToCheck) {
+                    component = component?.trim();
+                    if (component === 'tensorboard' || component === 'tensorboardX') {
                         return true;
                     }
                 }
