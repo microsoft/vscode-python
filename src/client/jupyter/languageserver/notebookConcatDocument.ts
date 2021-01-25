@@ -211,7 +211,7 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
         // One or more cells were added. Add a change event for each
         const insertions = this.notebook.cells.filter((c) => !oldUris.includes(c.uri.toString()));
 
-        insertions.forEach((insertion) => {
+        const changes = insertions.map((insertion) => {
             // Figure out the position of the item. This is where we're inserting the cell
             // Note: The first insertion will line up with the old cell at this position
             // The second or other insertions will line up with their new positions.
@@ -219,18 +219,19 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
 
             // Text should be the contents of the new cell plus the '\n'
             const text = `${insertion.document.getText()}\n`;
-            // Turn this cell into a change event.
-            this.onCellsChangedEmitter.fire({
-                document: this,
-                contentChanges: [
-                    {
-                        text,
-                        range: new Range(position, position),
-                        rangeLength: 0,
-                        rangeOffset: 0,
-                    },
-                ],
-            });
+
+            return {
+                text,
+                range: new Range(position, position),
+                rangeLength: 0,
+                rangeOffset: 0,
+            };
+        });
+
+        // Send all of the changes
+        this.onCellsChangedEmitter.fire({
+            document: this,
+            contentChanges: changes,
         });
     }
 
@@ -242,7 +243,7 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
                 oldIndexes.push(i);
             }
         });
-        oldIndexes.forEach((index) => {
+        const changes = oldIndexes.map((index) => {
             // Figure out the position of the item in the new list
             const position =
                 index < newUris.length ? this.getPositionOfCell(this.notebook.cells[index].uri) : this.getEndPosition();
@@ -254,17 +255,18 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
             const endPosition = new Position(position.line + this.cellTracking[index].lineCount, 0);
 
             // Turn this cell into a change event.
-            this.onCellsChangedEmitter.fire({
-                document: this,
-                contentChanges: [
-                    {
-                        text: '',
-                        range: new Range(position, endPosition),
-                        rangeLength: length,
-                        rangeOffset: 0,
-                    },
-                ],
-            });
+            return {
+                text: '',
+                range: new Range(position, endPosition),
+                rangeLength: length,
+                rangeOffset: 0,
+            };
+        });
+
+        // Send the event
+        this.onCellsChangedEmitter.fire({
+            document: this,
+            contentChanges: changes,
         });
     }
 
