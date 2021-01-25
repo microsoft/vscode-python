@@ -86,7 +86,7 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
 
     private onDidChangeSubscription: Disposable;
 
-    private cellTracking: { uri: Uri; endPosition: Position; length: number }[] = [];
+    private cellTracking: { uri: Uri; lineCount: number; length: number }[] = [];
 
     private onCellsChangedEmitter = new EventEmitter<TextDocumentChangeEvent>();
 
@@ -166,31 +166,27 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
         this.cellTracking = [];
         this.notebook.cells.forEach((c) => {
             // Compute end position from number of lines in a cell
-            const startPosition = this.getPositionOfCell(c.uri);
             const cellText = c.document.getText();
             const lines = cellText.splitLines({ trim: false });
-
-            // Include final split as a cell really has \n on the end.
-            const endPosition = new Position(startPosition.line + lines.length, 0);
 
             this.cellTracking.push({
                 uri: c.uri,
                 length: cellText.length + 1, // \n is included concat length
-                endPosition,
+                lineCount: lines.length,
             });
         });
     }
 
     private onDidChange() {
         this._version += 1;
-        const newUris = this.notebook.cells.map((c) => c.uri);
-        const oldUris = this.cellTracking.map((c) => c.uri);
+        const newUris = this.notebook.cells.map((c) => c.uri.toString());
+        const oldUris = this.cellTracking.map((c) => c.uri.toString());
 
         // See if number of cells or cell positions changed
         if (this.cellTracking.length < this.notebook.cells.length) {
-            this.raiseCellInsertion(newUris, oldUris);
+            this.raiseCellInsertions(oldUris);
         } else if (this.cellTracking.length > this.notebook.cells.length) {
-            this.raiseCellDeletion(newUris, oldUris);
+            this.raiseCellDeletions(newUris, oldUris);
         } else if (!isEqual(oldUris, newUris)) {
             this.raiseCellMovement();
         }
@@ -211,15 +207,18 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
         return new Position(0, 0);
     }
 
-    private raiseCellInsertion(newUris: Uri[], oldUris: Uri[]) {
-        // A cell was inserted. Figure out which one
-        const index = newUris.findIndex((p) => !oldUris.includes(p));
-        if (index >= 0) {
-            // Figure out the position of the item before. This is where we're inserting the cell
-            const position = index > 0 ? this.getPositionOfCell(newUris[index]) : new Position(0, 0);
+    private raiseCellInsertions(oldUris: string[]) {
+        // One or more cells were added. Add a change event for each
+        const insertions = this.notebook.cells.filter((c) => !oldUris.includes(c.uri.toString()));
+
+        insertions.forEach((insertion) => {
+            // Figure out the position of the item. This is where we're inserting the cell
+            // Note: The first insertion will line up with the old cell at this position
+            // The second or other insertions will line up with their new positions.
+            const position = this.getPositionOfCell(insertion.uri);
 
             // Text should be the contents of the new cell plus the '\n'
-            const text = `${this.notebook.cells[index].document.getText()}\n`;
+            const text = `${insertion.document.getText()}\n`;
             // Turn this cell into a change event.
             this.onCellsChangedEmitter.fire({
                 document: this,
@@ -232,21 +231,27 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
                     },
                 ],
             });
-        }
+        });
     }
 
-    private raiseCellDeletion(newUris: Uri[], oldUris: Uri[]) {
-        // A cell was deleted. Figure out which one
-        const index = oldUris.findIndex((p) => !newUris.includes(p));
-        if (index >= 0) {
+    private raiseCellDeletions(newUris: string[], oldUris: string[]) {
+        // cells were deleted. Figure out which ones
+        const oldIndexes: number[] = [];
+        oldUris.forEach((o, i) => {
+            if (!newUris.includes(o)) {
+                oldIndexes.push(i);
+            }
+        });
+        oldIndexes.forEach((index) => {
             // Figure out the position of the item in the new list
-            const position = index < newUris.length ? this.getPositionOfCell(newUris[index]) : this.getEndPosition();
+            const position =
+                index < newUris.length ? this.getPositionOfCell(this.notebook.cells[index].uri) : this.getEndPosition();
 
             // Length should be old length
             const { length } = this.cellTracking[index];
 
             // Range should go from new position to end of old position
-            const { endPosition } = this.cellTracking[index];
+            const endPosition = new Position(position.line + this.cellTracking[index].lineCount, 0);
 
             // Turn this cell into a change event.
             this.onCellsChangedEmitter.fire({
@@ -260,7 +265,7 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
                     },
                 ],
             });
-        }
+        });
     }
 
     private raiseCellMovement() {
@@ -271,7 +276,13 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
             contentChanges: [
                 {
                     text: this.concatDocument.getText(),
-                    range: new Range(new Position(0, 0), this.cellTracking[this.cellTracking.length - 1].endPosition),
+                    range: new Range(
+                        new Position(0, 0),
+                        new Position(
+                            this.cellTracking.reduce((p, c) => p + c.lineCount, 0),
+                            0,
+                        ),
+                    ),
                     rangeLength: this.cellTracking.reduce((p, c) => p + c.length, 0),
                     rangeOffset: 0,
                 },
