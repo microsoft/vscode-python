@@ -63,7 +63,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         processService.on('exec', this.logger.logProcess.bind(this.logger));
 
         const windowsStoreInterpreterCheck = (await inDiscoveryExperiment(this.experimentService))
-            ? this.pyenvs.isWindowsStoreInterpreter
+            ? // Class methods may depend on other properties which belong to the class, so bind the correct context.
+              this.pyenvs.isWindowsStoreInterpreter.bind(this.pyenvs)
             : isWindowsStoreInterpreter;
 
         return createPythonService(
