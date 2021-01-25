@@ -144,15 +144,16 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     @captureTelemetry(EventName.PYTHON_INTERPRETER_DISCOVERY, { locator: 'all' }, true)
     public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
+        let environments: PythonEnvironment[] = [];
         if (await inDiscoveryExperiment(this.experimentService)) {
-            return this.pyenvs.getInterpreters(resource) && Promise.resolve([]);
+            environments = (await this.pyenvs.getInterpreters(resource)) ?? [];
+        } else {
+            const locator = this.serviceContainer.get<IInterpreterLocatorService>(
+                IInterpreterLocatorService,
+                INTERPRETER_LOCATOR_SERVICE,
+            );
+            environments = await locator.getInterpreters(resource, options);
         }
-
-        const locator = this.serviceContainer.get<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            INTERPRETER_LOCATOR_SERVICE,
-        );
-        const environments = await locator.getInterpreters(resource, options);
 
         await Promise.all(
             environments
