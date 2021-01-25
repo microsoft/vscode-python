@@ -911,6 +911,17 @@ export interface IEventNamePropertyMapping {
         choice: 'enter' | 'browse';
     };
     /**
+     * Telemetry event sent after an action has been taken while the interpreter quickpick was displayed,
+     * and if the action was not 'Enter interpreter path'.
+     */
+    [EventName.SELECT_INTERPRETER_SELECTED]: {
+        /**
+         * 'escape' if the quickpick was dismissed.
+         * 'selected' if an interpreter was selected.
+         */
+        action: 'escape' | 'selected';
+    };
+    /**
      * Telemetry event sent with details after updating the python interpreter
      */
     [EventName.PYTHON_INTERPRETER]: {

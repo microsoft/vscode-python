@@ -74,10 +74,11 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         });
 
         if (selection === undefined) {
-            return;
+            sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'escape' });
         } else if (selection.label === enterInterpreterPathSuggestion.label) {
             return this._enterOrBrowseInterpreterPath(input, state);
         } else {
+            sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'selected' });
             state.path = (selection as IInterpreterQuickPickItem).path;
         }
     }
