@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+/* eslint-disable max-classes-per-file */
+
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -12,11 +14,17 @@ import { IApplicationShell } from '../application/types';
 
 export class InputFlowAction {
     public static back = new InputFlowAction();
+
     public static cancel = new InputFlowAction();
+
     public static resume = new InputFlowAction();
-    private constructor() {}
+
+    private constructor() {
+        /** No body. */
+    }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InputStep<T extends any> = (input: MultiStepInput<T>, state: T) => Promise<InputStep<T> | void>;
 
 export interface IQuickPickParameters<T extends QuickPickItem> {
@@ -70,9 +78,12 @@ export interface IMultiStepInput<S> {
 
 export class MultiStepInput<S> implements IMultiStepInput<S> {
     private current?: QuickInput;
+
     private steps: InputStep<S>[] = [];
+
     constructor(private readonly shell: IApplicationShell) {}
-    public run(start: InputStep<S>, state: S) {
+
+    public run(start: InputStep<S>, state: S): Promise<void> {
         return this.stepThrough(start, state);
     }
 
@@ -111,7 +122,8 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                         if (item === QuickInputButtons.Back) {
                             reject(InputFlowAction.back);
                         } else {
-                            resolve(<any>item);
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            resolve(item as any);
                         }
                     }),
                     input.onDidChangeSelection((selectedItems) => resolve(selectedItems[0])),
@@ -122,7 +134,8 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 if (acceptFilterBoxTextAsSelection) {
                     disposables.push(
                         input.onDidAccept(() => {
-                            resolve(<any>input.value);
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            resolve(input.value as any);
                         }),
                     );
                 }
@@ -154,7 +167,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 input.title = title;
                 input.step = step;
                 input.totalSteps = totalSteps;
-                input.password = password ? true : false;
+                input.password = !!password;
                 input.value = value || '';
                 input.prompt = prompt;
                 input.ignoreFocusOut = true;
@@ -165,7 +178,8 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                         if (item === QuickInputButtons.Back) {
                             reject(InputFlowAction.back);
                         } else {
-                            resolve(<any>item);
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            resolve(item as any);
                         }
                     }),
                     input.onDidAccept(async () => {
@@ -236,6 +250,7 @@ export interface IMultiStepInputFactory {
 @injectable()
 export class MultiStepInputFactory {
     constructor(@inject(IApplicationShell) private readonly shell: IApplicationShell) {}
+
     public create<S>(): IMultiStepInput<S> {
         return new MultiStepInput<S>(this.shell);
     }

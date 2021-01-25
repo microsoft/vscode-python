@@ -63,7 +63,6 @@ src/test/interpreters/display/interpreterSelectionTip.unit.test.ts
 src/test/interpreters/display.unit.test.ts
 
 src/test/configuration/interpreterSelector/interpreterSelector.unit.test.ts
-src/test/configuration/interpreterSelector/commands/setInterpreter.unit.test.ts
 
 src/test/install/channelManager.channels.test.ts
 src/test/install/channelManager.messages.test.ts
@@ -322,7 +321,6 @@ src/test/workspaceSymbols/generator.unit.test.ts
 src/client/interpreter/interpreterService.ts
 src/client/interpreter/configuration/interpreterComparer.ts
 src/client/interpreter/configuration/interpreterSelector/commands/base.ts
-src/client/interpreter/configuration/interpreterSelector/commands/setInterpreter.ts
 src/client/interpreter/configuration/interpreterSelector/commands/resetInterpreter.ts
 src/client/interpreter/configuration/interpreterSelector/commands/setShebangInterpreter.ts
 src/client/interpreter/configuration/interpreterSelector/interpreterSelector.ts
@@ -570,7 +568,6 @@ src/client/common/utils/enum.ts
 src/client/common/utils/async.ts
 src/client/common/utils/localize.ts
 src/client/common/utils/platform.ts
-src/client/common/utils/multiStepInput.ts
 src/client/common/utils/stopWatch.ts
 src/client/common/utils/random.ts
 src/client/common/utils/serializers.ts

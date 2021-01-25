@@ -6,13 +6,13 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationTarget, QuickPickItem, Uri } from 'vscode';
+import { ConfigurationTarget, OpenDialogOptions, QuickPickItem, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IPlatformService } from '../../../../client/common/platform/types';
 import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
 import { InterpreterQuickPickList, Interpreters } from '../../../../client/common/utils/localize';
-import { IMultiStepInput, IMultiStepInputFactory } from '../../../../client/common/utils/multiStepInput';
+import { IMultiStepInput, IMultiStepInputFactory, InputStep } from '../../../../client/common/utils/multiStepInput';
 import {
     InterpreterStateArgs,
     SetInterpreterCommand,
@@ -22,6 +22,7 @@ import {
     IInterpreterSelector,
     IPythonPathUpdaterServiceManager,
 } from '../../../../client/interpreter/configuration/types';
+import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { EventName } from '../../../../client/telemetry/constants';
 import * as Telemetry from '../../../../client/telemetry';
 
@@ -80,8 +81,7 @@ suite('Set Interpreter Command', () => {
             detail: '',
             label: '',
             path: 'This is the selected Python path',
-
-            interpreter: {} as any,
+            interpreter: {} as PythonEnvironment,
         };
         const expectedEnterInterpreterPathSuggestion = {
             label: InterpreterQuickPickList.enterPath.label(),
@@ -89,6 +89,7 @@ suite('Set Interpreter Command', () => {
             alwaysShow: true,
         };
         const currentPythonPath = 'python';
+
         setup(() => {
             _enterOrBrowseInterpreterPath = sinon.stub(
                 SetInterpreterCommand.prototype,
@@ -130,8 +131,7 @@ suite('Set Interpreter Command', () => {
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             multiStepInput
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
-
-                .returns(() => Promise.resolve(undefined as any));
+                .returns(() => Promise.resolve(undefined as unknown));
 
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
 
@@ -151,8 +151,7 @@ suite('Set Interpreter Command', () => {
             };
             multiStepInput
                 .setup((i) => i.showQuickPick(expectedParameters))
-
-                .returns(() => Promise.resolve(undefined as any))
+                .returns(() => Promise.resolve((undefined as unknown) as QuickPickItem))
                 .verifiable(TypeMoq.Times.once());
 
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
@@ -163,10 +162,7 @@ suite('Set Interpreter Command', () => {
         test('If an item is selected, update state and return', async () => {
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
-            multiStepInput
-                .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
-
-                .returns(() => Promise.resolve(item as any));
+            multiStepInput.setup((i) => i.showQuickPick(TypeMoq.It.isAny())).returns(() => Promise.resolve(item));
 
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
 
@@ -206,8 +202,7 @@ suite('Set Interpreter Command', () => {
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             multiStepInput
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
-
-                .returns(() => Promise.resolve(expectedEnterInterpreterPathSuggestion as any));
+                .returns(() => Promise.resolve(expectedEnterInterpreterPathSuggestion));
 
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
 
@@ -238,8 +233,7 @@ suite('Set Interpreter Command', () => {
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             multiStepInput
                 .setup((i) => i.showQuickPick(expectedParameters))
-
-                .returns(() => Promise.resolve(undefined as any))
+                .returns(() => Promise.resolve((undefined as unknown) as QuickPickItem))
                 .verifiable(TypeMoq.Times.once());
 
             await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
@@ -252,8 +246,7 @@ suite('Set Interpreter Command', () => {
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             multiStepInput
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
-
-                .returns(() => Promise.resolve('enteredPath' as any));
+                .returns(() => Promise.resolve('enteredPath'));
 
             await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
 
@@ -264,10 +257,7 @@ suite('Set Interpreter Command', () => {
             const state: InterpreterStateArgs = { path: undefined, workspace: undefined };
             const expectedPathUri = Uri.parse('browsed path');
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
-            multiStepInput
-                .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
-
-                .returns(() => Promise.resolve(items[0] as any));
+            multiStepInput.setup((i) => i.showQuickPick(TypeMoq.It.isAny())).returns(() => Promise.resolve(items[0]));
             appShell
                 .setup((a) => a.showOpenDialog(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([expectedPathUri]));
@@ -289,11 +279,10 @@ suite('Set Interpreter Command', () => {
                 title: InterpreterQuickPickList.browsePath.title(),
             };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
-            multiStepInput
-                .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
-
-                .returns(() => Promise.resolve(items[0] as any));
-            appShell.setup((a) => a.showOpenDialog(expectedParams as any)).verifiable(TypeMoq.Times.once());
+            multiStepInput.setup((i) => i.showQuickPick(TypeMoq.It.isAny())).returns(() => Promise.resolve(items[0]));
+            appShell
+                .setup((a) => a.showOpenDialog(expectedParams as OpenDialogOptions))
+                .verifiable(TypeMoq.Times.once());
             platformService.setup((p) => p.isWindows).returns(() => true);
 
             await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
@@ -310,10 +299,7 @@ suite('Set Interpreter Command', () => {
                 canSelectMany: false,
                 title: InterpreterQuickPickList.browsePath.title(),
             };
-            multiStepInput
-                .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
-
-                .returns(() => Promise.resolve(items[0] as any));
+            multiStepInput.setup((i) => i.showQuickPick(TypeMoq.It.isAny())).returns(() => Promise.resolve(items[0]));
             appShell.setup((a) => a.showOpenDialog(expectedParams)).verifiable(TypeMoq.Times.once());
             platformService.setup((p) => p.isWindows).returns(() => false);
 
@@ -332,22 +318,19 @@ suite('Set Interpreter Command', () => {
                 label: '',
                 path: 'This is the selected Python path',
 
-                interpreter: {} as any,
+                interpreter: {} as PythonEnvironment,
             };
 
             workspace.setup((w) => w.workspaceFolders).returns(() => undefined);
 
             interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
             const multiStepInput = {
-                run: (_: any, state: InterpreterStateArgs) => {
+                run: (_: unknown, state: InterpreterStateArgs) => {
                     state.path = selectedItem.path;
                     return Promise.resolve();
                 },
             };
-            multiStepInputFactory
-                .setup((f) => f.create())
-
-                .returns(() => multiStepInput as any);
+            multiStepInputFactory.setup((f) => f.create()).returns(() => multiStepInput as IMultiStepInput<unknown>);
             pythonPathUpdater
                 .setup((p) =>
                     p.updatePythonPath(
@@ -374,7 +357,7 @@ suite('Set Interpreter Command', () => {
                 label: '',
                 path: 'This is the selected Python path',
 
-                interpreter: {} as any,
+                interpreter: {} as PythonEnvironment,
             };
 
             const folder = { name: 'one', uri: Uri.parse('one'), index: 0 };
@@ -383,15 +366,12 @@ suite('Set Interpreter Command', () => {
             interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
 
             const multiStepInput = {
-                run: (_: any, state: InterpreterStateArgs) => {
+                run: (_: unknown, state: InterpreterStateArgs) => {
                     state.path = selectedItem.path;
                     return Promise.resolve();
                 },
             };
-            multiStepInputFactory
-                .setup((f) => f.create())
-
-                .returns(() => multiStepInput as any);
+            multiStepInputFactory.setup((f) => f.create()).returns(() => multiStepInput as IMultiStepInput<unknown>);
 
             pythonPathUpdater
                 .setup((p) =>
@@ -418,7 +398,7 @@ suite('Set Interpreter Command', () => {
                 label: '',
                 path: 'This is the selected Python path',
 
-                interpreter: {} as any,
+                interpreter: {} as PythonEnvironment,
             };
 
             workspace.setup((w) => w.workspaceFolders).returns(() => [folder1, folder2]);
@@ -442,15 +422,12 @@ suite('Set Interpreter Command', () => {
             interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
 
             const multiStepInput = {
-                run: (_: any, state: InterpreterStateArgs) => {
+                run: (_: unknown, state: InterpreterStateArgs) => {
                     state.path = selectedItem.path;
                     return Promise.resolve();
                 },
             };
-            multiStepInputFactory
-                .setup((f) => f.create())
-
-                .returns(() => multiStepInput as any);
+            multiStepInputFactory.setup((f) => f.create()).returns(() => multiStepInput as IMultiStepInput<unknown>);
             appShell
                 .setup((s) => s.showQuickPick(TypeMoq.It.isValue(expectedItems), TypeMoq.It.isAny()))
                 .returns(() =>
@@ -487,7 +464,7 @@ suite('Set Interpreter Command', () => {
                 label: '',
                 path: 'This is the selected Python path',
 
-                interpreter: {} as any,
+                interpreter: {} as PythonEnvironment,
             };
 
             workspace.setup((w) => w.workspaceFolders).returns(() => [folder1, folder2]);
@@ -512,15 +489,12 @@ suite('Set Interpreter Command', () => {
                 .setup((i) => i.getSuggestions(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([selectedItem]));
             const multiStepInput = {
-                run: (_: any, state: InterpreterStateArgs) => {
+                run: (_: unknown, state: InterpreterStateArgs) => {
                     state.path = selectedItem.path;
                     return Promise.resolve();
                 },
             };
-            multiStepInputFactory
-                .setup((f) => f.create())
-
-                .returns(() => multiStepInput as any);
+            multiStepInputFactory.setup((f) => f.create()).returns(() => multiStepInput as IMultiStepInput<unknown>);
             appShell
                 .setup((s) => s.showQuickPick(TypeMoq.It.isValue(expectedItems), TypeMoq.It.isAny()))
                 .returns(() =>
@@ -552,10 +526,7 @@ suite('Set Interpreter Command', () => {
             workspace.setup((w) => w.workspaceFolders).returns(() => [folder1, folder2]);
 
             interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
-            multiStepInputFactory
-                .setup((f) => f.create())
-
-                .verifiable(TypeMoq.Times.never());
+            multiStepInputFactory.setup((f) => f.create()).verifiable(TypeMoq.Times.never());
 
             const expectedItems = [
                 {
@@ -605,7 +576,8 @@ suite('Set Interpreter Command', () => {
                 interpreterSelector.object,
                 workspace.object,
             );
-            let inputStep!: Function;
+            type InputStepType = () => Promise<InputStep<unknown> | void>;
+            let inputStep!: InputStepType;
             pythonSettings.setup((p) => p.pythonPath).returns(() => 'python');
             const selectedItem: IInterpreterQuickPickItem = {
                 description: '',
@@ -613,23 +585,20 @@ suite('Set Interpreter Command', () => {
                 label: '',
                 path: 'This is the selected Python path',
 
-                interpreter: {} as any,
+                interpreter: {} as PythonEnvironment,
             };
 
             workspace.setup((w) => w.workspaceFolders).returns(() => undefined);
 
             interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
             const multiStepInput = {
-                run: (inputStepArg: any, state: InterpreterStateArgs) => {
+                run: (inputStepArg: InputStepType, state: InterpreterStateArgs) => {
                     inputStep = inputStepArg;
                     state.path = selectedItem.path;
                     return Promise.resolve();
                 },
             };
-            multiStepInputFactory
-                .setup((f) => f.create())
-
-                .returns(() => multiStepInput as any);
+            multiStepInputFactory.setup((f) => f.create()).returns(() => multiStepInput as IMultiStepInput<unknown>);
             pythonPathUpdater
                 .setup((p) =>
                     p.updatePythonPath(
