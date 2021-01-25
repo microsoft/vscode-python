@@ -4,7 +4,13 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import { Architecture, getOSType, OSType } from '../../../../../client/common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind, PythonExecutableInfo } from '../../../../../client/pythonEnvironments/base/info';
+import {
+    PythonEnvInfo,
+    PythonEnvKind,
+    PythonEnvSource,
+    PythonExecutableInfo,
+    UNKNOWN_PYTHON_VERSION,
+} from '../../../../../client/pythonEnvironments/base/info';
 import { PythonLocatorQuery } from '../../../../../client/pythonEnvironments/base/locator';
 import { WindowsPathEnvVarLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsKnownPathsLocator';
 import { ensureFSTree } from '../../../../utils/fs';
@@ -28,6 +34,7 @@ function getEnv(
     const env = createNamedEnv(name, version, PythonEnvKind.Unknown, executable);
     env.arch = Architecture.Unknown;
     env.executable.filename = env.executable.filename.toLowerCase();
+    env.source = [PythonEnvSource.PathEnvVar];
     return env;
 }
 
@@ -196,7 +203,14 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
         test('found using env info', async () => {
             const filename = path.join(ROOT1, 'python.exe');
             const env = {
+                kind: PythonEnvKind.Unknown,
+                name: '',
+                location: '',
                 executable: { ...EMPTY_EXECUTABLE, filename },
+                source: [],
+                version: UNKNOWN_PYTHON_VERSION,
+                arch: Architecture.Unknown,
+                distro: { org: '' },
             };
             const expected = getEnv('', '', filename);
             // We will expect the following once we switch
