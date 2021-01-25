@@ -4,11 +4,12 @@
 // tslint:disable-next-line:no-single-line-block-comment
 /* eslint-disable max-classes-per-file */
 
+import { uniq } from 'lodash';
 import { Event } from 'vscode';
 import { getSearchPathEntries } from '../../../../common/utils/exec';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { isStandardPythonBinary } from '../../../common/commonUtils';
-import { PythonEnvInfo, PythonEnvKind } from '../../info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../info';
 import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { Locators } from '../../locators';
 import { getEnvs } from '../../locatorUtils';
@@ -68,16 +69,28 @@ function getDirFilesLocator(
         const envs = await getEnvs(locator.iterEnvs(query));
         for (const env of envs) {
             if (isStandardPythonBinary(env.executable?.filename || '')) {
+                env.source = env.source
+                    ? uniq([...env.source, PythonEnvSource.PathEnvVar])
+                    : [PythonEnvSource.PathEnvVar];
                 yield env;
             }
         }
     }
     async function resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executable = typeof env === 'string' ? env : env.executable?.filename || '';
+
         if (!isStandardPythonBinary(executable)) {
             return undefined;
         }
-        return locator.resolveEnv(env);
+        const resolved = await locator.resolveEnv(env);
+        if (resolved) {
+            const source =
+                typeof env === 'string'
+                    ? [PythonEnvSource.PathEnvVar]
+                    : uniq([...env.source, PythonEnvSource.PathEnvVar]);
+            resolved.source = source;
+        }
+        return resolved;
     }
     return {
         iterEnvs,
