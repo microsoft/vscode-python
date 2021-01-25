@@ -22,6 +22,8 @@ import {
     IInterpreterSelector,
     IPythonPathUpdaterServiceManager,
 } from '../../../../client/interpreter/configuration/types';
+import { EventName } from '../../../../client/telemetry/constants';
+import * as Telemetry from '../../../../client/telemetry';
 
 suite('Set Interpreter Command', () => {
     let workspace: TypeMoq.IMock<IWorkspaceService>;
@@ -69,7 +71,10 @@ suite('Set Interpreter Command', () => {
     });
 
     suite('Test method _pickInterpreter()', async () => {
-        let _enterOrBrowseInterpreterPath: sinon.SinonStub<any>;
+        let _enterOrBrowseInterpreterPath: sinon.SinonStub;
+        let sendTelemetryStub: sinon.SinonStub;
+        let telemetryEvent: { eventName: EventName; properties: { userAction: string } } | undefined;
+
         const item: IInterpreterQuickPickItem = {
             description: '',
             detail: '',
@@ -90,6 +95,14 @@ suite('Set Interpreter Command', () => {
                 '_enterOrBrowseInterpreterPath',
             );
             _enterOrBrowseInterpreterPath.resolves();
+            sendTelemetryStub = sinon
+                .stub(Telemetry, 'sendTelemetryEvent')
+                .callsFake((eventName: EventName, _, properties: { userAction: string }) => {
+                    telemetryEvent = {
+                        eventName,
+                        properties,
+                    };
+                });
             interpreterSelector
                 .setup((i) => i.getSuggestions(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([item]));
@@ -107,7 +120,9 @@ suite('Set Interpreter Command', () => {
             );
         });
         teardown(() => {
+            telemetryEvent = undefined;
             sinon.restore();
+            Telemetry._resetSharedProperties();
         });
 
         test('Existing state path must be removed before displaying picker', async () => {
@@ -156,6 +171,34 @@ suite('Set Interpreter Command', () => {
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
 
             expect(state.path).to.equal(item.path, '');
+        });
+
+        test('If an item is selected, send SELECT_INTERPRETER_SELECTED telemetry with the "selected" property value', async () => {
+            const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
+            const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+            multiStepInput.setup((i) => i.showQuickPick(TypeMoq.It.isAny())).returns(() => Promise.resolve(item));
+
+            await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
+
+            sinon.assert.calledOnce(sendTelemetryStub);
+            assert.deepStrictEqual(telemetryEvent, {
+                eventName: EventName.SELECT_INTERPRETER_SELECTED,
+                properties: { action: 'selected' },
+            });
+        });
+
+        test('If the dropdown is dismissed, send SELECT_INTERPRETER_SELECTED telemetry with the "escape" property value', async () => {
+            const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
+            const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+            multiStepInput.setup((i) => i.showQuickPick(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
+
+            await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
+
+            sinon.assert.calledOnce(sendTelemetryStub);
+            assert.deepStrictEqual(telemetryEvent, {
+                eventName: EventName.SELECT_INTERPRETER_SELECTED,
+                properties: { action: 'escape' },
+            });
         });
 
         test('If `Enter or browse...` option is selected, call the corresponding method with correct arguments', async () => {
