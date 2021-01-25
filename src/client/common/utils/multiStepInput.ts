@@ -31,7 +31,6 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     matchOnDescription?: boolean;
     matchOnDetail?: boolean;
     acceptFilterBoxTextAsSelection?: boolean;
-    shouldResume?(): Promise<boolean>;
 }
 
 export interface InputBoxParameters {
@@ -43,11 +42,10 @@ export interface InputBoxParameters {
     prompt: string;
     buttons?: QuickInputButton[];
     validate(value: string): Promise<string | undefined>;
-    shouldResume?(): Promise<boolean>;
 }
 
-type MultiStepInputQuickPicResponseType<T, P> = T | (P extends { buttons: (infer I)[] } ? I : never);
-type MultiStepInputInputBoxResponseType<P> = string | (P extends { buttons: (infer I)[] } ? I : never);
+type MultiStepInputQuickPicResponseType<T, P> = T | (P extends { buttons: (infer I)[] } ? I : never) | undefined;
+type MultiStepInputInputBoxResponseType<P> = string | (P extends { buttons: (infer I)[] } ? I : never) | undefined;
 export interface IMultiStepInput<S> {
     run(start: InputStep<S>, state: S): Promise<void>;
     showQuickPick<T extends QuickPickItem, P extends IQuickPickParameters<T>>({
@@ -58,7 +56,6 @@ export interface IMultiStepInput<S> {
         activeItem,
         placeholder,
         buttons,
-        shouldResume,
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>>;
     showInputBox<P extends InputBoxParameters>({
         title,
@@ -68,7 +65,6 @@ export interface IMultiStepInput<S> {
         prompt,
         validate,
         buttons,
-        shouldResume,
     }: P): Promise<MultiStepInputInputBoxResponseType<P>>;
 }
 
@@ -88,7 +84,6 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         activeItem,
         placeholder,
         buttons,
-        shouldResume,
         matchOnDescription,
         matchOnDetail,
         acceptFilterBoxTextAsSelection,
@@ -121,13 +116,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     }),
                     input.onDidChangeSelection((selectedItems) => resolve(selectedItems[0])),
                     input.onDidHide(() => {
-                        (async () => {
-                            reject(
-                                shouldResume && (await shouldResume())
-                                    ? InputFlowAction.resume
-                                    : InputFlowAction.cancel,
-                            );
-                        })().catch(reject);
+                        resolve(undefined);
                     }),
                 );
                 if (acceptFilterBoxTextAsSelection) {
@@ -157,7 +146,6 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         validate,
         password,
         buttons,
-        shouldResume,
     }: P): Promise<MultiStepInputInputBoxResponseType<P>> {
         const disposables: Disposable[] = [];
         try {
@@ -199,13 +187,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                         }
                     }),
                     input.onDidHide(() => {
-                        (async () => {
-                            reject(
-                                shouldResume && (await shouldResume())
-                                    ? InputFlowAction.resume
-                                    : InputFlowAction.cancel,
-                            );
-                        })().catch(reject);
+                        resolve(undefined);
                     }),
                 );
                 if (this.current) {
