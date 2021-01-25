@@ -16,7 +16,7 @@ import { IPythonPathUpdaterServiceFactory, IPythonPathUpdaterServiceManager } fr
 @injectable()
 export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManager {
     constructor(
-        @inject(IPythonExecutionFactory)
+        @inject(IPythonPathUpdaterServiceFactory)
         private readonly pythonPathSettingsUpdaterFactory: IPythonPathUpdaterServiceFactory,
         @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
         @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
