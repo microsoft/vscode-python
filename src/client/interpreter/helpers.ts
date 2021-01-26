@@ -41,8 +41,8 @@ export function isInterpreterLocatedInWorkspace(interpreter: PythonEnvironment, 
 
 // The parts of IComponentAdapter used here.
 interface IComponent {
-    getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>>;
-    isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined>;
+    getInterpreterInformation(pythonPath: string): Promise<Partial<PythonEnvironment>>;
+    isMacDefaultPythonPath(pythonPath: string): Promise<boolean>;
 }
 
 @injectable()
@@ -130,7 +130,7 @@ export class InterpreterHelper implements IInterpreterHelper {
 
     public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean> {
         if (await inDiscoveryExperiment(this.experimentService)) {
-            return this.pyenvs.isMacDefaultPythonPath(pythonPath) && Promise.resolve(false);
+            return this.pyenvs.isMacDefaultPythonPath(pythonPath);
         }
 
         return isMacDefaultPythonPath(pythonPath);
