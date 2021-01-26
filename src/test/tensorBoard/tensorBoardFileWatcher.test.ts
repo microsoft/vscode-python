@@ -43,6 +43,9 @@ suite('TensorBoard file system watcher', async () => {
             await fse.unlink(eventFile);
             eventFile = undefined;
         }
+    });
+
+    suiteTeardown(async () => {
         if (eventFileDirectory && eventFileDirectory !== currentDirectory) {
             await fse.rmdir(eventFileDirectory);
             eventFileDirectory = undefined;
