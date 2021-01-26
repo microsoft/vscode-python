@@ -102,6 +102,8 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
     }
 
     private startWatchers(root: string): void {
+        // Note that we only check the root dir.  Any directories
+        // that might be watched due to a glob are not checked.
         if (!isDirWatchable(root)) {
             throw Error(`dir "${root}" is not watchable`);
         }
