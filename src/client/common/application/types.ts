@@ -47,6 +47,7 @@ import {
     TextEditorViewColumnChangeEvent,
     TreeView,
     TreeViewOptions,
+    UIKind,
     Uri,
     ViewColumn,
     WebviewPanel,
@@ -1042,17 +1043,6 @@ export interface IApplicationEnvironment {
      * from a desktop application or a web browser.
      */
     readonly uiKind: UIKind;
-}
-
-export enum UIKind {
-    /**
-     * Extensions are accessed from a desktop application.
-     */
-    Desktop = 1,
-    /**
-     * Extensions are accessed from a web browser.
-     */
-    Web = 2,
 }
 
 export interface IWebviewMessageListener {

@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 import { IPlatformService } from '../platform/types';
 import { ICurrentProcess, IPathUtils } from '../types';
 import { OSType } from '../utils/platform';
-import { Channel, IApplicationEnvironment, UIKind } from './types';
+import { Channel, IApplicationEnvironment } from './types';
 
 @injectable()
 export class ApplicationEnvironment implements IApplicationEnvironment {
@@ -51,7 +51,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     public get appRoot(): string {
         return vscode.env.appRoot;
     }
-    public get uiKind(): UIKind {
+    public get uiKind(): vscode.UIKind {
         return vscode.env.uiKind;
     }
     public get language(): string {

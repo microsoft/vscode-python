@@ -8,12 +8,13 @@ import '../extensions';
 import { inject, injectable, named } from 'inversify';
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { IServiceContainer } from '../../ioc/types';
-import { IApplicationEnvironment, ICommandManager, UIKind } from '../application/types';
+import { IApplicationEnvironment, ICommandManager } from '../application/types';
 import { Commands } from '../constants';
 import { IExtensionBuildInstaller, INSIDERS_INSTALLER } from '../installer/types';
 import { traceDecorators } from '../logger';
 import { IDisposable, IDisposableRegistry } from '../types';
 import { ExtensionChannels, IExtensionChannelRule, IExtensionChannelService, IInsiderExtensionPrompt } from './types';
+import { UIKind } from 'vscode';
 
 @injectable()
 export class InsidersExtensionService implements IExtensionSingleActivationService {

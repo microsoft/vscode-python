@@ -295,4 +295,9 @@ export namespace vscMock {
         Directory = 2,
         SymbolicLink = 64,
     }
+
+    export enum UIKind {
+        Desktop = 1,
+        Web = 2,
+    }
 }

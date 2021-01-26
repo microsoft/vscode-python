@@ -104,6 +104,7 @@ mockedVSCode.DebugAdapterExecutable = vscodeMocks.vscMock.DebugAdapterExecutable
 mockedVSCode.DebugAdapterServer = vscodeMocks.vscMock.DebugAdapterServer;
 mockedVSCode.QuickInputButtons = vscodeMocks.vscMockExtHostedTypes.QuickInputButtons;
 mockedVSCode.FileType = vscodeMocks.vscMock.FileType;
+mockedVSCode.UIKind = vscodeMocks.vscMock.UIKind;
 mockedVSCode.FileSystemError = vscodeMocks.vscMockExtHostedTypes.FileSystemError;
 (mockedVSCode as any).CellKind = vscodeMocks.vscMockExtHostedTypes.CellKind;
 (mockedVSCode as any).CellOutputKind = vscodeMocks.vscMockExtHostedTypes.CellOutputKind;

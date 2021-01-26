@@ -8,10 +8,10 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { EventEmitter } from 'vscode';
+import { EventEmitter, UIKind } from 'vscode';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { CommandManager } from '../../../client/common/application/commandManager';
-import { Channel, IApplicationEnvironment, ICommandManager, UIKind } from '../../../client/common/application/types';
+import { Channel, IApplicationEnvironment, ICommandManager } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
 import { ExtensionChannelService } from '../../../client/common/insidersBuild/downloadChannelService';
 import { InsidersExtensionPrompt } from '../../../client/common/insidersBuild/insidersExtensionPrompt';
@@ -211,7 +211,7 @@ suite('Insiders Extension Service - Activation', () => {
     });
 });
 
-suite('xInsiders Extension Service - Function handleEdgeCases()', () => {
+suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     let appEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let extensionChannelService: TypeMoq.IMock<IExtensionChannelService>;
