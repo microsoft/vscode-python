@@ -41,22 +41,18 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
     public async activate(resource: Uri): Promise<void> {
         if (await inDiscoveryExperiment(this.experimentService)) {
             const disposable = this.pyenvs.onDidCreate(resource, () => this.handleNewEnvironment(resource));
-            if (disposable) {
-                this.disposableRegistry.push(disposable);
-            }
-            // This is to prevent fallback
-            return;
+            this.disposableRegistry.push(disposable);
+        } else {
+            const builder = this.serviceContainer.get<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder);
+            const watcher = await builder.getWorkspaceVirtualEnvInterpreterWatcher(resource);
+            watcher.onDidCreate(
+                () => {
+                    this.handleNewEnvironment(resource).ignoreErrors();
+                },
+                this,
+                this.disposableRegistry,
+            );
         }
-
-        const builder = this.serviceContainer.get<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder);
-        const watcher = await builder.getWorkspaceVirtualEnvInterpreterWatcher(resource);
-        watcher.onDidCreate(
-            () => {
-                this.handleNewEnvironment(resource).ignoreErrors();
-            },
-            this,
-            this.disposableRegistry,
-        );
     }
 
     @traceDecorators.error('Error in event handler for detection of new environment')
