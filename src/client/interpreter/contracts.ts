@@ -53,7 +53,7 @@ export interface IComponentAdapter {
     getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment>;
     // IInterpreterHelper
     getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>>;
-    isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined>;
+    isMacDefaultPythonPath(pythonPath: string): Promise<boolean>;
     // ICondaService
     isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined>;
     getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
