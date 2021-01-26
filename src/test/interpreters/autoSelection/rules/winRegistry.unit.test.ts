@@ -12,14 +12,18 @@ import { PersistentState, PersistentStateFactory } from '../../../../client/comm
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { PlatformService } from '../../../../client/common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
-import { IPersistentStateFactory, Resource } from '../../../../client/common/types';
+import { IExperimentService, IPersistentStateFactory, Resource } from '../../../../client/common/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { OSType } from '../../../../client/common/utils/platform';
 import { InterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection';
 import { NextAction } from '../../../../client/interpreter/autoSelection/rules/baseRule';
 import { WindowsRegistryInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/winRegistry';
 import { IInterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection/types';
-import { IInterpreterHelper, IInterpreterLocatorService } from '../../../../client/interpreter/contracts';
+import {
+    IComponentAdapter,
+    IInterpreterHelper,
+    IInterpreterLocatorService,
+} from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { WindowsRegistryService } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryService';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
@@ -31,6 +35,8 @@ suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
     let state: PersistentState<PythonEnvironment | undefined>;
     let locator: IInterpreterLocatorService;
     let platform: IPlatformService;
+    let discovery: IComponentAdapter;
+    let experiments: IExperimentService;
     let helper: IInterpreterHelper;
     class WindowsRegistryInterpretersAutoSelectionRuleTest extends WindowsRegistryInterpretersAutoSelectionRule {
         public async setGlobalInterpreter(
@@ -53,6 +59,8 @@ suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
         helper = mock(InterpreterHelper);
         locator = mock(WindowsRegistryService);
         platform = mock(PlatformService);
+        discovery = mock<IComponentAdapter>();
+        experiments = mock<IExperimentService>();
 
         when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
             instance(state),
@@ -63,6 +71,8 @@ suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
             instance(stateFactory),
             instance(platform),
             instance(locator),
+            instance(discovery),
+            instance(experiments),
         );
     });
 

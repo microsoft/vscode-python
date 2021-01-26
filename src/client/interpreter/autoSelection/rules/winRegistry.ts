@@ -4,11 +4,18 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
+import { inDiscoveryExperiment } from '../../../common/experiments/helpers';
 import { traceVerbose } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
-import { IPersistentStateFactory, Resource } from '../../../common/types';
+import { IExperimentService, IPersistentStateFactory, Resource } from '../../../common/types';
 import { OSType } from '../../../common/utils/platform';
-import { IInterpreterHelper, IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE } from '../../contracts';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import {
+    IComponentAdapter,
+    IInterpreterHelper,
+    IInterpreterLocatorService,
+    WINDOWS_REGISTRY_SERVICE,
+} from '../../contracts';
 import { AutoSelectionRule, IInterpreterAutoSelectionService } from '../types';
 import { BaseRuleService, NextAction } from './baseRule';
 
@@ -22,6 +29,8 @@ export class WindowsRegistryInterpretersAutoSelectionRule extends BaseRuleServic
         @inject(IInterpreterLocatorService)
         @named(WINDOWS_REGISTRY_SERVICE)
         private winRegInterpreterLocator: IInterpreterLocatorService,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         super(AutoSelectionRule.windowsRegistry, fs, stateFactory);
     }
@@ -32,7 +41,12 @@ export class WindowsRegistryInterpretersAutoSelectionRule extends BaseRuleServic
         if (this.platform.osType !== OSType.Windows) {
             return NextAction.runNextRule;
         }
-        const interpreters = await this.winRegInterpreterLocator.getInterpreters(resource);
+        let interpreters: PythonEnvironment[] | undefined = [];
+        if (await inDiscoveryExperiment(this.experimentService)) {
+            interpreters = await this.pyenvs.getWinRegInterpreters(resource);
+        } else {
+            interpreters = await this.winRegInterpreterLocator.getInterpreters(resource);
+        }
         const bestInterpreter = this.helper.getBestInterpreter(interpreters);
         traceVerbose(
             `Selected Interpreter from ${this.ruleName}, ${
