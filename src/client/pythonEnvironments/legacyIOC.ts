@@ -286,11 +286,8 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return { name: env.name, path: env.location };
     }
 
-    // A result of `undefined` means "Fall back to the old code!"
-    public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined> {
-        if (!this.enabled) {
-            return undefined;
-        }
+    // eslint-disable-next-line class-methods-use-this
+    public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean> {
         // Eventually we won't be calling 'isWindowsStoreInterpreter' in the component adapter, so we won't
         // need to use 'isWindowsStoreEnvironment' directly here. This is just a temporary implementation.
         return isWindowsStoreEnvironment(pythonPath);

@@ -55,7 +55,7 @@ export interface IComponentAdapter {
     isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined>;
     getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
 
-    isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined>;
+    isWindowsStoreInterpreter(pythonPath: string): Promise<boolean>;
 }
 
 export const IInterpreterLocatorService = Symbol('IInterpreterLocatorService');
