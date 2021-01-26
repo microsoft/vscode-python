@@ -51,7 +51,7 @@ export class TensorBoardNbextensionCodeLensProvider implements IExtensionSingleA
             title: TensorBoard.launchNativeTensorBoardSessionCodeLens(),
             command: Commands.LaunchTensorBoard,
             arguments: [
-                { trigger: TensorBoardEntrypointTrigger.fileimport, entrypoint: TensorBoardEntrypoint.codelens },
+                { trigger: TensorBoardEntrypointTrigger.nbextension, entrypoint: TensorBoardEntrypoint.codelens },
             ],
         };
         const codelenses: CodeLens[] = [];
@@ -59,9 +59,6 @@ export class TensorBoardNbextensionCodeLensProvider implements IExtensionSingleA
             const line = document.lineAt(index);
             if (containsNotebookExtension([line.text])) {
                 const range = new Range(new Position(line.lineNumber, 0), new Position(line.lineNumber, 1));
-                command.arguments = [
-                    { trigger: TensorBoardEntrypointTrigger.nbextension, entrypoint: TensorBoardEntrypoint.codelens },
-                ];
                 codelenses.push(new CodeLens(range, command));
                 this.sendTelemetryOnce();
             }
