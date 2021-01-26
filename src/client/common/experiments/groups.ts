@@ -85,7 +85,7 @@ export enum SendSelectionToREPL {
 
 // Feature flag for 'Python: Launch TensorBoard' feature
 export enum NativeTensorBoard {
-    experiment = 'nativeTensorBoard',
+    experiment = 'pythonTensorboardExperiment',
 }
 
 // Experiment to show a prompt asking users to install or select linter

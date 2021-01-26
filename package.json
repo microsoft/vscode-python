@@ -1047,7 +1047,7 @@
                             "jediLSP",
                             "debuggerDataViewer",
                             "pythonSendEntireLineToREPL",
-                            "nativeTensorBoard",
+                            "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
                             "All"
                         ]
@@ -1076,7 +1076,7 @@
                             "jediLSP",
                             "debuggerDataViewer",
                             "pythonSendEntireLineToREPL",
-                            "nativeTensorBoard",
+                            "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
                             "All"
                         ]
