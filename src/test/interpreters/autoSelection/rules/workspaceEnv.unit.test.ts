@@ -77,7 +77,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         }
 
         public async getWorkspaceVirtualEnvInterpreters(resource: Resource): Promise<PythonEnvironment[] | undefined> {
-            return super.getWorkspaceVirtualEnvInterpreters(resource, { ignoreCache: true });
+            return super.getWorkspaceVirtualEnvInterpreters(resource);
         }
     }
     setup(() => {
