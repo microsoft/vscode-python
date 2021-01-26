@@ -3,7 +3,6 @@
 
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
-import { TensorBoardCodeActionProvider } from './tensorBoardCodeActionProvider';
 import { TensorBoardImportCodeLensProvider } from './tensorBoardImportCodeLensProvider';
 import { TensorBoardFileWatcher } from './tensorBoardFileWatcher';
 import { TensorBoardUsageTracker } from './tensorBoardUsageTracker';
@@ -32,9 +31,5 @@ export function registerTypes(serviceManager: IServiceManager): void {
         TensorBoardNbextensionCodeLensProvider,
     );
     serviceManager.addBinding(TensorBoardNbextensionCodeLensProvider, IExtensionSingleActivationService);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        TensorBoardCodeActionProvider,
-    );
     serviceManager.addSingleton(IExtensionSingleActivationService, TerminalWatcher);
 }

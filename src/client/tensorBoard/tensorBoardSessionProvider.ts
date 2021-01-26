@@ -47,18 +47,6 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                             trigger,
                             entrypoint,
                         });
-                        // Convenience telemetry events for A/B testing
-                        if (
-                            trigger === TensorBoardEntrypointTrigger.fileimport &&
-                            entrypoint === TensorBoardEntrypoint.codelens
-                        ) {
-                            sendTelemetryEvent(EventName.TENSORBOARD_IMPORT_CODELENS_CLICKED);
-                        } else if (
-                            trigger === TensorBoardEntrypointTrigger.fileimport &&
-                            entrypoint === TensorBoardEntrypoint.codeaction
-                        ) {
-                            sendTelemetryEvent(EventName.TENSORBOARD_IMPORT_CODEACTION_CLICKED);
-                        }
                         return this.createNewSession();
                     },
                 ),

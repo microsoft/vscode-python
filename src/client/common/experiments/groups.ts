@@ -95,12 +95,6 @@ export enum LinterInstallationPromptVariants {
     noPrompt = 'pythonNotDisplayLinterPrompt',
 }
 
-// AB test codeactions vs codelenses as an entrypoint for native TensorBoard sessions
-export enum NativeTensorBoardEntrypoints {
-    codeActions = 'pythonTensorBoardCodeActions',
-    codeLenses = 'pythonTensorBoardCodeLenses',
-}
-
 // Experiment to control which environment discovery mechanism can be used
 export enum DiscoveryVariants {
     discoverWithFileWatching = 'pythonDiscoveryModule',

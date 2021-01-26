@@ -1725,7 +1725,7 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent after the python.launchTensorBoard command has been executed.
      * The `entrypoint` property indicates whether the command was executed directly by the
-     * user from the command palette or from a codeaction, codelens, or the user clicking 'yes'
+     * user from the command palette or from a codelens or the user clicking 'yes'
      * on the launch prompt we display.
      * The `trigger` property indicates whether the entrypoint was triggered by the user
      * importing tensorboard, using tensorboard in a notebook, detected tfevent files in
@@ -1764,10 +1764,10 @@ export interface IEventNamePropertyMapping {
     [EventName.TENSORBOARD_SESSION_DURATION]: never | undefined;
     /**
      * Telemetry event sent when an entrypoint is displayed to the user. This event is sent once
-     * per entrypoint per session to minimize redundant events since codeactions and codelenses
+     * per entrypoint per session to minimize redundant events since codelenses
      * can be displayed multiple times per file.
      * The `entrypoint` property indicates whether the command was executed directly by the
-     * user from the command palette or from a codeaction, codelens, or the user clicking 'yes'
+     * user from the command palette or from a codelens or the user clicking 'yes'
      * on the launch prompt we display.
      * The `trigger` property indicates whether the entrypoint was triggered by the user
      * importing tensorboard, using tensorboard in a notebook, detected tfevent files in
@@ -1791,16 +1791,6 @@ export interface IEventNamePropertyMapping {
         selection: TensorBoardPromptSelection;
         operationType: 'install' | 'upgrade';
     };
-    /**
-     * Telemetry event indicating the codeaction on a tensorboard import was clicked.
-     * Used for A/B testing codeaction vs codelens.
-     */
-    [EventName.TENSORBOARD_IMPORT_CODEACTION_CLICKED]: never | undefined;
-    /**
-     * Telemetry event indicating the codelens above a tensorboard import was clicked.
-     * Used for A/B testing codeaction vs codelens.
-     */
-    [EventName.TENSORBOARD_IMPORT_CODELENS_CLICKED]: never | undefined;
     /**
      * Telemetry event sent when we find an active integrated terminal running tensorboard.
      */

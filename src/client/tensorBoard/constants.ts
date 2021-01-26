@@ -20,7 +20,6 @@ export enum TensorBoardSessionStartResult {
 
 export enum TensorBoardEntrypoint {
     prompt = 'prompt',
-    codeaction = 'codeaction',
     codelens = 'codelens',
     palette = 'palette',
 }

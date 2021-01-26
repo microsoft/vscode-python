@@ -6,7 +6,7 @@ import { once } from 'lodash';
 import { CodeLens, Command, languages, Position, Range, TextDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { Commands, PYTHON } from '../common/constants';
-import { NativeTensorBoard, NativeTensorBoardEntrypoints } from '../common/experiments/groups';
+import { NativeTensorBoard } from '../common/experiments/groups';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
@@ -54,10 +54,7 @@ export class TensorBoardImportCodeLensProvider implements IExtensionSingleActiva
     }
 
     private async activateInternal() {
-        if (
-            (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) &&
-            (await this.experimentService.inExperiment(NativeTensorBoardEntrypoints.codeLenses))
-        ) {
+        if (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) {
             this.disposables.push(languages.registerCodeLensProvider(PYTHON, this));
         }
     }
