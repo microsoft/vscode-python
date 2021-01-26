@@ -392,6 +392,12 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         const envs = await getEnvs(iterator);
         return envs.map(convertEnvInfo);
     }
+
+    // Implements IInterpreterLocatorService (for WINDOWS_REGISTRY_SERVICE).
+
+    public async getWinRegInterpreters(resource: Resource): Promise<PythonEnvironment[] | undefined> {
+        return this.getInterpreters(resource, undefined, [PythonEnvSource.WindowsRegistry]);
+    }
 }
 
 export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): Promise<void> {

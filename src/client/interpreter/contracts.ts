@@ -46,6 +46,8 @@ export interface IComponentAdapter {
         resource: Uri,
         options?: { ignoreCache?: boolean },
     ): Promise<PythonEnvironment[] | undefined>;
+    // IInterpreterLocatorService (for WINDOWS_REGISTRY_SERVICE)
+    getWinRegInterpreters(resource: Resource): Promise<PythonEnvironment[] | undefined>;
     // IInterpreterService
     getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment>;
     // IInterpreterHelper
