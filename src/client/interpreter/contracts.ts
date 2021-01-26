@@ -2,6 +2,7 @@ import { SemVer } from 'semver';
 import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { Resource } from '../common/types';
+import { PythonEnvSource } from '../pythonEnvironments/base/info';
 import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/discovery/locators/services/conda';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 
@@ -35,7 +36,11 @@ export interface IComponentAdapter {
     onDidCreate(resource: Resource, callback: () => void): Disposable | undefined;
     // IInterpreterLocatorService
     hasInterpreters: Promise<boolean | undefined>;
-    getInterpreters(resource?: Uri): Promise<PythonEnvironment[] | undefined>;
+    getInterpreters(
+        resource?: Uri,
+        options?: GetInterpreterOptions,
+        source?: PythonEnvSource[],
+    ): Promise<PythonEnvironment[] | undefined>;
     // WorkspaceVirtualEnvInterpretersAutoSelectionRule
     getWorkspaceVirtualEnvInterpreters(resource: Uri): Promise<PythonEnvironment[] | undefined>;
     // IInterpreterService

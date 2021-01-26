@@ -3,11 +3,19 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
+import { inDiscoveryExperiment } from '../../../common/experiments/helpers';
 import { traceVerbose } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IPersistentStateFactory, Resource } from '../../../common/types';
-import { CURRENT_PATH_SERVICE, IInterpreterHelper, IInterpreterLocatorService } from '../../contracts';
+import { IExperimentService, IPersistentStateFactory, Resource } from '../../../common/types';
+import { IServiceContainer } from '../../../ioc/types';
+import { PythonEnvSource } from '../../../pythonEnvironments/base/info';
+import {
+    CURRENT_PATH_SERVICE,
+    IComponentAdapter,
+    IInterpreterHelper,
+    IInterpreterLocatorService,
+} from '../../contracts';
 import { AutoSelectionRule, IInterpreterAutoSelectionService } from '../types';
 import { BaseRuleService, NextAction } from './baseRule';
 
@@ -17,9 +25,9 @@ export class CurrentPathInterpretersAutoSelectionRule extends BaseRuleService {
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper,
         @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory,
-        @inject(IInterpreterLocatorService)
-        @named(CURRENT_PATH_SERVICE)
-        private readonly currentPathInterpreterLocator: IInterpreterLocatorService,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
     ) {
         super(AutoSelectionRule.currentPath, fs, stateFactory);
     }
@@ -27,7 +35,11 @@ export class CurrentPathInterpretersAutoSelectionRule extends BaseRuleService {
         resource: Resource,
         manager?: IInterpreterAutoSelectionService,
     ): Promise<NextAction> {
-        const interpreters = await this.currentPathInterpreterLocator.getInterpreters(resource);
+        let interpreters = (await inDiscoveryExperiment(this.experimentService))
+            ? await this.pyenvs.getInterpreters(resource, undefined, [PythonEnvSource.PathEnvVar])
+            : await this.serviceContainer
+                  .get<IInterpreterLocatorService>(IInterpreterLocatorService, CURRENT_PATH_SERVICE)
+                  .getInterpreters(resource);
         const bestInterpreter = this.helper.getBestInterpreter(interpreters);
         traceVerbose(
             `Selected Interpreter from ${this.ruleName}, ${

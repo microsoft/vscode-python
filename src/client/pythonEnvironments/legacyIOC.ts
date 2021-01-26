@@ -456,12 +456,12 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
             WorkspaceVirtualEnvWatcherService,
             WORKSPACE_VIRTUAL_ENV_SERVICE,
         );
+        serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            CurrentPathService,
+            CURRENT_PATH_SERVICE,
+        );
     }
-    serviceManager.addSingleton<IInterpreterLocatorService>(
-        IInterpreterLocatorService,
-        CurrentPathService,
-        CURRENT_PATH_SERVICE,
-    );
     serviceManager.addSingleton<IPythonInPathCommandProvider>(
         IPythonInPathCommandProvider,
         PythonInPathCommandProvider,
