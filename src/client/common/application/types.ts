@@ -1036,6 +1036,23 @@ export interface IApplicationEnvironment {
      * The custom uri scheme the editor registers to in the operating system.
      */
     readonly uriScheme: string;
+    /**
+     * The UI kind property indicates from which UI extensions
+     * are accessed from. For example, extensions could be accessed
+     * from a desktop application or a web browser.
+     */
+    readonly uiKind: UIKind;
+}
+
+export enum UIKind {
+    /**
+     * Extensions are accessed from a desktop application.
+     */
+    Desktop = 1,
+    /**
+     * Extensions are accessed from a web browser.
+     */
+    Web = 2,
 }
 
 export interface IWebviewMessageListener {

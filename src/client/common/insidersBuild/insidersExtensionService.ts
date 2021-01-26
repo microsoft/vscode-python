@@ -8,7 +8,7 @@ import '../extensions';
 import { inject, injectable, named } from 'inversify';
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { IServiceContainer } from '../../ioc/types';
-import { IApplicationEnvironment, ICommandManager } from '../application/types';
+import { IApplicationEnvironment, ICommandManager, UIKind } from '../application/types';
 import { Commands } from '../constants';
 import { IExtensionBuildInstaller, INSIDERS_INSTALLER } from '../installer/types';
 import { traceDecorators } from '../logger';
@@ -101,6 +101,10 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
      */
     private async promptToInstallInsidersIfApplicable(isDefault: boolean): Promise<boolean> {
         if (this.appEnvironment.channel !== 'insiders') {
+            return false;
+        }
+        if (this.appEnvironment.uiKind === UIKind.Web) {
+            // We're running in Codespaces browser-based editor, do not show prompt.
             return false;
         }
         if (this.insidersPrompt.hasUserBeenNotified.value) {

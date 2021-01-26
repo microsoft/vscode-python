@@ -11,7 +11,7 @@ import * as TypeMoq from 'typemoq';
 import { EventEmitter } from 'vscode';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { CommandManager } from '../../../client/common/application/commandManager';
-import { Channel, IApplicationEnvironment, ICommandManager } from '../../../client/common/application/types';
+import { Channel, IApplicationEnvironment, ICommandManager, UIKind } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
 import { ExtensionChannelService } from '../../../client/common/insidersBuild/downloadChannelService';
 import { InsidersExtensionPrompt } from '../../../client/common/insidersBuild/insidersExtensionPrompt';
@@ -211,7 +211,7 @@ suite('Insiders Extension Service - Activation', () => {
     });
 });
 
-suite('Insiders Extension Service - Function handleEdgeCases()', () => {
+suite('xInsiders Extension Service - Function handleEdgeCases()', () => {
     let appEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let extensionChannelService: TypeMoq.IMock<IExtensionChannelService>;
@@ -246,6 +246,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             .returns(() => instance(hasUserBeenNotifiedState))
             // Basically means "we don't care" (necessary for strict mocks).
             .verifiable(TypeMoq.Times.atLeast(0));
+        hasUserBeenNotifiedState = mock(PersistentState);
     }
 
     setup(() => {
@@ -268,12 +269,19 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         installChannel?: ExtensionChannels;
         isChannelUsingDefaultConfiguration?: boolean;
         hasUserBeenNotified?: boolean;
+        uiKind?: UIKind;
     };
 
     function setState(info: TestInfo, checkPromptEnroll: boolean) {
         if (info.vscodeChannel) {
             appEnvironment.setup((e) => e.channel).returns(() => info.vscodeChannel!);
         }
+
+        appEnvironment
+            .setup((e) => e.uiKind)
+            .returns(() => info.uiKind ?? UIKind.Desktop)
+            // Basically means "we don't care" (necessary for strict mocks).
+            .verifiable(TypeMoq.Times.atLeast(0));
 
         if (info.hasUserBeenNotified !== undefined) {
             when(hasUserBeenNotifiedState.value).thenReturn(info.hasUserBeenNotified!);
@@ -298,6 +306,23 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
 
         verifyAll();
         verify(hasUserBeenNotifiedState.value).once();
+    });
+
+    test(`Insiders Install Prompt is not displayed when uiKind = 'UIKind.Web'`, async () => {
+        setState(
+            {
+                // prompt to enroll
+                vscodeChannel: 'insiders',
+                hasUserBeenNotified: false,
+                isChannelUsingDefaultConfiguration: true,
+                uiKind: UIKind.Web,
+            },
+            false,
+        );
+
+        await insidersExtensionService.handleEdgeCases(true);
+
+        verifyAll();
     });
 
     suite('Verify no operation is performed if none of the case conditions are met', async () => {
