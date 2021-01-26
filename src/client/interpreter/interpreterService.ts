@@ -39,19 +39,12 @@ import { inDiscoveryExperiment } from '../common/experiments/helpers';
 
 const EXPIRY_DURATION = 24 * 60 * 60 * 1000;
 
-// The parts of IComponentAdapter used here.
-interface IComponent {
-    hasInterpreters: Promise<boolean | undefined>;
-    getInterpreterDetails(pythonPath: string): Promise<undefined | PythonEnvironment>;
-    getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[] | undefined>;
-}
-
 @injectable()
 export class InterpreterService implements Disposable, IInterpreterService {
     public get hasInterpreters(): Promise<boolean> {
         return inDiscoveryExperiment(this.experimentService).then((inExp) => {
             if (inExp) {
-                return this.pyenvs.hasInterpreters && Promise.resolve(false);
+                return this.pyenvs.hasInterpreters;
             }
             const locator = this.serviceContainer.get<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
@@ -95,7 +88,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         this.persistentStateFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
