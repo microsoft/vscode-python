@@ -42,7 +42,7 @@ export interface ILanguageServer extends Disposable {
 }
 
 /**
- * This allows Python exntension to update Product enum without breaking Jupyter.
+ * This allows Python extension to update Product enum without breaking Jupyter.
  * I.e. we have a strict contract, else using numbers (in enums) is bound to break across products.
  */
 enum JupyterProductToInstall {
@@ -169,7 +169,7 @@ export class JupyterExtensionIntegration {
             ) => this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions),
             isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> => {
                 if (await inDiscoveryExperiment(this.experimentService)) {
-                    return this.pyenvs.isWindowsStoreInterpreter(pythonPath) && Promise.resolve(false);
+                    return this.pyenvs.isWindowsStoreInterpreter(pythonPath);
                 }
                 return isWindowsStoreInterpreter(pythonPath);
             },
@@ -188,7 +188,7 @@ export class JupyterExtensionIntegration {
                 const interpreter = !isResource(r) ? r : undefined;
                 const client = await this.languageServerCache.get(resource, interpreter);
 
-                // Some langauge servers don't support the connection yet. (like Jedi until we switch to LSP)
+                // Some language servers don't support the connection yet. (like Jedi until we switch to LSP)
                 if (client && client.connection && client.capabilities) {
                     return {
                         connection: client.connection,
