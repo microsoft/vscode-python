@@ -465,11 +465,11 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
             CurrentPathService,
             CURRENT_PATH_SERVICE,
         );
+        serviceManager.addSingleton<IPythonInPathCommandProvider>(
+            IPythonInPathCommandProvider,
+            PythonInPathCommandProvider,
+        );
     }
-    serviceManager.addSingleton<IPythonInPathCommandProvider>(
-        IPythonInPathCommandProvider,
-        PythonInPathCommandProvider,
-    );
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
 
     serviceManager.addSingleton<IInterpreterLocatorService>(
