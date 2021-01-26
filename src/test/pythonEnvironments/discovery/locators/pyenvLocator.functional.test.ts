@@ -56,7 +56,7 @@ suite('Pyenv Locator Tests', () => {
                 },
                 source: [PythonEnvSource.Pyenv],
             });
-            envInfo.defaultDisplayName = '3.9.0:pyenv';
+            envInfo.display = '3.9.0:pyenv';
             envInfo.location = path.join(testPyenvVersionsDir, '3.9.0');
             envInfo.name = '3.9.0';
             return envInfo;
@@ -73,7 +73,7 @@ suite('Pyenv Locator Tests', () => {
                 },
                 source: [PythonEnvSource.Pyenv],
             });
-            envInfo.defaultDisplayName = 'conda1:pyenv';
+            envInfo.display = 'conda1:pyenv';
             envInfo.location = path.join(testPyenvVersionsDir, 'conda1');
             envInfo.name = 'conda1';
             return envInfo;
@@ -90,7 +90,7 @@ suite('Pyenv Locator Tests', () => {
                 },
                 source: [PythonEnvSource.Pyenv],
             });
-            envInfo.defaultDisplayName = 'miniconda3-4.7.12:pyenv';
+            envInfo.display = 'miniconda3-4.7.12:pyenv';
             envInfo.location = path.join(testPyenvVersionsDir, 'miniconda3-4.7.12');
             envInfo.name = 'miniconda3-4.7.12';
             envInfo.distro.org = 'miniconda3';
@@ -108,7 +108,7 @@ suite('Pyenv Locator Tests', () => {
                 },
                 source: [PythonEnvSource.Pyenv],
             });
-            envInfo.defaultDisplayName = 'venv1:pyenv';
+            envInfo.display = 'venv1:pyenv';
             envInfo.location = path.join(testPyenvVersionsDir, 'venv1');
             envInfo.name = 'venv1';
             return envInfo;

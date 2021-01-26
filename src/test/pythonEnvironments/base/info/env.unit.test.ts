@@ -16,7 +16,6 @@ suite('pyenvs info - getEnvDisplayString()', () => {
         kind?: PythonEnvKind;
         distro?: PythonDistroInfo;
         display?: string;
-        defaultDisplayName?: string;
         location?: string;
     }): PythonEnvInfo {
         const env = createLocatedEnv(
@@ -29,63 +28,27 @@ suite('pyenvs info - getEnvDisplayString()', () => {
         env.name = info.name || '';
         env.arch = info.arch || Architecture.Unknown;
         env.display = info.display;
-        env.defaultDisplayName = info.defaultDisplayName;
         return env;
     }
 
-    suite('cached', () => {
-        suite('already resolved', () => {
-            [
-                'Python', // built: absolute minimal
-                'Python 3.7.x x64 (my-env: venv)', // built: full
-                'spam',
-                'some env',
-                // corner cases
-                '---',
-                '  ',
-            ].forEach((display: string) => {
-                test(`"${display}"`, () => {
-                    const expected = display;
-                    const env = getEnv({ display });
-
-                    const result = getEnvDisplayString(env);
-
-                    assert.equal(result, expected);
-                });
-            });
-        });
-
-        suite('has default', () => {
-            const defaultDisplayName = 'my-env (some-kind)';
-
-            test('without "display"', () => {
-                const expected = defaultDisplayName;
-                const env = getEnv({ defaultDisplayName });
+    suite('already set', () => {
+        [
+            'Python', // built: absolute minimal
+            'Python 3.7.x x64 (my-env: venv)', // built: full
+            'spam',
+            'some env',
+            // corner cases
+            '---',
+            '  ',
+        ].forEach((display: string) => {
+            test(`"${display}"`, () => {
+                const expected = display;
+                const env = getEnv({ display });
 
                 const result = getEnvDisplayString(env);
 
                 assert.equal(result, expected);
             });
-
-            test('with empty "display"', () => {
-                const expected = defaultDisplayName;
-                const env = getEnv({ defaultDisplayName, display: '' });
-
-                const result = getEnvDisplayString(env);
-
-                assert.equal(result, expected);
-            });
-        });
-
-        test('both', () => {
-            const display = 'Python 3.7.3 (system)';
-            const defaultDisplayName = 'my-env (some-kind)';
-            const expected = display;
-            const env = getEnv({ display, defaultDisplayName });
-
-            const result = getEnvDisplayString(env);
-
-            assert.equal(result, expected);
         });
     });
 

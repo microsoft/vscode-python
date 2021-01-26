@@ -60,15 +60,16 @@ export class WindowsRegistryLocator extends Locator {
             traceVerbose(`Failed to parse version: ${versionStr}`, ex);
         }
 
-        return buildEnvInfo({
+        const env = buildEnvInfo({
             kind: this.kind,
             executable: data.interpreterPath,
             fileInfo: await getFileInfo(data.interpreterPath),
             version,
             arch: getArchitecture(data),
             org: data.distroOrgName,
-            defaultDisplayName: data.displayName,
             source: [PythonEnvSource.WindowsRegistry],
         });
+        env.distro.defaultDisplayName = data.companyDisplayName;
+        return env;
     }
 }

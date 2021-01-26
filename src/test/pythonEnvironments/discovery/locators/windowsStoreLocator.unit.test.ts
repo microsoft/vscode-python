@@ -153,7 +153,7 @@ suite('Windows Store', () => {
                     const data = pathToData.get(k);
                     if (data) {
                         return {
-                            defaultDisplayName: undefined,
+                            display: undefined,
                             searchLocation: undefined,
                             name: '',
                             location: '',
@@ -177,7 +177,7 @@ suite('Windows Store', () => {
         test('resolveEnv(string)', async () => {
             const python38path = path.join(testStoreAppRoot, 'python3.8.exe');
             const expected = {
-                defaultDisplayName: undefined,
+                display: undefined,
                 searchLocation: undefined,
                 name: '',
                 location: '',
@@ -195,7 +195,7 @@ suite('Windows Store', () => {
         test('resolveEnv(PythonEnvInfo)', async () => {
             const python38path = path.join(testStoreAppRoot, 'python3.8.exe');
             const expected = {
-                defaultDisplayName: undefined,
+                display: undefined,
                 searchLocation: undefined,
                 name: '',
                 location: '',
@@ -209,7 +209,7 @@ suite('Windows Store', () => {
             const input: PythonEnvInfo = {
                 name: '',
                 location: '',
-                defaultDisplayName: undefined,
+                display: undefined,
                 searchLocation: undefined,
                 kind: PythonEnvKind.WindowsStore,
                 distro: { org: 'Microsoft' },
@@ -236,7 +236,7 @@ suite('Windows Store', () => {
         test('resolveEnv(string): forbidden path', async () => {
             const python38path = path.join(testLocalAppData, 'Program Files', 'WindowsApps', 'python3.8.exe');
             const expected = {
-                defaultDisplayName: undefined,
+                display: undefined,
                 searchLocation: undefined,
                 name: '',
                 location: '',

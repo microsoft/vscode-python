@@ -176,13 +176,12 @@ type _PythonEnvInfo = PythonEnvBaseInfo & PythonBuildInfo;
  * they will usually be able to provide the version as well.
  *
  * @prop distro - the installed Python distro that this env is using or belongs to
- * @prop defaultDisplayName - the text to use when showing the env to users
+ * @prop display - the text to use when showing the env to users
  * @prop searchLocation - the root under which a locator found this env, if any
  */
 export type PythonEnvInfo = _PythonEnvInfo & {
     distro: PythonDistroInfo;
     display?: string;
-    defaultDisplayName?: string;
     searchLocation?: Uri;
 };
 

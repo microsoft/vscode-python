@@ -43,7 +43,7 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
                 ctime: -1,
                 mtime: -1,
             },
-            defaultDisplayName: undefined,
+            display: undefined,
             version,
             arch: platformUtils.Architecture.Unknown,
             distro: { org: '' },

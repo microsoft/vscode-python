@@ -279,7 +279,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
             // `pyenv local|global <env-name>` or `pyenv shell <env-name>`
             //
             // For the display name we are going to treat these as `pyenv` environments.
-            const defaultDisplayName = `${subDir}:pyenv`;
+            const display = `${subDir}:pyenv`;
 
             const org = versionStrings && versionStrings.distro ? versionStrings.distro : '';
 
@@ -291,7 +291,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
                 location: envDir,
                 version: pythonVersion,
                 source: [PythonEnvSource.Pyenv],
-                defaultDisplayName,
+                display,
                 org,
                 fileInfo,
             });
@@ -329,7 +329,7 @@ export class PyenvLocator extends FSWatchingLocator {
                 executable: executablePath,
                 source,
                 location,
-                defaultDisplayName: `${name}:pyenv`,
+                display: `${name}:pyenv`,
                 version: await getPythonVersionFromPath(executablePath, versionStrings?.pythonVer),
                 org: versionStrings && versionStrings.distro ? versionStrings.distro : '',
                 fileInfo: await getFileInfo(executablePath),

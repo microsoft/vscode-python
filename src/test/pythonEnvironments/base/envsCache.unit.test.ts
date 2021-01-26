@@ -142,7 +142,7 @@ suite('Environment Info cache', () => {
         const otherEnv = {
             kind: PythonEnvKind.OtherGlobal,
             executable: { filename: 'my-other-env' },
-            defaultDisplayName: 'other-env',
+            display: 'other-env',
         };
         const updatedEnvInfoArray = [
             otherEnv,
@@ -151,7 +151,7 @@ suite('Environment Info cache', () => {
         const expected = [otherEnv];
         const envsCache = await getPersistentCache(
             getGlobalPersistentStore(),
-            (env) => env.defaultDisplayName !== undefined,
+            (env) => env.display !== undefined,
         );
 
         envsCache.setAllEnvs(updatedEnvInfoArray);

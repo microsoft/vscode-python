@@ -36,7 +36,7 @@ export function buildEnvInfo(init?: {
     arch?: Architecture;
     fileInfo?: { ctime: number; mtime: number };
     source?: PythonEnvSource[];
-    defaultDisplayName?: string;
+    display?: string;
 }): PythonEnvInfo {
     const env = {
         name: init?.name ?? '',
@@ -49,7 +49,7 @@ export function buildEnvInfo(init?: {
             mtime: init?.fileInfo?.mtime ?? -1,
         },
         searchLocation: undefined,
-        defaultDisplayName: init?.defaultDisplayName,
+        display: init?.display,
         version: {
             major: -1,
             minor: -1,
@@ -122,12 +122,7 @@ function updateEnv(
  */
 export function getEnvDisplayString(env: PythonEnvInfo): string {
     if (env.display === undefined || env.display === '') {
-        if (env.defaultDisplayName !== undefined && env.defaultDisplayName !== '') {
-            // XXX Normalize it?
-            env.display = env.defaultDisplayName;
-        } else {
-            env.display = buildEnvDisplayString(env);
-        }
+        env.display = buildEnvDisplayString(env);
     }
     return env.display;
 }
@@ -481,7 +476,7 @@ export function mergeEnvironments(target: PythonEnvInfo, other: PythonEnvInfo): 
     );
 
     merged.arch = merged.arch === Architecture.Unknown ? other.arch : target.arch;
-    merged.defaultDisplayName = merged.defaultDisplayName ?? other.defaultDisplayName;
+    merged.display = merged.display ?? other.display;
     merged.distro = distro;
     merged.executable = executable;
 

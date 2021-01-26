@@ -39,7 +39,7 @@ export interface IRegistryInterpreterData {
     versionStr?: string;
     sysVersionStr?: string;
     bitnessStr?: string;
-    displayName?: string;
+    companyDisplayName?: string;
     distroOrgName?: string;
 }
 
@@ -65,7 +65,7 @@ async function getInterpreterDataFromKey(
                 result.versionStr = value.value;
                 break;
             case 'DisplayName':
-                result.displayName = value.value;
+                result.companyDisplayName = value.value;
                 break;
             default:
                 break;

@@ -224,7 +224,7 @@ suite('Windows Registry', () => {
             versionStr: data.find((x) => x.name === 'Version')?.value,
             sysVersionStr: data.find((x) => x.name === 'SysVersion')?.value,
             bitnessStr: data.find((x) => x.name === 'SysArchitecture')?.value,
-            displayName: data.find((x) => x.name === 'DisplayName')?.value,
+            companyDisplayName: data.find((x) => x.name === 'DisplayName')?.value,
             distroOrgName: org,
         });
     }
@@ -238,16 +238,17 @@ suite('Windows Registry', () => {
             version = UNKNOWN_PYTHON_VERSION;
         }
 
-        return buildEnvInfo({
+        const env = buildEnvInfo({
             location: '',
             kind: PythonEnvKind.OtherGlobal,
             executable: data.interpreterPath,
             version,
             arch: data.bitnessStr === '32bit' ? Architecture.x86 : Architecture.x64,
             org: data.distroOrgName ?? '',
-            defaultDisplayName: data.displayName,
             source: [PythonEnvSource.WindowsRegistry],
         });
+        env.distro.defaultDisplayName = data.companyDisplayName;
+        return env;
     }
 
     async function getExpectedDataFromKey({ arch, hive, key }: winreg.Options, org: string): Promise<PythonEnvInfo> {
