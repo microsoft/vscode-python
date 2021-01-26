@@ -11,7 +11,12 @@ import { FileSystemPaths, FileSystemPathUtils } from '../../../../client/common/
 import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../../../client/common/process/types';
 import { ITerminalActivationCommandProvider } from '../../../../client/common/terminal/types';
-import { IConfigurationService, IPersistentStateFactory, IPythonSettings } from '../../../../client/common/types';
+import {
+    IConfigurationService,
+    IExperimentService,
+    IPersistentStateFactory,
+    IPythonSettings,
+} from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import {
     IComponentAdapter,
@@ -54,6 +59,7 @@ suite('Interpreters Conda Service', () => {
     let disposableRegistry: Disposable[];
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    let experiments: TypeMoq.IMock<IExperimentService>;
     let mockState: MockState;
     let terminalProvider: TypeMoq.IMock<ITerminalActivationCommandProvider>;
     setup(async () => {
@@ -69,6 +75,7 @@ suite('Interpreters Conda Service', () => {
         config = TypeMoq.Mock.ofType<IConfigurationService>();
         settings = TypeMoq.Mock.ofType<IPythonSettings>();
         procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
+        experiments = TypeMoq.Mock.ofType<IExperimentService>();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((x: any) => x.then).returns(() => undefined);
         procServiceFactory
@@ -131,6 +138,7 @@ suite('Interpreters Conda Service', () => {
             workspaceService.object,
             pyenvs.object,
             registryInterpreterLocatorService.object,
+            experiments.object,
         );
     });
 
@@ -630,6 +638,8 @@ suite('Interpreters Conda Service', () => {
             disposableRegistry,
             workspaceService.object,
             pyenvs.object,
+            undefined,
+            experiments.object,
         );
 
         const result = await condaSrv.getCondaFile();

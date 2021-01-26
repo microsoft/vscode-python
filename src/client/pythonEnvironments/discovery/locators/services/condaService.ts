@@ -4,10 +4,17 @@ import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../../../common/application/types';
+import { inDiscoveryExperiment } from '../../../../common/experiments/helpers';
 import { traceDecorators, traceError, traceVerbose, traceWarning } from '../../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../../common/process/types';
-import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../../common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentService,
+    IPersistentStateFactory,
+    Resource,
+} from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
 import {
     IComponentAdapter,
@@ -54,6 +61,7 @@ export const CondaGetEnvironmentPrefix = 'Outputting Environment Now...';
 interface IComponent {
     isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined>;
     getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
+    getWinRegInterpreters(resource: Resource): Promise<PythonEnvironment[] | undefined>;
 }
 
 /**
@@ -82,7 +90,8 @@ export class CondaService implements ICondaService {
         @inject(IInterpreterLocatorService)
         @named(WINDOWS_REGISTRY_SERVICE)
         @optional()
-        private registryLookupForConda?: IInterpreterLocatorService,
+        private registryLookupForConda: IInterpreterLocatorService | undefined,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         this.addCondaPathChangedHandler();
     }
@@ -400,8 +409,8 @@ export class CondaService implements ICondaService {
         if (isAvailable) {
             return 'conda';
         }
-        if (this.platform.isWindows && this.registryLookupForConda) {
-            const interpreters = await this.registryLookupForConda.getInterpreters();
+        if (this.platform.isWindows) {
+            const interpreters: PythonEnvironment[] = (await this.getWinRegEnvs()) || [];
             const condaInterpreters = interpreters.filter(CondaService.detectCondaEnvironment);
             const condaInterpreter = CondaService.getLatestVersion(condaInterpreters);
             if (condaInterpreter) {
@@ -415,6 +424,16 @@ export class CondaService implements ICondaService {
             }
         }
         return this.getCondaFileFromKnownLocations();
+    }
+
+    private async getWinRegEnvs(): Promise<PythonEnvironment[] | undefined> {
+        if (await inDiscoveryExperiment(this.experimentService)) {
+            return await this.pyenvs.getWinRegInterpreters(undefined);
+        }
+        if (this.registryLookupForConda) {
+            return this.registryLookupForConda.getInterpreters();
+        }
+        return [];
     }
 
     /**
