@@ -635,7 +635,7 @@ suite('Conda and its environments are located correctly', () => {
                     name,
                     kind: PythonEnvKind.Conda,
                     arch: platform.Architecture.Unknown,
-                    defaultDisplayName: undefined,
+                    display: undefined,
                     searchLocation: undefined,
                     distro: { org: AnacondaCompanyName },
                     version: { major: -1, minor: -1, micro: -1, release: { level: 'final', serial: 0 } },
