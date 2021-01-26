@@ -4,7 +4,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { ConfigurationTarget, EventEmitter, Uri, ViewColumn } from 'vscode';
+import { ConfigurationTarget, EventEmitter, UIKind, Uri, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -69,6 +69,10 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
     }
 
     public async activate(): Promise<void> {
+        if (this.appEnvironment.uiKind === UIKind.Web) {
+            // We're running in Codespaces browser-based editor, do not open start page.
+            return;
+        }
         this.activateBackground().ignoreErrors();
     }
 
