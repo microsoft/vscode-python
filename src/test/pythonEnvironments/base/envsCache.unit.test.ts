@@ -149,10 +149,7 @@ suite('Environment Info cache', () => {
             { kind: PythonEnvKind.System, executable: { filename: 'my-system-env' } },
         ] as PythonEnvInfo[];
         const expected = [otherEnv];
-        const envsCache = await getPersistentCache(
-            getGlobalPersistentStore(),
-            (env) => env.display !== undefined,
-        );
+        const envsCache = await getPersistentCache(getGlobalPersistentStore(), (env) => env.display !== undefined);
 
         envsCache.setAllEnvs(updatedEnvInfoArray);
         await envsCache.flush();
