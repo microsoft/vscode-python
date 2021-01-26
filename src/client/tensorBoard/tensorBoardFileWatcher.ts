@@ -15,9 +15,7 @@ import { TensorBoardPrompt } from './tensorBoardPrompt';
 export class TensorBoardFileWatcher implements IExtensionSingleActivationService {
     private fileSystemWatchers = new Map<WorkspaceFolder, FileSystemWatcher[]>();
 
-    private globPattern1 = '*tfevents*';
-
-    private globPattern2 = '*/*tfevents*';
+    private globPatterns = ['*tfevents*', '*/*tfevents*', '*/*/*tfevents*'];
 
     constructor(
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
@@ -57,7 +55,7 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
 
     private async promptIfWorkspaceHasPreexistingFiles() {
         try {
-            for (const pattern of [this.globPattern1, this.globPattern2]) {
+            for (const pattern of this.globPatterns) {
                 const matches = await this.workspaceService.findFiles(pattern, undefined, 1);
                 if (matches.length > 0) {
                     await this.tensorBoardPrompt.showNativeTensorBoardPrompt(TensorBoardEntrypointTrigger.tfeventfiles);
@@ -86,7 +84,7 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
 
     private createFileSystemWatcher(folder: WorkspaceFolder) {
         const fileWatchers = [];
-        for (const pattern of [this.globPattern1, this.globPattern2]) {
+        for (const pattern of this.globPatterns) {
             const relativePattern = new RelativePattern(folder, pattern);
             const fileSystemWatcher = this.workspaceService.createFileSystemWatcher(relativePattern);
 
