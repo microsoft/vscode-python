@@ -35,7 +35,7 @@ export interface IComponentAdapter {
     // VirtualEnvPrompt
     onDidCreate(resource: Resource, callback: () => void): Disposable;
     // IInterpreterLocatorService
-    hasInterpreters: Promise<boolean | undefined>;
+    hasInterpreters: Promise<boolean>;
     getInterpreters(
         resource?: Uri,
         options?: GetInterpreterOptions,
