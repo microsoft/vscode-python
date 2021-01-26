@@ -214,11 +214,8 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return convertEnvInfo(env);
     }
 
-    // A result of `undefined` means "Fall back to the old code!"
-    public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined> {
-        if (!this.enabled) {
-            return undefined;
-        }
+    // eslint-disable-next-line class-methods-use-this
+    public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean> {
         // While `ComponentAdapter` represents how the component would be used in the rest of the
         // extension, we cheat here for the sake of performance.  This is not a problem because when
         // we start using the component's public API directly we will be dealing with `PythonEnvInfo`

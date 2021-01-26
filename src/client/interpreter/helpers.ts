@@ -39,19 +39,13 @@ export function isInterpreterLocatedInWorkspace(interpreter: PythonEnvironment, 
     return interpreterPath.startsWith(resourcePath);
 }
 
-// The parts of IComponentAdapter used here.
-interface IComponent {
-    getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>>;
-    isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined>;
-}
-
 @injectable()
 export class InterpreterHelper implements IInterpreterHelper {
     private readonly persistentFactory: IPersistentStateFactory;
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         this.persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
@@ -130,7 +124,7 @@ export class InterpreterHelper implements IInterpreterHelper {
 
     public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean> {
         if (await inDiscoveryExperiment(this.experimentService)) {
-            return this.pyenvs.isMacDefaultPythonPath(pythonPath) && Promise.resolve(false);
+            return this.pyenvs.isMacDefaultPythonPath(pythonPath);
         }
 
         return isMacDefaultPythonPath(pythonPath);
