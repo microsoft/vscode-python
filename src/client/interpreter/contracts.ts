@@ -39,7 +39,7 @@ export interface IComponentAdapter {
     // WorkspaceVirtualEnvInterpretersAutoSelectionRule
     getWorkspaceVirtualEnvInterpreters(
         resource: Uri,
-        options?: GetInterpreterLocatorOptions,
+        options?: { ignoreCache?: boolean },
     ): Promise<PythonEnvironment[] | undefined>;
     // IInterpreterService
     getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment>;

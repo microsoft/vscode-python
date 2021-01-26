@@ -13,7 +13,6 @@ import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
-    GetInterpreterLocatorOptions,
     GetInterpreterOptions,
     GLOBAL_VIRTUAL_ENV_SERVICE,
     IComponentAdapter,
@@ -369,7 +368,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
 
     public async getWorkspaceVirtualEnvInterpreters(
         resource: vscode.Uri,
-        options?: GetInterpreterLocatorOptions,
+        options?: { ignoreCache?: boolean },
     ): Promise<PythonEnvironment[] | undefined> {
         if (!this.enabled) {
             return undefined;
