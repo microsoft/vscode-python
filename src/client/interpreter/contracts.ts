@@ -33,7 +33,7 @@ export interface IVirtualEnvironmentsSearchPathProvider {
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
     // VirtualEnvPrompt
-    onDidCreate(resource: Resource, callback: () => void): Disposable | undefined;
+    onDidCreate(resource: Resource, callback: () => void): Disposable;
     // IInterpreterLocatorService
     hasInterpreters: Promise<boolean | undefined>;
     getInterpreters(

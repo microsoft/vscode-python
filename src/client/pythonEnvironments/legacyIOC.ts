@@ -174,10 +174,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     // For use in VirtualEnvironmentPrompt.activate()
 
     // Call callback if an environment gets created within the resource provided.
-    public onDidCreate(resource: Resource, callback: () => void): vscode.Disposable | undefined {
-        if (!this.enabled) {
-            return undefined;
-        }
+    public onDidCreate(resource: Resource, callback: () => void): vscode.Disposable {
         const workspaceFolder = resource ? vscode.workspace.getWorkspaceFolder(resource) : undefined;
         return this.api.onChanged((e) => {
             if (!workspaceFolder || !e.searchLocation) {
