@@ -179,6 +179,13 @@ type TypedMethodDescriptor<T> = (
     descriptor: TypedPropertyDescriptor<T>,
 ) => TypedPropertyDescriptor<T> | void;
 
+// The following code uses "any" in many places, as TS does not have rich support
+// for typing decorators. Specifically, while it is possible to write types which
+// encode the signature of the wrapped function, TS fails to actually infer the
+// type of "this" and the signature at call sites, instead choosing to infer
+// based on other hints (like the closure parameters), which ends up making it
+// no safer than "any" (and sometimes misleading enough to be more unsafe).
+
 /**
  * Decorates a method, sending a telemetry event with the given properties.
  * @param eventName The event name to send.
@@ -187,6 +194,8 @@ type TypedMethodDescriptor<T> = (
  * @param failureEventName If the decorated method returns a Promise and fails, send this event instead of eventName.
  * @param lazyProperties A static function on the decorated class which returns extra properties to add to the event.
  * This can be used to provide properties which are only known at runtime (after the decorator has executed).
+ * @param lazyMeasures A static function on the decorated class which returns extra measures to add to the event.
+ * This can be used to provide measures which are only known at runtime (after the decorator has executed).
  */
 export function captureTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
@@ -211,7 +220,7 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
         descriptor.value = function (this: This, ...args: any[]) {
             // Legacy case; fast path that sends event before method executes.
             // Does not set "failed" if the result is a Promise and throws an exception.
-            if (!captureDuration && !lazyProperties) {
+            if (!captureDuration && !lazyProperties && !lazyMeasures) {
                 sendTelemetryEvent(eventName, undefined, properties);
 
                 return originalMethod.apply(this, args);
