@@ -18,7 +18,14 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
-    @captureTelemetry(EventName.COMPLETION)
+    @captureTelemetry(
+        EventName.COMPLETION,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        PythonCompletionItemProvider.completionMeasure,
+    )
     public async provideCompletionItems(
         document: vscode.TextDocument,
         position: vscode.Position,
@@ -31,6 +38,13 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
             }
         }
         return items;
+    }
+
+    private static completionMeasure(
+        _this: PythonCompletionItemProvider,
+        result: vscode.CompletionItem[] | undefined,
+    ): Record<string, number> {
+        return { resultLength: result?.length ?? 0 };
     }
 
     public async resolveCompletionItem(

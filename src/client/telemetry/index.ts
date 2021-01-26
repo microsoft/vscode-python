@@ -12,6 +12,7 @@ import { traceError, traceInfo } from '../common/logger';
 import { Telemetry } from '../common/startPage/constants';
 import type { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
+import { isPromise } from '../common/utils/async';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
@@ -102,7 +103,7 @@ export function clearTelemetryReporter(): void {
 
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
-    durationMs?: Record<string, number> | number,
+    measuresOrDurationMs?: Record<string, number> | number,
     properties?: P[E],
     ex?: Error,
 ): void {
@@ -110,7 +111,10 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         return;
     }
     const reporter = getTelemetryReporter();
-    const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs || undefined;
+    const measures =
+        typeof measuresOrDurationMs === 'number'
+            ? { duration: measuresOrDurationMs }
+            : measuresOrDurationMs || undefined;
     const customProperties: Record<string, string> = {};
     const eventNameSent = eventName as string;
 
@@ -175,11 +179,6 @@ type TypedMethodDescriptor<T> = (
     descriptor: TypedPropertyDescriptor<T>,
 ) => TypedPropertyDescriptor<T> | void;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isPromise(object: any): object is Promise<void> {
-    return typeof object.then === 'function' && typeof object.catch === 'function';
-}
-
 /**
  * Decorates a method, sending a telemetry event with the given properties.
  * @param eventName The event name to send.
@@ -194,7 +193,10 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
     properties?: P[E],
     captureDuration = true,
     failureEventName?: E,
-    lazyProperties?: (obj: This) => P[E],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    lazyProperties?: (obj: This, result?: any) => P[E],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    lazyMeasures?: (obj: This, result?: any) => Record<string, number>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
     return function (
@@ -215,14 +217,24 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
                 return originalMethod.apply(this, args);
             }
 
-            const props = () => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const getProps = (result?: any) => {
                 if (lazyProperties) {
-                    return { ...properties, ...lazyProperties(this) };
+                    return { ...properties, ...lazyProperties(this, result) };
                 }
                 return properties;
             };
 
             const stopWatch = captureDuration ? new StopWatch() : undefined;
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const getMeasures = (result?: any) => {
+                const measures = stopWatch ? { duration: stopWatch.elapsedTime } : undefined;
+                if (lazyMeasures) {
+                    return { ...measures, ...lazyMeasures(this, result) };
+                }
+                return measures;
+            };
 
             const result = originalMethod.apply(this, args);
 
@@ -230,15 +242,15 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
             if (result && isPromise(result)) {
                 result
                     .then((data) => {
-                        sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
+                        sendTelemetryEvent(eventName, getMeasures(data), getProps(data));
                         return data;
                     })
                     .catch((ex) => {
-                        const failedProps: P[E] = { ...props(), failed: true } as P[E] & FailedEventType;
-                        sendTelemetryEvent(failureEventName || eventName, stopWatch?.elapsedTime, failedProps, ex);
+                        const failedProps: P[E] = { ...getProps(), failed: true } as P[E] & FailedEventType;
+                        sendTelemetryEvent(failureEventName || eventName, getMeasures(), failedProps, ex);
                     });
             } else {
-                sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
+                sendTelemetryEvent(eventName, getMeasures(result), getProps(result));
             }
 
             return result;
@@ -294,6 +306,8 @@ type FailedEventType = { failed: true };
 export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when providing completion items for the given position and document.
+     *
+     * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.COMPLETION]: never | undefined;
     /**
