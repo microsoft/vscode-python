@@ -12,7 +12,6 @@ import { getFastEnvInfo } from '../../info/env';
 import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
 import { iterAndUpdateEnvs, resolveEnvFromIterator } from '../../locatorUtils';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
-import { FSWatchingLocator } from './fsWatchingLocator';
 
 /**
  * A naive locator the wraps a function that finds Python executables.
@@ -81,35 +80,9 @@ export class DirFilesLocator extends FoundFilesLocator {
     }
 }
 
-/**
- * A locator for executables in a single directory.
- */
-export class DirFilesWatchingLocator extends FSWatchingLocator {
-    private readonly subLocator: ILocator;
-
-    constructor(
-        dirname: string,
-        kind: PythonEnvKind,
-        // The default is defined by DirFilesLocator.
-        getExecutables?: (dir: string) => AsyncIterableIterator<string>,
-    ) {
-        super(
-            () => [dirname],
-            async () => kind,
-            // Watch just the directory.
-            { noTree: true },
-        );
-        this.subLocator = new DirFilesLocator(dirname, kind, getExecutables);
-    }
-
-    protected doIterEnvs(query: PythonLocatorQuery): IPythonEnvsIterator {
-        return this.subLocator.iterEnvs(query);
-    }
-
-    protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        return this.subLocator.resolveEnv(env);
-    }
-}
+// For now we do not have a DirFilesWatchingLocator.  It would be
+// a subclass of FSWatchingLocator that wraps a DirFilesLocator
+// instance.
 
 async function* getExecutablesDefault(dirname: string): AsyncIterableIterator<string> {
     for await (const entry of iterPythonExecutablesInDir(dirname)) {
