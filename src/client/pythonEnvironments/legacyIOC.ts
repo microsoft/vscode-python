@@ -249,12 +249,9 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return isCondaEnvironment(interpreterPath);
     }
 
-    // A result of `undefined` means "Fall back to the old code!"
     public async getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined> {
-        if (!this.enabled) {
-            return undefined;
-        }
         if (!(await isCondaEnvironment(interpreterPath))) {
+            // Undefined is expected here when the env is not Conda env.
             return undefined;
         }
 
