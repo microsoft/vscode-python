@@ -40,7 +40,8 @@ export interface IComponentAdapter {
         resource?: Uri,
         options?: GetInterpreterOptions,
         source?: PythonEnvSource[],
-    ): Promise<PythonEnvironment[] | undefined>;
+    ): Promise<PythonEnvironment[]>;
+
     // WorkspaceVirtualEnvInterpretersAutoSelectionRule
     getWorkspaceVirtualEnvInterpreters(
         resource: Uri,
