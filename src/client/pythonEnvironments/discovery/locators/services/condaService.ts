@@ -232,10 +232,10 @@ export class CondaService implements ICondaService {
      * Return (env name, interpreter filename) for the interpreter.
      */
     public async getCondaEnvironment(interpreterPath: string): Promise<{ name: string; path: string } | undefined> {
-        const found = await this.pyenvs.getCondaEnvironment(interpreterPath);
-        if (found !== undefined) {
-            return found;
+        if (await inDiscoveryExperiment(this.experimentService)) {
+            return this.pyenvs.getCondaEnvironment(interpreterPath);
         }
+
         const isCondaEnv = await this.isCondaEnvironment(interpreterPath);
         if (!isCondaEnv) {
             return undefined;
