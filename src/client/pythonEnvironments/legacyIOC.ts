@@ -448,10 +448,10 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
             PipEnvService,
             PIPENV_SERVICE,
         );
+        serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
     }
 
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
-    serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
 }
 
 export function registerNewDiscoveryForIOC(
