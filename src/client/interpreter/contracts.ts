@@ -55,7 +55,7 @@ export interface IComponentAdapter {
     getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>>;
     isMacDefaultPythonPath(pythonPath: string): Promise<boolean>;
     // ICondaService
-    isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined>;
+    isCondaEnvironment(interpreterPath: string): Promise<boolean>;
     getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
 
     isWindowsStoreInterpreter(pythonPath: string): Promise<boolean>;

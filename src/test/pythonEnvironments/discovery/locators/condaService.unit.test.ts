@@ -7,6 +7,7 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, EventEmitter } from 'vscode';
 
 import { IWorkspaceService } from '../../../../client/common/application/types';
+import { DiscoveryVariants } from '../../../../client/common/experiments/groups';
 import { FileSystemPaths, FileSystemPathUtils } from '../../../../client/common/platform/fs-paths';
 import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../../../client/common/process/types';
@@ -59,9 +60,9 @@ suite('Interpreters Conda Service', () => {
     let disposableRegistry: Disposable[];
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
-    let experiments: TypeMoq.IMock<IExperimentService>;
     let mockState: MockState;
     let terminalProvider: TypeMoq.IMock<ITerminalActivationCommandProvider>;
+    let experimentService: TypeMoq.IMock<IExperimentService>;
     setup(async () => {
         condaPathSetting = '';
         processService = TypeMoq.Mock.ofType<IProcessService>();
@@ -75,7 +76,6 @@ suite('Interpreters Conda Service', () => {
         config = TypeMoq.Mock.ofType<IConfigurationService>();
         settings = TypeMoq.Mock.ofType<IPythonSettings>();
         procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
-        experiments = TypeMoq.Mock.ofType<IExperimentService>();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((x: any) => x.then).returns(() => undefined);
         procServiceFactory
@@ -97,6 +97,14 @@ suite('Interpreters Conda Service', () => {
         terminalProvider
             .setup((p) => p.getActivationCommandsForInterpreter!(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(['activate']));
+
+        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
+        experimentService
+            .setup((exp) => exp.inExperiment(DiscoveryVariants.discoverWithFileWatching))
+            .returns(() => Promise.resolve(false));
+        experimentService
+            .setup((exp) => exp.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
+            .returns(() => Promise.resolve(false));
 
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         serviceContainer
@@ -137,7 +145,7 @@ suite('Interpreters Conda Service', () => {
             disposableRegistry,
             workspaceService.object,
             pyenvs.object,
-            experiments.object,
+            experimentService.object,
             registryInterpreterLocatorService.object,
         );
     });
@@ -638,7 +646,7 @@ suite('Interpreters Conda Service', () => {
             disposableRegistry,
             workspaceService.object,
             pyenvs.object,
-            experiments.object,
+            experimentService.object,
         );
 
         const result = await condaSrv.getCondaFile();

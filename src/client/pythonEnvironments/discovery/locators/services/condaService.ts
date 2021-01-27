@@ -13,7 +13,6 @@ import {
     IDisposableRegistry,
     IExperimentService,
     IPersistentStateFactory,
-    Resource,
 } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
 import {
@@ -57,13 +56,6 @@ export const CondaLocationsGlobWin = `{${condaGlobPathsForWindows.join(',')}}`;
 
 export const CondaGetEnvironmentPrefix = 'Outputting Environment Now...';
 
-// The parts of IComponentAdapter used here.
-interface IComponent {
-    isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined>;
-    getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
-    getWinRegInterpreters(resource: Resource): Promise<PythonEnvironment[] | undefined>;
-}
-
 /**
  * A wrapper around a conda installation.
  */
@@ -86,7 +78,7 @@ export class CondaService implements ICondaService {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IInterpreterLocatorService)
         @named(WINDOWS_REGISTRY_SERVICE)
@@ -226,10 +218,10 @@ export class CondaService implements ICondaService {
      * @memberof CondaService
      */
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean> {
-        const result = await this.pyenvs.isCondaEnvironment(interpreterPath);
-        if (result !== undefined) {
-            return result;
+        if (await inDiscoveryExperiment(this.experimentService)) {
+            return this.pyenvs.isCondaEnvironment(interpreterPath);
         }
+
         const dir = path.dirname(interpreterPath);
         const { isWindows } = this.platform;
         const condaMetaDirectory = isWindows ? path.join(dir, 'conda-meta') : path.join(dir, '..', 'conda-meta');
