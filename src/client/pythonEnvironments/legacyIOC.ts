@@ -443,8 +443,12 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
             WINDOWS_REGISTRY_SERVICE,
         );
         serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
+        serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            PipEnvService,
+            PIPENV_SERVICE,
+        );
     }
-    serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
 
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
