@@ -47,7 +47,7 @@ export interface IComponentAdapter {
         options?: { ignoreCache?: boolean },
     ): Promise<PythonEnvironment[]>;
     // IInterpreterService
-    getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment>;
+    getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<PythonEnvironment>;
     // IInterpreterHelper
     getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>>;
     isMacDefaultPythonPath(pythonPath: string): Promise<boolean>;

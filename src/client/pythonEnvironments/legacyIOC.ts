@@ -226,15 +226,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     // Implements IInterpreterService
 
     // We use the same getInterpreters() here as for IInterpreterLocatorService.
-
-    // A result of `undefined` means "Fall back to the old code!"
-    public async getInterpreterDetails(
-        pythonPath: string,
-        resource?: vscode.Uri,
-    ): Promise<undefined | PythonEnvironment> {
-        if (!this.enabled) {
-            return undefined;
-        }
+    public async getInterpreterDetails(pythonPath: string, resource?: vscode.Uri): Promise<PythonEnvironment> {
         const info = buildEnvInfo({ executable: pythonPath });
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
@@ -243,10 +235,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
             }
         }
         const env = await this.api.resolveEnv(info);
-        if (env === undefined) {
-            return undefined;
-        }
-        return convertEnvInfo(env);
+        return convertEnvInfo(env ?? buildEnvInfo({ executable: pythonPath }));
     }
 
     // Implements ICondaService
