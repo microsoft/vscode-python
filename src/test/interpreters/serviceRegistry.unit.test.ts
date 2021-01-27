@@ -56,9 +56,7 @@ import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
 import { registerTypes } from '../../client/interpreter/serviceRegistry';
-import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { CondaInheritEnvPrompt } from '../../client/interpreter/virtualEnvs/condaInheritEnvPrompt';
-import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { VirtualEnvironmentPrompt } from '../../client/interpreter/virtualEnvs/virtualEnvPrompt';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 
@@ -76,7 +74,6 @@ suite('Interpreters - Service Registry', () => {
             [IInterpreterSecurityStorage, InterpreterSecurityStorage],
             [IInterpreterSecurityService, InterpreterSecurityService],
 
-            [IVirtualEnvironmentManager, VirtualEnvironmentManager],
             [IExtensionActivationService, VirtualEnvironmentPrompt],
             [IExtensionSingleActivationService, InterpreterSelectionTip],
 

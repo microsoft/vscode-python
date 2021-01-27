@@ -349,7 +349,14 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (info.architecture) {
             displayNameParts.push(getArchitectureDisplayName(info.architecture));
         }
-        if (!info.envName && info.path && info.envType && info.envType === EnvironmentType.Pipenv) {
+        if (
+            !info.envName &&
+            info.path &&
+            info.envType &&
+            info.envType === EnvironmentType.Pipenv &&
+            // We cannot access 'IVirtualEnvironmentManager' while in experiment.
+            !(await inDiscoveryExperiment(this.experimentService))
+        ) {
             // If we do not have the name of the environment, then try to get it again.
             // This can happen based on the context (i.e. resource).
             // I.e. we can determine if an environment is PipEnv only when giving it the right workspace path (i.e. resource).

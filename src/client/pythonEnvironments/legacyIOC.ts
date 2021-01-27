@@ -32,6 +32,8 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
+import { VirtualEnvironmentManager } from '../interpreter/virtualEnvs';
+import { IVirtualEnvironmentManager } from '../interpreter/virtualEnvs/types';
 import { IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, PythonReleaseLevel } from './base/info';
 import { buildEnvInfo } from './base/info/env';
@@ -440,6 +442,7 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
             WindowsRegistryService,
             WINDOWS_REGISTRY_SERVICE,
         );
+        serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
     }
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
 

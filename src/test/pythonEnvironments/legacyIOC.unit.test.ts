@@ -28,6 +28,8 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../client/interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
+import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
+import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { initializeExternalDependencies } from '../../client/pythonEnvironments/common/externalDependencies';
@@ -88,6 +90,12 @@ suite('Interpreters - Service Registry', () => {
                 IInterpreterLocatorService,
                 CondaEnvFileService,
                 CONDA_ENV_FILE_SERVICE,
+            ),
+        ).once();
+        verify(
+            serviceManager.addSingleton<IVirtualEnvironmentManager>(
+                IVirtualEnvironmentManager,
+                VirtualEnvironmentManager,
             ),
         ).once();
         verify(
