@@ -271,6 +271,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return iterator.next().then((res) => !res.done);
     }
 
+    // A result of `undefined` means "Fall back to the old code!"
     public async getInterpreters(
         resource?: vscode.Uri,
         options?: GetInterpreterLocatorOptions,
@@ -280,7 +281,10 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         //     onSuggestion?: boolean;
         // }
         source?: PythonEnvSource[],
-    ): Promise<PythonEnvironment[]> {
+    ): Promise<PythonEnvironment[] | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
         // Notify locators are locating.
         this.refreshing.fire();
 

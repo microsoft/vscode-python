@@ -139,7 +139,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
     public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
         let environments: PythonEnvironment[] = [];
         if (await inDiscoveryExperiment(this.experimentService)) {
-            environments = await this.pyenvs.getInterpreters(resource, options);
+            environments = (await this.pyenvs.getInterpreters(resource, options)) ?? [];
         } else {
             const locator = this.serviceContainer.get<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
