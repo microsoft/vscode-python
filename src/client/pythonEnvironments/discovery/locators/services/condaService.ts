@@ -428,7 +428,7 @@ export class CondaService implements ICondaService {
 
     private async getWinRegEnvs(): Promise<PythonEnvironment[] | undefined> {
         if (await inDiscoveryExperiment(this.experimentService)) {
-            return await this.pyenvs.getWinRegInterpreters(undefined);
+            return this.pyenvs.getWinRegInterpreters(undefined);
         }
         if (this.registryLookupForConda) {
             return this.registryLookupForConda.getInterpreters();
