@@ -87,11 +87,11 @@ export class CondaService implements ICondaService {
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IComponentAdapter) private readonly pyenvs: IComponent,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IInterpreterLocatorService)
         @named(WINDOWS_REGISTRY_SERVICE)
         @optional()
-        private registryLookupForConda: IInterpreterLocatorService | undefined,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
+        private registryLookupForConda?: IInterpreterLocatorService,
     ) {
         this.addCondaPathChangedHandler();
     }

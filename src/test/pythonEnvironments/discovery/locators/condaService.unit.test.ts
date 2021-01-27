@@ -137,8 +137,8 @@ suite('Interpreters Conda Service', () => {
             disposableRegistry,
             workspaceService.object,
             pyenvs.object,
-            registryInterpreterLocatorService.object,
             experiments.object,
+            registryInterpreterLocatorService.object,
         );
     });
 
@@ -638,7 +638,6 @@ suite('Interpreters Conda Service', () => {
             disposableRegistry,
             workspaceService.object,
             pyenvs.object,
-            undefined,
             experiments.object,
         );
 
