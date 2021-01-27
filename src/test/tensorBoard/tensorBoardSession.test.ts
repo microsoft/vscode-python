@@ -1,5 +1,6 @@
 import { assert } from 'chai';
 import Sinon, * as sinon from 'sinon';
+import { SemVer } from 'semver';
 import { IApplicationShell, ICommandManager } from '../../client/common/application/types';
 import { IExperimentService, IInstaller, InstallerResponse, ProductInstallStatus } from '../../client/common/types';
 import { TensorBoard } from '../../client/common/utils/localize';
@@ -9,6 +10,22 @@ import { TensorBoardSession } from '../../client/tensorBoard/tensorBoardSession'
 import { TensorBoardSessionProvider } from '../../client/tensorBoard/tensorBoardSessionProvider';
 import { closeActiveWindows, initialize } from '../initialize';
 import * as ExperimentHelpers from '../../client/common/experiments/helpers';
+import { IInterpreterService } from '../../client/interpreter/contracts';
+import { Architecture } from '../../client/common/utils/platform';
+import { PythonEnvironment, EnvironmentType } from '../../client/pythonEnvironments/info';
+import { PYTHON_PATH } from '../common';
+
+const info: PythonEnvironment = {
+    architecture: Architecture.Unknown,
+    companyDisplayName: '',
+    displayName: '',
+    envName: '',
+    path: '',
+    envType: EnvironmentType.Unknown,
+    version: new SemVer('0.0.0-alpha'),
+    sysPrefix: '',
+    sysVersion: '',
+};
 
 suite('TensorBoard session creation', async () => {
     let serviceManager: IServiceManager;
@@ -32,6 +49,15 @@ suite('TensorBoard session creation', async () => {
         // Pretend to be in experiment
         const experimentService = serviceManager.get<IExperimentService>(IExperimentService);
         sandbox.stub(experimentService, 'inExperiment').resolves(true);
+
+        // Ensure we use CI Python
+        const interpreter: PythonEnvironment = {
+            ...info,
+            envType: EnvironmentType.Unknown,
+            path: PYTHON_PATH,
+        };
+        const interpreterService = serviceManager.get<IInterpreterService>(IInterpreterService);
+        sandbox.stub(interpreterService, 'getActiveInterpreter').resolves(interpreter);
 
         // Create tensorboard session provider
         provider = serviceManager.get<TensorBoardSessionProvider>(TensorBoardSessionProvider);
