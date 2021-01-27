@@ -7,7 +7,7 @@
 // import * as crypto from 'crypto';
 
 import { relative } from 'path';
-import * as vscode from 'vscode';
+import type * as vscode from 'vscode';
 import { vscMockHtmlContent } from './htmlContent';
 import { vscMockStrings } from './strings';
 import { vscUri } from './uri';
@@ -2166,6 +2166,6 @@ export namespace vscMockExtHostedTypes {
     }
 
     export class QuickInputButtons {
-        static readonly Back: vscode.QuickInputButton = { iconPath: new vscode.ThemeIcon('back') };
+        static readonly Back: vscode.QuickInputButton = { iconPath: vscUri.URI.file('back') };
     }
 }
