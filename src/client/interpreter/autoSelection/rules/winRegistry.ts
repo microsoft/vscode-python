@@ -41,7 +41,7 @@ export class WindowsRegistryInterpretersAutoSelectionRule extends BaseRuleServic
         if (this.platform.osType !== OSType.Windows) {
             return NextAction.runNextRule;
         }
-        let interpreters: PythonEnvironment[] | undefined = [];
+        let interpreters: PythonEnvironment[] = [];
         if (await inDiscoveryExperiment(this.experimentService)) {
             interpreters = await this.pyenvs.getWinRegInterpreters(resource);
         } else {

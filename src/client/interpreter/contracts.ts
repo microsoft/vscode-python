@@ -49,7 +49,7 @@ export interface IComponentAdapter {
     ): Promise<PythonEnvironment[]>;
 
     // IInterpreterLocatorService (for WINDOWS_REGISTRY_SERVICE)
-    getWinRegInterpreters(resource: Resource): Promise<PythonEnvironment[] | undefined>;
+    getWinRegInterpreters(resource: Resource): Promise<PythonEnvironment[]>;
     // IInterpreterService
     getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<PythonEnvironment>;
 

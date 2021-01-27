@@ -402,7 +402,7 @@ export class CondaService implements ICondaService {
             return 'conda';
         }
         if (this.platform.isWindows) {
-            const interpreters: PythonEnvironment[] = (await this.getWinRegEnvs()) || [];
+            const interpreters: PythonEnvironment[] = await this.getWinRegEnvs();
             const condaInterpreters = interpreters.filter(CondaService.detectCondaEnvironment);
             const condaInterpreter = CondaService.getLatestVersion(condaInterpreters);
             if (condaInterpreter) {
@@ -418,7 +418,7 @@ export class CondaService implements ICondaService {
         return this.getCondaFileFromKnownLocations();
     }
 
-    private async getWinRegEnvs(): Promise<PythonEnvironment[] | undefined> {
+    private async getWinRegEnvs(): Promise<PythonEnvironment[]> {
         if (await inDiscoveryExperiment(this.experimentService)) {
             return this.pyenvs.getWinRegInterpreters(undefined);
         }

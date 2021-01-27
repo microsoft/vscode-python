@@ -355,7 +355,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
 
     // Implements IInterpreterLocatorService (for WINDOWS_REGISTRY_SERVICE).
 
-    public async getWinRegInterpreters(resource: Resource): Promise<PythonEnvironment[] | undefined> {
+    public async getWinRegInterpreters(resource: Resource): Promise<PythonEnvironment[]> {
         return this.getInterpreters(resource, undefined, [PythonEnvSource.WindowsRegistry]);
     }
 }
