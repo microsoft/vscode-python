@@ -5,7 +5,7 @@
 
 import * as assert from 'assert';
 import * as typemoq from 'typemoq';
-import { Memento, ExtensionContext } from 'vscode';
+import { ExtensionContext } from 'vscode';
 import {
     IApplicationEnvironment,
     IApplicationShell,
@@ -67,7 +67,7 @@ suite('StartPage tests', () => {
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         context = typemoq.Mock.ofType<IExtensionContext>();
         appEnvironment = typemoq.Mock.ofType<IApplicationEnvironment>();
-        memento = typemoq.Mock.ofType<Memento>();
+        memento = typemoq.Mock.ofType<ExtensionContext['globalState']>();
 
         configuration.setup((cs) => cs.getSettings(undefined)).returns(() => dummySettings);
 
