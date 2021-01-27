@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../interpreter/contracts';
+import { IComponentAdapter, IInterpreterLocatorService, PIPENV_SERVICE } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { EnvironmentType } from '../../pythonEnvironments/info';
-import { ExecutionInfo } from '../types';
+import { inDiscoveryExperiment } from '../experiments/helpers';
+import { ExecutionInfo, IExperimentService } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
 import { InterpreterUri } from './types';
@@ -14,8 +15,6 @@ export const pipenvName = 'pipenv';
 
 @injectable()
 export class PipEnvInstaller extends ModuleInstaller {
-    private readonly pipenv: IInterpreterLocatorService;
-
     public get name(): string {
         return 'pipenv';
     }
@@ -29,11 +28,18 @@ export class PipEnvInstaller extends ModuleInstaller {
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
-        this.pipenv = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
     }
     public async isSupported(resource?: InterpreterUri): Promise<boolean> {
         if (isResource(resource)) {
-            const interpreters = await this.pipenv.getInterpreters(resource);
+            const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
+            const pyenvs = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
+            const interpreters = (await inDiscoveryExperiment(experimentService))
+                ? await pyenvs
+                      .getInterpreters(resource)
+                      .then((envs) => envs.filter((e) => e.envType == EnvironmentType.Pipenv))
+                : await this.serviceContainer
+                      .get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE)
+                      .getInterpreters(resource);
             return interpreters.length > 0;
         } else {
             return resource.envType === EnvironmentType.Pipenv;
