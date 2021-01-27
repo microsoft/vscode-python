@@ -6,6 +6,7 @@
 import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
@@ -23,6 +24,7 @@ import {
 import { EXTENSION_ROOT_DIR_FOR_TESTS, TEST_TIMEOUT } from '../../../constants';
 import { sleep } from '../../../core';
 import { initialize, initializeTest } from '../../../initialize';
+import * as ExperimentHelpers from '../../../../client/common/experiments/helpers';
 
 suite('Activation of Environments in Terminal', () => {
     const file = path.join(
@@ -57,7 +59,9 @@ suite('Activation of Environments in Terminal', () => {
     let terminalSettings: any;
     let pythonSettings: any;
     let experiments: IExperimentsManager;
+    const sandbox = sinon.createSandbox();
     suiteSetup(async () => {
+        sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(false);
         envPaths = await fs.readJson(envsLocation);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders![0].uri);
         pythonSettings = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders![0].uri);
@@ -81,6 +85,7 @@ suite('Activation of Environments in Terminal', () => {
     });
 
     suiteTeardown(async function () {
+        sandbox.restore();
         this.timeout(TEST_TIMEOUT * 2);
         await revertSettings();
 
