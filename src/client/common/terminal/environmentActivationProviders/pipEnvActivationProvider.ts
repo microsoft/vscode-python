@@ -3,27 +3,22 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import '../../../common/extensions';
-import {
-    IInterpreterLocatorService,
-    IInterpreterService,
-    IPipEnvService,
-    PIPENV_SERVICE,
-} from '../../../interpreter/contracts';
+import { IInterpreterService } from '../../../interpreter/contracts';
 import { EnvironmentType } from '../../../pythonEnvironments/info';
 import { IWorkspaceService } from '../../application/types';
 import { IFileSystem } from '../../platform/types';
+import { IConfigurationService } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
 
 @injectable()
 export class PipEnvActivationCommandProvider implements ITerminalActivationCommandProvider {
     constructor(
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IInterpreterLocatorService)
-        @named(PIPENV_SERVICE)
-        private readonly pipenvService: IPipEnvService,
+        @inject(IConfigurationService)
+        private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
     ) {}
@@ -46,7 +41,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         ) {
             return;
         }
-        const execName = this.pipenvService.executable;
+        const execName = this.configService.getSettings().pipenvPath;
         return [`${execName.fileToCommandArgument()} shell`];
     }
 
@@ -59,7 +54,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
             return;
         }
 
-        const execName = this.pipenvService.executable;
+        const execName = this.configService.getSettings().pipenvPath;
         return [`${execName.fileToCommandArgument()} shell`];
     }
 }

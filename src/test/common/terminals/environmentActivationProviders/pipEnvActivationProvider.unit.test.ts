@@ -13,8 +13,9 @@ import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { PipEnvActivationCommandProvider } from '../../../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../../client/common/terminal/types';
+import { IConfigurationService } from '../../../../client/common/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
-import { IInterpreterService, IPipEnvService } from '../../../../client/interpreter/contracts';
+import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 
@@ -24,7 +25,7 @@ suite('Terminals Activation - Pipenv', () => {
             let pipenvExecFile = 'pipenv';
             let activationProvider: ITerminalActivationCommandProvider;
             let interpreterService: IInterpreterService;
-            let pipenvService: TypeMoq.IMock<IPipEnvService>;
+            let configService: TypeMoq.IMock<IConfigurationService>;
             let workspaceService: IWorkspaceService;
             let fs: IFileSystem;
             setup(() => {
@@ -32,15 +33,15 @@ suite('Terminals Activation - Pipenv', () => {
                 fs = mock(FileSystem);
                 workspaceService = mock(WorkspaceService);
                 interpreterService = mock(InterpreterService);
-                pipenvService = TypeMoq.Mock.ofType<IPipEnvService>();
+                configService = TypeMoq.Mock.ofType<IConfigurationService>();
                 activationProvider = new PipEnvActivationCommandProvider(
                     instance(interpreterService),
-                    pipenvService.object,
+                    configService.object,
                     instance(workspaceService),
                     instance(fs),
                 );
 
-                pipenvService.setup((p) => p.executable).returns(() => pipenvExecFile);
+                configService.setup((p) => p.getSettings()).returns(() => ({ pipenvPath: pipenvExecFile } as any));
             });
 
             test('No commands for no interpreter', async () => {
