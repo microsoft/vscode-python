@@ -4,10 +4,16 @@ import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../../../common/application/types';
+import { inDiscoveryExperiment } from '../../../../common/experiments/helpers';
 import { traceDecorators, traceError, traceVerbose, traceWarning } from '../../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../../common/process/types';
-import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../../common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentService,
+    IPersistentStateFactory,
+} from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
 import {
     IComponentAdapter,
@@ -50,12 +56,6 @@ export const CondaLocationsGlobWin = `{${condaGlobPathsForWindows.join(',')}}`;
 
 export const CondaGetEnvironmentPrefix = 'Outputting Environment Now...';
 
-// The parts of IComponentAdapter used here.
-interface IComponent {
-    isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined>;
-    getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
-}
-
 /**
  * A wrapper around a conda installation.
  */
@@ -78,7 +78,8 @@ export class CondaService implements ICondaService {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IInterpreterLocatorService)
         @named(WINDOWS_REGISTRY_SERVICE)
         @optional()
@@ -217,10 +218,10 @@ export class CondaService implements ICondaService {
      * @memberof CondaService
      */
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean> {
-        const result = await this.pyenvs.isCondaEnvironment(interpreterPath);
-        if (result !== undefined) {
-            return result;
+        if (await inDiscoveryExperiment(this.experimentService)) {
+            return this.pyenvs.isCondaEnvironment(interpreterPath);
         }
+
         const dir = path.dirname(interpreterPath);
         const { isWindows } = this.platform;
         const condaMetaDirectory = isWindows ? path.join(dir, 'conda-meta') : path.join(dir, '..', 'conda-meta');
