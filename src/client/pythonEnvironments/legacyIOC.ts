@@ -38,7 +38,7 @@ import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
 import { isMacDefaultPythonPath } from './base/locators/lowLevel/macDefaultLocator';
 import { getEnvs } from './base/locatorUtils';
-import { getFileInfo, inExperiment, isParentPath } from './common/externalDependencies';
+import { inExperiment, isParentPath } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
@@ -141,6 +141,9 @@ export interface IPythonEnvironments extends ILocator {}
 
 @injectable()
 class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationService {
+    // this will be set based on experiment
+    private enabled = false;
+
     private readonly refreshing = new vscode.EventEmitter<void>();
 
     private readonly refreshed = new vscode.EventEmitter<void>();
@@ -148,12 +151,14 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     private allowOnSuggestionRefresh = false;
 
     constructor(
+        // The adapter only wraps one thing: the component API.
         private readonly api: IPythonEnvironments,
         private readonly environmentsSecurity: IEnvironmentsSecurity,
         private readonly disposables: IDisposableRegistry,
     ) {}
 
     public async activate(): Promise<void> {
+        this.enabled = await inDiscoveryExperiment();
         this.disposables.push(
             this.api.onChanged((e) => {
                 const query = {
@@ -167,7 +172,12 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     }
 
     // For use in VirtualEnvironmentPrompt.activate()
-    public onDidCreate(resource: Resource, callback: () => void): vscode.Disposable {
+
+    // Call callback if an environment gets created within the resource provided.
+    public onDidCreate(resource: Resource, callback: () => void): vscode.Disposable | undefined {
+        if (!this.enabled) {
+            return undefined;
+        }
         const workspaceFolder = resource ? vscode.workspace.getWorkspaceFolder(resource) : undefined;
         return this.api.onChanged((e) => {
             if (!workspaceFolder || !e.searchLocation) {
@@ -183,31 +193,35 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     }
 
     // Implements IInterpreterLocatorProgressHandler
-    public get onRefreshing(): vscode.Event<void> {
-        return this.refreshing.event;
+
+    // A result of `undefined` means "Fall back to the old code!"
+    public get onRefreshing(): vscode.Event<void> | undefined {
+        return this.enabled ? this.refreshing.event : undefined;
     }
 
-    public get onRefreshed(): vscode.Event<void> {
-        return this.refreshed.event;
+    public get onRefreshed(): vscode.Event<void> | undefined {
+        return this.enabled ? this.refreshed.event : undefined;
     }
 
     // Implements IInterpreterHelper
-    public async getInterpreterInformation(pythonPath: string): Promise<Partial<PythonEnvironment>> {
+
+    // A result of `undefined` means "Fall back to the old code!"
+    public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
+        if (!this.enabled) {
+            return undefined;
+        }
         const env = await this.api.resolveEnv(pythonPath);
         if (env === undefined) {
-            // We don't know what this is. So, create a simple env info object with basic info.
-            return convertEnvInfo(
-                buildEnvInfo({
-                    executable: pythonPath,
-                    fileInfo: await getFileInfo(pythonPath),
-                }),
-            );
+            return undefined;
         }
         return convertEnvInfo(env);
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean> {
+    // A result of `undefined` means "Fall back to the old code!"
+    public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
         // While `ComponentAdapter` represents how the component would be used in the rest of the
         // extension, we cheat here for the sake of performance.  This is not a problem because when
         // we start using the component's public API directly we will be dealing with `PythonEnvInfo`
@@ -218,7 +232,15 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     // Implements IInterpreterService
 
     // We use the same getInterpreters() here as for IInterpreterLocatorService.
-    public async getInterpreterDetails(pythonPath: string, resource?: vscode.Uri): Promise<PythonEnvironment> {
+
+    // A result of `undefined` means "Fall back to the old code!"
+    public async getInterpreterDetails(
+        pythonPath: string,
+        resource?: vscode.Uri,
+    ): Promise<undefined | PythonEnvironment> {
+        if (!this.enabled) {
+            return undefined;
+        }
         const info = buildEnvInfo({ executable: pythonPath });
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
@@ -228,20 +250,18 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         }
         const env = await this.api.resolveEnv(info);
         if (env === undefined) {
-            // We don't know what this is. So, create a simple env info object with basic info.
-            return convertEnvInfo(
-                buildEnvInfo({
-                    executable: pythonPath,
-                    fileInfo: await getFileInfo(pythonPath),
-                }),
-            );
+            return undefined;
         }
         return convertEnvInfo(env);
     }
 
     // Implements ICondaService
-    // eslint-disable-next-line class-methods-use-this
-    public async isCondaEnvironment(interpreterPath: string): Promise<boolean> {
+
+    // A result of `undefined` means "Fall back to the old code!"
+    public async isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
         // While `ComponentAdapter` represents how the component would be used in the rest of the
         // extension, we cheat here for the sake of performance.  This is not a problem because when
         // we start using the component's public API directly we will be dealing with `PythonEnvInfo`
@@ -249,7 +269,11 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return isCondaEnvironment(interpreterPath);
     }
 
+    // A result of `undefined` means "Fall back to the old code!"
     public async getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
         if (!(await isCondaEnvironment(interpreterPath))) {
             return undefined;
         }
@@ -265,19 +289,28 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         return { name: env.name, path: env.location };
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean> {
+    // A result of `undefined` means "Fall back to the old code!"
+    public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
         // Eventually we won't be calling 'isWindowsStoreInterpreter' in the component adapter, so we won't
         // need to use 'isWindowsStoreEnvironment' directly here. This is just a temporary implementation.
         return isWindowsStoreEnvironment(pythonPath);
     }
 
     // Implements IInterpreterLocatorService
-    public get hasInterpreters(): Promise<boolean> {
+
+    // A result of `undefined` means "Fall back to the old code!"
+    public get hasInterpreters(): Promise<boolean | undefined> {
+        if (!this.enabled) {
+            return Promise.resolve(undefined);
+        }
         const iterator = this.api.iterEnvs();
         return iterator.next().then((res) => !res.done);
     }
 
+    // A result of `undefined` means "Fall back to the old code!"
     public async getInterpreters(
         resource?: vscode.Uri,
         options?: GetInterpreterLocatorOptions,
@@ -287,7 +320,10 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         //     onSuggestion?: boolean;
         // }
         source?: PythonEnvSource[],
-    ): Promise<PythonEnvironment[]> {
+    ): Promise<PythonEnvironment[] | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
         // Notify locators are locating.
         this.refreshing.fire();
 
@@ -344,7 +380,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     public async getWorkspaceVirtualEnvInterpreters(
         resource: vscode.Uri,
         options?: { ignoreCache?: boolean },
-    ): Promise<PythonEnvironment[]> {
+    ): Promise<PythonEnvironment[] | undefined> {
         if (!this.enabled) {
             return undefined;
         }

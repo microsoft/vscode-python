@@ -33,32 +33,32 @@ export interface IVirtualEnvironmentsSearchPathProvider {
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
     // VirtualEnvPrompt
-    onDidCreate(resource: Resource, callback: () => void): Disposable;
+    onDidCreate(resource: Resource, callback: () => void): Disposable | undefined;
     // IInterpreterLocatorService
-    hasInterpreters: Promise<boolean>;
+    hasInterpreters: Promise<boolean | undefined>;
     getInterpreters(
         resource?: Uri,
         options?: GetInterpreterOptions,
         source?: PythonEnvSource[],
-    ): Promise<PythonEnvironment[]>;
+    ): Promise<PythonEnvironment[] | undefined>;
     // WorkspaceVirtualEnvInterpretersAutoSelectionRule
     getWorkspaceVirtualEnvInterpreters(
         resource: Uri,
         options?: { ignoreCache?: boolean },
-    ): Promise<PythonEnvironment[]>;
+    ): Promise<PythonEnvironment[] | undefined>;
 
     // IInterpreterLocatorService (for WINDOWS_REGISTRY_SERVICE)
     getWinRegInterpreters(resource: Resource): Promise<PythonEnvironment[] | undefined>;
     // IInterpreterService
-    getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<PythonEnvironment>;
+    getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment>;
     // IInterpreterHelper
-    getInterpreterInformation(pythonPath: string): Promise<Partial<PythonEnvironment>>;
-    isMacDefaultPythonPath(pythonPath: string): Promise<boolean>;
+    getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>>;
+    isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined>;
     // ICondaService
-    isCondaEnvironment(interpreterPath: string): Promise<boolean>;
+    isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined>;
     getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
 
-    isWindowsStoreInterpreter(pythonPath: string): Promise<boolean>;
+    isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined>;
 }
 
 export const IInterpreterLocatorService = Symbol('IInterpreterLocatorService');
