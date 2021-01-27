@@ -674,6 +674,10 @@ export interface IEventNamePropertyMapping {
          * If global interpreter is being used
          */
         usingGlobalInterpreter: boolean;
+        /**
+         * If we're running in Codespaces browser-based editor
+         */
+        usingCodespaces: boolean;
     };
     /**
      * Telemetry event sent when substituting Environment variables to calculate value of variables

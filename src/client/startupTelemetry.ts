@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IWorkspaceService } from './common/application/types';
+import { UIKind } from 'vscode';
+import { IApplicationEnvironment, IWorkspaceService } from './common/application/types';
 import { isTestExecution } from './common/constants';
 import { DeprecatePythonPath } from './common/experiments/groups';
 import { traceError } from './common/logger';
@@ -140,6 +141,8 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         : false;
     const hasPython3 =
         interpreters!.filter((item) => (item && item.version ? item.version.major === 3 : false)).length > 0;
+    const usingCodespaces =
+        serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment).uiKind === UIKind.Web;
 
     return {
         condaVersion,
@@ -151,5 +154,6 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         usingUserDefinedInterpreter,
         usingAutoSelectedWorkspaceInterpreter,
         usingGlobalInterpreter,
+        usingCodespaces,
     };
 }
