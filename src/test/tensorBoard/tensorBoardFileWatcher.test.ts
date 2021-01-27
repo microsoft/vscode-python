@@ -111,12 +111,12 @@ suite('TensorBoard file system watcher', async () => {
 
         // Stub the prompt show method so we can verify that it was called
         const prompt = serviceManager.get<TensorBoardPrompt>(TensorBoardPrompt);
-        showNativeTensorBoardPrompt = sinon.stub(prompt, 'showNativeTensorBoardPrompt');
+        showNativeTensorBoardPrompt = sandbox.stub(prompt, 'showNativeTensorBoardPrompt');
         serviceManager.rebindInstance(TensorBoardPrompt, prompt);
 
         // Pretend there are no open folders
         const workspaceService = serviceManager.get<IWorkspaceService>(IWorkspaceService);
-        sinon.stub(workspaceService, 'workspaceFolders').get(() => undefined);
+        sandbox.stub(workspaceService, 'workspaceFolders').get(() => undefined);
         serviceManager.rebindInstance(IWorkspaceService, workspaceService);
         const fileWatcher = serviceManager.get<TensorBoardFileWatcher>(TensorBoardFileWatcher);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
