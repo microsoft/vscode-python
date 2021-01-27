@@ -201,17 +201,9 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     }
 
     // Implements IInterpreterHelper
-
-    // A result of `undefined` means "Fall back to the old code!"
-    public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
-        if (!this.enabled) {
-            return undefined;
-        }
+    public async getInterpreterInformation(pythonPath: string): Promise<Partial<PythonEnvironment> | undefined> {
         const env = await this.api.resolveEnv(pythonPath);
-        if (env === undefined) {
-            return undefined;
-        }
-        return convertEnvInfo(env);
+        return env ? convertEnvInfo(env) : undefined;
     }
 
     // eslint-disable-next-line class-methods-use-this

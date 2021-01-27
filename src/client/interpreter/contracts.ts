@@ -51,8 +51,11 @@ export interface IComponentAdapter {
     getWinRegInterpreters(resource: Resource): Promise<PythonEnvironment[] | undefined>;
     // IInterpreterService
     getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<PythonEnvironment>;
+
     // IInterpreterHelper
-    getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>>;
+    // Undefined is expected on this API, if the environment info retrieval fails.
+    getInterpreterInformation(pythonPath: string): Promise<Partial<PythonEnvironment> | undefined>;
+
     isMacDefaultPythonPath(pythonPath: string): Promise<boolean>;
 
     // ICondaService
