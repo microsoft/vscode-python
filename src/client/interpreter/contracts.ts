@@ -40,12 +40,14 @@ export interface IComponentAdapter {
         resource?: Uri,
         options?: GetInterpreterOptions,
         source?: PythonEnvSource[],
-    ): Promise<PythonEnvironment[] | undefined>;
+    ): Promise<PythonEnvironment[]>;
+
     // WorkspaceVirtualEnvInterpretersAutoSelectionRule
     getWorkspaceVirtualEnvInterpreters(
         resource: Uri,
         options?: { ignoreCache?: boolean },
     ): Promise<PythonEnvironment[]>;
+
     // IInterpreterService
     getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<PythonEnvironment>;
 

@@ -9,6 +9,7 @@ import { TensorBoardSession } from '../../client/tensorBoard/tensorBoardSession'
 import { TensorBoardSessionProvider } from '../../client/tensorBoard/tensorBoardSessionProvider';
 import { closeActiveWindows, initialize } from '../initialize';
 import * as ExperimentHelpers from '../../client/common/experiments/helpers';
+import { DiscoveryVariants } from '../../client/common/experiments/groups';
 
 suite('TensorBoard session creation', async () => {
     let serviceManager: IServiceManager;
@@ -31,7 +32,13 @@ suite('TensorBoard session creation', async () => {
         sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(false);
         // Pretend to be in experiment
         const experimentService = serviceManager.get<IExperimentService>(IExperimentService);
-        sandbox.stub(experimentService, 'inExperiment').resolves(true);
+        const inExperimentStub = sandbox.stub(experimentService, 'inExperiment');
+        inExperimentStub.resolves(true);
+
+        // These are used in interpreter service
+        inExperimentStub.withArgs(DiscoveryVariants.discoverWithFileWatching).resolves(false);
+        inExperimentStub.withArgs(DiscoveryVariants.discoveryWithoutFileWatching).resolves(false);
+
         // Create tensorboard session provider
         provider = serviceManager.get<TensorBoardSessionProvider>(TensorBoardSessionProvider);
         await provider.activate();
