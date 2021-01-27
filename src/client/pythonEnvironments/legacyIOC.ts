@@ -366,10 +366,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     public async getWorkspaceVirtualEnvInterpreters(
         resource: vscode.Uri,
         options?: { ignoreCache?: boolean },
-    ): Promise<PythonEnvironment[] | undefined> {
-        if (!this.enabled) {
-            return undefined;
-        }
+    ): Promise<PythonEnvironment[]> {
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(resource);
         if (!workspaceFolder) {
             return [];

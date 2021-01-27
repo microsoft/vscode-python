@@ -45,7 +45,7 @@ export interface IComponentAdapter {
     getWorkspaceVirtualEnvInterpreters(
         resource: Uri,
         options?: { ignoreCache?: boolean },
-    ): Promise<PythonEnvironment[] | undefined>;
+    ): Promise<PythonEnvironment[]>;
     // IInterpreterService
     getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment>;
     // IInterpreterHelper
