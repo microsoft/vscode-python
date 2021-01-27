@@ -50,7 +50,7 @@ export interface IComponentAdapter {
     // IInterpreterLocatorService (for WINDOWS_REGISTRY_SERVICE)
     getWinRegInterpreters(resource: Resource): Promise<PythonEnvironment[] | undefined>;
     // IInterpreterService
-    getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment>;
+    getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<PythonEnvironment>;
     // IInterpreterHelper
     getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>>;
     isMacDefaultPythonPath(pythonPath: string): Promise<boolean>;
