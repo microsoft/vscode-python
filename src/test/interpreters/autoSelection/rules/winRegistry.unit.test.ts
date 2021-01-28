@@ -23,8 +23,11 @@ import {
     IComponentAdapter,
     IInterpreterHelper,
     IInterpreterLocatorService,
+    WINDOWS_REGISTRY_SERVICE,
 } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
+import { ServiceContainer } from '../../../../client/ioc/container';
+import { IServiceContainer } from '../../../../client/ioc/types';
 import { WindowsRegistryService } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryService';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
@@ -38,6 +41,7 @@ suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
     let discovery: IComponentAdapter;
     let experiments: IExperimentService;
     let helper: IInterpreterHelper;
+    let serviceContainer: IServiceContainer;
     class WindowsRegistryInterpretersAutoSelectionRuleTest extends WindowsRegistryInterpretersAutoSelectionRule {
         public async setGlobalInterpreter(
             interpreter?: PythonEnvironment,
@@ -61,18 +65,22 @@ suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
         platform = mock(PlatformService);
         discovery = mock<IComponentAdapter>();
         experiments = mock<IExperimentService>();
+        serviceContainer = mock(ServiceContainer);
 
         when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
             instance(state),
         );
+        when(
+            serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE),
+        ).thenReturn(instance(locator));
         rule = new WindowsRegistryInterpretersAutoSelectionRuleTest(
             instance(fs),
             instance(helper),
             instance(stateFactory),
             instance(platform),
-            instance(locator),
             instance(discovery),
             instance(experiments),
+            instance(serviceContainer),
         );
     });
 

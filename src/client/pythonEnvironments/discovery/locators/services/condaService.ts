@@ -1,4 +1,4 @@
-import { inject, injectable, named, optional } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
@@ -21,6 +21,7 @@ import {
     IInterpreterLocatorService,
     WINDOWS_REGISTRY_SERVICE,
 } from '../../../../interpreter/contracts';
+import { IServiceContainer } from '../../../../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { CondaEnvironmentInfo, CondaInfo } from './conda';
 import { parseCondaEnvFileContents } from './condaHelper';
@@ -80,10 +81,7 @@ export class CondaService implements ICondaService {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
-        @inject(IInterpreterLocatorService)
-        @named(WINDOWS_REGISTRY_SERVICE)
-        @optional()
-        private registryLookupForConda?: IInterpreterLocatorService,
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
     ) {
         this.addCondaPathChangedHandler();
     }
@@ -422,8 +420,12 @@ export class CondaService implements ICondaService {
         if (await inDiscoveryExperiment(this.experimentService)) {
             return this.pyenvs.getWinRegInterpreters(undefined);
         }
-        if (this.registryLookupForConda) {
-            return this.registryLookupForConda.getInterpreters();
+
+        const registryLookupForConda: IInterpreterLocatorService | undefined = this.serviceContainer.get<
+            IInterpreterLocatorService
+        >(IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE);
+        if (registryLookupForConda) {
+            return registryLookupForConda.getInterpreters();
         }
         return [];
     }

@@ -23,6 +23,7 @@ import {
     IComponentAdapter,
     IInterpreterLocatorService,
     IInterpreterService,
+    WINDOWS_REGISTRY_SERVICE,
 } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { CondaService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaService';
@@ -123,6 +124,11 @@ suite('Interpreters Conda Service', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(ITerminalActivationCommandProvider), TypeMoq.It.isAny()))
             .returns(() => terminalProvider.object);
         serviceContainer
+            .setup((c) =>
+                c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(WINDOWS_REGISTRY_SERVICE)),
+            )
+            .returns(() => registryInterpreterLocatorService.object);
+        serviceContainer
             .setup((c) => c.getAll(TypeMoq.It.isValue(ITerminalActivationCommandProvider), TypeMoq.It.isAny()))
             .returns(() => [terminalProvider.object]);
         config.setup((c) => c.getSettings(TypeMoq.It.isValue(undefined))).returns(() => settings.object);
@@ -146,7 +152,7 @@ suite('Interpreters Conda Service', () => {
             workspaceService.object,
             pyenvs.object,
             experimentService.object,
-            registryInterpreterLocatorService.object,
+            serviceContainer.object,
         );
     });
 
@@ -395,7 +401,7 @@ suite('Interpreters Conda Service', () => {
         expect(mockState.data.data).lengthOf(7, 'Incorrect number of items in the cache');
     });
 
-    test('Ignore cache if environment is not found in the cache (cond env is not detected in conda env list)', async () => {
+    test('Ignore cache if environment is not found in the cache (conda env is not detected in conda env list)', async () => {
         const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'newEnvironment', 'python.exe');
         const condaEnvsPath = path.join('c', 'users', 'xyz', '.conda', 'envs');
 
@@ -471,7 +477,7 @@ suite('Interpreters Conda Service', () => {
             },
         ].map((item) => ({ ...info, ...item }));
         const condaInterpreterIndex = registryInterpreters.findIndex((i) => i.displayName === 'Anaconda');
-        const expectedCodnaPath = path.join(
+        const expectedCondaPath = path.join(
             path.dirname(registryInterpreters[condaInterpreterIndex].path),
             'conda.exe',
         );
@@ -484,10 +490,10 @@ suite('Interpreters Conda Service', () => {
             .returns(() => Promise.resolve(registryInterpreters));
         fileSystem
             .setup((fs) => fs.fileExists(TypeMoq.It.isAny()))
-            .returns((file: string) => Promise.resolve(file === expectedCodnaPath));
+            .returns((file: string) => Promise.resolve(file === expectedCondaPath));
 
         const condaExe = await condaService.getCondaFile();
-        assert.equal(condaExe, expectedCodnaPath, 'Failed to identify conda.exe');
+        assert.equal(condaExe, expectedCondaPath, 'Failed to identify conda.exe');
     });
 
     test('Must use Conda env from Registry to latest version of locate conda.exe', async () => {
@@ -647,6 +653,7 @@ suite('Interpreters Conda Service', () => {
             workspaceService.object,
             pyenvs.object,
             experimentService.object,
+            serviceContainer.object,
         );
 
         const result = await condaSrv.getCondaFile();
