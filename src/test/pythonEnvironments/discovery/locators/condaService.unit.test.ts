@@ -633,6 +633,9 @@ suite('Interpreters Conda Service', () => {
 
     test('Get conda file from default/known locations', async () => {
         const expected = 'C:/ProgramData/Miniconda2/Scripts/conda.exe';
+        registryInterpreterLocatorService
+            .setup((r) => r.getInterpreters(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve([]));
 
         platformService.setup((p) => p.isWindows).returns(() => true);
 
