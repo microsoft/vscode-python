@@ -421,13 +421,10 @@ export class CondaService implements ICondaService {
             return this.pyenvs.getWinRegInterpreters(undefined);
         }
 
-        const registryLookupForConda: IInterpreterLocatorService | undefined = this.serviceContainer.get<
+        const registryLookupForConda: IInterpreterLocatorService = this.serviceContainer.get<
             IInterpreterLocatorService
         >(IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE);
-        if (registryLookupForConda) {
-            return registryLookupForConda.getInterpreters();
-        }
-        return [];
+        return registryLookupForConda.getInterpreters();
     }
 
     /**
