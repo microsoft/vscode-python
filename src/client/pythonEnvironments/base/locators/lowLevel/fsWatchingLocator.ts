@@ -92,6 +92,17 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
         if (typeof roots === 'string') {
             roots = [roots];
         }
+        const promises = roots.map(async (root) => {
+            // Note that we only check the root dir.  Any directories
+            // that might be watched due to a glob are not checked.
+            const unwatchable = await checkDirWatchable(root);
+            if (unwatchable) {
+                logError(`dir "${root}" is not watchable (${unwatchable})`);
+                return undefined;
+            }
+            return root;
+        });
+        const watchableRoots = (await Promise.all(promises)).filter((root) => !!root) as string[];
 
         // Enable all workspace watchers.
         if (this.watcherKind === FSWatcherKind.Global) {
@@ -102,16 +113,7 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
             }
         }
 
-        roots.forEach((root) => {
-            // Note that we only check the root dir.  Any directories
-            // that might be watched due to a glob are not checked.
-            const unwatchable = checkDirWatchable(root);
-            if (unwatchable) {
-                logError(`dir "${root}" is not watchable (${unwatchable})`);
-            } else {
-                this.startWatchers(root);
-            }
-        });
+        watchableRoots.forEach((root) => this.startWatchers(root));
     }
 
     private startWatchers(root: string): void {
