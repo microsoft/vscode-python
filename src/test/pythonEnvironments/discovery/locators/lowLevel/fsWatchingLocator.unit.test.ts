@@ -36,7 +36,7 @@ suite('File System Watching Locator Tests', () => {
         constructor(
             watcherKind: FSWatcherKind,
             opts: {
-                noTree?: boolean;
+                envStructure?: binWatcher.PythonEnvStructure;
             } = {},
         ) {
             super(() => baseDir, callback, opts, watcherKind);
@@ -57,12 +57,13 @@ suite('File System Watching Locator Tests', () => {
         }
     }
 
-    ['standard', 'flat', 'default'].forEach((structure) => {
-        let noTree: boolean | undefined = structure === 'standard';
-        if (structure === 'default') {
-            noTree = undefined;
-        }
-        suite(`${structure} structure`, () => {
+    [
+        binWatcher.PythonEnvStructure.Standard,
+        binWatcher.PythonEnvStructure.Flat,
+        // `undefined` means "use the default".
+        undefined,
+    ].forEach((envStructure) => {
+        suite(`${envStructure || 'default'} structure`, () => {
             const expected =
                 getOSType() === OSType.Windows
                     ? [
@@ -77,7 +78,7 @@ suite('File System Watching Locator Tests', () => {
                           '*/python',
                           '*/bin/python',
                       ];
-            if (noTree) {
+            if (envStructure === binWatcher.PythonEnvStructure.Flat) {
                 while (expected.length > 1) {
                     expected.pop();
                 }
@@ -87,7 +88,7 @@ suite('File System Watching Locator Tests', () => {
             const watcherExperiment = [true, false];
 
             const opts = {
-                noTree,
+                envStructure,
             };
 
             watcherKinds.forEach((watcherKind) => {

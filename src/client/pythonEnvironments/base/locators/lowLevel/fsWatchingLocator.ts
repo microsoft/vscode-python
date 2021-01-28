@@ -71,9 +71,9 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
              */
             searchLocation?: string;
             /**
-             * Whether or not we're watching a typical env tree.
+             * The Python env structure to watch.
              */
-            noTree?: boolean;
+            envStructure?: PythonEnvStructure;
         } = {},
         private readonly watcherKind: FSWatcherKind = FSWatcherKind.Global,
     ) {
@@ -135,7 +135,8 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
 
         const globs = resolvePythonExeGlobs(
             this.opts.executableBaseGlob,
-            this.opts.noTree ? PythonEnvStructure.Flat : PythonEnvStructure.Standard,
+            // The structure determines which globs are returned.
+            this.opts.envStructure,
         );
         const watchers = globs.map((g) => watchLocationForPythonBinaries(root, callback, g));
         this.disposables.push(...watchers);
