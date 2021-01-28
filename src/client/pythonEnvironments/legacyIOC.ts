@@ -435,14 +435,14 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
             IPythonInPathCommandProvider,
             PythonInPathCommandProvider,
         );
+        serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            WindowsRegistryService,
+            WINDOWS_REGISTRY_SERVICE,
+        );
     }
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
 
-    serviceManager.addSingleton<IInterpreterLocatorService>(
-        IInterpreterLocatorService,
-        WindowsRegistryService,
-        WINDOWS_REGISTRY_SERVICE,
-    );
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
 }

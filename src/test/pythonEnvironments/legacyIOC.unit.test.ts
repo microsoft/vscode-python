@@ -65,8 +65,11 @@ suite('Interpreters - Service Registry', () => {
         const serviceManager = mock(ServiceManager);
         const serviceContainer = mock(ServiceContainer);
         const experimentService = mock(ExperimentService);
+
         when(serviceContainer.get<IExperimentService>(IExperimentService)).thenReturn(instance(experimentService));
         when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
+        when(experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching)).thenResolve(false);
+
         initializeExternalDependencies(instance(serviceContainer));
         await registerLegacyDiscoveryForIOC(instance(serviceManager));
 
