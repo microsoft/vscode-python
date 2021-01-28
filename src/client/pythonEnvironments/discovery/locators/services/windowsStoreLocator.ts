@@ -12,6 +12,7 @@ import { getPythonVersionFromPath } from '../../../base/info/pythonVersion';
 import { IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { getFileInfo } from '../../../common/externalDependencies';
+import { PythonEnvStructure } from '../../../common/pythonBinariesWatcher';
 
 /**
  * Gets path to the Windows Apps directory.
@@ -141,6 +142,7 @@ export class WindowsStoreLocator extends FSWatchingLocator {
         super(getWindowsStoreAppsRoot, async () => this.kind, {
             executableBaseGlob: pythonExeGlob,
             searchLocation: getWindowsStoreAppsRoot(),
+            envStructure: PythonEnvStructure.Flat,
         });
     }
 
