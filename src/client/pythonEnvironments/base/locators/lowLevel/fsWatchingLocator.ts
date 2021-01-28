@@ -22,10 +22,12 @@ export enum FSWatcherKind {
     Workspace, // Watchers observes directory in the user's currently open workspace.
 }
 
+type DirUnwatchableReason = 'too many files' | undefined;
+
 /**
  * Determine if the directory is watchable.
  */
-export function isDirWatchable(dirname: string): boolean {
+export function checkDirWatchable(dirname: string): DirUnwatchableReason {
     let names: string[];
     try {
         names = fs.readdirSync(dirname);
@@ -33,12 +35,15 @@ export function isDirWatchable(dirname: string): boolean {
         if (err.code === 'ENOENT') {
             // We treat a missing directory as watchable since it should
             // be watchable if created later.
-            return true;
+            return undefined;
         }
         throw err; // re-throw
     }
     // The limit here is an educated guess.
-    return names.length < 200;
+    if (names.length > 200) {
+        return 'too many files';
+    }
+    return undefined;
 }
 
 /**
@@ -104,8 +109,9 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
     private startWatchers(root: string): void {
         // Note that we only check the root dir.  Any directories
         // that might be watched due to a glob are not checked.
-        if (!isDirWatchable(root)) {
-            throw Error(`dir "${root}" is not watchable`);
+        const unwatchable = checkDirWatchable(root);
+        if (unwatchable) {
+            throw Error(`dir "${root}" is not watchable (${unwatchable})`);
         }
 
         const callback = async (type: FileChangeType, executable: string) => {
