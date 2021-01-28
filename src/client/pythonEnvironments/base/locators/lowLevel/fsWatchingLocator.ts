@@ -94,22 +94,22 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
         }
 
         // Enable all workspace watchers.
-        let enableGlobalWatchers = true;
         if (this.watcherKind === FSWatcherKind.Global) {
             // Enable global watchers only if the experiment allows it.
-            enableGlobalWatchers = await inExperiment(DiscoveryVariants.discoverWithFileWatching);
+            const enableGlobalWatchers = await inExperiment(DiscoveryVariants.discoverWithFileWatching);
+            if (!enableGlobalWatchers) {
+                return;
+            }
         }
 
         roots.forEach((root) => {
-            if (enableGlobalWatchers) {
-                // Note that we only check the root dir.  Any directories
-                // that might be watched due to a glob are not checked.
-                const unwatchable = checkDirWatchable(root);
-                if (unwatchable) {
-                    logError(`dir "${root}" is not watchable (${unwatchable})`);
-                } else {
-                    this.startWatchers(root);
-                }
+            // Note that we only check the root dir.  Any directories
+            // that might be watched due to a glob are not checked.
+            const unwatchable = checkDirWatchable(root);
+            if (unwatchable) {
+                logError(`dir "${root}" is not watchable (${unwatchable})`);
+            } else {
+                this.startWatchers(root);
             }
         });
     }
