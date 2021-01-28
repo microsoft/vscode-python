@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { IComponentAdapter, IInterpreterLocatorService, PIPENV_SERVICE } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { EnvironmentType } from '../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { inDiscoveryExperiment } from '../experiments/helpers';
 import { ExecutionInfo, IExperimentService } from '../types';
 import { isResource } from '../utils/misc';
@@ -32,14 +32,19 @@ export class PipEnvInstaller extends ModuleInstaller {
     public async isSupported(resource?: InterpreterUri): Promise<boolean> {
         if (isResource(resource)) {
             const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
-            const pyenvs = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
-            const interpreters = (await inDiscoveryExperiment(experimentService))
-                ? await pyenvs
-                      .getInterpreters(resource)
-                      .then((envs) => envs.filter((e) => e.envType == EnvironmentType.Pipenv))
-                : await this.serviceContainer
-                      .get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE)
-                      .getInterpreters(resource);
+            let interpreters: PythonEnvironment[] = [];
+            if (await inDiscoveryExperiment(experimentService)) {
+                const pyenvs = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
+                interpreters = await pyenvs
+                    .getInterpreters(resource)
+                    .then((envs) => envs.filter((e) => e.envType == EnvironmentType.Pipenv));
+            } else {
+                const pipenvs = this.serviceContainer.get<IInterpreterLocatorService>(
+                    IInterpreterLocatorService,
+                    PIPENV_SERVICE,
+                );
+                interpreters = await pipenvs.getInterpreters(resource);
+            }
             return interpreters.length > 0;
         } else {
             return resource.envType === EnvironmentType.Pipenv;
