@@ -63,6 +63,7 @@ export interface ILinterManager {
 }
 
 export interface ILintMessage {
+    file?: string;
     line: number;
     column: number;
     code: string | undefined;
