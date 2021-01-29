@@ -3,22 +3,23 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import '../../../common/extensions';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { EnvironmentType } from '../../../pythonEnvironments/info';
 import { IWorkspaceService } from '../../application/types';
 import { IFileSystem } from '../../platform/types';
-import { IConfigurationService } from '../../types';
+import { IToolExecutionPath, ToolExecutionPath } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
 
 @injectable()
 export class PipEnvActivationCommandProvider implements ITerminalActivationCommandProvider {
     constructor(
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IConfigurationService)
-        private readonly configService: IConfigurationService,
+        @inject(IToolExecutionPath)
+        @named(ToolExecutionPath.pipenv)
+        private readonly pipEnvExecution: IToolExecutionPath,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
     ) {}
@@ -41,7 +42,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         ) {
             return;
         }
-        const execName = this.configService.getSettings().pipenvPath;
+        const execName = this.pipEnvExecution.executable;
         return [`${execName.fileToCommandArgument()} shell`];
     }
 
@@ -54,7 +55,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
             return;
         }
 
-        const execName = this.configService.getSettings().pipenvPath;
+        const execName = this.pipEnvExecution.executable;
         return [`${execName.fileToCommandArgument()} shell`];
     }
 }

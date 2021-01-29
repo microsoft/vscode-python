@@ -368,6 +368,20 @@ export interface IConfigurationService {
     ): Promise<void>;
 }
 
+/**
+ * Carries various tool execution path settings. For eg. pipenvPath, condaPath, pytestPath etc. These can be
+ * potentially used in discovery, autoselection, activation, installers, execution etc. And so should be a
+ * common interface to all the components.
+ */
+export const IToolExecutionPath = Symbol('IToolExecutionPath');
+export interface IToolExecutionPath {
+    readonly executable: string;
+}
+export enum ToolExecutionPath {
+    pipenv = 'pipenv',
+    // Gradually populate this list with tools as they come up.
+}
+
 export const ISocketServer = Symbol('ISocketServer');
 export interface ISocketServer extends Disposable {
     readonly client: Promise<Socket>;

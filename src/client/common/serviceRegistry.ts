@@ -1,7 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IExperimentService, IFileDownloader, IHttpClient, IInterpreterPathService } from '../common/types';
+import {
+    IExperimentService,
+    IFileDownloader,
+    IHttpClient,
+    IInterpreterPathService,
+    IToolExecutionPath,
+    ToolExecutionPath,
+} from '../common/types';
 import { IServiceManager } from '../ioc/types';
 import { JupyterExtensionDependencyManager } from '../jupyter/jupyterExtensionDependencyManager';
 import { ImportTracker } from '../telemetry/importTracker';
@@ -38,6 +45,7 @@ import {
 import { WorkspaceService } from './application/workspace';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { ConfigurationService } from './configuration/service';
+import { PipEnvExecutionPath } from './configuration/executionSettings/pipEnvExecution';
 import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
 import { DebuggerDataViewerExperimentEnabler } from './experiments/debuggerDataViewerExperimentEnabler';
@@ -184,6 +192,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         PipEnvActivationCommandProvider,
         TerminalActivationProviders.pipenv,
     );
+    serviceManager.addSingleton<IToolExecutionPath>(IToolExecutionPath, PipEnvExecutionPath, ToolExecutionPath.pipenv);
     serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);
 
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);

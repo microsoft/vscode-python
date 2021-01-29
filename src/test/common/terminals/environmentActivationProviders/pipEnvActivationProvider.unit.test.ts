@@ -13,7 +13,7 @@ import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { PipEnvActivationCommandProvider } from '../../../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../../client/common/terminal/types';
-import { IConfigurationService } from '../../../../client/common/types';
+import { IToolExecutionPath } from '../../../../client/common/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
@@ -25,7 +25,7 @@ suite('Terminals Activation - Pipenv', () => {
             let pipenvExecFile = 'pipenv';
             let activationProvider: ITerminalActivationCommandProvider;
             let interpreterService: IInterpreterService;
-            let configService: TypeMoq.IMock<IConfigurationService>;
+            let pipEnvExecution: TypeMoq.IMock<IToolExecutionPath>;
             let workspaceService: IWorkspaceService;
             let fs: IFileSystem;
             setup(() => {
@@ -33,15 +33,15 @@ suite('Terminals Activation - Pipenv', () => {
                 fs = mock(FileSystem);
                 workspaceService = mock(WorkspaceService);
                 interpreterService = mock(InterpreterService);
-                configService = TypeMoq.Mock.ofType<IConfigurationService>();
+                pipEnvExecution = TypeMoq.Mock.ofType<IToolExecutionPath>();
                 activationProvider = new PipEnvActivationCommandProvider(
                     instance(interpreterService),
-                    configService.object,
+                    pipEnvExecution.object,
                     instance(workspaceService),
                     instance(fs),
                 );
 
-                configService.setup((p) => p.getSettings()).returns(() => ({ pipenvPath: pipenvExecFile } as any));
+                pipEnvExecution.setup((p) => p.executable).returns(() => pipenvExecFile);
             });
 
             test('No commands for no interpreter', async () => {
