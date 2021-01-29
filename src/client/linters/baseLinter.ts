@@ -20,7 +20,6 @@ const namedRegexp = require('named-js-regexp');
 const REGEX = '(?<line>\\d+),(?<column>-?\\d+),(?<type>\\w+),(?<code>\\w+\\d+):(?<message>.*)\\r?(\\n|$)';
 
 export interface IRegexGroup {
-    file: string;
     line: number;
     column: number;
     code: string;
@@ -54,7 +53,6 @@ export function parseLine(
     match.column = Number(<any>match.column);
 
     return {
-        file: match.file,
         code: match.code,
         message: match.message,
         column: isNaN(match.column) || match.column <= 0 ? 0 : match.column - colOffset,

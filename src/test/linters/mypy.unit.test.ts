@@ -5,7 +5,7 @@
 
 import { expect } from 'chai';
 import { parseLine } from '../../client/linters/baseLinter';
-import { REGEX } from '../../client/linters/mypy';
+import { getRegex } from '../../client/linters/mypy';
 import { ILintMessage, LinterId } from '../../client/linters/types';
 
 // This following is a real-world example. See gh=2380.
@@ -55,7 +55,7 @@ suite('Linting - MyPy', () => {
             ],
         ];
         for (const [line, expected] of tests) {
-            const msg = parseLine(line, REGEX, LinterId.MyPy);
+            const msg = parseLine(line, getRegex('provider.pyi'), LinterId.MyPy);
 
             expect(msg).to.deep.equal(expected);
         }
