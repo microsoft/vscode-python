@@ -84,7 +84,6 @@ export interface ICondaService {
     getCondaVersion(): Promise<SemVer | undefined>;
     getCondaInfo(): Promise<CondaInfo | undefined>;
     getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined>;
-    isCondaEnvironment(interpreterPath: string): Promise<boolean>;
     getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
 }
 

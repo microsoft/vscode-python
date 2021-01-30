@@ -8,12 +8,7 @@ import { inDiscoveryExperiment } from '../../../../common/experiments/helpers';
 import { traceDecorators, traceWarning } from '../../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../../common/process/types';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentService,
-    IPersistentStateFactory,
-} from '../../../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
 import { IComponentAdapter, ICondaService, ICondaServiceDeprecated } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
@@ -88,6 +83,7 @@ export class CondaService implements ICondaService {
             this.condaFile = setting;
             return setting;
         }
+        return '';
     }
 
     /**
@@ -140,21 +136,6 @@ export class CondaService implements ICondaService {
     public async getCondaInfo(): Promise<CondaInfo | undefined> {
         const condaServiceDeprecated = this.serviceContainer.get<ICondaServiceDeprecated>(ICondaServiceDeprecated);
         return condaServiceDeprecated.getCondaInfo();
-    }
-
-    /**
-     * Determines whether a python interpreter is a conda environment or not.
-     * The check is done by simply looking for the 'conda-meta' directory.
-     * @param {string} interpreterPath
-     * @returns {Promise<boolean>}
-     * @memberof CondaService
-     */
-    public async isCondaEnvironment(interpreterPath: string): Promise<boolean> {
-        if (await inDiscoveryExperiment(this.experimentService)) {
-            return this.pyenvs.isCondaEnvironment(interpreterPath);
-        }
-        const condaServiceDeprecated = this.serviceContainer.get<ICondaServiceDeprecated>(ICondaServiceDeprecated);
-        return condaServiceDeprecated.isCondaEnvironment(interpreterPath);
     }
 
     /**

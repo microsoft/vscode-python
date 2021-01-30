@@ -25,7 +25,7 @@ import {
     ITerminalSettings,
 } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
-import { ICondaService } from '../../../client/interpreter/contracts';
+import { ICondaServiceDeprecated } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -39,7 +39,7 @@ suite('Terminal Environment Activation conda', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let processService: TypeMoq.IMock<IProcessService>;
     let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
-    let condaService: TypeMoq.IMock<ICondaService>;
+    let condaService: TypeMoq.IMock<ICondaServiceDeprecated>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let conda: string;
     let bash: ITerminalActivationCommandProvider;
@@ -55,7 +55,7 @@ suite('Terminal Environment Activation conda', () => {
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         processService = TypeMoq.Mock.ofType<IProcessService>();
-        condaService = TypeMoq.Mock.ofType<ICondaService>();
+        condaService = TypeMoq.Mock.ofType<ICondaServiceDeprecated>();
         condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(conda));
         bash = mock(Bash);
 
@@ -75,7 +75,7 @@ suite('Terminal Environment Activation conda', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IProcessServiceFactory), TypeMoq.It.isAny()))
             .returns(() => procServiceFactory.object);
         serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(ICondaService), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(ICondaServiceDeprecated), TypeMoq.It.isAny()))
             .returns(() => condaService.object);
 
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -608,14 +608,14 @@ suite('Terminal Environment Activation conda', () => {
             // each test simply tests the base windows activate command,
             // and then the specific result from the terminal selected.
             const servCnt = TypeMoq.Mock.ofType<IServiceContainer>();
-            const condaSrv = TypeMoq.Mock.ofType<ICondaService>();
+            const condaSrv = TypeMoq.Mock.ofType<ICondaServiceDeprecated>();
             condaSrv
                 .setup((c) => c.getCondaFile())
                 .returns(async () => {
                     return path.join(testParams.basePath, 'conda.exe');
                 });
             servCnt
-                .setup((s) => s.get(TypeMoq.It.isValue(ICondaService), TypeMoq.It.isAny()))
+                .setup((s) => s.get(TypeMoq.It.isValue(ICondaServiceDeprecated), TypeMoq.It.isAny()))
                 .returns(() => condaSrv.object);
 
             const tstCmdProvider = new CondaActivationCommandProvider(

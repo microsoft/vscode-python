@@ -146,7 +146,6 @@ suite('Interpreters Conda Service', () => {
             procServiceFactory.object,
             platformService.object,
             fileSystem.object,
-            persistentStateFactory.object,
             config.object,
             disposableRegistry,
             workspaceService.object,
@@ -160,86 +159,6 @@ suite('Interpreters Conda Service', () => {
     function resetMockState(data: any) {
         mockState = new MockState(data);
     }
-
-    async function identifyPythonPathAsCondaEnvironment(
-        isWindows: boolean,
-        isOsx: boolean,
-        isLinux: boolean,
-        pythonPath: string,
-    ) {
-        platformService.setup((p) => p.isLinux).returns(() => isLinux);
-        platformService.setup((p) => p.isWindows).returns(() => isWindows);
-        platformService.setup((p) => p.isMac).returns(() => isOsx);
-
-        const isCondaEnv = await condaService.isCondaEnvironment(pythonPath);
-        expect(isCondaEnv).to.be.equal(true, 'Path not identified as a conda path');
-    }
-
-    test('Correctly identifies a python path as a conda environment (windows)', async () => {
-        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
-        fileSystem
-            .setup((f) => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta'))))
-            .returns(() => Promise.resolve(true));
-        await identifyPythonPathAsCondaEnvironment(true, false, false, pythonPath);
-    });
-
-    test('Correctly identifies a python path as a conda environment (linux)', async () => {
-        const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
-        fileSystem
-            .setup((f) =>
-                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta'))),
-            )
-            .returns(() => Promise.resolve(true));
-        await identifyPythonPathAsCondaEnvironment(false, false, true, pythonPath);
-    });
-
-    test('Correctly identifies a python path as a conda environment (osx)', async () => {
-        const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
-        fileSystem
-            .setup((f) =>
-                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta'))),
-            )
-            .returns(() => Promise.resolve(true));
-        await identifyPythonPathAsCondaEnvironment(false, true, false, pythonPath);
-    });
-
-    async function identifyPythonPathAsNonCondaEnvironment(
-        isWindows: boolean,
-        isOsx: boolean,
-        isLinux: boolean,
-        pythonPath: string,
-    ) {
-        platformService.setup((p) => p.isLinux).returns(() => isLinux);
-        platformService.setup((p) => p.isWindows).returns(() => isWindows);
-        platformService.setup((p) => p.isMac).returns(() => isOsx);
-
-        fileSystem
-            .setup((f) => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta'))))
-            .returns(() => Promise.resolve(false));
-        fileSystem
-            .setup((f) =>
-                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta'))),
-            )
-            .returns(() => Promise.resolve(false));
-
-        const isCondaEnv = await condaService.isCondaEnvironment(pythonPath);
-        expect(isCondaEnv).to.be.equal(false, 'Path incorrectly identified as a conda path');
-    }
-
-    test('Correctly identifies a python path as a non-conda environment (windows)', async () => {
-        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
-        await identifyPythonPathAsNonCondaEnvironment(true, false, false, pythonPath);
-    });
-
-    test('Correctly identifies a python path as a non-conda environment (linux)', async () => {
-        const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
-        await identifyPythonPathAsNonCondaEnvironment(false, false, true, pythonPath);
-    });
-
-    test('Correctly identifies a python path as a non-conda environment (osx)', async () => {
-        const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
-        await identifyPythonPathAsNonCondaEnvironment(false, true, false, pythonPath);
-    });
 
     async function checkCondaNameAndPathForCondaEnvironments(
         isWindows: boolean,
@@ -650,7 +569,6 @@ suite('Interpreters Conda Service', () => {
             procServiceFactory.object,
             platformService.object,
             fileSystem.object,
-            persistentStateFactory.object,
             config.object,
             disposableRegistry,
             workspaceService.object,
@@ -896,25 +814,6 @@ suite('Interpreters Conda Service', () => {
 
         const version = await condaService.getCondaVersion();
         assert.equal(version!.raw, expectedVersion);
-    });
-
-    test('isCondaInCurrentPath will return true if conda is available', async () => {
-        processService
-            .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve({ stdout: 'xyz' }));
-        const isAvailable = await condaService.isCondaInCurrentPath();
-        assert.equal(isAvailable, true);
-    });
-
-    test('isCondaInCurrentPath will return false if conda is not available', async () => {
-        processService
-            .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
-            .returns(() => Promise.reject(new Error('not found')));
-        fileSystem.setup((fs) => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
-        platformService.setup((p) => p.isWindows).returns(() => false);
-
-        const isAvailable = await condaService.isCondaInCurrentPath();
-        assert.equal(isAvailable, false);
     });
 
     async function testFailureOfGettingCondaEnvironments(
