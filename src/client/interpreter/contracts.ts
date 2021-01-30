@@ -79,6 +79,20 @@ export interface IInterpreterLocatorService extends Disposable {
 export const ICondaService = Symbol('ICondaService');
 
 export interface ICondaService {
+    getCondaFile(): Promise<string>;
+    isCondaAvailable(): Promise<boolean>;
+    getCondaVersion(): Promise<SemVer | undefined>;
+    getCondaInfo(): Promise<CondaInfo | undefined>;
+    getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined>;
+    isCondaEnvironment(interpreterPath: string): Promise<boolean>;
+    getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
+}
+
+export const ICondaServiceDeprecated = Symbol('ICondaServiceDeprecated');
+/**
+ * @deprecated
+ */
+export interface ICondaServiceDeprecated {
     readonly condaEnvironmentsFile: string | undefined;
     getCondaFile(): Promise<string>;
     isCondaAvailable(): Promise<boolean>;

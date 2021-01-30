@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
 import { IFileSystem } from '../../../../common/platform/types';
-import { ICondaService, IInterpreterHelper } from '../../../../interpreter/contracts';
+import { ICondaServiceDeprecated, IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
 import { PythonEnvironment } from '../../../info';
 import { CacheableLocatorService } from './cacheableLocatorService';
@@ -17,7 +17,7 @@ import { parseCondaInfo } from './conda';
 @injectable()
 export class CondaEnvService extends CacheableLocatorService {
     constructor(
-        @inject(ICondaService) private condaService: ICondaService,
+        @inject(ICondaServiceDeprecated) private condaService: ICondaServiceDeprecated,
         @inject(IInterpreterHelper) private helper: IInterpreterHelper,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IFileSystem) private fileSystem: IFileSystem,

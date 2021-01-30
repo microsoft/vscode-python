@@ -13,7 +13,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
 import { IFileSystem } from '../../../../common/platform/types';
-import { ICondaService, IInterpreterHelper } from '../../../../interpreter/contracts';
+import { ICondaServiceDeprecated, IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { CacheableLocatorService } from './cacheableLocatorService';
@@ -26,7 +26,7 @@ import { AnacondaCompanyName } from './conda';
 export class CondaEnvFileService extends CacheableLocatorService {
     constructor(
         @inject(IInterpreterHelper) private helperService: IInterpreterHelper,
-        @inject(ICondaService) private condaService: ICondaService,
+        @inject(ICondaServiceDeprecated) private condaService: ICondaServiceDeprecated,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
     ) {
