@@ -1087,7 +1087,7 @@ suite('Interpreters Conda Service', () => {
                 )
                 .returns(() => Promise.resolve(true));
 
-            const condaFile = await condaService.getCondaFileFromInterpreter(t.pythonPath, t.environmentName);
+            const condaFile = await condaService._getCondaFileFromInterpreter(t.pythonPath, t.environmentName);
             assert.equal(condaFile, t.expectedCondaPath);
         });
         test(`Finds conda.exe for different ${t.environmentName}`, async () => {
@@ -1107,7 +1107,7 @@ suite('Interpreters Conda Service', () => {
                 )
                 .returns(() => Promise.resolve(true));
 
-            const condaFile = await condaService.getCondaFileFromInterpreter(t.pythonPath, undefined);
+            const condaFile = await condaService._getCondaFileFromInterpreter(t.pythonPath, undefined);
 
             // This should only work if the expectedConda path has the original environment name in it
             if (t.expectedCondaPath.includes(t.environmentName)) {

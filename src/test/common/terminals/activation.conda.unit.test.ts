@@ -628,16 +628,12 @@ suite('Terminal Environment Activation conda', () => {
         test(testParams.testName, async () => {
             // each test simply tests the base windows activate command,
             // and then the specific result from the terminal selected.
-            const servCnt = TypeMoq.Mock.ofType<IServiceContainer>();
-            const condaSrv = TypeMoq.Mock.ofType<ICondaLocatorService>();
+            const condaSrv = TypeMoq.Mock.ofType<ICondaService>();
             condaSrv
                 .setup((c) => c.getCondaFile())
                 .returns(async () => {
                     return path.join(testParams.basePath, 'conda.exe');
                 });
-            servCnt
-                .setup((s) => s.get(TypeMoq.It.isValue(ICondaLocatorService), TypeMoq.It.isAny()))
-                .returns(() => condaSrv.object);
 
             const tstCmdProvider = new CondaActivationCommandProvider(
                 condaSrv.object,

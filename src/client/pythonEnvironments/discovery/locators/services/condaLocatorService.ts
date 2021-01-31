@@ -331,7 +331,7 @@ export class CondaLocatorService implements ICondaLocatorService {
      */
     @traceDecorators.verbose('Get Conda File from interpreter')
     @cache(120_000)
-    public async getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined> {
+    public async _getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined> {
         const condaExe = this.platform.isWindows ? 'conda.exe' : 'conda';
         const scriptsDir = this.platform.isWindows ? 'Scripts' : 'bin';
         const interpreterDir = interpreterPath ? path.dirname(interpreterPath) : '';
@@ -404,7 +404,7 @@ export class CondaLocatorService implements ICondaLocatorService {
             const condaInterpreters = interpreters.filter(CondaLocatorService.detectCondaEnvironment);
             const condaInterpreter = CondaLocatorService.getLatestVersion(condaInterpreters);
             if (condaInterpreter) {
-                const interpreterPath = await this.getCondaFileFromInterpreter(
+                const interpreterPath = await this._getCondaFileFromInterpreter(
                     condaInterpreter.path,
                     condaInterpreter.envName,
                 );

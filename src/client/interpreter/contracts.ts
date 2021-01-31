@@ -77,7 +77,9 @@ export interface IInterpreterLocatorService extends Disposable {
 }
 
 export const ICondaService = Symbol('ICondaService');
-
+/**
+ * Interface carries the properties which are not available via the discovery component.
+ */
 export interface ICondaService {
     getCondaFile(): Promise<string>;
     isCondaAvailable(): Promise<boolean>;
@@ -97,7 +99,6 @@ export interface ICondaLocatorService {
     getCondaInfo(): Promise<CondaInfo | undefined>;
     getCondaEnvironments(ignoreCache: boolean): Promise<CondaEnvironmentInfo[] | undefined>;
     getInterpreterPath(condaEnvironmentPath: string): string;
-    getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined>;
     isCondaEnvironment(interpreterPath: string): Promise<boolean>;
     getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
 }

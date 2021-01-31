@@ -9,37 +9,6 @@ import { ICondaService, ICondaLocatorService } from '../../../../interpreter/con
 import { IServiceContainer } from '../../../../ioc/types';
 import { CondaInfo } from './conda';
 
-const untildify: (value: string) => string = require('untildify');
-
-// This glob pattern will match all of the following:
-// ~/anaconda/bin/conda, ~/anaconda3/bin/conda, ~/miniconda/bin/conda, ~/miniconda3/bin/conda
-// /usr/share/anaconda/bin/conda, /usr/share/anaconda3/bin/conda, /usr/share/miniconda/bin/conda,
-// /usr/share/miniconda3/bin/conda
-
-const condaGlobPathsForLinuxMac = [
-    untildify('~/opt/*conda*/bin/conda'),
-    '/opt/*conda*/bin/conda',
-    '/usr/share/*conda*/bin/conda',
-    untildify('~/*conda*/bin/conda'),
-];
-
-export const CondaLocationsGlob = `{${condaGlobPathsForLinuxMac.join(',')}}`;
-
-// ...and for windows, the known default install locations:
-const condaGlobPathsForWindows = [
-    '/ProgramData/[Mm]iniconda*/Scripts/conda.exe',
-    '/ProgramData/[Aa]naconda*/Scripts/conda.exe',
-    untildify('~/[Mm]iniconda*/Scripts/conda.exe'),
-    untildify('~/[Aa]naconda*/Scripts/conda.exe'),
-    untildify('~/AppData/Local/Continuum/[Mm]iniconda*/Scripts/conda.exe'),
-    untildify('~/AppData/Local/Continuum/[Aa]naconda*/Scripts/conda.exe'),
-];
-
-// format for glob processing:
-export const CondaLocationsGlobWin = `{${condaGlobPathsForWindows.join(',')}}`;
-
-export const CondaGetEnvironmentPrefix = 'Outputting Environment Now...';
-
 /**
  * A wrapper around a conda installation.
  */
@@ -56,16 +25,14 @@ export class CondaService implements ICondaService {
      * Return the path to the "conda file".
      */
     public async getCondaFile(): Promise<string> {
-        const condaLocatorService = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
-        return condaLocatorService.getCondaFile();
+        return this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService).getCondaFile();
     }
 
     /**
      * Is there a conda install to use?
      */
     public async isCondaAvailable(): Promise<boolean> {
-        const condaLocatorService = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
-        return condaLocatorService.isCondaAvailable();
+        return this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService).isCondaAvailable();
     }
 
     /**
@@ -78,7 +45,7 @@ export class CondaService implements ICondaService {
     @cache(120_000)
     public async getCondaVersion(): Promise<SemVer | undefined> {
         const processService = await this.processServiceFactory.create();
-        const info = await this.getCondaInfo().catch<CondaInfo | undefined>(() => undefined);
+        const info = await this._getCondaInfo().catch<CondaInfo | undefined>(() => undefined);
         let versionString: string | undefined;
         if (info && info.conda_version) {
             versionString = info.conda_version;
@@ -100,16 +67,6 @@ export class CondaService implements ICondaService {
         // Use a bogus version, at least to indicate the fact that a version was returned.
         traceWarning(`Unable to parse Version of Conda, ${versionString}`);
         return new SemVer('0.0.1');
-    }
-
-    /**
-     * Return the info reported by the conda install.
-     * The result is cached for 30s.
-     */
-    @cache(60_000)
-    public async getCondaInfo(): Promise<CondaInfo | undefined> {
-        const condaLocatorService = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
-        return condaLocatorService.getCondaInfo();
     }
 
     /**
@@ -158,5 +115,14 @@ export class CondaService implements ICondaService {
         }
 
         return undefined;
+    }
+
+    /**
+     * Return the info reported by the conda install.
+     * The result is cached for 30s.
+     */
+    @cache(60_000)
+    public async _getCondaInfo(): Promise<CondaInfo | undefined> {
+        return this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService).getCondaInfo();
     }
 }

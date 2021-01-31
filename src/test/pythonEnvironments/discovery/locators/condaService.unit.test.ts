@@ -525,13 +525,13 @@ suite('Interpreters Conda Service', () => {
         fileSystem.setup((fs) => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
         fileSystem.setup((fs) => fs.search(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
         platformService.setup((p) => p.isWindows).returns(() => false);
-        condaService.getCondaInfo = () => Promise.reject(new Error('Not Found'));
+        condaService._getCondaInfo = () => Promise.reject(new Error('Not Found'));
         const isAvailable = await condaService.isCondaAvailable();
         assert.equal(isAvailable, false);
     });
 
     test('Version info from conda process will be returned in getCondaVersion', async () => {
-        condaService.getCondaInfo = () => Promise.reject(new Error('Not Found'));
+        condaService._getCondaInfo = () => Promise.reject(new Error('Not Found'));
         condaService.getCondaFile = () => Promise.resolve('conda');
         const expectedVersion = parse('4.4.4')!.raw;
         processService
