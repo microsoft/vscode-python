@@ -67,7 +67,8 @@ export class CondaInstaller extends ModuleInstaller {
         const pythonPath = isResource(resource)
             ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
             : resource.path;
-        const info = await condaService.getCondaEnvironment(pythonPath);
+        const condaLocatorService = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const info = await condaLocatorService.getCondaEnvironment(pythonPath);
         const args = [isUpgrade ? 'update' : 'install'];
 
         // Temporarily ensure tensorboard is installed from the conda-forge

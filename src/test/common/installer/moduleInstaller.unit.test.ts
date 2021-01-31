@@ -40,7 +40,7 @@ import {
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Products } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
-import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
+import { ICondaLocatorService, ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
@@ -237,7 +237,12 @@ suite('Module Installer', () => {
 
                             const condaService = TypeMoq.Mock.ofType<ICondaService>();
                             condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(condaExecutable));
-                            condaService
+
+                            const condaLocatorService = TypeMoq.Mock.ofType<ICondaLocatorService>();
+                            serviceContainer
+                                .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService)))
+                                .returns(() => condaLocatorService.object);
+                            condaLocatorService
                                 .setup((c) => c.getCondaEnvironment(TypeMoq.It.isAny()))
                                 .returns(() => Promise.resolve(condaEnvInfo));
 

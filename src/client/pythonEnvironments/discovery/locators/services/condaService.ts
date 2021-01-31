@@ -1,16 +1,11 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { parse, SemVer } from 'semver';
-import { ConfigurationChangeEvent, Uri } from 'vscode';
-
-import { IWorkspaceService } from '../../../../common/application/types';
-import { inDiscoveryExperiment } from '../../../../common/experiments/helpers';
 import { traceDecorators, traceWarning } from '../../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../../common/process/types';
-import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
-import { IComponentAdapter, ICondaService, ICondaLocatorService } from '../../../../interpreter/contracts';
+import { ICondaService, ICondaLocatorService } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
 import { CondaInfo } from './conda';
 
@@ -50,40 +45,19 @@ export const CondaGetEnvironmentPrefix = 'Outputting Environment Now...';
  */
 @injectable()
 export class CondaService implements ICondaService {
-    private condaFile: string | undefined;
-
     constructor(
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
         @inject(IPlatformService) private platform: IPlatformService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-    ) {
-        this.addCondaPathChangedHandler();
-    }
+    ) {}
 
     /**
      * Return the path to the "conda file".
      */
     public async getCondaFile(): Promise<string> {
-        if (!(await inDiscoveryExperiment(this.experimentService))) {
-            const condaLocatorService = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
-            return condaLocatorService.getCondaFile();
-        }
-        if (this.condaFile) {
-            return this.condaFile;
-        }
-        const settings = this.configService.getSettings();
-        const setting = settings.condaPath;
-        if (setting && setting !== '') {
-            this.condaFile = setting;
-            return setting;
-        }
-        return '';
+        const condaLocatorService = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        return condaLocatorService.getCondaFile();
     }
 
     /**
@@ -139,17 +113,6 @@ export class CondaService implements ICondaService {
     }
 
     /**
-     * Return (env name, interpreter filename) for the interpreter.
-     */
-    public async getCondaEnvironment(interpreterPath: string): Promise<{ name: string; path: string } | undefined> {
-        if (await inDiscoveryExperiment(this.experimentService)) {
-            return this.pyenvs.getCondaEnvironment(interpreterPath);
-        }
-        const condaLocatorService = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
-        return condaLocatorService.getCondaEnvironment(interpreterPath);
-    }
-
-    /**
      * Get the conda exe from the path to an interpreter's python. This might be different than the
      * globally registered conda.exe.
      *
@@ -195,20 +158,5 @@ export class CondaService implements ICondaService {
         }
 
         return undefined;
-    }
-
-    private addCondaPathChangedHandler() {
-        const disposable = this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this));
-        this.disposableRegistry.push(disposable);
-    }
-
-    private async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
-        const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
-            ? this.workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
-            : [undefined];
-        if (workspacesUris.findIndex((uri) => event.affectsConfiguration('python.condaPath', uri)) === -1) {
-            return;
-        }
-        this.condaFile = undefined;
     }
 }

@@ -82,14 +82,12 @@ export interface ICondaService {
     getCondaFile(): Promise<string>;
     isCondaAvailable(): Promise<boolean>;
     getCondaVersion(): Promise<SemVer | undefined>;
-    getCondaInfo(): Promise<CondaInfo | undefined>;
     getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined>;
-    getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
 }
 
 export const ICondaLocatorService = Symbol('ICondaLocatorService');
 /**
- * @deprecated
+ * @deprecated Use the new discovery component when in experiment, only use this otherwise.
  */
 export interface ICondaLocatorService {
     readonly condaEnvironmentsFile: string | undefined;
