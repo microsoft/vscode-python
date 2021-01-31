@@ -17,7 +17,7 @@ import {
 import { cache } from '../../../../common/utils/decorators';
 import {
     IComponentAdapter,
-    ICondaServiceDeprecated,
+    ICondaLocatorService,
     IInterpreterLocatorService,
     WINDOWS_REGISTRY_SERVICE,
 } from '../../../../interpreter/contracts';
@@ -61,7 +61,7 @@ export const CondaGetEnvironmentPrefix = 'Outputting Environment Now...';
  * A wrapper around a conda installation.
  */
 @injectable()
-export class CondaServiceDeprecated implements ICondaServiceDeprecated {
+export class CondaLocatorService implements ICondaLocatorService {
     public get condaEnvironmentsFile(): string | undefined {
         const homeDir = this.platform.isWindows ? process.env.USERPROFILE : process.env.HOME || process.env.HOMEPATH;
         return homeDir ? path.join(homeDir, '.conda', 'environments.txt') : undefined;
@@ -213,7 +213,7 @@ export class CondaServiceDeprecated implements ICondaServiceDeprecated {
      * The check is done by simply looking for the 'conda-meta' directory.
      * @param {string} interpreterPath
      * @returns {Promise<boolean>}
-     * @memberof CondaServiceDeprecated
+     * @memberof CondaLocatorService
      */
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean> {
         if (await inDiscoveryExperiment(this.experimentService)) {
@@ -401,8 +401,8 @@ export class CondaServiceDeprecated implements ICondaServiceDeprecated {
         }
         if (this.platform.isWindows) {
             const interpreters: PythonEnvironment[] = await this.getWinRegEnvs();
-            const condaInterpreters = interpreters.filter(CondaServiceDeprecated.detectCondaEnvironment);
-            const condaInterpreter = CondaServiceDeprecated.getLatestVersion(condaInterpreters);
+            const condaInterpreters = interpreters.filter(CondaLocatorService.detectCondaEnvironment);
+            const condaInterpreter = CondaLocatorService.getLatestVersion(condaInterpreters);
             if (condaInterpreter) {
                 const interpreterPath = await this.getCondaFileFromInterpreter(
                     condaInterpreter.path,

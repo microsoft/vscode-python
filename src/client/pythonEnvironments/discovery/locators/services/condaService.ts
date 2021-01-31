@@ -10,7 +10,7 @@ import { IFileSystem, IPlatformService } from '../../../../common/platform/types
 import { IProcessServiceFactory } from '../../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
-import { IComponentAdapter, ICondaService, ICondaServiceDeprecated } from '../../../../interpreter/contracts';
+import { IComponentAdapter, ICondaService, ICondaLocatorService } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
 import { CondaInfo } from './conda';
 
@@ -71,8 +71,8 @@ export class CondaService implements ICondaService {
      */
     public async getCondaFile(): Promise<string> {
         if (!(await inDiscoveryExperiment(this.experimentService))) {
-            const condaServiceDeprecated = this.serviceContainer.get<ICondaServiceDeprecated>(ICondaServiceDeprecated);
-            return condaServiceDeprecated.getCondaFile();
+            const condaLocatorService = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+            return condaLocatorService.getCondaFile();
         }
         if (this.condaFile) {
             return this.condaFile;
@@ -90,8 +90,8 @@ export class CondaService implements ICondaService {
      * Is there a conda install to use?
      */
     public async isCondaAvailable(): Promise<boolean> {
-        const condaServiceDeprecated = this.serviceContainer.get<ICondaServiceDeprecated>(ICondaServiceDeprecated);
-        return condaServiceDeprecated.isCondaAvailable();
+        const condaLocatorService = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        return condaLocatorService.isCondaAvailable();
     }
 
     /**
@@ -134,8 +134,8 @@ export class CondaService implements ICondaService {
      */
     @cache(60_000)
     public async getCondaInfo(): Promise<CondaInfo | undefined> {
-        const condaServiceDeprecated = this.serviceContainer.get<ICondaServiceDeprecated>(ICondaServiceDeprecated);
-        return condaServiceDeprecated.getCondaInfo();
+        const condaLocatorService = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        return condaLocatorService.getCondaInfo();
     }
 
     /**
@@ -145,8 +145,8 @@ export class CondaService implements ICondaService {
         if (await inDiscoveryExperiment(this.experimentService)) {
             return this.pyenvs.getCondaEnvironment(interpreterPath);
         }
-        const condaServiceDeprecated = this.serviceContainer.get<ICondaServiceDeprecated>(ICondaServiceDeprecated);
-        return condaServiceDeprecated.getCondaEnvironment(interpreterPath);
+        const condaLocatorService = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        return condaLocatorService.getCondaEnvironment(interpreterPath);
     }
 
     /**

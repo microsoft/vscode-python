@@ -118,7 +118,7 @@ import { Architecture } from '../../client/common/utils/platform';
 import { Random } from '../../client/common/utils/random';
 import {
     ICondaService,
-    ICondaServiceDeprecated,
+    ICondaLocatorService,
     IInterpreterLocatorService,
     IInterpreterService,
     INTERPRETER_LOCATOR_SERVICE,
@@ -157,7 +157,7 @@ suite('Module Installer', () => {
         let ioc: UnitTestIocContainer;
         let mockTerminalService: TypeMoq.IMock<ITerminalService>;
         let condaService: TypeMoq.IMock<ICondaService>;
-        let condaServiceDeprecated: TypeMoq.IMock<ICondaServiceDeprecated>;
+        let condaLocatorService: TypeMoq.IMock<ICondaLocatorService>;
         let interpreterService: TypeMoq.IMock<IInterpreterService>;
         let mockTerminalFactory: TypeMoq.IMock<ITerminalServiceFactory>;
 
@@ -222,10 +222,10 @@ suite('Module Installer', () => {
 
             await ioc.registerMockInterpreterTypes();
             condaService = TypeMoq.Mock.ofType<ICondaService>();
-            condaServiceDeprecated = TypeMoq.Mock.ofType<ICondaServiceDeprecated>();
-            ioc.serviceManager.addSingletonInstance<ICondaServiceDeprecated>(
-                ICondaServiceDeprecated,
-                condaServiceDeprecated.object,
+            condaLocatorService = TypeMoq.Mock.ofType<ICondaLocatorService>();
+            ioc.serviceManager.addSingletonInstance<ICondaLocatorService>(
+                ICondaLocatorService,
+                condaLocatorService.object,
             );
             ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, condaService.object);
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
@@ -468,10 +468,10 @@ suite('Module Installer', () => {
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
             serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ICondaService))).returns(() => condaService.object);
             serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(ICondaServiceDeprecated)))
-                .returns(() => condaServiceDeprecated.object);
+                .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService)))
+                .returns(() => condaLocatorService.object);
             condaService.setup((c) => c.isCondaAvailable()).returns(() => Promise.resolve(true));
-            condaServiceDeprecated
+            condaLocatorService
                 .setup((c) => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath)))
                 .returns(() => Promise.resolve(true));
 
@@ -491,10 +491,10 @@ suite('Module Installer', () => {
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
             serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ICondaService))).returns(() => condaService.object);
             serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(ICondaServiceDeprecated)))
-                .returns(() => condaServiceDeprecated.object);
+                .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService)))
+                .returns(() => condaLocatorService.object);
             condaService.setup((c) => c.isCondaAvailable()).returns(() => Promise.resolve(true));
-            condaServiceDeprecated
+            condaLocatorService
                 .setup((c) => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath)))
                 .returns(() => Promise.resolve(false));
 

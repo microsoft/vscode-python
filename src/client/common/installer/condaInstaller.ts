@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ICondaService, ICondaServiceDeprecated } from '../../interpreter/contracts';
+import { ICondaService, ICondaLocatorService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ExecutionInfo, IConfigurationService } from '../types';
 import { isResource } from '../utils/misc';
@@ -96,7 +96,7 @@ export class CondaInstaller extends ModuleInstaller {
      * Is the provided interprter a conda environment
      */
     private async isCurrentEnvironmentACondaEnvironment(resource?: InterpreterUri): Promise<boolean> {
-        const condaService = this.serviceContainer.get<ICondaServiceDeprecated>(ICondaServiceDeprecated);
+        const condaService = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
         const pythonPath = isResource(resource)
             ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
             : resource.path;

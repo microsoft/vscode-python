@@ -87,11 +87,11 @@ export interface ICondaService {
     getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
 }
 
-export const ICondaServiceDeprecated = Symbol('ICondaServiceDeprecated');
+export const ICondaLocatorService = Symbol('ICondaLocatorService');
 /**
  * @deprecated
  */
-export interface ICondaServiceDeprecated {
+export interface ICondaLocatorService {
     readonly condaEnvironmentsFile: string | undefined;
     getCondaFile(): Promise<string>;
     isCondaAvailable(): Promise<boolean>;

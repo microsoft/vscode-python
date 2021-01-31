@@ -27,7 +27,7 @@ import {
 import { IConfigurationService } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Architecture, OSType } from '../../../client/common/utils/platform';
-import { ICondaServiceDeprecated } from '../../../client/interpreter/contracts';
+import { ICondaLocatorService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
@@ -35,7 +35,7 @@ suite('Terminal Service helpers', () => {
     let helper: TerminalHelper;
     let terminalManager: ITerminalManager;
     let platformService: IPlatformService;
-    let condaService: ICondaServiceDeprecated;
+    let condaService: ICondaLocatorService;
     let configurationService: IConfigurationService;
     let condaActivationProvider: ITerminalActivationCommandProvider;
     let bashActivationProvider: ITerminalActivationCommandProvider;
@@ -58,7 +58,7 @@ suite('Terminal Service helpers', () => {
         mockDetector = mock(TerminalNameShellDetector);
         terminalManager = mock(TerminalManager);
         platformService = mock(PlatformService);
-        condaService = mock<ICondaServiceDeprecated>();
+        condaService = mock<ICondaLocatorService>();
         configurationService = mock(ConfigurationService);
         condaActivationProvider = mock(CondaActivationCommandProvider);
         bashActivationProvider = mock(Bash);

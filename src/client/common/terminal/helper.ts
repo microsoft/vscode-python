@@ -3,7 +3,7 @@
 
 import { inject, injectable, multiInject, named } from 'inversify';
 import { Terminal, Uri } from 'vscode';
-import { ICondaServiceDeprecated, IInterpreterService } from '../../interpreter/contracts';
+import { ICondaLocatorService, IInterpreterService } from '../../interpreter/contracts';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -28,7 +28,7 @@ export class TerminalHelper implements ITerminalHelper {
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
-        @inject(ICondaServiceDeprecated) private readonly condaService: ICondaServiceDeprecated,
+        @inject(ICondaLocatorService) private readonly condaService: ICondaLocatorService,
         @inject(IInterpreterService) readonly interpreterService: IInterpreterService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ITerminalActivationCommandProvider)

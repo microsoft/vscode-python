@@ -26,7 +26,7 @@ import {
     WINDOWS_REGISTRY_SERVICE,
 } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { CondaServiceDeprecated } from '../../../../client/pythonEnvironments/discovery/locators/services/condaServiceDeprecated';
+import { CondaLocatorService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaLocatorService';
 import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { MockState } from '../../../interpreters/mocks';
 
@@ -48,7 +48,7 @@ const info: PythonEnvironment = {
 suite('Interpreters Conda Service', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let platformService: TypeMoq.IMock<IPlatformService>;
-    let condaService: CondaServiceDeprecated;
+    let condaService: CondaLocatorService;
     let pyenvs: TypeMoq.IMock<IComponentAdapter>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let config: TypeMoq.IMock<IConfigurationService>;
@@ -142,7 +142,7 @@ suite('Interpreters Conda Service', () => {
                 return utils.arePathsSame(p1, p2);
             });
 
-        condaService = new CondaServiceDeprecated(
+        condaService = new CondaLocatorService(
             procServiceFactory.object,
             platformService.object,
             fileSystem.object,
@@ -640,13 +640,13 @@ suite('Interpreters Conda Service', () => {
         platformService.setup((p) => p.isWindows).returns(() => true);
 
         fileSystem.setup((f) => f.search(TypeMoq.It.isAnyString())).returns(() => Promise.resolve([expected]));
-        const CondaServiceDeprecatedForTesting = class extends CondaServiceDeprecated {
+        const CondaLocatorServiceForTesting = class extends CondaLocatorService {
             // eslint-disable-next-line class-methods-use-this
             public async isCondaInCurrentPath() {
                 return false;
             }
         };
-        const condaSrv = new CondaServiceDeprecatedForTesting(
+        const condaSrv = new CondaLocatorServiceForTesting(
             procServiceFactory.object,
             platformService.object,
             fileSystem.object,

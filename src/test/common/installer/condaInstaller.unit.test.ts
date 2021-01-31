@@ -11,7 +11,7 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
 import { InterpreterUri } from '../../../client/common/installer/types';
 import { ExecutionInfo, IConfigurationService, IPythonSettings } from '../../../client/common/types';
-import { ICondaService, ICondaServiceDeprecated } from '../../../client/interpreter/contracts';
+import { ICondaService, ICondaLocatorService } from '../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CondaEnvironmentInfo } from '../../../client/pythonEnvironments/discovery/locators/services/conda';
@@ -21,7 +21,7 @@ suite('Common - Conda Installer', () => {
     let installer: CondaInstallerTest;
     let serviceContainer: IServiceContainer;
     let condaService: ICondaService;
-    let condaServiceDeprecated: ICondaServiceDeprecated;
+    let condaLocatorService: ICondaLocatorService;
     let configService: IConfigurationService;
     class CondaInstallerTest extends CondaInstaller {
         public async getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo> {
@@ -31,11 +31,11 @@ suite('Common - Conda Installer', () => {
     setup(() => {
         serviceContainer = mock(ServiceContainer);
         condaService = mock(CondaService);
-        condaServiceDeprecated = mock<ICondaServiceDeprecated>();
+        condaLocatorService = mock<ICondaLocatorService>();
         configService = mock(ConfigurationService);
         when(serviceContainer.get<ICondaService>(ICondaService)).thenReturn(instance(condaService));
-        when(serviceContainer.get<ICondaServiceDeprecated>(ICondaServiceDeprecated)).thenReturn(
-            instance(condaServiceDeprecated),
+        when(serviceContainer.get<ICondaLocatorService>(ICondaLocatorService)).thenReturn(
+            instance(condaLocatorService),
         );
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         installer = new CondaInstallerTest(instance(serviceContainer));
@@ -69,7 +69,7 @@ suite('Common - Conda Installer', () => {
         when(settings.pythonPath).thenReturn(pythonPath);
         when(condaService.isCondaAvailable()).thenResolve(true);
         when(configService.getSettings(uri)).thenReturn(instance(settings));
-        when(condaServiceDeprecated.isCondaEnvironment(pythonPath)).thenResolve(false);
+        when(condaLocatorService.isCondaEnvironment(pythonPath)).thenResolve(false);
 
         const supported = await installer.isSupported(uri);
 
@@ -83,7 +83,7 @@ suite('Common - Conda Installer', () => {
         when(settings.pythonPath).thenReturn(pythonPath);
         when(condaService.isCondaAvailable()).thenResolve(true);
         when(configService.getSettings(uri)).thenReturn(instance(settings));
-        when(condaServiceDeprecated.isCondaEnvironment(pythonPath)).thenResolve(true);
+        when(condaLocatorService.isCondaEnvironment(pythonPath)).thenResolve(true);
 
         const supported = await installer.isSupported(uri);
 
