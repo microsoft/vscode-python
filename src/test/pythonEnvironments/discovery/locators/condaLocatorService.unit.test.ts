@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import { EOL } from 'os';
 import * as path from 'path';
-import { parse, SemVer } from 'semver';
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Disposable, EventEmitter } from 'vscode';
 
@@ -939,18 +939,6 @@ suite('Interpreters Conda Service', () => {
 
         const condaExe = await condaService.getCondaFile();
         assert.equal(condaExe, expectedCodaExe, 'Failed to identify conda.exe');
-    });
-
-    test('Version info from conda process will be returned in getCondaVersion', async () => {
-        condaService.getCondaInfo = () => Promise.reject(new Error('Not Found'));
-        condaService.getCondaFile = () => Promise.resolve('conda');
-        const expectedVersion = parse('4.4.4')!.raw;
-        processService
-            .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve({ stdout: '4.4.4' }));
-
-        const version = await condaService.getCondaVersion();
-        assert.equal(version!.raw, expectedVersion);
     });
 
     test('isCondaInCurrentPath will return true if conda is available', async () => {

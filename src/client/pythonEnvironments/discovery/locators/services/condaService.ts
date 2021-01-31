@@ -15,6 +15,7 @@ import { CondaInfo } from './conda';
 @injectable()
 export class CondaService implements ICondaService {
     private isAvailable: boolean | undefined;
+
     constructor(
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
         @inject(IPlatformService) private platform: IPlatformService,
