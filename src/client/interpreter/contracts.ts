@@ -94,7 +94,6 @@ export const ICondaLocatorService = Symbol('ICondaLocatorService');
 export interface ICondaLocatorService {
     readonly condaEnvironmentsFile: string | undefined;
     getCondaFile(): Promise<string>;
-    isCondaAvailable(): Promise<boolean>;
     getCondaVersion(): Promise<SemVer | undefined>;
     getCondaInfo(): Promise<CondaInfo | undefined>;
     getCondaEnvironments(ignoreCache: boolean): Promise<CondaEnvironmentInfo[] | undefined>;

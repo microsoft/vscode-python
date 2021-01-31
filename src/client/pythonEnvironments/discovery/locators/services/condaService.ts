@@ -14,6 +14,7 @@ import { CondaInfo } from './conda';
  */
 @injectable()
 export class CondaService implements ICondaService {
+    private isAvailable: boolean | undefined;
     constructor(
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
         @inject(IPlatformService) private platform: IPlatformService,
@@ -32,7 +33,13 @@ export class CondaService implements ICondaService {
      * Is there a conda install to use?
      */
     public async isCondaAvailable(): Promise<boolean> {
-        return this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService).isCondaAvailable();
+        if (typeof this.isAvailable === 'boolean') {
+            return this.isAvailable;
+        }
+        return this.getCondaVersion()
+
+            .then((version) => (this.isAvailable = version !== undefined)) // eslint-disable-line no-return-assign
+            .catch(() => (this.isAvailable = false)); // eslint-disable-line no-return-assign
     }
 
     /**

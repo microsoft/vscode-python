@@ -69,8 +69,6 @@ export class CondaLocatorService implements ICondaLocatorService {
 
     private condaFile?: Promise<string | undefined>;
 
-    private isAvailable: boolean | undefined;
-
     constructor(
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
         @inject(IPlatformService) private platform: IPlatformService,
@@ -128,19 +126,6 @@ export class CondaLocatorService implements ICondaLocatorService {
             this.condaFile = this.getCondaFileImpl();
         }
         return (await this.condaFile)!;
-    }
-
-    /**
-     * Is there a conda install to use?
-     */
-    public async isCondaAvailable(): Promise<boolean> {
-        if (typeof this.isAvailable === 'boolean') {
-            return this.isAvailable;
-        }
-        return this.getCondaVersion()
-
-            .then((version) => (this.isAvailable = version !== undefined)) // eslint-disable-line no-return-assign
-            .catch(() => (this.isAvailable = false)); // eslint-disable-line no-return-assign
     }
 
     /**
