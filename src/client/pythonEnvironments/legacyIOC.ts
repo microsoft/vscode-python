@@ -141,9 +141,6 @@ export interface IPythonEnvironments extends ILocator {}
 
 @injectable()
 class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationService {
-    // this will be set based on experiment
-    private enabled = false;
-
     private readonly refreshing = new vscode.EventEmitter<void>();
 
     private readonly refreshed = new vscode.EventEmitter<void>();
@@ -158,7 +155,6 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     ) {}
 
     public async activate(): Promise<void> {
-        this.enabled = await inDiscoveryExperiment();
         this.disposables.push(
             this.api.onChanged((e) => {
                 const query = {
@@ -190,14 +186,12 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     }
 
     // Implements IInterpreterLocatorProgressHandler
-
-    // A result of `undefined` means "Fall back to the old code!"
-    public get onRefreshing(): vscode.Event<void> | undefined {
-        return this.enabled ? this.refreshing.event : undefined;
+    public get onRefreshing(): vscode.Event<void> {
+        return this.refreshing.event;
     }
 
-    public get onRefreshed(): vscode.Event<void> | undefined {
-        return this.enabled ? this.refreshed.event : undefined;
+    public get onRefreshed(): vscode.Event<void> {
+        return this.refreshed.event;
     }
 
     // Implements IInterpreterHelper

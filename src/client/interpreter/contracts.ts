@@ -32,6 +32,9 @@ export interface IVirtualEnvironmentsSearchPathProvider {
 
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
+    // InterpreterLocatorProgressStatubarHandler
+    readonly onRefreshing: Event<void>;
+    readonly onRefreshed: Event<void>;
     // VirtualEnvPrompt
     onDidCreate(resource: Resource, callback: () => void): Disposable;
     // IInterpreterLocatorService
