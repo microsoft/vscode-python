@@ -91,7 +91,6 @@ import {
     ITerminalService,
     ITerminalServiceFactory,
     TerminalActivationProviders,
-    TerminalCreationOptions,
 } from '../../client/common/terminal/types';
 import {
     IAsyncDisposableRegistry,
