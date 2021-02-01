@@ -91,11 +91,11 @@ export interface ITerminalServiceFactory {
      * Gets a terminal service.
      * If one exists with the same information, that is returned else a new one is created.
      *
-     * @param {TerminalCreationOptions} [options]
+     * @param {TerminalCreationOptions}
      * @returns {ITerminalService}
      * @memberof ITerminalServiceFactory
      */
-    getTerminalService(options?: TerminalCreationOptions): ITerminalService;
+    getTerminalService(options: TerminalCreationOptions): ITerminalService;
     createTerminalService(resource?: Uri, title?: string): ITerminalService;
 }
 

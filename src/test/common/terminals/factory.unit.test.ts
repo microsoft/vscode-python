@@ -54,9 +54,9 @@ suite('Terminal Service Factory', () => {
     });
 
     test('Ensure same instance of terminal service is returned', () => {
-        const instance = factory.getTerminalService() as SynchronousTerminalService;
+        const instance = factory.getTerminalService({}) as SynchronousTerminalService;
         const sameInstance =
-            (factory.getTerminalService() as SynchronousTerminalService).terminalService === instance.terminalService;
+            (factory.getTerminalService({}) as SynchronousTerminalService).terminalService === instance.terminalService;
         expect(sameInstance).to.equal(true, 'Instances are not the same');
 
         const differentInstance = factory.getTerminalService({ resource: undefined, title: 'New Title' });
@@ -65,7 +65,7 @@ suite('Terminal Service Factory', () => {
     });
 
     test('Ensure different instance of terminal service is returned when title is provided', () => {
-        const defaultInstance = factory.getTerminalService();
+        const defaultInstance = factory.getTerminalService({});
         expect(defaultInstance instanceof SynchronousTerminalService).to.equal(
             true,
             'Not an instance of Terminal service',
