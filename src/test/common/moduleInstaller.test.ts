@@ -190,14 +190,10 @@ suite('Module Installer', () => {
 
             mockTerminalService = TypeMoq.Mock.ofType<ITerminalService>();
             mockTerminalFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
-            mockTerminalFactory
-                .setup((t) => t.getTerminalService(TypeMoq.It.is<TerminalCreationOptions>((a) => a === resource)))
-                .returns(() => mockTerminalService.object)
-                .verifiable(TypeMoq.Times.atLeastOnce());
             // If resource is provided, then ensure we do not invoke without the resource.
             mockTerminalFactory
                 .setup((t) => t.getTerminalService(TypeMoq.It.isAny()))
-                .callback((passedInResource) => expect(passedInResource).to.be.equal(resource))
+                .callback((passedInResource) => expect(passedInResource).to.be.deep.equal({ resource }))
                 .returns(() => mockTerminalService.object);
             ioc.serviceManager.addSingletonInstance<ITerminalServiceFactory>(
                 ITerminalServiceFactory,
