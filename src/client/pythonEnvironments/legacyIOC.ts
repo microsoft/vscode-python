@@ -442,10 +442,10 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
             WindowsRegistryService,
             WINDOWS_REGISTRY_SERVICE,
         );
-        serviceManager.addSingleton<ICondaLocatorService>(ICondaLocatorService, CondaLocatorService);
     }
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
 
+    serviceManager.addSingleton<ICondaLocatorService>(ICondaLocatorService, CondaLocatorService);
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
 }
