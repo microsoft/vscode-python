@@ -1,46 +1,15 @@
 import * as assert from 'assert';
-import { expect } from 'chai';
 import * as path from 'path';
-import { parse, SemVer } from 'semver';
+import { parse } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { EventEmitter } from 'vscode';
 
 import { DiscoveryVariants } from '../../../../client/common/experiments/groups';
 import { FileSystemPaths, FileSystemPathUtils } from '../../../../client/common/platform/fs-paths';
 import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../../../client/common/process/types';
-import { ITerminalActivationCommandProvider } from '../../../../client/common/terminal/types';
-import {
-    IConfigurationService,
-    IExperimentService,
-    IPersistentStateFactory,
-    IPythonSettings,
-} from '../../../../client/common/types';
-import { Architecture } from '../../../../client/common/utils/platform';
-import {
-    IInterpreterLocatorService,
-    IInterpreterService,
-    WINDOWS_REGISTRY_SERVICE,
-} from '../../../../client/interpreter/contracts';
+import { IConfigurationService, IExperimentService, IPythonSettings } from '../../../../client/common/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { CondaService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
-import { MockState } from '../../../interpreters/mocks';
-
-const untildify: (value: string) => string = require('untildify');
-
-const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
-const info: PythonEnvironment = {
-    architecture: Architecture.Unknown,
-    companyDisplayName: '',
-    displayName: '',
-    envName: '',
-    path: '',
-    envType: EnvironmentType.Unknown,
-    version: new SemVer('0.0.0-alpha'),
-    sysPrefix: '',
-    sysVersion: '',
-};
 
 suite('Interpreters Conda Service', () => {
     let processService: TypeMoq.IMock<IProcessService>;
@@ -49,22 +18,14 @@ suite('Interpreters Conda Service', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let config: TypeMoq.IMock<IConfigurationService>;
     let settings: TypeMoq.IMock<IPythonSettings>;
-    let registryInterpreterLocatorService: TypeMoq.IMock<IInterpreterLocatorService>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
-    let persistentStateFactory: TypeMoq.IMock<IPersistentStateFactory>;
     let condaPathSetting: string;
-    let interpreterService: TypeMoq.IMock<IInterpreterService>;
-    let mockState: MockState;
-    let terminalProvider: TypeMoq.IMock<ITerminalActivationCommandProvider>;
     let experimentService: TypeMoq.IMock<IExperimentService>;
     setup(async () => {
         condaPathSetting = '';
         processService = TypeMoq.Mock.ofType<IProcessService>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
-        persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
-        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        registryInterpreterLocatorService = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         config = TypeMoq.Mock.ofType<IConfigurationService>();
         settings = TypeMoq.Mock.ofType<IPythonSettings>();
@@ -74,21 +35,6 @@ suite('Interpreters Conda Service', () => {
         procServiceFactory
             .setup((p) => p.create(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(processService.object));
-        const e = new EventEmitter<void>();
-        interpreterService.setup((x) => x.onDidChangeInterpreter).returns(() => e.event);
-        resetMockState(undefined);
-        persistentStateFactory
-            .setup((s) => s.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => mockState);
-
-        terminalProvider = TypeMoq.Mock.ofType<ITerminalActivationCommandProvider>();
-        terminalProvider.setup((p) => p.isShellSupported(TypeMoq.It.isAny())).returns(() => true);
-        terminalProvider
-            .setup((p) => p.getActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(['activate']));
-        terminalProvider
-            .setup((p) => p.getActivationCommandsForInterpreter!(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(['activate']));
 
         experimentService = TypeMoq.Mock.ofType<IExperimentService>();
         experimentService
@@ -111,17 +57,6 @@ suite('Interpreters Conda Service', () => {
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
             .returns(() => config.object);
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(ITerminalActivationCommandProvider), TypeMoq.It.isAny()))
-            .returns(() => terminalProvider.object);
-        serviceContainer
-            .setup((c) =>
-                c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(WINDOWS_REGISTRY_SERVICE)),
-            )
-            .returns(() => registryInterpreterLocatorService.object);
-        serviceContainer
-            .setup((c) => c.getAll(TypeMoq.It.isValue(ITerminalActivationCommandProvider), TypeMoq.It.isAny()))
-            .returns(() => [terminalProvider.object]);
         config.setup((c) => c.getSettings(TypeMoq.It.isValue(undefined))).returns(() => settings.object);
         settings.setup((p) => p.condaPath).returns(() => condaPathSetting);
         fileSystem
@@ -141,375 +76,8 @@ suite('Interpreters Conda Service', () => {
         );
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function resetMockState(data: any) {
-        mockState = new MockState(data);
-    }
-
-    test('Must use Conda env from Registry to locate conda.exe', async () => {
-        const condaPythonExePath = path.join('dumyPath', 'environments', 'conda', 'Scripts', 'python.exe');
-        const registryInterpreters: PythonEnvironment[] = [
-            {
-                displayName: 'One',
-                path: path.join(environmentsPath, 'path1', 'one.exe'),
-                companyDisplayName: 'One 1',
-                version: new SemVer('1.0.0'),
-                envType: EnvironmentType.Unknown,
-            },
-            {
-                displayName: 'Anaconda',
-                path: condaPythonExePath,
-                companyDisplayName: 'Two 2',
-                version: new SemVer('1.11.0'),
-                envType: EnvironmentType.Conda,
-            },
-            {
-                displayName: 'Three',
-                path: path.join(environmentsPath, 'path2', 'one.exe'),
-                companyDisplayName: 'Three 3',
-                version: new SemVer('2.10.1'),
-                envType: EnvironmentType.Unknown,
-            },
-            {
-                displayName: 'Seven',
-                path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
-                companyDisplayName: 'Continuum Analytics, Inc.',
-                envType: EnvironmentType.Unknown,
-            },
-        ].map((item) => ({ ...info, ...item }));
-        const condaInterpreterIndex = registryInterpreters.findIndex((i) => i.displayName === 'Anaconda');
-        const expectedCondaPath = path.join(
-            path.dirname(registryInterpreters[condaInterpreterIndex].path),
-            'conda.exe',
-        );
-        platformService.setup((p) => p.isWindows).returns(() => true);
-        processService
-            .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
-            .returns(() => Promise.reject(new Error('Not Found')));
-        registryInterpreterLocatorService
-            .setup((r) => r.getInterpreters(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(registryInterpreters));
-        fileSystem
-            .setup((fs) => fs.fileExists(TypeMoq.It.isAny()))
-            .returns((file: string) => Promise.resolve(file === expectedCondaPath));
-
-        const condaExe = await condaService.getCondaFile();
-        assert.equal(condaExe, expectedCondaPath, 'Failed to identify conda.exe');
-    });
-
-    test('Must use Conda env from Registry to latest version of locate conda.exe', async () => {
-        const condaPythonExePath = path.join('dumyPath', 'environments');
-        const registryInterpreters: PythonEnvironment[] = [
-            {
-                displayName: 'One',
-                path: path.join(environmentsPath, 'path1', 'one.exe'),
-                companyDisplayName: 'One 1',
-                version: new SemVer('1.0.0'),
-                envType: EnvironmentType.Unknown,
-            },
-            {
-                displayName: 'Anaconda',
-                path: path.join(condaPythonExePath, 'conda1', 'Scripts', 'python.exe'),
-                companyDisplayName: 'Two 1',
-                version: new SemVer('1.11.0'),
-                envType: EnvironmentType.Conda,
-            },
-            {
-                displayName: 'Anaconda',
-                path: path.join(condaPythonExePath, 'conda211', 'Scripts', 'python.exe'),
-                companyDisplayName: 'Two 2.11',
-                version: new SemVer('2.11.0'),
-                envType: EnvironmentType.Conda,
-            },
-            {
-                displayName: 'Anaconda',
-                path: path.join(condaPythonExePath, 'conda231', 'Scripts', 'python.exe'),
-                companyDisplayName: 'Two 2.31',
-                version: new SemVer('2.31.0'),
-                envType: EnvironmentType.Conda,
-            },
-            {
-                displayName: 'Anaconda',
-                path: path.join(condaPythonExePath, 'conda221', 'Scripts', 'python.exe'),
-                companyDisplayName: 'Two 2.21',
-                version: new SemVer('2.21.0'),
-                envType: EnvironmentType.Conda,
-            },
-            {
-                displayName: 'Three',
-                path: path.join(environmentsPath, 'path2', 'one.exe'),
-                companyDisplayName: 'Three 3',
-                version: new SemVer('2.10.1'),
-                envType: EnvironmentType.Unknown,
-            },
-            {
-                displayName: 'Seven',
-                path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
-                companyDisplayName: 'Continuum Analytics, Inc.',
-                envType: EnvironmentType.Unknown,
-            },
-        ].map((item) => ({ ...info, ...item }));
-        const indexOfLatestVersion = 3;
-        const expectedCodnaPath = path.join(path.dirname(registryInterpreters[indexOfLatestVersion].path), 'conda.exe');
-        platformService.setup((p) => p.isWindows).returns(() => true);
-        processService
-            .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
-            .returns(() => Promise.reject(new Error('Not Found')));
-        registryInterpreterLocatorService
-            .setup((r) => r.getInterpreters(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(registryInterpreters));
-        fileSystem
-            .setup((fs) => fs.fileExists(TypeMoq.It.isAny()))
-            .returns((file: string) => Promise.resolve(file === expectedCodnaPath));
-
-        const condaExe = await condaService.getCondaFile();
-        assert.equal(condaExe, expectedCodnaPath, 'Failed to identify conda.exe');
-    });
-
-    test("Must use 'conda' if conda.exe cannot be located using registry entries", async () => {
-        const condaPythonExePath = path.join('dumyPath', 'environments');
-        const registryInterpreters: PythonEnvironment[] = [
-            {
-                displayName: 'One',
-                path: path.join(environmentsPath, 'path1', 'one.exe'),
-                companyDisplayName: 'One 1',
-                version: new SemVer('1.0.0'),
-                envType: EnvironmentType.Unknown,
-            },
-            {
-                displayName: 'Anaconda',
-                path: path.join(condaPythonExePath, 'conda1', 'Scripts', 'python.exe'),
-                companyDisplayName: 'Two 1',
-                version: new SemVer('1.11.0'),
-                envType: EnvironmentType.Unknown,
-            },
-            {
-                displayName: 'Anaconda',
-                path: path.join(condaPythonExePath, 'conda211', 'Scripts', 'python.exe'),
-                companyDisplayName: 'Two 2.11',
-                version: new SemVer('2.11.0'),
-                envType: EnvironmentType.Unknown,
-            },
-            {
-                displayName: 'Anaconda',
-                path: path.join(condaPythonExePath, 'conda231', 'Scripts', 'python.exe'),
-                companyDisplayName: 'Two 2.31',
-                version: new SemVer('2.31.0'),
-                envType: EnvironmentType.Unknown,
-            },
-            {
-                displayName: 'Anaconda',
-                path: path.join(condaPythonExePath, 'conda221', 'Scripts', 'python.exe'),
-                companyDisplayName: 'Two 2.21',
-                version: new SemVer('2.21.0'),
-                envType: EnvironmentType.Unknown,
-            },
-            {
-                displayName: 'Three',
-                path: path.join(environmentsPath, 'path2', 'one.exe'),
-                companyDisplayName: 'Three 3',
-                version: new SemVer('2.10.1'),
-                envType: EnvironmentType.Unknown,
-            },
-            {
-                displayName: 'Seven',
-                path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
-                companyDisplayName: 'Continuum Analytics, Inc.',
-                envType: EnvironmentType.Unknown,
-            },
-        ].map((item) => ({ ...info, ...item }));
-        platformService.setup((p) => p.isWindows).returns(() => true);
-        processService
-            .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
-            .returns(() => Promise.reject(new Error('Not Found')));
-        registryInterpreterLocatorService
-            .setup((r) => r.getInterpreters(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(registryInterpreters));
-        fileSystem.setup((fs) => fs.search(TypeMoq.It.isAnyString())).returns(async () => []);
-        fileSystem.setup((fs) => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
-
-        const condaExe = await condaService.getCondaFile();
-        assert.equal(condaExe, 'conda', 'Failed to identify conda.exe');
-    });
-
-    test('Get conda file from default/known locations', async () => {
-        const expected = 'C:/ProgramData/Miniconda2/Scripts/conda.exe';
-        registryInterpreterLocatorService
-            .setup((r) => r.getInterpreters(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve([]));
-
-        platformService.setup((p) => p.isWindows).returns(() => true);
-
-        fileSystem.setup((f) => f.search(TypeMoq.It.isAnyString())).returns(() => Promise.resolve([expected]));
-        const CondaServiceForTesting = class extends CondaService {
-            // eslint-disable-next-line class-methods-use-this
-            public async isCondaInCurrentPath() {
-                return false;
-            }
-        };
-        const condaSrv = new CondaServiceForTesting(
-            procServiceFactory.object,
-            platformService.object,
-            fileSystem.object,
-            serviceContainer.object,
-        );
-
-        const result = await condaSrv.getCondaFile();
-        expect(result).is.equal(expected);
-    });
-
-    test("Must use 'python.condaPath' setting if set", async () => {
-        condaPathSetting = 'spam-spam-conda-spam-spam';
-        // We ensure that conda would otherwise be found.
-        processService
-            .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version'])))
-            .returns(() => Promise.resolve({ stdout: 'xyz' }))
-            .verifiable(TypeMoq.Times.never());
-
-        const condaExe = await condaService.getCondaFile();
-        assert.equal(condaExe, 'spam-spam-conda-spam-spam', 'Failed to identify conda.exe');
-
-        // We should not try to call other unwanted methods.
-        processService.verifyAll();
-        registryInterpreterLocatorService.verify((r) => r.getInterpreters(TypeMoq.It.isAny()), TypeMoq.Times.never());
-    });
-
-    test("Must use 'conda' if is available in the current path", async () => {
-        processService
-            .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version'])))
-            .returns(() => Promise.resolve({ stdout: 'xyz' }));
-
-        const condaExe = await condaService.getCondaFile();
-        assert.equal(condaExe, 'conda', 'Failed to identify conda.exe');
-
-        // We should not try to call other unwanted methods.
-        registryInterpreterLocatorService.verify((r) => r.getInterpreters(TypeMoq.It.isAny()), TypeMoq.Times.never());
-    });
-
-    test('Must invoke process only once to check if conda is in the current path', async () => {
-        processService
-            .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version'])))
-            .returns(() => Promise.resolve({ stdout: 'xyz' }));
-
-        const condaExe = await condaService.getCondaFile();
-        assert.equal(condaExe, 'conda', 'Failed to identify conda.exe');
-        processService.verify(
-            (p) => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-            TypeMoq.Times.once(),
-        );
-
-        // We should not try to call other unwanted methods.
-        registryInterpreterLocatorService.verify((r) => r.getInterpreters(TypeMoq.It.isAny()), TypeMoq.Times.never());
-
-        await condaService.getCondaFile();
-        processService.verify(
-            (p) => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-            TypeMoq.Times.once(),
-        );
-    });
-
-    [
-        '~/anaconda/bin/conda',
-        '~/miniconda/bin/conda',
-        '~/anaconda2/bin/conda',
-        '~/miniconda2/bin/conda',
-        '~/anaconda3/bin/conda',
-        '~/miniconda3/bin/conda',
-    ].forEach((knownLocation) => {
-        test(`Must return conda path from known location '${knownLocation}' (non windows)`, async () => {
-            const expectedCondaLocation = untildify(knownLocation);
-            platformService.setup((p) => p.isWindows).returns(() => false);
-            processService
-                .setup((p) =>
-                    p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()),
-                )
-                .returns(() => Promise.reject(new Error('Not Found')));
-            fileSystem
-                .setup((fs) => fs.search(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve([expectedCondaLocation]));
-            fileSystem
-                .setup((fs) => fs.fileExists(TypeMoq.It.isValue(expectedCondaLocation)))
-                .returns(() => Promise.resolve(true));
-
-            const condaExe = await condaService.getCondaFile();
-            assert.equal(condaExe, expectedCondaLocation, 'Failed to identify');
-        });
-    });
-
-    test("Must return 'conda' if conda could not be found in known locations", async () => {
-        platformService.setup((p) => p.isWindows).returns(() => false);
-        processService
-            .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
-            .returns(() => Promise.reject(new Error('Not Found')));
-        fileSystem.setup((fs) => fs.search(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
-        fileSystem.setup((fs) => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
-
-        const condaExe = await condaService.getCondaFile();
-        assert.equal(condaExe, 'conda', 'Failed to identify');
-    });
-
-    test('Must use Conda env from Registry to locate conda.exe', async () => {
-        const condaPythonExePath = path.join(
-            __dirname,
-            '..',
-            '..',
-            '..',
-            'src',
-            'test',
-            'pythonFiles',
-            'environments',
-            'conda',
-            'Scripts',
-            'python.exe',
-        );
-        const registryInterpreters: PythonEnvironment[] = [
-            {
-                displayName: 'One',
-                path: path.join(environmentsPath, 'path1', 'one.exe'),
-                companyDisplayName: 'One 1',
-                version: new SemVer('1.0.0'),
-                envType: EnvironmentType.Unknown,
-            },
-            {
-                displayName: 'Anaconda',
-                path: condaPythonExePath,
-                companyDisplayName: 'Two 2',
-                version: new SemVer('1.11.0'),
-                envType: EnvironmentType.Unknown,
-            },
-            {
-                displayName: 'Three',
-                path: path.join(environmentsPath, 'path2', 'one.exe'),
-                companyDisplayName: 'Three 3',
-                version: new SemVer('2.10.1'),
-                envType: EnvironmentType.Unknown,
-            },
-            {
-                displayName: 'Seven',
-                path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
-                companyDisplayName: 'Continuum Analytics, Inc.',
-                envType: EnvironmentType.Unknown,
-            },
-        ].map((item) => ({ ...info, ...item }));
-
-        const expectedCodaExe = path.join(path.dirname(condaPythonExePath), 'conda.exe');
-
-        platformService.setup((p) => p.isWindows).returns(() => true);
-        processService
-            .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
-            .returns(() => Promise.reject(new Error('Not Found')));
-        fileSystem
-            .setup((fs) => fs.fileExists(TypeMoq.It.isValue(expectedCodaExe)))
-            .returns(() => Promise.resolve(true));
-        registryInterpreterLocatorService
-            .setup((r) => r.getInterpreters(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(registryInterpreters));
-
-        const condaExe = await condaService.getCondaFile();
-        assert.equal(condaExe, expectedCodaExe, 'Failed to identify conda.exe');
-    });
-
     test('isAvailable will return true if conda is available', async () => {
+        condaService.getCondaFile = () => Promise.resolve('conda');
         processService
             .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: '4.4.4' }));

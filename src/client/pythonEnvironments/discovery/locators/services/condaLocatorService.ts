@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { compare } from 'semver';
