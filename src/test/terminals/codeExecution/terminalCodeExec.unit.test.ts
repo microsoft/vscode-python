@@ -10,7 +10,11 @@ import { IFileSystem, IPlatformService } from '../../../client/common/platform/t
 import { createCondaEnv } from '../../../client/common/process/pythonEnvironment';
 import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
 import { IProcessService, IPythonExecutionFactory } from '../../../client/common/process/types';
-import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
+import {
+    ITerminalService,
+    ITerminalServiceFactory,
+    TerminalCreationOptions,
+} from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/codeExecution/djangoShellCodeExecution';
@@ -116,7 +120,11 @@ suite('Terminal - Code Execution', () => {
         suite(`${testSuiteName} (validation of title)`, () => {
             setup(() => {
                 terminalFactory
-                    .setup((f) => f.getTerminalService(TypeMoq.It.isAny(), TypeMoq.It.isValue(expectedTerminalTitle)))
+                    .setup((f) =>
+                        f.getTerminalService(
+                            TypeMoq.It.is<TerminalCreationOptions>((a) => a.title === expectedTerminalTitle),
+                        ),
+                    )
                     .returns(() => terminalService.object);
             });
 
@@ -151,7 +159,7 @@ suite('Terminal - Code Execution', () => {
             this.timeout(5000); // Activation of terminals take some time (there's a delay in the code to account for VSC Terminal issues).
             setup(() => {
                 terminalFactory
-                    .setup((f) => f.getTerminalService(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .setup((f) => f.getTerminalService(TypeMoq.It.isAny()))
                     .returns(() => terminalService.object);
             });
 

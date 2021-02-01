@@ -59,7 +59,7 @@ suite('Terminal Service Factory', () => {
             (factory.getTerminalService() as SynchronousTerminalService).terminalService === instance.terminalService;
         expect(sameInstance).to.equal(true, 'Instances are not the same');
 
-        const differentInstance = factory.getTerminalService(undefined, 'New Title');
+        const differentInstance = factory.getTerminalService({ resource: undefined, title: 'New Title' });
         const notTheSameInstance = differentInstance === instance;
         expect(notTheSameInstance).not.to.equal(true, 'Instances are the same');
     });
@@ -71,16 +71,20 @@ suite('Terminal Service Factory', () => {
             'Not an instance of Terminal service',
         );
 
-        const notSameAsDefaultInstance = factory.getTerminalService(undefined, 'New Title') === defaultInstance;
+        const notSameAsDefaultInstance =
+            factory.getTerminalService({ resource: undefined, title: 'New Title' }) === defaultInstance;
         expect(notSameAsDefaultInstance).to.not.equal(true, 'Instances are the same as default instance');
 
-        const instance = factory.getTerminalService(undefined, 'New Title') as SynchronousTerminalService;
+        const instance = factory.getTerminalService({
+            resource: undefined,
+            title: 'New Title',
+        }) as SynchronousTerminalService;
         const sameInstance =
-            (factory.getTerminalService(undefined, 'New Title') as SynchronousTerminalService).terminalService ===
-            instance.terminalService;
+            (factory.getTerminalService({ resource: undefined, title: 'New Title' }) as SynchronousTerminalService)
+                .terminalService === instance.terminalService;
         expect(sameInstance).to.equal(true, 'Instances are not the same');
 
-        const differentInstance = factory.getTerminalService(undefined, 'Another New Title');
+        const differentInstance = factory.getTerminalService({ resource: undefined, title: 'Another New Title' });
         const notTheSameInstance = differentInstance === instance;
         expect(notTheSameInstance).not.to.equal(true, 'Instances are the same');
     });
@@ -122,9 +126,9 @@ suite('Terminal Service Factory', () => {
             .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isValue(fileB)))
             .returns(() => workspaceFolderB.object);
 
-        const terminalForFile1A = factory.getTerminalService(file1A) as SynchronousTerminalService;
-        const terminalForFile2A = factory.getTerminalService(file2A) as SynchronousTerminalService;
-        const terminalForFileB = factory.getTerminalService(fileB) as SynchronousTerminalService;
+        const terminalForFile1A = factory.getTerminalService({ resource: file1A }) as SynchronousTerminalService;
+        const terminalForFile2A = factory.getTerminalService({ resource: file2A }) as SynchronousTerminalService;
+        const terminalForFileB = factory.getTerminalService({ resource: fileB }) as SynchronousTerminalService;
 
         const terminalsAreSameForWorkspaceA = terminalForFile1A.terminalService === terminalForFile2A.terminalService;
         expect(terminalsAreSameForWorkspaceA).to.equal(true, 'Instances are not the same for Workspace A');

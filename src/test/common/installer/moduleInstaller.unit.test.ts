@@ -254,7 +254,7 @@ suite('Module Installer', () => {
                             terminalService = TypeMoq.Mock.ofType<ITerminalService>();
                             const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
                             terminalServiceFactory
-                                .setup((f) => f.getTerminalService(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                                .setup((f) => f.getTerminalService(TypeMoq.It.isAny()))
                                 .returns(() => terminalService.object);
                             serviceContainer
                                 .setup((c) => c.get(TypeMoq.It.isValue(ITerminalServiceFactory), TypeMoq.It.isAny()))

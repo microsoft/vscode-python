@@ -228,7 +228,7 @@ suite('Module Installer only', () => {
                                 .setup((c) => c.get(TypeMoq.It.isValue(ITerminalServiceFactory)))
                                 .returns(() => terminalServiceFactory.object);
                             terminalServiceFactory
-                                .setup((p) => p.getTerminalService(resource))
+                                .setup((p) => p.getTerminalService({ resource }))
                                 .returns(() => terminalService.object);
                             terminalService
                                 .setup((t) => t.sendCommand(CTagsInstallationScript, []))
@@ -252,7 +252,7 @@ suite('Module Installer only', () => {
                                 .setup((c) => c.get(TypeMoq.It.isValue(ITerminalServiceFactory)))
                                 .returns(() => terminalServiceFactory.object);
                             terminalServiceFactory
-                                .setup((p) => p.getTerminalService(resource))
+                                .setup((p) => p.getTerminalService({ resource }))
                                 .returns(() => terminalService.object);
                             terminalService
                                 .setup((t) => t.sendCommand(CTagsInstallationScript, []))

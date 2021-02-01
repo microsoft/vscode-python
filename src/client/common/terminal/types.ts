@@ -88,15 +88,6 @@ export type TerminalCreationOptions = {
 
 export interface ITerminalServiceFactory {
     /**
-     * Gets a terminal service with a specific title.
-     * If one exists, its returned else a new one is created.
-     * @param {Uri} resource
-     * @param {string} title
-     * @returns {ITerminalService}
-     * @memberof ITerminalServiceFactory
-     */
-    getTerminalService(resource?: Uri, title?: string): ITerminalService;
-    /**
      * Gets a terminal service.
      * If one exists with the same information, that is returned else a new one is created.
      *

@@ -91,6 +91,7 @@ import {
     ITerminalService,
     ITerminalServiceFactory,
     TerminalActivationProviders,
+    TerminalCreationOptions,
 } from '../../client/common/terminal/types';
 import {
     IAsyncDisposableRegistry,
@@ -190,7 +191,7 @@ suite('Module Installer', () => {
             mockTerminalService = TypeMoq.Mock.ofType<ITerminalService>();
             mockTerminalFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
             mockTerminalFactory
-                .setup((t) => t.getTerminalService(TypeMoq.It.isValue(resource)))
+                .setup((t) => t.getTerminalService(TypeMoq.It.is<TerminalCreationOptions>((a) => a === resource)))
                 .returns(() => mockTerminalService.object)
                 .verifiable(TypeMoq.Times.atLeastOnce());
             // If resource is provided, then ensure we do not invoke without the resource.

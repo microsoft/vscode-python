@@ -226,7 +226,7 @@ export class CTagsInstaller extends BaseInstaller {
         } else {
             const terminalService = this.serviceContainer
                 .get<ITerminalServiceFactory>(ITerminalServiceFactory)
-                .getTerminalService(resource);
+                .getTerminalService({ resource });
             terminalService
                 .sendCommand(CTagsInstallationScript, [])
                 .catch((ex) => traceError(`Failed to install ctags. Script sent '${CTagsInstallationScript}', ${ex}`));
@@ -583,7 +583,7 @@ export class DataScienceInstaller extends BaseInstaller {
         // Get a list of known installation channels, pip, conda, etc.
         const channels: IModuleInstaller[] = await this.serviceContainer
             .get<IInstallationChannelManager>(IInstallationChannelManager)
-            .getInstallationChannels();
+            .getInstallationChannels(interpreter);
 
         // Pick an installerModule based on whether the interpreter is conda or not. Default is pip.
         let installerModule;
