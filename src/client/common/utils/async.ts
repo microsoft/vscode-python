@@ -153,7 +153,21 @@ export async function* chain<T>(
     const promises = iterators.map(getNext);
     let numRunning = iterators.length;
     while (numRunning > 0) {
-        const { index, result, err } = await Promise.race(promises);
+        let index: NextResult<T>['index'];
+        let result: NextResult<T>['result'];
+        let err: NextResult<T>['err'];
+
+        try {
+            const promise = await Promise.race(promises);
+            index = promise.index;
+            result = promise.result;
+            err = promise.err;
+        } catch (error) {
+            err = error;
+            index = 0;
+            result = null;
+        }
+
         if (err !== null) {
             promises[index] = NEVER as Promise<NextResult<T>>;
             numRunning -= 1;
