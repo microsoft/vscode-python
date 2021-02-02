@@ -14,7 +14,10 @@ import { IFileSystem, IPlatformService } from '../../../client/common/platform/t
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../../client/common/terminal/environmentActivationProviders/commandPrompt';
-import { CondaActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
+import {
+    CondaActivationCommandProvider,
+    _getPowershellCommands,
+} from '../../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
 import { PipEnvActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
 import { PyEnvActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalHelper } from '../../../client/common/terminal/helper';
@@ -70,6 +73,7 @@ suite('Terminal Environment Activation conda', () => {
         condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(conda));
         bash = mock(Bash);
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((x: any) => x.then).returns(() => undefined);
         procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
         procServiceFactory
@@ -670,7 +674,7 @@ suite('Terminal Environment Activation conda', () => {
             if (testParams.terminalKind === TerminalShellType.commandPrompt) {
                 result = await tstCmdProvider.getWindowsCommands(testParams.envName);
             } else {
-                result = await tstCmdProvider.getPowershellCommands(testParams.envName);
+                result = await _getPowershellCommands(testParams.envName);
             }
             expect(result).to.deep.equal(testParams.expectedResult, 'Specific terminal command is incorrect.');
         });

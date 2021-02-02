@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -17,6 +18,9 @@ import { InterpreterUri } from './types';
 export class CondaInstaller extends ModuleInstaller {
     public _isCondaAvailable: boolean | undefined;
 
+    // Unfortunately inversify requires the number of args in constructor to be explictly
+    // specified as more than its base class. So we need the constructor.
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }
@@ -25,7 +29,7 @@ export class CondaInstaller extends ModuleInstaller {
         return 'Conda';
     }
 
-    public get displayName() {
+    public get displayName(): string {
         return 'Conda';
     }
 
