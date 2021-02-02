@@ -91,7 +91,7 @@ suite('chain async iterators', () => {
         const deferred = createDeferred<void>();
         const it = (async function* () {
             deferred.resolve();
-            yield undefined;
+            yield;
         })();
 
         const results = await flatten(chain([it]));
@@ -170,7 +170,7 @@ suite('chain async iterators', () => {
             // We do not yield anything.
             deferred23.resolve();
 
-            yield undefined;
+            yield;
         })();
         const it3 = (async function* () {
             await deferred23.promise;
