@@ -29,7 +29,7 @@ export async function* findInterpretersInDir(
     root: string,
     recurseLevel?: number,
     filterSubDir?: FileFilterFunc,
-    ignoreErrors = false,
+    ignoreErrors = true,
 ): AsyncIterableIterator<string> {
     // "checkBin" is a local variable rather than global
     // so we can stub it out during unit testing.
@@ -44,7 +44,7 @@ export async function* findInterpretersInDir(
     // We use an initial depth of 1.
     for await (const { filename, filetype } of walkSubTree(root, 1, cfg)) {
         if (filetype === FileType.File || filetype === FileType.SymbolicLink) {
-            if (matchFile(filename, checkBin, ignoreErrors || false)) {
+            if (matchFile(filename, checkBin, ignoreErrors)) {
                 yield filename;
             }
         }
@@ -58,8 +58,8 @@ export async function* findInterpretersInDir(
 export async function* iterPythonExecutablesInDir(
     dirname: string,
     opts: {
-        ignoreErrors?: boolean;
-    } = {},
+        ignoreErrors: boolean;
+    } = { ignoreErrors: true },
 ): AsyncIterableIterator<DirEntry> {
     const readDirOpts = {
         ...opts,
@@ -105,8 +105,8 @@ async function readDirEntries(
     dirname: string,
     opts: {
         filterFilename?: FileFilterFunc;
-        ignoreErrors?: boolean;
-    } = {},
+        ignoreErrors: boolean;
+    } = { ignoreErrors: true },
 ): Promise<DirEntry[]> {
     const ignoreErrors = opts.ignoreErrors || false;
     if (opts.filterFilename && getOSType() === OSType.Windows) {
@@ -175,8 +175,8 @@ async function readDirEntries(
 async function getFileType(
     filename: string,
     opts: {
-        ignoreErrors?: boolean;
-    } = {},
+        ignoreErrors: boolean;
+    } = { ignoreErrors: true },
 ): Promise<FileType | undefined> {
     let stat: fs.Stats;
     try {
@@ -197,9 +197,9 @@ async function getFileType(
 function matchFile(
     filename: string,
     filterFile: FileFilterFunc | undefined,
-    // If "ignoreErrors" is true then We treat a failed filter
+    // If "ignoreErrors" is true then we treat a failed filter
     // as though it returned `false`.
-    ignoreErrors: boolean,
+    ignoreErrors = true,
 ): boolean {
     if (filterFile === undefined) {
         return true;
