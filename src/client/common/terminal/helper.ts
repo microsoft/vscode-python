@@ -3,15 +3,17 @@
 
 import { inject, injectable, multiInject, named } from 'inversify';
 import { Terminal, Uri } from 'vscode';
-import { ICondaLocatorService, IInterpreterService } from '../../interpreter/contracts';
+import { IComponentAdapter, ICondaLocatorService, IInterpreterService } from '../../interpreter/contracts';
+import { IServiceContainer } from '../../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITerminalManager } from '../application/types';
+import { inDiscoveryExperiment } from '../experiments/helpers';
 import '../extensions';
 import { traceDecorators, traceError } from '../logger';
 import { IPlatformService } from '../platform/types';
-import { IConfigurationService, Resource } from '../types';
+import { IConfigurationService, IExperimentService, Resource } from '../types';
 import { OSType } from '../utils/platform';
 import { ShellDetector } from './shellDetector';
 import {
@@ -28,7 +30,7 @@ export class TerminalHelper implements ITerminalHelper {
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
-        @inject(ICondaLocatorService) private readonly condaService: ICondaLocatorService,
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IInterpreterService) readonly interpreterService: IInterpreterService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ITerminalActivationCommandProvider)
@@ -129,10 +131,14 @@ export class TerminalHelper implements ITerminalHelper {
     ): Promise<string[] | undefined> {
         const settings = this.configurationService.getSettings(resource);
 
+        const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
+        const condaService = (await inDiscoveryExperiment(experimentService))
+            ? this.serviceContainer.get<IComponentAdapter>(IComponentAdapter)
+            : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
         // If we have a conda environment, then use that.
         const isCondaEnvironment = interpreter
             ? interpreter.envType === EnvironmentType.Conda
-            : await this.condaService.isCondaEnvironment(settings.pythonPath);
+            : await condaService.isCondaEnvironment(settings.pythonPath);
         if (isCondaEnvironment) {
             const activationCommands = interpreter
                 ? await this.conda.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)

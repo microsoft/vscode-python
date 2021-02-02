@@ -69,6 +69,12 @@ suite('Terminal Environment Activation conda', () => {
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         processService = TypeMoq.Mock.ofType<IProcessService>();
         condaLocatorService = TypeMoq.Mock.ofType<ICondaLocatorService>();
+        serviceContainer
+            .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService)))
+            .returns(() => condaLocatorService.object);
+        serviceContainer
+            .setup((c) => c.get(TypeMoq.It.isValue(IExperimentService)))
+            .returns(() => experimentService.object);
         condaService = TypeMoq.Mock.ofType<ICondaService>();
         condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(conda));
         bash = mock(Bash);
@@ -109,7 +115,7 @@ suite('Terminal Environment Activation conda', () => {
         terminalHelper = new TerminalHelper(
             platformService.object,
             instance(mock(TerminalManager)),
-            condaLocatorService.object,
+            serviceContainer.object,
             instance(mock(InterpreterService)),
             configService.object,
             new CondaActivationCommandProvider(
