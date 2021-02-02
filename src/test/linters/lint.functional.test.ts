@@ -41,6 +41,7 @@ import { ILintMessage, LinterId, LintMessageSeverity } from '../../client/linter
 import { deleteFile, PYTHON_PATH } from '../common';
 import { BaseTestFixture, getLinterID, getProductName, newMockDocument, throwUnknownProduct } from './common';
 import * as ExperimentHelpers from '../../client/common/experiments/helpers';
+import { DiscoveryVariants } from '../../client/common/experiments/groups';
 
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const workspaceUri = Uri.file(workspaceDir);
@@ -727,6 +728,9 @@ class TestFixture extends BaseTestFixture {
         const pyenvs: IComponentAdapter = mock<IComponentAdapter>();
 
         const experimentService = TypeMoq.Mock.ofType<IExperimentService>(undefined, TypeMoq.MockBehavior.Strict);
+        experimentService
+            .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
+            .returns(() => Promise.resolve(false));
 
         const inDiscoveryExperimentStub = sinon.stub(ExperimentHelpers, 'inDiscoveryExperiment');
         inDiscoveryExperimentStub.resolves(false);

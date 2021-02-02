@@ -18,6 +18,7 @@ import {
     workspace,
 } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { DiscoveryVariants } from '../../client/common/experiments/groups';
 import '../../client/common/extensions';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
@@ -90,6 +91,10 @@ suite('Refactor Rename', () => {
             .returns(() => envActivationService.object);
 
         const pyenvs: IComponentAdapter = mock<IComponentAdapter>();
+
+        experimentService
+            .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
+            .returns(() => Promise.resolve(false));
 
         serviceContainer
             .setup((s) => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))

@@ -41,6 +41,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnviro
 import * as ExperimentHelpers from '../../../client/common/experiments/helpers';
 import * as WindowsStoreInterpreter from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { ExperimentService } from '../../../client/common/experiments/service';
+import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 
 const pythonInterpreter: PythonEnvironment = {
     path: '/foo/bar/python.exe',
@@ -105,6 +106,7 @@ suite('Process - PythonExecutionFactory', () => {
                 condaLocatorService = mock<ICondaLocatorService>();
                 processLogger = mock(ProcessLogger);
                 experimentService = mock(ExperimentService);
+                when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
 
                 pyenvs = mock<IComponentAdapter>();
                 when(pyenvs.isWindowsStoreInterpreter(anyString())).thenResolve(true);
