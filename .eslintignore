@@ -202,7 +202,6 @@ src/test/common/platform/fs-temp.unit.test.ts
 src/test/common/platform/fs-temp.functional.test.ts
 src/test/common/platform/filesystem.functional.test.ts
 src/test/common/platform/filesystem.test.ts
-src/test/common/utils/async.unit.test.ts
 src/test/common/utils/cacheUtils.unit.test.ts
 src/test/common/utils/decorators.unit.test.ts
 src/test/common/utils/localize.functional.test.ts
