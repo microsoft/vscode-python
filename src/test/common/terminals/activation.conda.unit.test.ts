@@ -8,6 +8,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
 import { TerminalManager } from '../../../client/common/application/terminalManager';
+import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 import '../../../client/common/extensions';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
@@ -21,11 +22,12 @@ import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../
 import {
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IPythonSettings,
     ITerminalSettings,
 } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
-import { ICondaLocatorService, ICondaService } from '../../../client/interpreter/contracts';
+import { IComponentAdapter, ICondaLocatorService, ICondaService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -41,6 +43,8 @@ suite('Terminal Environment Activation conda', () => {
     let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
     let condaService: TypeMoq.IMock<ICondaService>;
     let condaLocatorService: TypeMoq.IMock<ICondaLocatorService>;
+    let experimentService: TypeMoq.IMock<IExperimentService>;
+    let componentAdapter: TypeMoq.IMock<IComponentAdapter>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let conda: string;
     let bash: ITerminalActivationCommandProvider;
@@ -53,6 +57,11 @@ suite('Terminal Environment Activation conda', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
             .returns(() => disposables);
 
+        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
+        experimentService
+            .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
+            .returns(() => Promise.resolve(false));
+        componentAdapter = TypeMoq.Mock.ofType<IComponentAdapter>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         processService = TypeMoq.Mock.ofType<IProcessService>();
@@ -80,7 +89,7 @@ suite('Terminal Environment Activation conda', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(ICondaService), TypeMoq.It.isAny()))
             .returns(() => condaService.object);
         serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService)))
             .returns(() => condaLocatorService.object);
 
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -104,6 +113,8 @@ suite('Terminal Environment Activation conda', () => {
                 platformService.object,
                 configService.object,
                 serviceContainer.object,
+                experimentService.object,
+                componentAdapter.object,
             ),
             instance(bash),
             mock(CommandPromptAndPowerShell),
@@ -135,6 +146,8 @@ suite('Terminal Environment Activation conda', () => {
             platformService.object,
             configService.object,
             serviceContainer.object,
+            experimentService.object,
+            componentAdapter.object,
         );
         const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.fish);
 
@@ -164,6 +177,8 @@ suite('Terminal Environment Activation conda', () => {
             platformService.object,
             configService.object,
             serviceContainer.object,
+            experimentService.object,
+            componentAdapter.object,
         );
         const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
 
@@ -193,6 +208,8 @@ suite('Terminal Environment Activation conda', () => {
             platformService.object,
             configService.object,
             serviceContainer.object,
+            experimentService.object,
+            componentAdapter.object,
         );
         const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
 
@@ -270,6 +287,8 @@ suite('Terminal Environment Activation conda', () => {
                 platformService.object,
                 configService.object,
                 serviceContainer.object,
+                experimentService.object,
+                componentAdapter.object,
             );
             const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
 
@@ -299,6 +318,8 @@ suite('Terminal Environment Activation conda', () => {
             platformService.object,
             configService.object,
             serviceContainer.object,
+            experimentService.object,
+            componentAdapter.object,
         ).getActivationCommands(undefined, shellType);
         let expectedActivationCommand: string[] | undefined;
         const expectEnvActivatePath = path.dirname(pythonPath);
@@ -640,6 +661,8 @@ suite('Terminal Environment Activation conda', () => {
                 platformService.object,
                 configService.object,
                 serviceContainer.object,
+                experimentService.object,
+                componentAdapter.object,
             );
 
             let result: string[] | undefined;
