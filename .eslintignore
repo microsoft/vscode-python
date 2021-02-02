@@ -565,7 +565,6 @@ src/client/common/terminal/environmentActivationProviders/bash.ts
 src/client/common/terminal/environmentActivationProviders/pyenvActivationProvider.ts
 src/client/common/utils/decorators.ts
 src/client/common/utils/enum.ts
-src/client/common/utils/async.ts
 src/client/common/utils/localize.ts
 src/client/common/utils/platform.ts
 src/client/common/utils/stopWatch.ts
