@@ -17,11 +17,6 @@ export interface IStartPageProps {
     testMode?: boolean;
 }
 
-function initializeLoc(content: string): void {
-    const locJSON = JSON.parse(content);
-    storeLocStrings(locJSON);
-}
-
 // Front end of the Python extension start page.
 // In general it consists of its render method and methods that send and receive messages.
 export class StartPage extends React.Component<IStartPageProps> implements IMessageHandler {
@@ -159,7 +154,9 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 break;
 
             case SharedMessages.LocInit:
-                initializeLoc(payload);
+                // Initialize localization.
+                const locJSON = JSON.parse(payload);
+                storeLocStrings(locJSON);
                 break;
 
             default:
