@@ -48,8 +48,7 @@ export class CondaService implements ICondaService {
      */
     public async getCondaFile(): Promise<string> {
         if (!(await inDiscoveryExperiment(this.experimentService))) {
-            const condaLocatorService = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
-            return condaLocatorService.getCondaFile();
+            return this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService).getCondaFile();
         }
         if (!this.condaFile) {
             this.condaFile = this.getCondaFileImpl();

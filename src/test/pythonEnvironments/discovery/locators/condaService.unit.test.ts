@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import { parse } from 'semver';
 import * as TypeMoq from 'typemoq';
+import { IWorkspaceService } from '../../../../client/common/application/types';
 
 import { DiscoveryVariants } from '../../../../client/common/experiments/groups';
 import { FileSystemPaths, FileSystemPathUtils } from '../../../../client/common/platform/fs-paths';
@@ -22,9 +23,11 @@ suite('Interpreters Conda Service', () => {
     let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
     let condaPathSetting: string;
     let experimentService: TypeMoq.IMock<IExperimentService>;
+    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     setup(async () => {
         condaPathSetting = '';
         processService = TypeMoq.Mock.ofType<IProcessService>();
+        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         config = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -73,6 +76,10 @@ suite('Interpreters Conda Service', () => {
             platformService.object,
             fileSystem.object,
             serviceContainer.object,
+            experimentService.object,
+            config.object,
+            [],
+            workspaceService.object,
         );
     });
 
