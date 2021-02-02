@@ -1,13 +1,17 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { parse, SemVer } from 'semver';
-import { traceDecorators, traceWarning } from '../../../../common/logger';
+import { ConfigurationChangeEvent, Uri } from 'vscode';
+import { IWorkspaceService } from '../../../../common/application/types';
+import { inDiscoveryExperiment } from '../../../../common/experiments/helpers';
+import { traceDecorators, traceVerbose, traceWarning } from '../../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../../common/process/types';
+import { IExperimentService, IConfigurationService, IDisposableRegistry } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
 import { ICondaService, ICondaLocatorService } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
-import { CondaInfo } from './conda';
+import { Conda, CondaInfo } from './conda';
 
 /**
  * A wrapper around a conda installation.
@@ -16,18 +20,41 @@ import { CondaInfo } from './conda';
 export class CondaService implements ICondaService {
     private isAvailable: boolean | undefined;
 
+    private condaFile: Promise<string> | undefined;
+
+    /**
+     * Locating conda binary is expensive, since it potentially involves spawning or
+     * trying to spawn processes; so it's done lazily and asynchronously. Methods that
+     * need a Conda instance should use getConda() to obtain it, and should never access
+     * this property directly.
+     */
+    private condaPromise: Promise<Conda | undefined> | undefined;
+
     constructor(
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
         @inject(IPlatformService) private platform: IPlatformService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-    ) {}
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+    ) {
+        this.addCondaPathChangedHandler();
+    }
 
     /**
      * Return the path to the "conda file".
      */
     public async getCondaFile(): Promise<string> {
-        return this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService).getCondaFile();
+        if (!(await inDiscoveryExperiment(this.experimentService))) {
+            const condaLocatorService = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+            return condaLocatorService.getCondaFile();
+        }
+        if (!this.condaFile) {
+            this.condaFile = this.getCondaFileImpl();
+        }
+        return this.condaFile;
     }
 
     /**
@@ -131,6 +158,46 @@ export class CondaService implements ICondaService {
      */
     @cache(60_000)
     public async _getCondaInfo(): Promise<CondaInfo | undefined> {
-        return this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService).getCondaInfo();
+        if (!(await inDiscoveryExperiment(this.experimentService))) {
+            return this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService).getCondaInfo();
+        }
+        const conda = await this.getConda();
+        return conda?.getInfo();
+    }
+
+    /**
+     * Return the path to the "conda file", if there is one (in known locations).
+     */
+    private async getCondaFileImpl(): Promise<string> {
+        const settings = this.configService.getSettings();
+        const setting = settings.condaPath;
+        if (setting && setting !== '') {
+            return setting;
+        }
+        const conda = await this.getConda();
+        return conda?.command ?? 'conda';
+    }
+
+    private async getConda(): Promise<Conda | undefined> {
+        traceVerbose(`Searching for conda.`);
+        if (this.condaPromise === undefined) {
+            this.condaPromise = Conda.locate();
+        }
+        return this.condaPromise;
+    }
+
+    private addCondaPathChangedHandler() {
+        const disposable = this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this));
+        this.disposableRegistry.push(disposable);
+    }
+
+    private async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
+        const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
+            ? this.workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
+            : [undefined];
+        if (workspacesUris.findIndex((uri) => event.affectsConfiguration('python.condaPath', uri)) === -1) {
+            return;
+        }
+        this.condaFile = undefined;
     }
 }
