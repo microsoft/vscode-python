@@ -59,11 +59,10 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         pythonPath: string,
         targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
-        const envInfo = (await inDiscoveryExperiment(this.experimentService))
-            ? await this.pyenvs.getCondaEnvironment(pythonPath)
-            : await this.serviceContainer
-                  .get<ICondaLocatorService>(ICondaLocatorService)
-                  .getCondaEnvironment(pythonPath);
+        const condaLocatorService = (await inDiscoveryExperiment(this.experimentService))
+            ? this.pyenvs
+            : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const envInfo = await condaLocatorService.getCondaEnvironment(pythonPath);
         if (!envInfo) {
             return;
         }

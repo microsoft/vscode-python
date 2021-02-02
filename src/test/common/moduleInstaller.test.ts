@@ -34,6 +34,7 @@ import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegi
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
+import { DiscoveryVariants } from '../../client/common/experiments/groups';
 import { ExperimentsManager } from '../../client/common/experiments/manager';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { FeatureDeprecationManager } from '../../client/common/featureDeprecationManager';
@@ -158,6 +159,7 @@ suite('Module Installer', () => {
         let mockTerminalService: TypeMoq.IMock<ITerminalService>;
         let condaService: TypeMoq.IMock<ICondaService>;
         let condaLocatorService: TypeMoq.IMock<ICondaLocatorService>;
+        let experimentService: TypeMoq.IMock<IExperimentService>;
         let interpreterService: TypeMoq.IMock<IInterpreterService>;
         let mockTerminalFactory: TypeMoq.IMock<ITerminalServiceFactory>;
 
@@ -219,6 +221,10 @@ suite('Module Installer', () => {
             await ioc.registerMockInterpreterTypes();
             condaService = TypeMoq.Mock.ofType<ICondaService>();
             condaLocatorService = TypeMoq.Mock.ofType<ICondaLocatorService>();
+            experimentService = TypeMoq.Mock.ofType<IExperimentService>();
+            experimentService
+                .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
+                .returns(() => Promise.resolve(false));
             ioc.serviceManager.addSingletonInstance<ICondaLocatorService>(
                 ICondaLocatorService,
                 condaLocatorService.object,
@@ -466,6 +472,9 @@ suite('Module Installer', () => {
             serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService)))
                 .returns(() => condaLocatorService.object);
+            serviceContainer
+                .setup((c) => c.get(TypeMoq.It.isValue(IExperimentService)))
+                .returns(() => experimentService.object);
             condaService.setup((c) => c.isCondaAvailable()).returns(() => Promise.resolve(true));
             condaLocatorService
                 .setup((c) => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath)))
@@ -489,6 +498,9 @@ suite('Module Installer', () => {
             serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService)))
                 .returns(() => condaLocatorService.object);
+            serviceContainer
+                .setup((c) => c.get(TypeMoq.It.isValue(IExperimentService)))
+                .returns(() => experimentService.object);
             condaService.setup((c) => c.isCondaAvailable()).returns(() => Promise.resolve(true));
             condaLocatorService
                 .setup((c) => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath)))

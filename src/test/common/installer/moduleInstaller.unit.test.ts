@@ -20,6 +20,7 @@ import {
 } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
+import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
 import { ModuleInstaller } from '../../../client/common/installer/moduleInstaller';
 import { PipEnvInstaller, pipenvName } from '../../../client/common/installer/pipEnvInstaller';
@@ -32,6 +33,7 @@ import {
     ExecutionInfo,
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IOutputChannel,
     IPythonSettings,
     ModuleNamePurpose,
@@ -207,6 +209,7 @@ suite('Module Installer', () => {
                         let configService: TypeMoq.IMock<IConfigurationService>;
                         let fs: TypeMoq.IMock<IFileSystem>;
                         let pythonSettings: TypeMoq.IMock<IPythonSettings>;
+                        let experimentService: TypeMoq.IMock<IExperimentService>;
                         let interpreterService: TypeMoq.IMock<IInterpreterService>;
                         let installer: IModuleInstaller;
                         const condaExecutable = 'my.exe';
@@ -222,6 +225,14 @@ suite('Module Installer', () => {
                             serviceContainer
                                 .setup((c) => c.get(TypeMoq.It.isValue(IFileSystem)))
                                 .returns(() => fs.object);
+
+                            experimentService = TypeMoq.Mock.ofType<IExperimentService>();
+                            experimentService
+                                .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
+                                .returns(() => Promise.resolve(false));
+                            serviceContainer
+                                .setup((c) => c.get(TypeMoq.It.isValue(IExperimentService)))
+                                .returns(() => experimentService.object);
 
                             disposables = [];
                             serviceContainer
