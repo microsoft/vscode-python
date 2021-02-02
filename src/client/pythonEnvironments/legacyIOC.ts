@@ -451,9 +451,8 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
             PIPENV_SERVICE,
         );
         serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
+        serviceManager.addSingleton<ICondaLocatorService>(ICondaLocatorService, CondaLocatorService);
     }
-
-    serviceManager.addSingleton<ICondaLocatorService>(ICondaLocatorService, CondaLocatorService);
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
 }
 
