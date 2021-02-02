@@ -4,9 +4,10 @@
 
 import * as React from 'react';
 import '../../client/common/extensions';
+import { SharedMessages } from '../../client/common/startPage/messages';
 import { ISettingPackage, IStartPageMapping, StartPageMessages } from '../../client/common/startPage/types';
 import { Image, ImageName } from '../react-common/image';
-import { getLocString } from '../react-common/locReactSide';
+import { getLocString, storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import './startPage.css';
 
@@ -14,6 +15,11 @@ export interface IStartPageProps {
     skipDefault?: boolean;
     baseTheme: string;
     testMode?: boolean;
+}
+
+function initializeLoc(content: string): void {
+    const locJSON = JSON.parse(content);
+    storeLocStrings(locJSON);
 }
 
 // Front end of the Python extension start page.
@@ -146,9 +152,18 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     }
 
     public handleMessage = (msg: string, payload?: any) => {
-        if (msg === StartPageMessages.SendSetting) {
-            this.releaseNotes.showAgainSetting = payload.showAgainSetting;
-            this.setState({});
+        switch (msg) {
+            case StartPageMessages.SendSetting:
+                this.releaseNotes.showAgainSetting = payload.showAgainSetting;
+                this.setState({});
+                break;
+
+            case SharedMessages.LocInit:
+                initializeLoc(payload);
+                break;
+
+            default:
+                break;
         }
 
         return false;
