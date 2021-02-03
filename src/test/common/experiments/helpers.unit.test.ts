@@ -14,7 +14,7 @@ import {
     setDefaultLanguageServerByExperiment,
 } from '../../../client/common/experiments/helpers';
 import { ExperimentService } from '../../../client/common/experiments/service';
-import { IDefaultJediLanguageServer, IExperimentService } from '../../../client/common/types';
+import { IDefaultLanguageServer, IExperimentService } from '../../../client/common/types';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceManager } from '../../../client/ioc/types';
 import { MockWorkspaceConfiguration } from '../../startPage/mockWorkspaceConfig';
@@ -68,9 +68,7 @@ suite('Experiments - setDefaultLanguageServerByExperiment()', () => {
 
         verify(workspaceService.getConfiguration('python')).once();
         verify(experimentService.inExperiment(JediLSP.experiment)).never();
-        verify(
-            serviceManager.addSingletonInstance<IDefaultJediLanguageServer>(IDefaultJediLanguageServer, anything()),
-        ).never();
+        verify(serviceManager.addSingletonInstance<IDefaultLanguageServer>(IDefaultLanguageServer, anything())).never();
     });
 
     test('languageServer NOT set by user and NOT in experiment', async () => {
@@ -81,11 +79,11 @@ suite('Experiments - setDefaultLanguageServerByExperiment()', () => {
             }),
         );
         when(experimentService.inExperiment(JediLSP.experiment)).thenResolve(false);
-        when(
-            serviceManager.addSingletonInstance<IDefaultJediLanguageServer>(IDefaultJediLanguageServer, anything()),
-        ).thenCall((_symbol, value: IDefaultJediLanguageServer) => {
-            defaultServerType = value.defaultJediType;
-        });
+        when(serviceManager.addSingletonInstance<IDefaultLanguageServer>(IDefaultLanguageServer, anything())).thenCall(
+            (_symbol, value: IDefaultLanguageServer) => {
+                defaultServerType = value.defaultLSType;
+            },
+        );
 
         await setDefaultLanguageServerByExperiment(
             instance(experimentService),
@@ -95,9 +93,7 @@ suite('Experiments - setDefaultLanguageServerByExperiment()', () => {
 
         verify(workspaceService.getConfiguration('python')).once();
         verify(experimentService.inExperiment(JediLSP.experiment)).once();
-        verify(
-            serviceManager.addSingletonInstance<IDefaultJediLanguageServer>(IDefaultJediLanguageServer, anything()),
-        ).once();
+        verify(serviceManager.addSingletonInstance<IDefaultLanguageServer>(IDefaultLanguageServer, anything())).once();
         expect(defaultServerType).to.equal(LanguageServerType.Jedi);
     });
 
@@ -109,11 +105,11 @@ suite('Experiments - setDefaultLanguageServerByExperiment()', () => {
             }),
         );
         when(experimentService.inExperiment(JediLSP.experiment)).thenResolve(true);
-        when(
-            serviceManager.addSingletonInstance<IDefaultJediLanguageServer>(IDefaultJediLanguageServer, anything()),
-        ).thenCall((_symbol, value: IDefaultJediLanguageServer) => {
-            defaultServerType = value.defaultJediType;
-        });
+        when(serviceManager.addSingletonInstance<IDefaultLanguageServer>(IDefaultLanguageServer, anything())).thenCall(
+            (_symbol, value: IDefaultLanguageServer) => {
+                defaultServerType = value.defaultLSType;
+            },
+        );
 
         await setDefaultLanguageServerByExperiment(
             instance(experimentService),
@@ -123,9 +119,7 @@ suite('Experiments - setDefaultLanguageServerByExperiment()', () => {
 
         verify(workspaceService.getConfiguration('python')).once();
         verify(experimentService.inExperiment(JediLSP.experiment)).once();
-        verify(
-            serviceManager.addSingletonInstance<IDefaultJediLanguageServer>(IDefaultJediLanguageServer, anything()),
-        ).once();
+        verify(serviceManager.addSingletonInstance<IDefaultLanguageServer>(IDefaultLanguageServer, anything())).once();
         expect(defaultServerType).to.equal(LanguageServerType.JediLSP);
     });
 });

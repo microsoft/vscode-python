@@ -14,7 +14,7 @@ import { isUnitTestExecution } from '../constants';
 import { DeprecatePythonPath } from '../experiments/groups';
 import {
     IConfigurationService,
-    IDefaultJediLanguageServer,
+    IDefaultLanguageServer,
     IExperimentsManager,
     IInterpreterPathService,
     IPythonSettings,
@@ -37,7 +37,7 @@ export class ConfigurationService implements IConfigurationService {
         const interpreterSecurityService = this.serviceContainer.get<IInterpreterSecurityService>(
             IInterpreterSecurityService,
         );
-        const defaultJedi = this.serviceContainer.tryGet<IDefaultJediLanguageServer>(IDefaultJediLanguageServer);
+        const defaultJedi = this.serviceContainer.tryGet<IDefaultLanguageServer>(IDefaultLanguageServer);
         return PythonSettings.getInstance(
             resource,
             InterpreterAutoSelectionService,

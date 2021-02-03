@@ -631,8 +631,8 @@ export interface IInterpreterPathService {
  * Adding experiment check there would mean touching the entire extension. For simplicity
  * this is a solution.
  */
-export const IDefaultJediLanguageServer = Symbol('IDefaultJediLanguageServer');
+export const IDefaultLanguageServer = Symbol('IDefaultLanguageServer');
 
-export interface IDefaultJediLanguageServer {
-    readonly defaultJediType: LanguageServerType.Jedi | LanguageServerType.JediLSP;
+export interface IDefaultLanguageServer {
+    readonly defaultLSType: LanguageServerType;
 }

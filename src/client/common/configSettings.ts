@@ -30,7 +30,7 @@ import * as internalPython from './process/internal/python';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
-    IDefaultJediLanguageServer,
+    IDefaultLanguageServer,
     IExperiments,
     IExperimentsManager,
     IFormattingSettings,
@@ -164,7 +164,7 @@ export class PythonSettings implements IPythonSettings {
         private readonly experimentsManager?: IExperimentsManager,
         private readonly interpreterPathService?: IInterpreterPathService,
         private readonly interpreterSecurityService?: IInterpreterSecurityService,
-        private readonly defaultJedi?: IDefaultJediLanguageServer,
+        private readonly defaultJedi?: IDefaultLanguageServer,
     ) {
         this.workspace = workspace || new WorkspaceService();
         this.workspaceRoot = workspaceFolder;
@@ -178,7 +178,7 @@ export class PythonSettings implements IPythonSettings {
         experimentsManager?: IExperimentsManager,
         interpreterPathService?: IInterpreterPathService,
         interpreterSecurityService?: IInterpreterSecurityService,
-        defaultJedi?: IDefaultJediLanguageServer,
+        defaultJedi?: IDefaultLanguageServer,
     ): PythonSettings {
         workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
@@ -282,7 +282,7 @@ export class PythonSettings implements IPythonSettings {
         this.useIsolation = systemVariables.resolveAny(pythonSettings.get<boolean>('useIsolation', true))!;
 
         const defaultServer = this.defaultJedi
-            ? this.defaultJedi.defaultJediType
+            ? this.defaultJedi.defaultLSType
             : pythonSettings.get<LanguageServerType>('languageServer');
         let ls = defaultServer ?? LanguageServerType.Jedi;
         ls = systemVariables.resolveAny(ls);

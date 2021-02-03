@@ -7,7 +7,7 @@ import { injectable } from 'inversify';
 import { LanguageServerType } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
-import { IDefaultJediLanguageServer, IExperimentService } from '../types';
+import { IDefaultLanguageServer, IExperimentService } from '../types';
 import { DiscoveryVariants, JediLSP } from './groups';
 
 export async function inDiscoveryExperiment(experimentService: IExperimentService): Promise<boolean> {
@@ -19,11 +19,11 @@ export async function inDiscoveryExperiment(experimentService: IExperimentServic
 }
 
 @injectable()
-class DefaultLanguageServer implements IDefaultJediLanguageServer {
-    public readonly defaultJediType: LanguageServerType.Jedi | LanguageServerType.JediLSP;
+class DefaultLanguageServer implements IDefaultLanguageServer {
+    public readonly defaultLSType: LanguageServerType.Jedi | LanguageServerType.JediLSP;
 
     constructor(defaultServer: LanguageServerType.Jedi | LanguageServerType.JediLSP) {
-        this.defaultJediType = defaultServer;
+        this.defaultLSType = defaultServer;
     }
 }
 
@@ -49,8 +49,8 @@ export async function setDefaultLanguageServerByExperiment(
     const lsType = (await experimentService.inExperiment(JediLSP.experiment))
         ? LanguageServerType.JediLSP
         : LanguageServerType.Jedi;
-    serviceManager.addSingletonInstance<IDefaultJediLanguageServer>(
-        IDefaultJediLanguageServer,
+    serviceManager.addSingletonInstance<IDefaultLanguageServer>(
+        IDefaultLanguageServer,
         new DefaultLanguageServer(lsType),
     );
     return Promise.resolve();
