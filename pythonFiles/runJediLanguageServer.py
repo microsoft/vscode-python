@@ -7,6 +7,4 @@ sys.path.append(os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python"))
 
 from jedi_language_server.cli import cli
 
-# Trick language server into thinking it started from 'jedi-language-server.exe'
-sys.argv[0] = "jedi-language-server.exe"
 sys.exit(cli())
