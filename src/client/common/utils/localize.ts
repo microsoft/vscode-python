@@ -7,6 +7,8 @@ import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { FileSystem } from '../platform/fileSystem';
 
+/* eslint-disable @typescript-eslint/no-namespace */
+
 // External callers of localize use these tables to retrieve localized values.
 export namespace Diagnostics {
     export const warnSourceMaps = localize(

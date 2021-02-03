@@ -389,7 +389,6 @@ src/client/providers/referenceProvider.ts
 src/client/providers/terminalProvider.ts
 src/client/providers/signatureProvider.ts
 
-src/client/activation/serviceRegistry.ts
 src/client/activation/languageServer/manager.ts
 src/client/activation/languageServer/languageServerExtension.ts
 src/client/activation/languageServer/languageServerProxy.ts
@@ -406,7 +405,6 @@ src/client/activation/commands.ts
 src/client/activation/activationManager.ts
 src/client/activation/progress.ts
 src/client/activation/extensionSurvey.ts
-src/client/activation/types.ts
 src/client/activation/common/languageServerChangeHandler.ts
 src/client/activation/common/activatorBase.ts
 src/client/activation/common/languageServerFolderService.ts
@@ -417,7 +415,6 @@ src/client/activation/common/downloadChannelRules.ts
 src/client/activation/refCountedLanguageServer.ts
 src/client/activation/jedi.ts
 src/client/activation/languageClientMiddleware.ts
-src/client/activation/activationService.ts
 src/client/activation/node/manager.ts
 src/client/activation/node/cancellationUtils.ts
 src/client/activation/node/languageServerProxy.ts
@@ -512,7 +509,6 @@ src/client/testing/display/main.ts
 src/client/testing/display/picker.ts
 src/client/testing/configuration.ts
 
-src/client/common/configuration/service.ts
 src/client/common/serviceRegistry.ts
 src/client/common/helpers.ts
 src/client/common/net/browser.ts
@@ -560,7 +556,6 @@ src/client/common/terminal/environmentActivationProviders/bash.ts
 src/client/common/terminal/environmentActivationProviders/pyenvActivationProvider.ts
 src/client/common/utils/decorators.ts
 src/client/common/utils/enum.ts
-src/client/common/utils/localize.ts
 src/client/common/utils/platform.ts
 src/client/common/utils/stopWatch.ts
 src/client/common/utils/random.ts
@@ -578,7 +573,6 @@ src/client/common/dotnet/services/unknownOsCompatibilityService.ts
 src/client/common/dotnet/services/macCompatibilityService.ts
 src/client/common/dotnet/services/linuxCompatibilityService.ts
 src/client/common/dotnet/services/windowsCompatibilityService.ts
-src/client/common/types.ts
 src/client/common/logger.ts
 src/client/common/constants.ts
 src/client/common/variables/serviceRegistry.ts

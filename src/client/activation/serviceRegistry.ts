@@ -63,7 +63,7 @@ import {
 } from './types';
 import { JediLanguageServerActivator } from './jedi/activator';
 
-export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType) {
+export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType): void {
     serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
     serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
     serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);
