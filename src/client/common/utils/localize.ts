@@ -7,7 +7,7 @@ import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { FileSystem } from '../platform/fileSystem';
 
-/* eslint-disable @typescript-eslint/no-namespace */
+/* eslint-disable @typescript-eslint/no-namespace, no-shadow */
 
 // External callers of localize use these tables to retrieve localized values.
 export namespace Diagnostics {
@@ -578,14 +578,14 @@ let askedForCollection: Record<string, string> = {};
 let loadedLocale: string;
 
 // This is exported only for testing purposes.
-export function _resetCollections() {
+export function _resetCollections(): void {
     loadedLocale = '';
     loadedCollection = undefined;
     askedForCollection = {};
 }
 
 // This is exported only for testing purposes.
-export function _getAskedForCollection() {
+export function _getAskedForCollection(): Record<string, string> {
     return askedForCollection;
 }
 
@@ -604,7 +604,7 @@ export function getCollectionJSON(): string {
 
 export function localize(key: string, defValue?: string) {
     // Return a pointer to function so that we refetch it on each call.
-    return () => {
+    return (): string => {
         return getString(key, defValue);
     };
 }
