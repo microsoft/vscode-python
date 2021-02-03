@@ -64,6 +64,7 @@ export interface IExtensionActivationService {
 
 export enum LanguageServerType {
     Jedi = 'Jedi',
+    JediLSP = 'JediLSP',
     Microsoft = 'Microsoft',
     Node = 'Pylance',
     None = 'None',

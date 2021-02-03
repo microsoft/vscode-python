@@ -189,6 +189,7 @@
     "LanguageService.startingJedi": "Starting Jedi Python language engine.",
     "LanguageService.startingMicrosoft": "Starting Microsoft Python language server.",
     "LanguageService.startingPylance": "Starting Pylance language server.",
+    "LanguageService.startingJediLSP": "Starting Jedi language server.",
     "LanguageService.startingNone": "Editor support is inactive since language server is set to None.",
     "LanguageService.reloadAfterLanguageServerChange": "Please reload the window switching between language servers.",
     "AttachProcess.unsupportedOS": "Operating system '{0}' not supported.",

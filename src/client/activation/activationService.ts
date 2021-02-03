@@ -263,6 +263,9 @@ export class LanguageServerExtensionActivationService
             case LanguageServerType.Jedi:
                 outputLine = LanguageService.startingJedi();
                 break;
+            case LanguageServerType.JediLSP:
+                outputLine = LanguageService.startingJediLSP();
+                break;
             case LanguageServerType.Microsoft:
                 outputLine = LanguageService.startingMicrosoft();
                 break;

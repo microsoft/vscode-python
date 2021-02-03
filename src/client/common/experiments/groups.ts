@@ -69,7 +69,7 @@ export enum SurveyAndInterpreterTipNotification {
 
 // Experiment to switch Jedi to use an LSP instead of direct providers
 export enum JediLSP {
-    experiment = 'jediLSP',
+    experiment = 'vscode.python.jediLSP',
 }
 // Experiment to show a prompt asking users to join python mailing list.
 export enum JoinMailingListPromptVariants {
