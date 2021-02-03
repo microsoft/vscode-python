@@ -89,9 +89,9 @@ suite('chain async iterators', () => {
 
     test('one iterator, no items', async () => {
         const deferred = createDeferred<void>();
+        // eslint-disable-next-line require-yield
         const it = (async function* () {
             deferred.resolve();
-            yield;
         })();
 
         const results = await flatten(chain([it]));
@@ -165,12 +165,11 @@ suite('chain async iterators', () => {
             yield 'a';
             deferred12.resolve();
         })();
+        // eslint-disable-next-line require-yield
         const it2 = (async function* () {
             await deferred12.promise;
             // We do not yield anything.
             deferred23.resolve();
-
-            yield;
         })();
         const it3 = (async function* () {
             await deferred23.promise;
