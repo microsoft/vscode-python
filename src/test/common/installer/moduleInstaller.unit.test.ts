@@ -242,6 +242,9 @@ suite('Module Installer', () => {
                             experimentService
                                 .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
                                 .returns(() => Promise.resolve(false));
+                            experimentService
+                                .setup((e) => e.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
+                                .returns(() => Promise.resolve(false));
                             serviceContainer
                                 .setup((c) => c.get(TypeMoq.It.isValue(IExperimentService)))
                                 .returns(() => experimentService.object);

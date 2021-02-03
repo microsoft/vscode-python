@@ -107,6 +107,7 @@ suite('Process - PythonExecutionFactory', () => {
                 processLogger = mock(ProcessLogger);
                 experimentService = mock(ExperimentService);
                 when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
+                when(experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching)).thenResolve(false);
 
                 pyenvs = mock<IComponentAdapter>();
                 when(pyenvs.isWindowsStoreInterpreter(anyString())).thenResolve(true);
