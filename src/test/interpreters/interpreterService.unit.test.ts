@@ -33,7 +33,7 @@ import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import {
@@ -156,8 +156,8 @@ suite('Interpreters service', () => {
             IInterpreterAutoSelectionService,
             MockAutoSelectionService,
         );
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
-            IInterpreterAutoSeletionProxyService,
+        serviceManager.addSingleton<IInterpreterAutoSelectionProxyService>(
+            IInterpreterAutoSelectionProxyService,
             MockAutoSelectionService,
         );
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService.object);

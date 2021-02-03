@@ -44,7 +44,7 @@ import { EnvironmentActivationService } from '../client/interpreter/activation/s
 import { IEnvironmentActivationService } from '../client/interpreter/activation/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
 } from '../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../client/interpreter/contracts';
 import { InterpreterService } from '../client/interpreter/interpreterService';
@@ -199,8 +199,8 @@ export class IocContainer {
             IInterpreterAutoSelectionService,
             MockAutoSelectionService,
         );
-        this.serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
-            IInterpreterAutoSeletionProxyService,
+        this.serviceManager.addSingleton<IInterpreterAutoSelectionProxyService>(
+            IInterpreterAutoSelectionProxyService,
             MockAutoSelectionService,
         );
     }
@@ -262,7 +262,7 @@ export class IocContainer {
         platformRegisterTypes(this.serviceManager);
     }
     public registerInterpreterTypes() {
-        // This method registers all interpreter types except `IInterpreterAutoSeletionProxyService` & `IEnvironmentActivationService`, as it's already registered in the constructor & registerMockProcessTypes() respectively
+        // This method registers all interpreter types except `IInterpreterAutoSelectionProxyService` & `IEnvironmentActivationService`, as it's already registered in the constructor & registerMockProcessTypes() respectively
         registerInterpreterTypes(this.serviceManager);
     }
     public registerMockProcessTypes() {

@@ -20,7 +20,7 @@ import {
 } from '../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -89,8 +89,8 @@ suite('Linting - Arguments', () => {
                             IInterpreterAutoSelectionService,
                             MockAutoSelectionService,
                         );
-                        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
-                            IInterpreterAutoSeletionProxyService,
+                        serviceManager.addSingleton<IInterpreterAutoSelectionProxyService>(
+                            IInterpreterAutoSelectionProxyService,
                             MockAutoSelectionService,
                         );
                         engine = TypeMoq.Mock.ofType<ILintingEngine>();

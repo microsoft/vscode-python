@@ -8,13 +8,13 @@ import { Event, EventEmitter } from 'vscode';
 import { Resource } from '../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 @injectable()
 export class MockAutoSelectionService
-    implements IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService {
+    implements IInterpreterAutoSelectionService, IInterpreterAutoSelectionProxyService {
     // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
     public async setWorkspaceInterpreter(_resource: Resource, _interpreter: PythonEnvironment): Promise<void> {
         return Promise.resolve();
@@ -39,5 +39,5 @@ export class MockAutoSelectionService
     }
 
     // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
-    public registerInstance(_instance: IInterpreterAutoSeletionProxyService): void {}
+    public registerInstance(_instance: IInterpreterAutoSelectionProxyService): void {}
 }

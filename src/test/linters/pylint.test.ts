@@ -22,7 +22,7 @@ import { IPythonToolExecutionService } from '../../client/common/process/types';
 import { ExecutionInfo, IConfigurationService, IInstaller, IPythonSettings } from '../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -73,8 +73,8 @@ suite('Linting - Pylint', () => {
             IInterpreterAutoSelectionService,
             MockAutoSelectionService,
         );
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
-            IInterpreterAutoSeletionProxyService,
+        serviceManager.addSingleton<IInterpreterAutoSelectionProxyService>(
+            IInterpreterAutoSelectionProxyService,
             MockAutoSelectionService,
         );
 

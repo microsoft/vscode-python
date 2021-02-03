@@ -16,7 +16,7 @@ import { IPersistentStateFactory, Resource } from '../../../client/common/types'
 import { createDeferred } from '../../../client/common/utils/async';
 import { InterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection';
 import { InterpreterSecurityService } from '../../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
-import { InterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/proxy';
+import { InterpreterAutoSelectionProxyService } from '../../../client/interpreter/autoSelection/proxy';
 import { CachedInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/cached';
 import { CurrentPathInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/currentPath';
 import { SettingsInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/settings';
@@ -25,7 +25,7 @@ import { WindowsRegistryInterpretersAutoSelectionRule } from '../../../client/in
 import { WorkspaceVirtualEnvInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/workspaceEnv';
 import {
     IInterpreterAutoSelectionRule,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
     IInterpreterSecurityService,
 } from '../../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper } from '../../../client/interpreter/contracts';
@@ -47,7 +47,7 @@ suite('Interpreters - Auto Selection', () => {
     let workspaceInterpreter: IInterpreterAutoSelectionRule;
     let state: PersistentState<PythonEnvironment | undefined>;
     let helper: IInterpreterHelper;
-    let proxy: IInterpreterAutoSeletionProxyService;
+    let proxy: IInterpreterAutoSelectionProxyService;
     let interpreterSecurityService: IInterpreterSecurityService;
     class InterpreterAutoSelectionServiceTest extends InterpreterAutoSelectionService {
         public initializeStore(resource: Resource): Promise<void> {
@@ -73,7 +73,7 @@ suite('Interpreters - Auto Selection', () => {
         userDefinedInterpreter = mock(SettingsInterpretersAutoSelectionRule);
         workspaceInterpreter = mock(WorkspaceVirtualEnvInterpretersAutoSelectionRule);
         helper = mock(InterpreterHelper);
-        proxy = mock(InterpreterAutoSeletionProxyService);
+        proxy = mock(InterpreterAutoSelectionProxyService);
         when(interpreterSecurityService.isSafe(anything())).thenReturn(undefined);
 
         autoSelectionService = new InterpreterAutoSelectionServiceTest(

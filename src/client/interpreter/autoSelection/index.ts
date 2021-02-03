@@ -19,7 +19,7 @@ import {
     AutoSelectionRule,
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
     IInterpreterSecurityService,
 } from './types';
 
@@ -55,7 +55,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         @inject(IInterpreterAutoSelectionRule)
         @named(AutoSelectionRule.workspaceVirtualEnvs)
         workspaceInterpreter: IInterpreterAutoSelectionRule,
-        @inject(IInterpreterAutoSeletionProxyService) proxy: IInterpreterAutoSeletionProxyService,
+        @inject(IInterpreterAutoSelectionProxyService) proxy: IInterpreterAutoSelectionProxyService,
         @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
         @inject(IInterpreterSecurityService) private readonly interpreterSecurityService: IInterpreterSecurityService,
     ) {

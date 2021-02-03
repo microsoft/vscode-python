@@ -5,12 +5,12 @@
 
 import { expect } from 'chai';
 import { Event, EventEmitter, Uri } from 'vscode';
-import { InterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/proxy';
-import { IInterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/types';
+import { InterpreterAutoSelectionProxyService } from '../../../client/interpreter/autoSelection/proxy';
+import { IInterpreterAutoSelectionProxyService } from '../../../client/interpreter/autoSelection/types';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Auto Selection Proxy', () => {
-    class InstanceClass implements IInterpreterAutoSeletionProxyService {
+    class InstanceClass implements IInterpreterAutoSelectionProxyService {
         public eventEmitter = new EventEmitter<void>();
         constructor(private readonly pythonPath: string = '') {}
         public get onDidChangeAutoSelectedInterpreter(): Event<void> {
@@ -27,9 +27,9 @@ suite('Interpreters - Auto Selection Proxy', () => {
         }
     }
 
-    let proxy: InterpreterAutoSeletionProxyService;
+    let proxy: InterpreterAutoSelectionProxyService;
     setup(() => {
-        proxy = new InterpreterAutoSeletionProxyService([] as any);
+        proxy = new InterpreterAutoSelectionProxyService([] as any);
     });
 
     test('Change evnet is fired', () => {

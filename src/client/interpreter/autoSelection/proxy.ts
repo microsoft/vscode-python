@@ -7,14 +7,14 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IAsyncDisposableRegistry, IDisposableRegistry, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { IInterpreterAutoSeletionProxyService } from './types';
+import { IInterpreterAutoSelectionProxyService } from './types';
 
 @injectable()
-export class InterpreterAutoSeletionProxyService implements IInterpreterAutoSeletionProxyService {
+export class InterpreterAutoSelectionProxyService implements IInterpreterAutoSelectionProxyService {
     private readonly didAutoSelectedInterpreterEmitter = new EventEmitter<void>();
-    private instance?: IInterpreterAutoSeletionProxyService;
+    private instance?: IInterpreterAutoSelectionProxyService;
     constructor(@inject(IDisposableRegistry) private readonly disposables: IAsyncDisposableRegistry) {}
-    public registerInstance(instance: IInterpreterAutoSeletionProxyService): void {
+    public registerInstance(instance: IInterpreterAutoSelectionProxyService): void {
         this.instance = instance;
         this.disposables.push(
             this.instance.onDidChangeAutoSelectedInterpreter(() => this.didAutoSelectedInterpreterEmitter.fire()),

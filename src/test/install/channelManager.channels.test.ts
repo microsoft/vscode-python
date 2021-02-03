@@ -13,7 +13,7 @@ import { Product } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -53,8 +53,8 @@ suite('Installation - installation channels', () => {
             IInterpreterAutoSelectionService,
             MockAutoSelectionService,
         );
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
-            IInterpreterAutoSeletionProxyService,
+        serviceManager.addSingleton<IInterpreterAutoSelectionProxyService>(
+            IInterpreterAutoSelectionProxyService,
             MockAutoSelectionService,
         );
     });

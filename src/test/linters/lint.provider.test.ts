@@ -23,7 +23,7 @@ import {
 import { createDeferred } from '../../client/common/utils/async';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -105,8 +105,8 @@ suite('Linting - Provider', () => {
             IInterpreterAutoSelectionService,
             MockAutoSelectionService,
         );
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
-            IInterpreterAutoSeletionProxyService,
+        serviceManager.addSingleton<IInterpreterAutoSelectionProxyService>(
+            IInterpreterAutoSelectionProxyService,
             MockAutoSelectionService,
         );
         serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
