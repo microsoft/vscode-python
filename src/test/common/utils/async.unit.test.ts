@@ -285,6 +285,34 @@ suite('chain async iterators', () => {
         assert.deepEqual(results, expected);
     });
 
+    test('A failed iterator does not block the others, if throwing before yielding.', async () => {
+        // If this test fails then it will likely fail intermittently.
+        // For (mostly) deterministic results we must control when each iterator starts.
+        const deferred12 = createDeferred<void>();
+        const deferred23 = createDeferred<void>();
+        const expected = ['a', 'c'];
+        const it1 = (async function* () {
+            yield 'a';
+            deferred12.resolve();
+        })();
+        const failure = new Error('uh-oh!');
+        const it2 = (async function* () {
+            await deferred12.promise;
+            deferred23.resolve();
+            throw failure;
+            yield 'b';
+        })();
+        const it3 = (async function* () {
+            await deferred23.promise;
+            yield 'c';
+        })();
+        const fails = it2;
+
+        const results = await flatten(chain([it1, fails, it3]));
+
+        assert.deepEqual(results, expected);
+    });
+
     test('int results', async () => {
         const expected = [42, 7, 11, 13];
         const it = (async function* () {
