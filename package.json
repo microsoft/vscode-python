@@ -1049,7 +1049,7 @@
                             "pythonSendEntireLineToREPL",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
-                            "python.jediLSP",
+                            "pythonJediLSP",
                             "All"
                         ]
                     },
@@ -1079,7 +1079,7 @@
                             "pythonSendEntireLineToREPL",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
-                            "python.jediLSP",
+                            "pythonJediLSP",
                             "All"
                         ]
                     },
