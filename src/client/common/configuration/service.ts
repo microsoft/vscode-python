@@ -12,7 +12,13 @@ import { IWorkspaceService } from '../application/types';
 import { PythonSettings } from '../configSettings';
 import { isUnitTestExecution } from '../constants';
 import { DeprecatePythonPath } from '../experiments/groups';
-import { IConfigurationService, IExperimentsManager, IInterpreterPathService, IPythonSettings } from '../types';
+import {
+    IConfigurationService,
+    IDefaultJediLanguageServer,
+    IExperimentsManager,
+    IInterpreterPathService,
+    IPythonSettings,
+} from '../types';
 
 @injectable()
 export class ConfigurationService implements IConfigurationService {
@@ -29,6 +35,7 @@ export class ConfigurationService implements IConfigurationService {
         const interpreterSecurityService = this.serviceContainer.get<IInterpreterSecurityService>(
             IInterpreterSecurityService,
         );
+        const defaultJedi = this.serviceContainer.tryGet<IDefaultJediLanguageServer>(IDefaultJediLanguageServer);
         return PythonSettings.getInstance(
             resource,
             InterpreterAutoSelectionService,
@@ -36,6 +43,7 @@ export class ConfigurationService implements IConfigurationService {
             experiments,
             interpreterPathService,
             interpreterSecurityService,
+            defaultJedi,
         );
     }
 

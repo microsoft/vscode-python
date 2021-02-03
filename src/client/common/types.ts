@@ -620,3 +620,16 @@ export interface IInterpreterPathService {
     update(resource: Resource, configTarget: ConfigurationTarget, value: string | undefined): Promise<void>;
     copyOldInterpreterStorageValuesToNew(resource: Uri | undefined): Promise<void>;
 }
+
+/**
+ * Interface used to retrieve the default language server to use when in experiment
+ *
+ * Note: This is added to get around a problem that the config service is not `async`.
+ * Adding experiment check there would mean touching the entire extension. For simplicity
+ * this is a solution.
+ */
+export const IDefaultJediLanguageServer = Symbol('IDefaultJediLanguageServer');
+
+export interface IDefaultJediLanguageServer {
+    readonly defaultJediType: LanguageServerType.Jedi | LanguageServerType.JediLSP;
+}

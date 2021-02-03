@@ -30,6 +30,7 @@ import * as internalPython from './process/internal/python';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
+    IDefaultJediLanguageServer,
     IExperiments,
     IExperimentsManager,
     IFormattingSettings,
@@ -163,6 +164,7 @@ export class PythonSettings implements IPythonSettings {
         private readonly experimentsManager?: IExperimentsManager,
         private readonly interpreterPathService?: IInterpreterPathService,
         private readonly interpreterSecurityService?: IInterpreterSecurityService,
+        private readonly defaultJedi?: IDefaultJediLanguageServer,
     ) {
         this.workspace = workspace || new WorkspaceService();
         this.workspaceRoot = workspaceFolder;
@@ -176,6 +178,7 @@ export class PythonSettings implements IPythonSettings {
         experimentsManager?: IExperimentsManager,
         interpreterPathService?: IInterpreterPathService,
         interpreterSecurityService?: IInterpreterSecurityService,
+        defaultJedi?: IDefaultJediLanguageServer,
     ): PythonSettings {
         workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
@@ -189,6 +192,7 @@ export class PythonSettings implements IPythonSettings {
                 experimentsManager,
                 interpreterPathService,
                 interpreterSecurityService,
+                defaultJedi,
             );
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
             // Pass null to avoid VSC from complaining about not passing in a value.
@@ -277,7 +281,10 @@ export class PythonSettings implements IPythonSettings {
 
         this.useIsolation = systemVariables.resolveAny(pythonSettings.get<boolean>('useIsolation', true))!;
 
-        let ls = pythonSettings.get<LanguageServerType>('languageServer') ?? LanguageServerType.Jedi;
+        const defaultServer = this.defaultJedi
+            ? this.defaultJedi.defaultJediType
+            : pythonSettings.get<LanguageServerType>('languageServer');
+        let ls = defaultServer ?? LanguageServerType.Jedi;
         ls = systemVariables.resolveAny(ls);
         if (!Object.values(LanguageServerType).includes(ls)) {
             ls = LanguageServerType.Jedi;

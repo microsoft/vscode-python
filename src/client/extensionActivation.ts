@@ -24,6 +24,7 @@ import { IStartPage } from './common/startPage/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IExperimentsManager,
     IFeatureDeprecationManager,
     IOutputChannel,
@@ -62,6 +63,7 @@ import * as pythonEnvironments from './pythonEnvironments';
 
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
+import { setDefaultLanguageServerByExperiment } from './common/experiments/helpers';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -119,6 +121,10 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
     tensorBoardRegisterTypes(serviceManager);
+
+    const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
+    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    await setDefaultLanguageServerByExperiment(experimentService, workspaceService, serviceManager);
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
@@ -180,7 +186,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
-    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     interpreterManager
         .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
         .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
