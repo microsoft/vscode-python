@@ -7,10 +7,12 @@ import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import '../../../common/extensions';
 import { IInterpreterService } from '../../../interpreter/contracts';
+import { isPipenvEnvironmentRelatedToFolder } from '../../../pythonEnvironments/discovery/locators/services/pipEnvHelper';
 import { EnvironmentType } from '../../../pythonEnvironments/info';
 import { IWorkspaceService } from '../../application/types';
+import { inDiscoveryExperiment } from '../../experiments/helpers';
 import { IFileSystem } from '../../platform/types';
-import { IToolExecutionPath, ToolExecutionPath } from '../../types';
+import { IExperimentService, IToolExecutionPath, ToolExecutionPath } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
 
 @injectable()
@@ -22,6 +24,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         private readonly pipEnvExecution: IToolExecutionPath,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {}
 
     public isShellSupported(_targetShell: TerminalShellType): boolean {
@@ -35,12 +38,19 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         }
         // Activate using `pipenv shell` only if the current folder relates pipenv environment.
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
-        if (
-            workspaceFolder &&
-            interpreter.pipEnvWorkspaceFolder &&
-            !this.fs.arePathsSame(workspaceFolder.uri.fsPath, interpreter.pipEnvWorkspaceFolder)
-        ) {
-            return;
+        if (workspaceFolder) {
+            if (await inDiscoveryExperiment(this.experimentService)) {
+                if (!(await isPipenvEnvironmentRelatedToFolder(interpreter.path, workspaceFolder?.uri.fsPath))) {
+                    return;
+                }
+            } else {
+                if (
+                    interpreter.pipEnvWorkspaceFolder &&
+                    !this.fs.arePathsSame(workspaceFolder.uri.fsPath, interpreter.pipEnvWorkspaceFolder)
+                ) {
+                    return;
+                }
+            }
         }
         const execName = this.pipEnvExecution.executable;
         return [`${execName.fileToCommandArgument()} shell`];

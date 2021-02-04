@@ -85,7 +85,7 @@ const convertedKinds = new Map(
 );
 
 function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
-    const { name, location, executable, arch, kind, searchLocation, version, distro } = info;
+    const { name, location, executable, arch, kind, version, distro } = info;
     const { filename, sysPrefix } = executable;
     const env: PythonEnvironment = {
         sysPrefix,
@@ -101,12 +101,6 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
         env.envType = envType;
     }
     // Otherwise it stays Unknown.
-
-    if (searchLocation !== undefined) {
-        if (kind === PythonEnvKind.Pipenv) {
-            env.pipEnvWorkspaceFolder = searchLocation.fsPath;
-        }
-    }
 
     if (version !== undefined) {
         const { release, sysVersion } = version;
