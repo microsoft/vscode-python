@@ -54,12 +54,12 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
     }
 
     public async showBanner(): Promise<void> {
-        if (!this.enabled) {
+        const message = await this.getPromptMessage();
+        if (!message) {
             return;
         }
 
-        const message = await this.getPromptMessage();
-        if (!message) {
+        if (!this.enabled) {
             return;
         }
 
@@ -96,25 +96,27 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
             return undefined;
         }
 
+        const lsType = this.configuration.getSettings().languageServer ?? LanguageServerType.Jedi;
+
+        let message: string | undefined;
+
+        if (lsType === LanguageServerType.Jedi) {
+            if (await this.experiments.inExperiment(TryPylance.jediPrompt1)) {
+                message = await this.experiments.getExperimentValue<string>(TryPylance.jediPrompt1);
+            } else if (await this.experiments.inExperiment(TryPylance.jediPrompt2)) {
+                message = await this.experiments.getExperimentValue<string>(TryPylance.jediPrompt2);
+            }
+        } else if (lsType === LanguageServerType.Microsoft || lsType === LanguageServerType.None) {
+            if (await this.experiments.inExperiment(TryPylance.experiment)) {
+                message = Pylance.proposePylanceMessage();
+            }
+        }
+
         // Do not prompt if Pylance is already installed.
         if (this.extensions.getExtension(PYLANCE_EXTENSION_ID)) {
             return undefined;
         }
 
-        const lsType = this.configuration.getSettings().languageServer ?? LanguageServerType.Jedi;
-
-        if (lsType === LanguageServerType.Jedi) {
-            if (await this.experiments.inExperiment(TryPylance.jediPrompt1)) {
-                return this.experiments.getExperimentValue<string>(TryPylance.jediPrompt1);
-            } else if (await this.experiments.inExperiment(TryPylance.jediPrompt2)) {
-                return this.experiments.getExperimentValue<string>(TryPylance.jediPrompt2);
-            }
-        } else if (lsType === LanguageServerType.Microsoft || lsType === LanguageServerType.None) {
-            if (await this.experiments.inExperiment(TryPylance.experiment)) {
-                return Pylance.proposePylanceMessage();
-            }
-        }
-
-        return undefined;
+        return message;
     }
 }
