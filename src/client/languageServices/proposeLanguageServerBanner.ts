@@ -54,6 +54,7 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
     }
 
     public async showBanner(): Promise<void> {
+        // Call this first to ensure that the experiment service is called.
         const message = await this.getPromptMessage();
         if (!message) {
             return;
