@@ -7,10 +7,20 @@ sys.path.append(os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python"))
 
 import pygls.protocol
 
+try:
+    import __builtin__ as builtins
+except ImportError:
+    import builtins
+
+try:
+    unicode = builtins.unicode
+except AttributeError:
+    unicode = builtins.str
+
 
 def is_json_basic_type(obj):
-    """Returns true if the object is an instance of type [int, floor, bool, str]"""
-    return isinstance(obj, (int, float, bool, str))
+    """Returns true if the object is an instance of type [int, float, bool, str, unicode]"""
+    return isinstance(obj, (int, float, bool, str, unicode))
 
 
 def remove_null_fields(obj, obj_field_name=None):
@@ -34,11 +44,11 @@ def remove_null_fields(obj, obj_field_name=None):
 
     # We need this as a list for now so we can check for the special case with
     # textDocument object
-    attributes = list(
-        filter(
-            lambda x: not x.startswith("_") and not callable(getattr(obj, x)), dir(obj)
-        )
-    )
+    attributes = [
+        attr
+        for attr in dir(obj)
+        if not attr.startswith("_") and not callable(getattr(obj, attr))
+    ]
 
     for attr in attributes:
         member = getattr(obj, attr)
