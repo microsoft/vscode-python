@@ -109,9 +109,6 @@ export class MockDiscoveryService implements ITestDiscoveryService {
 
 @injectable()
 export class MockUnitTestSocketServer extends EventEmitter implements IUnitTestSocketServer {
-    constructor() {
-        super();
-    }
     private results: {}[] = [];
     public reset() {
         this.removeAllListeners();
