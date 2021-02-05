@@ -9,19 +9,18 @@ export class JupyterExtensionDependencyManager implements IJupyterExtensionDepen
     constructor(
         @inject(IExtensions) private extensions: IExtensions,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(ICommandManager) private commandManager: ICommandManager,
     ) {}
 
     public get isJupyterExtensionInstalled(): boolean {
         return this.extensions.getExtension(JUPYTER_EXTENSION_ID) !== undefined;
     }
 
-    public async installJupyterExtension(): Promise<undefined> {
+    public async installJupyterExtension(commandManager: ICommandManager): Promise<undefined> {
         const yes = Common.bannerLabelYes();
         const no = Common.bannerLabelNo();
         const answer = await this.appShell.showErrorMessage(Jupyter.jupyterExtensionRequired(), yes, no);
         if (answer === yes) {
-            this.commandManager.executeCommand('extension.open', JUPYTER_EXTENSION_ID);
+            commandManager.executeCommand('extension.open', JUPYTER_EXTENSION_ID);
         }
         return undefined;
     }
