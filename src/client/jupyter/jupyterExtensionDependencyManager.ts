@@ -1,9 +1,5 @@
 import { inject, injectable } from 'inversify';
-import {
-    IApplicationEnvironment,
-    IApplicationShell,
-    IJupyterExtensionDependencyManager,
-} from '../common/application/types';
+import { IApplicationShell, ICommandManager, IJupyterExtensionDependencyManager } from '../common/application/types';
 import { JUPYTER_EXTENSION_ID } from '../common/constants';
 import { IExtensions } from '../common/types';
 import { Common, Jupyter } from '../common/utils/localize';
@@ -13,7 +9,7 @@ export class JupyterExtensionDependencyManager implements IJupyterExtensionDepen
     constructor(
         @inject(IExtensions) private extensions: IExtensions,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment,
+        @inject(ICommandManager) private commandManager: ICommandManager,
     ) {}
 
     public get isJupyterExtensionInstalled(): boolean {
@@ -25,7 +21,7 @@ export class JupyterExtensionDependencyManager implements IJupyterExtensionDepen
         const no = Common.bannerLabelNo();
         const answer = await this.appShell.showErrorMessage(Jupyter.jupyterExtensionRequired(), yes, no);
         if (answer === yes) {
-            this.appShell.openUrl(`${this.appEnv.uriScheme}:extension/${JUPYTER_EXTENSION_ID}`);
+            this.commandManager.executeCommand('extension.open', JUPYTER_EXTENSION_ID);
         }
         return undefined;
     }

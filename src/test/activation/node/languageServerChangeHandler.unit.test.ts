@@ -7,7 +7,7 @@ import { anyString, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Extension } from 'vscode';
 import { LanguageServerChangeHandler } from '../../../client/activation/common/languageServerChangeHandler';
 import { LanguageServerType } from '../../../client/activation/types';
-import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../../../client/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../../client/common/constants';
 import { IExtensions } from '../../../client/common/types';
 import { Common, LanguageService, Pylance } from '../../../client/common/utils/localize';
@@ -15,7 +15,6 @@ import { Common, LanguageService, Pylance } from '../../../client/common/utils/l
 suite('Language Server - Change Handler', () => {
     let extensions: IExtensions;
     let appShell: IApplicationShell;
-    let appEnv: IApplicationEnvironment;
     let commands: ICommandManager;
     let extensionsChangedEvent: EventEmitter<void>;
     let handler: LanguageServerChangeHandler;
@@ -24,11 +23,9 @@ suite('Language Server - Change Handler', () => {
     setup(() => {
         extensions = mock<IExtensions>();
         appShell = mock<IApplicationShell>();
-        appEnv = mock<IApplicationEnvironment>();
         commands = mock<ICommandManager>();
 
         pylanceExtension = mock<Extension<any>>();
-        when(appEnv.uriScheme).thenReturn('scheme');
 
         extensionsChangedEvent = new EventEmitter<void>();
         when(extensions.onDidChange).thenReturn(extensionsChangedEvent.event);
@@ -44,7 +41,6 @@ suite('Language Server - Change Handler', () => {
             await handler.handleLanguageServerChange(t);
 
             verify(extensions.getExtension(anyString())).once();
-            verify(appShell.openUrl(anyString())).never();
             verify(appShell.showInformationMessage(anyString(), anyString())).never();
             verify(appShell.showWarningMessage(anyString(), anyString())).never();
             verify(commands.executeCommand(anyString())).never();
@@ -121,7 +117,7 @@ suite('Language Server - Change Handler', () => {
         handler = makeHandler(undefined);
         await handler.handleLanguageServerChange(LanguageServerType.Node);
 
-        verify(appShell.openUrl(`scheme:extension/${PYLANCE_EXTENSION_ID}`)).once();
+        verify(commands.executeCommand('extension.open', PYLANCE_EXTENSION_ID)).once();
         verify(commands.executeCommand('workbench.action.reloadWindow')).never();
     });
 
@@ -137,7 +133,7 @@ suite('Language Server - Change Handler', () => {
         handler = makeHandler(undefined);
         await handler.handleLanguageServerChange(LanguageServerType.Node);
 
-        verify(appShell.openUrl(`scheme:extension/${PYLANCE_EXTENSION_ID}`)).never();
+        verify(commands.executeCommand('extension.open', PYLANCE_EXTENSION_ID)).never();
         verify(commands.executeCommand('workbench.action.reloadWindow')).never();
     });
 
@@ -180,7 +176,6 @@ suite('Language Server - Change Handler', () => {
             initialLSType,
             instance(extensions),
             instance(appShell),
-            instance(appEnv),
             instance(commands),
         );
     }

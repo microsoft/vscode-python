@@ -84,6 +84,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.files.save']: [Uri];
     ['jupyter.opennotebook']: [undefined | Uri, undefined | CommandSource];
     ['jupyter.runallcells']: [Uri];
+    ['extension.open']: [string];
     [Commands.GetSelectedInterpreterPath]: [{ workspaceFolder: string } | string[]];
     [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
     [Commands.Sort_Imports]: [undefined, Uri];

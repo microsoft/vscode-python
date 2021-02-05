@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { LanguageServerType } from '../activation/types';
-import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
+import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../common/constants';
 import { TryPylance } from '../common/experiments/groups';
 import '../common/extensions';
@@ -19,10 +19,6 @@ import {
 import { Common, Pylance } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-
-export function getPylanceExtensionUri(appEnv: IApplicationEnvironment): string {
-    return `${appEnv.uriScheme}:extension/${PYLANCE_EXTENSION_ID}`;
-}
 
 // persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
@@ -42,7 +38,7 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment,
+        @inject(ICommandManager) readonly commandManager: ICommandManager,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IExperimentService) private experiments: IExperimentService,
@@ -73,7 +69,7 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
 
         let userAction: string;
         if (response === Pylance.tryItNow()) {
-            this.appShell.openUrl(getPylanceExtensionUri(this.appEnv));
+            this.commandManager.executeCommand('extension.open', PYLANCE_EXTENSION_ID);
             userAction = 'yes';
             await this.disable();
         } else if (response === Common.bannerLabelNo()) {

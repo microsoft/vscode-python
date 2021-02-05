@@ -6,7 +6,7 @@ import { CancellationToken, CompletionItem, ProviderResult } from 'vscode';
 
 import ProtocolCompletionItem from 'vscode-languageclient/lib/common/protocolCompletionItem';
 import { CompletionResolveRequest } from 'vscode-languageclient/node';
-import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IExtensions, Resource } from '../../common/types';
@@ -32,7 +32,7 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
+        @inject(ICommandManager) readonly commandManager: ICommandManager,
     ) {
         super(manager, workspace, fs, configurationService);
     }
@@ -47,7 +47,7 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
             // Pylance is not yet installed. Throw will cause activator to use Jedi
             // temporarily. Language server installation tracker will prompt for window
             // reload when Pylance becomes available.
-            await promptForPylanceInstall(this.appShell, this.appEnv);
+            await promptForPylanceInstall(this.appShell, this.commandManager);
             throw new Error(Pylance.pylanceNotInstalledMessage());
         }
     }

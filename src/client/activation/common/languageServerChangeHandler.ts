@@ -2,17 +2,16 @@
 // Licensed under the MIT License.
 
 import { Disposable } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../../common/application/types';
+import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { IExtensions } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { Common, LanguageService, Pylance } from '../../common/utils/localize';
-import { getPylanceExtensionUri } from '../../languageServices/proposeLanguageServerBanner';
 import { LanguageServerType } from '../types';
 
 export async function promptForPylanceInstall(
     appShell: IApplicationShell,
-    appEnv: IApplicationEnvironment,
+    commandManager: ICommandManager,
 ): Promise<void> {
     // If not installed, point user to Pylance at the store.
     const response = await appShell.showWarningMessage(
@@ -22,7 +21,7 @@ export async function promptForPylanceInstall(
     );
 
     if (response === Common.bannerLabelYes()) {
-        appShell.openUrl(getPylanceExtensionUri(appEnv));
+        commandManager.executeCommand('extension.open', PYLANCE_EXTENSION_ID);
     }
 }
 
@@ -37,7 +36,6 @@ export class LanguageServerChangeHandler implements Disposable {
         private currentLsType: LanguageServerType | undefined,
         private readonly extensions: IExtensions,
         private readonly appShell: IApplicationShell,
-        private readonly appEnv: IApplicationEnvironment,
         private readonly commands: ICommandManager,
     ) {
         this.pylanceInstalled = this.isPylanceInstalled();
@@ -72,7 +70,7 @@ export class LanguageServerChangeHandler implements Disposable {
         let response: string | undefined;
         if (lsType === LanguageServerType.Node && !this.isPylanceInstalled()) {
             // If not installed, point user to Pylance at the store.
-            await promptForPylanceInstall(this.appShell, this.appEnv);
+            await promptForPylanceInstall(this.appShell, this.commands);
             // At this point Pylance is not yet installed. Skip reload prompt
             // since we are going to show it when Pylance becomes available.
         } else {

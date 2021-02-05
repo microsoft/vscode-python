@@ -7,7 +7,7 @@ import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
 import { Extension } from 'vscode';
 import { LanguageServerType } from '../../../client/activation/types';
-import { IApplicationEnvironment, IApplicationShell } from '../../../client/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../../client/common/constants';
 import { TryPylance } from '../../../client/common/experiments/groups';
 import {
@@ -19,11 +19,7 @@ import {
     IPythonSettings,
 } from '../../../client/common/types';
 import { Common, Pylance } from '../../../client/common/utils/localize';
-import {
-    getPylanceExtensionUri,
-    ProposeLSStateKeys,
-    ProposePylanceBanner,
-} from '../../../client/languageServices/proposeLanguageServerBanner';
+import { ProposeLSStateKeys, ProposePylanceBanner } from '../../../client/languageServices/proposeLanguageServerBanner';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
 
@@ -63,8 +59,8 @@ const expectedMessages = {
 suite('Propose Pylance Banner', () => {
     let config: typemoq.IMock<IConfigurationService>;
     let appShell: typemoq.IMock<IApplicationShell>;
-    let appEnv: typemoq.IMock<IApplicationEnvironment>;
     let settings: typemoq.IMock<IPythonSettings>;
+    let commandManager: typemoq.IMock<ICommandManager>;
     let sendTelemetryStub: sinon.SinonStub;
     let telemetryEvent: { eventName: EventName; properties: { userAction: string } } | undefined;
 
@@ -77,8 +73,7 @@ suite('Propose Pylance Banner', () => {
         settings = typemoq.Mock.ofType<IPythonSettings>();
         config.setup((x) => x.getSettings(typemoq.It.isAny())).returns(() => settings.object);
         appShell = typemoq.Mock.ofType<IApplicationShell>();
-        appEnv = typemoq.Mock.ofType<IApplicationEnvironment>();
-        appEnv.setup((x) => x.uriScheme).returns(() => 'scheme');
+        commandManager = typemoq.Mock.ofType<ICommandManager>();
 
         sendTelemetryStub = sinon
             .stub(Telemetry, 'sendTelemetryEvent')
@@ -101,7 +96,14 @@ suite('Propose Pylance Banner', () => {
             t.shouldShowBanner ? 'show' : 'not show'
         } banner`, async () => {
             settings.setup((x) => x.languageServer).returns(() => t.lsType);
-            const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, t.experiment, false);
+            const testBanner = preparePopup(
+                true,
+                appShell.object,
+                commandManager.object,
+                config.object,
+                t.experiment,
+                false,
+            );
             const message = await testBanner.getPromptMessage();
             if (t.experiment) {
                 expect(message).to.be.equal(
@@ -116,7 +118,14 @@ suite('Propose Pylance Banner', () => {
     testData.forEach((t) => {
         test(`When Pylance is installed, banner should not be shown when "python.languageServer": "${t.lsType}"`, async () => {
             settings.setup((x) => x.languageServer).returns(() => t.lsType);
-            const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, t.experiment, true);
+            const testBanner = preparePopup(
+                true,
+                appShell.object,
+                commandManager.object,
+                config.object,
+                t.experiment,
+                true,
+            );
             const message = await testBanner.getPromptMessage();
             expect(message).to.be.equal(undefined, `getPromptMessage() returned ${message}`);
         });
@@ -136,7 +145,7 @@ suite('Propose Pylance Banner', () => {
         const testBanner = preparePopup(
             false,
             appShell.object,
-            appEnv.object,
+            commandManager.object,
             config.object,
             TryPylance.experiment,
             false,
@@ -157,12 +166,15 @@ suite('Propose Pylance Banner', () => {
             )
             .returns(async () => no)
             .verifiable(typemoq.Times.once());
-        appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.never());
+
+        commandManager
+            .setup((c) => c.executeCommand('extension.open', PYLANCE_EXTENSION_ID))
+            .verifiable(typemoq.Times.never());
 
         const testBanner = preparePopup(
             true,
             appShell.object,
-            appEnv.object,
+            commandManager.object,
             config.object,
             TryPylance.experiment,
             false,
@@ -191,12 +203,15 @@ suite('Propose Pylance Banner', () => {
             )
             .returns(async () => later)
             .verifiable(typemoq.Times.once());
-        appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.never());
+
+        commandManager
+            .setup((c) => c.executeCommand('extension.open', PYLANCE_EXTENSION_ID))
+            .verifiable(typemoq.Times.never());
 
         const testBanner = preparePopup(
             true,
             appShell.object,
-            appEnv.object,
+            commandManager.object,
             config.object,
             TryPylance.experiment,
             false,
@@ -230,12 +245,15 @@ suite('Propose Pylance Banner', () => {
             )
             .returns(async () => yes)
             .verifiable(typemoq.Times.once());
-        appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.once());
+
+        commandManager
+            .setup((c) => c.executeCommand('extension.open', PYLANCE_EXTENSION_ID))
+            .verifiable(typemoq.Times.once());
 
         const testBanner = preparePopup(
             true,
             appShell.object,
-            appEnv.object,
+            commandManager.object,
             config.object,
             TryPylance.experiment,
             false,
@@ -258,7 +276,7 @@ suite('Propose Pylance Banner', () => {
 function preparePopup(
     enabledValue: boolean,
     appShell: IApplicationShell,
-    appEnv: IApplicationEnvironment,
+    commandManager: ICommandManager,
     config: IConfigurationService,
     experiment: TryPylance | undefined,
     pylanceInstalled: boolean,
@@ -305,5 +323,12 @@ function preparePopup(
     extensions
         .setup((x) => x.getExtension(PYLANCE_EXTENSION_ID))
         .returns(() => (pylanceInstalled ? extension.object : undefined));
-    return new ProposePylanceBanner(appShell, appEnv, myfactory.object, config, experiments.object, extensions.object);
+    return new ProposePylanceBanner(
+        appShell,
+        commandManager,
+        myfactory.object,
+        config,
+        experiments.object,
+        extensions.object,
+    );
 }

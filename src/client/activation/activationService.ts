@@ -7,12 +7,7 @@ import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode
 
 import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/checks/lsNotSupported';
 import { IDiagnosticsService } from '../application/diagnostics/types';
-import {
-    IApplicationEnvironment,
-    IApplicationShell,
-    ICommandManager,
-    IWorkspaceService,
-} from '../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { traceError } from '../common/logger';
 import {
@@ -84,7 +79,6 @@ export class LanguageServerExtensionActivationService
             this.getCurrentLanguageServerType(),
             this.serviceContainer.get<IExtensions>(IExtensions),
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
-            this.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment),
             this.serviceContainer.get<ICommandManager>(ICommandManager),
         );
         disposables.push(this.languageServerChangeHandler);
