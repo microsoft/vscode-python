@@ -19,22 +19,21 @@ except AttributeError:
 
 
 def is_json_basic_type(obj):
-    """Returns true if the object is an instance of type [int, float, bool, str, unicode]"""
+    """Checks if the object is an int, float, bool, or str."""
     return isinstance(obj, (int, float, bool, str, unicode))
 
 
 def remove_null_fields(obj, obj_field_name=None):
-    """This function is used to remove fields with a 'None' value. This is a temporary
-    workaround to address the following issue:
+    """Removes fields with a 'None' value.
 
-    https://github.com/pappasam/jedi-language-server/issues/60
-    https://github.com/openlawlibrary/pygls/issues/145
-    https://github.com/microsoft/vscode-languageserver-node/issues/740
-
-    Essentially the LS Client in VS Code expects optional fields that are not needed
-    should be skipped. Currently in pygls options fields use 'null' value.
-    https://github.com/microsoft/vscode-languageserver-node/issues/740#issuecomment-773967897
+    The LS Client in VS Code expects optional fields that are not needed
+    to be omitted. Unfortunately, pygls uses 'null' in these instances.
     """
+    # This is a temporary workaround to address the following issues:
+    #   https://github.com/microsoft/vscode-languageserver-node/issues/740#issuecomment-773967897
+    #   https://github.com/pappasam/jedi-language-server/issues/60
+    #   https://github.com/openlawlibrary/pygls/issues/145
+    #   https://github.com/microsoft/vscode-languageserver-node/issues/740
     if is_json_basic_type(obj):
         return
     elif isinstance(obj, list):
@@ -78,11 +77,7 @@ def remove_null_fields(obj, obj_field_name=None):
 
 
 def patched_without_none_fields(resp):
-    """`JsonRPCResponseMessage.without_none_fields` method only removes fields with
-    a `None` value from the top level protocol message object, but *not* from the
-    result contents. Patch the `without_none_fields` method to additionally remove
-    fields with a `none` value from the attributes of the result object recursively.
-    """
+    """Monkeypatch for `JsonRPCResponseMessage.without_none_fields` to remove `None` results."""
     if resp.error is None:
         del resp.error
         if hasattr(resp, "result"):
