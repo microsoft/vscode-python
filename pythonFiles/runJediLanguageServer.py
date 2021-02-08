@@ -8,14 +8,9 @@ sys.path.append(os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python"))
 import pygls.protocol
 
 try:
-    import __builtin__ as builtins
-except ImportError:
-    import builtins
-
-try:
-    unicode = builtins.unicode
-except AttributeError:
-    unicode = builtins.str
+    unicode
+except Exception:
+    unicode = str
 
 
 def is_json_basic_type(obj):
