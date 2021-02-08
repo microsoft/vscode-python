@@ -15,10 +15,12 @@ except Exception:
 
 def is_json_basic_type(obj):
     """Checks if the object is an int, float, bool, or str."""
-    return isinstance(obj, (int, float, bool, str, unicode))
+    if isinstance(obj, (int, float, bool, str)):
+        return True
+    return sys.version_info < (3,) and isinstance(obj, unicode)
 
 
-def remove_null_fields(obj, obj_field_name=None):
+def handle_null_fields(obj, obj_field_name=None):
     """Removes fields with a 'None' value.
 
     The LS Client in VS Code expects optional fields that are not needed
@@ -33,18 +35,21 @@ def remove_null_fields(obj, obj_field_name=None):
         return
     elif isinstance(obj, list):
         for o in obj:
-            remove_null_fields(o, obj_field_name)
+            handle_null_fields(o, obj_field_name)
         return
+    elif isinstance(obj, dict):
+        for k, v in obj.items():
+            handle_null_fields(v, k)
 
     # We need this as a list for now so we can check for the special case with
-    # textDocument object
-    attributes = [
+    # textDocument object.
+    important_attributes = [
         attr
         for attr in dir(obj)
         if not attr.startswith("_") and not callable(getattr(obj, attr))
     ]
 
-    for attr in attributes:
+    for attr in important_attributes:
         member = getattr(obj, attr)
         if member is None:
             # This is a special condition to handle VersionedTextDocumentIdentifier object.
@@ -58,7 +63,7 @@ def remove_null_fields(obj, obj_field_name=None):
             if (
                 attr == "version"
                 and obj_field_name == "textDocument"
-                and "uri" in attributes
+                and "uri" in important_attributes
             ):
                 setattr(obj, "version", 0)
             else:
@@ -68,7 +73,7 @@ def remove_null_fields(obj, obj_field_name=None):
             continue
 
         else:
-            remove_null_fields(member, attr)
+            handle_null_fields(member, attr)
 
 
 def patched_without_none_fields(resp):
@@ -76,7 +81,7 @@ def patched_without_none_fields(resp):
     if resp.error is None:
         del resp.error
         if hasattr(resp, "result"):
-            remove_null_fields(resp.result)
+            handle_null_fields(resp.result)
     else:
         del resp.result
     return resp
