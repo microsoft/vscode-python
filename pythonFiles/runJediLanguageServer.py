@@ -41,15 +41,11 @@ def handle_null_fields(obj, obj_field_name=None):
         for k, v in obj.items():
             handle_null_fields(v, k)
 
-    # We need this as a list for now so we can check for the special case with
-    # textDocument object.
-    important_attributes = [
-        attr
-        for attr in dir(obj)
-        if not attr.startswith("_") and not callable(getattr(obj, attr))
-    ]
+    important_attribute = lambda x: not x.startswith("_") and not callable(
+        getattr(obj, x)
+    )
 
-    for attr in important_attributes:
+    for attr in filter(important_attribute, dir(obj)):
         member = getattr(obj, attr)
         if member is None:
             # This is a special condition to handle VersionedTextDocumentIdentifier object.
@@ -63,7 +59,7 @@ def handle_null_fields(obj, obj_field_name=None):
             if (
                 attr == "version"
                 and obj_field_name == "textDocument"
-                and "uri" in important_attributes
+                and "uri" in dir(obj)
             ):
                 setattr(obj, "version", 0)
             else:
