@@ -33,9 +33,13 @@ export class TestMessageService implements ITestMessageService {
         }, []);
         const messages: IPythonTestMessage[] = [];
         for (const tf of testFuncs) {
+            if (tf.testFunction.status === undefined) {
+                // The test results were not updated after the test run.
+                continue;
+            }
             const nameToRun = tf.testFunction.nameToRun;
             const provider = ProductNames.get(Product.pytest)!;
-            const status = tf.testFunction.status!;
+            const status = tf.testFunction.status;
             if (status === TestStatus.Pass) {
                 // If the test passed, there's not much to do with it.
                 const msg: IPythonTestMessage = {
