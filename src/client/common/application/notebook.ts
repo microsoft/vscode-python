@@ -85,7 +85,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IApplicationEnvironment) readonly env: IApplicationEnvironment,
     ) {
-        if (this.useProposedApi && this.env.channel === 'insiders') {
+        if (this.useProposedApi) {
             this.addEventHandlers();
             this.canUseNotebookApi = true;
         }
