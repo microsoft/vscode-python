@@ -78,7 +78,10 @@ def select_reviewers(
     potential_reviewers = set(available_reviewers)  # Mutable copy.
     potential_reviewers -= already_reviewing
     potential_reviewers.discard(author)
+    print("Potential reviewers (left):", potential_reviewers)
+    print(f"Want {count} reviewers")
     count -= len(already_reviewing)
+    print(f"Need {count} more reviewers")
     selected_reviewers = []
     while count > 0 and potential_reviewers:
         selected = random.choice(list(potential_reviewers))
@@ -86,6 +89,7 @@ def select_reviewers(
         selected_reviewers.append(selected)
         count -= 1
     selected_reviewers = frozenset(selected_reviewers)
+    print(f"Reviewers to add:", select_reviewers)
     return already_reviewing | selected_reviewers, selected_reviewers
 
 
@@ -135,14 +139,17 @@ async def main(token: str):
     event = gidgethub.actions.event()
     author = event["pull_request"]["user"]["login"]
     available_reviewers = frozenset(config["reviewers"])
+    print("Available reviewers:", available_reviewers)
     assigned_reviewers = {
         reviewer["login"] for reviewer in event["pull_request"]["requested_reviewers"]
     }
+    print("Reviewers already requested:", assigned_reviewers)
     async with httpx.AsyncClient(timeout=None) as client:
         gh = gidgethub.httpx.GitHubAPI(
             client, event["repository"]["full_name"], oauth_token=token
         )
         already_reviewers = await already_reviewed(gh)
+        print("People who have already reviewed:", already_reviewers)
         team_reviewers, reviewers_to_add = select_reviewers(
             author=author,
             available_reviewers=available_reviewers,
@@ -157,6 +164,8 @@ async def main(token: str):
                 )
             if reviewers_to_add and not event["pull_request"]["draft"]:
                 nursery.start_soon(add_reviewers, gh, reviewers_to_add)
+            else:
+                print("No reviewers to add or PR is in draft")
 
 
 if __name__ == "__main__":
