@@ -76,8 +76,8 @@ suite('Jedi LSP - analysis Options', () => {
     test('With extraPaths provided', async () => {
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn(new MockWorkspaceFolder(workspacePath));
         when(configurationService.getSettings(anything())).thenReturn({
-            // We expect a distinct set of paths back
-            autoComplete: { extraPaths: ['\\absolute\\pathA', 'relative\\pathB', 'relative\\pathB'] },
+            // We expect a distinct set of paths back, using __dirname to test absolute path
+            autoComplete: { extraPaths: [__dirname, 'relative/pathB', 'relative/pathB'] },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
         analysisOptions.initialize(undefined, undefined);
@@ -86,8 +86,8 @@ suite('Jedi LSP - analysis Options', () => {
 
         expect(result.initializationOptions.workspace.extraPaths).to.deep.equal([
             expectedWorkspacePath,
-            '\\absolute\\pathA',
-            path.join(expectedWorkspacePath, 'relative\\pathB'),
+            __dirname,
+            path.join(expectedWorkspacePath, 'relative/pathB'),
         ]);
     });
 });
