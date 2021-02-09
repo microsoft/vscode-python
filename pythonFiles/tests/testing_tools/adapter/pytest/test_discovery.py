@@ -138,6 +138,13 @@ class StubPytestItem(util.StubProxy):
 
 
 class StubSubtypedItem(StubPytestItem):
+
+    @classmethod
+    def from_parent(cls, parent, *args, **kwargs):
+        self = super(StubSubtypedItem, cls).from_parent(parent, name=kwargs['name'], runner=None, dtest=None)
+        self.__init__(*args, **kwargs)
+        return self
+
     def __init__(self, *args, **kwargs):
         super(StubSubtypedItem, self).__init__(*args, **kwargs)
         if "nodeid" in self.__dict__:
@@ -161,7 +168,7 @@ def create_stub_function_item(*args, **kwargs):
     # pytest removes this functionality.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        return StubFunctionItem(*args, **kwargs)
+        return StubFunctionItem.from_parent(None, *args, **kwargs)
 
 
 class StubDoctestItem(StubSubtypedItem, _pytest.doctest.DoctestItem):
@@ -175,7 +182,7 @@ def create_stub_doctest_item(*args, **kwargs):
     # pytest removes this functionality.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        return StubDoctestItem(*args, **kwargs)
+        return StubDoctestItem.from_parent(None, *args, **kwargs)
 
 
 class StubPytestSession(util.StubProxy):
