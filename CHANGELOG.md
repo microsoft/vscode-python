@@ -1,5 +1,40 @@
 # Changelog
 
+## 2021.2.0-rc (8 February 2021)
+
+### Enhancements
+
+1. Use Language Server Protocol to work with Jedi.
+   ([#11995](https://github.com/Microsoft/vscode-python/issues/11995))
+
+### Fixes
+
+1. Don't suggest insiders program nor show start page when in Codespaces.
+   ([#14833](https://github.com/Microsoft/vscode-python/issues/14833))
+1. Fix description of `Pyramid` debug config.
+   (thanks [vvijayalakshmi21](https://github.com/vvijayalakshmi21/))
+   ([#5479](https://github.com/Microsoft/vscode-python/issues/5479))
+1. Refactored the Enable Linting command to provide the user with a choice of "Enable" or "Disable" linting to make it more intuitive. (thanks [henryboisdequin](https://github.com/henryboisdequin))
+   ([#8800](https://github.com/Microsoft/vscode-python/issues/8800))
+1. Fix marketplace links in popups opening a non-browser VS Code instance in Codespaces.
+   ([#14264](https://github.com/Microsoft/vscode-python/issues/14264))
+1. Fixed the error command suggested when attempting to use "debug tests" configuration
+   (Thanks [Shahzaib paracha](https://github.com/ShahzaibParacha))
+   ([#14729](https://github.com/Microsoft/vscode-python/issues/14729))
+1. Single test run fails sometimes if there is an error in unrelated file imported during discovery.
+   (thanks [Szymon Janota](https://github.com/sjanota/))
+   ([#15147](https://github.com/Microsoft/vscode-python/issues/15147))
+1. Re-enable localization on the start page. It was accidentally
+   disabled in October when the Jupyter extension was split out.
+   ([#15232](https://github.com/Microsoft/vscode-python/issues/15232))
+1. Ensure target environment is activated in the terminal when running install scripts.
+   ([#15285](https://github.com/Microsoft/vscode-python/issues/15285))
+
+### Code Health
+
+1. Raised the minimum required VS Code version to 1.51.
+   ([#15237](https://github.com/Microsoft/vscode-python/issues/15237))
+
 ## 2021.1.0 (21 January 2021)
 
 ### Enhancements
