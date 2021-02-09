@@ -30,7 +30,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { EventName } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry/index';
 import { TestDiscoveryTelemetry, TestRunTelemetry } from '../../../telemetry/types';
-import { IPythonTestMessage, ITestDiagnosticService, WorkspaceTestStatus } from '../../types';
+import { IPythonTestFailMessage, IPythonTestMessage, ITestDiagnosticService, WorkspaceTestStatus } from '../../types';
 import { copyDesiredTestResults } from '../testUtils';
 import { CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL } from './../constants';
 import {
@@ -413,10 +413,9 @@ export abstract class BaseTestManager implements ITestManager {
             for (const msg of messages) {
                 if (
                     fs.arePathsSame(fileUri.fsPath, Uri.file(msg.testFilePath).fsPath) &&
-                    msg.status !== TestStatus.Pass &&
-                    msg.status !== undefined
+                    msg.status !== TestStatus.Pass
                 ) {
-                    const diagnostic = this.createDiagnostics(msg);
+                    const diagnostic = this.createDiagnostics(msg as IPythonTestFailMessage);
                     newDiagnostics.push(diagnostic);
                 }
             }
@@ -492,24 +491,25 @@ export abstract class BaseTestManager implements ITestManager {
         });
     }
 
-    private createDiagnostics(message: IPythonTestMessage): Diagnostic {
-        const stackStart = message.locationStack![0];
-        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status!);
+    private createDiagnostics(message: IPythonTestFailMessage): Diagnostic {
+        const stackStart = message.locationStack[0];
+        const diagMsg = this.getDiagnosticMessage(message);
         const severity = this.unitTestDiagnosticService.getSeverity(message.severity)!;
-        const diagMsg = message.message ? message.message.split('\n')[0] : '';
-        const diagnostic = new Diagnostic(
-            stackStart.location.range,
-            `${diagPrefix ? `${diagPrefix}: ` : 'Ok'}${diagMsg}`,
-            severity,
-        );
+        const diagnostic = new Diagnostic(stackStart.location.range, diagMsg, severity);
         diagnostic.code = message.code;
         diagnostic.source = message.provider;
         const relatedInfoArr: DiagnosticRelatedInformation[] = [];
-        for (const frameDetails of message.locationStack!) {
+        for (const frameDetails of message.locationStack) {
             const relatedInfo = new DiagnosticRelatedInformation(frameDetails.location, frameDetails.lineText);
             relatedInfoArr.push(relatedInfo);
         }
         diagnostic.relatedInformation = relatedInfoArr;
         return diagnostic;
+    }
+
+    private getDiagnosticMessage(message: IPythonTestFailMessage): string {
+        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status);
+        const diagMsg = message.message ? message.message.split('\n')[0] : '';
+        return `${diagPrefix ? `${diagPrefix}: ` : 'Ok'}${diagMsg}`;
     }
 }

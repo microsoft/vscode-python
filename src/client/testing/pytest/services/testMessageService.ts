@@ -12,7 +12,13 @@ import { IFileSystem } from '../../../common/platform/types';
 import { Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { FlattenedTestFunction, ITestMessageService, Tests, TestStatus } from '../../common/types';
-import { ILocationStackFrameDetails, IPythonTestMessage, PythonTestMessageSeverity } from '../../types';
+import {
+    ILocationStackFrameDetails,
+    IPythonTestFailMessage,
+    IPythonTestMessage,
+    IPythonTestPassMessage,
+    PythonTestMessageSeverity,
+} from '../../types';
 
 @injectable()
 export class TestMessageService implements ITestMessageService {
@@ -42,7 +48,7 @@ export class TestMessageService implements ITestMessageService {
             const status = tf.testFunction.status;
             if (status === TestStatus.Pass) {
                 // If the test passed, there's not much to do with it.
-                const msg: IPythonTestMessage = {
+                const msg: IPythonTestPassMessage = {
                     code: nameToRun,
                     severity: PythonTestMessageSeverity.Pass,
                     provider: provider,
@@ -63,7 +69,7 @@ export class TestMessageService implements ITestMessageService {
                     severity = PythonTestMessageSeverity.Skip;
                 }
 
-                const msg: IPythonTestMessage = {
+                const msg: IPythonTestFailMessage = {
                     code: nameToRun,
                     message: message,
                     severity: severity,
