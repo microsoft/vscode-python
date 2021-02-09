@@ -413,7 +413,8 @@ export abstract class BaseTestManager implements ITestManager {
             for (const msg of messages) {
                 if (
                     fs.arePathsSame(fileUri.fsPath, Uri.file(msg.testFilePath).fsPath) &&
-                    msg.status !== TestStatus.Pass
+                    msg.status !== TestStatus.Pass &&
+                    msg.status !== undefined
                 ) {
                     const diagnostic = this.createDiagnostics(msg);
                     newDiagnostics.push(diagnostic);
