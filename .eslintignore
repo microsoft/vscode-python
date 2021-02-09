@@ -382,7 +382,6 @@ src/client/providers/docStringFoldingProvider.ts
 src/client/providers/linterProvider.ts
 src/client/providers/simpleRefactorProvider.ts
 src/client/providers/completionProvider.ts
-src/client/providers/jediProxy.ts
 src/client/providers/definitionProvider.ts
 src/client/providers/referenceProvider.ts
 src/client/providers/terminalProvider.ts
