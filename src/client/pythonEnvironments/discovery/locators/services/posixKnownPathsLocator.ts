@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fsapi from 'fs-extra';
+import * as fs from 'fs';
 import * as path from 'path';
 import { traceError, traceInfo } from '../../../../common/logger';
 
@@ -14,26 +14,23 @@ import { getFileInfo, resolveSymbolicLink } from '../../../common/externalDepend
 import { commonPosixBinPaths, isPosixPythonBinPattern } from '../../../common/posixUtils';
 
 async function getPythonBinFromKnownPaths(): Promise<string[]> {
-    const knownPaths = await commonPosixBinPaths();
+    const knownDirs = await commonPosixBinPaths();
     const pythonBins: Set<string> = new Set();
-    for (const knownPath of knownPaths) {
-        const paths = (await fsapi.readdir(knownPath))
-            .map((filename: string) => path.join(knownPath, filename))
+    for (const dirname of knownDirs) {
+        const paths = (await fs.promises.readdir(dirname, { withFileTypes: true }))
+            .filter((dirent: fs.Dirent) => !dirent.isDirectory())
+            .map((dirent: fs.Dirent) => path.join(dirname, dirent.name))
             .filter(isPosixPythonBinPattern);
 
         for (const filepath of paths) {
-            // Skip any directories
-            const stats = await fsapi.lstat(filepath);
-            if (!stats.isDirectory()) {
-                // Ensure that we have a collection of unique global binaries by
-                // resolving all symlinks to the target binaries.
-                try {
-                    const resolvedBin = await resolveSymbolicLink(filepath);
-                    pythonBins.add(resolvedBin);
-                    traceInfo(`Found: ${filepath} --> ${resolvedBin}`);
-                } catch (ex) {
-                    traceError('Failed to resolve symbolic link: ', ex);
-                }
+            // Ensure that we have a collection of unique global binaries by
+            // resolving all symlinks to the target binaries.
+            try {
+                const resolvedBin = await resolveSymbolicLink(filepath);
+                pythonBins.add(resolvedBin);
+                traceInfo(`Found: ${filepath} --> ${resolvedBin}`);
+            } catch (ex) {
+                traceError('Failed to resolve symbolic link: ', ex);
             }
         }
     }
