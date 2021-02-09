@@ -137,12 +137,11 @@ class StubPytestItem(util.StubProxy):
 
 
 class StubSubtypedItem(StubPytestItem):
-
     @classmethod
     def from_args(cls, *args, **kwargs):
         if not hasattr(cls, "from_parent"):
             return cls(*args, **kwargs)
-        self = cls.from_parent(parent=None, name=kwargs["name"], runner=None, dtest=None)
+        self = cls.from_parent(None, name=kwargs["name"], runner=None, dtest=None)
         self.__init__(*args, **kwargs)
         return self
 
@@ -214,6 +213,7 @@ def generate_parse_item(pathsep):
         return adapter_util.fix_fileid(
             *args,
             **dict(
+                # dependency injection
                 _normcase=normcase,
                 _pathsep=pathsep,
             )
@@ -223,6 +223,7 @@ def generate_parse_item(pathsep):
         return pytest_item._normalize_test_id(
             *args,
             **dict(
+                # dependency injection
                 _fix_fileid=_fix_fileid,
                 _pathsep=pathsep,
             )
@@ -232,6 +233,7 @@ def generate_parse_item(pathsep):
         return pytest_item._iter_nodes(
             *args,
             **dict(
+                # dependency injection
                 _normalize_test_id=_normalize_test_id,
                 _normcase=normcase,
                 _pathsep=pathsep,
@@ -242,6 +244,7 @@ def generate_parse_item(pathsep):
         return pytest_item._parse_node_id(
             *args,
             **dict(
+                # dependency injection
                 _iter_nodes=_iter_nodes,
             )
         )
@@ -251,6 +254,7 @@ def generate_parse_item(pathsep):
         return pytest_item._split_fspath(
             *args,
             **dict(
+                # dependency injection
                 _normcase=normcase,
             )
         )
@@ -260,6 +264,7 @@ def generate_parse_item(pathsep):
         return pytest_item._matches_relfile(
             *args,
             **dict(
+                # dependency injection
                 _normcase=normcase,
                 _pathsep=pathsep,
             )
@@ -269,6 +274,7 @@ def generate_parse_item(pathsep):
         return pytest_item._is_legacy_wrapper(
             *args,
             **dict(
+                # dependency injection
                 _pathsep=pathsep,
             )
         )
@@ -277,6 +283,7 @@ def generate_parse_item(pathsep):
         return pytest_item._get_location(
             *args,
             **dict(
+                # dependency injection
                 _matches_relfile=_matches_relfile,
                 _is_legacy_wrapper=_is_legacy_wrapper,
                 _pathsep=pathsep,
@@ -288,6 +295,7 @@ def generate_parse_item(pathsep):
         return pytest_item.parse_item(
             item,
             **dict(
+                # dependency injection
                 _parse_node_id=_parse_node_id,
                 _split_fspath=_split_fspath,
                 _get_location=_get_location,
@@ -356,6 +364,7 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(
             stub.calls,
             [
+                # There's only one call.
                 ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
             ],
         )
