@@ -108,7 +108,15 @@ class StubPytestItem(util.StubProxy):
 
         attrs.setdefault("user_properties", [])
 
-        self.__dict__.update(attrs)
+        slots = getattr(type(self), "__slots__", None)
+        if slots:
+            for name, value in attrs.items():
+                if name in self.__slots__:
+                    setattr(self, name, value)
+                else:
+                    self.__dict__[name] = value
+        else:
+            self.__dict__.update(attrs)
 
         if "own_markers" not in attrs:
             self.own_markers = ()
