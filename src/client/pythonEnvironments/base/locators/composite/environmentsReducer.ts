@@ -22,9 +22,11 @@ export class PythonEnvsReducer implements ILocator {
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const environments = await getEnvs(this.iterEnvs());
-        const environment = environments.find((e) => areSameEnv(e, env));
+        let environment: string | PythonEnvInfo | undefined = environments.find((e) => areSameEnv(e, env));
         if (!environment) {
-            return undefined;
+            // It isn't one we've reduced, but fall back
+            // to the wrapped locator anyway.
+            environment = env;
         }
         return this.parentLocator.resolveEnv(environment);
     }
