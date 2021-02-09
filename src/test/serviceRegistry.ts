@@ -175,7 +175,7 @@ export class IocContainer {
     private disposables: Disposable[] = [];
 
     constructor() {
-        const cont = new Container();
+        const cont = new Container({ skipBaseClassChecks: true });
         this.serviceManager = new ServiceManager(cont);
         this.serviceContainer = new ServiceContainer(cont);
 
