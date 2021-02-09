@@ -203,7 +203,7 @@ suite('Linting - Pylint', () => {
         let execInfo: ExecutionInfo | undefined;
         execService
             .setup((x) => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .callback((e: ExecutionInfo, _b, _c) => {
+            .callback((e: ExecutionInfo) => {
                 execInfo = e;
             })
             .returns(() => Promise.resolve({ stdout: '', stderr: '' }));
@@ -211,9 +211,9 @@ suite('Linting - Pylint', () => {
         const lintSettings = new MockLintingSettings();
         lintSettings.pylintUseMinimalCheckers = true;
 
-        lintSettings['pylintPath'] = 'pyLint';
+        lintSettings.pylintPath = 'pyLint';
 
-        lintSettings['pylintEnabled'] = true;
+        lintSettings.pylintEnabled = true;
 
         const settings = TypeMoq.Mock.ofType<IPythonSettings>();
         settings.setup((x) => x.linting).returns(() => lintSettings);

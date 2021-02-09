@@ -25,7 +25,6 @@ src/test/initialize.ts
 src/test/mockClasses.ts
 src/test/performanceTest.ts
 src/test/proc.ts
-src/test/serviceRegistry.ts
 src/test/smokeTest.ts
 src/test/standardTest.ts
 src/test/startupTelemetry.unit.test.ts
@@ -42,10 +41,8 @@ src/test/interpreters/mocks.ts
 src/test/interpreters/interpreterVersion.unit.test.ts
 src/test/interpreters/virtualEnvs/index.unit.test.ts
 src/test/interpreters/virtualEnvs/condaInheritEnvPrompt.unit.test.ts
-src/test/interpreters/autoSelection/proxy.unit.test.ts
 src/test/interpreters/autoSelection/interpreterSecurity/interpreterEvaluation.unit.test.ts
 src/test/interpreters/autoSelection/interpreterSecurity/interpreterSecurityService.unit.test.ts
-src/test/interpreters/autoSelection/index.unit.test.ts
 src/test/interpreters/autoSelection/rules/settings.unit.test.ts
 src/test/interpreters/autoSelection/rules/cached.unit.test.ts
 src/test/interpreters/autoSelection/rules/winRegistry.unit.test.ts
@@ -54,7 +51,6 @@ src/test/interpreters/autoSelection/rules/currentPath.unit.test.ts
 src/test/interpreters/autoSelection/rules/system.unit.test.ts
 src/test/interpreters/virtualEnvManager.unit.test.ts
 src/test/interpreters/pythonPathUpdaterFactory.unit.test.ts
-src/test/interpreters/interpreterService.unit.test.ts
 src/test/interpreters/activation/service.unit.test.ts
 src/test/interpreters/activation/wrapperEnvironmentActivationService.unit.test.ts
 src/test/interpreters/helpers.unit.test.ts
@@ -63,9 +59,6 @@ src/test/interpreters/display/interpreterSelectionTip.unit.test.ts
 src/test/interpreters/display.unit.test.ts
 
 src/test/configuration/interpreterSelector/interpreterSelector.unit.test.ts
-
-src/test/install/channelManager.channels.test.ts
-src/test/install/channelManager.messages.test.ts
 
 src/test/terminals/serviceRegistry.unit.test.ts
 src/test/terminals/activation.unit.test.ts
@@ -176,7 +169,6 @@ src/test/testing/display/picker.unit.test.ts
 
 src/test/common/exitCIAfterTestReporter.ts
 src/test/common/crypto.unit.test.ts
-src/test/common/configuration/service.unit.test.ts
 src/test/common/net/fileDownloader.unit.test.ts
 src/test/common/net/httpClient.unit.test.ts
 src/test/common/terminals/activator/index.unit.test.ts
@@ -274,7 +266,6 @@ src/test/telemetry/importTracker.unit.test.ts
 src/test/telemetry/envFileTelemetry.unit.test.ts
 
 src/test/linters/pylint.unit.test.ts
-src/test/linters/lint.provider.test.ts
 src/test/linters/lint.unit.test.ts
 src/test/linters/linter.availability.unit.test.ts
 src/test/linters/common.ts
@@ -282,9 +273,7 @@ src/test/linters/lintengine.test.ts
 src/test/linters/lint.multilinter.test.ts
 src/test/linters/lint.test.ts
 src/test/linters/linterinfo.unit.test.ts
-src/test/linters/pylint.test.ts
 src/test/linters/lint.manager.unit.test.ts
-src/test/linters/lint.args.test.ts
 src/test/linters/linterCommands.unit.test.ts
 src/test/linters/linterManager.unit.test.ts
 
@@ -324,7 +313,6 @@ src/client/interpreter/configuration/pythonPathUpdaterServiceFactory.ts
 src/client/interpreter/configuration/services/globalUpdaterService.ts
 src/client/interpreter/configuration/services/workspaceUpdaterService.ts
 src/client/interpreter/configuration/services/workspaceFolderUpdaterService.ts
-src/client/interpreter/serviceRegistry.ts
 src/client/interpreter/helpers.ts
 src/client/interpreter/virtualEnvs/condaInheritEnvPrompt.ts
 src/client/interpreter/virtualEnvs/types.ts
@@ -332,14 +320,12 @@ src/client/interpreter/virtualEnvs/index.ts
 src/client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage.ts
 src/client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation.ts
 src/client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService.ts
-src/client/interpreter/autoSelection/proxy.ts
 src/client/interpreter/autoSelection/rules/baseRule.ts
 src/client/interpreter/autoSelection/rules/winRegistry.ts
 src/client/interpreter/autoSelection/rules/settings.ts
 src/client/interpreter/autoSelection/rules/currentPath.ts
 src/client/interpreter/autoSelection/rules/cached.ts
 src/client/interpreter/autoSelection/rules/system.ts
-src/client/interpreter/autoSelection/index.ts
 src/client/interpreter/activation/wrapperEnvironmentActivationService.ts
 src/client/interpreter/activation/terminalEnvironmentActivationService.ts
 src/client/interpreter/activation/preWarmVariables.ts
@@ -738,7 +724,6 @@ src/test/startPage/mockCommandManager.ts
 src/test/startPage/mockDocument.ts
 src/test/startPage/mockDocumentManager.ts
 src/test/startPage/mockExtensions.ts
-src/test/startPage/mockPythonSettings.ts
 src/test/startPage/mockTextEditor.ts
 src/test/startPage/mockWorkspaceConfig.ts
 src/test/startPage/mockWorkspaceFolder.ts

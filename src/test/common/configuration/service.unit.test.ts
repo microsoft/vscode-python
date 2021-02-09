@@ -73,7 +73,9 @@ suite('Configuration Service', () => {
         experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
 
-        workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ globalValue: 'globalValue' } as any));
+        workspaceConfig
+            .setup((w) => w.inspect('setting'))
+            .returns(() => ({ globalValue: 'globalValue', key: 'setting' }));
         workspaceConfig
             .setup((w) => w.update('setting', 'globalValue', ConfigurationTarget.Global))
             .returns(() => Promise.resolve())
@@ -88,7 +90,9 @@ suite('Configuration Service', () => {
         experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
 
-        workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ globalValue: 'globalValue' } as any));
+        workspaceConfig
+            .setup((w) => w.inspect('setting'))
+            .returns(() => ({ globalValue: 'globalValue', key: 'setting' }));
         workspaceConfig
             .setup((w) => w.update('setting', 'newGlobalValue', ConfigurationTarget.Global))
             .returns(() => Promise.resolve())
@@ -103,7 +107,9 @@ suite('Configuration Service', () => {
         experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
 
-        workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ workspaceValue: 'workspaceValue' } as any));
+        workspaceConfig
+            .setup((w) => w.inspect('setting'))
+            .returns(() => ({ workspaceValue: 'workspaceValue', key: 'setting' }));
         workspaceConfig
             .setup((w) => w.update('setting', 'workspaceValue', ConfigurationTarget.Workspace))
             .returns(() => Promise.resolve())
@@ -118,7 +124,9 @@ suite('Configuration Service', () => {
         experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
 
-        workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ workspaceValue: 'workspaceValue' } as any));
+        workspaceConfig
+            .setup((w) => w.inspect('setting'))
+            .returns(() => ({ workspaceValue: 'workspaceValue', key: 'setting' }));
         workspaceConfig
             .setup((w) => w.update('setting', 'newWorkspaceValue', ConfigurationTarget.Workspace))
             .returns(() => Promise.resolve())
@@ -135,7 +143,7 @@ suite('Configuration Service', () => {
         workspaceConfig
             .setup((w) => w.inspect('setting'))
 
-            .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue' } as any));
+            .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue', key: 'setting' }));
         workspaceConfig
             .setup((w) => w.update('setting', 'workspaceFolderValue', ConfigurationTarget.WorkspaceFolder))
             .returns(() => Promise.resolve())
@@ -157,7 +165,7 @@ suite('Configuration Service', () => {
         workspaceConfig
             .setup((w) => w.inspect('setting'))
 
-            .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue' } as any));
+            .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue', key: 'setting' }));
         workspaceConfig
             .setup((w) => w.update('setting', 'newWorkspaceFolderValue', ConfigurationTarget.WorkspaceFolder))
             .returns(() => Promise.resolve())
@@ -178,7 +186,7 @@ suite('Configuration Service', () => {
         interpreterPathService
             .setup((w) => w.inspect(resource))
 
-            .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue' } as any));
+            .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue', key: 'setting' }));
         interpreterPathService
             .setup((w) => w.update(resource, ConfigurationTarget.WorkspaceFolder, 'newWorkspaceFolderValue'))
             .returns(() => Promise.resolve())

@@ -66,7 +66,7 @@ import { VirtualEnvironmentPrompt } from './virtualEnvs/virtualEnvPrompt';
  * @param serviceManager
  */
 
-export function registerInterpreterTypes(serviceManager: IServiceManager) {
+export function registerInterpreterTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         InterpreterSecurityStorage,
@@ -161,7 +161,7 @@ export function registerInterpreterTypes(serviceManager: IServiceManager) {
     );
 }
 
-export function registerTypes(serviceManager: IServiceManager) {
+export function registerTypes(serviceManager: IServiceManager): void {
     registerInterpreterTypes(serviceManager);
     serviceManager.addSingleton<IInterpreterAutoSelectionProxyService>(
         IInterpreterAutoSelectionProxyService,

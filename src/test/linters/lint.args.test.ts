@@ -71,7 +71,7 @@ suite('Linting - Arguments', () => {
 
                         const fs = TypeMoq.Mock.ofType<IFileSystem>();
                         fs.setup((x) => x.fileExists(TypeMoq.It.isAny())).returns(
-                            () => new Promise<boolean>((resolve, _reject) => resolve(true)),
+                            () => new Promise<boolean>((resolve) => resolve(true)),
                         );
                         fs.setup((x) => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(
                             () => true,
@@ -140,6 +140,7 @@ suite('Linting - Arguments', () => {
                         document.setup((d) => d.uri).returns(() => fileUri);
 
                         let invoked = false;
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (linter as any).run = (args: string[]) => {
                             expect(args).to.deep.equal(expectedArgs);
                             invoked = true;
@@ -186,7 +187,8 @@ suite('Linting - Arguments', () => {
                         document.setup((d) => d.uri).returns(() => fileUri);
 
                         let invoked = false;
-                        (linter as any).run = (args: any[], _doc: any, _token: any) => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+                        (linter as any).run = (args: any[]) => {
                             expect(args[args.length - 1]).to.equal(fileUri.fsPath);
                             invoked = true;
                             return Promise.resolve([]);
