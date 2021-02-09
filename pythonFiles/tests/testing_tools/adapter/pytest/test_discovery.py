@@ -11,7 +11,6 @@ import os
 import sys
 import tempfile
 import unittest
-import warnings
 
 import pytest
 import _pytest.doctest
@@ -164,13 +163,7 @@ class StubFunctionItem(StubSubtypedItem, pytest.Function):
 
 
 def create_stub_function_item(*args, **kwargs):
-    # StubFunctionItem should not be calling __init__(), but instead from_parent().
-    # Unfortunately the detangling is massive due to the complexity of the test
-    # harness, so we are punting in hopes that we rewrite test discovery before
-    # pytest removes this functionality.
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        return StubFunctionItem.from_args(*args, **kwargs)
+    return StubFunctionItem.from_args(*args, **kwargs)
 
 
 class StubDoctestItem(StubSubtypedItem, _pytest.doctest.DoctestItem):
@@ -178,13 +171,7 @@ class StubDoctestItem(StubSubtypedItem, _pytest.doctest.DoctestItem):
 
 
 def create_stub_doctest_item(*args, **kwargs):
-    # StubDoctestItem should not be calling __init__(), but instead from_parent().
-    # Unfortunately the detangling is massive due to the complexity of the test
-    # harness, so we are punting in hopes that we rewrite test discovery before
-    # pytest removes this functionality.
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        return StubDoctestItem.from_args(*args, **kwargs)
+    return StubDoctestItem.from_args(*args, **kwargs)
 
 
 class StubPytestSession(util.StubProxy):
