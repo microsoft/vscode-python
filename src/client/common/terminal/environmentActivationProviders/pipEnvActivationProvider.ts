@@ -5,7 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
-import '../../../common/extensions';
+import '../../extensions';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { isPipenvEnvironmentRelatedToFolder } from '../../../pythonEnvironments/discovery/locators/services/pipEnvHelper';
 import { EnvironmentType } from '../../../pythonEnvironments/info';
@@ -13,7 +13,7 @@ import { IWorkspaceService } from '../../application/types';
 import { inDiscoveryExperiment } from '../../experiments/helpers';
 import { IFileSystem } from '../../platform/types';
 import { IExperimentService, IToolExecutionPath, ToolExecutionPath } from '../../types';
-import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
+import { ITerminalActivationCommandProvider } from '../types';
 
 @injectable()
 export class PipEnvActivationCommandProvider implements ITerminalActivationCommandProvider {
@@ -27,42 +27,38 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {}
 
-    public isShellSupported(_targetShell: TerminalShellType): boolean {
+    // eslint-disable-next-line class-methods-use-this
+    public isShellSupported(): boolean {
         return false;
     }
 
-    public async getActivationCommands(resource: Uri | undefined, _: TerminalShellType): Promise<string[] | undefined> {
+    public async getActivationCommands(resource: Uri | undefined): Promise<string[] | undefined> {
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
         if (!interpreter || interpreter.envType !== EnvironmentType.Pipenv) {
-            return;
+            return undefined;
         }
         // Activate using `pipenv shell` only if the current folder relates pipenv environment.
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         if (workspaceFolder) {
             if (await inDiscoveryExperiment(this.experimentService)) {
                 if (!(await isPipenvEnvironmentRelatedToFolder(interpreter.path, workspaceFolder?.uri.fsPath))) {
-                    return;
+                    return undefined;
                 }
-            } else {
-                if (
-                    interpreter.pipEnvWorkspaceFolder &&
-                    !this.fs.arePathsSame(workspaceFolder.uri.fsPath, interpreter.pipEnvWorkspaceFolder)
-                ) {
-                    return;
-                }
+            } else if (
+                interpreter.pipEnvWorkspaceFolder &&
+                !this.fs.arePathsSame(workspaceFolder.uri.fsPath, interpreter.pipEnvWorkspaceFolder)
+            ) {
+                return undefined;
             }
         }
         const execName = this.pipEnvExecution.executable;
         return [`${execName.fileToCommandArgument()} shell`];
     }
 
-    public async getActivationCommandsForInterpreter(
-        pythonPath: string,
-        _targetShell: TerminalShellType,
-    ): Promise<string[] | undefined> {
+    public async getActivationCommandsForInterpreter(pythonPath: string): Promise<string[] | undefined> {
         const interpreter = await this.interpreterService.getInterpreterDetails(pythonPath);
         if (!interpreter || interpreter.envType !== EnvironmentType.Pipenv) {
-            return;
+            return undefined;
         }
 
         const execName = this.pipEnvExecution.executable;

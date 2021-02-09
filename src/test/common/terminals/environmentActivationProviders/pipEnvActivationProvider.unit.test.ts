@@ -66,6 +66,7 @@ suite('Terminals Activation - Pipenv', () => {
                 for (const interpreterType of nonPipInterpreterTypes) {
                     when(interpreterService.getActiveInterpreter(resource)).thenResolve({
                         type: interpreterType,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     } as any);
 
                     for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {
@@ -78,6 +79,7 @@ suite('Terminals Activation - Pipenv', () => {
             test('pipenv shell is returned for pipenv interpeter', async () => {
                 when(interpreterService.getActiveInterpreter(resource)).thenResolve({
                     envType: EnvironmentType.Pipenv,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any);
 
                 for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {
@@ -90,6 +92,7 @@ suite('Terminals Activation - Pipenv', () => {
                 pipenvExecFile = 'my pipenv';
                 when(interpreterService.getActiveInterpreter(resource)).thenResolve({
                     envType: EnvironmentType.Pipenv,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any);
 
                 for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {

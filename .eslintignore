@@ -188,7 +188,6 @@ src/test/common/terminals/service.unit.test.ts
 src/test/common/terminals/helper.unit.test.ts
 src/test/common/terminals/activation.unit.test.ts
 src/test/common/terminals/shellDetectors/shellDetectors.unit.test.ts
-src/test/common/terminals/environmentActivationProviders/pipEnvActivationProvider.unit.test.ts
 src/test/common/terminals/environmentActivationProviders/terminalActivation.testvirtualenvs.ts
 src/test/common/socketStream.test.ts
 src/test/common/configSettings.test.ts
@@ -557,7 +556,6 @@ src/client/common/terminal/shellDetectors/vscEnvironmentShellDetector.ts
 src/client/common/terminal/shellDetectors/terminalNameShellDetector.ts
 src/client/common/terminal/shellDetectors/settingsShellDetector.ts
 src/client/common/terminal/shellDetectors/baseShellDetector.ts
-src/client/common/terminal/environmentActivationProviders/pipEnvActivationProvider.ts
 src/client/common/terminal/environmentActivationProviders/baseActivationProvider.ts
 src/client/common/terminal/environmentActivationProviders/condaActivationProvider.ts
 src/client/common/terminal/environmentActivationProviders/commandPrompt.ts
