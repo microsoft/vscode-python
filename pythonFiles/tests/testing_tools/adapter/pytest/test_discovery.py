@@ -140,8 +140,10 @@ class StubPytestItem(util.StubProxy):
 class StubSubtypedItem(StubPytestItem):
 
     @classmethod
-    def from_parent(cls, parent, *args, **kwargs):
-        self = super(StubSubtypedItem, cls).from_parent(parent, name=kwargs['name'], runner=None, dtest=None)
+    def from_args(cls, *args, **kwargs):
+        if not hasattr(cls, "from_parent"):
+            return cls(*args, **kwargs)
+        self = cls.from_parent(parent=None, name=kwargs["name"], runner=None, dtest=None)
         self.__init__(*args, **kwargs)
         return self
 
@@ -168,7 +170,7 @@ def create_stub_function_item(*args, **kwargs):
     # pytest removes this functionality.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        return StubFunctionItem.from_parent(None, *args, **kwargs)
+        return StubFunctionItem.from_args(*args, **kwargs)
 
 
 class StubDoctestItem(StubSubtypedItem, _pytest.doctest.DoctestItem):
@@ -182,7 +184,7 @@ def create_stub_doctest_item(*args, **kwargs):
     # pytest removes this functionality.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        return StubDoctestItem.from_parent(None, *args, **kwargs)
+        return StubDoctestItem.from_args(*args, **kwargs)
 
 
 class StubPytestSession(util.StubProxy):
