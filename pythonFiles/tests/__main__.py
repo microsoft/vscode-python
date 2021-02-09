@@ -22,14 +22,28 @@ def parse_args():
 
     ns = vars(args)
 
+    if remainder:
+        for arg in remainder:
+            if arg.startswith("-") and arg not in ("-v", "--verbose", "-h", "--help"):
+                specific = False
+                break
+        else:
+            specific = True
+    else:
+        specific = False
+    args.specific = specific
+
     return ns, remainder
 
 
-def main(pytestargs, markers=None):
+def main(pytestargs, markers=None, specific=False):
     sys.path.insert(1, TESTING_TOOLS_ROOT)
     sys.path.insert(1, DEBUG_ADAPTER_ROOT)
 
-    pytestargs = ["--rootdir", SRC_ROOT, TEST_ROOT] + pytestargs
+    if not specific:
+        pytestargs.insert(0, TEST_ROOT)
+    pytestargs.insert(0, "--rootdir")
+    pytestargs.insert(1, SRC_ROOT)
     for marker in reversed(markers or ()):
         pytestargs.insert(0, marker)
         pytestargs.insert(0, "-m")
