@@ -10,7 +10,7 @@ import { getSearchPathEntries } from '../../common/utils/exec';
  * @param {string} interpreterPath : Path to python interpreter.
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
-export function isPosixPythonBin(interpreterPath: string): boolean {
+export function isPosixPythonBinPattern(interpreterPath: string): boolean {
     /**
      * This Reg-ex matches following file names:
      * python

@@ -11,25 +11,29 @@ import { buildEnvInfo } from '../../../base/info/env';
 import { parseVersion } from '../../../base/info/pythonVersion';
 import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getFileInfo, resolveSymbolicLink } from '../../../common/externalDependencies';
-import { commonPosixBinPaths, isPosixPythonBin } from '../../../common/posixUtils';
+import { commonPosixBinPaths, isPosixPythonBinPattern } from '../../../common/posixUtils';
 
 async function getPythonBinFromKnownPaths(): Promise<string[]> {
     const knownPaths = await commonPosixBinPaths();
     const pythonBins: Set<string> = new Set();
     for (const knownPath of knownPaths) {
-        const files = (await fsapi.readdir(knownPath))
+        const paths = (await fsapi.readdir(knownPath))
             .map((filename: string) => path.join(knownPath, filename))
-            .filter(isPosixPythonBin);
+            .filter(isPosixPythonBinPattern);
 
-        for (const file of files) {
-            // Ensure that we have a collection of unique global binaries by
-            // resolving all symlinks to the target binaries.
-            try {
-                const resolvedBin = await resolveSymbolicLink(file);
-                pythonBins.add(resolvedBin);
-                traceInfo(`Found: ${file} --> ${resolvedBin}`);
-            } catch (ex) {
-                traceError('Failed to resolve symbolic link: ', ex);
+        for (const filepath of paths) {
+            // Skip any directories
+            const stats = await fsapi.lstat(filepath);
+            if (!stats.isDirectory()) {
+                // Ensure that we have a collection of unique global binaries by
+                // resolving all symlinks to the target binaries.
+                try {
+                    const resolvedBin = await resolveSymbolicLink(filepath);
+                    pythonBins.add(resolvedBin);
+                    traceInfo(`Found: ${filepath} --> ${resolvedBin}`);
+                } catch (ex) {
+                    traceError('Failed to resolve symbolic link: ', ex);
+                }
             }
         }
     }

@@ -12,10 +12,10 @@ import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from '../discovery/locators/services/conda';
 import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/virtualEnvironmentIdentifier';
-import { isPosixPythonBin } from './posixUtils';
+import { isPosixPythonBinPattern } from './posixUtils';
 import { isWindowsPythonExe } from './windowsUtils';
 
-const matchPythonExecutable = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
+const matchPythonExecutable = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBinPattern;
 
 type FileFilterFunc = (filename: string) => boolean;
 
@@ -33,7 +33,7 @@ export async function* findInterpretersInDir(
 ): AsyncIterableIterator<string> {
     // "checkBin" is a local variable rather than global
     // so we can stub it out during unit testing.
-    const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
+    const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBinPattern;
     const cfg = {
         ignoreErrors,
         filterSubDir,
