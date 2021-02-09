@@ -327,9 +327,9 @@ export class JediProxy implements Disposable {
     // @debounce(1500)
     @swallowExceptions('JediProxy')
     private async environmentVariablesChangeHandler() {
-        const newAutoComletePaths = await this.buildAutoCompletePaths();
-        if (this.additionalAutoCompletePaths.join(',') !== newAutoComletePaths.join(',')) {
-            this.additionalAutoCompletePaths = newAutoComletePaths;
+        const newAutoCompletePaths = await this.buildAutoCompletePaths();
+        if (this.additionalAutoCompletePaths.join(',') !== newAutoCompletePaths.join(',')) {
+            this.additionalAutoCompletePaths = newAutoCompletePaths;
             this.restartLanguageServer().ignoreErrors();
         }
     }
