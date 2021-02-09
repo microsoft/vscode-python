@@ -14,6 +14,7 @@ export async function inDiscoveryExperiment(experimentService: IExperimentServic
     const results = await Promise.all([
         experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching),
         experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching),
+        true,
     ]);
     return results.includes(true);
 }
