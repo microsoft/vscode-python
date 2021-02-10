@@ -90,15 +90,11 @@ export interface IFileSystemPathUtils {
 //===========================
 // filesystem operations
 
+// We could use FileType from utils/filesystem.ts, but it's simpler this way.
 export import FileType = vscode.FileType;
 export import FileStat = vscode.FileStat;
 export type ReadStream = fs.ReadStream;
 export type WriteStream = fs.WriteStream;
-
-export type DirEntry = {
-    filename: string;
-    filetype: FileType;
-};
 
 // The low-level filesystem operations on which the extension depends.
 export interface IRawFileSystem {

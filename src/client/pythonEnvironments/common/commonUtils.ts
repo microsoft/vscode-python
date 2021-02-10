@@ -3,8 +3,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { convertFileType } from '../../common/platform/fileSystem';
-import { DirEntry, FileType } from '../../common/platform/types';
+import { convertFileType, DirEntry, FileType, getFileType } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { logError } from '../../logging';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
@@ -170,28 +169,6 @@ async function readDirEntries(
         return entries.filter((e) => matchFile(e.filename, opts.filterFilename, ignoreErrors));
     }
     return entries;
-}
-
-async function getFileType(
-    filename: string,
-    opts: {
-        ignoreErrors: boolean;
-    } = { ignoreErrors: true },
-): Promise<FileType | undefined> {
-    let stat: fs.Stats;
-    try {
-        stat = await fs.promises.lstat(filename);
-    } catch (err) {
-        if (err.code === 'ENOENT') {
-            return undefined;
-        }
-        if (opts.ignoreErrors) {
-            logError(`lstat() failed for "${filename}" (${err})`);
-            return FileType.Unknown;
-        }
-        throw err; // re-throw
-    }
-    return convertFileType(stat);
 }
 
 function matchFile(
