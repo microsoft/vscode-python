@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { traceVerbose } from '../../common/logger';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../common/utils/workerPool';
 import { getInterpreterInfo, InterpreterInformation } from '../base/info/interpreter';
@@ -22,7 +23,10 @@ export interface IEnvironmentInfoService {
 
 async function buildEnvironmentInfo(interpreterPath: string): Promise<InterpreterInformation | undefined> {
     const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(interpreterPath), shellExecute).catch(
-        () => undefined,
+        (reason) => {
+            traceVerbose(reason);
+            return undefined;
+        },
     );
     if (interpreterInfo === undefined || interpreterInfo.version === undefined) {
         return undefined;

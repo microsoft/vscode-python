@@ -5,12 +5,12 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../../common/process/types';
-import { IExperimentService } from '../../common/types';
+import { IExperimentService, IDisposable } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { normalizeFilename } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
-import { IDisposable } from '../../common/utils/resourceLifecycle';
 import { IServiceContainer } from '../../ioc/types';
+import { shellExec } from '../../common/process/rawProcessApis';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
@@ -23,9 +23,12 @@ function getProcessFactory(): IProcessServiceFactory {
     return internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
 }
 
-export async function shellExecute(command: string, timeout: number): Promise<ExecutionResult<string>> {
-    const proc = await getProcessFactory().create();
-    return proc.shellExec(command, { timeout });
+export async function shellExecute(
+    command: string,
+    timeout: number,
+    disposables?: Set<IDisposable>,
+): Promise<ExecutionResult<string>> {
+    return shellExec(command, { timeout }, disposables);
 }
 
 export async function exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
