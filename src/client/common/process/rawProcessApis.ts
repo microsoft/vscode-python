@@ -50,7 +50,7 @@ export function shellExec(
     const shellOptions = getDefaultOptions(options);
     return new Promise((resolve, reject) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const proc = exec(command, shellOptions, (e: any, stdout: any, stderr: any) => {
+        const callback = (e: any, stdout: any, stderr: any) => {
             if (e && e !== null) {
                 reject(e);
             } else if (shellOptions.throwOnStdErr && stderr && stderr.length) {
@@ -60,7 +60,8 @@ export function shellExec(
                 // elsewhere because that's how exec behaves.
                 resolve({ stderr: stderr && stderr.length > 0 ? stderr : undefined, stdout });
             }
-        }); // NOSONAR
+        };
+        const proc = exec(command, shellOptions, callback); // NOSONAR
         const disposable: IDisposable = {
             dispose: () => {
                 if (!proc.killed) {
