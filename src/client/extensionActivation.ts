@@ -30,7 +30,6 @@ import {
     IOutputChannel,
 } from './common/types';
 import { noop } from './common/utils/misc';
-import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
@@ -112,7 +111,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const { enableProposedApi } = applicationEnv.packageJson;
     serviceManager.addSingletonInstance<boolean>(UseProposedApi, enableProposedApi);
     // Feature specific registrations.
-    variableRegisterTypes(serviceManager);
     unitTestsRegisterTypes(serviceManager);
     lintersRegisterTypes(serviceManager);
     interpretersRegisterTypes(serviceManager);

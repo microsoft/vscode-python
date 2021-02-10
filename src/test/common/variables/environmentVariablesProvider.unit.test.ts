@@ -12,7 +12,6 @@ import { ConfigurationChangeEvent, FileSystemWatcher, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
-import { ConfigurationService } from '../../../client/common/configuration/service';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { CurrentProcess } from '../../../client/common/process/currentProcess';
@@ -37,7 +36,6 @@ suite('Multiroot Environment Variables Provider', () => {
         envVarsService = mock(EnvironmentVariablesService);
         platform = mock(PlatformService);
         workspace = mock(WorkspaceService);
-        configuration = mock(ConfigurationService);
         currentProcess = mock(CurrentProcess);
         settings = mock(PythonSettings);
 
@@ -48,7 +46,6 @@ suite('Multiroot Environment Variables Provider', () => {
             [],
             instance(platform),
             instance(workspace),
-            instance(configuration),
             instance(currentProcess),
         );
 
@@ -300,7 +297,6 @@ suite('Multiroot Environment Variables Provider', () => {
                 [],
                 instance(platform),
                 instance(workspace),
-                instance(configuration),
                 instance(currentProcess),
                 100,
             );

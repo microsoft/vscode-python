@@ -5,10 +5,12 @@ import { inject, injectable, optional } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
+import { PythonSettings } from '../configSettings';
 import { traceVerbose } from '../logger';
 import { IPlatformService } from '../platform/types';
-import { IConfigurationService, ICurrentProcess, IDisposableRegistry } from '../types';
+import { ICurrentProcess, IDisposableRegistry } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
+import { SystemVariables } from './systemVariables';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 
 const CACHE_DURATION = 60 * 60 * 1000;
@@ -25,7 +27,6 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ICurrentProcess) private process: ICurrentProcess,
         @optional() private cacheDuration: number = CACHE_DURATION,
     ) {
@@ -86,11 +87,17 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         return mergedVars;
     }
     public async getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined> {
-        const settings = this.configurationService.getSettings(resource);
+        const systemVariables: SystemVariables = new SystemVariables(
+            undefined,
+            PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri?.fsPath,
+            this.workspaceService,
+        );
+        const envFileSetting = this.workspaceService.getConfiguration('python', resource).get<string>('envFile');
+        const envFile = systemVariables.resolveAny(envFileSetting)!;
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
-        this.createFileWatcher(settings.envFile, workspaceFolderUri);
-        return this.envVarsService.parseFile(settings.envFile, this.process.env);
+        this.createFileWatcher(envFile, workspaceFolderUri);
+        return this.envVarsService.parseFile(envFile, this.process.env);
     }
     public configurationChanged(e: ConfigurationChangeEvent) {
         this.trackedWorkspaceFolders.forEach((item) => {

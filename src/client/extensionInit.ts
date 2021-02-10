@@ -17,6 +17,7 @@ import {
     IOutputChannel,
     WORKSPACE_MEMENTO,
 } from './common/types';
+import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { OutputChannelNames } from './common/utils/localize';
 import { ExtensionState } from './components';
 import { ServiceContainer } from './ioc/container';
@@ -69,6 +70,7 @@ export function initializeStandard(ext: ExtensionState): void {
     const { serviceManager } = ext.legacyIOC;
     // Core registrations (non-feature specific).
     commonRegisterTypes(serviceManager);
+    variableRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
 
