@@ -5,7 +5,7 @@
 /* eslint-disable max-classes-per-file */
 
 import { Event, EventEmitter } from 'vscode';
-import { DirEntry, getFileType, FileType } from '../../../../common/utils/filesystem';
+import { DirEntry, FileType, getFileType } from '../../../../common/utils/filesystem';
 import { iterPythonExecutablesInDir } from '../../../common/commonUtils';
 import { resolvePath } from '../../../common/externalDependencies';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
