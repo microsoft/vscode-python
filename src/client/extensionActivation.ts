@@ -59,7 +59,7 @@ import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegist
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 
 // components
-import * as pythonEnvironments from './pythonEnvironments';
+// import * as pythonEnvironments from './pythonEnvironments';
 
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
@@ -68,7 +68,8 @@ import { setDefaultLanguageServerByExperiment } from './common/experiments/helpe
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
     ext: ExtensionState,
-    components: Components,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _components: Components,
 ): Promise<ActivationResult[]> {
     // Note that each activation returns a promise that resolves
     // when that activation completes.  However, it might have started
@@ -80,8 +81,13 @@ export async function activateComponents(
     // activation resolves `ActivationResult`, which can safely wrap
     // the "inner" promise.
     const promises: Promise<ActivationResult>[] = [
-        pythonEnvironments.activate(components.pythonEnvs),
-        // These will go away eventually.
+        // TODO: We cannot start activating the component just yet, as activateLegacy()
+        // registers various classes which might be required while activating the
+        // component. Once registration from activateLegacy() are moved before we call
+        // activateComponents(), we can activate the component here.
+        // https://github.com/microsoft/vscode-python/issues/15380
+        //
+        // pythonEnvironments.activate(components.pythonEnvs),
         activateLegacy(ext),
     ];
     return Promise.all(promises);
