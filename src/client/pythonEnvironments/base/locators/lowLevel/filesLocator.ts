@@ -84,16 +84,21 @@ async function* iterMinimalEnvsFromExecutables(
     kind: PythonEnvKind,
     ignoreMissing = true,
 ): AsyncIterableIterator<PythonEnvInfo> {
-    for await (const executable of executables) {
-        const onMissing = ignoreMissing ? undefined : FileType.Unknown;
-        const entry = await resolveFile(executable, onMissing);
-        if (entry === undefined) {
-            // eslint-disable-next-line no-continue
-            continue;
+    const onMissing = ignoreMissing ? undefined : FileType.Unknown;
+    function filterFile(ent: DirEntry | undefined): boolean {
+        if (ent === undefined) {
+            // The file must be missing.
+            return false;
         }
-        // This is where we would handle the file type.
-        const normFile = resolvePath(entry.filename);
-        yield getFastEnvInfo(kind, normFile);
+        // This is where we could handle the file type.
+        return true;
+    }
+    for await (const executable of executables) {
+        const entry = await resolveFile(executable, onMissing);
+        if (filterFile(entry)) {
+            const normFile = resolvePath(entry!.filename);
+            yield getFastEnvInfo(kind, normFile);
+        }
     }
 }
 
