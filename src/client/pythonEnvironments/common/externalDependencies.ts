@@ -4,13 +4,15 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../../common/process/types';
+import { ExecutionResult, SpawnOptions } from '../../common/process/types';
 import { IExperimentService, IDisposable } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { normalizeFilename } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
-import { shellExec } from '../../common/process/rawProcessApis';
+import { plainExec, shellExec } from '../../common/process/rawProcessApis';
+import { EnvironmentVariables } from '../../common/variables/types';
+import { BufferDecoder } from '../../common/process/decoder';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
@@ -19,21 +21,23 @@ export function initializeExternalDependencies(serviceContainer: IServiceContain
 
 // processes
 
-function getProcessFactory(): IProcessServiceFactory {
-    return internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
-}
-
 export async function shellExecute(
     command: string,
     timeout: number,
+    defaultEnv?: EnvironmentVariables,
     disposables?: Set<IDisposable>,
 ): Promise<ExecutionResult<string>> {
-    return shellExec(command, { timeout }, disposables);
+    return shellExec(command, { timeout }, defaultEnv, disposables);
 }
 
-export async function exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
-    const proc = await getProcessFactory().create();
-    return proc.exec(file, args, options);
+export async function exec(
+    file: string,
+    args: string[],
+    options: SpawnOptions = {},
+    defaultEnv?: EnvironmentVariables,
+    disposables?: Set<IDisposable>,
+): Promise<ExecutionResult<string>> {
+    return plainExec(file, args, options, new BufferDecoder(), defaultEnv, disposables);
 }
 
 // filesystem

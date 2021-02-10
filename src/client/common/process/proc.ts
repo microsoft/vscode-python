@@ -1,23 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { execSync, spawn } from 'child_process';
 import { EventEmitter } from 'events';
-import { Observable } from 'rxjs/Observable';
-import { Readable } from 'stream';
 
 import { IDisposable } from '../types';
-import { createDeferred } from '../utils/async';
 import { EnvironmentVariables } from '../variables/types';
-import { getDefaultOptions, shellExec } from './rawProcessApis';
+import { execObservable, killPid, plainExec, shellExec } from './rawProcessApis';
 import {
     ExecutionResult,
     IBufferDecoder,
     IProcessService,
     ObservableExecutionResult,
-    Output,
     ShellOptions,
     SpawnOptions,
-    StdErrError,
 } from './types';
 
 export class ProcessService extends EventEmitter implements IProcessService {
@@ -37,16 +31,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
     }
 
     public static kill(pid: number): void {
-        try {
-            if (process.platform === 'win32') {
-                // Windows doesn't support SIGTERM, so execute taskkill to kill the process
-                execSync(`taskkill /pid ${pid} /T /F`); // NOSONAR
-            } else {
-                process.kill(pid);
-            }
-        } catch {
-            // Ignore.
-        }
+        killPid(pid);
     }
 
     public dispose(): void {
@@ -61,150 +46,18 @@ export class ProcessService extends EventEmitter implements IProcessService {
     }
 
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
-        const spawnOptions = this.getDefaultOptions(options);
-        const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
-        const proc = spawn(file, args, spawnOptions);
-        let procExited = false;
-        const disposable: IDisposable = {
-            dispose() {
-                if (proc && !proc.killed && !procExited) {
-                    ProcessService.kill(proc.pid);
-                }
-                if (proc) {
-                    proc.unref();
-                }
-            },
-        };
-        this.processesToKill.add(disposable);
-
-        const output = new Observable<Output<string>>((subscriber) => {
-            const disposables: IDisposable[] = [];
-
-            // eslint-disable-next-line @typescript-eslint/ban-types
-            const on = (ee: Readable | null, name: string, fn: Function) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ee?.on(name, fn as any);
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                disposables.push({ dispose: () => ee?.removeListener(name, fn as any) as any });
-            };
-
-            if (options.token) {
-                disposables.push(
-                    options.token.onCancellationRequested(() => {
-                        if (!procExited && !proc.killed) {
-                            proc.kill();
-                            procExited = true;
-                        }
-                    }),
-                );
-            }
-
-            const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
-                const out = this.decoder.decode([data], encoding);
-                if (source === 'stderr' && options.throwOnStdErr) {
-                    subscriber.error(new StdErrError(out));
-                } else {
-                    subscriber.next({ source, out });
-                }
-            };
-
-            on(proc.stdout, 'data', (data: Buffer) => sendOutput('stdout', data));
-            on(proc.stderr, 'data', (data: Buffer) => sendOutput('stderr', data));
-
-            proc.once('close', () => {
-                procExited = true;
-                subscriber.complete();
-                disposables.forEach((d) => d.dispose());
-            });
-            proc.once('exit', () => {
-                procExited = true;
-                subscriber.complete();
-                disposables.forEach((d) => d.dispose());
-            });
-            proc.once('error', (ex) => {
-                procExited = true;
-                subscriber.error(ex);
-                disposables.forEach((d) => d.dispose());
-            });
-        });
-
+        const result = execObservable(file, args, options, this.decoder, this.env, this.processesToKill);
         this.emit('exec', file, args, options);
-
-        return {
-            proc,
-            out: output,
-            dispose: disposable.dispose,
-        };
+        return result;
     }
 
     public exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
-        const spawnOptions = this.getDefaultOptions(options);
-        const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
-        const proc = spawn(file, args, spawnOptions);
-        const deferred = createDeferred<ExecutionResult<string>>();
-        const disposable: IDisposable = {
-            dispose: () => {
-                if (!proc.killed && !deferred.completed) {
-                    proc.kill();
-                }
-            },
-        };
-        this.processesToKill.add(disposable);
-        const disposables: IDisposable[] = [];
-
-        // eslint-disable-next-line @typescript-eslint/ban-types
-        const on = (ee: Readable | null, name: string, fn: Function) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ee?.on(name, fn as any);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            disposables.push({ dispose: () => ee?.removeListener(name, fn as any) as any });
-        };
-
-        if (options.token) {
-            disposables.push(options.token.onCancellationRequested(disposable.dispose));
-        }
-
-        const stdoutBuffers: Buffer[] = [];
-        on(proc.stdout, 'data', (data: Buffer) => stdoutBuffers.push(data));
-        const stderrBuffers: Buffer[] = [];
-        on(proc.stderr, 'data', (data: Buffer) => {
-            if (options.mergeStdOutErr) {
-                stdoutBuffers.push(data);
-                stderrBuffers.push(data);
-            } else {
-                stderrBuffers.push(data);
-            }
-        });
-
-        proc.once('close', () => {
-            if (deferred.completed) {
-                return;
-            }
-            const stderr: string | undefined =
-                stderrBuffers.length === 0 ? undefined : this.decoder.decode(stderrBuffers, encoding);
-            if (stderr && stderr.length > 0 && options.throwOnStdErr) {
-                deferred.reject(new StdErrError(stderr));
-            } else {
-                const stdout = this.decoder.decode(stdoutBuffers, encoding);
-                deferred.resolve({ stdout, stderr });
-            }
-            disposables.forEach((d) => d.dispose());
-        });
-        proc.once('error', (ex) => {
-            deferred.reject(ex);
-            disposables.forEach((d) => d.dispose());
-        });
-
+        const promise = plainExec(file, args, options, this.decoder, this.env, this.processesToKill);
         this.emit('exec', file, args, options);
-
-        return deferred.promise;
+        return promise;
     }
 
     public shellExec(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
-        return shellExec(command, options, this.processesToKill);
-    }
-
-    private getDefaultOptions<T extends ShellOptions | SpawnOptions>(options: T): T {
-        return getDefaultOptions(options, this.env);
+        return shellExec(command, options, this.env, this.processesToKill);
     }
 }
