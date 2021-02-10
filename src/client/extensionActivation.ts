@@ -84,10 +84,13 @@ export async function activateComponents(
         // TODO: We cannot start activating the component just yet, as activateLegacy()
         // registers various classes which might be required while activating the
         // component. Once registration from activateLegacy() are moved before we call
-        // activateComponents(), we can activate the component here.
+        // activateComponents(), we can activate using the API here.
         // https://github.com/microsoft/vscode-python/issues/15380
         //
         // pythonEnvironments.activate(components.pythonEnvs),
+        //
+        // Right now this isn't a problem for the discovery component as we also activate
+        // it after we register classes in `activationManager.ts`.
         activateLegacy(ext),
     ];
     return Promise.all(promises);
