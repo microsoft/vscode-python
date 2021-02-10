@@ -328,7 +328,7 @@ export class Conda {
      */
     public async getInfo(): Promise<CondaInfo> {
         const disposables = new Set<IDisposable>();
-        const result = await exec(this.command, ['info', '--json'], undefined, undefined, disposables);
+        const result = await exec(this.command, ['info', '--json'], {}, disposables);
         traceVerbose(`conda info --json: ${result.stdout}`);
 
         // Ensure the process we started is cleaned up.
