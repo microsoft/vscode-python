@@ -5,7 +5,7 @@
 /* eslint-disable max-classes-per-file */
 
 import { Event, EventEmitter } from 'vscode';
-import { DirEntry } from '../../../../common/utils/filesystem';
+import { DirEntry, getFileType, FileType } from '../../../../common/utils/filesystem';
 import { iterPythonExecutablesInDir } from '../../../common/commonUtils';
 import { resolvePath } from '../../../common/externalDependencies';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
@@ -56,16 +56,43 @@ export class FoundFilesLocator implements ILocator {
     }
 }
 
+async function resolveFile(
+    executable: Executable,
+    // If this isn't set then we return undefined when missing.
+    onMissing?: FileType,
+): Promise<DirEntry | undefined> {
+    if (typeof executable !== 'string') {
+        // We trust that this means the file exists.
+        return executable;
+    }
+    const filename = executable;
+    let filetype = await getFileType(filename);
+    if (filetype === undefined) {
+        if (onMissing === undefined) {
+            return undefined;
+        }
+        filetype = onMissing;
+    }
+    return { filename, filetype };
+}
+
 /**
  * Build minimal env info corresponding to each executable filename.
  */
 async function* iterMinimalEnvsFromExecutables(
     executables: Executable[] | AsyncIterableIterator<Executable>,
     kind: PythonEnvKind,
+    ignoreMissing = true,
 ): AsyncIterableIterator<PythonEnvInfo> {
     for await (const executable of executables) {
-        const filename = typeof executable === 'string' ? executable : executable.filename;
-        const normFile = resolvePath(filename);
+        const onMissing = ignoreMissing ? undefined : FileType.Unknown;
+        const entry = await resolveFile(executable, onMissing);
+        if (entry === undefined) {
+            // eslint-disable-next-line no-continue
+            continue;
+        }
+        // This is where we would handle the file type.
+        const normFile = resolvePath(entry.filename);
         yield getFastEnvInfo(kind, normFile);
     }
 }
