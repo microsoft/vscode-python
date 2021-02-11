@@ -5,11 +5,9 @@ import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { Commands } from '../common/constants';
-import { ContextKey } from '../common/contextKey';
-import { NativeTensorBoard } from '../common/experiments/groups';
 import { traceError, traceInfo } from '../common/logger';
 import { IProcessServiceFactory } from '../common/process/types';
-import { IDisposableRegistry, IExperimentService, IInstaller } from '../common/types';
+import { IDisposableRegistry, IInstaller } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { sendTelemetryEvent } from '../telemetry';
@@ -26,34 +24,25 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
     ) {}
 
     public async activate(): Promise<void> {
-        this.activateInternal().ignoreErrors();
-    }
-
-    private async activateInternal() {
-        if (await this.experimentService.inExperiment(NativeTensorBoard.experiment)) {
-            this.disposables.push(
-                this.commandManager.registerCommand(
-                    Commands.LaunchTensorBoard,
-                    (
-                        entrypoint: TensorBoardEntrypoint = TensorBoardEntrypoint.palette,
-                        trigger: TensorBoardEntrypointTrigger = TensorBoardEntrypointTrigger.palette,
-                    ) => {
-                        sendTelemetryEvent(EventName.TENSORBOARD_SESSION_LAUNCH, undefined, {
-                            trigger,
-                            entrypoint,
-                        });
-                        return this.createNewSession();
-                    },
-                ),
-            );
-            const contextKey = new ContextKey('python.isInNativeTensorBoardExperiment', this.commandManager);
-            contextKey.set(true).ignoreErrors();
-        }
+        this.disposables.push(
+            this.commandManager.registerCommand(
+                Commands.LaunchTensorBoard,
+                (
+                    entrypoint: TensorBoardEntrypoint = TensorBoardEntrypoint.palette,
+                    trigger: TensorBoardEntrypointTrigger = TensorBoardEntrypointTrigger.palette,
+                ) => {
+                    sendTelemetryEvent(EventName.TENSORBOARD_SESSION_LAUNCH, undefined, {
+                        trigger,
+                        entrypoint,
+                    });
+                    return this.createNewSession();
+                },
+            ),
+        );
     }
 
     private async createNewSession(): Promise<TensorBoardSession | undefined> {
