@@ -59,7 +59,7 @@ import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegist
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 
 // components
-// import * as pythonEnvironments from './pythonEnvironments';
+import * as pythonEnvironments from './pythonEnvironments';
 
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
@@ -68,8 +68,7 @@ import { setDefaultLanguageServerByExperiment } from './common/experiments/helpe
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
     ext: ExtensionState,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _components: Components,
+    components: Components,
 ): Promise<ActivationResult[]> {
     // Note that each activation returns a promise that resolves
     // when that activation completes.  However, it might have started
@@ -80,20 +79,19 @@ export async function activateComponents(
     // `Promise.all()`, etc.) will flatten nested promises.  Thus
     // activation resolves `ActivationResult`, which can safely wrap
     // the "inner" promise.
+
+    // TODO: As of now activateLegacy() registers various classes which might
+    // be required while activating components. Once registration from
+    // activateLegacy() are moved before we activate other components, we can
+    // activate them parallelly with the other components.
+    // https://github.com/microsoft/vscode-python/issues/15380
+    // These will go away eventually once everything is refactored into components.
+    const legacyActivationResult = await activateLegacy(ext);
     const promises: Promise<ActivationResult>[] = [
-        // TODO: We cannot start activating the component just yet, as activateLegacy()
-        // registers various classes which might be required while activating the
-        // component. Once registration from activateLegacy() are moved before we call
-        // activateComponents(), we can activate using the API here.
-        // https://github.com/microsoft/vscode-python/issues/15380
-        //
-        // pythonEnvironments.activate(components.pythonEnvs),
-        //
-        // Right now this isn't a problem for the discovery component as we also activate
-        // it after we register classes in `activationManager.ts`.
-        activateLegacy(ext),
+        // More component activations will go here
+        pythonEnvironments.activate(components.pythonEnvs),
     ];
-    return Promise.all(promises);
+    return Promise.all([legacyActivationResult, ...promises]);
 }
 
 /// //////////////////////////
