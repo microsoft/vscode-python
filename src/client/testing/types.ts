@@ -23,6 +23,7 @@ import {
     FlattenedTestFunction,
     ITestManager,
     ITestResultsService,
+    NonPassingTestStatus,
     TestFile,
     TestFolder,
     TestFunction,
@@ -170,6 +171,22 @@ export interface ITestDiagnosticService {
     getSeverity(unitTestSeverity: PythonTestMessageSeverity): DiagnosticSeverity | undefined;
 }
 
+export enum PythonTestMessageSeverity {
+    Error,
+    Failure,
+    Skip,
+    Pass,
+}
+export type NonPassingTestSeverity = Exclude<PythonTestMessageSeverity, PythonTestMessageSeverity.Pass>;
+
+export enum DiagnosticMessageType {
+    Error,
+    Fail,
+    Skipped,
+    Pass,
+}
+export type NonPassingTestMessageType = Exclude<DiagnosticMessageType, DiagnosticMessageType.Pass>;
+
 interface IPythonTestMessageCommon {
     code: string;
     testFilePath: string;
@@ -178,25 +195,24 @@ interface IPythonTestMessageCommon {
     testTime: number;
     provider: string;
 }
+export interface ITestPassMessage extends IPythonTestMessageCommon {
+    status: TestStatus.Pass;
+    severity: PythonTestMessageSeverity.Pass;
+}
+export interface ITestFailMessage extends IPythonTestMessageCommon {
+    status: NonPassingTestStatus;
+    severity: NonPassingTestSeverity;
+    // The following are failure-specific.
+    message?: string;
+    traceback?: string;
+    locationStack: ILocationStackFrameDetails[];
+}
+//export type IPythonTestMessage = ITestPassMessage | ITestFailMessage;
 export interface IPythonTestMessage extends IPythonTestMessageCommon {
     message?: string;
     traceback?: string;
     locationStack?: ILocationStackFrameDetails[];
 }
-export enum PythonTestMessageSeverity {
-    Error,
-    Failure,
-    Skip,
-    Pass,
-}
-export type NonPassingTestSeverity = Exclude<PythonTestMessageSeverity, PythonTestMessageSeverity.Pass>;
-export enum DiagnosticMessageType {
-    Error,
-    Fail,
-    Skipped,
-    Pass,
-}
-export type NonPassingTestMessageType = Exclude<DiagnosticMessageType, DiagnosticMessageType.Pass>;
 
 export interface ILocationStackFrameDetails {
     location: Location;
