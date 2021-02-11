@@ -28,7 +28,7 @@ export function matchBasicPythonExeFilename(filename: string): boolean {
  * @param {string} interpreterPath : Path to python interpreter.
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
-export function isWindowsPythonExe(interpreterPath: string): boolean {
+export function matchPythonExeFilename(filename: string): boolean {
     /**
      * This Reg-ex matches following file names:
      * python.exe
@@ -38,7 +38,7 @@ export function isWindowsPythonExe(interpreterPath: string): boolean {
      */
     const windowsPythonExes = /^python(\d+(.\d+)?)?\.exe$/;
 
-    return windowsPythonExes.test(path.basename(interpreterPath));
+    return windowsPythonExes.test(path.basename(filename));
 }
 
 export interface IRegistryInterpreterData {

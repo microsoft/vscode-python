@@ -14,8 +14,8 @@ import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/vi
 import * as posix from './posixUtils';
 import * as windows from './windowsUtils';
 
-const matchPythonExecutable =
-    getOSType() === OSType.Windows ? windows.isWindowsPythonExe : posix.isPosixPythonBinPattern;
+const matchPythonExeFilename =
+    getOSType() === OSType.Windows ? windows.matchPythonExeFilename : posix.matchPythonExeFilename;
 const matchBasicPythonExeFilename =
     getOSType() === OSType.Windows ? windows.matchBasicPythonExeFilename : posix.matchBasicPythonExeFilename;
 
@@ -35,7 +35,7 @@ export async function* findInterpretersInDir(
 ): AsyncIterableIterator<DirEntry> {
     // "checkBin" is a local variable rather than global
     // so we can stub it out during unit testing.
-    const checkBin = getOSType() === OSType.Windows ? windows.isWindowsPythonExe : posix.isPosixPythonBinPattern;
+    const checkBin = getOSType() === OSType.Windows ? windows.matchPythonExeFilename : posix.matchPythonExeFilename;
     const cfg = {
         ignoreErrors,
         filterSubDir,
@@ -66,7 +66,7 @@ export async function* iterPythonExecutablesInDir(
 ): AsyncIterableIterator<DirEntry> {
     const readDirOpts = {
         ...opts,
-        filterFile: matchPythonExecutable,
+        filterFile: matchPythonExeFilename,
     };
     const entries = await readDirEntries(dirname, readDirOpts);
     for (const entry of entries) {

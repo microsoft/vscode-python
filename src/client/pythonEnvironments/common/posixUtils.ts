@@ -17,7 +17,7 @@ export function matchBasicPythonExeFilename(filename: string): boolean {
  * @param {string} interpreterPath : Path to python interpreter.
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
-export function isPosixPythonBinPattern(interpreterPath: string): boolean {
+export function matchPythonExeFilename(filename: string): boolean {
     /**
      * This Reg-ex matches following file names:
      * python
@@ -27,7 +27,7 @@ export function isPosixPythonBinPattern(interpreterPath: string): boolean {
      */
     const posixPythonBinPattern = /^python(\d+(\.\d+)?)?$/;
 
-    return posixPythonBinPattern.test(path.basename(interpreterPath));
+    return posixPythonBinPattern.test(path.basename(filename));
 }
 
 export async function commonPosixBinPaths(): Promise<string[]> {
