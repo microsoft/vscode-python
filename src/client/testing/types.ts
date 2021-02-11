@@ -171,12 +171,12 @@ export interface ITestDiagnosticService {
 }
 
 interface IPythonTestMessageCommon {
-    code: string | undefined;
+    code: string;
     testFilePath: string;
-    status?: FinalTestStatus;
+    status: FinalTestStatus;
     severity: PythonTestMessageSeverity;
     testTime: number;
-    provider: string | undefined;
+    provider: string;
 }
 export interface IPythonTestMessage extends IPythonTestMessageCommon {
     message?: string;
