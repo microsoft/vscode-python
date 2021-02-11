@@ -34,6 +34,9 @@ export class UnitTestDiagnosticService implements ITestDiagnosticService {
     }
     public getMessagePrefix(status: NonPassingTestStatus): string | undefined {
         const msgType = this.MessageTypes.get(status);
+        // If `msgType` is `undefined` then it means we've added a new
+        // failing test status but forgot to support it here (or it means
+        // elsewhere we asserted a bogus value, like `undefined`).
         return msgType !== undefined ? this.MessagePrefixes.get(msgType) : undefined;
     }
     public getSeverity(unitTestSeverity: NonPassingTestSeverity): DiagnosticSeverity | undefined {
