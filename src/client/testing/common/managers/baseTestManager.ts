@@ -493,22 +493,23 @@ export abstract class BaseTestManager implements ITestManager {
 
     private createDiagnostics(message: ITestNonPassingMessage): Diagnostic {
         const stackStart = message.locationStack[0];
-        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status);
+        const diagMsg = this.getDiagnosticMessage(message);
         const severity = this.unitTestDiagnosticService.getSeverity(message.severity)!;
-        const diagMsg = message.message ? message.message.split('\n')[0] : '';
-        const diagnostic = new Diagnostic(
-            stackStart.location.range,
-            `${diagPrefix ? `${diagPrefix}: ` : 'Ok'}${diagMsg}`,
-            severity,
-        );
+        const diagnostic = new Diagnostic(stackStart.location.range, diagMsg, severity);
         diagnostic.code = message.code;
         diagnostic.source = message.provider;
         const relatedInfoArr: DiagnosticRelatedInformation[] = [];
-        for (const frameDetails of message.locationStack!) {
+        for (const frameDetails of message.locationStack) {
             const relatedInfo = new DiagnosticRelatedInformation(frameDetails.location, frameDetails.lineText);
             relatedInfoArr.push(relatedInfo);
         }
         diagnostic.relatedInformation = relatedInfoArr;
         return diagnostic;
+    }
+
+    private getDiagnosticMessage(message: ITestNonPassingMessage): string {
+        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status);
+        const diagMsg = message.message ? message.message.split('\n')[0] : '';
+        return `${diagPrefix ? `${diagPrefix}: ` : 'Ok'}${diagMsg}`;
     }
 }
