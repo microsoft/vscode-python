@@ -29,7 +29,7 @@ export async function* findInterpretersInDir(
     recurseLevel?: number,
     filterSubDir?: FileFilterFunc,
     ignoreErrors = true,
-): AsyncIterableIterator<string> {
+): AsyncIterableIterator<DirEntry> {
     // "checkBin" is a local variable rather than global
     // so we can stub it out during unit testing.
     const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBinPattern;
@@ -41,10 +41,11 @@ export async function* findInterpretersInDir(
         maxDepth: recurseLevel || 0,
     };
     // We use an initial depth of 1.
-    for await (const { filename, filetype } of walkSubTree(root, 1, cfg)) {
+    for await (const entry of walkSubTree(root, 1, cfg)) {
+        const { filename, filetype } = entry;
         if (filetype === FileType.File || filetype === FileType.SymbolicLink) {
             if (matchFile(filename, checkBin, ignoreErrors)) {
-                yield filename;
+                yield entry;
             }
         }
         // We ignore all other file types.
@@ -199,9 +200,10 @@ function matchFile(
 export async function getPythonVersionFromNearByFiles(interpreterPath: string): Promise<PythonVersion> {
     const root = path.dirname(interpreterPath);
     let version = UNKNOWN_PYTHON_VERSION;
-    for await (const interpreter of findInterpretersInDir(root)) {
+    for await (const entry of findInterpretersInDir(root)) {
+        const { filename } = entry;
         try {
-            const curVersion = parseVersion(path.basename(interpreter));
+            const curVersion = parseVersion(path.basename(filename));
             if (comparePythonVersionSpecificity(curVersion, version) > 0) {
                 version = curVersion;
             }
@@ -277,9 +279,9 @@ export async function getInterpreterPathFromDir(
 
     // Search in the sub-directories for python binary
     const executables = findInterpretersInDir(envDir, recurseLevel, filterDir, opt.ignoreErrors);
-    for await (const bin of executables) {
-        if (await isStandardPythonBinary(bin)) {
-            return bin;
+    for await (const entry of executables) {
+        if (await isStandardPythonBinary(entry)) {
+            return entry.filename;
         }
     }
     return undefined;
