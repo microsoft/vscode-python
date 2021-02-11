@@ -170,16 +170,18 @@ export interface ITestDiagnosticService {
     getSeverity(unitTestSeverity: PythonTestMessageSeverity): DiagnosticSeverity | undefined;
 }
 
-export interface IPythonTestMessage {
+interface IPythonTestMessageCommon {
     code: string | undefined;
-    message?: string;
-    severity: PythonTestMessageSeverity;
-    provider: string | undefined;
-    traceback?: string;
-    testTime: number;
-    status?: FinalTestStatus;
-    locationStack?: ILocationStackFrameDetails[];
     testFilePath: string;
+    status?: FinalTestStatus;
+    severity: PythonTestMessageSeverity;
+    testTime: number;
+    provider: string | undefined;
+}
+export interface IPythonTestMessage extends IPythonTestMessageCommon {
+    message?: string;
+    traceback?: string;
+    locationStack?: ILocationStackFrameDetails[];
 }
 export enum PythonTestMessageSeverity {
     Error,
