@@ -239,7 +239,7 @@ export async function getPythonVersionFromPath(
     return version;
 }
 
-const filterStandardFile = getFileFilter()!;
+const filterStandardFile = getFileFilter({ ignoreFileType: FileType.SymbolicLink })!;
 
 /**
  * Returns true if binary basename is 'python' or 'python.exe', false otherwise.
