@@ -29,6 +29,8 @@ import { CommandSource } from '../../../client/testing/common/constants';
 import { UnitTestDiagnosticService } from '../../../client/testing/common/services/unitTestDiagnosticService';
 import {
     FlattenedTestFunction,
+    isNonPassingTestStatus,
+    NonPassingTestStatus,
     ITestManager,
     ITestManagerFactory,
     Tests,
@@ -274,7 +276,8 @@ async function getExpectedDiagnosticFromTestDetails(testDetails: ITestDetails): 
         expectedSourceTestFilePath = path.join(UNITTEST_TEST_FILES_PATH, testDetails.sourceFileName!);
     }
     const expectedSourceTestFileUri = vscode.Uri.file(expectedSourceTestFilePath);
-    const diagMsgPrefix = new UnitTestDiagnosticService().getMessagePrefix(testDetails.status);
+    assert.ok(isNonPassingTestStatus(testDetails.status));
+    const diagMsgPrefix = new UnitTestDiagnosticService().getMessagePrefix(testDetails.status as NonPassingTestStatus);
     const expectedDiagMsg = `${diagMsgPrefix ? `${diagMsgPrefix}: ` : ''}${testDetails.message}`;
     let expectedDiagRange = testDetails.testDefRange;
     let expectedSeverity = vscode.DiagnosticSeverity.Error;
