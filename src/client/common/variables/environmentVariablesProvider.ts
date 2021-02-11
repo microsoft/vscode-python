@@ -17,9 +17,13 @@ const CACHE_DURATION = 60 * 60 * 1000;
 @injectable()
 export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvider, Disposable {
     public trackedWorkspaceFolders = new Set<string>();
+
     private fileWatchers = new Map<string, FileSystemWatcher>();
+
     private disposables: Disposable[] = [];
+
     private changeEventEmitter: EventEmitter<Uri | undefined>;
+
     private readonly envVarCaches = new Map<string, InMemoryCache<EnvironmentVariables>>();
 
     constructor(
@@ -40,7 +44,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         return this.changeEventEmitter.event;
     }
 
-    public dispose() {
+    public dispose(): void {
         this.changeEventEmitter.dispose();
         this.fileWatchers.forEach((watcher) => {
             if (watcher) {
@@ -70,6 +74,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         cache.data = { ...vars };
         return vars;
     }
+
     public async _getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
         let mergedVars = await this.getCustomEnvironmentVariables(resource);
         if (!mergedVars) {
@@ -86,6 +91,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         }
         return mergedVars;
     }
+
     public async getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined> {
         const systemVariables: SystemVariables = new SystemVariables(
             undefined,
@@ -99,7 +105,8 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         this.createFileWatcher(envFile, workspaceFolderUri);
         return this.envVarsService.parseFile(envFile, this.process.env);
     }
-    public configurationChanged(e: ConfigurationChangeEvent) {
+
+    public configurationChanged(e: ConfigurationChangeEvent): void {
         this.trackedWorkspaceFolders.forEach((item) => {
             const uri = item && item.length > 0 ? Uri.file(item) : undefined;
             if (e.affectsConfiguration('python.envFile', uri)) {
@@ -107,7 +114,8 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
             }
         });
     }
-    public createFileWatcher(envFile: string, workspaceFolderUri?: Uri) {
+
+    public createFileWatcher(envFile: string, workspaceFolderUri?: Uri): void {
         if (this.fileWatchers.has(envFile)) {
             return;
         }
@@ -119,9 +127,10 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
             this.disposables.push(envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(workspaceFolderUri)));
         }
     }
+
     private getWorkspaceFolderUri(resource?: Uri): Uri | undefined {
         if (!resource) {
-            return;
+            return undefined;
         }
         const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource!);
         return workspaceFolder ? workspaceFolder.uri : undefined;

@@ -209,8 +209,6 @@ src/test/common/featureDeprecationManager.unit.test.ts
 src/test/common/serviceRegistry.unit.test.ts
 src/test/common/extensions.unit.test.ts
 src/test/common/variables/envVarsService.unit.test.ts
-src/test/common/variables/environmentVariablesProvider.unit.test.ts
-src/test/common/variables/envVarsProvider.multiroot.test.ts
 src/test/common/nuget/azureBobStoreRepository.unit.test.ts
 src/test/common/helpers.test.ts
 src/test/common/application/commands/reloadCommand.unit.test.ts
@@ -575,7 +573,6 @@ src/client/common/constants.ts
 src/client/common/variables/serviceRegistry.ts
 src/client/common/variables/environment.ts
 src/client/common/variables/types.ts
-src/client/common/variables/environmentVariablesProvider.ts
 src/client/common/variables/sysTypes.ts
 src/client/common/variables/systemVariables.ts
 src/client/common/nuget/azureBlobStoreNugetRepository.ts

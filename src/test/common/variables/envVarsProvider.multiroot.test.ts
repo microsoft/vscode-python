@@ -34,7 +34,7 @@ suite('Multiroot Environment Variables Provider', () => {
     const pathVariableName = getSearchPathEnvVarNames()[0];
     suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
-            return this.skip();
+            this.skip();
         }
         await clearPythonPathInWorkspaceFolder(workspace4Path);
         await updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
@@ -178,7 +178,7 @@ suite('Multiroot Environment Variables Provider', () => {
         // this test is flaky on windows (likely the value of the path property
         // has incorrect path separator chars). Tracked by GH #4756
         if (isOs(OSType.Windows)) {
-            return this.skip();
+            this.skip();
         }
 
         await updateSetting('envFile', '${workspaceRoot}/.env', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -65,7 +66,9 @@ suite('Multiroot Environment Variables Provider', () => {
 
         provider.trackedWorkspaceFolders.add(workspaceFolder1Uri.fsPath);
         provider.trackedWorkspaceFolders.add(workspaceFolder2Uri.fsPath);
-        provider.onDidEnvironmentVariablesChange((uri) => (affectedWorkspace = uri));
+        provider.onDidEnvironmentVariablesChange((uri) => {
+            affectedWorkspace = uri;
+        });
         const changedEvent: ConfigurationChangeEvent = {
             affectsConfiguration(setting: string, uri?: Uri) {
                 return setting === 'python.envFile' && uri!.fsPath === workspaceFolder1Uri.fsPath;
@@ -82,9 +85,11 @@ suite('Multiroot Environment Variables Provider', () => {
         const workspaceFolderUri = Uri.file('workspace1');
 
         provider.trackedWorkspaceFolders.add(workspaceFolderUri.fsPath);
-        provider.onDidEnvironmentVariablesChange((uri) => (affectedWorkspace = uri));
+        provider.onDidEnvironmentVariablesChange((uri) => {
+            affectedWorkspace = uri;
+        });
         const changedEvent: ConfigurationChangeEvent = {
-            affectsConfiguration(_setting: string, _uri?: Uri) {
+            affectsConfiguration() {
                 return false;
             },
         };
@@ -95,9 +100,11 @@ suite('Multiroot Environment Variables Provider', () => {
     });
     test('Event is not fired when workspace is not tracked', () => {
         let affectedWorkspace: Uri | undefined;
-        provider.onDidEnvironmentVariablesChange((uri) => (affectedWorkspace = uri));
+        provider.onDidEnvironmentVariablesChange((uri) => {
+            affectedWorkspace = uri;
+        });
         const changedEvent: ConfigurationChangeEvent = {
-            affectsConfiguration(_setting: string, _uri?: Uri) {
+            affectsConfiguration() {
                 return true;
             },
         };
@@ -110,17 +117,22 @@ suite('Multiroot Environment Variables Provider', () => {
         const workspaceTitle = workspaceUri ? '(with a workspace)' : '(without a workspace)';
         test(`Event is fired when the environment file is modified ${workspaceTitle}`, () => {
             let affectedWorkspace: Uri | undefined = Uri.file('dummy value');
-            const envFile = path.join('a', 'b', 'env.file');
+            envFile = path.join('a', 'b', 'env.file');
             const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
 
+            // eslint-disable-next-line @typescript-eslint/ban-types
             let onChangeHandler: undefined | ((resource?: Uri) => Function);
 
             fileSystemWatcher
                 .setup((fs) => fs.onDidChange(typemoq.It.isAny()))
-                .callback((cb) => (onChangeHandler = cb))
+                .callback((cb) => {
+                    onChangeHandler = cb;
+                })
                 .verifiable(typemoq.Times.once());
             when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
-            provider.onDidEnvironmentVariablesChange((uri) => (affectedWorkspace = uri));
+            provider.onDidEnvironmentVariablesChange((uri) => {
+                affectedWorkspace = uri;
+            });
 
             provider.createFileWatcher(envFile, workspaceUri);
 
@@ -133,17 +145,22 @@ suite('Multiroot Environment Variables Provider', () => {
         });
         test(`Event is fired when the environment file is deleted ${workspaceTitle}`, () => {
             let affectedWorkspace: Uri | undefined = Uri.file('dummy value');
-            const envFile = path.join('a', 'b', 'env.file');
+            envFile = path.join('a', 'b', 'env.file');
             const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
 
+            // eslint-disable-next-line @typescript-eslint/ban-types
             let onDeleted: undefined | ((resource?: Uri) => Function);
 
             fileSystemWatcher
                 .setup((fs) => fs.onDidDelete(typemoq.It.isAny()))
-                .callback((cb) => (onDeleted = cb))
+                .callback((cb) => {
+                    onDeleted = cb;
+                })
                 .verifiable(typemoq.Times.once());
             when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
-            provider.onDidEnvironmentVariablesChange((uri) => (affectedWorkspace = uri));
+            provider.onDidEnvironmentVariablesChange((uri) => {
+                affectedWorkspace = uri;
+            });
 
             provider.createFileWatcher(envFile, workspaceUri);
 
@@ -156,17 +173,22 @@ suite('Multiroot Environment Variables Provider', () => {
         });
         test(`Event is fired when the environment file is created ${workspaceTitle}`, () => {
             let affectedWorkspace: Uri | undefined = Uri.file('dummy value');
-            const envFile = path.join('a', 'b', 'env.file');
+            envFile = path.join('a', 'b', 'env.file');
             const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
 
+            // eslint-disable-next-line @typescript-eslint/ban-types
             let onCreated: undefined | ((resource?: Uri) => Function);
 
             fileSystemWatcher
                 .setup((fs) => fs.onDidCreate(typemoq.It.isAny()))
-                .callback((cb) => (onCreated = cb))
+                .callback((cb) => {
+                    onCreated = cb;
+                })
                 .verifiable(typemoq.Times.once());
             when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
-            provider.onDidEnvironmentVariablesChange((uri) => (affectedWorkspace = uri));
+            provider.onDidEnvironmentVariablesChange((uri) => {
+                affectedWorkspace = uri;
+            });
 
             provider.createFileWatcher(envFile, workspaceUri);
 
@@ -178,7 +200,7 @@ suite('Multiroot Environment Variables Provider', () => {
             assert.equal(affectedWorkspace, workspaceUri);
         });
         test(`File system watcher event handlers are added once ${workspaceTitle}`, () => {
-            const envFile = path.join('a', 'b', 'env.file');
+            envFile = path.join('a', 'b', 'env.file');
             const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
 
             fileSystemWatcher.setup((fs) => fs.onDidChange(typemoq.It.isAny())).verifiable(typemoq.Times.once());
@@ -277,7 +299,7 @@ suite('Multiroot Environment Variables Provider', () => {
         });
 
         test(`Cache result must be cleared when cache expires ${workspaceTitle}`, async () => {
-            const envFile = path.join('a', 'b', 'env.file');
+            envFile = path.join('a', 'b', 'env.file');
             const workspaceFolder = workspaceUri ? { name: '', index: 0, uri: workspaceUri } : undefined;
             const currentProcEnv = { SOMETHING: 'wow' };
 
@@ -319,12 +341,15 @@ suite('Multiroot Environment Variables Provider', () => {
             };
             const envFileVars = { MY_FILE: '1234', PYTHONPATH: `./foo${path.delimiter}./bar` };
 
+            // eslint-disable-next-line @typescript-eslint/ban-types
             let onChangeHandler: undefined | ((resource?: Uri) => Function);
             const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
 
             fileSystemWatcher
                 .setup((fs) => fs.onDidChange(typemoq.It.isAny()))
-                .callback((cb) => (onChangeHandler = cb))
+                .callback((cb) => {
+                    onChangeHandler = cb;
+                })
                 .verifiable(typemoq.Times.once());
             when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
 
