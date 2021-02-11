@@ -257,6 +257,7 @@ export async function isStandardPythonBinary(executable: string | DirEntry): Pro
         return false;
     }
     const filename = typeof executable === 'string' ? executable : executable.filename;
+    // We could be more permissive by using matchPythonExeFilename() here.
     if (!matchBasicPythonExeFilename(filename)) {
         return false;
     }
