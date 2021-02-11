@@ -20,7 +20,13 @@ import { CondaService } from '../../../client/pythonEnvironments/discovery/locat
 import { TestDiscoveredTestParser } from '../../../client/testing/common/services/discoveredTestParser';
 import { TestResultsService } from '../../../client/testing/common/services/testResultsService';
 import { DiscoveredTests } from '../../../client/testing/common/services/types';
-import { ITestVisitor, TestDiscoveryOptions, Tests, TestStatus } from '../../../client/testing/common/types';
+import {
+    FinalTestStatus,
+    ITestVisitor,
+    TestDiscoveryOptions,
+    Tests,
+    TestStatus,
+} from '../../../client/testing/common/types';
 import { XUnitParser } from '../../../client/testing/common/xUnitParser';
 import { TestMessageService } from '../../../client/testing/pytest/services/testMessageService';
 import {
@@ -227,7 +233,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                             severity: expectedSeverity,
                             provider: ProductNames.get(Product.pytest)!,
                             testTime: 0,
-                            status: td.status,
+                            status: td.status as FinalTestStatus,
                             locationStack: expectedLocationStack,
                             testFilePath: path.join(UNITTEST_TEST_FILES_PATH, td.fileName),
                         };

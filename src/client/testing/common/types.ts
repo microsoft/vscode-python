@@ -90,6 +90,12 @@ export enum TestStatus {
     Skipped = 'Skipped',
     Pass = 'Pass',
 }
+export type FinalTestStatus = TestStatus.Fail | TestStatus.Error | TestStatus.Skipped | TestStatus.Pass;
+export type NonPassingTestStatus = Exclude<FinalTestStatus, TestStatus.Pass>;
+
+export function isNonPassingTestStatus(status: TestStatus): boolean {
+    return [TestStatus.Fail, TestStatus.Error, TestStatus.Skipped].includes(status);
+}
 
 export type TestResult = {
     status?: TestStatus;
