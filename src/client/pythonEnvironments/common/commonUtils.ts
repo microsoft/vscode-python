@@ -3,7 +3,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { convertFileType, DirEntry, FileType, getFileType } from '../../common/utils/filesystem';
+import { convertFileType, DirEntry, FileType, getFileFilter, getFileType } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { logError } from '../../logging';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
@@ -239,14 +239,20 @@ export async function getPythonVersionFromPath(
     return version;
 }
 
+const filterStandardFile = getFileFilter()!;
+
 /**
  * Returns true if binary basename is 'python' or 'python.exe', false otherwise.
  * Often we only care about python.exe (on windows) and python (on linux/mac) as other version like
  * python3.exe or python3.8 are often symlinks to python.exe or python.
  * @param executable Absolute path to executable
  */
-export function isStandardPythonBinary(executable: string): boolean {
-    const base = path.basename(executable).toLowerCase();
+export async function isStandardPythonBinary(executable: string | DirEntry): Promise<boolean> {
+    if (!(await filterStandardFile(executable))) {
+        return false;
+    }
+    const filename = typeof executable === 'string' ? executable : executable.filename;
+    const base = path.basename(filename).toLowerCase();
     return base === 'python.exe' || base === 'python';
 }
 

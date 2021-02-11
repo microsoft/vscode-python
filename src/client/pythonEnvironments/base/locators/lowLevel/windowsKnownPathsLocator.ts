@@ -7,7 +7,6 @@
 import { uniq } from 'lodash';
 import { Event } from 'vscode';
 import { getSearchPathEntries } from '../../../../common/utils/exec';
-import { getFileFilter } from '../../../../common/utils/filesystem';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { isStandardPythonBinary, iterPythonExecutablesInDir } from '../../../common/commonUtils';
 import { isPyenvShimDir } from '../../../discovery/locators/services/pyenvLocator';
@@ -70,12 +69,9 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
 }
 
 async function* getExecutables(dirname: string): AsyncIterableIterator<string> {
-    const filterFile = getFileFilter();
     for await (const entry of iterPythonExecutablesInDir(dirname)) {
-        if (!filterFile || (await filterFile(entry))) {
-            if (isStandardPythonBinary(entry.filename)) {
-                yield entry.filename;
-            }
+        if (isStandardPythonBinary(entry)) {
+            yield entry.filename;
         }
     }
 }
