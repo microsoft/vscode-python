@@ -30,7 +30,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { EventName } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry/index';
 import { TestDiscoveryTelemetry, TestRunTelemetry } from '../../../telemetry/types';
-import { IPythonTestMessage, ITestDiagnosticService, WorkspaceTestStatus } from '../../types';
+import { IPythonTestMessage, ITestDiagnosticService, ITestNonPassingMessage, WorkspaceTestStatus } from '../../types';
 import { copyDesiredTestResults } from '../testUtils';
 import { CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL } from './../constants';
 import {
@@ -415,7 +415,7 @@ export abstract class BaseTestManager implements ITestManager {
                     fs.arePathsSame(fileUri.fsPath, Uri.file(msg.testFilePath).fsPath) &&
                     msg.status !== TestStatus.Pass
                 ) {
-                    const diagnostic = this.createDiagnostics(msg);
+                    const diagnostic = this.createDiagnostics(msg as ITestNonPassingMessage);
                     newDiagnostics.push(diagnostic);
                 }
             }
@@ -491,9 +491,9 @@ export abstract class BaseTestManager implements ITestManager {
         });
     }
 
-    private createDiagnostics(message: IPythonTestMessage): Diagnostic {
-        const stackStart = message.locationStack![0];
-        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status!);
+    private createDiagnostics(message: ITestNonPassingMessage): Diagnostic {
+        const stackStart = message.locationStack[0];
+        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status);
         const severity = this.unitTestDiagnosticService.getSeverity(message.severity)!;
         const diagMsg = message.message ? message.message.split('\n')[0] : '';
         const diagnostic = new Diagnostic(
