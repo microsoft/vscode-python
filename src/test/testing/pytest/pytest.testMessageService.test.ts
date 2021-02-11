@@ -32,6 +32,7 @@ import { TestMessageService } from '../../../client/testing/pytest/services/test
 import {
     ILocationStackFrameDetails,
     IPythonTestMessage,
+    ITestNonPassingMessage,
     PythonTestMessageSeverity,
 } from '../../../client/testing/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
@@ -60,8 +61,10 @@ async function testMessageProperties(
     imported: boolean = false,
     status: TestStatus,
 ) {
+    const nonPassing = message as ITestNonPassingMessage;
+    const expectedNonPassing = expectedMessage as ITestNonPassingMessage;
     assert.equal(message.code, expectedMessage.code, 'IPythonTestMessage code');
-    assert.equal(message.message, expectedMessage.message, 'IPythonTestMessage message');
+    assert.equal(nonPassing.message, expectedNonPassing.message, 'IPythonTestMessage message');
     assert.equal(message.severity, expectedMessage.severity, 'IPythonTestMessage severity');
     assert.equal(message.provider, expectedMessage.provider, 'IPythonTestMessage provider');
     assert.isNumber(message.testTime, 'IPythonTestMessage testTime');
@@ -69,36 +72,36 @@ async function testMessageProperties(
     assert.equal(message.testFilePath, expectedMessage.testFilePath, 'IPythonTestMessage testFilePath');
     if (status !== TestStatus.Pass) {
         assert.equal(
-            message.locationStack![0].lineText,
-            expectedMessage.locationStack![0].lineText,
+            nonPassing.locationStack[0].lineText,
+            expectedNonPassing.locationStack[0].lineText,
             'IPythonTestMessage line text',
         );
         assert.equal(
-            message.locationStack![0].location.uri.fsPath,
-            expectedMessage.locationStack![0].location.uri.fsPath,
+            nonPassing.locationStack[0].location.uri.fsPath,
+            expectedNonPassing.locationStack[0].location.uri.fsPath,
             'IPythonTestMessage locationStack fsPath',
         );
         if (status !== TestStatus.Skipped) {
             assert.equal(
-                message.locationStack![1].lineText,
-                expectedMessage.locationStack![1].lineText,
+                nonPassing.locationStack[1].lineText,
+                expectedNonPassing.locationStack[1].lineText,
                 'IPythonTestMessage line text',
             );
             assert.equal(
-                message.locationStack![1].location.uri.fsPath,
-                expectedMessage.locationStack![1].location.uri.fsPath,
+                nonPassing.locationStack[1].location.uri.fsPath,
+                expectedNonPassing.locationStack[1].location.uri.fsPath,
                 'IPythonTestMessage locationStack fsPath',
             );
         }
         if (imported) {
             assert.equal(
-                message.locationStack![2].lineText,
-                expectedMessage.locationStack![2].lineText,
+                nonPassing.locationStack[2].lineText,
+                expectedNonPassing.locationStack[2].lineText,
                 'IPythonTestMessage imported line text',
             );
             assert.equal(
-                message.locationStack![2].location.uri.fsPath,
-                expectedMessage.locationStack![2].location.uri.fsPath,
+                nonPassing.locationStack[2].location.uri.fsPath,
+                expectedNonPassing.locationStack[2].location.uri.fsPath,
                 'IPythonTestMessage imported location fsPath',
             );
         }
@@ -229,14 +232,15 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                         const expectedLocationStack = await getExpectedLocationStackFromTestDetails(td);
                         expectedMessage = {
                             code: td.nameToRun,
-                            message: td.message,
                             severity: expectedSeverity,
                             provider: ProductNames.get(Product.pytest)!,
                             testTime: 0,
                             status: td.status as FinalTestStatus,
-                            locationStack: expectedLocationStack,
                             testFilePath: path.join(UNITTEST_TEST_FILES_PATH, td.fileName),
-                        };
+                            // These are non-passing properties only:
+                            message: td.message,
+                            locationStack: expectedLocationStack,
+                        } as IPythonTestMessage;
                         testMessage = testMessages.find((tm) => tm.code === td.nameToRun)!;
                     });
                     test('Message', async () => {

@@ -207,12 +207,7 @@ export interface ITestNonPassingMessage extends IPythonTestMessageCommon {
     traceback?: string;
     locationStack: ILocationStackFrameDetails[];
 }
-//export type IPythonTestMessage = ITestPassMessage | ITestFailMessage;
-export interface IPythonTestMessage extends IPythonTestMessageCommon {
-    message?: string;
-    traceback?: string;
-    locationStack?: ILocationStackFrameDetails[];
-}
+export type IPythonTestMessage = ITestPassingMessage | ITestNonPassingMessage;
 
 export interface ILocationStackFrameDetails {
     location: Location;
