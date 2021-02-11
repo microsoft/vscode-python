@@ -11,10 +11,13 @@ import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from '../discovery/locators/services/conda';
 import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/virtualEnvironmentIdentifier';
-import { isPosixPythonBinPattern } from './posixUtils';
-import { isWindowsPythonExe } from './windowsUtils';
+import * as posix from './posixUtils';
+import * as windows from './windowsUtils';
 
-const matchPythonExecutable = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBinPattern;
+const matchPythonExecutable =
+    getOSType() === OSType.Windows ? windows.isWindowsPythonExe : posix.isPosixPythonBinPattern;
+const matchBasicPythonExeFilename =
+    getOSType() === OSType.Windows ? windows.matchBasicPythonExeFilename : posix.matchBasicPythonExeFilename;
 
 type FileFilterFunc = (filename: string) => boolean;
 
@@ -32,7 +35,7 @@ export async function* findInterpretersInDir(
 ): AsyncIterableIterator<DirEntry> {
     // "checkBin" is a local variable rather than global
     // so we can stub it out during unit testing.
-    const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBinPattern;
+    const checkBin = getOSType() === OSType.Windows ? windows.isWindowsPythonExe : posix.isPosixPythonBinPattern;
     const cfg = {
         ignoreErrors,
         filterSubDir,
@@ -254,9 +257,11 @@ export async function isStandardPythonBinary(executable: string | DirEntry): Pro
         return false;
     }
     const filename = typeof executable === 'string' ? executable : executable.filename;
+    if (!matchBasicPythonExeFilename(filename)) {
+        return false;
+    }
     // This would also be a good place to verify that the file is executable.
-    const base = path.basename(filename).toLowerCase();
-    return base === 'python.exe' || base === 'python';
+    return true;
 }
 
 /**

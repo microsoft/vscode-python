@@ -6,6 +6,13 @@ import * as path from 'path';
 import { getSearchPathEntries } from '../../common/utils/exec';
 
 /**
+ * Determine if the given filename looks like the simplest Python executable.
+ */
+export function matchBasicPythonExeFilename(filename: string): boolean {
+    return path.basename(filename) === 'python';
+}
+
+/**
  * Checks if a given path ends with python*.exe
  * @param {string} interpreterPath : Path to python interpreter.
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.

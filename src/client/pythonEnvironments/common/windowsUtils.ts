@@ -17,6 +17,13 @@ import {
 /* eslint-disable global-require */
 
 /**
+ * Determine if the given filename looks like the simplest Python executable.
+ */
+export function matchBasicPythonExeFilename(filename: string): boolean {
+    return path.basename(filename).toLowerCase() === 'python.exe';
+}
+
+/**
  * Checks if a given path ends with python*.exe
  * @param {string} interpreterPath : Path to python interpreter.
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
