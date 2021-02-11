@@ -651,6 +651,8 @@ part of!
    ([#14182](https://github.com/Microsoft/vscode-python/issues/14182))
 1. Fix exporting from the interactive window.
    ([#14210](https://github.com/Microsoft/vscode-python/issues/14210))
+1. Fix for CVE-2020-16977
+   ([CVE-2020-16977](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2020-16977))
 
 ### Thanks
 
