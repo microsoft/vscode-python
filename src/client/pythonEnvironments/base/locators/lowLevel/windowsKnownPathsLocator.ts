@@ -7,8 +7,9 @@
 import { uniq } from 'lodash';
 import { Event } from 'vscode';
 import { getSearchPathEntries } from '../../../../common/utils/exec';
+import { getFileFilter } from '../../../../common/utils/filesystem';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
-import { isStandardPythonBinary } from '../../../common/commonUtils';
+import { isStandardPythonBinary, iterPythonExecutablesInDir } from '../../../common/commonUtils';
 import { isPyenvShimDir } from '../../../discovery/locators/services/pyenvLocator';
 import { isWindowsStoreDir } from '../../../discovery/locators/services/windowsStoreLocator';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../info';
@@ -68,6 +69,17 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
     }
 }
 
+async function* getExecutables(dirname: string): AsyncIterableIterator<string> {
+    const filterFile = getFileFilter();
+    for await (const entry of iterPythonExecutablesInDir(dirname)) {
+        if (!filterFile || (await filterFile(entry))) {
+            if (isStandardPythonBinary(entry.filename)) {
+                yield entry.filename;
+            }
+        }
+    }
+}
+
 function getDirFilesLocator(
     // These are passed through to DirFilesLocator.
     dirname: string,
@@ -77,7 +89,7 @@ function getDirFilesLocator(
     // in the directory.  If we did then we would use
     // `DirFilesWatchingLocator`, but only if not \\windows\system32 and
     // the `isDirWatchable()` (from fsWatchingLocator.ts) returns true.
-    const locator = new DirFilesLocator(dirname, kind);
+    const locator = new DirFilesLocator(dirname, kind, getExecutables);
     const dispose = async () => undefined;
 
     // Really we should be checking for symlinks or something more
@@ -87,12 +99,8 @@ function getDirFilesLocator(
     async function* iterEnvs(query: PythonLocatorQuery): IPythonEnvsIterator {
         const envs = await getEnvs(locator.iterEnvs(query));
         for (const env of envs) {
-            if (isStandardPythonBinary(env.executable?.filename || '')) {
-                env.source = env.source
-                    ? uniq([...env.source, PythonEnvSource.PathEnvVar])
-                    : [PythonEnvSource.PathEnvVar];
-                yield env;
-            }
+            env.source = env.source ? uniq([...env.source, PythonEnvSource.PathEnvVar]) : [PythonEnvSource.PathEnvVar];
+            yield env;
         }
     }
     async function resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
