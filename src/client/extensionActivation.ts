@@ -78,12 +78,19 @@ export async function activateComponents(
     // `Promise.all()`, etc.) will flatten nested promises.  Thus
     // activation resolves `ActivationResult`, which can safely wrap
     // the "inner" promise.
+
+    // TODO: As of now activateLegacy() registers various classes which might
+    // be required while activating components. Once registration from
+    // activateLegacy() are moved before we activate other components, we can
+    // activate them parallelly with the other components.
+    // https://github.com/microsoft/vscode-python/issues/15380
+    // These will go away eventually once everything is refactored into components.
+    const legacyActivationResult = await activateLegacy(ext);
     const promises: Promise<ActivationResult>[] = [
+        // More component activations will go here
         pythonEnvironments.activate(components.pythonEnvs),
-        // These will go away eventually.
-        activateLegacy(ext),
     ];
-    return Promise.all(promises);
+    return Promise.all([legacyActivationResult, ...promises]);
 }
 
 /// //////////////////////////
