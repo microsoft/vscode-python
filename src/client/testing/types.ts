@@ -19,6 +19,7 @@ import {
 import { Product, Resource } from '../common/types';
 import { CommandSource } from './common/constants';
 import {
+    FinalTestStatus,
     FlattenedTestFunction,
     ITestManager,
     ITestResultsService,
@@ -176,7 +177,7 @@ export interface IPythonTestMessage {
     provider: string | undefined;
     traceback?: string;
     testTime: number;
-    status?: TestStatus;
+    status?: FinalTestStatus;
     locationStack?: ILocationStackFrameDetails[];
     testFilePath: string;
 }

@@ -11,7 +11,14 @@ import { ProductNames } from '../../../common/installer/productNames';
 import { IFileSystem } from '../../../common/platform/types';
 import { Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { FlattenedTestFunction, ITestMessageService, Tests, TestStatus } from '../../common/types';
+import {
+    FlattenedTestFunction,
+    isNonPassingTestStatus,
+    ITestMessageService,
+    NonPassingTestStatus,
+    Tests,
+    TestStatus,
+} from '../../common/types';
 import { ILocationStackFrameDetails, IPythonTestMessage, PythonTestMessageSeverity } from '../../types';
 
 @injectable()
@@ -47,7 +54,7 @@ export class TestMessageService implements ITestMessageService {
                     testFilePath: tf.parentTestFile.fullPath,
                 };
                 messages.push(msg);
-            } else {
+            } else if (isNonPassingTestStatus(status)) {
                 // If the test did not pass, we need to parse the traceback to find each line in
                 // their respective files so they can be included as related information for the
                 // diagnostic.
@@ -67,11 +74,12 @@ export class TestMessageService implements ITestMessageService {
                     traceback: tf.testFunction.traceback,
                     testTime: tf.testFunction.time,
                     testFilePath: testFilePath,
-                    status: status,
+                    status: status as NonPassingTestStatus,
                     locationStack: locationStack,
                 };
                 messages.push(msg);
             }
+            // All test results with a non-final status are ignored.
         }
         return messages;
     }
