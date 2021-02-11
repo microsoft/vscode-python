@@ -87,3 +87,83 @@ export async function getFileType(
     }
     return convertFileType(stat);
 }
+
+function normalizeFileTypes(filetypes: FileType | FileType[] | undefined): FileType[] | undefined {
+    if (filetypes === undefined) {
+        return undefined;
+    }
+    if (Array.isArray(filetypes)) {
+        if (filetypes.length === 0) {
+            return undefined;
+        }
+        return filetypes;
+    }
+    return [filetypes];
+}
+
+async function resolveFile(
+    file: string | DirEntry,
+    opts: {
+        ensure?: boolean;
+        onMissing?: FileType;
+    } = {},
+): Promise<DirEntry | undefined> {
+    let filename: string;
+    if (typeof file !== 'string') {
+        if (!opts.ensure) {
+            if (opts.onMissing === undefined) {
+                return file;
+            }
+            // At least make sure it exists.
+            if ((await getFileType(file.filename)) !== undefined) {
+                return file;
+            }
+        }
+        filename = file.filename;
+    } else {
+        filename = file;
+    }
+
+    const filetype = (await getFileType(filename)) || opts.onMissing;
+    if (filetype === undefined) {
+        return undefined;
+    }
+    return { filename, filetype };
+}
+
+type FileFilterFunc = (file: string | DirEntry) => Promise<boolean>;
+
+export function getFileFilter(
+    opts: {
+        ignoreMissing?: boolean;
+        ignoreFileType?: FileType | FileType[];
+        ensureEntry?: boolean;
+    } = {
+        ignoreMissing: true,
+    },
+): FileFilterFunc | undefined {
+    const ignoreFileType = normalizeFileTypes(opts.ignoreFileType);
+
+    if (!opts.ignoreMissing && !ignoreFileType) {
+        // Do not filter.
+        return undefined;
+    }
+
+    async function filterFile(file: string | DirEntry): Promise<boolean> {
+        let entry = await resolveFile(file, { ensure: opts.ensureEntry });
+        if (!entry) {
+            if (opts.ignoreMissing) {
+                return false;
+            }
+            const filename = typeof file === 'string' ? file : file.filename;
+            entry = { filename, filetype: FileType.Unknown };
+        }
+        if (ignoreFileType) {
+            if (ignoreFileType.includes(entry!.filetype)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return filterFile;
+}
