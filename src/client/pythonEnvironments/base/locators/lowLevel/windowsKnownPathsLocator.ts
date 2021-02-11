@@ -9,6 +9,12 @@ import { Event } from 'vscode';
 import { getSearchPathEntries } from '../../../../common/utils/exec';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { isStandardPythonBinary } from '../../../common/commonUtils';
+import { arePathsSame } from '../../../common/externalDependencies';
+import { isPyenvShimDir } from '../../../discovery/locators/services/pyenvLocator';
+import {
+    getWindowsStoreAppsRoot,
+    isForbiddenStorePath,
+} from '../../../discovery/locators/services/windowsStoreLocator';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../info';
 import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { Locators } from '../../locators';
@@ -31,6 +37,13 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
 
     constructor() {
         const dirLocators: (ILocator & IDisposable)[] = getSearchPathEntries()
+            .filter((dirname) => {
+                return (
+                    !arePathsSame(dirname, getWindowsStoreAppsRoot()) &&
+                    !isForbiddenStorePath(dirname) &&
+                    !isPyenvShimDir(dirname)
+                );
+            })
             // Build a locator for each directory.
             .map((dirname) => getDirFilesLocator(dirname, PythonEnvKind.Unknown));
         this.disposables.push(...dirLocators);
