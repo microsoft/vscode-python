@@ -552,8 +552,28 @@ export abstract class BaseTestManager implements ITestManager {
     }
 
     private getDiagnosticMessage(message: ITestNonPassingMessage): string {
-        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status)!;
         const diagMsg = message.message ? message.message.split('\n')[0] : '';
+        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status);
+        if (diagPrefix === undefined) {
+            // This isn't something we should expect to happen, but
+            // `getMessagePrefix()` can return undefined.  (See the note
+            // there for when it can heppen.)  In the meantime, we play
+            // it safe here to be a bit resilient to accidents.
+            if (diagMsg === '') {
+                // This is the value we decied to use in #14311.  It
+                // isn't the most helpful message, but it's better than
+                // the failure we fixed with that PR.  Regardless, we
+                // don't expect to reach this case.
+                return 'Ok';
+            }
+            // With #14311 this case led to a confusing diagnostic
+            // message, partly we did not anticipate having a message
+            // without a prefix.
+            return diagMsg;
+        }
+        if (diagMsg === '') {
+            return diagPrefix;
+        }
         return `${diagPrefix}: ${diagMsg}`;
     }
 }
