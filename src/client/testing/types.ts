@@ -195,11 +195,11 @@ interface IPythonTestMessageCommon {
     testTime: number;
     provider: string;
 }
-export interface ITestPassMessage extends IPythonTestMessageCommon {
+export interface ITestPassingMessage extends IPythonTestMessageCommon {
     status: TestStatus.Pass;
     severity: PythonTestMessageSeverity.Pass;
 }
-export interface ITestFailMessage extends IPythonTestMessageCommon {
+export interface ITestNonPassingMessage extends IPythonTestMessageCommon {
     status: NonPassingTestStatus;
     severity: NonPassingTestSeverity;
     // The following are failure-specific.
