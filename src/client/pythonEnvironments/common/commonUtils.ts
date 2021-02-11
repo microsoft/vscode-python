@@ -254,6 +254,7 @@ export async function isStandardPythonBinary(executable: string | DirEntry): Pro
         return false;
     }
     const filename = typeof executable === 'string' ? executable : executable.filename;
+    // This would also be a good place to verify that the file is executable.
     const base = path.basename(filename).toLowerCase();
     return base === 'python.exe' || base === 'python';
 }
