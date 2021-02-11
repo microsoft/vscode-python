@@ -1,10 +1,10 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
+import { mock, when, instance } from 'ts-mockito';
 import { TensorBoardUsageTracker } from '../../client/tensorBoard/tensorBoardUsageTracker';
 import { TensorBoardPrompt } from '../../client/tensorBoard/tensorBoardPrompt';
 import { MockDocumentManager } from '../startPage/mockDocumentManager';
 import { createTensorBoardPromptWithMocks } from './helpers';
-import { mock, when, instance } from 'ts-mockito';
 import { NativeTensorBoard } from '../../client/common/experiments/groups';
 import { ExperimentService } from '../../client/common/experiments/service';
 
