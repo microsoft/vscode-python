@@ -278,7 +278,7 @@ export async function getInterpreterPathFromDir(
     // Search in the sub-directories for python binary
     const executables = findInterpretersInDir(envDir, recurseLevel, filterDir, opt.ignoreErrors);
     for await (const bin of executables) {
-        if (isStandardPythonBinary(bin)) {
+        if (await isStandardPythonBinary(bin)) {
             return bin;
         }
     }

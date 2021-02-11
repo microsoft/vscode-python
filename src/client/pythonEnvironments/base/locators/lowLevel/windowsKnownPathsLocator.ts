@@ -70,7 +70,7 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
 
 async function* getExecutables(dirname: string): AsyncIterableIterator<string> {
     for await (const entry of iterPythonExecutablesInDir(dirname)) {
-        if (isStandardPythonBinary(entry)) {
+        if (await isStandardPythonBinary(entry)) {
             yield entry.filename;
         }
     }
@@ -102,7 +102,7 @@ function getDirFilesLocator(
     async function resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executable = typeof env === 'string' ? env : env.executable?.filename || '';
 
-        if (!isStandardPythonBinary(executable)) {
+        if (!(await isStandardPythonBinary(executable))) {
             return undefined;
         }
         const resolved = await locator.resolveEnv(env);
