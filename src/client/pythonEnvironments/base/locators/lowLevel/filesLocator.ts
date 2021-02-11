@@ -5,7 +5,7 @@
 /* eslint-disable max-classes-per-file */
 
 import { Event, EventEmitter } from 'vscode';
-import { DirEntry, FileType, getFileType } from '../../../../common/utils/filesystem';
+import { DirEntry } from '../../../../common/utils/filesystem';
 import { iterPythonExecutablesInDir } from '../../../common/commonUtils';
 import { resolvePath } from '../../../common/externalDependencies';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
@@ -56,49 +56,17 @@ export class FoundFilesLocator implements ILocator {
     }
 }
 
-async function resolveFile(
-    executable: Executable,
-    // If this isn't set then we return undefined when missing.
-    onMissing?: FileType,
-): Promise<DirEntry | undefined> {
-    if (typeof executable !== 'string') {
-        // We trust that this means the file exists.
-        return executable;
-    }
-    const filename = executable;
-    let filetype = await getFileType(filename);
-    if (filetype === undefined) {
-        if (onMissing === undefined) {
-            return undefined;
-        }
-        filetype = onMissing;
-    }
-    return { filename, filetype };
-}
-
 /**
  * Build minimal env info corresponding to each executable filename.
  */
 async function* iterMinimalEnvsFromExecutables(
     executables: Executable[] | AsyncIterableIterator<Executable>,
     kind: PythonEnvKind,
-    ignoreMissing = true,
 ): AsyncIterableIterator<PythonEnvInfo> {
-    const onMissing = ignoreMissing ? undefined : FileType.Unknown;
-    function filterFile(ent: DirEntry | undefined): boolean {
-        if (ent === undefined) {
-            // The file must be missing.
-            return false;
-        }
-        // This is where we could handle the file type.
-        return true;
-    }
     for await (const executable of executables) {
-        const entry = await resolveFile(executable, onMissing);
-        if (filterFile(entry)) {
-            const normFile = resolvePath(entry!.filename);
-            yield getFastEnvInfo(kind, normFile);
-        }
+        const filename = typeof executable === 'string' ? executable : executable.filename;
+        const normFile = resolvePath(filename);
+        yield getFastEnvInfo(kind, normFile);
     }
 }
 
