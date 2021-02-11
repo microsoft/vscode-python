@@ -552,8 +552,8 @@ export abstract class BaseTestManager implements ITestManager {
     }
 
     private getDiagnosticMessage(message: ITestNonPassingMessage): string {
-        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status);
+        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status)!;
         const diagMsg = message.message ? message.message.split('\n')[0] : '';
-        return `${diagPrefix ? `${diagPrefix}: ` : 'Ok'}${diagMsg}`;
+        return `${diagPrefix}: ${diagMsg}`;
     }
 }
