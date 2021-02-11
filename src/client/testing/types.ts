@@ -189,12 +189,14 @@ export enum PythonTestMessageSeverity {
     Skip,
     Pass,
 }
+export type NonPassingTestSeverity = Exclude<PythonTestMessageSeverity, PythonTestMessageSeverity.Pass>;
 export enum DiagnosticMessageType {
     Error,
     Fail,
     Skipped,
     Pass,
 }
+export type NonPassingTestMessageType = Exclude<DiagnosticMessageType, DiagnosticMessageType.Pass>;
 
 export interface ILocationStackFrameDetails {
     location: Location;
