@@ -7,7 +7,6 @@ import {
     OutputChannel,
     Uri,
 } from 'vscode';
-import { getValues as getEnumValues } from '../../common/utils/enum';
 import { ITestingSettings, Product } from '../../common/types';
 import { DebuggerTypeName } from '../../debugger/constants';
 import { ConsoleType } from '../../debugger/types';
@@ -81,27 +80,24 @@ export enum TestingType {
     function = 'function',
 }
 
-export enum NonPassingTestStatus {
-    Fail = 'Fail',
-    Error = 'Error',
-    Skipped = 'Skipped',
-}
-enum PassingTestStatus {
-    Pass = 'Pass',
-}
-export const FinalTestStatus = { ...NonPassingTestStatus, ...PassingTestStatus };
-export type FinalTestStatus = NonPassingTestStatus | PassingTestStatus;
-enum NonFinalTestStatus {
+// A better approach would be bottom-up using composition.  However,
+// it's a bit trickier to get right, so we take the simpler approach
+// for now.
+export enum TestStatus {
     Unknown = 'Unknown',
     Discovering = 'Discovering',
     Idle = 'Idle',
     Running = 'Running',
+    Fail = 'Fail',
+    Error = 'Error',
+    Skipped = 'Skipped',
+    Pass = 'Pass',
 }
-export const TestStatus = { ...FinalTestStatus, ...NonFinalTestStatus };
-export type TestStatus = FinalTestStatus | NonFinalTestStatus;
+export type FinalTestStatus = TestStatus.Fail | TestStatus.Error | TestStatus.Skipped | TestStatus.Pass;
+export type NonPassingTestStatus = Exclude<FinalTestStatus, TestStatus.Pass>;
 
 export function isNonPassingTestStatus(status: TestStatus): boolean {
-    return getEnumValues(NonPassingTestStatus).includes(status);
+    return [TestStatus.Fail, TestStatus.Error, TestStatus.Skipped].includes(status);
 }
 
 export type TestResult = {
