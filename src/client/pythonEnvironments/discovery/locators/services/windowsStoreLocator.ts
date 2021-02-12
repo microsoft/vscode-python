@@ -55,18 +55,30 @@ export function isWindowsStoreDir(dirPath: string): boolean {
 
 /**
  * Checks if store python is installed.
- *
+ * @param {string} interpreterPath : Absolute path to a interpreter.
  * Remarks:
  * If store python was never installed then the store apps directory will not
  * have idle.exe or pip.exe. We can use this as a way to identify the python.exe
  * found in the store apps directory is a real python or a store install shortcut.
  */
-async function isStorePythonInstalled(): Promise<boolean> {
-    const results = await Promise.all([
+async function isStorePythonInstalled(interpreterPath?: string): Promise<boolean> {
+    let results = await Promise.all([
         pathExists(path.join(getWindowsStoreAppsRoot(), 'idle.exe')),
         pathExists(path.join(getWindowsStoreAppsRoot(), 'pip.exe')),
     ]);
-    return results.includes(true);
+
+    if (results.includes(true)) {
+        return true;
+    }
+
+    if (interpreterPath) {
+        results = await Promise.all([
+            pathExists(path.join(path.dirname(interpreterPath), 'idle.exe')),
+            pathExists(path.join(path.dirname(interpreterPath), 'pip.exe')),
+        ]);
+        return results.includes(true);
+    }
+    return false;
 }
 
 /**
@@ -102,7 +114,7 @@ async function isStorePythonInstalled(): Promise<boolean> {
  *
  */
 export async function isWindowsStoreEnvironment(interpreterPath: string): Promise<boolean> {
-    if (await isStorePythonInstalled()) {
+    if (await isStorePythonInstalled(interpreterPath)) {
         const pythonPathToCompare = path.normalize(interpreterPath).toUpperCase();
         const localAppDataStorePath = path.normalize(getWindowsStoreAppsRoot()).toUpperCase();
         if (pythonPathToCompare.includes(localAppDataStorePath)) {
