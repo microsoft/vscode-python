@@ -131,7 +131,8 @@ export class PythonInPathCommandProvider implements IPythonInPathCommandProvider
     constructor(@inject(IPlatformService) private readonly platform: IPlatformService) {}
 
     public getCommands(): { command: string; args?: string[] }[] {
-        const paths = ['python3.7', 'python3.6', 'python3', 'python2', 'python'].map((item) => ({ command: item }));
+        // const paths = ['python3.7', 'python3.6', 'python3', 'python2', 'python'].map((item) => ({ command: item }));
+        const paths = ['python3.7', 'python3', 'python2', 'python'].map((item) => ({ command: item }));
         if (this.platform.osType !== OSType.Windows) {
             return paths;
         }

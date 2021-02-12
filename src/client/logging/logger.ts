@@ -26,6 +26,7 @@ export type LoggerConfig = {
 // Create a logger just the way we like it.
 export function createLogger(config?: LoggerConfig) {
     const logger = winston.createLogger({
+        exitOnError: false,
         // We would also set "levels" here.
     });
     if (config) {
