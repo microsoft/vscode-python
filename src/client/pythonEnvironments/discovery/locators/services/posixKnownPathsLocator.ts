@@ -14,6 +14,9 @@ import { commonPosixBinPaths, isPosixPythonBinPattern } from '../../../common/po
 import { isPyenvShimDir } from './pyenvLocator';
 
 async function getPythonBinFromKnownPaths(): Promise<string[]> {
+    // Filter out pyenv shims. They are not actual python binaries, they are used to launch
+    // the binaries specified in .python-version file in the cwd. We should not be reporting
+    // those binaries as environments.
     const knownDirs = (await commonPosixBinPaths()).filter((dirname) => !isPyenvShimDir(dirname));
     const pythonBins: Set<string> = new Set();
     for (const dirname of knownDirs) {

@@ -45,7 +45,7 @@ function getPyenvVersionsDir(): string {
  */
 export function isPyenvShimDir(dirPath: string): boolean {
     const shimPath = path.join(getPyenvDir(), 'shims');
-    return arePathsSame(shimPath, dirPath);
+    return arePathsSame(shimPath, dirPath) || arePathsSame(`${shimPath}${path.sep}`, dirPath);
 }
 
 /**
