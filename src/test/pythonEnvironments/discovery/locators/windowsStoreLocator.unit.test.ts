@@ -15,7 +15,7 @@ import {
     PythonVersion,
     UNKNOWN_PYTHON_VERSION,
 } from '../../../../client/pythonEnvironments/base/info';
-import { InterpreterInformation } from '../../../../client/pythonEnvironments/base/info/interpreter';
+import { InterpreterExecInformation } from '../../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
 import * as externalDep from '../../../../client/pythonEnvironments/common/externalDependencies';
 import {
@@ -102,7 +102,7 @@ suite('Windows Store', () => {
             sysVersion?: string,
             sysPrefix?: string,
             versionStr?: string,
-        ): InterpreterInformation {
+        ): InterpreterExecInformation {
             let version: PythonVersion;
             try {
                 version = parseVersion(versionStr ?? path.basename(executable));

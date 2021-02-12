@@ -63,14 +63,15 @@ export function shellExec(
     return new Promise((resolve, reject) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const callback = (e: any, stdout: any, stderr: any) => {
-            if (e && e !== null) {
+            if (e && e !== null && !shellOptions.doNotThrowExecException) {
                 reject(e);
-            } else if (shellOptions.throwOnStdErr && stderr && stderr.length) {
+            }
+            if (shellOptions.throwOnStdErr && stderr && stderr.length) {
                 reject(new Error(stderr));
             } else {
                 // Make sure stderr is undefined if we actually had none. This is checked
                 // elsewhere because that's how exec behaves.
-                resolve({ stderr: stderr && stderr.length > 0 ? stderr : undefined, stdout });
+                resolve({ stderr: stderr && stderr.length > 0 ? stderr : undefined, stdout, error: e });
             }
         };
         const proc = exec(command, shellOptions, callback); // NOSONAR

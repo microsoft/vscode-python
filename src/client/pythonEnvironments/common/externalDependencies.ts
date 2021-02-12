@@ -4,7 +4,7 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ExecutionResult, SpawnOptions } from '../../common/process/types';
+import { ExecutionResult, ShellOptions, SpawnOptions } from '../../common/process/types';
 import { IExperimentService, IDisposable } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { normalizeFilename } from '../../common/utils/filesystem';
@@ -27,10 +27,10 @@ export function initializeExternalDependencies(serviceContainer: IServiceContain
  */
 export async function shellExecute(
     command: string,
-    timeout: number,
+    options?: ShellOptions,
     disposables?: Set<IDisposable>,
 ): Promise<ExecutionResult<string>> {
-    return shellExec(command, { timeout }, undefined, disposables);
+    return shellExec(command, options, undefined, disposables);
 }
 
 /**

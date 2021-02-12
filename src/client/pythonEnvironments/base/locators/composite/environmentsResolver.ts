@@ -6,7 +6,7 @@ import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
 import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
-import { InterpreterInformation } from '../../info/interpreter';
+import { InterpreterExecInformation } from '../../info/interpreter';
 import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
 
@@ -30,11 +30,11 @@ export class PythonEnvsResolver implements ILocator {
         if (!environment) {
             return undefined;
         }
-        const interpreterInfo = await this.environmentInfoService.getEnvironmentInfo(environment.executable.filename);
-        if (!interpreterInfo) {
-            return undefined;
+        const info = await this.environmentInfoService.getEnvironmentInfo(environment.executable.filename);
+        if (!info.interpreterExecInfo) {
+            return info.isValidExecutable ? environment : undefined;
         }
-        return getResolvedEnv(interpreterInfo, environment);
+        return getResolvedEnv(info.interpreterExecInfo, environment);
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
@@ -97,11 +97,9 @@ export class PythonEnvsResolver implements ILocator {
         state.pending += 1;
         // It's essential we increment the pending call count before any asynchronus calls in this method.
         // We want this to be run even when `resolveInBackground` is called in background.
-        const interpreterInfo = await this.environmentInfoService.getEnvironmentInfo(
-            seen[envIndex].executable.filename,
-        );
-        if (interpreterInfo) {
-            const resolvedEnv = getResolvedEnv(interpreterInfo, seen[envIndex]);
+        const info = await this.environmentInfoService.getEnvironmentInfo(seen[envIndex].executable.filename);
+        if (info.interpreterExecInfo) {
+            const resolvedEnv = getResolvedEnv(info.interpreterExecInfo, seen[envIndex]);
             const old = seen[envIndex];
             seen[envIndex] = resolvedEnv;
             didUpdate.fire({ old, index: envIndex, update: resolvedEnv });
@@ -126,7 +124,7 @@ function checkIfFinishedAndNotify(
     }
 }
 
-function getResolvedEnv(interpreterInfo: InterpreterInformation, environment: PythonEnvInfo) {
+function getResolvedEnv(interpreterInfo: InterpreterExecInformation, environment: PythonEnvInfo) {
     // Deep copy into a new object
     const resolvedEnv = cloneDeep(environment);
     resolvedEnv.version = interpreterInfo.version;

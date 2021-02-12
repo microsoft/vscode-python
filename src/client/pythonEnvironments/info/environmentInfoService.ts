@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { traceVerbose } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../common/utils/workerPool';
 import { getInterpreterInfo, InterpreterInformation } from '../base/info/interpreter';
-import { shellExecute } from '../common/externalDependencies';
 import { buildPythonExecInfo } from '../exec';
 
 export enum EnvironmentInfoServiceQueuePriority {
@@ -18,21 +16,13 @@ export interface IEnvironmentInfoService {
     getEnvironmentInfo(
         interpreterPath: string,
         priority?: EnvironmentInfoServiceQueuePriority,
-    ): Promise<InterpreterInformation | undefined>;
+    ): Promise<InterpreterInformation>;
     isInfoProvided(interpreterPath: string): boolean;
 }
 
-async function buildEnvironmentInfo(interpreterPath: string): Promise<InterpreterInformation | undefined> {
+async function buildEnvironmentInfo(interpreterPath: string): Promise<InterpreterInformation> {
     const disposables = new Set<IDisposable>();
-    const interpreterInfo = await getInterpreterInfo(
-        buildPythonExecInfo(interpreterPath),
-        shellExecute,
-        undefined,
-        disposables,
-    ).catch((reason) => {
-        traceVerbose(reason);
-        return undefined;
-    });
+    const info = await getInterpreterInfo(buildPythonExecInfo(interpreterPath), disposables);
 
     // Ensure the process we started is cleaned up.
     disposables.forEach((p) => {
@@ -42,11 +32,7 @@ async function buildEnvironmentInfo(interpreterPath: string): Promise<Interprete
             // ignore.
         }
     });
-
-    if (interpreterInfo === undefined || interpreterInfo.version === undefined) {
-        return undefined;
-    }
-    return interpreterInfo;
+    return info;
 }
 
 export class EnvironmentInfoService implements IEnvironmentInfoService {
@@ -59,7 +45,7 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
         Deferred<InterpreterInformation>
     >();
 
-    private workerPool?: IWorkerPool<string, InterpreterInformation | undefined>;
+    private workerPool?: IWorkerPool<string, InterpreterInformation>;
 
     public dispose(): void {
         if (this.workerPool !== undefined) {
@@ -71,7 +57,7 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
     public async getEnvironmentInfo(
         interpreterPath: string,
         priority?: EnvironmentInfoServiceQueuePriority,
-    ): Promise<InterpreterInformation | undefined> {
+    ): Promise<InterpreterInformation> {
         const result = this.cache.get(interpreterPath);
         if (result !== undefined) {
             // Another call for this environment has already been made, return its result
@@ -79,7 +65,7 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
         }
 
         if (this.workerPool === undefined) {
-            this.workerPool = createRunningWorkerPool<string, InterpreterInformation | undefined>(buildEnvironmentInfo);
+            this.workerPool = createRunningWorkerPool<string, InterpreterInformation>(buildEnvironmentInfo);
         }
 
         const deferred = createDeferred<InterpreterInformation>();

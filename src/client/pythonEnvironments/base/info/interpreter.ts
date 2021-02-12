@@ -2,19 +2,34 @@
 // Licensed under the MIT License.
 
 import { PythonExecutableInfo, PythonVersion } from '.';
+import { traceError, traceInfo } from '../../../common/logger';
 import {
     interpreterInfo as getInterpreterInfoCommand,
     InterpreterInfoJson,
 } from '../../../common/process/internal/scripts';
 import { IDisposable } from '../../../common/types';
 import { Architecture } from '../../../common/utils/platform';
+import { EXTENSION_ROOT_DIR } from '../../../constants';
+import { shellExecute } from '../../common/externalDependencies';
 import { copyPythonExecInfo, PythonExecInfo } from '../../exec';
 import { parseVersion } from './pythonVersion';
 
-export type InterpreterInformation = {
+export type InterpreterExecInformation = {
     arch: Architecture;
     executable: PythonExecutableInfo;
     version: PythonVersion;
+};
+
+export type InterpreterInformation = {
+    /**
+     * The information parsed from the output of interpreter info script.
+     */
+    interpreterExecInfo: InterpreterExecInformation | undefined;
+    /**
+     * Carries if it's a valid python executable.
+     * Note it maybe the case that interpreterExecInfo is `undefined`, but it is still a valid executable.
+     */
+    isValidExecutable: boolean;
 };
 
 /**
@@ -25,7 +40,7 @@ export type InterpreterInformation = {
  * @param python - the path to the Python executable
  * @param raw - the information returned by the `interpreterInfo.py` script
  */
-function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): InterpreterInformation {
+function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): InterpreterExecInformation {
     const rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}`;
     return {
         arch: raw.is64Bit ? Architecture.x64 : Architecture.x86,
@@ -42,31 +57,15 @@ function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): Inter
     };
 }
 
-type ShellExecResult = {
-    stdout: string;
-    stderr?: string;
-};
-type ShellExecFunc = (command: string, timeout: number, disposables?: Set<IDisposable>) => Promise<ShellExecResult>;
-
-type Logger = {
-    info(msg: string): void;
-
-    error(msg: string): void;
-};
-
 /**
  * Collect full interpreter information from the given Python executable.
  *
  * @param python - the information to use when running Python
- * @param shellExec - the function to use to exec Python
- * @param logger - if provided, used to log failures or other info
  */
 export async function getInterpreterInfo(
     python: PythonExecInfo,
-    shellExec: ShellExecFunc,
-    logger?: Logger,
     disposables?: Set<IDisposable>,
-): Promise<InterpreterInformation | undefined> {
+): Promise<InterpreterInformation> {
     const [args, parse] = getInterpreterInfoCommand();
     const info = copyPythonExecInfo(python, args);
     const argv = [info.command, ...info.args];
@@ -74,22 +73,40 @@ export async function getInterpreterInfo(
     // Concat these together to make a set of quoted strings
     const quoted = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '\\\\')}"`), '');
 
-    // Try shell execing the command, followed by the arguments. This will make node kill the process if it
-    // takes too long.
-    // Sometimes the python path isn't valid, timeout if that's the case.
-    // See these two bugs:
-    // https://github.com/microsoft/vscode-python/issues/7569
-    // https://github.com/microsoft/vscode-python/issues/7760
-    const result = await shellExec(quoted, 15000, disposables);
+    const result = await shellExecute(
+        quoted,
+        {
+            /**
+             * Try shell executing the command, followed by the arguments. This will make node kill the process if it
+             * takes too long.
+             * Sometimes the python path isn't valid, timeout if that's the case.
+             * See these two bugs:
+             * https://github.com/microsoft/vscode-python/issues/7569
+             * https://github.com/microsoft/vscode-python/issues/7760
+             */
+            timeout: 15000,
+            /**
+             * Use extensions directory as cwd instead so there can be no shadowing when running the script.
+             */
+            cwd: EXTENSION_ROOT_DIR,
+            /**
+             * We're exiting using `sys.exit(42)` in the interpreter info script, hence we're expecting an exec exception.
+             */
+            doNotThrowExecException: true,
+        },
+        disposables,
+    );
+    const isValidExecutable = result.error?.code === 42; // Error code 42 is thrown from interpreter info script.
     if (result.stderr) {
-        if (logger) {
-            logger.error(`Failed to parse interpreter information for ${argv} stderr: ${result.stderr}`);
-        }
-        return undefined;
+        traceError(`Failed to parse interpreter information for ${argv} stderr: ${result.stderr}`);
+        return { interpreterExecInfo: undefined, isValidExecutable };
     }
-    const json = parse(result.stdout);
-    if (logger) {
-        logger.info(`Found interpreter for ${argv}`);
+    try {
+        const json = parse(result.stdout);
+        traceInfo(`Found interpreter for ${argv}`);
+        return { interpreterExecInfo: extractInterpreterInfo(python.pythonExecutable, json), isValidExecutable };
+    } catch (ex) {
+        traceError(`Failed to parse interpreter information`, ex);
+        return { interpreterExecInfo: undefined, isValidExecutable };
     }
-    return extractInterpreterInfo(python.pythonExecutable, json);
 }

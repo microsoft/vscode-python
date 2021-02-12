@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ChildProcess, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
+import { ChildProcess, ExecException, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
@@ -32,11 +32,12 @@ export type SpawnOptions = ChildProcessSpawnOptions & {
     extraVariables?: NodeJS.ProcessEnv;
 };
 
-export type ShellOptions = ExecOptions & { throwOnStdErr?: boolean };
+export type ShellOptions = ExecOptions & { throwOnStdErr?: boolean; doNotThrowExecException?: boolean };
 
 export type ExecutionResult<T extends string | Buffer> = {
     stdout: T;
     stderr?: T;
+    error?: ExecException | null;
 };
 
 export const IProcessLogger = Symbol('IProcessLogger');
