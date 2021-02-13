@@ -85,7 +85,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                 await debugLauncher.launchDebugger(launchOptions);
             } else {
                 const runOptions: Options = {
-                    args: testArgs.concat(testPaths),
+                    args: testArgs,
                     cwd: options.cwd,
                     outChannel: options.outChannel,
                     token: options.token,
