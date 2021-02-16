@@ -54,7 +54,7 @@ def handle_null_fields(obj, obj_field_name=None):
             # https://github.com/openlawlibrary/pygls/issues/146
             #
             # The version field should either use `0` or the value received from `client`.
-            # Seems like using `null` or removing this causes VS Code to ignore
+            # Seems like using `null` or removing this causes VS Code  to ignore
             # code actions.
             if (
                 attr == "version"
