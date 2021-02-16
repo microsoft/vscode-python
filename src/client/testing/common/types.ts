@@ -96,8 +96,9 @@ export enum TestStatus {
 export type FinalTestStatus = TestStatus.Fail | TestStatus.Error | TestStatus.Skipped | TestStatus.Pass;
 export type NonPassingTestStatus = Exclude<FinalTestStatus, TestStatus.Pass>;
 
+const nonPassing = Object.values(TestStatus).filter((value) => value !== TestStatus.Pass);
 export function isNonPassingTestStatus(status: TestStatus): boolean {
-    return [TestStatus.Fail, TestStatus.Error, TestStatus.Skipped].includes(status);
+    return nonPassing.includes(status);
 }
 
 export type TestResult = {
