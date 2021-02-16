@@ -55,6 +55,11 @@ suite('Python envs locator - Environments Resolver', () => {
                     resolve({
                         stdout:
                             '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "sysVersion": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
+                        error: {
+                            code: 42,
+                            name: '',
+                            message: '',
+                        },
                     });
                 }),
             );
@@ -222,6 +227,11 @@ suite('Python envs locator - Environments Resolver', () => {
                     resolve({
                         stdout:
                             '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "sysVersion": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
+                        error: {
+                            code: 42,
+                            name: '',
+                            message: '',
+                        },
                     });
                 }),
             );
@@ -254,7 +264,7 @@ suite('Python envs locator - Environments Resolver', () => {
             assert.deepEqual(expected, createExpectedEnvInfo(resolvedEnvReturnedByReducer));
         });
 
-        test('If the parent locator resolves environment, but fetching interpreter info returns undefined, return undefined', async () => {
+        test('If the parent locator resolves environment, but running interpreter info throws error, return undefined', async () => {
             stubShellExec.returns(
                 new Promise<ExecutionResult<string>>((_resolve, reject) => {
                     reject();
@@ -280,6 +290,78 @@ suite('Python envs locator - Environments Resolver', () => {
             const expected = await resolver.resolveEnv(env);
 
             assert.deepEqual(expected, undefined);
+        });
+
+        test('If fetching interpreter info fails with stderr and it is not a valid executable, return undefined', async () => {
+            stubShellExec.returns(
+                new Promise<ExecutionResult<string>>((resolve) => {
+                    resolve({
+                        stderr: 'Kaboom',
+                        stdout: '',
+                        error: {
+                            code: 1,
+                            name: '',
+                            message: '',
+                        },
+                    });
+                }),
+            );
+            const env = createNamedEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
+            const resolvedEnvReturnedByReducer = createNamedEnv(
+                'env1',
+                '3.8.1',
+                PythonEnvKind.Conda,
+                'resolved/path/to/exec',
+            );
+            const parentLocator = new SimpleLocator([], {
+                resolve: async (e: PythonEnvInfo) => {
+                    if (e === env) {
+                        return resolvedEnvReturnedByReducer;
+                    }
+                    throw new Error('Incorrect environment sent to the resolver');
+                },
+            });
+            const resolver = new PythonEnvsResolver(parentLocator, envInfoService, () => true);
+
+            const expected = await resolver.resolveEnv(env);
+
+            assert.deepEqual(expected, undefined);
+        });
+
+        test('If fetching interpreter info returns undefined but it is still a valid executable, return the environment returned by parent locator', async () => {
+            stubShellExec.returns(
+                new Promise<ExecutionResult<string>>((resolve) => {
+                    resolve({
+                        stderr: 'Kaboom',
+                        stdout: '',
+                        error: {
+                            code: 42,
+                            name: '',
+                            message: '',
+                        },
+                    });
+                }),
+            );
+            const env = createNamedEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
+            const resolvedEnvReturnedByReducer = createNamedEnv(
+                'env1',
+                '3.8.1',
+                PythonEnvKind.Conda,
+                'resolved/path/to/exec',
+            );
+            const parentLocator = new SimpleLocator([], {
+                resolve: async (e: PythonEnvInfo) => {
+                    if (e === env) {
+                        return resolvedEnvReturnedByReducer;
+                    }
+                    throw new Error('Incorrect environment sent to the resolver');
+                },
+            });
+            const resolver = new PythonEnvsResolver(parentLocator, envInfoService, () => true);
+
+            const expected = await resolver.resolveEnv(env);
+
+            assert.deepEqual(expected, resolvedEnvReturnedByReducer);
         });
 
         test("If the parent locator isn't able to resolve environment, return undefined", async () => {

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { traceVerbose } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../common/utils/workerPool';
@@ -22,7 +23,13 @@ export interface IEnvironmentInfoService {
 
 async function buildEnvironmentInfo(interpreterPath: string): Promise<InterpreterInformation> {
     const disposables = new Set<IDisposable>();
-    const info = await getInterpreterInfo(buildPythonExecInfo(interpreterPath), disposables);
+    const info: InterpreterInformation = await getInterpreterInfo(
+        buildPythonExecInfo(interpreterPath),
+        disposables,
+    ).catch((reason) => {
+        traceVerbose(reason);
+        return { interpreterExecInfo: undefined, isValidExecutable: false };
+    });
 
     // Ensure the process we started is cleaned up.
     disposables.forEach((p) => {
