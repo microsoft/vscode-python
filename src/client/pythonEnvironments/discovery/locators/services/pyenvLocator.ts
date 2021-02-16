@@ -39,7 +39,7 @@ function getPyenvVersionsDir(): string {
 
 /**
  * Checks if a given directory path is same as `pyenv` shims path. This checks
- * `~/.pyenv/shims` os posix and `~/.pyenv/pyenv-win/shims` on windows.
+ * `~/.pyenv/shims` on posix and `~/.pyenv/pyenv-win/shims` on windows.
  * @param {string} dirPath: Absolute path to any directory
  * @returns {boolean}: Returns true if the patch is same as `pyenv` shims directory.
  */
