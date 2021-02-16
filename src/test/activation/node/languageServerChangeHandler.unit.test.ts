@@ -240,7 +240,8 @@ suite('Language Server - Change Handler', () => {
 
             const inspection = {
                 key: 'python.languageServer',
-                workspaceFolderValue: target === ConfigurationTarget.WorkspaceFolder ? LanguageServerType.Node : undefined;
+                workspaceFolderValue:
+                    target === ConfigurationTarget.WorkspaceFolder ? LanguageServerType.Node : undefined,
             };
 
             when(configuration.inspect<string>('languageServer')).thenReturn(inspection);
@@ -261,7 +262,7 @@ suite('Language Server - Change Handler', () => {
             ).once();
             verify(configService.updateSetting(anything(), anything(), anything(), anything())).never();
         });
-    })
+    });
 
     function makeHandler(initialLSType: LanguageServerType | undefined): LanguageServerChangeHandler {
         return new LanguageServerChangeHandler(
