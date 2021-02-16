@@ -12,5 +12,7 @@ try:
     obj["is64Bit"] = sys.maxsize > 2 ** 32
 
     print(json.dumps(obj))
+except Exception as e:
+    print("Interpreter info script failed", str(e))
 finally:
     sys.exit(42)
