@@ -46,7 +46,7 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
 
     public get languageId(): string {
         // eslint-disable-next-line global-require
-        const { NotebookCellKind } = require('vscode') as typeof import('vscode');
+        const { NotebookCellKind } = require('vscode');
         // Return Python if we have python cells.
         if (this.notebook.cells.some((item) => item.language.toLowerCase() === PYTHON_LANGUAGE.toLowerCase())) {
             return PYTHON_LANGUAGE;
