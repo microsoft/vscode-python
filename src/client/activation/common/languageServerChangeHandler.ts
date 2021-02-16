@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../common/application/types';
+import { ConfigurationTarget, Disposable } from 'vscode';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
-import { IExtensions } from '../../common/types';
+import { IConfigurationService, IExtensions } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { Common, LanguageService, Pylance } from '../../common/utils/localize';
 import { LanguageServerType } from '../types';
@@ -12,16 +12,32 @@ import { LanguageServerType } from '../types';
 export async function promptForPylanceInstall(
     appShell: IApplicationShell,
     commandManager: ICommandManager,
+    workspace: IWorkspaceService,
+    configService: IConfigurationService,
 ): Promise<void> {
-    // If not installed, point user to Pylance at the store.
     const response = await appShell.showWarningMessage(
-        Pylance.installPylanceMessage(),
-        Common.bannerLabelYes(),
-        Common.bannerLabelNo(),
+        Pylance.pylanceRevertToJediPrompt(),
+        Pylance.pylanceInstallPylance(),
+        Pylance.pylanceRevertToJedi(),
+        Pylance.remindMeLater(),
     );
 
-    if (response === Common.bannerLabelYes()) {
+    if (response === Pylance.pylanceInstallPylance()) {
         commandManager.executeCommand('extension.open', PYLANCE_EXTENSION_ID);
+    } else if (response === Pylance.pylanceRevertToJedi()) {
+        const inspection = workspace.getConfiguration('python').inspect<string>('languageServer');
+
+        let target: ConfigurationTarget | undefined;
+        if (inspection?.workspaceValue) {
+            target = ConfigurationTarget.Workspace;
+        } else if (inspection?.globalValue) {
+            target = ConfigurationTarget.Global;
+        }
+
+        if (target) {
+            await configService.updateSetting('languageServer', LanguageServerType.Jedi, undefined, target);
+            commandManager.executeCommand('workbench.action.reloadWindow');
+        }
     }
 }
 
@@ -37,6 +53,8 @@ export class LanguageServerChangeHandler implements Disposable {
         private readonly extensions: IExtensions,
         private readonly appShell: IApplicationShell,
         private readonly commands: ICommandManager,
+        private readonly workspace: IWorkspaceService,
+        private readonly configService: IConfigurationService,
     ) {
         this.pylanceInstalled = this.isPylanceInstalled();
         this.disposables.push(
@@ -70,7 +88,7 @@ export class LanguageServerChangeHandler implements Disposable {
         let response: string | undefined;
         if (lsType === LanguageServerType.Node && !this.isPylanceInstalled()) {
             // If not installed, point user to Pylance at the store.
-            await promptForPylanceInstall(this.appShell, this.commands);
+            await promptForPylanceInstall(this.appShell, this.commands, this.workspace, this.configService);
             // At this point Pylance is not yet installed. Skip reload prompt
             // since we are going to show it when Pylance becomes available.
         } else {
