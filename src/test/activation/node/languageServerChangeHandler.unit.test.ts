@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { anyString, instance, mock, verify, when } from 'ts-mockito';
+import { anyString, instance, mock, verify, when, anything } from 'ts-mockito';
 import { ConfigurationTarget, EventEmitter, Extension, WorkspaceConfiguration } from 'vscode';
 import { LanguageServerChangeHandler } from '../../../client/activation/common/languageServerChangeHandler';
 import { LanguageServerType } from '../../../client/activation/types';
@@ -221,6 +221,47 @@ suite('Language Server - Change Handler', () => {
             verify(configService.updateSetting('languageServer', LanguageServerType.Jedi, undefined, target)).once();
         });
     });
+
+    [ConfigurationTarget.WorkspaceFolder, undefined].forEach((target) => {
+        const targetName = target === ConfigurationTarget.WorkspaceFolder ? 'workspace folder' : 'missing';
+        test(`Revert to Jedi with ${targetName} setting does nothing`, async () => {
+            const configuration = mock<WorkspaceConfiguration>();
+
+            when(
+                appShell.showWarningMessage(
+                    Pylance.pylanceRevertToJediPrompt(),
+                    Pylance.pylanceInstallPylance(),
+                    Pylance.pylanceRevertToJedi(),
+                    Pylance.remindMeLater(),
+                ),
+            ).thenReturn(Promise.resolve(Pylance.pylanceRevertToJedi()));
+
+            when(workspace.getConfiguration('python')).thenReturn(instance(configuration));
+
+            const inspection = {
+                key: 'python.languageServer',
+                workspaceFolderValue: target === ConfigurationTarget.WorkspaceFolder ? LanguageServerType.Node : undefined;
+            };
+
+            when(configuration.inspect<string>('languageServer')).thenReturn(inspection);
+
+            handler = makeHandler(undefined);
+            await handler.handleLanguageServerChange(LanguageServerType.Node);
+
+            verify(
+                appShell.showInformationMessage(LanguageService.reloadAfterLanguageServerChange(), Common.reload()),
+            ).never();
+            verify(
+                appShell.showWarningMessage(
+                    Pylance.pylanceRevertToJediPrompt(),
+                    Pylance.pylanceInstallPylance(),
+                    Pylance.pylanceRevertToJedi(),
+                    Pylance.remindMeLater(),
+                ),
+            ).once();
+            verify(configService.updateSetting(anything(), anything(), anything(), anything())).never();
+        });
+    })
 
     function makeHandler(initialLSType: LanguageServerType | undefined): LanguageServerChangeHandler {
         return new LanguageServerChangeHandler(
