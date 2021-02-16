@@ -9,6 +9,8 @@ import { Event } from 'vscode';
 import { getSearchPathEntries } from '../../../../common/utils/exec';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { isStandardPythonBinary } from '../../../common/commonUtils';
+import { isPyenvShimDir } from '../../../discovery/locators/services/pyenvLocator';
+import { isWindowsStoreDir } from '../../../discovery/locators/services/windowsStoreLocator';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../info';
 import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { Locators } from '../../locators';
@@ -31,6 +33,17 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
 
     constructor() {
         const dirLocators: (ILocator & IDisposable)[] = getSearchPathEntries()
+            .filter((dirname) => {
+                // Filter out following directories:
+                // 1. Windows Store app directories: We have a store app locator that handles this. The
+                //    python.exe available in these directories might not be python. It can be a store
+                //    install shortcut that takes you to windows store.
+                //
+                // 2. Filter out pyenv shims: They are not actual python binaries, they are used to launch
+                //    the binaries specified in .python-version file in the cwd. We should not be reporting
+                //    those binaries as environments.
+                return !isWindowsStoreDir(dirname) && !isPyenvShimDir(dirname);
+            })
             // Build a locator for each directory.
             .map((dirname) => getDirFilesLocator(dirname, PythonEnvKind.Unknown));
         this.disposables.push(...dirLocators);

@@ -81,6 +81,7 @@ suite('Environment Identifier', () => {
 
     suite('Windows Store', () => {
         let getEnvVar: sinon.SinonStub;
+        let pathExists: sinon.SinonStub;
         const fakeLocalAppDataPath = path.join(TEST_LAYOUT_ROOT, 'storeApps');
         const fakeProgramFilesPath = 'X:\\Program Files';
         const executable = ['python.exe', 'python3.exe', 'python3.8.exe'];
@@ -88,17 +89,23 @@ suite('Environment Identifier', () => {
             getEnvVar = sinon.stub(platformApis, 'getEnvironmentVariable');
             getEnvVar.withArgs('LOCALAPPDATA').returns(fakeLocalAppDataPath);
             getEnvVar.withArgs('ProgramFiles').returns(fakeProgramFilesPath);
+
+            pathExists = sinon.stub(externalDependencies, 'pathExists');
+            pathExists.withArgs(path.join(fakeLocalAppDataPath, 'Microsoft', 'WindowsApps', 'idle.exe')).resolves(true);
         });
         suiteTeardown(() => {
             getEnvVar.restore();
+            pathExists.restore();
         });
         executable.forEach((exe) => {
             test(`Path to local app data windows store interpreter (${exe})`, async () => {
+                getEnvVar.withArgs('LOCALAPPDATA').returns(fakeLocalAppDataPath);
                 const interpreterPath = path.join(fakeLocalAppDataPath, 'Microsoft', 'WindowsApps', exe);
                 const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
                 assert.deepEqual(envType, EnvironmentType.WindowsStore);
             });
             test(`Path to local app data windows store interpreter app sub-directory (${exe})`, async () => {
+                getEnvVar.withArgs('LOCALAPPDATA').returns(fakeLocalAppDataPath);
                 const interpreterPath = path.join(
                     fakeLocalAppDataPath,
                     'Microsoft',
@@ -126,13 +133,15 @@ suite('Environment Identifier', () => {
                 assert.deepEqual(envType, EnvironmentType.WindowsStore);
             });
             test(`Program files app data not set (${exe})`, async () => {
-                getEnvVar.withArgs('ProgramFiles').returns(undefined);
                 const interpreterPath = path.join(
                     fakeProgramFilesPath,
                     'WindowsApps',
                     'PythonSoftwareFoundation.Python.3.8_qbz5n2kfra8p0',
                     exe,
                 );
+                getEnvVar.withArgs('ProgramFiles').returns(undefined);
+                pathExists.withArgs(path.join(path.dirname(interpreterPath), 'idle.exe')).resolves(true);
+
                 const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
                 assert.deepEqual(envType, EnvironmentType.WindowsStore);
             });
@@ -147,6 +156,12 @@ suite('Environment Identifier', () => {
                 const interpreterPath = path
                     .join(fakeLocalAppDataPath, 'Microsoft', 'WindowsApps', exe)
                     .replace('\\', '/');
+                pathExists.callsFake((p: string) => {
+                    if (p.endsWith('idle.exe')) {
+                        return Promise.resolve(true);
+                    }
+                    return Promise.resolve(false);
+                });
                 const envType: EnvironmentType = await identifyEnvironment(`\\\\?\\${interpreterPath}`);
                 assert.deepEqual(envType, EnvironmentType.WindowsStore);
             });

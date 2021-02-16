@@ -20,6 +20,7 @@ import { parseVersion } from '../../../../client/pythonEnvironments/base/info/py
 import * as externalDep from '../../../../client/pythonEnvironments/common/externalDependencies';
 import {
     getWindowsStorePythonExes,
+    isWindowsStoreDir,
     WindowsStoreLocator,
 } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
 import { getEnvs } from '../../base/common';
@@ -49,6 +50,15 @@ suite('Windows Store', () => {
 
             const actual = await getWindowsStorePythonExes();
             assert.deepEqual(actual, expected);
+        });
+
+        test('isWindowsStoreDir: valid case', () => {
+            assert.deepStrictEqual(isWindowsStoreDir(testStoreAppRoot), true);
+            assert.deepStrictEqual(isWindowsStoreDir(testStoreAppRoot + path.sep), true);
+        });
+
+        test('isWindowsStoreDir: invalid case', () => {
+            assert.deepStrictEqual(isWindowsStoreDir(__dirname), false);
         });
     });
 
