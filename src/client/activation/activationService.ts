@@ -276,7 +276,7 @@ export class LanguageServerExtensionActivationService
                 outputLine = LanguageService.startingNone();
                 break;
             default:
-                throw new Error('Unknown langauge server type in activator.');
+                throw new Error('Unknown language server type in activator.');
         }
         this.output.appendLine(outputLine);
     }

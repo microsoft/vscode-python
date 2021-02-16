@@ -121,7 +121,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
     }
 
     @captureTelemetry(
-        EventName.LANGUAGE_SERVER_STARTUP,
+        EventName.JEDI_LANGUAGE_SERVER_STARTUP,
         undefined,
         true,
         undefined,
