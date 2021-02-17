@@ -135,7 +135,6 @@ src/test/testing/navigation/suiteNavigator.unit.test.ts
 src/test/testing/navigation/commandHandlers.unit.test.ts
 src/test/testing/navigation/helper.unit.test.ts
 src/test/testing/navigation/symbolNavigator.unit.test.ts
-src/test/testing/configuration.unit.test.ts
 src/test/testing/explorer/treeView.unit.test.ts
 src/test/testing/explorer/testExplorerCommandHandler.unit.test.ts
 src/test/testing/explorer/failedTestHandler.unit.test.ts

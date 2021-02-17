@@ -21,7 +21,7 @@ import {
 } from '../../client/testing/common/types';
 import { TEST_OUTPUT_CHANNEL } from '../../client/testing/constants';
 import { ITestingSettings } from '../../client/testing/configuration/types';
-import { UnitTestConfigurationService } from '../../client/testing/configuration';
+import { NONE_SELECTED, UnitTestConfigurationService } from '../../client/testing/configuration';
 
 suite('Unit Tests - ConfigurationService', () => {
     UNIT_TEST_PRODUCTS.forEach((product) => {
@@ -263,7 +263,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 try {
                     await testConfigService.target.displayTestFrameworkError(workspaceUri);
                 } catch (exc) {
-                    if (exc !== null) {
+                    if (exc !== NONE_SELECTED) {
                         throw exc;
                     }
                     exceptionThrown = true;
@@ -294,7 +294,7 @@ suite('Unit Tests - ConfigurationService', () => {
                         });
                     await testConfigService.target.displayTestFrameworkError(workspaceUri);
                 } catch (exc) {
-                    if (exc !== null) {
+                    if (exc !== NONE_SELECTED) {
                         throw exc;
                     }
                     exceptionThrown = true;
@@ -333,7 +333,7 @@ suite('Unit Tests - ConfigurationService', () => {
                     .setup((t) => t.selectTestRunner(typeMoq.It.isAny()))
                     .returns(() => {
                         selectTestRunnerInvoked = true;
-                        return Promise.resolve(product as any);
+                        return Promise.resolve(product);
                     });
 
                 const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>(
@@ -382,7 +382,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 try {
                     await testConfigService.target.displayTestFrameworkError(workspaceUri);
                 } catch (exc) {
-                    if (exc !== null) {
+                    if (exc !== NONE_SELECTED) {
                         throw exc;
                     }
                     exceptionThrown = true;
@@ -407,7 +407,7 @@ suite('Unit Tests - ConfigurationService', () => {
                     .setup((t) => t.selectTestRunner(typeMoq.It.isAny()))
                     .returns(() => {
                         selectTestRunnerInvoked = true;
-                        return Promise.resolve(product as any);
+                        return Promise.resolve(product);
                     });
 
                 let enableTestInvoked = false;
@@ -475,7 +475,7 @@ suite('Unit Tests - ConfigurationService', () => {
                     .setup((t) => t.selectTestRunner(typeMoq.It.isAny()))
                     .returns(() => {
                         selectTestRunnerInvoked = true;
-                        return Promise.resolve(product as any);
+                        return Promise.resolve(product);
                     });
 
                 const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>();

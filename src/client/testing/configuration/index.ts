@@ -19,6 +19,8 @@ import {
     UnitTestProduct,
 } from '../common/types';
 
+export const NONE_SELECTED = Error('none selected');
+
 @injectable()
 export class UnitTestConfigurationService implements ITestConfigurationService {
     private readonly configurationService: IConfigurationService;
@@ -51,7 +53,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
             option,
         );
         if (item !== option) {
-            throw Error();
+            throw NONE_SELECTED;
         }
         return this._promptToEnableAndConfigureTestFramework(wkspace);
     }
@@ -127,7 +129,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
         try {
             const selectedTestRunner = await this.selectTestRunner(messageToDisplay);
             if (typeof selectedTestRunner !== 'number') {
-                throw Error();
+                throw NONE_SELECTED;
             }
             const helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
             telemetryProps.tool = helper.parseProviderName(selectedTestRunner);
