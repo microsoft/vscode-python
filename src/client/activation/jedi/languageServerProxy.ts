@@ -13,13 +13,13 @@ import {
 
 import { DeprecatePythonPath } from '../../common/experiments/groups';
 import { traceDecorators, traceError } from '../../common/logger';
-import { IConfigurationService, IExperimentsManager, IInterpreterPathService, Resource } from '../../common/types';
+import { IExperimentsManager, IInterpreterPathService, Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
 import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
@@ -44,7 +44,6 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
     constructor(
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
         @inject(ITestManagementService) private readonly testManager: ITestManagementService,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
     ) {
@@ -81,7 +80,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
 
     @traceDecorators.error('Failed to start language server')
     @captureTelemetry(
-        EventName.LANGUAGE_SERVER_ENABLED,
+        EventName.JEDI_LANGUAGE_SERVER_ENABLED,
         undefined,
         true,
         undefined,
@@ -107,7 +106,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
                 // late the server may have already sent a message (which leads to failures). Register
                 // these on the state change to running to ensure they are ready soon enough.
                 if (e.newState === State.Running) {
-                    this.registerHandlers(resource);
+                    this.registerHandlers();
                 }
             });
 
@@ -131,7 +130,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
     }
 
     @captureTelemetry(
-        EventName.LANGUAGE_SERVER_READY,
+        EventName.JEDI_LANGUAGE_SERVER_READY,
         undefined,
         true,
         undefined,
@@ -155,7 +154,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         await this.testManager.activate(new LanguageServerSymbolProvider(this.languageClient));
     }
 
-    private registerHandlers(resource: Resource) {
+    private registerHandlers() {
         if (this.disposed) {
             // Check if it got disposed in the interim.
             return;
@@ -167,7 +166,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
             this.disposables.push(
                 this.interpreterPathService.onDidChange(() => {
-                    // Manually send didChangeConfiguration in order to get the server to requery
+                    // Manually send didChangeConfiguration in order to get the server to re-query
                     // the workspace configurations (to then pick up pythonPath set in the middleware).
                     // This is needed as interpreter changes via the interpreter path service happen
                     // outside of VS Code's settings (which would mean VS Code sends the config updates itself).
@@ -176,19 +175,6 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
                     });
                 }),
             );
-        }
-
-        const settings = this.configurationService.getSettings(resource);
-        if (settings.downloadLanguageServer) {
-            this.languageClient!.onTelemetry((telemetryEvent) => {
-                const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
-                const formattedProperties = {
-                    ...telemetryEvent.Properties,
-                    // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
-                    method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
-                };
-                sendTelemetryEvent(eventName, telemetryEvent.Measurements, formattedProperties);
-            });
         }
     }
 }

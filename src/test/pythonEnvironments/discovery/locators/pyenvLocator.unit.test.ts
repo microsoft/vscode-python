@@ -9,6 +9,7 @@ import * as fileUtils from '../../../../client/pythonEnvironments/common/externa
 import {
     IPyenvVersionStrings,
     isPyenvEnvironment,
+    isPyenvShimDir,
     parsePyenvVersion,
 } from '../../../../client/pythonEnvironments/discovery/locators/services/pyenvLocator';
 
@@ -267,5 +268,26 @@ suite('Pyenv Versions Parser Test', () => {
         test(`Parse pyenv version [${data.input}]`, async () => {
             assert.deepStrictEqual(await parsePyenvVersion(data.input), data.expectedOutput);
         });
+    });
+});
+
+suite('Pyenv Shims Dir filter tests', () => {
+    let getEnvVariableStub: sinon.SinonStub;
+    const pyenvRoot = path.join('path', 'to', 'pyenv', 'root');
+
+    setup(() => {
+        getEnvVariableStub = sinon.stub(platformUtils, 'getEnvironmentVariable');
+        getEnvVariableStub.withArgs('PYENV_ROOT').returns(pyenvRoot);
+    });
+
+    teardown(() => {
+        getEnvVariableStub.restore();
+    });
+
+    test('isPyenvShimDir: valid case', () => {
+        assert.deepStrictEqual(isPyenvShimDir(path.join(pyenvRoot, 'shims')), true);
+    });
+    test('isPyenvShimDir: invalid case', () => {
+        assert.deepStrictEqual(isPyenvShimDir(__dirname), false);
     });
 });

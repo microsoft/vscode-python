@@ -1376,6 +1376,32 @@ export interface IEventNamePropertyMapping {
         userAction: string;
     };
     /**
+     * Telemetry event sent when Jedi Language Server is started for workspace (workspace folder in case of multi-root)
+     */
+    [EventName.JEDI_LANGUAGE_SERVER_ENABLED]: {
+        lsVersion?: string;
+    };
+    /**
+     * Telemetry event sent when Jedi Language Server server is ready to receive messages
+     */
+    [EventName.JEDI_LANGUAGE_SERVER_READY]: {
+        lsVersion?: string;
+    };
+    /**
+     * Telemetry event sent when starting Node.js server
+     */
+    [EventName.JEDI_LANGUAGE_SERVER_STARTUP]: {
+        lsVersion?: string;
+    };
+    /**
+     * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
+     */
+    [EventName.JEDI_LANGUAGE_SERVER_TELEMETRY]: unknown;
+    /**
+     * Telemetry sent when the client makes a request to the Node.js server
+     */
+    [EventName.JEDI_LANGUAGE_SERVER_REQUEST]: unknown;
+    /**
      * Telemetry captured for enabling reload.
      */
     [EventName.PYTHON_WEB_APP_RELOAD]: {

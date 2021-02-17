@@ -3,13 +3,13 @@
 
 'use strict';
 
-import { anyString, instance, mock, verify, when } from 'ts-mockito';
-import { EventEmitter, Extension } from 'vscode';
+import { anyString, instance, mock, verify, when, anything } from 'ts-mockito';
+import { ConfigurationTarget, EventEmitter, Extension, WorkspaceConfiguration } from 'vscode';
 import { LanguageServerChangeHandler } from '../../../client/activation/common/languageServerChangeHandler';
 import { LanguageServerType } from '../../../client/activation/types';
-import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../client/common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../../client/common/constants';
-import { IExtensions } from '../../../client/common/types';
+import { IConfigurationService, IExtensions } from '../../../client/common/types';
 import { Common, LanguageService, Pylance } from '../../../client/common/utils/localize';
 
 suite('Language Server - Change Handler', () => {
@@ -19,11 +19,16 @@ suite('Language Server - Change Handler', () => {
     let extensionsChangedEvent: EventEmitter<void>;
     let handler: LanguageServerChangeHandler;
 
+    let workspace: IWorkspaceService;
+    let configService: IConfigurationService;
+
     let pylanceExtension: Extension<any>;
     setup(() => {
         extensions = mock<IExtensions>();
         appShell = mock<IApplicationShell>();
         commands = mock<ICommandManager>();
+        workspace = mock<IWorkspaceService>();
+        configService = mock<IConfigurationService>();
 
         pylanceExtension = mock<Extension<any>>();
 
@@ -84,9 +89,10 @@ suite('Language Server - Change Handler', () => {
     test('Handler should prompt for install when language server changes to Pylance and Pylance is not installed', async () => {
         when(
             appShell.showWarningMessage(
-                Pylance.installPylanceMessage(),
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo(),
+                Pylance.pylanceRevertToJediPrompt(),
+                Pylance.pylanceInstallPylance(),
+                Pylance.pylanceRevertToJedi(),
+                Pylance.remindMeLater(),
             ),
         ).thenReturn(Promise.resolve(undefined));
 
@@ -98,9 +104,10 @@ suite('Language Server - Change Handler', () => {
         ).never();
         verify(
             appShell.showWarningMessage(
-                Pylance.installPylanceMessage(),
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo(),
+                Pylance.pylanceRevertToJediPrompt(),
+                Pylance.pylanceInstallPylance(),
+                Pylance.pylanceRevertToJedi(),
+                Pylance.remindMeLater(),
             ),
         ).once();
     });
@@ -108,11 +115,12 @@ suite('Language Server - Change Handler', () => {
     test('Handler should open Pylance store page when language server changes to Pylance, Pylance is not installed and user clicks Yes', async () => {
         when(
             appShell.showWarningMessage(
-                Pylance.installPylanceMessage(),
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo(),
+                Pylance.pylanceRevertToJediPrompt(),
+                Pylance.pylanceInstallPylance(),
+                Pylance.pylanceRevertToJedi(),
+                Pylance.remindMeLater(),
             ),
-        ).thenReturn(Promise.resolve(Common.bannerLabelYes()));
+        ).thenReturn(Promise.resolve(Pylance.pylanceInstallPylance()));
 
         handler = makeHandler(undefined);
         await handler.handleLanguageServerChange(LanguageServerType.Node);
@@ -124,11 +132,12 @@ suite('Language Server - Change Handler', () => {
     test('Handler should not open Pylance store page when language server changes to Pylance, Pylance is not installed and user clicks No', async () => {
         when(
             appShell.showWarningMessage(
-                Pylance.installPylanceMessage(),
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo(),
+                Pylance.pylanceRevertToJediPrompt(),
+                Pylance.pylanceInstallPylance(),
+                Pylance.pylanceRevertToJedi(),
+                Pylance.remindMeLater(),
             ),
-        ).thenReturn(Promise.resolve(Common.bannerLabelNo()));
+        ).thenReturn(Promise.resolve(Pylance.remindMeLater()));
 
         handler = makeHandler(undefined);
         await handler.handleLanguageServerChange(LanguageServerType.Node);
@@ -171,12 +180,98 @@ suite('Language Server - Change Handler', () => {
         verify(commands.executeCommand('workbench.action.reloadWindow')).never();
     });
 
+    [ConfigurationTarget.Global, ConfigurationTarget.Workspace].forEach((target) => {
+        const targetName = target === ConfigurationTarget.Global ? 'global' : 'workspace';
+        test(`Revert to Jedi with setting in ${targetName} config`, async () => {
+            const configuration = mock<WorkspaceConfiguration>();
+
+            when(
+                appShell.showWarningMessage(
+                    Pylance.pylanceRevertToJediPrompt(),
+                    Pylance.pylanceInstallPylance(),
+                    Pylance.pylanceRevertToJedi(),
+                    Pylance.remindMeLater(),
+                ),
+            ).thenReturn(Promise.resolve(Pylance.pylanceRevertToJedi()));
+
+            when(workspace.getConfiguration('python')).thenReturn(instance(configuration));
+
+            const inspection = {
+                key: 'python.languageServer',
+                workspaceValue: target === ConfigurationTarget.Workspace ? LanguageServerType.Node : undefined,
+                globalValue: target === ConfigurationTarget.Global ? LanguageServerType.Node : undefined,
+            };
+
+            when(configuration.inspect<string>('languageServer')).thenReturn(inspection);
+
+            handler = makeHandler(undefined);
+            await handler.handleLanguageServerChange(LanguageServerType.Node);
+
+            verify(
+                appShell.showInformationMessage(LanguageService.reloadAfterLanguageServerChange(), Common.reload()),
+            ).never();
+            verify(
+                appShell.showWarningMessage(
+                    Pylance.pylanceRevertToJediPrompt(),
+                    Pylance.pylanceInstallPylance(),
+                    Pylance.pylanceRevertToJedi(),
+                    Pylance.remindMeLater(),
+                ),
+            ).once();
+            verify(configService.updateSetting('languageServer', LanguageServerType.Jedi, undefined, target)).once();
+        });
+    });
+
+    [ConfigurationTarget.WorkspaceFolder, undefined].forEach((target) => {
+        const targetName = target === ConfigurationTarget.WorkspaceFolder ? 'workspace folder' : 'missing';
+        test(`Revert to Jedi with ${targetName} setting does nothing`, async () => {
+            const configuration = mock<WorkspaceConfiguration>();
+
+            when(
+                appShell.showWarningMessage(
+                    Pylance.pylanceRevertToJediPrompt(),
+                    Pylance.pylanceInstallPylance(),
+                    Pylance.pylanceRevertToJedi(),
+                    Pylance.remindMeLater(),
+                ),
+            ).thenReturn(Promise.resolve(Pylance.pylanceRevertToJedi()));
+
+            when(workspace.getConfiguration('python')).thenReturn(instance(configuration));
+
+            const inspection = {
+                key: 'python.languageServer',
+                workspaceFolderValue:
+                    target === ConfigurationTarget.WorkspaceFolder ? LanguageServerType.Node : undefined,
+            };
+
+            when(configuration.inspect<string>('languageServer')).thenReturn(inspection);
+
+            handler = makeHandler(undefined);
+            await handler.handleLanguageServerChange(LanguageServerType.Node);
+
+            verify(
+                appShell.showInformationMessage(LanguageService.reloadAfterLanguageServerChange(), Common.reload()),
+            ).never();
+            verify(
+                appShell.showWarningMessage(
+                    Pylance.pylanceRevertToJediPrompt(),
+                    Pylance.pylanceInstallPylance(),
+                    Pylance.pylanceRevertToJedi(),
+                    Pylance.remindMeLater(),
+                ),
+            ).once();
+            verify(configService.updateSetting(anything(), anything(), anything(), anything())).never();
+        });
+    });
+
     function makeHandler(initialLSType: LanguageServerType | undefined): LanguageServerChangeHandler {
         return new LanguageServerChangeHandler(
             initialLSType,
             instance(extensions),
             instance(appShell),
             instance(commands),
+            instance(workspace),
+            instance(configService),
         );
     }
 });

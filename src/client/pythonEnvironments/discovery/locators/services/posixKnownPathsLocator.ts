@@ -4,7 +4,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { traceError, traceInfo } from '../../../../common/logger';
-
 import { Architecture } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, PythonReleaseLevel, PythonVersion } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
@@ -12,9 +11,13 @@ import { parseVersion } from '../../../base/info/pythonVersion';
 import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getFileInfo, resolveSymbolicLink } from '../../../common/externalDependencies';
 import { commonPosixBinPaths, isPosixPythonBinPattern } from '../../../common/posixUtils';
+import { isPyenvShimDir } from './pyenvLocator';
 
 async function getPythonBinFromKnownPaths(): Promise<string[]> {
-    const knownDirs = await commonPosixBinPaths();
+    // Filter out pyenv shims. They are not actual python binaries, they are used to launch
+    // the binaries specified in .python-version file in the cwd. We should not be reporting
+    // those binaries as environments.
+    const knownDirs = (await commonPosixBinPaths()).filter((dirname) => !isPyenvShimDir(dirname));
     const pythonBins: Set<string> = new Set();
     for (const dirname of knownDirs) {
         const paths = (await fs.promises.readdir(dirname, { withFileTypes: true }))

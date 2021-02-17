@@ -49,7 +49,6 @@
     "Pylance.proposePylanceMessage": "试试微软新的更快的、功能丰富的语言服务器 Pylance! ",
     "Pylance.tryItNow": "立即安装",
     "Pylance.remindMeLater": "稍后提醒",
-    "Pylance.installPylanceMessage": "Pylance 扩展未安装。点击 \"是\" 打开 Pylance 安装页面。",
     "Pylance.pylanceNotInstalledMessage": "Pylance 扩展未安装。",
     "Pylance.pylanceInstalledReloadPromptMessage": "Pylance 扩展未安装。重新加载窗口以激活？",
     "Experiments.inGroup": "用户属于 '{0}' 实验组",

@@ -114,10 +114,6 @@ export namespace Pylance {
     export const tryItNow = localize('Pylance.tryItNow', 'Try it now');
     export const remindMeLater = localize('Pylance.remindMeLater', 'Remind me later');
 
-    export const installPylanceMessage = localize(
-        'Pylance.installPylanceMessage',
-        'Pylance extension is not installed. Click Yes to open Pylance installation page.',
-    );
     export const pylanceNotInstalledMessage = localize(
         'Pylance.pylanceNotInstalledMessage',
         'Pylance extension is not installed.',
@@ -126,6 +122,13 @@ export namespace Pylance {
         'Pylance.pylanceInstalledReloadPromptMessage',
         'Pylance extension is now installed. Reload window to activate?',
     );
+
+    export const pylanceRevertToJediPrompt = localize(
+        'Pylance.pylanceRevertToJediPrompt',
+        'The Pylance extension is not installed but the python.languageServer value is set to "Pylance". Would you like to install the Pylance extension to use Pylance, or revert back to Jedi?',
+    );
+    export const pylanceInstallPylance = localize('Pylance.pylanceInstallPylance', 'Install Pylance');
+    export const pylanceRevertToJedi = localize('Pylance.pylanceRevertToJedi', 'Revert to Jedi');
 }
 
 export namespace Jupyter {
