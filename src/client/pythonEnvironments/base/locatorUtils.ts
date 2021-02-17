@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
+import { traceVerbose } from '../../common/logger';
 import { createDeferred } from '../../common/utils/async';
 import { getURIFilter } from '../../common/utils/misc';
 import { IDisposable } from '../../common/utils/resourceLifecycle';
@@ -87,11 +88,15 @@ export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvI
                 listener.dispose();
             } else {
                 const { index, update } = event;
-                // If envs[index] is undefined, environment is not valid. So do not accept updates for the env.
-                if (envs[index] !== undefined) {
-                    // We don't worry about if envs[index] is set already.
-                    envs[index] = update;
+                if (envs[index] === undefined) {
+                    traceVerbose(
+                        `Updates sent for an env which was classified as invalid earlier, currently not expected, ${JSON.stringify(
+                            update,
+                        )}`,
+                    );
                 }
+                // We don't worry about if envs[index] is set already.
+                envs[index] = update;
             }
         });
     }
