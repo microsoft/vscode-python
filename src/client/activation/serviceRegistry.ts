@@ -136,12 +136,6 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
             ILanguageServerFolderService,
             NodeLanguageServerFolderService,
         );
-    } else if (languageServerType === LanguageServerType.Jedi) {
-        serviceManager.add<ILanguageServerActivator>(
-            ILanguageServerActivator,
-            JediExtensionActivator,
-            LanguageServerType.Jedi,
-        );
     } else if (languageServerType === LanguageServerType.JediLSP) {
         serviceManager.add<ILanguageServerActivator>(
             ILanguageServerActivator,
