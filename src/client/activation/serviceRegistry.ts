@@ -165,6 +165,11 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
             LanguageServerType.None,
         );
     }
+    serviceManager.add<ILanguageServerActivator>(
+        ILanguageServerActivator,
+        JediExtensionActivator,
+        LanguageServerType.Jedi,
+    ); // We fallback to Jedi if for some reason we're unable to use other language servers, hence register this always.
 
     serviceManager.addSingleton<IDownloadChannelRule>(
         IDownloadChannelRule,
