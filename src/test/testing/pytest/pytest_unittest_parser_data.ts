@@ -12,10 +12,12 @@ export enum PytestDataPlatformType {
 }
 
 export type PytestDiscoveryScenario = {
+    // eslint-disable-next-line camelcase
     pytest_version_spec: string;
     platform: string;
     description: string;
     rootdir: string;
+    // eslint-disable-next-line camelcase
     test_functions: string[];
     functionCount: number;
     stdout: string[];

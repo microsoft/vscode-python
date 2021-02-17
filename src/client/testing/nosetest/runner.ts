@@ -7,8 +7,11 @@ import { IServiceContainer } from '../../ioc/types';
 import { NOSETEST_PROVIDER } from '../common/constants';
 import { Options } from '../common/runner';
 import {
+    IArgumentsHelper,
+    IArgumentsService,
     ITestDebugLauncher,
     ITestManager,
+    ITestManagerRunner,
     ITestResultsService,
     ITestRunner,
     IXUnitParser,
@@ -16,7 +19,6 @@ import {
     TestRunOptions,
     Tests,
 } from '../common/types';
-import { IArgumentsHelper, IArgumentsService, ITestManagerRunner } from '../types';
 
 const WITH_XUNIT = '--with-xunit';
 const XUNIT_FILE = '--xunit-file';

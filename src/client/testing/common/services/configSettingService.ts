@@ -3,8 +3,7 @@ import { Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { ITestConfigSettingsService } from '../../types';
-import { UnitTestProduct } from './../types';
+import { ITestConfigSettingsService, UnitTestProduct } from '../types';
 
 @injectable()
 export class TestConfigSettingsService implements ITestConfigSettingsService {

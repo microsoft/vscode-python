@@ -14,13 +14,13 @@ import {
     TestFolder,
     TestFunction,
     TestingType,
-    TestProvider,
     TestResult,
     Tests,
     TestStatus,
     TestSuite,
     TestSummary,
 } from '../../client/testing/common/types';
+import { TestProvider } from '../../client/testing/types';
 import { fixPath, RESOURCE } from './helper';
 
 type SuperTest = TestFunction & {

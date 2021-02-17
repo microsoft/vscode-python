@@ -7,26 +7,21 @@ import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
 import { OutputChannel, Uri, WorkspaceConfiguration } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
-import {
-    IConfigurationService,
-    IInstaller,
-    IOutputChannel,
-    IPythonSettings,
-    ITestingSettings,
-    Product,
-} from '../../client/common/types';
+import { IConfigurationService, IInstaller, IOutputChannel, IPythonSettings, Product } from '../../client/common/types';
 import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IServiceContainer } from '../../client/ioc/types';
-import { TEST_OUTPUT_CHANNEL, UNIT_TEST_PRODUCTS } from '../../client/testing/common/constants';
+import { UNIT_TEST_PRODUCTS } from '../../client/testing/common/constants';
 import { TestsHelper } from '../../client/testing/common/testUtils';
 import { TestFlatteningVisitor } from '../../client/testing/common/testVisitors/flatteningVisitor';
-import { ITestsHelper } from '../../client/testing/common/types';
-import { UnitTestConfigurationService } from '../../client/testing/configuration';
 import {
     ITestConfigSettingsService,
     ITestConfigurationManager,
     ITestConfigurationManagerFactory,
-} from '../../client/testing/types';
+    ITestsHelper,
+} from '../../client/testing/common/types';
+import { TEST_OUTPUT_CHANNEL } from '../../client/testing/constants';
+import { ITestingSettings } from '../../client/testing/configuration/types';
+import { UnitTestConfigurationService } from '../../client/testing/configuration';
 
 suite('Unit Tests - ConfigurationService', () => {
     UNIT_TEST_PRODUCTS.forEach((product) => {

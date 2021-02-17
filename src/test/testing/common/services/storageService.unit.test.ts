@@ -8,6 +8,7 @@ import { copyDesiredTestResults } from '../../../../client/testing/common/testUt
 import {
     FlattenedTestFunction,
     FlattenedTestSuite,
+    TestDataItemType,
     TestFile,
     TestFolder,
     TestFunction,
@@ -15,7 +16,6 @@ import {
     TestStatus,
     TestSuite,
 } from '../../../../client/testing/common/types';
-import { TestDataItemType } from '../../../../client/testing/types';
 import { createMockTestDataItem } from '../testUtils.unit.test';
 
 suite('Unit Tests - Storage Service', () => {

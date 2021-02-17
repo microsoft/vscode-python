@@ -10,17 +10,19 @@ import { IServiceContainer } from '../../ioc/types';
 import { UNITTEST_PROVIDER } from '../common/constants';
 import { Options } from '../common/runner';
 import {
+    IArgumentsHelper,
     ITestDebugLauncher,
     ITestManager,
+    ITestManagerRunner,
     ITestResultsService,
     ITestRunner,
+    IUnitTestHelper,
     IUnitTestSocketServer,
     LaunchOptions,
     TestRunOptions,
     Tests,
     TestStatus,
 } from '../common/types';
-import { IArgumentsHelper, ITestManagerRunner, IUnitTestHelper } from '../types';
 
 type TestStatusMap = {
     status: TestStatus;

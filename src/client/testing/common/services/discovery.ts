@@ -15,7 +15,7 @@ import {
 import { IOutputChannel } from '../../../common/types';
 import { captureTelemetry } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
-import { TEST_OUTPUT_CHANNEL } from '../constants';
+import { TEST_OUTPUT_CHANNEL } from '../../constants';
 import { ITestDiscoveryService, TestDiscoveryOptions, Tests } from '../types';
 import { DiscoveredTests, ITestDiscoveredTestParser } from './types';
 

@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../../ioc/types';
-import { IArgumentsHelper, IArgumentsService, TestFilter } from '../../types';
+import { IArgumentsHelper, IArgumentsService, TestFilter } from '../../common/types';
 
 const OptionsWithArguments = ['-k', '-p', '-s', '-t', '--pattern', '--start-directory', '--top-level-directory'];
 

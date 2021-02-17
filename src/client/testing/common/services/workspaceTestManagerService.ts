@@ -1,14 +1,14 @@
 import { inject, injectable, named } from 'inversify';
 import { Disposable, OutputChannel, Uri, workspace } from 'vscode';
 import { IDisposableRegistry, IOutputChannel } from '../../../common/types';
-import { TEST_OUTPUT_CHANNEL } from './../constants';
+import { TEST_OUTPUT_CHANNEL } from '../../constants';
 import {
     ITestManager,
     ITestManagerService,
     ITestManagerServiceFactory,
     IWorkspaceTestManagerService,
     UnitTestProduct,
-} from './../types';
+} from '../types';
 
 @injectable()
 export class WorkspaceTestManagerService implements IWorkspaceTestManagerService, Disposable {

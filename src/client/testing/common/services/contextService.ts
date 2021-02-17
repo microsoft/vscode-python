@@ -8,8 +8,13 @@ import { ICommandManager } from '../../../common/application/types';
 import { ContextKey } from '../../../common/contextKey';
 import { IDisposable } from '../../../common/types';
 import { swallowExceptions } from '../../../common/utils/decorators';
-import { ITestManagementService, WorkspaceTestStatus } from '../../types';
-import { ITestCollectionStorageService, ITestContextService, TestStatus } from '../types';
+import {
+    ITestCollectionStorageService,
+    ITestContextService,
+    ITestManagementService,
+    TestStatus,
+    WorkspaceTestStatus,
+} from '../types';
 
 @injectable()
 export class TestContextService implements ITestContextService {

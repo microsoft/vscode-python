@@ -2,7 +2,7 @@ import { Uri } from 'vscode';
 import { Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { TestConfigurationManager } from '../common/managers/testConfigurationManager';
-import { ITestConfigSettingsService } from '../types';
+import { ITestConfigSettingsService } from '../common/types';
 
 export class ConfigurationManager extends TestConfigurationManager {
     constructor(workspace: Uri, serviceContainer: IServiceContainer, cfg?: ITestConfigSettingsService) {

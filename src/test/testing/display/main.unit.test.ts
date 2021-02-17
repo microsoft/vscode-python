@@ -9,7 +9,7 @@ import { StatusBarItem, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
 import '../../../client/common/extensions';
-import { IConfigurationService, IPythonSettings, ITestingSettings } from '../../../client/common/types';
+import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { Testing } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
@@ -17,6 +17,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { CANCELLATION_REASON } from '../../../client/testing/common/constants';
 import { ITestsHelper, Tests } from '../../../client/testing/common/types';
 import { TestResultDisplay } from '../../../client/testing/display/main';
+import { ITestingSettings } from '../../../client/testing/configuration/types';
 import { sleep } from '../../core';
 
 suite('Unit Tests - TestResultDisplay', () => {

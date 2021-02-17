@@ -50,7 +50,7 @@ import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { registerTypes as lintersRegisterTypes } from '../client/linters/serviceRegistry';
-import { TEST_OUTPUT_CHANNEL } from '../client/testing/common/constants';
+import { TEST_OUTPUT_CHANNEL } from '../client/testing/constants';
 import { registerTypes as unittestsRegisterTypes } from '../client/testing/serviceRegistry';
 import { LegacyFileSystem } from './legacyFileSystem';
 import { MockOutputChannel } from './mockClasses';

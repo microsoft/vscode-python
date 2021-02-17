@@ -31,6 +31,7 @@ import { TestResultResetVisitor } from '../../client/testing/common/testVisitors
 import {
     ITestCollectionStorageService,
     ITestContextService,
+    ITestDiagnosticService,
     ITestDiscoveryService,
     ITestManager,
     ITestManagerFactory,
@@ -42,14 +43,13 @@ import {
     ITestsStatusUpdaterService,
     ITestVisitor,
     IUnitTestSocketServer,
-    TestProvider,
 } from '../../client/testing/common/types';
 import { TestManager as NoseTestManager } from '../../client/testing/nosetest/main';
 import { TestDiscoveryService as NoseTestDiscoveryService } from '../../client/testing/nosetest/services/discoveryService';
 import { TestsParser as NoseTestTestsParser } from '../../client/testing/nosetest/services/parserService';
 import { TestManager as PyTestTestManager } from '../../client/testing/pytest/main';
 import { TestDiscoveryService as PytestTestDiscoveryService } from '../../client/testing/pytest/services/discoveryService';
-import { ITestDiagnosticService } from '../../client/testing/types';
+import { TestProvider } from '../../client/testing/types';
 import { TestManager as UnitTestTestManager } from '../../client/testing/unittest/main';
 import { TestDiscoveryService as UnitTestTestDiscoveryService } from '../../client/testing/unittest/services/discoveryService';
 import { TestsParser as UnitTestTestsParser } from '../../client/testing/unittest/services/parserService';

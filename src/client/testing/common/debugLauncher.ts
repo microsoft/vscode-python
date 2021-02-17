@@ -13,7 +13,8 @@ import { DebuggerTypeName } from '../../debugger/constants';
 import { IDebugConfigurationResolver } from '../../debugger/extension/configuration/types';
 import { LaunchRequestArguments } from '../../debugger/types';
 import { IServiceContainer } from '../../ioc/types';
-import { ITestDebugConfig, ITestDebugLauncher, LaunchOptions, TestProvider } from './types';
+import { TestProvider } from '../types';
+import { ITestDebugConfig, ITestDebugLauncher, LaunchOptions } from './types';
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {

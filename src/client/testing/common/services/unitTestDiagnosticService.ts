@@ -8,17 +8,20 @@ import { DiagnosticSeverity } from 'vscode';
 import * as localize from '../../../common/utils/localize';
 import {
     DiagnosticMessageType,
-    NonPassingTestMessageType,
     ITestDiagnosticService,
+    NonPassingTestMessageType,
     NonPassingTestSeverity,
+    NonPassingTestStatus,
     PythonTestMessageSeverity,
-} from '../../types';
-import { NonPassingTestStatus, TestStatus } from '../types';
+    TestStatus,
+} from '../types';
 
 @injectable()
 export class UnitTestDiagnosticService implements ITestDiagnosticService {
     private MessageTypes = new Map<NonPassingTestStatus, NonPassingTestMessageType>();
+
     private MessageSeverities = new Map<NonPassingTestSeverity, DiagnosticSeverity | undefined>();
+
     private MessagePrefixes = new Map<NonPassingTestMessageType, string>();
 
     constructor() {
@@ -32,6 +35,7 @@ export class UnitTestDiagnosticService implements ITestDiagnosticService {
         this.MessagePrefixes.set(DiagnosticMessageType.Fail, localize.Testing.testFailDiagnosticMessage());
         this.MessagePrefixes.set(DiagnosticMessageType.Skipped, localize.Testing.testSkippedDiagnosticMessage());
     }
+
     public getMessagePrefix(status: NonPassingTestStatus): string | undefined {
         const msgType = this.MessageTypes.get(status);
         // If `msgType` is `undefined` then it means we've added a new
@@ -39,6 +43,7 @@ export class UnitTestDiagnosticService implements ITestDiagnosticService {
         // elsewhere we asserted a bogus value, like `undefined`).
         return msgType !== undefined ? this.MessagePrefixes.get(msgType) : undefined;
     }
+
     public getSeverity(unitTestSeverity: NonPassingTestSeverity): DiagnosticSeverity | undefined {
         return this.MessageSeverities.get(unitTestSeverity);
     }

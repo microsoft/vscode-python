@@ -76,7 +76,14 @@ import type {
 } from 'vscode-proposed';
 
 import { IAsyncDisposable, Resource } from '../types';
-import { ICommandNameArgumentTypeMapping } from './commands';
+
+export enum CommandSource {
+    auto = 'auto',
+    ui = 'ui',
+    codelens = 'codelens',
+    commandPalette = 'commandpalette',
+    testExplorer = 'testExplorer',
+}
 
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
@@ -445,11 +452,7 @@ export interface ICommandManager {
      * @param thisArg The `this` context used when invoking the handler function.
      * @return Disposable which unregisters this command on disposal.
      */
-    registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
-        command: E,
-        callback: (...args: U) => any,
-        thisArg?: any,
-    ): Disposable;
+    registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any): Disposable;
 
     /**
      * Registers a text editor command that can be invoked via a keyboard shortcut,
@@ -485,10 +488,7 @@ export interface ICommandManager {
      * @return A thenable that resolves to the returned value of the given command. `undefined` when
      * the command handler function doesn't return anything.
      */
-    executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
-        command: E,
-        ...rest: U
-    ): Thenable<T | undefined>;
+    executeCommand<T>(command: string, ...rest: any[]): Thenable<T | undefined>;
 
     /**
      * Retrieve the list of all available commands. Commands starting an underscore are

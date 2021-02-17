@@ -16,7 +16,7 @@ import '../../../client/common/extensions';
 import { IConfigurationService, IDisposable, IPythonSettings } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
 import { UnitTestManagementService } from '../../../client/testing/main';
-import { ITestManagementService } from '../../../client/testing/types';
+import { ITestingService } from '../../../client/testing/types';
 
 //tslint:disable:no-require-imports no-require-imports no-var-requires no-any no-unnecessary-class max-func-body-length
 
@@ -29,7 +29,7 @@ suite('Language Server - LanguageServer', () => {
     let clientFactory: ILanguageClientFactory;
     let server: LanguageServerTest;
     let client: typemoq.IMock<LanguageClient>;
-    let testManager: ITestManagementService;
+    let testManager: ITestingService;
     let configService: typemoq.IMock<IConfigurationService>;
     let commandManager: typemoq.IMock<ICommandManager>;
     let stateChangeListener: ((e: StateChangeEvent) => void) | undefined;

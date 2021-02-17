@@ -8,8 +8,8 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
-import { TestDataItem, TestDataItemType } from '../../types';
 import { getParentFile, getParentSuite, getTestDataItemType } from '../testUtils';
+import { TestDataItem, TestDataItemType } from '../types';
 import * as testing from '../types';
 import * as discovery from './types';
 

@@ -13,8 +13,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { CANCELLATION_REASON } from '../common/constants';
-import { ITestsHelper, Tests } from '../common/types';
-import { ITestResultDisplay } from '../types';
+import { ITestsHelper, ITestResultDisplay, Tests } from '../common/types';
 
 @injectable()
 export class TestResultDisplay implements ITestResultDisplay {

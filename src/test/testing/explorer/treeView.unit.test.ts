@@ -10,9 +10,9 @@ import { ApplicationShell } from '../../../client/common/application/application
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
+import { ITestTreeViewProvider, TestDataItem } from '../../../client/testing/common/types';
 import { TestTreeViewProvider } from '../../../client/testing/explorer/testTreeViewProvider';
 import { TreeViewService } from '../../../client/testing/explorer/treeView';
-import { ITestTreeViewProvider, TestDataItem } from '../../../client/testing/types';
 
 suite('Unit Tests Test Explorer Tree View', () => {
     let treeViewService: TreeViewService;

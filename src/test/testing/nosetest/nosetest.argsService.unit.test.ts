@@ -8,8 +8,8 @@ import * as path from 'path';
 import * as typeMoq from 'typemoq';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ArgumentsHelper } from '../../../client/testing/common/argumentsHelper';
+import { IArgumentsHelper } from '../../../client/testing/common/types';
 import { ArgumentsService as NoseTestArgumentsService } from '../../../client/testing/nosetest/services/argsService';
-import { IArgumentsHelper } from '../../../client/testing/types';
 
 suite('ArgsService: nosetest', () => {
     let argumentsService: NoseTestArgumentsService;

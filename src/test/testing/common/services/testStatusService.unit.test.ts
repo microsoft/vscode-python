@@ -14,6 +14,8 @@ import {
     FlattenedTestSuite,
     ITestCollectionStorageService,
     ITestsStatusUpdaterService,
+    TestDataItem,
+    TestDataItemType,
     TestFile,
     TestFolder,
     TestFunction,
@@ -21,7 +23,6 @@ import {
     TestStatus,
     TestSuite,
 } from '../../../../client/testing/common/types';
-import { TestDataItem, TestDataItemType } from '../../../../client/testing/types';
 import { createMockTestDataItem } from '../testUtils.unit.test';
 
 suite('Unit Tests - Tests Status Updater', () => {

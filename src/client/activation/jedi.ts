@@ -40,7 +40,7 @@ import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
 import { JediSymbolProvider } from '../providers/symbolProvider';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { ITestManagementService } from '../testing/types';
+import { ITestingService } from '../testing/types';
 import { BlockFormatProviders } from '../typeFormatters/blockFormatProvider';
 import { OnTypeFormattingDispatcher } from '../typeFormatters/dispatcher';
 import { OnEnterFormatter } from '../typeFormatters/onEnterFormatter';
@@ -94,7 +94,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             context.subscriptions.push(JediExtensionActivator.workspaceSymbols);
         }
 
-        const testManagementService = this.serviceManager.get<ITestManagementService>(ITestManagementService);
+        const testManagementService = this.serviceManager.get<ITestingService>(ITestingService);
         testManagementService
             .activate(this.symbolProvider)
             .catch((ex) => traceError('Failed to activate Unit Tests', ex));

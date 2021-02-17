@@ -14,8 +14,8 @@ import { EnablementTracker } from '../../../client/testing/common/enablementTrac
 import { TestConfigSettingsService } from '../../../client/testing/common/services/configSettingService';
 import { TestsHelper } from '../../../client/testing/common/testUtils';
 import { TestFlatteningVisitor } from '../../../client/testing/common/testVisitors/flatteningVisitor';
-import { ITestsHelper, TestProvider } from '../../../client/testing/common/types';
-import { ITestConfigSettingsService } from '../../../client/testing/types';
+import { ITestConfigSettingsService, ITestsHelper } from '../../../client/testing/common/types';
+import { TestProvider } from '../../../client/testing/types';
 import { noop } from '../../core';
 
 suite('Unit Tests - Track Enablement', () => {

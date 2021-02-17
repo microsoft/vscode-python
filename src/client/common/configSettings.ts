@@ -20,6 +20,7 @@ import { LogLevel } from '../logging/levels';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { sendSettingTelemetry } from '../telemetry/envFileTelemetry';
+import { ITestingSettings } from '../testing/configuration/types';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { DEFAULT_INTERPRETER_SETTING, isTestExecution } from './constants';
@@ -40,7 +41,6 @@ import {
     IPythonSettings,
     ISortImportSettings,
     ITerminalSettings,
-    ITestingSettings,
     IWorkspaceSymbolSettings,
     LoggingLevelSettingType,
     Resource,

@@ -21,7 +21,7 @@ import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ITestManagementService } from '../../testing/types';
+import { ITestingService } from '../../testing/types';
 import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import { ProgressReporting } from '../progress';
@@ -43,7 +43,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
 
     constructor(
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
-        @inject(ITestManagementService) private readonly testManager: ITestManagementService,
+        @inject(ITestingService) private readonly testManager: ITestingService,
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
     ) {

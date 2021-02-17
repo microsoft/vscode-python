@@ -24,7 +24,7 @@ import {
     TensorBoardSessionStartResult,
     TensorBoardEntrypoint,
 } from '../tensorBoard/constants';
-import { TestProvider } from '../testing/common/types';
+import { TestProvider } from '../testing/types';
 import { EventName, PlatformErrors } from './constants';
 import type { LinterTrigger, TestTool } from './types';
 

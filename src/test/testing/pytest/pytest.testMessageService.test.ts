@@ -22,19 +22,17 @@ import { TestResultsService } from '../../../client/testing/common/services/test
 import { DiscoveredTests } from '../../../client/testing/common/services/types';
 import {
     FinalTestStatus,
+    ILocationStackFrameDetails,
+    IPythonTestMessage,
+    ITestNonPassingMessage,
     ITestVisitor,
+    PythonTestMessageSeverity,
     TestDiscoveryOptions,
     Tests,
     TestStatus,
 } from '../../../client/testing/common/types';
 import { XUnitParser } from '../../../client/testing/common/xUnitParser';
 import { TestMessageService } from '../../../client/testing/pytest/services/testMessageService';
-import {
-    ILocationStackFrameDetails,
-    IPythonTestMessage,
-    ITestNonPassingMessage,
-    PythonTestMessageSeverity,
-} from '../../../client/testing/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
 import { UnitTestIocContainer } from '../serviceRegistry';
@@ -58,7 +56,7 @@ const filterdTestScenarios = testScenarios.filter((ts) => {
 async function testMessageProperties(
     message: IPythonTestMessage,
     expectedMessage: IPythonTestMessage,
-    imported: boolean = false,
+    imported = false,
     status: TestStatus,
 ) {
     const nonPassing = message as ITestNonPassingMessage;

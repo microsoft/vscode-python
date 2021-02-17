@@ -52,9 +52,9 @@ import { setExtensionInstallTelemetryProperties } from './telemetry/extensionIns
 import { registerTypes as tensorBoardRegisterTypes } from './tensorBoard/serviceRegistry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
-import { ITestContextService } from './testing/common/types';
 import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from './testing/navigation/types';
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
+import { ITestingService } from './testing/types';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 
 // components
@@ -173,7 +173,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     serviceContainer.get<ITestCodeNavigatorCommandHandler>(ITestCodeNavigatorCommandHandler).register();
     serviceContainer.get<ITestExplorerCommandHandler>(ITestExplorerCommandHandler).register();
     serviceContainer.get<ILanguageServerExtension>(ILanguageServerExtension).register();
-    serviceContainer.get<ITestContextService>(ITestContextService).register();
+    serviceContainer.get<ITestingService>(ITestingService).register();
 
     // "activate" everything else
 
