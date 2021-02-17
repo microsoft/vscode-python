@@ -15,7 +15,7 @@ import { ICommandManager } from '../../../client/common/application/types';
 import '../../../client/common/extensions';
 import { IConfigurationService, IDisposable, IPythonSettings } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
-import { UnitTestManagementService } from '../../../client/testing/main';
+import { TestingService } from '../../../client/testing/main';
 import { ITestingService } from '../../../client/testing/types';
 
 //tslint:disable:no-require-imports no-require-imports no-var-requires no-any no-unnecessary-class max-func-body-length
@@ -36,7 +36,7 @@ suite('Language Server - LanguageServer', () => {
     setup(() => {
         client = typemoq.Mock.ofType<LanguageClient>();
         clientFactory = mock(DotNetLanguageClientFactory);
-        testManager = mock(UnitTestManagementService);
+        testManager = mock(TestingService);
         configService = typemoq.Mock.ofType<IConfigurationService>();
 
         commandManager = typemoq.Mock.ofType<ICommandManager>();

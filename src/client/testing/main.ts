@@ -60,7 +60,27 @@ import { TEST_OUTPUT_CHANNEL } from './constants';
 import { ITestingService } from './types';
 
 @injectable()
-export class UnitTestManagementService implements ITestingService, ITestManagementService, Disposable {
+export class TestingService implements ITestingService {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
+
+    public async activate(symbolProvider: DocumentSymbolProvider): Promise<void> {
+        const mgmt = this.serviceContainer.get<ITestManagementService>(ITestManagementService);
+        return ((mgmt as unknown) as ITestingService).activate(symbolProvider);
+    }
+
+    public register(): void {
+        const context = this.serviceContainer.get<ITestContextService>(ITestContextService);
+        context.register();
+    }
+
+    public getSettingsPropertyNames(product: Product): TestSettingsPropertyNames {
+        const helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
+        return helper.getSettingsPropertyNames(product);
+    }
+}
+
+@injectable()
+export class UnitTestManagementService implements ITestManagementService, Disposable {
     private readonly outputChannel: OutputChannel;
     private activatedOnce: boolean = false;
     private readonly disposableRegistry: Disposable[];
@@ -97,10 +117,6 @@ export class UnitTestManagementService implements ITestingService, ITestManageme
     public get onDidStatusChange(): Event<WorkspaceTestStatus> {
         return this._onDidStatusChange.event;
     }
-    public register(): void {
-        const context = this.serviceContainer.get<ITestContextService>(ITestContextService);
-        context.register();
-    }
     public async activate(symbolProvider: DocumentSymbolProvider): Promise<void> {
         if (this.activatedOnce) {
             return;
@@ -117,10 +133,6 @@ export class UnitTestManagementService implements ITestingService, ITestManageme
             traceError('Failed to auto discover tests upon activation', ex),
         );
         await this.registerSymbolProvider(symbolProvider);
-    }
-    public getSettingsPropertyNames(product: Product): TestSettingsPropertyNames {
-        const helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
-        return helper.getSettingsPropertyNames(product);
     }
     public checkExperiments() {
         const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);

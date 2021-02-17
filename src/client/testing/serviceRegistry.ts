@@ -66,7 +66,7 @@ import { TestExplorerCommandHandler } from './explorer/commandHandlers';
 import { FailedTestHandler } from './explorer/failedTestHandler';
 import { TestTreeViewProvider } from './explorer/testTreeViewProvider';
 import { TreeViewService } from './explorer/treeView';
-import { UnitTestManagementService } from './main';
+import { TestingService, UnitTestManagementService } from './main';
 import { registerTypes as registerNavigationTypes } from './navigation/serviceRegistry';
 import { ITestExplorerCommandHandler } from './navigation/types';
 import { TestManager as NoseTestManager } from './nosetest/main';
@@ -133,10 +133,7 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<ITestConfigurationService>(ITestConfigurationService, UnitTestConfigurationService);
     serviceManager.addSingleton<ITestManagementService>(ITestManagementService, UnitTestManagementService);
-    serviceManager.addSingletonInstance<ITestingService>(
-        ITestingService,
-        serviceManager.get<ITestingService>(ITestManagementService),
-    );
+    serviceManager.addSingleton<ITestingService>(ITestingService, TestingService);
 
     serviceManager.addSingleton<ITestResultDisplay>(ITestResultDisplay, TestResultDisplay);
     serviceManager.addSingleton<ITestDisplay>(ITestDisplay, TestDisplay);
