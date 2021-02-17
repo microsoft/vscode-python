@@ -17,7 +17,7 @@ import { PYLANCE_EXTENSION_ID } from '../../../client/common/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IExtensions, IPythonSettings } from '../../../client/common/types';
-import { Common, Pylance } from '../../../client/common/utils/localize';
+import { Pylance } from '../../../client/common/utils/localize';
 
 suite('Pylance Language Server - Activator', () => {
     let activator: NodeLanguageServerActivator;
@@ -92,20 +92,22 @@ suite('Pylance Language Server - Activator', () => {
     test('When Pylance is not installed activator should show install prompt ', async () => {
         when(
             appShell.showWarningMessage(
-                Pylance.installPylanceMessage(),
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo(),
+                Pylance.pylanceRevertToJediPrompt(),
+                Pylance.pylanceInstallPylance(),
+                Pylance.pylanceRevertToJedi(),
+                Pylance.remindMeLater(),
             ),
-        ).thenReturn(Promise.resolve(Common.bannerLabelNo()));
+        ).thenReturn(Promise.resolve(Pylance.remindMeLater()));
 
         try {
             await activator.start(undefined);
         } catch {}
         verify(
             appShell.showWarningMessage(
-                Pylance.installPylanceMessage(),
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo(),
+                Pylance.pylanceRevertToJediPrompt(),
+                Pylance.pylanceInstallPylance(),
+                Pylance.pylanceRevertToJedi(),
+                Pylance.remindMeLater(),
             ),
         ).once();
         verify(commandManager.executeCommand('extension.open', PYLANCE_EXTENSION_ID)).never();
@@ -114,11 +116,12 @@ suite('Pylance Language Server - Activator', () => {
     test('When Pylance is not installed activator should open Pylance install page if users clicks Yes', async () => {
         when(
             appShell.showWarningMessage(
-                Pylance.installPylanceMessage(),
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo(),
+                Pylance.pylanceRevertToJediPrompt(),
+                Pylance.pylanceInstallPylance(),
+                Pylance.pylanceRevertToJedi(),
+                Pylance.remindMeLater(),
             ),
-        ).thenReturn(Promise.resolve(Common.bannerLabelYes()));
+        ).thenReturn(Promise.resolve(Pylance.pylanceInstallPylance()));
 
         try {
             await activator.start(undefined);

@@ -34,7 +34,6 @@
     "Pylance.proposePylanceMessage": "Попробуйте новый языковый сервер для Python от Microsoft: Pylance! Установите расширение Pylance.",
     "Pylance.tryItNow": "Да, хочу",
     "Pylance.remindMeLater": "Напомните позже",
-    "Pylance.installPylanceMessage": "Расширение Pylance не установлено. Нажмите Да чтобы открыть страницу установки Pylance.",
     "Pylance.pylanceNotInstalledMessage": "Расширение Pylance не установлено.",
     "Pylance.pylanceInstalledReloadPromptMessage": "Расширение Pylance установлено. Перезагрузить окно для его активации?",
     "LanguageService.reloadAfterLanguageServerChange": "Пожалуйста, перезагрузите окно после смены типа языкового сервера."

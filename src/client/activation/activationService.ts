@@ -86,6 +86,8 @@ export class LanguageServerExtensionActivationService
             this.serviceContainer.get<IExtensions>(IExtensions),
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.serviceContainer.get<ICommandManager>(ICommandManager),
+            this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
+            this.serviceContainer.get<IConfigurationService>(IConfigurationService),
         );
         disposables.push(this.languageServerChangeHandler);
     }
