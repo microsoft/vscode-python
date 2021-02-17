@@ -142,7 +142,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
 
     private readonly refreshed = new vscode.EventEmitter<void>();
 
-    private allowOnSuggestionRefresh = false;
+    private allowOnSuggestionRefresh = true;
 
     constructor(
         // The adapter only wraps one thing: the component API.
