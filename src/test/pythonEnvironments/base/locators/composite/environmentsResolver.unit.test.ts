@@ -14,6 +14,7 @@ import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnviro
 import { parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvUpdatedEvent } from '../../../../../client/pythonEnvironments/base/locator';
 import { PythonEnvsResolver } from '../../../../../client/pythonEnvironments/base/locators/composite/environmentsResolver';
+import { getEnvs as getEnvsWithUpdates } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import * as ExternalDep from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import { EnvironmentInfoService } from '../../../../../client/pythonEnvironments/info/environmentInfoService';
@@ -116,6 +117,64 @@ suite('Python envs locator - Environments Resolver', () => {
                 null,
             ];
             assert.deepEqual(onUpdatedEvents, expectedUpdates);
+        });
+
+        test('If fetching interpreter info fails and environment is invalid, it is not reported in the final list of envs', async () => {
+            // Arrange
+            stubShellExec.returns(
+                new Promise<ExecutionResult<string>>((resolve) => {
+                    resolve({
+                        stderr: 'Kaboom',
+                        stdout: '',
+                        error: {
+                            code: 1, // Any code other than 42 means it's not a valid executable
+                            name: '',
+                            message: '',
+                        },
+                    });
+                }),
+            );
+            const env1 = createNamedEnv('env1', '3.5.12b1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec1'));
+            const env2 = createNamedEnv('env2', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
+            const environmentsToBeIterated = [env1, env2];
+            const parentLocator = new SimpleLocator(environmentsToBeIterated);
+            const resolver = new PythonEnvsResolver(parentLocator, envInfoService, () => true);
+
+            // Act
+            const iterator = resolver.iterEnvs();
+            const envs = await getEnvsWithUpdates(iterator);
+
+            // Assert
+            assert.deepEqual(envs, []);
+        });
+
+        test('If fetching interpreter info fails but the environment is valid, it is reported in the final list of envs', async () => {
+            // Arrange
+            stubShellExec.returns(
+                new Promise<ExecutionResult<string>>((resolve) => {
+                    resolve({
+                        stderr: 'Kaboom',
+                        stdout: '',
+                        error: {
+                            code: 42, // Any code other than 42 means it's not a valid executable
+                            name: '',
+                            message: '',
+                        },
+                    });
+                }),
+            );
+            const env1 = createNamedEnv('env1', '3.5.12b1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec1'));
+            const env2 = createNamedEnv('env2', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
+            const environmentsToBeIterated = [env1, env2];
+            const parentLocator = new SimpleLocator(environmentsToBeIterated);
+            const resolver = new PythonEnvsResolver(parentLocator, envInfoService, () => true);
+
+            // Act
+            const iterator = resolver.iterEnvs();
+            const envs = await getEnvsWithUpdates(iterator);
+
+            // Assert
+            assert.deepEqual(envs, [env1, env2]);
         });
 
         test('Updates to environments from the incoming iterator are sent correctly followed by the null event', async () => {
