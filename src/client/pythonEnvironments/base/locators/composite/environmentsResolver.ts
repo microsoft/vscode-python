@@ -61,7 +61,7 @@ export class PythonEnvsResolver implements ILocator {
                     state.done = true;
                     checkIfFinishedAndNotify(state, didUpdate);
                     listener.dispose();
-                } else if (seen[event.index] !== undefined) {
+                } else if (event.update && seen[event.index] !== undefined) {
                     seen[event.index] = event.update;
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
                 } else {
@@ -98,11 +98,14 @@ export class PythonEnvsResolver implements ILocator {
         // It's essential we increment the pending call count before any asynchronus calls in this method.
         // We want this to be run even when `resolveInBackground` is called in background.
         const info = await this.environmentInfoService.getEnvironmentInfo(seen[envIndex].executable.filename);
+        const old = seen[envIndex];
         if (info.interpreterExecInfo) {
             const resolvedEnv = getResolvedEnv(info.interpreterExecInfo, seen[envIndex]);
-            const old = seen[envIndex];
             seen[envIndex] = resolvedEnv;
             didUpdate.fire({ old, index: envIndex, update: resolvedEnv });
+        } else if (!info.isValidExecutable) {
+            // Send update that the environment is not valid.
+            didUpdate.fire({ old, index: envIndex, update: undefined });
         }
         state.pending -= 1;
         checkIfFinishedAndNotify(state, didUpdate);

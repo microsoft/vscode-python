@@ -56,7 +56,7 @@ async function* iterEnvsIterator(
                 state.done = true;
                 checkIfFinishedAndNotify(state, didUpdate);
                 listener.dispose();
-            } else if (seen[event.index] !== undefined) {
+            } else if (event.update && seen[event.index] !== undefined) {
                 state.pending += 1;
                 resolveDifferencesInBackground(event.index, event.update, state, didUpdate, seen).ignoreErrors();
             } else {

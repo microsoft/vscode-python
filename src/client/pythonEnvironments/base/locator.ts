@@ -22,8 +22,9 @@ export type PythonEnvUpdatedEvent = {
     old?: PythonEnvInfo;
     /**
      * The env info that replaces the old info.
+     * Update is sent as `undefined` if we find out that the environment is no longer valid.
      */
-    update: PythonEnvInfo;
+    update: PythonEnvInfo | undefined;
 };
 
 /**

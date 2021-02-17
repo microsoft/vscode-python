@@ -75,7 +75,7 @@ function getSearchLocationFilters(query: PythonLocatorQuery): ((u: Uri) => boole
  * This includes applying any received updates.
  */
 export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvInfo[]> {
-    const envs: PythonEnvInfo[] = [];
+    const envs: (PythonEnvInfo | undefined)[] = [];
 
     const updatesDone = createDeferred<void>();
     if (iterator.onUpdated === undefined) {
@@ -87,8 +87,11 @@ export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvI
                 listener.dispose();
             } else {
                 const { index, update } = event;
-                // We don't worry about if envs[index] is set already.
-                envs[index] = update;
+                // If envs[index] is undefined, environment is not valid. So do not accept updates for the env.
+                if (envs[index] !== undefined) {
+                    // We don't worry about if envs[index] is set already.
+                    envs[index] = update;
+                }
             }
         });
     }
@@ -103,7 +106,8 @@ export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvI
     }
     await updatesDone.promise;
 
-    return envs;
+    // Do not return invalid environments
+    return envs.filter((e) => e !== undefined).map((e) => e!);
 }
 
 /**
@@ -175,7 +179,7 @@ export async function resolveEnvFromIterator(
         listener = iterator.onUpdated((event: PythonEnvUpdatedEvent | null) => {
             if (event === null) {
                 done.resolve();
-            } else if (matchEnv(event.update)) {
+            } else if (!event.update || matchEnv(event.update)) {
                 resolved = event.update;
             }
         });
