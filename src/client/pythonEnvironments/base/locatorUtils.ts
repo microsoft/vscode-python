@@ -89,10 +89,9 @@ export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvI
             } else {
                 const { index, update } = event;
                 if (envs[index] === undefined) {
+                    const json = JSON.stringify(update);
                     traceVerbose(
-                        `Updates sent for an env which was classified as invalid earlier, currently not expected, ${JSON.stringify(
-                            update,
-                        )}`,
+                        `Updates sent for an env which was classified as invalid earlier, currently not expected, ${json}`,
                     );
                 }
                 // We don't worry about if envs[index] is set already.
