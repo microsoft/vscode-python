@@ -3,7 +3,7 @@
 
 import { isEqual } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
-import { traceError, traceVerbose } from '../../../../common/logger';
+import { traceVerbose } from '../../../../common/logger';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { areSameEnv, mergeEnvironments } from '../../info/env';
 import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
@@ -60,7 +60,7 @@ async function* iterEnvsIterator(
                 state.pending += 1;
                 resolveDifferencesInBackground(event.index, event.update, state, didUpdate, seen).ignoreErrors();
             } else if (event.update === undefined) {
-                traceError(
+                throw new Error(
                     'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in reducer',
                 );
             } else {

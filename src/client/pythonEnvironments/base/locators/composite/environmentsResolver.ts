@@ -3,7 +3,7 @@
 
 import { cloneDeep } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
-import { traceError, traceVerbose } from '../../../../common/logger';
+import { traceVerbose } from '../../../../common/logger';
 import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
 import { InterpreterExecInformation } from '../../info/interpreter';
@@ -65,7 +65,7 @@ export class PythonEnvsResolver implements ILocator {
                     seen[event.index] = event.update;
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
                 } else if (event.update === undefined) {
-                    traceError(
+                    throw new Error(
                         'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in resolver',
                     );
                 } else {
