@@ -480,7 +480,7 @@ suite('Interpreters service', () => {
                     build: [],
                 },
             };
-            const expectedDisplayName = '2.7';
+            const expectedDisplayName = 'Python 2.7';
 
             const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const displayName = await service.getDisplayName(interpreterInfo, undefined).catch(() => '');
@@ -512,7 +512,7 @@ suite('Interpreters service', () => {
                     build: [],
                 },
             };
-            const expectedDisplayName = '3';
+            const expectedDisplayName = 'Python 3';
 
             const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const displayName = await service.getDisplayName(interpreterInfo, undefined).catch(() => '');
