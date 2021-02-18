@@ -344,7 +344,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const envSuffixParts: string[] = [];
 
         if (info.version) {
-            // Exclude invalid -1 filler values
+            // Exclude invalid -1 filler values.
             const versionParts = [info.version.major, info.version.minor, info.version.patch].filter(
                 (value) => value > -1,
             );
