@@ -260,9 +260,9 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
     const pyenvVersionDir = getPyenvVersionsDir();
 
     const subDirs = getSubDirs(pyenvVersionDir, true);
-    for await (const subDir of subDirs) {
-        const envDirName = path.basename(subDir);
-        const interpreterPath = await getInterpreterPathFromDir(subDir);
+    for await (const subDirPath of subDirs) {
+        const envDirName = path.basename(subDirPath);
+        const interpreterPath = await getInterpreterPathFromDir(subDirPath);
 
         if (interpreterPath) {
             // The sub-directory name sometimes can contain distro and python versions.
@@ -299,7 +299,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
             const envInfo = buildEnvInfo({
                 kind: PythonEnvKind.Pyenv,
                 executable: interpreterPath,
-                location: subDir,
+                location: subDirPath,
                 version: pythonVersion,
                 source: [PythonEnvSource.Pyenv],
                 display,
