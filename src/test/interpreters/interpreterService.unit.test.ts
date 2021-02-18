@@ -486,7 +486,7 @@ suite('Interpreters service', () => {
             const displayName = await service.getDisplayName(interpreterInfo, undefined).catch(() => '');
 
             expect(displayName).to.equal(expectedDisplayName);
-            expect(getInterpreterHashStub.calledOnce).to.equal(true);
+            expect(getInterpreterHashStub.notCalled).to.equal(true);
             persistentStateFactory.verifyAll();
         });
 
@@ -518,7 +518,7 @@ suite('Interpreters service', () => {
             const displayName = await service.getDisplayName(interpreterInfo, undefined).catch(() => '');
 
             expect(displayName).to.equal(expectedDisplayName);
-            expect(getInterpreterHashStub.calledOnce).to.equal(true);
+            expect(getInterpreterHashStub.notCalled).to.equal(true);
             persistentStateFactory.verifyAll();
         });
     });
