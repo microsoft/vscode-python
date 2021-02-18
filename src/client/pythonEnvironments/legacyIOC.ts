@@ -106,21 +106,22 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
 
     if (version !== undefined) {
         const { release, sysVersion } = version;
+        const versionPrefix = getVersionString(version);
         let versionStr;
 
         if (release === undefined) {
-            versionStr = `${getVersionString(version)}-final`;
+            versionStr = `${versionPrefix}-final`;
             env.sysVersion = '';
         } else {
             const { level, serial } = release;
             const releaseStr = level === PythonReleaseLevel.Final ? 'final' : `${level}${serial}`;
-            versionStr = `${getVersionString(version)}-${releaseStr}`;
+            versionStr = `${versionPrefix}-${releaseStr}`;
             env.sysVersion = sysVersion;
         }
 
         const result = parseBasicVersion(versionStr)[0];
         const semverLikeVersion: PythonVersion = {
-            raw: versionStr,
+            raw: versionPrefix,
             major: result.major,
             minor: result.minor,
             patch: result.micro,
