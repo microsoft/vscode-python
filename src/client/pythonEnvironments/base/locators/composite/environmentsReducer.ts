@@ -56,13 +56,13 @@ async function* iterEnvsIterator(
                 state.done = true;
                 checkIfFinishedAndNotify(state, didUpdate);
                 listener.dispose();
-            } else if (event.update && seen[event.index] !== undefined) {
-                state.pending += 1;
-                resolveDifferencesInBackground(event.index, event.update, state, didUpdate, seen).ignoreErrors();
             } else if (event.update === undefined) {
                 throw new Error(
                     'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in reducer',
                 );
+            } else if (seen[event.index] !== undefined) {
+                state.pending += 1;
+                resolveDifferencesInBackground(event.index, event.update, state, didUpdate, seen).ignoreErrors();
             } else {
                 // This implies a problem in a downstream locator
                 traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
