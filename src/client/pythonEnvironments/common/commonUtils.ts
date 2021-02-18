@@ -247,10 +247,11 @@ export async function getPythonVersionFromPath(
 const filterStandardFile = getFileFilter({ ignoreFileType: FileType.SymbolicLink })!;
 
 /**
- * Returns true if binary basename is 'python' or 'python.exe', false otherwise.
- * Often we only care about python.exe (on windows) and python (on linux/mac) as other version like
- * python3.exe or python3.8 are often symlinks to python.exe or python.
- * @param executable Absolute path to executable
+ * Decide if the file is a typical Python executable.
+ *
+ * This is a best effort operation with a focus on the common cases
+ * and on efficiency.  The filename must be basic (python/python.exe).
+ * Symlinks are ignored.
  */
 export async function isStandardPythonBinary(executable: string | DirEntry): Promise<boolean> {
     if (!(await filterStandardFile(executable))) {
@@ -258,7 +259,12 @@ export async function isStandardPythonBinary(executable: string | DirEntry): Pro
     }
 
     const filename = typeof executable === 'string' ? executable : executable.filename;
-    // We could be more permissive by using matchPythonExeFilename() here.
+    // We could be more permissive here by using matchPythonExeFilename().
+    // Originally one key motivation for the "basic" check was to avoid
+    // symlinks (which often look like python3.exe, etc., particularly
+    // on Windows).  However, the symbolic link check above eliminates
+    // that rationale to an extent.
+    // (See: https://github.com/microsoft/vscode-python/issues/15447)
     if (!matchBasicPythonExeFilename(filename)) {
         return false;
     }
