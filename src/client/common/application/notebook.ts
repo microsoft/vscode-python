@@ -14,6 +14,7 @@ import type {
     NotebookEditor,
     NotebookKernel,
     NotebookKernelProvider,
+    window,
 } from 'vscode-proposed';
 import { UseProposedApi } from '../constants';
 import { IDisposableRegistry } from '../types';
@@ -34,7 +35,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     }
     public get onDidChangeActiveNotebookEditor(): Event<NotebookEditor | undefined> {
         return this.canUseNotebookApi
-            ? this.notebook.onDidChangeActiveNotebookEditor
+            ? this.window.onDidChangeActiveNotebookEditor
             : new EventEmitter<NotebookEditor | undefined>().event;
     }
     public get onDidOpenNotebookDocument(): Event<NotebookDocument> {
@@ -56,7 +57,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         return this.canUseNotebookApi ? this.notebook.notebookDocuments : [];
     }
     public get notebookEditors() {
-        return this.canUseNotebookApi ? this.notebook.visibleNotebookEditors : [];
+        return this.canUseNotebookApi ? this.window.visibleNotebookEditors : [];
     }
     public get onDidChangeNotebookDocument(): Event<NotebookCellChangedEvent> {
         return this.canUseNotebookApi
@@ -67,7 +68,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         if (!this.useProposedApi) {
             return;
         }
-        return this.notebook.activeNotebookEditor;
+        return this.window.activeNotebookEditor;
     }
     private get notebook() {
         if (!this._notebook) {
@@ -75,9 +76,16 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         }
         return this._notebook!;
     }
+    private get window() {
+        if (!this._window) {
+            this._window = require('vscode').window;
+        }
+        return this._window!;
+    }
     private readonly _onDidChangeNotebookDocument = new EventEmitter<NotebookCellChangedEvent>();
     private addedEventHandlers?: boolean;
     private _notebook?: typeof notebook;
+    private _window?: typeof window;
     private readonly canUseNotebookApi?: boolean;
     private readonly handledCellChanges = new WeakSet<VSCNotebookCellsChangeEvent>();
     constructor(
