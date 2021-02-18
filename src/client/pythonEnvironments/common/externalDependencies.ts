@@ -97,23 +97,26 @@ export async function getFileInfo(filePath: string): Promise<{ ctime: number; mt
     }
 }
 
-export async function resolveSymbolicLink(filepath: string): Promise<string> {
-    const stats = await fsapi.lstat(filepath);
+export async function resolveSymbolicLink(absPath: string): Promise<string> {
+    const stats = await fsapi.lstat(absPath);
     if (stats.isSymbolicLink()) {
-        const link = await fsapi.readlink(filepath);
+        const link = await fsapi.readlink(absPath);
         return resolveSymbolicLink(link);
     }
-    return filepath;
+    return absPath;
 }
 
-export async function* getSubDirs(root: string): AsyncIterableIterator<string> {
+export async function* getSubDirs(root: string, resolveSymlinks: boolean): AsyncIterableIterator<string> {
     const dirContents = await fsapi.readdir(root);
     const generators = dirContents.map((item) => {
         async function* generator() {
-            const stat = await fsapi.lstat(path.join(root, item));
+            const fullPath = path.join(root, item);
+            const stat = await fsapi.lstat(fullPath);
 
             if (stat.isDirectory()) {
-                yield item;
+                yield fullPath;
+            } else if (resolveSymlinks && stat.isSymbolicLink()) {
+                yield await resolveSymbolicLink(fullPath);
             }
         }
 
