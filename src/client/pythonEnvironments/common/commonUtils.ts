@@ -256,12 +256,23 @@ export async function isStandardPythonBinary(executable: string | DirEntry): Pro
     if (!(await filterStandardFile(executable))) {
         return false;
     }
+
     const filename = typeof executable === 'string' ? executable : executable.filename;
     // We could be more permissive by using matchPythonExeFilename() here.
     if (!matchBasicPythonExeFilename(filename)) {
         return false;
     }
-    // This would also be a good place to verify that the file is executable.
+
+    // For some use cases it would also be a good idea to verify that
+    // the file is executable.  That is a relatively expensive operation
+    // (a stat on linux and actually executing the file on Windows), so
+    // at best it should be an optional check.  If we went down this
+    // route then it would be worth supporting `fs.Stats` as a type
+    // for the "executable" arg.
+    //
+    // Regardless, currently there is no code that would use such
+    // an option, so for now we don't bother supporting it.
+
     return true;
 }
 
