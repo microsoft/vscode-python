@@ -17,6 +17,7 @@ import {
     SpawnOptions,
     StdErrError,
 } from './types';
+import { noop } from '../utils/misc';
 
 export function getDefaultOptions<T extends ShellOptions | SpawnOptions>(
     options: T,
@@ -98,6 +99,10 @@ export function plainExec(
     const spawnOptions = getDefaultOptions(options, defaultEnv);
     const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
     const proc = spawn(file, args, spawnOptions);
+    // Listen to these errors (unhandled errors in streams tears down the process).
+    // Errors will be bubbled up to the `error` event in `proc`, hence no need to log.
+    proc.stdout?.on('error', noop);
+    proc.stderr?.on('error', noop);
     const deferred = createDeferred<ExecutionResult<string>>();
     const disposable: IDisposable = {
         dispose: () => {
