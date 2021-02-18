@@ -14,9 +14,9 @@ import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/vi
 import * as posix from './posixUtils';
 import * as windows from './windowsUtils';
 
-const matchPythonExeFilename =
+export const matchPythonExeFilename =
     getOSType() === OSType.Windows ? windows.matchPythonExeFilename : posix.matchPythonExeFilename;
-const matchBasicPythonExeFilename =
+export const matchBasicPythonExeFilename =
     getOSType() === OSType.Windows ? windows.matchBasicPythonExeFilename : posix.matchBasicPythonExeFilename;
 
 type FileFilterFunc = (filename: string) => boolean;
@@ -34,7 +34,7 @@ export async function* findInterpretersInDir(
     ignoreErrors = true,
 ): AsyncIterableIterator<DirEntry> {
     // "checkBin" is a local variable rather than global
-    // so we can stub it out during unit testing.
+    // so we can stub out getOSType() during unit testing.
     const checkBin = getOSType() === OSType.Windows ? windows.matchPythonExeFilename : posix.matchPythonExeFilename;
     const cfg = {
         ignoreErrors,
@@ -244,28 +244,24 @@ export async function getPythonVersionFromPath(
     return version;
 }
 
-const filterStandardFile = getFileFilter({ ignoreFileType: FileType.SymbolicLink })!;
-
 /**
- * Decide if the file is a typical Python executable.
- *
- * This is a best effort operation with a focus on the common cases
- * and on efficiency.  The filename must be basic (python/python.exe).
- * Symlinks are ignored.
+ * Decide if the file is meets the given criteria for a Python executable.
  */
-export async function isStandardPythonBinary(executable: string | DirEntry): Promise<boolean> {
-    if (!(await filterStandardFile(executable))) {
+export async function checkPythonExecutable(
+    executable: string | DirEntry,
+    opts: {
+        matchFilename: (f: string) => boolean;
+        filterFile?: (f: string | DirEntry) => Promise<boolean>;
+    } = {
+        matchFilename: matchPythonExeFilename,
+    },
+): Promise<boolean> {
+    if (opts.filterFile && !(await opts.filterFile(executable))) {
         return false;
     }
 
     const filename = typeof executable === 'string' ? executable : executable.filename;
-    // We could be more permissive here by using matchPythonExeFilename().
-    // Originally one key motivation for the "basic" check was to avoid
-    // symlinks (which often look like python3.exe, etc., particularly
-    // on Windows).  However, the symbolic link check above eliminates
-    // that rationale to an extent.
-    // (See: https://github.com/microsoft/vscode-python/issues/15447)
-    if (!matchBasicPythonExeFilename(filename)) {
+    if (!opts.matchFilename(filename)) {
         return false;
     }
 
@@ -280,6 +276,33 @@ export async function isStandardPythonBinary(executable: string | DirEntry): Pro
     // an option, so for now we don't bother supporting it.
 
     return true;
+}
+
+const filterStandardFile = getFileFilter({ ignoreFileType: FileType.SymbolicLink })!;
+
+/**
+ * Decide if the file is a typical Python executable.
+ *
+ * This is a best effort operation with a focus on the common cases
+ * and on efficiency.  The filename must be basic (python/python.exe).
+ * Symlinks are ignored.
+ */
+export async function isStandardPythonBinary(executable: string | DirEntry): Promise<boolean> {
+    // We could be more permissive here by using matchPythonExeFilename().
+    // Originally one key motivation for the "basic" check was to avoid
+    // symlinks (which often look like python3.exe, etc., particularly
+    // on Windows).  However, the symbolic link check above eliminates
+    // that rationale to an extent.
+    // (See: https://github.com/microsoft/vscode-python/issues/15447)
+    //
+    // "matchFilename" is a local variable rather than global
+    // so we can stub out getOSType() during unit testing.
+    const matchFilename =
+        getOSType() === OSType.Windows ? windows.matchBasicPythonExeFilename : posix.matchBasicPythonExeFilename;
+    return checkPythonExecutable(executable, {
+        matchFilename,
+        filterFile: filterStandardFile,
+    });
 }
 
 /**
