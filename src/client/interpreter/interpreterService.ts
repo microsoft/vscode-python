@@ -344,7 +344,12 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const envSuffixParts: string[] = [];
 
         if (info.version) {
-            displayNameParts.push(`${info.version.major}.${info.version.minor}.${info.version.patch}`);
+            // Exclude invalid -1 filler values
+            const versionParts = [info.version.major, info.version.minor, info.version.patch].filter(
+                (value) => value > -1,
+            );
+
+            displayNameParts.push(versionParts.join('.'));
         }
         if (info.architecture) {
             displayNameParts.push(getArchitectureDisplayName(info.architecture));
