@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../../ioc/types';
-import { IArgumentsHelper, IArgumentsService, TestFilter } from '../../types';
+import { IArgumentsHelper, IArgumentsService, TestFilter } from '../../common/types';
 
 const OptionsWithArguments = [
     '-c',
@@ -137,18 +137,23 @@ const OptionsWithoutArguments = [
     '-d',
 ];
 
+function getKnownOptions(): { withArgs: string[]; withoutArgs: string[] } {
+    return {
+        withArgs: OptionsWithArguments,
+        withoutArgs: OptionsWithoutArguments,
+    };
+}
+
 @injectable()
 export class ArgumentsService implements IArgumentsService {
+    public readonly getKnownOptions = getKnownOptions;
+
     private readonly helper: IArgumentsHelper;
+
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.helper = serviceContainer.get<IArgumentsHelper>(IArgumentsHelper);
     }
-    public getKnownOptions(): { withArgs: string[]; withoutArgs: string[] } {
-        return {
-            withArgs: OptionsWithArguments,
-            withoutArgs: OptionsWithoutArguments,
-        };
-    }
+
     public getOptionValue(args: string[], option: string): string | string[] | undefined {
         return this.helper.getOptionValues(args, option);
     }
@@ -273,6 +278,7 @@ export class ArgumentsService implements IArgumentsService {
         }
         return this.helper.filterArguments(filteredArgs, optionsWithArgsToRemove, optionsWithoutArgsToRemove);
     }
+
     public getTestFolders(args: string[]): string[] {
         const testDirs = this.helper.getOptionValues(args, '--rootdir');
         if (typeof testDirs === 'string') {

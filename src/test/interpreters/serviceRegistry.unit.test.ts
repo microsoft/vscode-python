@@ -12,7 +12,7 @@ import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSe
 import { InterpreterEvaluation } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
 import { InterpreterSecurityService } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
 import { InterpreterSecurityStorage } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage';
-import { InterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/proxy';
+import { InterpreterAutoSelectionProxyService } from '../../client/interpreter/autoSelection/proxy';
 import { CachedInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/cached';
 import { CurrentPathInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/currentPath';
 import { SettingsInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/settings';
@@ -23,7 +23,7 @@ import {
     AutoSelectionRule,
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
     IInterpreterEvaluation,
     IInterpreterSecurityService,
     IInterpreterSecurityStorage,
@@ -106,7 +106,7 @@ suite('Interpreters - Service Registry', () => {
             ],
             [IInterpreterAutoSelectionRule, CachedInterpretersAutoSelectionRule, AutoSelectionRule.cachedInterpreters],
             [IInterpreterAutoSelectionRule, SettingsInterpretersAutoSelectionRule, AutoSelectionRule.settings],
-            [IInterpreterAutoSeletionProxyService, InterpreterAutoSeletionProxyService],
+            [IInterpreterAutoSelectionProxyService, InterpreterAutoSelectionProxyService],
             [IInterpreterAutoSelectionService, InterpreterAutoSelectionService],
 
             [EnvironmentActivationService, EnvironmentActivationService],

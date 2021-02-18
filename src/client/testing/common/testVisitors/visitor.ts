@@ -3,9 +3,8 @@
 
 'use strict';
 
-import { TestDataItem } from '../../types';
 import { getChildren, getParent } from '../testUtils';
-import { Tests } from '../types';
+import { TestDataItem, Tests } from '../types';
 
 export type Visitor = (item: TestDataItem) => void;
 

@@ -5,7 +5,6 @@ import * as assert from 'assert';
 import { Container } from 'inversify';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { QuickPickOptions } from 'vscode';
 import { IApplicationShell } from '../../client/common/application/types';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { IModuleInstaller } from '../../client/common/installer/types';
@@ -13,7 +12,7 @@ import { Product } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -53,8 +52,8 @@ suite('Installation - installation channels', () => {
             IInterpreterAutoSelectionService,
             MockAutoSelectionService,
         );
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
-            IInterpreterAutoSeletionProxyService,
+        serviceManager.addSingleton<IInterpreterAutoSelectionProxyService>(
+            IInterpreterAutoSelectionProxyService,
             MockAutoSelectionService,
         );
     });
@@ -105,13 +104,15 @@ suite('Installation - installation channels', () => {
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let items: any[] | undefined;
         appShell
             .setup((x) => x.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .callback((i: string[], _o: QuickPickOptions) => {
+            .callback((i: string[]) => {
                 items = i;
             })
             .returns(
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 () => new Promise<string | undefined>((resolve, _reject) => resolve(undefined)),
             );
 
@@ -134,7 +135,7 @@ suite('Installation - installation channels', () => {
             .returns(
                 () => new Promise<boolean>((resolve) => resolve(supported)),
             );
-        installer.setup((x) => x.priority).returns(() => (priority ? priority : 0));
+        installer.setup((x) => x.priority).returns(() => priority || 0);
         serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, installer.object, name);
         return installer;
     }

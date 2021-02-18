@@ -11,7 +11,7 @@ import {
     OutputChannel,
     Uri,
 } from 'vscode';
-import { ICommandManager, IWorkspaceService } from '../../../common/application/types';
+import { CommandSource, ICommandManager, IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
 import { isNotInstalledError } from '../../../common/helpers';
 import { traceError } from '../../../common/logger';
@@ -30,22 +30,26 @@ import { IServiceContainer } from '../../../ioc/types';
 import { EventName } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry/index';
 import { TestDiscoveryTelemetry, TestRunTelemetry } from '../../../telemetry/types';
-import { IPythonTestMessage, ITestDiagnosticService, WorkspaceTestStatus } from '../../types';
+import { TEST_OUTPUT_CHANNEL } from '../../constants';
+import { TestProvider } from '../../types';
 import { copyDesiredTestResults } from '../testUtils';
-import { CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL } from './../constants';
+import { CANCELLATION_REASON } from '../constants';
 import {
+    IPythonTestMessage,
     ITestCollectionStorageService,
+    ITestDiagnosticService,
     ITestDiscoveryService,
     ITestManager,
+    ITestNonPassingMessage,
     ITestResultsService,
     ITestsHelper,
     ITestsStatusUpdaterService,
     TestDiscoveryOptions,
-    TestProvider,
     Tests,
     TestStatus,
     TestsToRun,
-} from './../types';
+    WorkspaceTestStatus,
+} from '../types';
 
 enum CancellationTokenType {
     testDiscovery,
@@ -54,34 +58,54 @@ enum CancellationTokenType {
 
 export abstract class BaseTestManager implements ITestManager {
     public diagnosticCollection: DiagnosticCollection;
+
     protected readonly settings: IPythonSettings;
+
     private readonly unitTestDiagnosticService: ITestDiagnosticService;
+
     public abstract get enabled(): boolean;
-    protected get outputChannel() {
+
+    protected get outputChannel(): OutputChannel {
         return this._outputChannel;
     }
-    protected get testResultsService() {
+
+    protected get testResultsService(): ITestResultsService {
         return this._testResultsService;
     }
+
     private readonly testCollectionStorage: ITestCollectionStorageService;
+
     private readonly _testResultsService: ITestResultsService;
+
     private readonly commandManager: ICommandManager;
+
     private readonly workspaceService: IWorkspaceService;
+
     private readonly _outputChannel: OutputChannel;
+
     protected tests?: Tests;
+
     private _status: TestStatus = TestStatus.Unknown;
+
     private testDiscoveryCancellationTokenSource?: CancellationTokenSource;
+
     private testRunnerCancellationTokenSource?: CancellationTokenSource;
+
     private _installer!: IInstaller;
+
     private readonly testsStatusUpdaterService: ITestsStatusUpdaterService;
+
     private discoverTestsPromise?: Promise<Tests>;
+
     private readonly _onDidStatusChange = new EventEmitter<WorkspaceTestStatus>();
+
     private get installer(): IInstaller {
         if (!this._installer) {
             this._installer = this.serviceContainer.get<IInstaller>(IInstaller);
         }
         return this._installer;
     }
+
     constructor(
         public readonly testProvider: TestProvider,
         private readonly product: Product,
@@ -105,27 +129,34 @@ export abstract class BaseTestManager implements ITestManager {
         this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
         disposables.push(this);
     }
+
     protected get testDiscoveryCancellationToken(): CancellationToken | undefined {
         return this.testDiscoveryCancellationTokenSource ? this.testDiscoveryCancellationTokenSource.token : undefined;
     }
+
     protected get testRunnerCancellationToken(): CancellationToken | undefined {
         return this.testRunnerCancellationTokenSource ? this.testRunnerCancellationTokenSource.token : undefined;
     }
-    public dispose() {
+
+    public dispose(): void {
         this.stop();
     }
+
     public get status(): TestStatus {
         return this._status;
     }
+
     public get onDidStatusChange(): Event<WorkspaceTestStatus> {
         return this._onDidStatusChange.event;
     }
+
     public get workingDirectory(): string {
         return this.settings.testing.cwd && this.settings.testing.cwd.length > 0
             ? this.settings.testing.cwd
             : this.rootDirectory;
     }
-    public stop() {
+
+    public stop(): void {
         if (this.testDiscoveryCancellationTokenSource) {
             this.testDiscoveryCancellationTokenSource.cancel();
         }
@@ -133,23 +164,26 @@ export abstract class BaseTestManager implements ITestManager {
             this.testRunnerCancellationTokenSource.cancel();
         }
     }
-    public reset() {
+
+    public reset(): void {
         this.tests = undefined;
         this.updateStatus(TestStatus.Unknown);
     }
-    public resetTestResults() {
+
+    public resetTestResults(): void {
         if (!this.tests) {
             return;
         }
 
         this.testResultsService.resetResults(this.tests);
     }
+
     public async discoverTests(
         cmdSource: CommandSource,
-        ignoreCache: boolean = false,
-        quietMode: boolean = false,
-        userInitiated: boolean = false,
-        clearTestStatus: boolean = false,
+        ignoreCache = false,
+        quietMode = false,
+        userInitiated = false,
+        clearTestStatus = false,
     ): Promise<Tests> {
         if (this.discoverTestsPromise) {
             return this.discoverTestsPromise;
@@ -163,16 +197,19 @@ export abstract class BaseTestManager implements ITestManager {
         );
         this.discoverTestsPromise
             .catch(noop)
-            .then(() => (this.discoverTestsPromise = undefined))
+            .then(() => {
+                this.discoverTestsPromise = undefined;
+            })
             .ignoreErrors();
         return this.discoverTestsPromise;
     }
+
     private async _discoverTests(
         cmdSource: CommandSource,
-        ignoreCache: boolean = false,
-        quietMode: boolean = false,
-        userInitiated: boolean = false,
-        clearTestStatus: boolean = false,
+        ignoreCache = false,
+        quietMode = false,
+        userInitiated = false,
+        clearTestStatus = false,
     ): Promise<Tests> {
         if (!ignoreCache && this.tests! && this.tests!.testFunctions.length > 0) {
             this.updateStatus(TestStatus.Idle);
@@ -190,7 +227,7 @@ export abstract class BaseTestManager implements ITestManager {
         const telementryProperties: TestDiscoveryTelemetry = {
             tool: this.testProvider,
 
-            trigger: cmdSource as any,
+            trigger: cmdSource as 'ui' | 'commandpalette',
             failed: false,
         };
         this.commandManager.executeCommand('setContext', 'testsDiscovered', true).then(noop, noop);
@@ -235,7 +272,7 @@ export abstract class BaseTestManager implements ITestManager {
                 sendTelemetryEvent(EventName.UNITTEST_DISCOVER, undefined, telementryProperties);
                 return tests;
             })
-            .catch(async (reason: {}) => {
+            .catch(async (reason: Error | string) => {
                 if (userInitiated) {
                     this.testsStatusUpdaterService.updateStatusAsUnknown(this.workspaceFolder, this.tests);
                 }
@@ -270,6 +307,7 @@ export abstract class BaseTestManager implements ITestManager {
                 return Promise.reject(reason);
             });
     }
+
     public async runTest(
         cmdSource: CommandSource,
         testsToRun?: TestsToRun,
@@ -283,7 +321,7 @@ export abstract class BaseTestManager implements ITestManager {
             Run_Specific_Class: 'false',
             Run_Specific_Function: 'false',
         };
-        //Ensure valid values are sent.
+        // Ensure valid values are sent.
         const validCmdSourceValues = getNamesAndValues<CommandSource>(CommandSource).map((item) => item.value);
         const telementryProperties: TestRunTelemetry = {
             tool: this.testProvider,
@@ -331,13 +369,12 @@ export abstract class BaseTestManager implements ITestManager {
         // If running failed tests, then don't clear the previously build UnitTests
         // If we do so, then we end up re-discovering the unit tests and clearing previously cached list of failed tests
         // Similarly, if running a specific test or test file, don't clear the cache (possible tests have some state information retained)
-        const clearDiscoveredTestCache =
+        const clearDiscoveredTestCache = !(
             runFailedTests ||
             moreInfo.Run_Specific_File ||
             moreInfo.Run_Specific_Class ||
             moreInfo.Run_Specific_Function
-                ? false
-                : true;
+        );
         return this.discoverTests(cmdSource, clearDiscoveredTestCache, true, true)
             .catch((reason) => {
                 if (
@@ -385,6 +422,7 @@ export abstract class BaseTestManager implements ITestManager {
                 return Promise.reject<Tests>(reason);
             });
     }
+
     public async updateDiagnostics(tests: Tests, messages: IPythonTestMessage[]): Promise<void> {
         await this.stripStaleDiagnostics(tests, messages);
 
@@ -415,7 +453,7 @@ export abstract class BaseTestManager implements ITestManager {
                     fs.arePathsSame(fileUri.fsPath, Uri.file(msg.testFilePath).fsPath) &&
                     msg.status !== TestStatus.Pass
                 ) {
-                    const diagnostic = this.createDiagnostics(msg);
+                    const diagnostic = this.createDiagnostics(msg as ITestNonPassingMessage);
                     newDiagnostics.push(diagnostic);
                 }
             }
@@ -424,19 +462,23 @@ export abstract class BaseTestManager implements ITestManager {
             this.diagnosticCollection.set(fileUri, newDiagnostics);
         }
     }
+
     protected abstract runTestImpl(
         tests: Tests,
         testsToRun?: TestsToRun,
         runFailedTests?: boolean,
         debug?: boolean,
     ): Promise<Tests>;
+
     protected abstract getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions;
+
     private updateStatus(status: TestStatus): void {
         this._status = status;
         // Fire after 1ms, let existing code run to completion,
         // We need to allow for code to get into a consistent state.
         setTimeout(() => this._onDidStatusChange.fire({ workspace: this.workspaceFolder, status }), 1);
     }
+
     private createCancellationToken(tokenType: CancellationTokenType) {
         this.disposeCancellationToken(tokenType);
         if (tokenType === CancellationTokenType.testDiscovery) {
@@ -445,6 +487,7 @@ export abstract class BaseTestManager implements ITestManager {
             this.testRunnerCancellationTokenSource = new CancellationTokenSource();
         }
     }
+
     private disposeCancellationToken(tokenType: CancellationTokenType) {
         if (tokenType === CancellationTokenType.testDiscovery) {
             if (this.testDiscoveryCancellationTokenSource) {
@@ -458,6 +501,7 @@ export abstract class BaseTestManager implements ITestManager {
             this.testRunnerCancellationTokenSource = undefined;
         }
     }
+
     /**
      * Whenever a test is run, any previous problems it had should be removed. This runs through
      * every already existing set of diagnostics for any that match the tests that were just run
@@ -491,24 +535,25 @@ export abstract class BaseTestManager implements ITestManager {
         });
     }
 
-    private createDiagnostics(message: IPythonTestMessage): Diagnostic {
-        const stackStart = message.locationStack![0];
-        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status!);
+    private createDiagnostics(message: ITestNonPassingMessage): Diagnostic {
+        const stackStart = message.locationStack[0];
+        const diagMsg = this.getDiagnosticMessage(message);
         const severity = this.unitTestDiagnosticService.getSeverity(message.severity)!;
-        const diagMsg = message.message ? message.message.split('\n')[0] : '';
-        const diagnostic = new Diagnostic(
-            stackStart.location.range,
-            `${diagPrefix ? `${diagPrefix}: ` : 'Ok'}${diagMsg}`,
-            severity,
-        );
+        const diagnostic = new Diagnostic(stackStart.location.range, diagMsg, severity);
         diagnostic.code = message.code;
         diagnostic.source = message.provider;
         const relatedInfoArr: DiagnosticRelatedInformation[] = [];
-        for (const frameDetails of message.locationStack!) {
+        for (const frameDetails of message.locationStack) {
             const relatedInfo = new DiagnosticRelatedInformation(frameDetails.location, frameDetails.lineText);
             relatedInfoArr.push(relatedInfo);
         }
         diagnostic.relatedInformation = relatedInfoArr;
         return diagnostic;
+    }
+
+    private getDiagnosticMessage(message: ITestNonPassingMessage): string {
+        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status);
+        const diagMsg = message.message ? message.message.split('\n')[0] : '';
+        return `${diagPrefix ? `${diagPrefix}: ` : 'Ok'}${diagMsg}`;
     }
 }

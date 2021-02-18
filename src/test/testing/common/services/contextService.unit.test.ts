@@ -13,10 +13,11 @@ import { TestCollectionStorageService } from '../../../../client/testing/common/
 import {
     ITestCollectionStorageService,
     ITestContextService,
+    ITestManagementService,
     TestStatus,
+    WorkspaceTestStatus,
 } from '../../../../client/testing/common/types';
 import { UnitTestManagementService } from '../../../../client/testing/main';
-import { ITestManagementService, WorkspaceTestStatus } from '../../../../client/testing/types';
 
 suite('Unit Tests - Context Service', () => {
     let cmdManager: ICommandManager;

@@ -1,26 +1,28 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { Uri, workspace } from 'vscode';
+import { CommandSource } from '../../common/application/types';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
-import { ITestingSettings, Product } from '../../common/types';
+import { Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { TestDataItem, TestDataItemType, TestWorkspaceFolder } from '../types';
-import { CommandSource } from './constants';
+import { ITestingSettings, TestSettingsPropertyNames } from '../configuration/types';
+import { TestProvider } from '../types';
 import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
 import {
     FlattenedTestFunction,
     FlattenedTestSuite,
     ITestsHelper,
     ITestVisitor,
+    TestDataItem,
+    TestDataItemType,
     TestFile,
     TestFolder,
     TestFunction,
-    TestProvider,
     Tests,
-    TestSettingsPropertyNames,
     TestsToRun,
     TestSuite,
+    TestWorkspaceFolder,
     UnitTestProduct,
 } from './types';
 

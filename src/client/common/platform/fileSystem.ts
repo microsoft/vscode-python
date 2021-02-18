@@ -12,6 +12,7 @@ import { promisify } from 'util';
 import * as vscode from 'vscode';
 import '../extensions';
 import { traceError } from '../logger';
+import { convertFileType } from '../utils/filesystem';
 import { createDirNotEmptyError, isFileExistsError, isFileNotFoundError, isNoPermissionsError } from './errors';
 import { FileSystemPaths, FileSystemPathUtils } from './fs-paths';
 import { TemporaryFileSystem } from './fs-temp';
@@ -30,30 +31,6 @@ import {
 } from './types';
 
 const ENCODING = 'utf8';
-
-interface IKnowsFileType {
-    isFile(): boolean;
-    isDirectory(): boolean;
-    isSymbolicLink(): boolean;
-}
-
-// This helper function determines the file type of the given stats
-// object.  The type follows the convention of node's fs module, where
-// a file has exactly one type.  Symlinks are not resolved.
-export function convertFileType(info: IKnowsFileType): FileType {
-    if (info.isFile()) {
-        return FileType.File;
-    }
-    if (info.isDirectory()) {
-        return FileType.Directory;
-    }
-    if (info.isSymbolicLink()) {
-        // The caller is responsible for combining this ("logical or")
-        // with File or Directory as necessary.
-        return FileType.SymbolicLink;
-    }
-    return FileType.Unknown;
-}
 
 export function convertStat(old: fs.Stats, filetype: FileType): FileStat {
     return {
@@ -550,7 +527,7 @@ export class FileSystem implements IFileSystem {
     }
 
     // eslint-disable-next-line @typescript-eslint/ban-types
-    public async writeFile(filename: string, data: {}): Promise<void> {
+    public async writeFile(filename: string, data: string | Buffer): Promise<void> {
         return this.utils.raw.writeText(filename, data);
     }
 

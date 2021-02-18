@@ -8,24 +8,26 @@ import * as path from 'path';
 import { instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { TreeItemCollapsibleState, Uri } from 'vscode';
+import { CommandSource } from '../../../client/common/application/types';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { Commands } from '../../../client/common/constants';
 import { IDisposable } from '../../../client/common/types';
-import { CommandSource } from '../../../client/testing/common/constants';
 import { TestCollectionStorageService } from '../../../client/testing/common/services/storageService';
 import { getTestDataItemType } from '../../../client/testing/common/testUtils';
 import {
     ITestCollectionStorageService,
+    TestDataItem,
+    TestDataItemType,
     TestFile,
     TestFolder,
     Tests,
     TestStatus,
+    TestWorkspaceFolder,
 } from '../../../client/testing/common/types';
 import { TestTreeItem } from '../../../client/testing/explorer/testTreeViewItem';
 import { TestTreeViewProvider } from '../../../client/testing/explorer/testTreeViewProvider';
 import { UnitTestManagementService } from '../../../client/testing/main';
-import { TestDataItem, TestDataItemType, TestWorkspaceFolder } from '../../../client/testing/types';
 import { noop } from '../../core';
 import {
     createMockTestExplorer as createMockTestTreeProvider,

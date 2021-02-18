@@ -26,7 +26,7 @@ import { IServiceContainer, IServiceManager } from './ioc/types';
 import { addOutputChannelLogging } from './logging';
 import * as pythonEnvironments from './pythonEnvironments';
 import { PythonEnvironments } from './pythonEnvironments/api';
-import { TEST_OUTPUT_CHANNEL } from './testing/common/constants';
+import { TEST_OUTPUT_CHANNEL } from './testing/constants';
 
 // The code in this module should do nothing more complex than register
 // objects to DI and simple init (e.g. no side effects).  That implies

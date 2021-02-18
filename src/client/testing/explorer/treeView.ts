@@ -9,7 +9,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
-import { ITestTreeViewProvider, TestDataItem } from '../types';
+import { ITestTreeViewProvider, TestDataItem } from '../common/types';
 
 @injectable()
 export class TreeViewService implements IExtensionSingleActivationService, IDisposable {

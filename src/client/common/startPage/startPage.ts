@@ -8,8 +8,8 @@ import { ConfigurationTarget, EventEmitter, UIKind, Uri, ViewColumn } from 'vsco
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { sendTelemetryEvent } from '../../telemetry';
-import { CommandSource } from '../../testing/common/constants';
 import {
+    CommandSource,
     IApplicationEnvironment,
     IApplicationShell,
     ICommandManager,

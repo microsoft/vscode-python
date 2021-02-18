@@ -9,11 +9,11 @@ import * as typeMoq from 'typemoq';
 import { OutputChannel, Uri } from 'vscode';
 import { IInstaller, IOutputChannel, Product } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
-import { TEST_OUTPUT_CHANNEL } from '../../client/testing/common/constants';
+import { ITestConfigSettingsService, ITestConfigurationManagerFactory } from '../../client/testing/common/types';
 import { TestConfigurationManagerFactory } from '../../client/testing/configurationFactory';
+import { TEST_OUTPUT_CHANNEL } from '../../client/testing/constants';
 import * as nose from '../../client/testing/nosetest/testConfigurationManager';
 import * as pytest from '../../client/testing/pytest/testConfigurationManager';
-import { ITestConfigSettingsService, ITestConfigurationManagerFactory } from '../../client/testing/types';
 import * as unittest from '../../client/testing/unittest/testConfigurationManager';
 
 use(chaiAsPromised);

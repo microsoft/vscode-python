@@ -3,14 +3,12 @@
 
 'use strict';
 
-import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
+import { CancellationToken, Disposable, Position, TextDocument, Uri } from 'vscode';
 import { Commands as LSCommands } from '../../activation/commands';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../tensorBoard/constants';
-import { CommandSource } from '../../testing/common/constants';
-import { TestFunction, TestsToRun } from '../../testing/common/types';
-import { TestDataItem, TestWorkspaceFolder } from '../../testing/types';
+import { TestDataItem, TestFunction, TestsToRun, TestWorkspaceFolder } from '../../testing/common/types';
 import { Commands } from '../constants';
-import { Channel } from './types';
+import { Channel, CommandSource, ICommandManager } from './types';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 
@@ -128,4 +126,18 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.navigateToTestFunction]: [Uri, TestDataItem, boolean];
     [Commands.navigateToTestSuite]: [Uri, TestDataItem, boolean];
     [Commands.LaunchTensorBoard]: [TensorBoardEntrypoint, TensorBoardEntrypointTrigger];
+}
+
+//export const IPythonCommandManager = Symbol('IPythonCommandManager');
+export interface IPythonCommandManager extends ICommandManager {
+    registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
+        command: E,
+        callback: (...args: U) => any,
+        thisArg?: any,
+    ): Disposable;
+
+    executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
+        command: E,
+        ...rest: U
+    ): Thenable<T | undefined>;
 }

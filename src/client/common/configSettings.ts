@@ -15,11 +15,12 @@ import {
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
 import './extensions';
-import { IInterpreterAutoSeletionProxyService, IInterpreterSecurityService } from '../interpreter/autoSelection/types';
+import { IInterpreterAutoSelectionProxyService, IInterpreterSecurityService } from '../interpreter/autoSelection/types';
 import { LogLevel } from '../logging/levels';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { sendSettingTelemetry } from '../telemetry/envFileTelemetry';
+import { ITestingSettings } from '../testing/configuration/types';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { DEFAULT_INTERPRETER_SETTING, isTestExecution } from './constants';
@@ -40,7 +41,6 @@ import {
     IPythonSettings,
     ISortImportSettings,
     ITerminalSettings,
-    ITestingSettings,
     IWorkspaceSymbolSettings,
     LoggingLevelSettingType,
     Resource,
@@ -159,7 +159,7 @@ export class PythonSettings implements IPythonSettings {
 
     constructor(
         workspaceFolder: Resource,
-        private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
+        private readonly interpreterAutoSelectionService: IInterpreterAutoSelectionProxyService,
         workspace?: IWorkspaceService,
         private readonly experimentsManager?: IExperimentsManager,
         private readonly interpreterPathService?: IInterpreterPathService,
@@ -173,7 +173,7 @@ export class PythonSettings implements IPythonSettings {
 
     public static getInstance(
         resource: Uri | undefined,
-        interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
+        interpreterAutoSelectionService: IInterpreterAutoSelectionProxyService,
         workspace?: IWorkspaceService,
         experimentsManager?: IExperimentsManager,
         interpreterPathService?: IInterpreterPathService,

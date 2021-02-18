@@ -6,7 +6,7 @@
 import * as assert from 'assert';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { IWorkspaceService } from '../../../client/common/application/types';
+import { CommandSource, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import {
@@ -18,18 +18,21 @@ import {
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ArgumentsHelper } from '../../../client/testing/common/argumentsHelper';
-import { CommandSource } from '../../../client/testing/common/constants';
 import { TestCollectionStorageService } from '../../../client/testing/common/services/storageService';
 import { TestResultsService } from '../../../client/testing/common/services/testResultsService';
 import { TestsStatusUpdaterService } from '../../../client/testing/common/services/testsStatusService';
 import { TestsHelper } from '../../../client/testing/common/testUtils';
 import { TestResultResetVisitor } from '../../../client/testing/common/testVisitors/resultResetVisitor';
 import {
+    IArgumentsHelper,
+    IArgumentsService,
     FlattenedTestFunction,
     FlattenedTestSuite,
+    ITestManagerRunner,
     ITestResultsService,
     ITestsHelper,
     ITestsStatusUpdaterService,
+    TestDataItemType,
     TestFile,
     TestFolder,
     TestFunction,
@@ -37,12 +40,6 @@ import {
     TestStatus,
     TestSuite,
 } from '../../../client/testing/common/types';
-import {
-    IArgumentsHelper,
-    IArgumentsService,
-    ITestManagerRunner,
-    TestDataItemType,
-} from '../../../client/testing/types';
 import { TestManager } from '../../../client/testing/unittest/main';
 import { TestManagerRunner } from '../../../client/testing/unittest/runner';
 import { ArgumentsService } from '../../../client/testing/unittest/services/argsService';

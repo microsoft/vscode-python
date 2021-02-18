@@ -8,7 +8,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { IPersistentState, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 
-export const IInterpreterAutoSeletionProxyService = Symbol('IInterpreterAutoSeletionProxyService');
+export const IInterpreterAutoSelectionProxyService = Symbol('IInterpreterAutoSelectionProxyService');
 /**
  * Interface similar to IInterpreterAutoSelectionService, to avoid chickn n egg situation.
  * Do we get python path from config first or get auto selected interpreter first!?
@@ -17,17 +17,17 @@ export const IInterpreterAutoSeletionProxyService = Symbol('IInterpreterAutoSele
  * Solution - Use a proxy that does nothing first, but later the real instance is injected.
  *
  * @export
- * @interface IInterpreterAutoSeletionProxyService
+ * @interface IInterpreterAutoSelectionProxyService
  */
-export interface IInterpreterAutoSeletionProxyService {
+export interface IInterpreterAutoSelectionProxyService {
     readonly onDidChangeAutoSelectedInterpreter: Event<void>;
     getAutoSelectedInterpreter(resource: Resource): PythonEnvironment | undefined;
-    registerInstance?(instance: IInterpreterAutoSeletionProxyService): void;
+    registerInstance?(instance: IInterpreterAutoSelectionProxyService): void;
     setWorkspaceInterpreter(resource: Uri, interpreter: PythonEnvironment | undefined): Promise<void>;
 }
 
 export const IInterpreterAutoSelectionService = Symbol('IInterpreterAutoSelectionService');
-export interface IInterpreterAutoSelectionService extends IInterpreterAutoSeletionProxyService {
+export interface IInterpreterAutoSelectionService extends IInterpreterAutoSelectionProxyService {
     readonly onDidChangeAutoSelectedInterpreter: Event<void>;
     autoSelectInterpreter(resource: Resource): Promise<void>;
     getAutoSelectedInterpreter(resource: Resource): PythonEnvironment | undefined;

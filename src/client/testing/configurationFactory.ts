@@ -9,7 +9,11 @@ import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import * as nose from './nosetest/testConfigurationManager';
 import * as pytest from './pytest/testConfigurationManager';
-import { ITestConfigSettingsService, ITestConfigurationManager, ITestConfigurationManagerFactory } from './types';
+import {
+    ITestConfigSettingsService,
+    ITestConfigurationManager,
+    ITestConfigurationManagerFactory,
+} from './common/types';
 import * as unittest from './unittest/testConfigurationManager';
 
 @injectable()

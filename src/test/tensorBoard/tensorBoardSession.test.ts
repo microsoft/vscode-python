@@ -7,7 +7,6 @@ import { TensorBoard } from '../../client/common/utils/localize';
 import { IServiceManager } from '../../client/ioc/types';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../client/tensorBoard/constants';
 import { TensorBoardSession } from '../../client/tensorBoard/tensorBoardSession';
-import { TensorBoardSessionProvider } from '../../client/tensorBoard/tensorBoardSessionProvider';
 import { closeActiveWindows, initialize } from '../initialize';
 import * as ExperimentHelpers from '../../client/common/experiments/helpers';
 import { IInterpreterService } from '../../client/interpreter/contracts';
@@ -31,7 +30,6 @@ suite('TensorBoard session creation', async () => {
     let serviceManager: IServiceManager;
     let errorMessageStub: Sinon.SinonStub;
     let sandbox: Sinon.SinonSandbox;
-    let provider: TensorBoardSessionProvider;
     let applicationShell: IApplicationShell;
     let commandManager: ICommandManager;
 
@@ -59,9 +57,6 @@ suite('TensorBoard session creation', async () => {
         const interpreterService = serviceManager.get<IInterpreterService>(IInterpreterService);
         sandbox.stub(interpreterService, 'getActiveInterpreter').resolves(interpreter);
 
-        // Create tensorboard session provider
-        provider = serviceManager.get<TensorBoardSessionProvider>(TensorBoardSessionProvider);
-        await provider.activate();
         applicationShell = serviceManager.get<IApplicationShell>(IApplicationShell);
         errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
         commandManager = serviceManager.get<ICommandManager>(ICommandManager);

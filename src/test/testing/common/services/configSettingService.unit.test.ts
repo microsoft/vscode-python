@@ -16,8 +16,7 @@ import {
     BufferedTestConfigSettingsService,
     TestConfigSettingsService,
 } from '../../../../client/testing/common/services/configSettingService';
-import { UnitTestProduct } from '../../../../client/testing/common/types';
-import { ITestConfigSettingsService } from '../../../../client/testing/types';
+import { ITestConfigSettingsService, UnitTestProduct } from '../../../../client/testing/common/types';
 
 use(chaiPromise);
 

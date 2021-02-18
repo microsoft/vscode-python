@@ -1,7 +1,7 @@
 import { inject, injectable, named } from 'inversify';
-import { TestDataItem, TestDataItemType } from '../../types';
 import { getChildren, getTestDataItemType } from '../testUtils';
 import { ITestResultsService, ITestVisitor, Tests, TestStatus } from '../types';
+import { TestDataItem, TestDataItemType } from '../types';
 
 @injectable()
 export class TestResultsService implements ITestResultsService {

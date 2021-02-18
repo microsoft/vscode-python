@@ -11,7 +11,13 @@ import {
     TextDocument,
     Uri,
 } from 'vscode';
-import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
+import {
+    CommandSource,
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IWorkspaceService,
+} from '../common/application/types';
 import * as constants from '../common/constants';
 import { AlwaysDisplayTestExplorerGroups } from '../common/experiments/groups';
 import '../common/extensions';
@@ -21,6 +27,7 @@ import {
     IDisposableRegistry,
     IExperimentsManager,
     IOutputChannel,
+    Product,
     Resource,
 } from '../common/types';
 import { noop } from '../common/utils/misc';
@@ -29,25 +36,48 @@ import { IServiceContainer } from '../ioc/types';
 import { EventName } from '../telemetry/constants';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry/index';
 import { activateCodeLenses } from './codeLenses/main';
-import { CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL } from './common/constants';
+import { CANCELLATION_REASON } from './common/constants';
 import { selectTestWorkspace } from './common/testUtils';
+import { TestSettingsPropertyNames } from './configuration/types';
 import {
     ITestCollectionStorageService,
+    ITestConfigurationService,
+    ITestManagementService,
     ITestManager,
     IWorkspaceTestManagerService,
+    ITestDisplay,
     TestFile,
     TestFunction,
+    ITestContextService,
+    ITestResultDisplay,
+    ITestsHelper,
     TestStatus,
     TestsToRun,
-} from './common/types';
-import {
-    ITestConfigurationService,
-    ITestDisplay,
-    ITestManagementService,
-    ITestResultDisplay,
     TestWorkspaceFolder,
     WorkspaceTestStatus,
-} from './types';
+} from './common/types';
+import { TEST_OUTPUT_CHANNEL } from './constants';
+import { ITestingService } from './types';
+
+@injectable()
+export class TestingService implements ITestingService {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
+
+    public async activate(symbolProvider: DocumentSymbolProvider): Promise<void> {
+        const mgmt = this.serviceContainer.get<ITestManagementService>(ITestManagementService);
+        return ((mgmt as unknown) as ITestingService).activate(symbolProvider);
+    }
+
+    public register(): void {
+        const context = this.serviceContainer.get<ITestContextService>(ITestContextService);
+        context.register();
+    }
+
+    public getSettingsPropertyNames(product: Product): TestSettingsPropertyNames {
+        const helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
+        return helper.getSettingsPropertyNames(product);
+    }
+}
 
 @injectable()
 export class UnitTestManagementService implements ITestManagementService, Disposable {

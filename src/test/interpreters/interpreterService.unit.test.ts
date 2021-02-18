@@ -33,7 +33,7 @@ import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import {
@@ -51,6 +51,8 @@ import * as hashApi from '../../client/pythonEnvironments/discovery/locators/ser
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { PYTHON_PATH } from '../common';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 use(chaiAsPromised);
 
@@ -156,8 +158,8 @@ suite('Interpreters service', () => {
             IInterpreterAutoSelectionService,
             MockAutoSelectionService,
         );
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
-            IInterpreterAutoSeletionProxyService,
+        serviceManager.addSingleton<IInterpreterAutoSelectionProxyService>(
+            IInterpreterAutoSelectionProxyService,
             MockAutoSelectionService,
         );
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService.object);
@@ -202,7 +204,7 @@ suite('Interpreters service', () => {
                 .returns(() => undefined);
             workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
             workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
-            let activeTextEditorChangeHandler: Function | undefined;
+            let activeTextEditorChangeHandler: (e: TextEditor | undefined) => any | undefined;
             documentManager
                 .setup((d) => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns((handler) => {
@@ -232,7 +234,7 @@ suite('Interpreters service', () => {
                 .returns(() => undefined);
             workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
             workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
-            let activeTextEditorChangeHandler: Function | undefined;
+            let activeTextEditorChangeHandler: (e?: TextEditor | undefined) => any | undefined;
             documentManager
                 .setup((d) => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns((handler) => {
@@ -247,7 +249,7 @@ suite('Interpreters service', () => {
             interpreterDisplay.verify((i) => i.refresh(TypeMoq.It.isValue(undefined)), TypeMoq.Times.never());
         });
 
-        test('If user belongs to Deprecate Pythonpath experiment, register the correct handler', async () => {
+        test('If user belongs to Deprecate pythonPath experiment, register the correct handler', async () => {
             const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
@@ -257,7 +259,9 @@ suite('Interpreters service', () => {
                 .returns(() => undefined);
             workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
             workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
-            let interpreterPathServiceHandler: Function | undefined;
+            let interpreterPathServiceHandler: (e: InterpreterConfigurationScope) => any | undefined = () => {
+                return 0;
+            };
             documentManager
                 .setup((d) => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => {
@@ -278,7 +282,9 @@ suite('Interpreters service', () => {
                 .verifiable(TypeMoq.Times.once());
             interpreterPathService
                 .setup((d) => d.onDidChange(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                .callback((cb) => (interpreterPathServiceHandler = cb))
+                .callback((cb) => {
+                    interpreterPathServiceHandler = cb;
+                })
                 .returns(() => {
                     return { dispose: noop };
                 });

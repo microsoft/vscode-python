@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import {
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
     IInterpreterSecurityService,
 } from '../../interpreter/autoSelection/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -29,8 +29,8 @@ export class ConfigurationService implements IConfigurationService {
     }
 
     public getSettings(resource?: Uri): IPythonSettings {
-        const InterpreterAutoSelectionService = this.serviceContainer.get<IInterpreterAutoSeletionProxyService>(
-            IInterpreterAutoSeletionProxyService,
+        const InterpreterAutoSelectionService = this.serviceContainer.get<IInterpreterAutoSelectionProxyService>(
+            IInterpreterAutoSelectionProxyService,
         );
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);

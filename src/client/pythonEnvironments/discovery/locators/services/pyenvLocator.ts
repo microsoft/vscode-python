@@ -13,7 +13,7 @@ import {
     getInterpreterPathFromDir,
     getPythonVersionFromPath,
 } from '../../../common/commonUtils';
-import { getFileInfo, getSubDirs, pathExists } from '../../../common/externalDependencies';
+import { arePathsSame, getFileInfo, getSubDirs, pathExists } from '../../../common/externalDependencies';
 
 function getPyenvDir(): string {
     // Check if the pyenv environment variables exist: PYENV on Windows, PYENV_ROOT on Unix.
@@ -35,6 +35,17 @@ function getPyenvDir(): string {
 
 function getPyenvVersionsDir(): string {
     return path.join(getPyenvDir(), 'versions');
+}
+
+/**
+ * Checks if a given directory path is same as `pyenv` shims path. This checks
+ * `~/.pyenv/shims` on posix and `~/.pyenv/pyenv-win/shims` on windows.
+ * @param {string} dirPath: Absolute path to any directory
+ * @returns {boolean}: Returns true if the patch is same as `pyenv` shims directory.
+ */
+export function isPyenvShimDir(dirPath: string): boolean {
+    const shimPath = path.join(getPyenvDir(), 'shims');
+    return arePathsSame(shimPath, dirPath) || arePathsSame(`${shimPath}${path.sep}`, dirPath);
 }
 
 /**

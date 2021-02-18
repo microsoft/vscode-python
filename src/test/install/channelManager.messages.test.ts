@@ -13,7 +13,7 @@ import { Product } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -60,8 +60,8 @@ suite('Installation - channel messages', () => {
             IInterpreterAutoSelectionService,
             MockAutoSelectionService,
         );
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
-            IInterpreterAutoSeletionProxyService,
+        serviceManager.addSingleton<IInterpreterAutoSelectionProxyService>(
+            IInterpreterAutoSelectionProxyService,
             MockAutoSelectionService,
         );
     });
@@ -161,13 +161,14 @@ suite('Installation - channel messages', () => {
         interpreters
             .setup((x) => x.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 () => new Promise<PythonEnvironment>((resolve, _reject) => resolve(activeInterpreter)),
             );
         const channels = new InstallationChannelManager(serviceContainer);
 
-        let url: string = '';
-        let message: string = '';
-        let search: string = '';
+        let url = '';
+        let message = '';
+        let search = '';
         appShell
             .setup((x) => x.showErrorMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
             .callback((m: string, s: string) => {
@@ -175,6 +176,7 @@ suite('Installation - channel messages', () => {
                 search = s;
             })
             .returns(
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 () => new Promise<string>((resolve, _reject) => resolve(search)),
             );
         appShell

@@ -47,7 +47,12 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
             // Pylance is not yet installed. Throw will cause activator to use Jedi
             // temporarily. Language server installation tracker will prompt for window
             // reload when Pylance becomes available.
-            await promptForPylanceInstall(this.appShell, this.commandManager);
+            await promptForPylanceInstall(
+                this.appShell,
+                this.commandManager,
+                this.workspace,
+                this.configurationService,
+            );
             throw new Error(Pylance.pylanceNotInstalledMessage());
         }
     }

@@ -7,8 +7,7 @@ import * as assert from 'assert';
 import { DiagnosticSeverity } from 'vscode';
 import * as localize from '../../../client/common/utils/localize';
 import { UnitTestDiagnosticService } from '../../../client/testing/common/services/unitTestDiagnosticService';
-import { TestStatus } from '../../../client/testing/common/types';
-import { PythonTestMessageSeverity } from '../../../client/testing/types';
+import { PythonTestMessageSeverity, TestStatus } from '../../../client/testing/common/types';
 
 suite('UnitTestDiagnosticService: unittest', () => {
     let diagnosticService: UnitTestDiagnosticService;

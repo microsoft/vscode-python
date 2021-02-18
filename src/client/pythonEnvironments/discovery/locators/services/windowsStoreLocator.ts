@@ -11,7 +11,7 @@ import { buildEnvInfo } from '../../../base/info/env';
 import { getPythonVersionFromPath } from '../../../base/info/pythonVersion';
 import { IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
-import { getFileInfo } from '../../../common/externalDependencies';
+import { getFileInfo, pathExists } from '../../../common/externalDependencies';
 import { PythonEnvStructure } from '../../../common/pythonBinariesWatcher';
 
 /**
@@ -26,16 +26,59 @@ export function getWindowsStoreAppsRoot(): string {
 
 /**
  * Checks if a given path is under the forbidden windows store directory.
- * @param {string} interpreterPath : Absolute path to the python interpreter.
+ * @param {string} absPath : Absolute path to a file or directory.
  * @returns {boolean} : Returns true if `interpreterPath` is under
  * `%ProgramFiles%/WindowsApps`.
  */
-export function isForbiddenStorePath(interpreterPath: string): boolean {
+export function isForbiddenStorePath(absPath: string): boolean {
     const programFilesStorePath = path
         .join(getEnvironmentVariable('ProgramFiles') || 'Program Files', 'WindowsApps')
         .normalize()
         .toUpperCase();
-    return path.normalize(interpreterPath).toUpperCase().includes(programFilesStorePath);
+    return path.normalize(absPath).toUpperCase().includes(programFilesStorePath);
+}
+
+/**
+ * Checks if a given directory is any one of the possible windows store directories, or
+ * its sub-directory.
+ * @param {string} dirPath : Absolute path to a directory.
+ *
+ * Remarks:
+ * These locations are tested:
+ * 1. %LOCALAPPDATA%/Microsoft/WindowsApps
+ * 2. %ProgramFiles%/WindowsApps
+ */
+export function isWindowsStoreDir(dirPath: string): boolean {
+    const storeRootPath = path.normalize(getWindowsStoreAppsRoot()).toUpperCase();
+    return path.normalize(dirPath).toUpperCase().includes(storeRootPath) || isForbiddenStorePath(dirPath);
+}
+
+/**
+ * Checks if store python is installed.
+ * @param {string} interpreterPath : Absolute path to a interpreter.
+ * Remarks:
+ * If store python was never installed then the store apps directory will not
+ * have idle.exe or pip.exe. We can use this as a way to identify the python.exe
+ * found in the store apps directory is a real python or a store install shortcut.
+ */
+async function isStorePythonInstalled(interpreterPath?: string): Promise<boolean> {
+    let results = await Promise.all([
+        pathExists(path.join(getWindowsStoreAppsRoot(), 'idle.exe')),
+        pathExists(path.join(getWindowsStoreAppsRoot(), 'pip.exe')),
+    ]);
+
+    if (results.includes(true)) {
+        return true;
+    }
+
+    if (interpreterPath) {
+        results = await Promise.all([
+            pathExists(path.join(path.dirname(interpreterPath), 'idle.exe')),
+            pathExists(path.join(path.dirname(interpreterPath), 'pip.exe')),
+        ]);
+        return results.includes(true);
+    }
+    return false;
 }
 
 /**
@@ -71,17 +114,19 @@ export function isForbiddenStorePath(interpreterPath: string): boolean {
  *
  */
 export async function isWindowsStoreEnvironment(interpreterPath: string): Promise<boolean> {
-    const pythonPathToCompare = path.normalize(interpreterPath).toUpperCase();
-    const localAppDataStorePath = path.normalize(getWindowsStoreAppsRoot()).toUpperCase();
-    if (pythonPathToCompare.includes(localAppDataStorePath)) {
-        return true;
-    }
+    if (await isStorePythonInstalled(interpreterPath)) {
+        const pythonPathToCompare = path.normalize(interpreterPath).toUpperCase();
+        const localAppDataStorePath = path.normalize(getWindowsStoreAppsRoot()).toUpperCase();
+        if (pythonPathToCompare.includes(localAppDataStorePath)) {
+            return true;
+        }
 
-    // Program Files store path is a forbidden path. Only admins and system has access this path.
-    // We should never have to look at this path or even execute python from this path.
-    if (isForbiddenStorePath(pythonPathToCompare)) {
-        traceWarning('isWindowsStoreEnvironment called with Program Files store path.');
-        return true;
+        // Program Files store path is a forbidden path. Only admins and system has access this path.
+        // We should never have to look at this path or even execute python from this path.
+        if (isForbiddenStorePath(pythonPathToCompare)) {
+            traceWarning('isWindowsStoreEnvironment called with Program Files store path.');
+            return true;
+        }
     }
     return false;
 }
@@ -107,7 +152,7 @@ const pythonExeGlob = 'python3.{[0-9],[0-9][0-9]}.exe';
  * @param {string} interpreterPath : Path to python interpreter.
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
-export function isWindowsStorePythonExe(interpreterPath: string): boolean {
+export function isWindowsStorePythonExePattern(interpreterPath: string): boolean {
     return minimatch(path.basename(interpreterPath), pythonExeGlob, { nocase: true });
 }
 
@@ -128,11 +173,16 @@ export function isWindowsStorePythonExe(interpreterPath: string): boolean {
  * that location.
  */
 export async function getWindowsStorePythonExes(): Promise<string[]> {
-    const windowsAppsRoot = getWindowsStoreAppsRoot();
+    if (await isStorePythonInstalled()) {
+        const windowsAppsRoot = getWindowsStoreAppsRoot();
 
-    // Collect python*.exe directly under %LOCALAPPDATA%/Microsoft/WindowsApps
-    const files = await fsapi.readdir(windowsAppsRoot);
-    return files.map((filename: string) => path.join(windowsAppsRoot, filename)).filter(isWindowsStorePythonExe);
+        // Collect python*.exe directly under %LOCALAPPDATA%/Microsoft/WindowsApps
+        const files = await fsapi.readdir(windowsAppsRoot);
+        return files
+            .map((filename: string) => path.join(windowsAppsRoot, filename))
+            .filter(isWindowsStorePythonExePattern);
+    }
+    return [];
 }
 
 export class WindowsStoreLocator extends FSWatchingLocator {

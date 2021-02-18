@@ -6,34 +6,45 @@
 import { injectable } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import * as localize from '../../../common/utils/localize';
-import { DiagnosticMessageType, ITestDiagnosticService, PythonTestMessageSeverity } from '../../types';
-import { TestStatus } from '../types';
+import {
+    DiagnosticMessageType,
+    ITestDiagnosticService,
+    NonPassingTestMessageType,
+    NonPassingTestSeverity,
+    NonPassingTestStatus,
+    PythonTestMessageSeverity,
+    TestStatus,
+} from '../types';
 
 @injectable()
 export class UnitTestDiagnosticService implements ITestDiagnosticService {
-    private MessageTypes = new Map<TestStatus, DiagnosticMessageType>();
-    private MessageSeverities = new Map<PythonTestMessageSeverity, DiagnosticSeverity | undefined>();
-    private MessagePrefixes = new Map<DiagnosticMessageType, string>();
+    private MessageTypes = new Map<NonPassingTestStatus, NonPassingTestMessageType>();
+
+    private MessageSeverities = new Map<NonPassingTestSeverity, DiagnosticSeverity | undefined>();
+
+    private MessagePrefixes = new Map<NonPassingTestMessageType, string>();
 
     constructor() {
         this.MessageTypes.set(TestStatus.Error, DiagnosticMessageType.Error);
         this.MessageTypes.set(TestStatus.Fail, DiagnosticMessageType.Fail);
         this.MessageTypes.set(TestStatus.Skipped, DiagnosticMessageType.Skipped);
-        this.MessageTypes.set(TestStatus.Pass, DiagnosticMessageType.Pass);
         this.MessageSeverities.set(PythonTestMessageSeverity.Error, DiagnosticSeverity.Error);
         this.MessageSeverities.set(PythonTestMessageSeverity.Failure, DiagnosticSeverity.Error);
         this.MessageSeverities.set(PythonTestMessageSeverity.Skip, DiagnosticSeverity.Information);
-        this.MessageSeverities.set(PythonTestMessageSeverity.Pass, undefined);
         this.MessagePrefixes.set(DiagnosticMessageType.Error, localize.Testing.testErrorDiagnosticMessage());
         this.MessagePrefixes.set(DiagnosticMessageType.Fail, localize.Testing.testFailDiagnosticMessage());
         this.MessagePrefixes.set(DiagnosticMessageType.Skipped, localize.Testing.testSkippedDiagnosticMessage());
-        this.MessagePrefixes.set(DiagnosticMessageType.Pass, '');
     }
-    public getMessagePrefix(status: TestStatus): string | undefined {
+
+    public getMessagePrefix(status: NonPassingTestStatus): string | undefined {
         const msgType = this.MessageTypes.get(status);
+        // If `msgType` is `undefined` then it means we've added a new
+        // failing test status but forgot to support it here (or it means
+        // elsewhere we asserted a bogus value, like `undefined`).
         return msgType !== undefined ? this.MessagePrefixes.get(msgType) : undefined;
     }
-    public getSeverity(unitTestSeverity: PythonTestMessageSeverity): DiagnosticSeverity | undefined {
+
+    public getSeverity(unitTestSeverity: NonPassingTestSeverity): DiagnosticSeverity | undefined {
         return this.MessageSeverities.get(unitTestSeverity);
     }
 }

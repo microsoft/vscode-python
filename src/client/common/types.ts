@@ -24,6 +24,7 @@ import type { CommandsWithoutArgs } from './application/commands';
 import type { ExtensionChannels } from './insidersBuild/types';
 import type { InterpreterUri } from './installer/types';
 import { EnvironmentVariables } from './variables/types';
+import { ITestingSettings } from '../testing/configuration/types';
 
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel {}
@@ -211,20 +212,6 @@ export interface ISortImportSettings {
     readonly args: string[];
 }
 
-export interface ITestingSettings {
-    readonly promptToConfigure: boolean;
-    readonly debugPort: number;
-    readonly nosetestsEnabled: boolean;
-    nosetestPath: string;
-    nosetestArgs: string[];
-    readonly pytestEnabled: boolean;
-    pytestPath: string;
-    pytestArgs: string[];
-    readonly unittestEnabled: boolean;
-    unittestArgs: string[];
-    cwd?: string;
-    readonly autoTestDiscoverOnSaveEnabled: boolean;
-}
 export interface IPylintCategorySeverity {
     readonly convention: DiagnosticSeverity;
     readonly refactor: DiagnosticSeverity;

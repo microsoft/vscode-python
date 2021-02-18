@@ -3,6 +3,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import { ConfigurationTarget } from 'vscode';
+import { CommandSource } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
@@ -13,25 +14,27 @@ import { TestManagerRunner as UnitTestTestManagerRunner } from '../../client/tes
 import { ArgumentsHelper } from '../../client/testing/common/argumentsHelper';
 import {
     CANCELLATION_REASON,
-    CommandSource,
     NOSETEST_PROVIDER,
     PYTEST_PROVIDER,
     UNITTEST_PROVIDER,
 } from '../../client/testing/common/constants';
 import { TestRunner } from '../../client/testing/common/runner';
 import {
+    IArgumentsHelper,
+    IArgumentsService,
     ITestDebugLauncher,
     ITestManagerFactory,
+    ITestManagerRunner,
     ITestMessageService,
     ITestRunner,
+    IUnitTestHelper,
     IXUnitParser,
-    TestProvider,
 } from '../../client/testing/common/types';
 import { XUnitParser } from '../../client/testing/common/xUnitParser';
 import { ArgumentsService as NoseTestArgumentsService } from '../../client/testing/nosetest/services/argsService';
 import { ArgumentsService as PyTestArgumentsService } from '../../client/testing/pytest/services/argsService';
 import { TestMessageService } from '../../client/testing/pytest/services/testMessageService';
-import { IArgumentsHelper, IArgumentsService, ITestManagerRunner, IUnitTestHelper } from '../../client/testing/types';
+import { TestProvider } from '../../client/testing/types';
 import { UnitTestHelper } from '../../client/testing/unittest/helper';
 import { ArgumentsService as UnitTestArgumentsService } from '../../client/testing/unittest/services/argsService';
 import { deleteDirectory, rootWorkspaceUri, updateSetting } from '../common';
