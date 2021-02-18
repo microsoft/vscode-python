@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { exec, execSync, spawn } from 'child_process';
+import { exec, ExecException, execSync, spawn } from 'child_process';
 import { Readable } from 'stream';
 import { Observable } from 'rxjs/Observable';
 import { IDisposable } from '../types';
@@ -62,8 +62,8 @@ export function shellExec(
     const shellOptions = getDefaultOptions(options, defaultEnv);
     return new Promise((resolve, reject) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const callback = (e: any, stdout: any, stderr: any) => {
-            if (e && e !== null && !shellOptions.doNotThrowExecException) {
+        const callback = (e: ExecException | null, stdout: any, stderr: any) => {
+            if (e && e !== null && !shellOptions.ignoreExitCode) {
                 reject(e);
             }
             if (shellOptions.throwOnStdErr && stderr && stderr.length) {
@@ -71,7 +71,11 @@ export function shellExec(
             } else {
                 // Make sure stderr is undefined if we actually had none. This is checked
                 // elsewhere because that's how exec behaves.
-                resolve({ stderr: stderr && stderr.length > 0 ? stderr : undefined, stdout, error: e });
+                resolve({
+                    stderr: stderr && stderr.length > 0 ? stderr : undefined,
+                    stdout,
+                    exitCode: e !== null ? e.code : undefined,
+                });
             }
         };
         const proc = exec(command, shellOptions, callback); // NOSONAR

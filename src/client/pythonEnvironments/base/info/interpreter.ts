@@ -92,11 +92,11 @@ export async function getInterpreterInfo(
             /**
              * We're exiting using `sys.exit(42)` in the interpreter info script, hence we're expecting an exec exception.
              */
-            doNotThrowExecException: true,
+            ignoreExitCode: true,
         },
         disposables,
     );
-    const isValidExecutable = result.error?.code === 42; // Error code 42 is thrown from interpreter info script.
+    const isValidExecutable = result.exitCode === 42; // Error code 42 is thrown from interpreter info script.
     if (result.stderr) {
         traceError(`Failed to parse interpreter information for ${argv} stderr: ${result.stderr}`);
         return { interpreterExecInfo: undefined, isValidExecutable };

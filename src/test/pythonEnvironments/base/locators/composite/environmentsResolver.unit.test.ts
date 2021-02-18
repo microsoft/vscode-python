@@ -56,11 +56,7 @@ suite('Python envs locator - Environments Resolver', () => {
                     resolve({
                         stdout:
                             '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "sysVersion": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
-                        error: {
-                            code: 42,
-                            name: '',
-                            message: '',
-                        },
+                        exitCode: 42, // Any code other than 42 means it's not a valid executable
                     });
                 }),
             );
@@ -126,11 +122,7 @@ suite('Python envs locator - Environments Resolver', () => {
                     resolve({
                         stderr: 'Kaboom',
                         stdout: '',
-                        error: {
-                            code: 1, // Any code other than 42 means it's not a valid executable
-                            name: '',
-                            message: '',
-                        },
+                        exitCode: 1, // Any code other than 42 means it's not a valid executable
                     });
                 }),
             );
@@ -155,11 +147,7 @@ suite('Python envs locator - Environments Resolver', () => {
                     resolve({
                         stderr: 'Kaboom',
                         stdout: '',
-                        error: {
-                            code: 42, // Any code other than 42 means it's not a valid executable
-                            name: '',
-                            message: '',
-                        },
+                        exitCode: 42, // Any code other than 42 means it's not a valid executable
                     });
                 }),
             );
@@ -286,11 +274,7 @@ suite('Python envs locator - Environments Resolver', () => {
                     resolve({
                         stdout:
                             '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "sysVersion": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
-                        error: {
-                            code: 42,
-                            name: '',
-                            message: '',
-                        },
+                        exitCode: 42,
                     });
                 }),
             );
@@ -357,11 +341,7 @@ suite('Python envs locator - Environments Resolver', () => {
                     resolve({
                         stderr: 'Kaboom',
                         stdout: '',
-                        error: {
-                            code: 1,
-                            name: '',
-                            message: '',
-                        },
+                        exitCode: 1,
                     });
                 }),
             );
@@ -393,11 +373,7 @@ suite('Python envs locator - Environments Resolver', () => {
                     resolve({
                         stderr: 'Kaboom',
                         stdout: '',
-                        error: {
-                            code: 42,
-                            name: '',
-                            message: '',
-                        },
+                        exitCode: 42,
                     });
                 }),
             );
