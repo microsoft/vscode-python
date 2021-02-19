@@ -106,17 +106,26 @@ export async function resolveSymbolicLink(absPath: string): Promise<string> {
     return absPath;
 }
 
+/**
+ * Returns full path to sub directories of a given directory.
+ * @param root
+ * @param resolveSymlinks
+ */
 export async function* getSubDirs(root: string, resolveSymlinks: boolean): AsyncIterableIterator<string> {
-    const dirContents = await fsapi.readdir(root);
+    const dirContents = await fsapi.promises.readdir(root, { withFileTypes: true });
     const generators = dirContents.map((item) => {
         async function* generator() {
-            const fullPath = path.join(root, item);
-            const stat = await fsapi.lstat(fullPath);
-
-            if (stat.isDirectory()) {
+            const fullPath = path.join(root, item.name);
+            if (item.isDirectory()) {
                 yield fullPath;
-            } else if (resolveSymlinks && stat.isSymbolicLink()) {
-                yield await resolveSymbolicLink(fullPath);
+            } else if (resolveSymlinks && item.isSymbolicLink()) {
+                // The current FS item is a symlink. It can potentially be a file
+                // or a directory. Resolve it first and then check if it is a directory.
+                const resolvedPath = await resolveSymbolicLink(fullPath);
+                const resolvedPathStat = await fsapi.lstat(resolvedPath);
+                if (resolvedPathStat.isDirectory()) {
+                    yield resolvedPath;
+                }
             }
         }
 
