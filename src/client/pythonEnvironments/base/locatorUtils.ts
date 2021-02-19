@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
+import { traceVerbose } from '../../common/logger';
 import { createDeferred } from '../../common/utils/async';
 import { getURIFilter } from '../../common/utils/misc';
 import { IDisposable } from '../../common/utils/resourceLifecycle';
@@ -75,7 +76,7 @@ function getSearchLocationFilters(query: PythonLocatorQuery): ((u: Uri) => boole
  * This includes applying any received updates.
  */
 export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvInfo[]> {
-    const envs: PythonEnvInfo[] = [];
+    const envs: (PythonEnvInfo | undefined)[] = [];
 
     const updatesDone = createDeferred<void>();
     if (iterator.onUpdated === undefined) {
@@ -87,6 +88,12 @@ export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvI
                 listener.dispose();
             } else {
                 const { index, update } = event;
+                if (envs[index] === undefined) {
+                    const json = JSON.stringify(update);
+                    traceVerbose(
+                        `Updates sent for an env which was classified as invalid earlier, currently not expected, ${json}`,
+                    );
+                }
                 // We don't worry about if envs[index] is set already.
                 envs[index] = update;
             }
@@ -103,7 +110,8 @@ export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvI
     }
     await updatesDone.promise;
 
-    return envs;
+    // Do not return invalid environments
+    return envs.filter((e) => e !== undefined).map((e) => e!);
 }
 
 /**
@@ -175,7 +183,7 @@ export async function resolveEnvFromIterator(
         listener = iterator.onUpdated((event: PythonEnvUpdatedEvent | null) => {
             if (event === null) {
                 done.resolve();
-            } else if (matchEnv(event.update)) {
+            } else if (!event.update || matchEnv(event.update)) {
                 resolved = event.update;
             }
         });

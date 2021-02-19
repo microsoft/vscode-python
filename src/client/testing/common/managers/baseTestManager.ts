@@ -538,7 +538,7 @@ export abstract class BaseTestManager implements ITestManager {
     private createDiagnostics(message: ITestNonPassingMessage): Diagnostic {
         const stackStart = message.locationStack[0];
         const diagMsg = this.getDiagnosticMessage(message);
-        const severity = this.unitTestDiagnosticService.getSeverity(message.severity)!;
+        const severity = this.unitTestDiagnosticService.getSeverity(message.severity);
         const diagnostic = new Diagnostic(stackStart.location.range, diagMsg, severity);
         diagnostic.code = message.code;
         diagnostic.source = message.provider;
@@ -552,8 +552,11 @@ export abstract class BaseTestManager implements ITestManager {
     }
 
     private getDiagnosticMessage(message: ITestNonPassingMessage): string {
-        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status);
         const diagMsg = message.message ? message.message.split('\n')[0] : '';
-        return `${diagPrefix ? `${diagPrefix}: ` : 'Ok'}${diagMsg}`;
+        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status);
+        if (diagMsg === '') {
+            return diagPrefix;
+        }
+        return `${diagPrefix}: ${diagMsg}`;
     }
 }

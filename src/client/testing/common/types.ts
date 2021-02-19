@@ -522,8 +522,8 @@ export interface ITestsStatusUpdaterService {
 
 export const ITestDiagnosticService = Symbol('ITestDiagnosticService');
 export interface ITestDiagnosticService {
-    getMessagePrefix(status: TestStatus): string | undefined;
-    getSeverity(unitTestSeverity: PythonTestMessageSeverity): DiagnosticSeverity | undefined;
+    getMessagePrefix(status: TestStatus): string;
+    getSeverity(unitTestSeverity: PythonTestMessageSeverity): DiagnosticSeverity;
 }
 
 export const IArgumentsService = Symbol('IArgumentsService');
