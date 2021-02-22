@@ -19,7 +19,7 @@ import {
 /**
  * Determine if the given filename looks like the simplest Python executable.
  */
-export function matchBasicPythonExeFilename(filename: string): boolean {
+export function matchBasicPythonBinFilename(filename: string): boolean {
     return path.basename(filename).toLowerCase() === 'python.exe';
 }
 
@@ -28,7 +28,7 @@ export function matchBasicPythonExeFilename(filename: string): boolean {
  * @param {string} interpreterPath : Path to python interpreter.
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
-export function matchPythonExeFilename(filename: string): boolean {
+export function matchPythonBinFilename(filename: string): boolean {
     /**
      * This Reg-ex matches following file names:
      * python.exe

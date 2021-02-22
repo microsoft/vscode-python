@@ -14,10 +14,10 @@ import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/vi
 import * as posix from './posixUtils';
 import * as windows from './windowsUtils';
 
-export const matchPythonExeFilename =
-    getOSType() === OSType.Windows ? windows.matchPythonExeFilename : posix.matchPythonExeFilename;
-export const matchBasicPythonExeFilename =
-    getOSType() === OSType.Windows ? windows.matchBasicPythonExeFilename : posix.matchBasicPythonExeFilename;
+export const matchPythonBinFilename =
+    getOSType() === OSType.Windows ? windows.matchPythonBinFilename : posix.matchPythonBinFilename;
+export const matchBasicPythonBinFilename =
+    getOSType() === OSType.Windows ? windows.matchBasicPythonBinFilename : posix.matchBasicPythonBinFilename;
 
 type FileFilterFunc = (filename: string) => boolean;
 
@@ -35,7 +35,7 @@ export async function* findInterpretersInDir(
 ): AsyncIterableIterator<DirEntry> {
     // "checkBin" is a local variable rather than global
     // so we can stub out getOSType() during unit testing.
-    const checkBin = getOSType() === OSType.Windows ? windows.matchPythonExeFilename : posix.matchPythonExeFilename;
+    const checkBin = getOSType() === OSType.Windows ? windows.matchPythonBinFilename : posix.matchPythonBinFilename;
     const cfg = {
         ignoreErrors,
         filterSubDir,
@@ -66,7 +66,7 @@ export async function* iterPythonExecutablesInDir(
 ): AsyncIterableIterator<DirEntry> {
     const readDirOpts = {
         ...opts,
-        filterFile: matchPythonExeFilename,
+        filterFile: matchPythonBinFilename,
     };
     const entries = await readDirEntries(dirname, readDirOpts);
     for (const entry of entries) {
@@ -253,7 +253,7 @@ export async function checkPythonExecutable(
         matchFilename: (f: string) => boolean;
         filterFile?: (f: string | DirEntry) => Promise<boolean>;
     } = {
-        matchFilename: matchPythonExeFilename,
+        matchFilename: matchPythonBinFilename,
     },
 ): Promise<boolean> {
     if (opts.filterFile && !(await opts.filterFile(executable))) {
@@ -288,7 +288,7 @@ const filterStandardFile = getFileFilter({ ignoreFileType: FileType.SymbolicLink
  * Symlinks are ignored.
  */
 export async function isStandardPythonBinary(executable: string | DirEntry): Promise<boolean> {
-    // We could be more permissive here by using matchPythonExeFilename().
+    // We could be more permissive here by using matchPythonBinFilename().
     // Originally one key motivation for the "basic" check was to avoid
     // symlinks (which often look like python3.exe, etc., particularly
     // on Windows).  However, the symbolic link check above eliminates
@@ -298,7 +298,7 @@ export async function isStandardPythonBinary(executable: string | DirEntry): Pro
     // "matchFilename" is a local variable rather than global
     // so we can stub out getOSType() during unit testing.
     const matchFilename =
-        getOSType() === OSType.Windows ? windows.matchBasicPythonExeFilename : posix.matchBasicPythonExeFilename;
+        getOSType() === OSType.Windows ? windows.matchBasicPythonBinFilename : posix.matchBasicPythonBinFilename;
     return checkPythonExecutable(executable, {
         matchFilename,
         filterFile: filterStandardFile,
