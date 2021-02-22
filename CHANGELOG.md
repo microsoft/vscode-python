@@ -655,6 +655,8 @@ part of!
    ([#14210](https://github.com/Microsoft/vscode-python/issues/14210))
 1. Fix for CVE-2020-16977
    ([CVE-2020-16977](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2020-16977))
+1. Fix for CVE-2020-17163
+   ([CVE-2020-17163](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2020-17163))
 
 ### Thanks
 
