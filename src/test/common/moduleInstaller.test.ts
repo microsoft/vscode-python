@@ -124,6 +124,7 @@ import {
     IInterpreterService,
     INTERPRETER_LOCATOR_SERVICE,
     PIPENV_SERVICE,
+    IComponentAdapter,
 } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { JupyterExtensionDependencyManager } from '../../client/jupyter/jupyterExtensionDependencyManager';
@@ -472,6 +473,9 @@ suite('Module Installer', () => {
                 .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService)))
                 .returns(() => condaLocatorService.object);
             serviceContainer
+                .setup((c) => c.get(TypeMoq.It.isValue(IComponentAdapter)))
+                .returns(() => condaLocatorService.object);
+            serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(IExperimentService)))
                 .returns(() => experimentService.object);
             condaService.setup((c) => c.isCondaAvailable()).returns(() => Promise.resolve(true));
@@ -494,6 +498,9 @@ suite('Module Installer', () => {
             settings.setup((s) => s.pythonPath).returns(() => pythonPath);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
             serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ICondaService))).returns(() => condaService.object);
+            serviceContainer
+                .setup((c) => c.get(TypeMoq.It.isValue(IComponentAdapter)))
+                .returns(() => condaLocatorService.object);
             serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService)))
                 .returns(() => condaLocatorService.object);
