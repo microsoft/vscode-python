@@ -43,7 +43,12 @@ import {
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Products } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
-import { IComponentAdapter, ICondaLocatorService, ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
+import {
+    IComponentAdapter,
+    ICondaLocatorService,
+    ICondaService,
+    IInterpreterService,
+} from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
