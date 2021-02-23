@@ -945,6 +945,10 @@ export interface IEventNamePropertyMapping {
         action: 'escape' | 'selected';
     };
     /**
+     * Telemetry event sent when the user select to either enter or find the interpreter from the quickpick.
+     */
+    [EventName.SELECT_INTERPRETER_ENTER_OR_FIND]: never | undefined;
+    /**
      * Telemetry event sent with details after updating the python interpreter
      */
     [EventName.PYTHON_INTERPRETER]: {

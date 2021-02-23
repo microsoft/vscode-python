@@ -97,6 +97,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         if (selection === undefined) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'escape' });
         } else if (selection.label === manualEntrySuggestion.label) {
+            sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_OR_FIND);
             return this._enterOrBrowseInterpreterPath(input, state);
         } else {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'selected' });
