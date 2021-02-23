@@ -84,7 +84,12 @@
         "onCommand:python.enableSourceMapSupport",
         "onCommand:python.launchTensorBoard",
         "workspaceContains:mspythonconfig.json",
-        "workspaceContains:pyproject.toml"
+        "workspaceContains:pyproject.toml",
+        "workspaceContains:Pipfile",
+        "workspaceContains:setup.py",
+        "workspaceContains:requirements.txt",
+        "workspaceContains:manage.py",
+        "workspaceContains:app.py"
     ],
     "main": "./out/client/extension",
     "contributes": {
