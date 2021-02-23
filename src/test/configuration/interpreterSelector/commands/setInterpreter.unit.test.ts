@@ -10,7 +10,7 @@ import { ConfigurationTarget, OpenDialogOptions, QuickPickItem, Uri } from 'vsco
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IPlatformService } from '../../../../client/common/platform/types';
-import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
+import { IConfigurationService, IExperimentService, IPythonSettings } from '../../../../client/common/types';
 import { InterpreterQuickPickList, Interpreters } from '../../../../client/common/utils/localize';
 import { IMultiStepInput, IMultiStepInputFactory, InputStep } from '../../../../client/common/utils/multiStepInput';
 import {
@@ -25,6 +25,7 @@ import {
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { EventName } from '../../../../client/telemetry/constants';
 import * as Telemetry from '../../../../client/telemetry';
+import { FindInterpreterVariants } from '../../../../client/common/experiments/groups';
 
 suite('Set Interpreter Command', () => {
     let workspace: TypeMoq.IMock<IWorkspaceService>;
@@ -36,6 +37,7 @@ suite('Set Interpreter Command', () => {
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let multiStepInputFactory: TypeMoq.IMock<IMultiStepInputFactory>;
+    let experimentService: TypeMoq.IMock<IExperimentService>;
     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
     const folder2 = { name: 'two', uri: Uri.parse('two'), index: 2 };
 
@@ -52,6 +54,12 @@ suite('Set Interpreter Command', () => {
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
 
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
+
+        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
+        experimentService
+            .setup((x) => x.inExperiment(TypeMoq.It.isValue(FindInterpreterVariants.findLast)))
+            .returns(() => Promise.resolve(false));
+
         configurationService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
 
         setInterpreterCommand = new SetInterpreterCommand(
@@ -64,6 +72,7 @@ suite('Set Interpreter Command', () => {
             platformService.object,
             interpreterSelector.object,
             workspace.object,
+            experimentService.object,
         );
     });
 
@@ -86,6 +95,11 @@ suite('Set Interpreter Command', () => {
         const expectedEnterInterpreterPathSuggestion = {
             label: InterpreterQuickPickList.enterPath.label(),
             detail: InterpreterQuickPickList.enterPath.detail(),
+            alwaysShow: true,
+        };
+        const expectedFindInterpreterPathSuggestion = {
+            label: InterpreterQuickPickList.findPath.label(),
+            detail: InterpreterQuickPickList.findPath.detail(),
             alwaysShow: true,
         };
         const currentPythonPath = 'python';
@@ -118,6 +132,7 @@ suite('Set Interpreter Command', () => {
                 platformService.object,
                 interpreterSelector.object,
                 workspace.object,
+                experimentService.object,
             );
         });
         teardown(() => {
@@ -138,7 +153,7 @@ suite('Set Interpreter Command', () => {
             expect(state.path).to.equal(undefined, '');
         });
 
-        test('Picker should be displayed with expected items', async () => {
+        test('Picker should be displayed with expected items: Not in find path experiment', async () => {
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             const suggestions = [expectedEnterInterpreterPathSuggestion, item];
@@ -155,6 +170,45 @@ suite('Set Interpreter Command', () => {
                 .verifiable(TypeMoq.Times.once());
 
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
+
+            multiStepInput.verifyAll();
+        });
+
+        test('Picker should be displayed with expected items: In find path experiment', async () => {
+            const experiments = TypeMoq.Mock.ofType<IExperimentService>();
+            experiments
+                .setup((x) => x.inExperiment(TypeMoq.It.isValue(FindInterpreterVariants.findLast)))
+                .returns(() => Promise.resolve(true));
+
+            const inExpSetInterpreterCommand = new SetInterpreterCommand(
+                appShell.object,
+                new PathUtils(false),
+                pythonPathUpdater.object,
+                configurationService.object,
+                commandManager.object,
+                multiStepInputFactory.object,
+                platformService.object,
+                interpreterSelector.object,
+                workspace.object,
+                experiments.object,
+            );
+
+            const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
+            const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+            const suggestions = [item, expectedFindInterpreterPathSuggestion];
+            const expectedParameters = {
+                placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
+                items: suggestions,
+                activeItem: item,
+                matchOnDetail: true,
+                matchOnDescription: true,
+            };
+            multiStepInput
+                .setup((i) => i.showQuickPick(expectedParameters))
+                .returns(() => Promise.resolve((undefined as unknown) as QuickPickItem))
+                .verifiable(TypeMoq.Times.once());
+
+            await inExpSetInterpreterCommand._pickInterpreter(multiStepInput.object, state);
 
             multiStepInput.verifyAll();
         });
@@ -575,6 +629,7 @@ suite('Set Interpreter Command', () => {
                 platformService.object,
                 interpreterSelector.object,
                 workspace.object,
+                experimentService.object,
             );
             type InputStepType = () => Promise<InputStep<unknown> | void>;
             let inputStep!: InputStepType;

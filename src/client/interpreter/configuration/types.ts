@@ -39,6 +39,12 @@ export interface IInterpreterQuickPickItem extends QuickPickItem {
     interpreter: PythonEnvironment;
 }
 
+export interface IFindInterpreterQuickPickItem {
+    label: string;
+    detail: string;
+    alwaysShow: boolean;
+}
+
 export const IInterpreterComparer = Symbol('IInterpreterComparer');
 export interface IInterpreterComparer {
     compare(a: PythonEnvironment, b: PythonEnvironment): number;
