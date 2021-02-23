@@ -177,7 +177,6 @@ src/test/common/experiments/manager.unit.test.ts
 src/test/common/experiments/telemetry.unit.test.ts
 src/test/common/platform/filesystem.unit.test.ts
 src/test/common/platform/errors.unit.test.ts
-src/test/common/platform/platformService.test.ts
 src/test/common/platform/utils.ts
 src/test/common/platform/fs-temp.unit.test.ts
 src/test/common/platform/fs-temp.functional.test.ts
