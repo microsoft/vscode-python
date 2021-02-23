@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import { injectable } from 'inversify';
@@ -14,7 +15,9 @@ import { IPlatformService } from './types';
 @injectable()
 export class PlatformService implements IPlatformService {
     public readonly osType: OSType = getOSType();
+
     public version?: SemVer;
+
     constructor() {
         if (this.osType === OSType.Unknown) {
             sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
@@ -22,12 +25,15 @@ export class PlatformService implements IPlatformService {
             });
         }
     }
-    public get pathVariableName() {
+
+    public get pathVariableName(): 'Path' | 'PATH' {
         return getSearchPathEnvVarNames(this.osType)[0];
     }
-    public get virtualEnvBinName() {
+
+    public get virtualEnvBinName(): 'Scripts' | 'bin' {
         return this.isWindows ? 'Scripts' : 'bin';
     }
+
     public async getVersion(): Promise<SemVer> {
         if (this.version) {
             return this.version;
@@ -44,7 +50,8 @@ export class PlatformService implements IPlatformService {
                         sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
                             osVersion: `${ver.major}.${ver.minor}.${ver.patch}`,
                         });
-                        return (this.version = ver);
+                        this.version = ver;
+                        return this.version;
                     }
                     throw new Error('Unable to parse version');
                 } catch (ex) {
@@ -61,15 +68,21 @@ export class PlatformService implements IPlatformService {
     public get isWindows(): boolean {
         return this.osType === OSType.Windows;
     }
+
     public get isMac(): boolean {
         return this.osType === OSType.OSX;
     }
+
     public get isLinux(): boolean {
         return this.osType === OSType.Linux;
     }
+
+    // eslint-disable-next-line class-methods-use-this
     public get osRelease(): string {
         return os.release();
     }
+
+    // eslint-disable-next-line class-methods-use-this
     public get is64bit(): boolean {
         return getArchitecture() === Architecture.x64;
     }
