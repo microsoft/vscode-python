@@ -39,6 +39,8 @@ import { inDiscoveryExperiment } from '../common/experiments/helpers';
 
 const EXPIRY_DURATION = 24 * 60 * 60 * 1000;
 
+type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
+
 @injectable()
 export class InterpreterService implements Disposable, IInterpreterService {
     public get hasInterpreters(): Promise<boolean> {
@@ -187,13 +189,16 @@ export class InterpreterService implements Disposable, IInterpreterService {
             : undefined;
         // Python path is invalid or python isn't installed.
         if (!fullyQualifiedPath) {
-            return;
+            return undefined;
         }
 
         return this.getInterpreterDetails(fullyQualifiedPath, resource);
     }
 
-    public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<PythonEnvironment | undefined> {
+    public async getInterpreterDetails(
+        pythonPath: string,
+        resource?: Uri,
+    ): Promise<StoredPythonEnvironment | undefined> {
         if (await inDiscoveryExperiment(this.experimentService)) {
             const info = await this.pyenvs.getInterpreterDetails(pythonPath);
             if (!info.displayName) {
@@ -210,7 +215,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             pythonPath = await pythonExecutionService.getExecutablePath().catch(() => '');
             // Python path is invalid or python isn't installed.
             if (!pythonPath) {
-                return;
+                return undefined;
             }
         }
 
@@ -236,8 +241,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             const found = interpreters.find((i) => fs.arePathsSame(i.path, pythonPath));
             if (found) {
                 // Cache the interpreter info, only if we get the data from interpreter list.
-
-                (found as any).__store = true;
+                (found as StoredPythonEnvironment).store = true;
                 return found;
             }
             // Use option1 as a fallback.
@@ -252,7 +256,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             interpreterInfo = both[0] ? both[0] : both[1];
         }
 
-        if (interpreterInfo && (interpreterInfo as any).__store) {
+        if (interpreterInfo && (interpreterInfo as StoredPythonEnvironment).store) {
             await this.updateCachedInterpreterInformation(interpreterInfo, resource);
         }
         return interpreterInfo;
@@ -310,7 +314,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return store;
     }
 
-    public _onConfigChanged = (resource?: Uri) => {
+    public _onConfigChanged = (resource?: Uri): void => {
         this.didChangeInterpreterConfigurationEmitter.fire(resource);
         // Check if we actually changed our python path
         const pySettings = this.configService.getSettings(resource);
@@ -391,7 +395,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             virtualEnvManager.getEnvironmentType(pythonPath),
         ]);
         if (!info) {
-            return;
+            return undefined;
         }
         const details: Partial<PythonEnvironment> = {
             ...(info as PythonEnvironment),
@@ -408,6 +412,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             envName,
         };
         pythonInfo.displayName = await this.getDisplayName(pythonInfo, resource);
+
         return pythonInfo;
     }
 }

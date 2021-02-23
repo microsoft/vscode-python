@@ -292,7 +292,6 @@ src/test/workspaceSymbols/common.ts
 src/test/workspaceSymbols/main.unit.test.ts
 src/test/workspaceSymbols/generator.unit.test.ts
 
-src/client/interpreter/interpreterService.ts
 src/client/interpreter/configuration/interpreterComparer.ts
 src/client/interpreter/configuration/interpreterSelector/commands/base.ts
 src/client/interpreter/configuration/interpreterSelector/commands/resetInterpreter.ts
@@ -493,7 +492,6 @@ src/client/common/platform/serviceRegistry.ts
 src/client/common/platform/errors.ts
 src/client/common/platform/fs-temp.ts
 src/client/common/platform/fs-paths.ts
-src/client/common/platform/platformService.ts
 src/client/common/platform/registry.ts
 src/client/common/platform/pathUtils.ts
 src/client/common/persistentState.ts
@@ -522,7 +520,6 @@ src/client/common/utils/stopWatch.ts
 src/client/common/utils/random.ts
 src/client/common/utils/serializers.ts
 src/client/common/utils/sysTypes.ts
-src/client/common/utils/version.ts
 src/client/common/utils/misc.ts
 src/client/common/utils/logging.ts
 src/client/common/utils/cacheUtils.ts
