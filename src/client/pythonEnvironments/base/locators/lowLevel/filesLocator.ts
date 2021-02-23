@@ -6,7 +6,7 @@
 
 import { Event, EventEmitter } from 'vscode';
 import { iterPythonExecutablesInDir } from '../../../common/commonUtils';
-import { normalizePath } from '../../../common/externalDependencies';
+import { resolvePath } from '../../../common/externalDependencies';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { getFastEnvInfo } from '../../info/env';
 import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
@@ -58,7 +58,7 @@ async function* iterMinimalEnvsFromExecutables(
     kind: PythonEnvKind,
 ): AsyncIterableIterator<PythonEnvInfo> {
     for await (const filename of executables) {
-        const executable = normalizePath(filename);
+        const executable = resolvePath(filename);
         yield getFastEnvInfo(kind, executable);
     }
 }

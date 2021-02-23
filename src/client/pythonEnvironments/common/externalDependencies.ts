@@ -75,6 +75,10 @@ export function normalizePath(filename: string): string {
     return normalizeFilename(filename);
 }
 
+export function resolvePath(filename: string): string {
+    return path.resolve(filename);
+}
+
 export function normCasePath(filePath: string): string {
     return getOSType() === OSType.Windows ? path.normalize(filePath).toUpperCase() : path.normalize(filePath);
 }
