@@ -303,7 +303,6 @@ export function compareVersions<T extends BasicVersionInfo, V extends BasicVersi
     return [0, ''];
 }
 
-//= ==========================
 // base version info
 
 /**
