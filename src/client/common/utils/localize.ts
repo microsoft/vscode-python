@@ -284,7 +284,13 @@ export namespace InterpreterQuickPickList {
             'InterpreterQuickPickList.findPath.detail',
             'Browse the file system to find a Python interpreter.',
         ),
-        label: localize('InterpreterQuickPickList.findPath.label', "I can't find the interpreter I want to select..."),
+        label: (): string => {
+            const labelText = localize(
+                'InterpreterQuickPickList.findPath.label',
+                "I can't find the interpreter I want to select...",
+            );
+            return `$(search-stop) ${labelText()}`;
+        },
     };
     export const browsePath = {
         label: localize('InterpreterQuickPickList.browsePath.label', 'Find...'),
