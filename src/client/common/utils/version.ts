@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as semver from 'semver';
 import { verboseRegExp } from './regexp';
 
 // basic version info
@@ -398,4 +399,14 @@ export function areSimilarVersions<T extends BasicVersionInfo, V extends BasicVe
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return ((left as unknown) as any)[prop] === -1;
     // tslint:enable:no-any
+}
+
+export function parseSemVerSafe(raw: string): semver.SemVer {
+    raw = raw.replace(/\.00*(?=[1-9]|0\.)/, '.');
+    const ver = semver.coerce(raw);
+    if (ver === null || !semver.valid(ver)) {
+        // TODO: Raise an exception instead?
+        return new semver.SemVer('0.0.0');
+    }
+    return ver;
 }

@@ -5,11 +5,12 @@
 
 import { injectable } from 'inversify';
 import * as os from 'os';
-import { coerce, SemVer, valid } from 'semver';
+import { coerce, SemVer } from 'semver';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName, PlatformErrors } from '../../telemetry/constants';
 import { getSearchPathEnvVarNames } from '../utils/exec';
 import { Architecture, getArchitecture, getOSType, OSType } from '../utils/platform';
+import { parseSemVerSafe } from '../utils/version';
 import { IPlatformService } from './types';
 
 @injectable()
@@ -58,7 +59,7 @@ export class PlatformService implements IPlatformService {
                     sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
                         failureType: PlatformErrors.FailedToParseVersion,
                     });
-                    return parseVersion(os.release());
+                    return parseSemVerSafe(os.release());
                 }
             default:
                 throw new Error('Not Supported');
@@ -86,14 +87,4 @@ export class PlatformService implements IPlatformService {
     public get is64bit(): boolean {
         return getArchitecture() === Architecture.x64;
     }
-}
-
-function parseVersion(raw: string): SemVer {
-    raw = raw.replace(/\.00*(?=[1-9]|0\.)/, '.');
-    const ver = coerce(raw);
-    if (ver === null || !valid(ver)) {
-        // TODO: Raise an exception instead?
-        return new SemVer('0.0.0');
-    }
-    return ver;
 }
