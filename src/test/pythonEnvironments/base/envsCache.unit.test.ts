@@ -152,7 +152,7 @@ suite('Environment Info cache', () => {
         assert.deepStrictEqual(result, envToFind);
     });
 
-    test('`getCachedEnvInfo` should undefined if no environment matches the input path', () => {
+    test('`getCachedEnvInfo` should return undefined if no environment matches the input path', () => {
         const envsCache = new PythonEnvInfoCache(getGlobalPersistentStore(), allEnvsComplete);
         envsCache.setAllEnvs(envInfoArray);
 
@@ -161,7 +161,7 @@ suite('Environment Info cache', () => {
         assert.strictEqual(result, undefined);
     });
 
-    test("`getCachedEnvInfo` should undefined if the cache hasn't been activated", () => {
+    test("`getCachedEnvInfo` should return undefined if the cache hasn't been activated", () => {
         const envsCache = new PythonEnvInfoCache(getGlobalPersistentStore(), allEnvsComplete);
 
         const result = envsCache.getCachedEnvInfo('my-nonexistent-env');

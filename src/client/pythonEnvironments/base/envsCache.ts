@@ -147,20 +147,7 @@ export class PythonEnvInfoCache implements IEnvsCache {
     }
 
     public getCachedEnvInfo(path: string): PythonEnvInfo | undefined {
-        const envs = this.filterEnvs({
-            executable: {
-                filename: path,
-                sysPrefix: '',
-                ctime: -1,
-                mtime: -1,
-            },
-        });
-
-        if (envs && envs.length) {
-            return envs[0];
-        }
-
-        return undefined;
+        return this.inMemory?.lookUp(path);
     }
 
     public async clearAndReloadFromStorage(): Promise<void> {
