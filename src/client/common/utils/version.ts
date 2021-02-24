@@ -401,6 +401,8 @@ export function areSimilarVersions<T extends BasicVersionInfo, V extends BasicVe
     // tslint:enable:no-any
 }
 
+// semver
+
 export function parseSemVerSafe(raw: string): semver.SemVer {
     raw = raw.replace(/\.00*(?=[1-9]|0\.)/, '.');
     const ver = semver.coerce(raw);
