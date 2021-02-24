@@ -105,7 +105,12 @@ export async function resolveSymbolicLink(absPath: string): Promise<string> {
     const stats = await fsapi.lstat(absPath);
     if (stats.isSymbolicLink()) {
         const link = await fsapi.readlink(absPath);
-        return resolveSymbolicLink(link);
+        // Result from readlink is not guaranteed to be an absolute path. For eg. on Mac it resolves
+        // /usr/local/bin/python3.9 -> ../../../Library/Frameworks/Python.framework/Versions/3.9/bin/python3.9
+        //
+        // The resultant path is reported relative to the symlink directory we resolve. Convert that to absolute path.
+        const absLinkPath = path.isAbsolute(link) ? link : path.resolve(path.dirname(absPath), link);
+        return resolveSymbolicLink(absLinkPath);
     }
     return absPath;
 }
