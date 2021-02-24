@@ -5,6 +5,7 @@
 
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { Octicons } from '../constants';
 import { FileSystem } from '../platform/fileSystem';
 
 /* eslint-disable @typescript-eslint/no-namespace, no-shadow */
@@ -289,7 +290,7 @@ export namespace InterpreterQuickPickList {
                 'InterpreterQuickPickList.findPath.label',
                 "I can't find the interpreter I want to select...",
             );
-            return `$(search-stop) ${labelText()}`;
+            return `${Octicons.Search_Stop} ${labelText()}`;
         },
     };
     export const browsePath = {
