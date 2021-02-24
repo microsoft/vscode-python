@@ -9,6 +9,7 @@ import { DiscoveryVariants } from '../../../../client/common/experiments/groups'
 import { traceWarning } from '../../../../client/common/logger';
 import { FileChangeType } from '../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, Deferred, sleep } from '../../../../client/common/utils/async';
+import { renderFSTree } from '../../../../client/common/utils/filesystem';
 import { getOSType, OSType } from '../../../../client/common/utils/platform';
 import { IDisposable } from '../../../../client/common/utils/resourceLifecycle';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
@@ -37,6 +38,7 @@ class Venvs {
             throw new Error(`Failed to create Env ${path.basename(envName)} Error: ${err}`);
         }
         const dirToLookInto = path.join(this.root, envName);
+        console.log(await renderFSTree(dirToLookInto, { maxDepth: 3 }));
         const filename = await getInterpreterPathFromDir(dirToLookInto);
         if (!filename) {
             throw new Error(`No environment to update exists in ${dirToLookInto}`);
