@@ -20,14 +20,31 @@ import { FileInfo, PythonEnvInfo, PythonExecutableInfo, PythonVersion } from '.'
 
 /**
  * Determine the corresponding Python executable filename, if any.
+ *
+ * The filename is resolved to its canonical absolute form.
+ *
+ * @param opts.preserveCase - on Windows, do not force a uniform case
+ *     for all filenames.  If this is `false` (the default) then the
+ *     resulting filename will be a unique representation, suitable
+ *     for comparison.
  */
-export function getEnvExecutable(env: string | Partial<PythonEnvInfo>): string {
+export function getEnvExecutable(
+    env: string | Partial<PythonEnvInfo>,
+    opts: {
+        preserveCase: boolean;
+    } = {
+        preserveCase: false,
+    },
+): string {
     let executable = env as string;
     if (typeof env !== 'string') {
         executable = env.executable?.filename || '';
     }
     if (executable === '') {
         return '';
+    }
+    if (opts.preserveCase) {
+        return path.resolve(executable);
     }
     return normalizeFilename(executable);
 }
@@ -188,8 +205,8 @@ export function haveSameExecutables(
     if (envs1.length !== envs2.length) {
         return false;
     }
-    const executables1 = envs1.map(getEnvExecutable);
-    const executables2 = envs2.map(getEnvExecutable);
+    const executables1 = envs1.map((env) => getEnvExecutable(env));
+    const executables2 = envs2.map((env) => getEnvExecutable(env));
     if (!executables2.every((e) => executables1.includes(e))) {
         return false;
     }
