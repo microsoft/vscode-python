@@ -60,4 +60,41 @@ suite('Linting - MyPy', () => {
             expect(msg).to.deep.equal(expected);
         }
     });
+    test('regex excludes unexpected files', () => {
+        // mypy run against `foo/bar.py` returning errors for foo/__init__.py
+        const outputWithUnexpectedFile = `
+foo/__init__.py:4:5: error: Statement is unreachable  [unreachable]
+foo/bar.py:2:14: error: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]
+Found 2 errors in 2 files (checked 1 source file)
+`;
+
+        const lines = outputWithUnexpectedFile.split('\n');
+        const tests: [string, ILintMessage | undefined][] = [
+            [lines[0], undefined],
+            [lines[1], undefined],
+            [
+                lines[2],
+                {
+                    code: undefined,
+                    message:
+                        'Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]',
+                    column: 14,
+                    line: 2,
+                    type: 'error',
+                    provider: 'mypy',
+                },
+            ],
+            [lines[3], undefined],
+        ];
+        for (const [line, expected] of tests) {
+            const msg = parseLine(line, getRegex('foo/bar.py'), LinterId.MyPy);
+
+            expect(msg).to.deep.equal(expected);
+        }
+    });
+    test('getRegex escapes filename correctly', () => {
+        expect(getRegex('foo/bar.py')).to.eql(
+            String.raw`foo/bar\.py:(?<line>\d+)(:(?<column>\d+))?: (?<type>\w+): (?<message>.*)\r?(\n|$)`,
+        );
+    });
 });

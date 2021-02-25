@@ -16,8 +16,8 @@ export class MyPy extends BaseLinter {
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
-        const fileName = document.uri.fsPath.slice(this.getWorkspaceRootPath(document).length + 1);
-        const regex = getRegex(fileName);
+        const relativeFilePath = document.uri.fsPath.slice(this.getWorkspaceRootPath(document).length + 1);
+        const regex = getRegex(relativeFilePath);
         const messages = await this.run([document.uri.fsPath], document, cancellation, regex);
         messages.forEach((msg) => {
             msg.severity = this.parseMessagesSeverity(msg.type, this.pythonSettings.linting.mypyCategorySeverity);
