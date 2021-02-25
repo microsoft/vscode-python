@@ -62,7 +62,7 @@ suite('Linting - MyPy', () => {
     });
     test('regex excludes unexpected files', () => {
         // mypy run against `foo/bar.py` returning errors for foo/__init__.py
-        const outputWithUnexpectedFile = `
+        const outputWithUnexpectedFile = `\
 foo/__init__.py:4:5: error: Statement is unreachable  [unreachable]
 foo/bar.py:2:14: error: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]
 Found 2 errors in 2 files (checked 1 source file)
@@ -71,9 +71,8 @@ Found 2 errors in 2 files (checked 1 source file)
         const lines = outputWithUnexpectedFile.split('\n');
         const tests: [string, ILintMessage | undefined][] = [
             [lines[0], undefined],
-            [lines[1], undefined],
             [
-                lines[2],
+                lines[1],
                 {
                     code: undefined,
                     message:
@@ -84,7 +83,7 @@ Found 2 errors in 2 files (checked 1 source file)
                     provider: 'mypy',
                 },
             ],
-            [lines[3], undefined],
+            [lines[2], undefined],
         ];
         for (const [line, expected] of tests) {
             const msg = parseLine(line, getRegex('foo/bar.py'), LinterId.MyPy);
