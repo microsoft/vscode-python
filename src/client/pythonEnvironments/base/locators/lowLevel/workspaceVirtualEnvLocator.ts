@@ -10,7 +10,7 @@ import {
     findInterpretersInDir,
     getEnvironmentDirFromPath,
     getPythonVersionFromPath,
-    isStandardPythonBinary,
+    looksLikeBasicVirtualPython,
 } from '../../../common/commonUtils';
 import { getFileInfo, isParentPath, pathExists } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from '../../../discovery/locators/services/pipEnvHelper';
@@ -115,7 +115,7 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
                         // Other version like python3.exe or python3.8 are often symlinks to
                         // python.exe or python in the same directory in the case of virtual
                         // environments.
-                        if (await isStandardPythonBinary(entry)) {
+                        if (await looksLikeBasicVirtualPython(entry)) {
                             // We should extract the kind here to avoid doing is*Environment()
                             // check multiple times. Those checks are file system heavy and
                             // we can use the kind to determine this anyway.

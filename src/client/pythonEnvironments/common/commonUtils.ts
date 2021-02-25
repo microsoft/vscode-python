@@ -278,31 +278,50 @@ export async function checkPythonExecutable(
     return true;
 }
 
-const filterStandardFile = getFileFilter({ ignoreFileType: FileType.SymbolicLink })!;
+const filterGlobalExecutable = getFileFilter({ ignoreFileType: FileType.SymbolicLink })!;
 
 /**
  * Decide if the file is a typical Python executable.
  *
  * This is a best effort operation with a focus on the common cases
  * and on efficiency.  The filename must be basic (python/python.exe).
- * Symlinks are ignored.
+ * For global envs, symlinks are ignored.
  */
-export async function isStandardPythonBinary(executable: string | DirEntry): Promise<boolean> {
+export async function looksLikeBasicGlobalPython(executable: string | DirEntry): Promise<boolean> {
+    // "matchBasic" is a local variable rather than global
+    // so we can stub out getOSType() during unit testing.
+    const matchBasic =
+        getOSType() === OSType.Windows ? windows.matchBasicPythonBinFilename : posix.matchBasicPythonBinFilename;
+
     // We could be more permissive here by using matchPythonBinFilename().
     // Originally one key motivation for the "basic" check was to avoid
     // symlinks (which often look like python3.exe, etc., particularly
-    // on Windows).  However, the symbolic link check above eliminates
+    // on Windows).  However, the symbolic link check here eliminates
     // that rationale to an extent.
     // (See: https://github.com/microsoft/vscode-python/issues/15447)
-    //
-    // "matchFilename" is a local variable rather than global
+    const matchFilename = matchBasic;
+    const filterFile = filterGlobalExecutable;
+    return checkPythonExecutable(executable, { matchFilename, filterFile });
+}
+
+/**
+ * Decide if the file is a typical Python executable.
+ *
+ * This is a best effort operation with a focus on the common cases
+ * and on efficiency.  The filename must be basic (python/python.exe).
+ * For global envs, symlinks are ignored.
+ */
+export async function looksLikeBasicVirtualPython(executable: string | DirEntry): Promise<boolean> {
+    // "matchBasic" is a local variable rather than global
     // so we can stub out getOSType() during unit testing.
-    const matchFilename =
+    const matchBasic =
         getOSType() === OSType.Windows ? windows.matchBasicPythonBinFilename : posix.matchBasicPythonBinFilename;
-    return checkPythonExecutable(executable, {
-        matchFilename,
-        filterFile: filterStandardFile,
-    });
+
+    // With virtual environments, we match only the simplest name
+    // (e.g. `python`) and we do not ignore symlinks.
+    const matchFilename = matchBasic;
+    const filterFile = undefined;
+    return checkPythonExecutable(executable, { matchFilename, filterFile });
 }
 
 /**
@@ -312,7 +331,8 @@ export async function isStandardPythonBinary(executable: string | DirEntry): Pro
  */
 export async function getInterpreterPathFromDir(
     envDir: string,
-    opt: {
+    opts: {
+        global?: boolean;
         ignoreErrors?: boolean;
     } = {},
 ): Promise<string | undefined> {
@@ -325,9 +345,10 @@ export async function getInterpreterPathFromDir(
     }
 
     // Search in the sub-directories for python binary
-    const executables = findInterpretersInDir(envDir, recurseLevel, filterDir, opt.ignoreErrors);
+    const matchExecutable = opts.global ? looksLikeBasicGlobalPython : looksLikeBasicVirtualPython;
+    const executables = findInterpretersInDir(envDir, recurseLevel, filterDir, opts.ignoreErrors);
     for await (const entry of executables) {
-        if (await isStandardPythonBinary(entry)) {
+        if (await matchExecutable(entry)) {
             return entry.filename;
         }
     }

@@ -8,7 +8,7 @@ import { uniq } from 'lodash';
 import { Event } from 'vscode';
 import { getSearchPathEntries } from '../../../../common/utils/exec';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
-import { isStandardPythonBinary, iterPythonExecutablesInDir } from '../../../common/commonUtils';
+import { iterPythonExecutablesInDir, looksLikeBasicGlobalPython } from '../../../common/commonUtils';
 import { isPyenvShimDir } from '../../../discovery/locators/services/pyenvLocator';
 import { isWindowsStoreDir } from '../../../discovery/locators/services/windowsStoreLocator';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../info';
@@ -70,7 +70,7 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
 
 async function* getExecutables(dirname: string): AsyncIterableIterator<string> {
     for await (const entry of iterPythonExecutablesInDir(dirname)) {
-        if (await isStandardPythonBinary(entry)) {
+        if (await looksLikeBasicGlobalPython(entry)) {
             yield entry.filename;
         }
     }
@@ -102,7 +102,7 @@ function getDirFilesLocator(
     async function resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executable = typeof env === 'string' ? env : env.executable?.filename || '';
 
-        if (!(await isStandardPythonBinary(executable))) {
+        if (!(await looksLikeBasicGlobalPython(executable))) {
             return undefined;
         }
         const resolved = await locator.resolveEnv(env);
