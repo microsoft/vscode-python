@@ -55,7 +55,7 @@ suite('Linting - MyPy', () => {
             ],
         ];
         for (const [line, expected] of tests) {
-            const msg = parseLine(line, REGEX, LinterId.MyPy);
+            const msg = parseLine(line, REGEX, LinterId.MyPy, 1);
 
             expect(msg).to.deep.equal(expected);
         }
