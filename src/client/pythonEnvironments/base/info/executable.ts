@@ -16,20 +16,16 @@ import {
     parseVersion,
 } from './pythonVersion';
 
-import {
-    FileInfo,
-    PythonEnvInfo,
-    PythonExecutableInfo,
-    PythonVersion,
-} from '.';
+import { FileInfo, PythonEnvInfo, PythonExecutableInfo, PythonVersion } from '.';
 
 /**
  * Determine the corresponding Python executable filename, if any.
  */
 export function getEnvExecutable(env: string | Partial<PythonEnvInfo>): string {
-    const executable = typeof env === 'string'
-        ? env
-        : env.executable?.filename || '';
+    let executable = env as string;
+    if (typeof env !== 'string') {
+        executable = env.executable?.filename || '';
+    }
     if (executable === '') {
         return '';
     }
@@ -185,6 +181,7 @@ function walkExecutablePath(filename: string): PythonVersion {
  * Decide if the two sets of executables for the given envs are the same.
  */
 export function haveSameExecutables(
+    // These are the sets of envs to compare.
     envs1: PythonEnvInfo[],
     envs2: PythonEnvInfo[],
 ): boolean {
@@ -203,7 +200,9 @@ export function haveSameExecutables(
  * Make a copy of "executable" and fill in empty properties using "other."
  */
 export function mergeExecutables(
+    // This is the info.
     executable: PythonExecutableInfo,
+    // This is used to fill in missing info.
     other: PythonExecutableInfo,
 ): PythonExecutableInfo {
     const merged: PythonExecutableInfo = {
