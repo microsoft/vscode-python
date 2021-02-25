@@ -250,18 +250,18 @@ export async function getPythonVersionFromPath(
 export async function checkPythonExecutable(
     executable: string | DirEntry,
     opts: {
-        matchFilename: (f: string) => boolean;
+        matchFilename?: (f: string) => boolean;
         filterFile?: (f: string | DirEntry) => Promise<boolean>;
-    } = {
-        matchFilename: matchPythonBinFilename,
     },
 ): Promise<boolean> {
+    const matchFilename = opts.matchFilename || matchPythonBinFilename;
+    const filename = typeof executable === 'string' ? executable : executable.filename;
+
     if (opts.filterFile && !(await opts.filterFile(executable))) {
         return false;
     }
 
-    const filename = typeof executable === 'string' ? executable : executable.filename;
-    if (!opts.matchFilename(filename)) {
+    if (!matchFilename(filename)) {
         return false;
     }
 
