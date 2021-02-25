@@ -67,7 +67,7 @@ type PythonApiForJupyterExtension = {
     /**
      * IInterpreterService
      */
-    onDidChangeInterpreter: Event<void>;
+    onDidChangeInterpreter: Event<Resource | void>;
     /**
      * IInterpreterService
      */

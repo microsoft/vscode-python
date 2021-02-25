@@ -36,6 +36,7 @@ import {
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 import { getInterpreterHash } from '../pythonEnvironments/discovery/locators/services/hashProvider';
 import { inDiscoveryExperiment } from '../common/experiments/helpers';
+import { IInterpreterSecurityService, IInterpreterAutoSelectionProxyService } from './autoSelection/types';
 
 const EXPIRY_DURATION = 24 * 60 * 60 * 1000;
 
@@ -62,13 +63,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.didChangeInterpreterInformation.event;
     }
 
-    public get onDidChangeInterpreterConfiguration(): Event<Uri | undefined> {
-        return this.didChangeInterpreterConfigurationEmitter.event;
-    }
-
     public _pythonPathSetting = '';
-
-    private readonly didChangeInterpreterConfigurationEmitter = new EventEmitter<Uri | undefined>();
 
     private readonly persistentStateFactory: IPersistentStateFactory;
 
@@ -90,6 +85,9 @@ export class InterpreterService implements Disposable, IInterpreterService {
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
+        @inject(IInterpreterSecurityService) private readonly interpreterSecurityService: IInterpreterSecurityService,
+        @inject(IInterpreterAutoSelectionProxyService)
+        private readonly interpreterAutoSelectionService: IInterpreterAutoSelectionProxyService,
     ) {
         this.persistentStateFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -113,6 +111,10 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const pySettings = this.configService.getSettings();
         this._pythonPathSetting = pySettings.pythonPath;
+        disposables.push(
+            this.interpreterAutoSelectionService.onDidChangeAutoSelectedInterpreter(() => this._onConfigChanged()),
+        );
+        disposables.push(this.interpreterSecurityService.onDidChangeSafeInterpreters(() => this._onConfigChanged()));
         if (this.experimentsManager.inExperiment(DeprecatePythonPath.experiment)) {
             disposables.push(
                 this.interpreterPathService.onDidChange((i) => {
@@ -311,7 +313,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public _onConfigChanged = (resource?: Uri) => {
-        this.didChangeInterpreterConfigurationEmitter.fire(resource);
         // Check if we actually changed our python path
         const pySettings = this.configService.getSettings(resource);
         if (this._pythonPathSetting === '' || this._pythonPathSetting !== pySettings.pythonPath) {

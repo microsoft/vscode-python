@@ -24,8 +24,8 @@ export class MockAutoSelectionService
     public async setGlobalInterpreter(_interpreter: PythonEnvironment): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
-    get onDidChangeAutoSelectedInterpreter(): Event<void> {
-        return new EventEmitter<void>().event;
+    get onDidChangeAutoSelectedInterpreter(): Event<Resource | void> {
+        return new EventEmitter<Resource | void>().event;
     }
 
     // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars

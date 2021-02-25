@@ -106,8 +106,7 @@ export interface ICondaLocatorService {
 
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
-    onDidChangeInterpreterConfiguration: Event<Uri | undefined>;
-    onDidChangeInterpreter: Event<void>;
+    onDidChangeInterpreter: Event<Resource | void>;
     onDidChangeInterpreterInformation: Event<PythonEnvironment>;
     hasInterpreters: Promise<boolean>;
     getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;

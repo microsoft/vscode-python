@@ -30,7 +30,7 @@ const workspacePathNameForGlobalWorkspaces = '';
 export class InterpreterAutoSelectionService implements IInterpreterAutoSelectionService {
     protected readonly autoSelectedWorkspacePromises = new Map<string, Deferred<void>>();
 
-    private readonly didAutoSelectedInterpreterEmitter = new EventEmitter<void>();
+    private readonly didAutoSelectedInterpreterEmitter = new EventEmitter<Resource | void>();
 
     private readonly autoSelectedInterpreterByWorkspace = new Map<string, PythonEnvironment | undefined>();
 
@@ -117,7 +117,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         return this.autoSelectedWorkspacePromises.get(key)!.promise;
     }
 
-    public get onDidChangeAutoSelectedInterpreter(): Event<void> {
+    public get onDidChangeAutoSelectedInterpreter(): Event<Resource | void> {
         return this.didAutoSelectedInterpreterEmitter.event;
     }
 

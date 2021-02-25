@@ -11,7 +11,7 @@ import { Event, Uri } from 'vscode';
 import { buildApi } from '../client/api';
 import { ConfigurationService } from '../client/common/configuration/service';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
-import { IConfigurationService } from '../client/common/types';
+import { IConfigurationService, Resource } from '../client/common/types';
 import { IInterpreterService } from '../client/interpreter/contracts';
 import { InterpreterService } from '../client/interpreter/interpreterService';
 import { ServiceContainer } from '../client/ioc/container';
@@ -67,8 +67,8 @@ suite('Extension API', () => {
     });
 
     test('Provide a callback which is called when interpreter setting changes', async () => {
-        const expectedEvent = Typemoq.Mock.ofType<Event<Uri | undefined>>().object;
-        when(interpreterService.onDidChangeInterpreterConfiguration).thenReturn(expectedEvent);
+        const expectedEvent = Typemoq.Mock.ofType<Event<Resource | void>>().object;
+        when(interpreterService.onDidChangeInterpreter).thenReturn(expectedEvent);
 
         const result = buildApi(Promise.resolve(), instance(serviceManager), instance(serviceContainer)).settings
             .onDidChangeExecutionDetails;

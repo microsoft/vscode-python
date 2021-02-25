@@ -4,7 +4,7 @@
 'use strict';
 
 import { noop } from 'lodash';
-import { Event, Uri } from 'vscode';
+import { Event } from 'vscode';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IConfigurationService, Resource } from './common/types';
@@ -54,7 +54,7 @@ export interface IExtensionApi {
         /**
          * An event that is emitted when execution details (for a resource) change. For instance, when interpreter configuration changes.
          */
-        readonly onDidChangeExecutionDetails: Event<Uri | undefined>;
+        readonly onDidChangeExecutionDetails: Event<Resource | void>;
         /**
          * Returns all the details the consumer needs to execute code within the selected environment,
          * corresponding to the specified resource taking into account any workspace-specific settings
@@ -131,7 +131,7 @@ export function buildApi(
             },
         },
         settings: {
-            onDidChangeExecutionDetails: interpreterService.onDidChangeInterpreterConfiguration,
+            onDidChangeExecutionDetails: interpreterService.onDidChangeInterpreter,
             getExecutionDetails(resource?: Resource) {
                 const pythonPath = configurationService.getSettings(resource).pythonPath;
                 // If pythonPath equals an empty string, no interpreter is set.

@@ -11,7 +11,7 @@ import { IInterpreterAutoSelectionProxyService } from './types';
 
 @injectable()
 export class InterpreterAutoSelectionProxyService implements IInterpreterAutoSelectionProxyService {
-    private readonly didAutoSelectedInterpreterEmitter = new EventEmitter<void>();
+    private readonly didAutoSelectedInterpreterEmitter = new EventEmitter<Resource | void>();
 
     private instance?: IInterpreterAutoSelectionProxyService;
 
@@ -24,7 +24,7 @@ export class InterpreterAutoSelectionProxyService implements IInterpreterAutoSel
         );
     }
 
-    public get onDidChangeAutoSelectedInterpreter(): Event<void> {
+    public get onDidChangeAutoSelectedInterpreter(): Event<Resource | void> {
         return this.didAutoSelectedInterpreterEmitter.event;
     }
 
