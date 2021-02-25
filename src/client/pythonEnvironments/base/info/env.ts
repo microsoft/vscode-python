@@ -4,11 +4,10 @@
 import { cloneDeep, uniq } from 'lodash';
 import * as path from 'path';
 import { getArchitectureDisplayName } from '../../../common/platform/registry';
-import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
 import { getKindDisplayName, getPrioritizedEnvKinds } from './envKind';
-import { parseExeVersion } from './executable';
+import { getEnvExecutable, parseExeVersion } from './executable';
 import { areIdenticalVersion, areSimilarVersions, getVersionDisplayString, isVersionEmpty } from './pythonVersion';
 
 import {
@@ -156,17 +155,6 @@ function buildEnvDisplayString(env: PythonEnvInfo): string {
 }
 
 /**
- * Determine the corresponding Python executable filename, if any.
- */
-export function getEnvExecutable(env: string | Partial<PythonEnvInfo>): string {
-    const executable = typeof env === 'string' ? env : env.executable?.filename || '';
-    if (executable === '') {
-        return '';
-    }
-    return normalizeFilename(executable);
-}
-
-/**
  * For the given data, build a normalized partial info object.
  *
  * If insufficient data is provided to generate a minimal object, such
@@ -279,21 +267,6 @@ export function getEnvMatcher(query: string | Partial<PythonEnvInfo>): (env: Pyt
         return arePathsSame(executable, candidate.executable.filename);
     }
     return matchEnv;
-}
-
-/**
- * Decide if the two sets of executables for the given envs are the same.
- */
-export function haveSameExecutables(envs1: PythonEnvInfo[], envs2: PythonEnvInfo[]): boolean {
-    if (envs1.length !== envs2.length) {
-        return false;
-    }
-    const executables1 = envs1.map(getEnvExecutable);
-    const executables2 = envs2.map(getEnvExecutable);
-    if (!executables2.every((e) => executables1.includes(e))) {
-        return false;
-    }
-    return true;
 }
 
 /**
