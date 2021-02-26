@@ -1,7 +1,7 @@
 import { SemVer } from 'semver';
 import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { Resource } from '../common/types';
+import { IPersistentState, Resource } from '../common/types';
 import { PythonEnvSource } from '../pythonEnvironments/base/info';
 import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/discovery/locators/services/conda';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
@@ -116,6 +116,7 @@ export interface IInterpreterService {
     refresh(resource: Resource): Promise<void>;
     initialize(): void;
     getDisplayName(interpreter: Partial<PythonEnvironment>): Promise<string>;
+    getInterpreterCache(pythonPath: string): Promise<IPersistentState<{ fileHash: string; info?: PythonEnvironment }>>;
 }
 
 export const IInterpreterDisplay = Symbol('IInterpreterDisplay');

@@ -4,12 +4,20 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { QuickPickItem } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands } from '../../../../common/constants';
 import { FindInterpreterVariants } from '../../../../common/experiments/groups';
+import { inDiscoveryExperiment } from '../../../../common/experiments/helpers';
 import { IPlatformService } from '../../../../common/platform/types';
-import { IConfigurationService, IExperimentService, IPathUtils, Resource } from '../../../../common/types';
+import {
+    IConfigurationService,
+    IExperimentService,
+    IExtensionContext,
+    IPathUtils,
+    Resource,
+} from '../../../../common/types';
 import { InterpreterQuickPickList } from '../../../../common/utils/localize';
 import {
     IMultiStepInput,
@@ -17,8 +25,10 @@ import {
     InputStep,
     IQuickPickParameters,
 } from '../../../../common/utils/multiStepInput';
+import { createPythonEnvInfoCache } from '../../../../pythonEnvironments';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
+import { IInterpreterService } from '../../../contracts';
 import {
     IFindInterpreterQuickPickItem,
     IInterpreterQuickPickItem,
@@ -26,6 +36,8 @@ import {
     IPythonPathUpdaterServiceManager,
 } from '../../types';
 import { BaseInterpreterSelectorCommand } from './base';
+
+const untildify = require('untildify');
 
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
 
@@ -42,7 +54,9 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(IExperimentService) private readonly experiments: IExperimentService,
+        @inject(IExperimentService) readonly experiments: IExperimentService,
+        @inject(IExtensionContext) readonly context: IExtensionContext,
+        @inject(IInterpreterService) readonly interpreterService: IInterpreterService,
     ) {
         super(pythonPathUpdaterService, commandManager, applicationShell, workspaceService);
     }
@@ -129,6 +143,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             // User entered text in the filter box to enter path to python, store it
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'enter' });
             state.path = selection;
+            await this.sendInterpreterEntryTelemetry(state.path);
         } else if (selection && selection.label === InterpreterQuickPickList.browsePath.label()) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'browse' });
             const filtersKey = 'Executables';
@@ -142,6 +157,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             });
             if (uris && uris.length > 0) {
                 state.path = uris[0].fsPath;
+                await this.sendInterpreterEntryTelemetry(state.path);
             }
         }
     }
@@ -165,5 +181,34 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             // Having the value `undefined` means user cancelled the quickpick, so we update nothing in that case.
             await this.pythonPathUpdaterService.updatePythonPath(interpreterState.path, configTarget, 'ui', wkspace);
         }
+    }
+
+    /**
+     * Check if the interpreter that was entered exists in the cache.
+     * If it does, it means that it had already been discovered,
+     * and we didn't do a good job of surfacing it.
+     *
+     * @param selection Intepreter path that was either entered manually or picked by browsing through the filesystem.
+     */
+    private async sendInterpreterEntryTelemetry(selection: string): Promise<void> {
+        let interpreterPath = path.normalize(untildify(selection));
+
+        if (!path.isAbsolute(interpreterPath)) {
+            interpreterPath = path.join(this.workspaceService.rootPath || '', selection);
+        }
+
+        let discovered: boolean;
+        if (await inDiscoveryExperiment(this.experiments)) {
+            const cache = await createPythonEnvInfoCache(this.context);
+            const env = cache.getCachedEnvInfo(interpreterPath);
+            discovered = !!env;
+        } else {
+            const store = await this.interpreterService.getInterpreterCache(interpreterPath);
+            discovered = store.value && store.value.info !== undefined;
+        }
+
+        sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTERED_EXISTS, undefined, { discovered });
+
+        return undefined;
     }
 }
