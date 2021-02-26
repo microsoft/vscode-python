@@ -14,6 +14,7 @@ import {
     IConfigurationService,
     IExperimentService,
     IExtensionContext,
+    IPersistentState,
     IPythonSettings,
 } from '../../../../client/common/types';
 import { InterpreterQuickPickList, Interpreters } from '../../../../client/common/utils/localize';
@@ -62,6 +63,7 @@ suite('Set Interpreter Command', () => {
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
 
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
+        workspace.setup((w) => w.rootPath).returns(() => 'rootPath');
 
         experimentService = TypeMoq.Mock.ofType<IExperimentService>();
         experimentService
@@ -319,6 +321,16 @@ suite('Set Interpreter Command', () => {
             multiStepInput
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve('enteredPath'));
+            interpreterService
+                .setup((i) => i.getInterpreterCache(TypeMoq.It.isAnyString()))
+                .returns(() =>
+                    Promise.resolve({
+                        value: { fileHash: 'fileHash', info: undefined },
+                    } as IPersistentState<{
+                        fileHash: string;
+                        info?: PythonEnvironment;
+                    }>),
+                );
 
             await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
 
@@ -333,6 +345,16 @@ suite('Set Interpreter Command', () => {
             appShell
                 .setup((a) => a.showOpenDialog(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([expectedPathUri]));
+            interpreterService
+                .setup((i) => i.getInterpreterCache(TypeMoq.It.isAnyString()))
+                .returns(() =>
+                    Promise.resolve({
+                        value: { fileHash: 'fileHash', info: undefined },
+                    } as IPersistentState<{
+                        fileHash: string;
+                        info?: PythonEnvironment;
+                    }>),
+                );
 
             await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
 
