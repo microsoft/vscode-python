@@ -949,6 +949,15 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.SELECT_INTERPRETER_ENTER_OR_FIND]: never | undefined;
     /**
+     * Telemetry event sent after the user entered an interpreter path, or found it by browsing the filesystem.
+     */
+    [EventName.SELECT_INTERPRETER_ENTERED_EXISTS]: {
+        /**
+         * Carries `true` if the interpreter that was selected had already been discovered earlier (exists in the cache).
+         */
+        discovered: boolean;
+    };
+    /**
      * Telemetry event sent with details after updating the python interpreter
      */
     [EventName.PYTHON_INTERPRETER]: {
