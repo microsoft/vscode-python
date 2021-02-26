@@ -10,7 +10,12 @@ import { ConfigurationTarget, OpenDialogOptions, QuickPickItem, Uri } from 'vsco
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IPlatformService } from '../../../../client/common/platform/types';
-import { IConfigurationService, IExperimentService, IPythonSettings } from '../../../../client/common/types';
+import {
+    IConfigurationService,
+    IExperimentService,
+    IExtensionContext,
+    IPythonSettings,
+} from '../../../../client/common/types';
 import { InterpreterQuickPickList, Interpreters } from '../../../../client/common/utils/localize';
 import { IMultiStepInput, IMultiStepInputFactory, InputStep } from '../../../../client/common/utils/multiStepInput';
 import {
@@ -26,6 +31,7 @@ import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { EventName } from '../../../../client/telemetry/constants';
 import * as Telemetry from '../../../../client/telemetry';
 import { FindInterpreterVariants } from '../../../../client/common/experiments/groups';
+import { IInterpreterService } from '../../../../client/interpreter/contracts';
 
 suite('Set Interpreter Command', () => {
     let workspace: TypeMoq.IMock<IWorkspaceService>;
@@ -38,6 +44,8 @@ suite('Set Interpreter Command', () => {
     let platformService: TypeMoq.IMock<IPlatformService>;
     let multiStepInputFactory: TypeMoq.IMock<IMultiStepInputFactory>;
     let experimentService: TypeMoq.IMock<IExperimentService>;
+    let context: TypeMoq.IMock<IExtensionContext>;
+    let interpreterService: TypeMoq.IMock<IInterpreterService>;
     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
     const folder2 = { name: 'two', uri: Uri.parse('two'), index: 2 };
 
@@ -60,6 +68,10 @@ suite('Set Interpreter Command', () => {
             .setup((x) => x.inExperiment(TypeMoq.It.isValue(FindInterpreterVariants.findLast)))
             .returns(() => Promise.resolve(false));
 
+        context = TypeMoq.Mock.ofType<IExtensionContext>();
+
+        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+
         configurationService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
 
         setInterpreterCommand = new SetInterpreterCommand(
@@ -73,6 +85,8 @@ suite('Set Interpreter Command', () => {
             interpreterSelector.object,
             workspace.object,
             experimentService.object,
+            context.object,
+            interpreterService.object,
         );
     });
 
@@ -133,6 +147,8 @@ suite('Set Interpreter Command', () => {
                 interpreterSelector.object,
                 workspace.object,
                 experimentService.object,
+                context.object,
+                interpreterService.object,
             );
         });
         teardown(() => {
@@ -191,6 +207,8 @@ suite('Set Interpreter Command', () => {
                 interpreterSelector.object,
                 workspace.object,
                 experiments.object,
+                context.object,
+                interpreterService.object,
             );
 
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
@@ -630,6 +648,8 @@ suite('Set Interpreter Command', () => {
                 interpreterSelector.object,
                 workspace.object,
                 experimentService.object,
+                context.object,
+                interpreterService.object,
             );
             type InputStepType = () => Promise<InputStep<unknown> | void>;
             let inputStep!: InputStepType;
