@@ -24,7 +24,7 @@ import {
     TensorBoardSessionStartResult,
     TensorBoardEntrypoint,
 } from '../tensorBoard/constants';
-import { TestProvider } from '../testing/common/types';
+import { TestProvider } from '../testing/types';
 import { EventName, PlatformErrors } from './constants';
 import type { LinterTrigger, TestTool } from './types';
 
@@ -944,6 +944,10 @@ export interface IEventNamePropertyMapping {
          */
         action: 'escape' | 'selected';
     };
+    /**
+     * Telemetry event sent when the user select to either enter or find the interpreter from the quickpick.
+     */
+    [EventName.SELECT_INTERPRETER_ENTER_OR_FIND]: never | undefined;
     /**
      * Telemetry event sent with details after updating the python interpreter
      */

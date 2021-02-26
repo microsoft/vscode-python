@@ -441,6 +441,88 @@ suite('Interpreters service', () => {
         });
     });
 
+    suite('Display name with incomplete interpreter versions', () => {
+        let getInterpreterHashStub: sinon.SinonStub;
+
+        setup(() => {
+            setupSuite();
+            fileSystem.reset();
+            persistentStateFactory.reset();
+            getInterpreterHashStub = sinon.stub(hashApi, 'getInterpreterHash');
+
+            const fileHash = 'file_hash';
+            getInterpreterHashStub.resolves(fileHash);
+        });
+
+        teardown(() => {
+            getInterpreterHashStub.restore();
+        });
+
+        test('Python version without micro version should be displayed as X.Y and not default to X.Y.0', async () => {
+            persistentStateFactory
+                .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => {
+                    const state = {
+                        updateValue: () => Promise.resolve(),
+                        value: undefined,
+                    };
+                    return state as any;
+                })
+                .verifiable(TypeMoq.Times.once());
+
+            const interpreterInfo: Partial<PythonEnvironment> = {
+                version: {
+                    major: 2,
+                    minor: 7,
+                    patch: -1,
+                    raw: 'something',
+                    prerelease: [],
+                    build: [],
+                },
+            };
+            const expectedDisplayName = 'Python 2.7';
+
+            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
+            const displayName = await service.getDisplayName(interpreterInfo, undefined).catch(() => '');
+
+            expect(displayName).to.equal(expectedDisplayName);
+            expect(getInterpreterHashStub.notCalled).to.equal(true);
+            persistentStateFactory.verifyAll();
+        });
+
+        test('Python version without minor or micro version should be displayed as X and not default to X.0.0', async () => {
+            persistentStateFactory
+                .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => {
+                    const state = {
+                        updateValue: () => Promise.resolve(),
+                        value: undefined,
+                    };
+                    return state as any;
+                })
+                .verifiable(TypeMoq.Times.once());
+
+            const interpreterInfo: Partial<PythonEnvironment> = {
+                version: {
+                    major: 3,
+                    minor: -1,
+                    patch: -1,
+                    raw: 'something',
+                    prerelease: [],
+                    build: [],
+                },
+            };
+            const expectedDisplayName = 'Python 3';
+
+            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
+            const displayName = await service.getDisplayName(interpreterInfo, undefined).catch(() => '');
+
+            expect(displayName).to.equal(expectedDisplayName);
+            expect(getInterpreterHashStub.notCalled).to.equal(true);
+            persistentStateFactory.verifyAll();
+        });
+    });
+
     // This is kind of a verbose test, but we need to ensure we have covered all permutations.
     // Also we have special handling for certain types of interpreters.
     suite('Display Format (with all permutations)', () => {

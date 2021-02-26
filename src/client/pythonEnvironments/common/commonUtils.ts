@@ -3,7 +3,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { convertFileType, DirEntry, FileType, getFileType } from '../../common/utils/filesystem';
+import { convertFileType, DirEntry, FileType, getFileFilter, getFileType } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { logError } from '../../logging';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
@@ -11,10 +11,13 @@ import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from '../discovery/locators/services/conda';
 import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/virtualEnvironmentIdentifier';
-import { isPosixPythonBinPattern } from './posixUtils';
-import { isWindowsPythonExe } from './windowsUtils';
+import * as posix from './posixUtils';
+import * as windows from './windowsUtils';
 
-const matchPythonExecutable = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBinPattern;
+export const matchPythonBinFilename =
+    getOSType() === OSType.Windows ? windows.matchPythonBinFilename : posix.matchPythonBinFilename;
+export const matchBasicPythonBinFilename =
+    getOSType() === OSType.Windows ? windows.matchBasicPythonBinFilename : posix.matchBasicPythonBinFilename;
 
 type FileFilterFunc = (filename: string) => boolean;
 
@@ -29,10 +32,10 @@ export async function* findInterpretersInDir(
     recurseLevel?: number,
     filterSubDir?: FileFilterFunc,
     ignoreErrors = true,
-): AsyncIterableIterator<string> {
+): AsyncIterableIterator<DirEntry> {
     // "checkBin" is a local variable rather than global
-    // so we can stub it out during unit testing.
-    const checkBin = getOSType() === OSType.Windows ? isWindowsPythonExe : isPosixPythonBinPattern;
+    // so we can stub out getOSType() during unit testing.
+    const checkBin = getOSType() === OSType.Windows ? windows.matchPythonBinFilename : posix.matchPythonBinFilename;
     const cfg = {
         ignoreErrors,
         filterSubDir,
@@ -41,10 +44,11 @@ export async function* findInterpretersInDir(
         maxDepth: recurseLevel || 0,
     };
     // We use an initial depth of 1.
-    for await (const { filename, filetype } of walkSubTree(root, 1, cfg)) {
+    for await (const entry of walkSubTree(root, 1, cfg)) {
+        const { filename, filetype } = entry;
         if (filetype === FileType.File || filetype === FileType.SymbolicLink) {
             if (matchFile(filename, checkBin, ignoreErrors)) {
-                yield filename;
+                yield entry;
             }
         }
         // We ignore all other file types.
@@ -62,7 +66,7 @@ export async function* iterPythonExecutablesInDir(
 ): AsyncIterableIterator<DirEntry> {
     const readDirOpts = {
         ...opts,
-        filterFile: matchPythonExecutable,
+        filterFile: matchPythonBinFilename,
     };
     const entries = await readDirEntries(dirname, readDirOpts);
     for (const entry of entries) {
@@ -199,9 +203,10 @@ function matchFile(
 export async function getPythonVersionFromNearByFiles(interpreterPath: string): Promise<PythonVersion> {
     const root = path.dirname(interpreterPath);
     let version = UNKNOWN_PYTHON_VERSION;
-    for await (const interpreter of findInterpretersInDir(root)) {
+    for await (const entry of findInterpretersInDir(root)) {
+        const { filename } = entry;
         try {
-            const curVersion = parseVersion(path.basename(interpreter));
+            const curVersion = parseVersion(path.basename(filename));
             if (comparePythonVersionSpecificity(curVersion, version) > 0) {
                 version = curVersion;
             }
@@ -240,14 +245,83 @@ export async function getPythonVersionFromPath(
 }
 
 /**
- * Returns true if binary basename is 'python' or 'python.exe', false otherwise.
- * Often we only care about python.exe (on windows) and python (on linux/mac) as other version like
- * python3.exe or python3.8 are often symlinks to python.exe or python.
- * @param executable Absolute path to executable
+ * Decide if the file is meets the given criteria for a Python executable.
  */
-export function isStandardPythonBinary(executable: string): boolean {
-    const base = path.basename(executable).toLowerCase();
-    return base === 'python.exe' || base === 'python';
+export async function checkPythonExecutable(
+    executable: string | DirEntry,
+    opts: {
+        matchFilename?: (f: string) => boolean;
+        filterFile?: (f: string | DirEntry) => Promise<boolean>;
+    },
+): Promise<boolean> {
+    const matchFilename = opts.matchFilename || matchPythonBinFilename;
+    const filename = typeof executable === 'string' ? executable : executable.filename;
+
+    if (opts.filterFile && !(await opts.filterFile(executable))) {
+        return false;
+    }
+
+    if (!matchFilename(filename)) {
+        return false;
+    }
+
+    // For some use cases it would also be a good idea to verify that
+    // the file is executable.  That is a relatively expensive operation
+    // (a stat on linux and actually executing the file on Windows), so
+    // at best it should be an optional check.  If we went down this
+    // route then it would be worth supporting `fs.Stats` as a type
+    // for the "executable" arg.
+    //
+    // Regardless, currently there is no code that would use such
+    // an option, so for now we don't bother supporting it.
+
+    return true;
+}
+
+const filterGlobalExecutable = getFileFilter({ ignoreFileType: FileType.SymbolicLink })!;
+
+/**
+ * Decide if the file is a typical Python executable.
+ *
+ * This is a best effort operation with a focus on the common cases
+ * and on efficiency.  The filename must be basic (python/python.exe).
+ * For global envs, symlinks are ignored.
+ */
+export async function looksLikeBasicGlobalPython(executable: string | DirEntry): Promise<boolean> {
+    // "matchBasic" is a local variable rather than global
+    // so we can stub out getOSType() during unit testing.
+    const matchBasic =
+        getOSType() === OSType.Windows ? windows.matchBasicPythonBinFilename : posix.matchBasicPythonBinFilename;
+
+    // We could be more permissive here by using matchPythonBinFilename().
+    // Originally one key motivation for the "basic" check was to avoid
+    // symlinks (which often look like python3.exe, etc., particularly
+    // on Windows).  However, the symbolic link check here eliminates
+    // that rationale to an extent.
+    // (See: https://github.com/microsoft/vscode-python/issues/15447)
+    const matchFilename = matchBasic;
+    const filterFile = filterGlobalExecutable;
+    return checkPythonExecutable(executable, { matchFilename, filterFile });
+}
+
+/**
+ * Decide if the file is a typical Python executable.
+ *
+ * This is a best effort operation with a focus on the common cases
+ * and on efficiency.  The filename must be basic (python/python.exe).
+ * For global envs, symlinks are ignored.
+ */
+export async function looksLikeBasicVirtualPython(executable: string | DirEntry): Promise<boolean> {
+    // "matchBasic" is a local variable rather than global
+    // so we can stub out getOSType() during unit testing.
+    const matchBasic =
+        getOSType() === OSType.Windows ? windows.matchBasicPythonBinFilename : posix.matchBasicPythonBinFilename;
+
+    // With virtual environments, we match only the simplest name
+    // (e.g. `python`) and we do not ignore symlinks.
+    const matchFilename = matchBasic;
+    const filterFile = undefined;
+    return checkPythonExecutable(executable, { matchFilename, filterFile });
 }
 
 /**
@@ -257,7 +331,8 @@ export function isStandardPythonBinary(executable: string): boolean {
  */
 export async function getInterpreterPathFromDir(
     envDir: string,
-    opt: {
+    opts: {
+        global?: boolean;
         ignoreErrors?: boolean;
     } = {},
 ): Promise<string | undefined> {
@@ -270,10 +345,11 @@ export async function getInterpreterPathFromDir(
     }
 
     // Search in the sub-directories for python binary
-    const executables = findInterpretersInDir(envDir, recurseLevel, filterDir, opt.ignoreErrors);
-    for await (const bin of executables) {
-        if (isStandardPythonBinary(bin)) {
-            return bin;
+    const matchExecutable = opts.global ? looksLikeBasicGlobalPython : looksLikeBasicVirtualPython;
+    const executables = findInterpretersInDir(envDir, recurseLevel, filterDir, opts.ignoreErrors);
+    for await (const entry of executables) {
+        if (await matchExecutable(entry)) {
+            return entry.filename;
         }
     }
     return undefined;

@@ -97,12 +97,12 @@ suite('Insiders Test: Language Server', () => {
                 expect(locations![0].uri.fsPath).to.contain(path.basename(notebookDefinitions));
 
                 // Insert a new cell
-                const activeEditor = vscode.notebook.activeNotebookEditor;
+                const activeEditor = vscode.window.activeNotebookEditor;
                 expect(activeEditor).not.to.be.equal(undefined, 'Active editor not found in notebook');
                 await activeEditor!.edit((edit) => {
                     edit.replaceCells(0, 0, [
                         {
-                            cellKind: vscode.CellKind.Code,
+                            cellKind: vscode.NotebookCellKind.Code,
                             language: PYTHON_LANGUAGE,
                             source: 'x = 4',
                             metadata: {
@@ -125,7 +125,7 @@ suite('Insiders Test: Language Server', () => {
                     edit.replaceCells(0, 1, []);
                     edit.replaceCells(1, 0, [
                         {
-                            cellKind: vscode.CellKind.Code,
+                            cellKind: vscode.NotebookCellKind.Code,
                             language: PYTHON_LANGUAGE,
                             source: 'x = 4',
                             metadata: {

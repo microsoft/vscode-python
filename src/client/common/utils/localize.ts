@@ -5,6 +5,7 @@
 
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { Octicons } from '../constants';
 import { FileSystem } from '../platform/fileSystem';
 
 /* eslint-disable @typescript-eslint/no-namespace, no-shadow */
@@ -278,6 +279,19 @@ export namespace InterpreterQuickPickList {
         detail: localize('InterpreterQuickPickList.enterPath.detail', 'Enter path or find an existing interpreter'),
         label: localize('InterpreterQuickPickList.enterPath.label', 'Enter interpreter path...'),
         placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python interpreter.'),
+    };
+    export const findPath = {
+        detail: localize(
+            'InterpreterQuickPickList.findPath.detail',
+            'Browse the file system to find a Python interpreter.',
+        ),
+        label: (): string => {
+            const labelText = localize(
+                'InterpreterQuickPickList.findPath.label',
+                "I can't find the interpreter I want to select...",
+            );
+            return `${Octicons.Search_Stop} ${labelText()}`;
+        },
     };
     export const browsePath = {
         label: localize('InterpreterQuickPickList.browsePath.label', 'Find...'),

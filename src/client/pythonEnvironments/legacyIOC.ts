@@ -9,7 +9,7 @@ import { DiscoveryVariants } from '../common/experiments/groups';
 import { traceError } from '../common/logger';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { IDisposableRegistry, Resource } from '../common/types';
-import { getVersionString, parseVersion } from '../common/utils/version';
+import { getVersionString } from '../common/utils/version';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -68,6 +68,8 @@ import {
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
 import { EnvironmentType, PythonEnvironment } from './info';
 import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
+import { parseBasicVersion } from './base/info/pythonVersion';
+import { PythonVersion } from './info/pythonVersion';
 
 const convertedKinds = new Map(
     Object.entries({
@@ -104,17 +106,29 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
 
     if (version !== undefined) {
         const { release, sysVersion } = version;
+        const versionPrefix = getVersionString(version);
+        let versionStr;
+
         if (release === undefined) {
-            const versionStr = `${getVersionString(version)}-final`;
-            env.version = parseVersion(versionStr);
+            versionStr = `${versionPrefix}-final`;
             env.sysVersion = '';
         } else {
             const { level, serial } = release;
             const releaseStr = level === PythonReleaseLevel.Final ? 'final' : `${level}${serial}`;
-            const versionStr = `${getVersionString(version)}-${releaseStr}`;
-            env.version = parseVersion(versionStr);
+            versionStr = `${versionPrefix}-${releaseStr}`;
             env.sysVersion = sysVersion;
         }
+
+        const result = parseBasicVersion(versionStr)[0];
+        const semverLikeVersion: PythonVersion = {
+            raw: versionPrefix,
+            major: result.major,
+            minor: result.minor,
+            patch: result.micro,
+            build: [],
+            prerelease: [],
+        };
+        env.version = semverLikeVersion;
     }
 
     if (distro !== undefined && distro.org !== '') {

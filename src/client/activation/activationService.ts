@@ -243,6 +243,7 @@ export class LanguageServerExtensionActivationService
             if (serverType === LanguageServerType.Jedi) {
                 throw ex;
             }
+            traceError(ex);
             this.output.appendLine(LanguageService.lsFailedToStart());
             serverType = LanguageServerType.Jedi;
             server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);

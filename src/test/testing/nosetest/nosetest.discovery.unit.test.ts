@@ -10,15 +10,16 @@ import { CancellationToken } from 'vscode';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { NOSETEST_PROVIDER } from '../../../client/testing/common/constants';
 import {
+    IArgumentsService,
     ITestDiscoveryService,
     ITestRunner,
     ITestsParser,
     Options,
     TestDiscoveryOptions,
+    TestFilter,
     Tests,
 } from '../../../client/testing/common/types';
 import { TestDiscoveryService } from '../../../client/testing/nosetest/services/discoveryService';
-import { IArgumentsService, TestFilter } from '../../../client/testing/types';
 
 use(chaipromise);
 

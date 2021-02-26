@@ -6,11 +6,18 @@ import * as path from 'path';
 import { getSearchPathEntries } from '../../common/utils/exec';
 
 /**
+ * Determine if the given filename looks like the simplest Python executable.
+ */
+export function matchBasicPythonBinFilename(filename: string): boolean {
+    return path.basename(filename) === 'python';
+}
+
+/**
  * Checks if a given path ends with python*.exe
  * @param {string} interpreterPath : Path to python interpreter.
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
-export function isPosixPythonBinPattern(interpreterPath: string): boolean {
+export function matchPythonBinFilename(filename: string): boolean {
     /**
      * This Reg-ex matches following file names:
      * python
@@ -20,7 +27,7 @@ export function isPosixPythonBinPattern(interpreterPath: string): boolean {
      */
     const posixPythonBinPattern = /^python(\d+(\.\d+)?)?$/;
 
-    return posixPythonBinPattern.test(path.basename(interpreterPath));
+    return posixPythonBinPattern.test(path.basename(filename));
 }
 
 export async function commonPosixBinPaths(): Promise<string[]> {

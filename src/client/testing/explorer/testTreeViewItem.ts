@@ -9,8 +9,7 @@ import { getIcon } from '../../common/utils/icons';
 import { noop } from '../../common/utils/misc';
 import { Icons } from '../common/constants';
 import { getTestDataItemType, isSubtestsParent } from '../common/testUtils';
-import { TestResult, TestStatus, TestSuite } from '../common/types';
-import { TestDataItem, TestDataItemType } from '../types';
+import { TestDataItem, TestDataItemType, TestResult, TestStatus, TestSuite } from '../common/types';
 
 function getDefaultCollapsibleState(data: TestDataItem): TreeItemCollapsibleState {
     return getTestDataItemType(data) === TestDataItemType.function

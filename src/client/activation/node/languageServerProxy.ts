@@ -28,7 +28,7 @@ import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ITestManagementService } from '../../testing/types';
+import { ITestingService } from '../../testing/types';
 import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerFolderService, ILanguageServerProxy } from '../types';
@@ -68,7 +68,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
 
     constructor(
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
-        @inject(ITestManagementService) private readonly testManager: ITestManagementService,
+        @inject(ITestingService) private readonly testManager: ITestingService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,

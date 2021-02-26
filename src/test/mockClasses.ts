@@ -38,6 +38,8 @@ export class MockOutputChannel implements vscode.OutputChannel {
 }
 
 export class MockStatusBarItem implements vscode.StatusBarItem {
+    backgroundColor: vscode.ThemeColor | undefined;
+    accessibilityInformation?: vscode.AccessibilityInformation | undefined;
     public alignment!: vscode.StatusBarAlignment;
     public priority!: number;
     public text!: string;

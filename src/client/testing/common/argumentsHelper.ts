@@ -5,7 +5,7 @@
 
 import { injectable } from 'inversify';
 import { traceWarning } from '../../common/logger';
-import { IArgumentsHelper } from '../types';
+import { IArgumentsHelper } from '../common/types';
 
 @injectable()
 export class ArgumentsHelper implements IArgumentsHelper {

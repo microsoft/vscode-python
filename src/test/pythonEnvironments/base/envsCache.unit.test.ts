@@ -90,7 +90,7 @@ suite('Environment Info cache', () => {
         assert.strictEqual(envs === envInfoArray, false);
     });
 
-    test('`filterEnvs` should return environments that match its argument using areSameEnvironmnet', async () => {
+    test('`filterEnvs` should return environments that match its argument using areSameEnvironment', async () => {
         const env: PythonEnvInfo = ({ executable: { filename: 'my-venv-env' } } as unknown) as PythonEnvInfo;
         const envsCache = await getPersistentCache(getGlobalPersistentStore(), allEnvsComplete);
 
@@ -134,6 +134,37 @@ suite('Environment Info cache', () => {
         const envsCache = new PythonEnvInfoCache(getGlobalPersistentStore(), allEnvsComplete);
 
         const result = envsCache.filterEnvs(env);
+
+        assert.strictEqual(result, undefined);
+    });
+
+    test('`getCachedEnvInfo` should return an environment that matches the input path', () => {
+        const envToFind = ({
+            kind: PythonEnvKind.System,
+            executable: { filename: 'my-system-env' },
+        } as unknown) as PythonEnvInfo;
+        const envsCache = new PythonEnvInfoCache(getGlobalPersistentStore(), allEnvsComplete);
+
+        envsCache.setAllEnvs([...envInfoArray, envToFind]);
+
+        const result = envsCache.getCachedEnvInfo('my-system-env');
+
+        assert.deepStrictEqual(result, envToFind);
+    });
+
+    test('`getCachedEnvInfo` should return undefined if no environment matches the input path', () => {
+        const envsCache = new PythonEnvInfoCache(getGlobalPersistentStore(), allEnvsComplete);
+        envsCache.setAllEnvs(envInfoArray);
+
+        const result = envsCache.getCachedEnvInfo('my-nonexistent-env');
+
+        assert.strictEqual(result, undefined);
+    });
+
+    test("`getCachedEnvInfo` should return undefined if the cache hasn't been activated", () => {
+        const envsCache = new PythonEnvInfoCache(getGlobalPersistentStore(), allEnvsComplete);
+
+        const result = envsCache.getCachedEnvInfo('my-nonexistent-env');
 
         assert.strictEqual(result, undefined);
     });

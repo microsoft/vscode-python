@@ -20,6 +20,7 @@ import { isEqual } from 'lodash';
 import { NotebookConcatTextDocument, NotebookCell, NotebookDocument } from 'vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 
 export const NotebookConcatPrefix = '_NotebookConcat_';
 
@@ -44,7 +45,16 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
     }
 
     public get languageId(): string {
-        return this.notebook.languages[0];
+        // eslint-disable-next-line global-require
+        const { NotebookCellKind } = require('vscode');
+        // Return Python if we have python cells.
+        if (this.notebook.cells.some((item) => item.language.toLowerCase() === PYTHON_LANGUAGE.toLowerCase())) {
+            return PYTHON_LANGUAGE;
+        }
+        // Return the language of the first available cell, else assume its a Python notebook.
+        // The latter is not possible, except for the case where we have all markdown cells,
+        // in which case the language server will never kick in.
+        return this.notebook.cells.find((item) => item.cellKind === NotebookCellKind.Code)?.language || PYTHON_LANGUAGE;
     }
 
     public get version(): number {

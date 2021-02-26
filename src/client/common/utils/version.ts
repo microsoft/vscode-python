@@ -6,7 +6,6 @@
 import * as semver from 'semver';
 import { verboseRegExp } from './regexp';
 
-//===========================
 // basic version info
 
 /**
@@ -34,7 +33,7 @@ type ErrorMsg = string;
 function normalizeVersionPart(part: unknown): [number, ErrorMsg] {
     // Any -1 values where the original is not a number are handled in validation.
     if (typeof part === 'number') {
-        if (isNaN(part)) {
+        if (Number.isNaN(part)) {
             return [-1, 'missing'];
         }
         if (part < 0) {
@@ -45,7 +44,7 @@ function normalizeVersionPart(part: unknown): [number, ErrorMsg] {
     }
     if (typeof part === 'string') {
         const parsed = parseInt(part, 10);
-        if (isNaN(parsed)) {
+        if (Number.isNaN(parsed)) {
             return [-1, 'string not numeric'];
         }
         if (parsed < 0) {
@@ -86,7 +85,7 @@ function copyStrict<T extends BasicVersionInfo>(info: T): RawBasicVersionInfo {
         micro: info.micro,
     };
 
-    const unnormalized = ((info as unknown) as RawBasicVersionInfo).unnormalized;
+    const { unnormalized } = (info as unknown) as RawBasicVersionInfo;
     if (unnormalized !== undefined) {
         copied.unnormalized = {
             major: unnormalized.major,
@@ -139,7 +138,7 @@ function validateVersionPart(prop: string, part: number, unnormalized?: ErrorMsg
  * Only the "basic" version info will be validated.  The caller
  * is responsible for any other properties beyond that.
  */
-export function validateBasicVersionInfo<T extends BasicVersionInfo>(info: T) {
+export function validateBasicVersionInfo<T extends BasicVersionInfo>(info: T): void {
     const raw = (info as unknown) as RawBasicVersionInfo;
     validateVersionPart('major', info.major, raw.unnormalized?.major);
     validateVersionPart('minor', info.minor, raw.unnormalized?.minor);
@@ -164,9 +163,11 @@ export function validateBasicVersionInfo<T extends BasicVersionInfo>(info: T) {
 export function getVersionString<T extends BasicVersionInfo>(info: T): string {
     if (info.major < 0) {
         return '';
-    } else if (info.minor < 0) {
+    }
+    if (info.minor < 0) {
         return `${info.major}`;
-    } else if (info.micro < 0) {
+    }
+    if (info.micro < 0) {
         return `${info.major}.${info.minor}`;
     }
     return `${info.major}.${info.minor}.${info.micro}`;
@@ -269,25 +270,30 @@ export function compareVersions<T extends BasicVersionInfo, V extends BasicVersi
 ): [number, string] {
     if (left.major < right.major) {
         return [1, 'major'];
-    } else if (left.major > right.major) {
+    }
+    if (left.major > right.major) {
         return [-1, 'major'];
-    } else if (left.major === -1) {
+    }
+    if (left.major === -1) {
         // Don't bother checking minor or micro.
         return [0, ''];
     }
 
     if (left.minor < right.minor) {
         return [1, 'minor'];
-    } else if (left.minor > right.minor) {
+    }
+    if (left.minor > right.minor) {
         return [-1, 'minor'];
-    } else if (left.minor === -1) {
+    }
+    if (left.minor === -1) {
         // Don't bother checking micro.
         return [0, ''];
     }
 
     if (left.micro < right.micro) {
         return [1, 'micro'];
-    } else if (left.micro > right.micro) {
+    }
+    if (left.micro > right.micro) {
         return [-1, 'micro'];
     }
 
@@ -298,7 +304,6 @@ export function compareVersions<T extends BasicVersionInfo, V extends BasicVersi
     return [0, ''];
 }
 
-//===========================
 // base version info
 
 /**
@@ -330,7 +335,7 @@ export function normalizeVersionInfo<T extends VersionInfo>(info: T): T {
  *
  * This assumes that the info has already been normalized.
  */
-export function validateVersionInfo<T extends VersionInfo>(info: T) {
+export function validateVersionInfo<T extends VersionInfo>(info: T): void {
     validateBasicVersionInfo(info);
     // `info.raw` can be anything.
 }
@@ -396,10 +401,9 @@ export function areSimilarVersions<T extends BasicVersionInfo, V extends BasicVe
     // tslint:enable:no-any
 }
 
-//===========================
 // semver
 
-export function parseVersion(raw: string): semver.SemVer {
+export function parseSemVerSafe(raw: string): semver.SemVer {
     raw = raw.replace(/\.00*(?=[1-9]|0\.)/, '.');
     const ver = semver.coerce(raw);
     if (ver === null || !semver.valid(ver)) {

@@ -28,7 +28,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.51.0"
+        "vscode": "^1.53.0"
     },
     "keywords": [
         "python",
@@ -84,7 +84,12 @@
         "onCommand:python.enableSourceMapSupport",
         "onCommand:python.launchTensorBoard",
         "workspaceContains:mspythonconfig.json",
-        "workspaceContains:pyproject.toml"
+        "workspaceContains:pyproject.toml",
+        "workspaceContains:Pipfile",
+        "workspaceContains:setup.py",
+        "workspaceContains:requirements.txt",
+        "workspaceContains:manage.py",
+        "workspaceContains:app.py"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -2082,7 +2087,7 @@
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
-        "@types/vscode": "~1.51.0",
+        "@types/vscode": "~1.53.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",

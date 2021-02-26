@@ -33,7 +33,6 @@ function getEnv(
 ): PythonEnvInfo {
     const env = createNamedEnv(name, version, PythonEnvKind.Unknown, executable);
     env.arch = Architecture.Unknown;
-    env.executable.filename = env.executable.filename.toLowerCase();
     env.source = [PythonEnvSource.PathEnvVar];
     return env;
 }

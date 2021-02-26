@@ -100,3 +100,8 @@ export enum DiscoveryVariants {
     discoverWithFileWatching = 'pythonDiscoveryModule',
     discoveryWithoutFileWatching = 'pythonDiscoveryModuleWithoutWatcher',
 }
+
+// Find Interpreter suggestion experiment variants
+export enum FindInterpreterVariants {
+    findLast = 'pythonFindInterpreter',
+}

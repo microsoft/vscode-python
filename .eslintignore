@@ -127,11 +127,6 @@ src/test/testing/codeLenses/testFiles.unit.test.ts
 src/test/testing/nosetest/nosetest.test.ts
 src/test/testing/nosetest/nosetest.disovery.test.ts
 src/test/testing/nosetest/nosetest.run.test.ts
-src/test/testing/pytest/pytest.testMessageService.test.ts
-src/test/testing/pytest/pytest_unittest_parser_data.ts
-src/test/testing/pytest/pytest.test.ts
-src/test/testing/pytest/pytest_run_tests_data.ts
-src/test/testing/pytest/services/discoveryService.unit.test.ts
 src/test/testing/rediscover.test.ts
 src/test/testing/helper.ts
 src/test/testing/navigation/fileNavigator.unit.test.ts
@@ -140,7 +135,6 @@ src/test/testing/navigation/suiteNavigator.unit.test.ts
 src/test/testing/navigation/commandHandlers.unit.test.ts
 src/test/testing/navigation/helper.unit.test.ts
 src/test/testing/navigation/symbolNavigator.unit.test.ts
-src/test/testing/configuration.unit.test.ts
 src/test/testing/explorer/treeView.unit.test.ts
 src/test/testing/explorer/testExplorerCommandHandler.unit.test.ts
 src/test/testing/explorer/failedTestHandler.unit.test.ts
@@ -151,8 +145,6 @@ src/test/testing/banners/proposeNewLanguageServerBanner.unit.test.ts
 src/test/testing/common/argsHelper.unit.test.ts
 src/test/testing/common/trackEnablement.unit.test.ts
 src/test/testing/common/debugLauncher.unit.test.ts
-src/test/testing/common/managers/baseTestManager.unit.test.ts
-src/test/testing/common/managers/testConfigurationManager.unit.test.ts
 src/test/testing/common/testUtils.unit.test.ts
 src/test/testing/common/testVisitors/resultResetVisitor.unit.test.ts
 src/test/testing/common/services/discoveredTestParser.unit.test.ts
@@ -185,7 +177,6 @@ src/test/common/experiments/manager.unit.test.ts
 src/test/common/experiments/telemetry.unit.test.ts
 src/test/common/platform/filesystem.unit.test.ts
 src/test/common/platform/errors.unit.test.ts
-src/test/common/platform/platformService.test.ts
 src/test/common/platform/utils.ts
 src/test/common/platform/fs-temp.unit.test.ts
 src/test/common/platform/fs-temp.functional.test.ts
@@ -300,7 +291,6 @@ src/test/workspaceSymbols/common.ts
 src/test/workspaceSymbols/main.unit.test.ts
 src/test/workspaceSymbols/generator.unit.test.ts
 
-src/client/interpreter/interpreterService.ts
 src/client/interpreter/configuration/interpreterComparer.ts
 src/client/interpreter/configuration/interpreterSelector/commands/base.ts
 src/client/interpreter/configuration/interpreterSelector/commands/resetInterpreter.ts
@@ -443,12 +433,6 @@ src/client/testing/nosetest/services/parserService.ts
 src/client/testing/nosetest/services/argsService.ts
 src/client/testing/nosetest/services/discoveryService.ts
 src/client/testing/main.ts
-src/client/testing/pytest/main.ts
-src/client/testing/pytest/testConfigurationManager.ts
-src/client/testing/pytest/runner.ts
-src/client/testing/pytest/services/argsService.ts
-src/client/testing/pytest/services/discoveryService.ts
-src/client/testing/pytest/services/testMessageService.ts
 src/client/testing/configurationFactory.ts
 src/client/testing/navigation/serviceRegistry.ts
 src/client/testing/navigation/symbolProvider.ts
@@ -462,13 +446,9 @@ src/client/testing/explorer/testTreeViewProvider.ts
 src/client/testing/explorer/commandHandlers.ts
 src/client/testing/explorer/failedTestHandler.ts
 src/client/testing/explorer/treeView.ts
-src/client/testing/types.ts
 src/client/testing/common/argumentsHelper.ts
 src/client/testing/common/enablementTracker.ts
 src/client/testing/common/debugLauncher.ts
-src/client/testing/common/managers/testConfigurationManager.ts
-src/client/testing/common/managers/baseTestManager.ts
-src/client/testing/common/types.ts
 src/client/testing/common/constants.ts
 src/client/testing/common/testUtils.ts
 src/client/testing/common/xUnitParser.ts
@@ -481,7 +461,6 @@ src/client/testing/common/services/contextService.ts
 src/client/testing/common/services/testResultsService.ts
 src/client/testing/common/services/storageService.ts
 src/client/testing/common/services/types.ts
-src/client/testing/common/services/unitTestDiagnosticService.ts
 src/client/testing/common/services/testsStatusService.ts
 src/client/testing/common/services/discovery.ts
 src/client/testing/common/services/configSettingService.ts
@@ -512,7 +491,6 @@ src/client/common/platform/serviceRegistry.ts
 src/client/common/platform/errors.ts
 src/client/common/platform/fs-temp.ts
 src/client/common/platform/fs-paths.ts
-src/client/common/platform/platformService.ts
 src/client/common/platform/registry.ts
 src/client/common/platform/pathUtils.ts
 src/client/common/persistentState.ts
@@ -541,7 +519,6 @@ src/client/common/utils/stopWatch.ts
 src/client/common/utils/random.ts
 src/client/common/utils/serializers.ts
 src/client/common/utils/sysTypes.ts
-src/client/common/utils/version.ts
 src/client/common/utils/misc.ts
 src/client/common/utils/logging.ts
 src/client/common/utils/cacheUtils.ts

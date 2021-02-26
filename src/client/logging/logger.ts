@@ -27,6 +27,7 @@ export type LoggerConfig = {
 export function createLogger(config?: LoggerConfig) {
     const logger = winston.createLogger({
         // We would also set "levels" here.
+        exitOnError: false, // Do not exit extension host if there is an exception.
     });
     if (config) {
         configureLogger(logger, config);

@@ -5,8 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
-import { Tests, TestsToRun } from '../common/types';
-import { IArgumentsHelper, IUnitTestHelper } from '../types';
+import { IArgumentsHelper, IUnitTestHelper, Tests, TestsToRun } from '../common/types';
 
 @injectable()
 export class UnitTestHelper implements IUnitTestHelper {

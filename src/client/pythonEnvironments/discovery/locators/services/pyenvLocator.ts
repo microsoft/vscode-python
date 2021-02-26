@@ -259,15 +259,15 @@ export function parsePyenvVersion(str: string): Promise<IPyenvVersionStrings | u
 async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
     const pyenvVersionDir = getPyenvVersionsDir();
 
-    const subDirs = getSubDirs(pyenvVersionDir);
-    for await (const subDir of subDirs) {
-        const envDir = path.join(pyenvVersionDir, subDir);
-        const interpreterPath = await getInterpreterPathFromDir(envDir);
+    const subDirs = getSubDirs(pyenvVersionDir, true);
+    for await (const subDirPath of subDirs) {
+        const envDirName = path.basename(subDirPath);
+        const interpreterPath = await getInterpreterPathFromDir(subDirPath);
 
         if (interpreterPath) {
             // The sub-directory name sometimes can contain distro and python versions.
             // here we attempt to extract the texts out of the name.
-            const versionStrings = await parsePyenvVersion(subDir);
+            const versionStrings = await parsePyenvVersion(envDirName);
 
             // Here we look for near by files, or config files to see if we can get python version info
             // without running python itself.
@@ -290,7 +290,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
             // `pyenv local|global <env-name>` or `pyenv shell <env-name>`
             //
             // For the display name we are going to treat these as `pyenv` environments.
-            const display = `${subDir}:pyenv`;
+            const display = `${envDirName}:pyenv`;
 
             const org = versionStrings && versionStrings.distro ? versionStrings.distro : '';
 
@@ -299,14 +299,14 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
             const envInfo = buildEnvInfo({
                 kind: PythonEnvKind.Pyenv,
                 executable: interpreterPath,
-                location: envDir,
+                location: subDirPath,
                 version: pythonVersion,
                 source: [PythonEnvSource.Pyenv],
                 display,
                 org,
                 fileInfo,
             });
-            envInfo.name = subDir;
+            envInfo.name = envDirName;
 
             yield envInfo;
         }

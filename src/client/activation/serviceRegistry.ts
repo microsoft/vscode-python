@@ -136,12 +136,6 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
             ILanguageServerFolderService,
             NodeLanguageServerFolderService,
         );
-    } else if (languageServerType === LanguageServerType.Jedi) {
-        serviceManager.add<ILanguageServerActivator>(
-            ILanguageServerActivator,
-            JediExtensionActivator,
-            LanguageServerType.Jedi,
-        );
     } else if (languageServerType === LanguageServerType.JediLSP) {
         serviceManager.add<ILanguageServerActivator>(
             ILanguageServerActivator,
@@ -165,6 +159,11 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
             LanguageServerType.None,
         );
     }
+    serviceManager.add<ILanguageServerActivator>(
+        ILanguageServerActivator,
+        JediExtensionActivator,
+        LanguageServerType.Jedi,
+    ); // We fallback to Jedi if for some reason we're unable to use other language servers, hence register this always.
 
     serviceManager.addSingleton<IDownloadChannelRule>(
         IDownloadChannelRule,

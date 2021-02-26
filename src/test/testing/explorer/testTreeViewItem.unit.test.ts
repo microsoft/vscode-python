@@ -6,9 +6,8 @@
 import { expect } from 'chai';
 import { Uri } from 'vscode';
 import { Commands } from '../../../client/common/constants';
-import { TestFile, TestFolder, TestFunction, TestSuite } from '../../../client/testing/common/types';
+import { TestDataItemType, TestFile, TestFolder, TestFunction, TestSuite } from '../../../client/testing/common/types';
 import { TestTreeItem } from '../../../client/testing/explorer/testTreeViewItem';
-import { TestDataItemType } from '../../../client/testing/types';
 import { createMockTestDataItem, createSubtestParent } from '../common/testUtils.unit.test';
 import { getTestExplorerViewItemData } from './explorerTestData';
 

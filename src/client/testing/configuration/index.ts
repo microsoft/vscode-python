@@ -2,32 +2,39 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../common/application/types';
-import { traceError } from '../common/logger';
-import { IConfigurationService, Product } from '../common/types';
-import { IServiceContainer } from '../ioc/types';
-import { sendTelemetryEvent } from '../telemetry';
-import { EventName } from '../telemetry/constants';
-import { TestConfiguringTelemetry } from '../telemetry/types';
-import { BufferedTestConfigSettingsService } from './common/services/configSettingService';
-import { ITestsHelper, UnitTestProduct } from './common/types';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { traceError } from '../../common/logger';
+import { IConfigurationService, Product } from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
+import { TestConfiguringTelemetry } from '../../telemetry/types';
+import { BufferedTestConfigSettingsService } from '../common/services/configSettingService';
 import {
     ITestConfigSettingsService,
     ITestConfigurationManager,
     ITestConfigurationManagerFactory,
     ITestConfigurationService,
-} from './types';
+    ITestsHelper,
+    UnitTestProduct,
+} from '../common/types';
+
+export const NONE_SELECTED = Error('none selected');
 
 @injectable()
 export class UnitTestConfigurationService implements ITestConfigurationService {
     private readonly configurationService: IConfigurationService;
+
     private readonly appShell: IApplicationShell;
+
     private readonly workspaceService: IWorkspaceService;
+
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
+
     public async displayTestFrameworkError(wkspace: Uri): Promise<void> {
         const settings = this.configurationService.getSettings(wkspace);
         let enabledCount = settings.testing.pytestEnabled ? 1 : 0;
@@ -39,18 +46,18 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
                 'Enable only one of the test frameworks (unittest, pytest or nosetest).',
                 true,
             );
-        } else {
-            const option = 'Enable and configure a Test Framework';
-            const item = await this.appShell.showInformationMessage(
-                'No test framework configured (unittest, pytest or nosetest)',
-                option,
-            );
-            if (item === option) {
-                return this._promptToEnableAndConfigureTestFramework(wkspace);
-            }
-            return Promise.reject(null);
         }
+        const option = 'Enable and configure a Test Framework';
+        const item = await this.appShell.showInformationMessage(
+            'No test framework configured (unittest, pytest or nosetest)',
+            option,
+        );
+        if (item !== option) {
+            throw NONE_SELECTED;
+        }
+        return this._promptToEnableAndConfigureTestFramework(wkspace);
     }
+
     public async selectTestRunner(placeHolderMessage: string): Promise<UnitTestProduct | undefined> {
         const items = [
             {
@@ -83,13 +90,14 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
 
         return selectedTestRunner ? (selectedTestRunner.product as UnitTestProduct) : undefined;
     }
+
     public async enableTest(wkspace: Uri, product: UnitTestProduct): Promise<void> {
         const factory = this.serviceContainer.get<ITestConfigurationManagerFactory>(ITestConfigurationManagerFactory);
         const configMgr = factory.create(wkspace, product);
         return this._enableTest(wkspace, configMgr);
     }
 
-    public async promptToEnableAndConfigureTestFramework(wkspace: Uri) {
+    public async promptToEnableAndConfigureTestFramework(wkspace: Uri): Promise<void> {
         await this._promptToEnableAndConfigureTestFramework(wkspace, undefined, false, 'commandpalette');
     }
 
@@ -110,18 +118,18 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
 
     private async _promptToEnableAndConfigureTestFramework(
         wkspace: Uri,
-        messageToDisplay: string = 'Select a test framework/tool to enable',
-        enableOnly: boolean = false,
+        messageToDisplay = 'Select a test framework/tool to enable',
+        enableOnly = false,
         trigger: 'ui' | 'commandpalette' = 'ui',
-    ) {
+    ): Promise<void> {
         const telemetryProps: TestConfiguringTelemetry = {
-            trigger: trigger,
+            trigger,
             failed: false,
         };
         try {
             const selectedTestRunner = await this.selectTestRunner(messageToDisplay);
             if (typeof selectedTestRunner !== 'number') {
-                return Promise.reject(null);
+                throw NONE_SELECTED;
             }
             const helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
             telemetryProps.tool = helper.parseProviderName(selectedTestRunner);

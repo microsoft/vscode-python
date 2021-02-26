@@ -29,6 +29,8 @@
    ([#15232](https://github.com/Microsoft/vscode-python/issues/15232))
 1. Ensure target environment is activated in the terminal when running install scripts.
    ([#15285](https://github.com/Microsoft/vscode-python/issues/15285))
+1. Allow support for using notebook APIs in the VS code stable build.
+   ([#15364](https://github.com/Microsoft/vscode-python/issues/15364))
 
 ### Code Health
 
@@ -653,6 +655,8 @@ part of!
    ([#14210](https://github.com/Microsoft/vscode-python/issues/14210))
 1. Fix for CVE-2020-16977
    ([CVE-2020-16977](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2020-16977))
+1. Fix for CVE-2020-17163
+   ([CVE-2020-17163](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2020-17163))
 
 ### Thanks
 

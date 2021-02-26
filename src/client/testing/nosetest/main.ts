@@ -4,8 +4,16 @@ import { Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { NOSETEST_PROVIDER } from '../common/constants';
 import { BaseTestManager } from '../common/managers/baseTestManager';
-import { ITestsHelper, TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
-import { IArgumentsService, ITestManagerRunner, TestFilter } from '../types';
+import {
+    IArgumentsService,
+    ITestManagerRunner,
+    ITestsHelper,
+    TestDiscoveryOptions,
+    TestFilter,
+    TestRunOptions,
+    Tests,
+    TestsToRun,
+} from '../common/types';
 
 @injectable()
 export class TestManager extends BaseTestManager {

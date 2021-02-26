@@ -7,8 +7,9 @@ import { inject, injectable } from 'inversify';
 import { QuickPickItem } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands } from '../../../../common/constants';
+import { FindInterpreterVariants } from '../../../../common/experiments/groups';
 import { IPlatformService } from '../../../../common/platform/types';
-import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
+import { IConfigurationService, IExperimentService, IPathUtils, Resource } from '../../../../common/types';
 import { InterpreterQuickPickList } from '../../../../common/utils/localize';
 import {
     IMultiStepInput,
@@ -18,10 +19,16 @@ import {
 } from '../../../../common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
-import { IInterpreterQuickPickItem, IInterpreterSelector, IPythonPathUpdaterServiceManager } from '../../types';
+import {
+    IFindInterpreterQuickPickItem,
+    IInterpreterQuickPickItem,
+    IInterpreterSelector,
+    IPythonPathUpdaterServiceManager,
+} from '../../types';
 import { BaseInterpreterSelectorCommand } from './base';
 
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
+
 @injectable()
 export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     constructor(
@@ -35,6 +42,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
+        @inject(IExperimentService) private readonly experiments: IExperimentService,
     ) {
         super(pythonPathUpdaterService, commandManager, applicationShell, workspaceService);
     }
@@ -50,12 +58,25 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         state: InterpreterStateArgs,
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         const interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
-        const enterInterpreterPathSuggestion = {
-            label: InterpreterQuickPickList.enterPath.label(),
-            detail: InterpreterQuickPickList.enterPath.detail(),
+
+        const inFindExperiment = await this.experiments.inExperiment(FindInterpreterVariants.findLast);
+        const manualEntrySuggestion: IFindInterpreterQuickPickItem = {
+            label: inFindExperiment
+                ? InterpreterQuickPickList.findPath.label()
+                : InterpreterQuickPickList.enterPath.label(),
+            detail: inFindExperiment
+                ? InterpreterQuickPickList.findPath.detail()
+                : InterpreterQuickPickList.enterPath.detail(),
             alwaysShow: true,
         };
-        const suggestions = [enterInterpreterPathSuggestion, ...interpreterSuggestions];
+
+        let suggestions: (IInterpreterQuickPickItem | IFindInterpreterQuickPickItem)[] = [];
+        if (inFindExperiment) {
+            suggestions = [...interpreterSuggestions, manualEntrySuggestion];
+        } else {
+            suggestions = [manualEntrySuggestion, ...interpreterSuggestions];
+        }
+
         const currentPythonPath = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
             state.workspace ? state.workspace.fsPath : undefined,
@@ -63,19 +84,20 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
 
         state.path = undefined;
         const selection = await input.showQuickPick<
-            IInterpreterQuickPickItem | typeof enterInterpreterPathSuggestion,
-            IQuickPickParameters<IInterpreterQuickPickItem | typeof enterInterpreterPathSuggestion>
+            IInterpreterQuickPickItem | IFindInterpreterQuickPickItem,
+            IQuickPickParameters<IInterpreterQuickPickItem | IFindInterpreterQuickPickItem>
         >({
             placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
             items: suggestions,
-            activeItem: suggestions[1],
+            activeItem: inFindExperiment ? suggestions[0] : suggestions[1],
             matchOnDetail: true,
             matchOnDescription: true,
         });
 
         if (selection === undefined) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'escape' });
-        } else if (selection.label === enterInterpreterPathSuggestion.label) {
+        } else if (selection.label === manualEntrySuggestion.label) {
+            sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_OR_FIND);
             return this._enterOrBrowseInterpreterPath(input, state);
         } else {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'selected' });

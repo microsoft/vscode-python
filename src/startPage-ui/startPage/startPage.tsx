@@ -74,7 +74,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                     </div>
                     <div className="block">
                         <div className="text" onClick={this.openBlankNotebook} role="button">
-                            {getLocString('StartPage.CreateJupyterNotebook', 'Create a Jupyter Notebook')}
+                            {getLocString('StartPage.createJupyterNotebook', 'Create a Jupyter Notebook')}
                         </div>
                         {this.renderNotebookDescription()}
                     </div>

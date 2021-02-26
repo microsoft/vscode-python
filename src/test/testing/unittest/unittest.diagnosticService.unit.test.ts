@@ -7,8 +7,7 @@ import * as assert from 'assert';
 import { DiagnosticSeverity } from 'vscode';
 import * as localize from '../../../client/common/utils/localize';
 import { UnitTestDiagnosticService } from '../../../client/testing/common/services/unitTestDiagnosticService';
-import { TestStatus } from '../../../client/testing/common/types';
-import { PythonTestMessageSeverity } from '../../../client/testing/types';
+import { PythonTestMessageSeverity, TestStatus } from '../../../client/testing/common/types';
 
 suite('UnitTestDiagnosticService: unittest', () => {
     let diagnosticService: UnitTestDiagnosticService;
@@ -22,8 +21,8 @@ suite('UnitTestDiagnosticService: unittest', () => {
         let expectedPrefix: string;
         let expectedSeverity: DiagnosticSeverity;
         suiteSetup(() => {
-            actualPrefix = diagnosticService.getMessagePrefix(TestStatus.Error)!;
-            actualSeverity = diagnosticService.getSeverity(PythonTestMessageSeverity.Error)!;
+            actualPrefix = diagnosticService.getMessagePrefix(TestStatus.Error);
+            actualSeverity = diagnosticService.getSeverity(PythonTestMessageSeverity.Error);
             expectedPrefix = localize.Testing.testErrorDiagnosticMessage();
             expectedSeverity = DiagnosticSeverity.Error;
         });
@@ -40,8 +39,8 @@ suite('UnitTestDiagnosticService: unittest', () => {
         let expectedPrefix: string;
         let expectedSeverity: DiagnosticSeverity;
         suiteSetup(() => {
-            actualPrefix = diagnosticService.getMessagePrefix(TestStatus.Fail)!;
-            actualSeverity = diagnosticService.getSeverity(PythonTestMessageSeverity.Failure)!;
+            actualPrefix = diagnosticService.getMessagePrefix(TestStatus.Fail);
+            actualSeverity = diagnosticService.getSeverity(PythonTestMessageSeverity.Failure);
             expectedPrefix = localize.Testing.testFailDiagnosticMessage();
             expectedSeverity = DiagnosticSeverity.Error;
         });
@@ -58,8 +57,8 @@ suite('UnitTestDiagnosticService: unittest', () => {
         let expectedPrefix: string;
         let expectedSeverity: DiagnosticSeverity;
         suiteSetup(() => {
-            actualPrefix = diagnosticService.getMessagePrefix(TestStatus.Skipped)!;
-            actualSeverity = diagnosticService.getSeverity(PythonTestMessageSeverity.Skip)!;
+            actualPrefix = diagnosticService.getMessagePrefix(TestStatus.Skipped);
+            actualSeverity = diagnosticService.getSeverity(PythonTestMessageSeverity.Skip);
             expectedPrefix = localize.Testing.testSkippedDiagnosticMessage();
             expectedSeverity = DiagnosticSeverity.Information;
         });

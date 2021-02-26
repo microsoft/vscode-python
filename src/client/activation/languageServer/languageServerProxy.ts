@@ -14,7 +14,7 @@ import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ITestManagementService } from '../../testing/types';
+import { ITestingService } from '../../testing/types';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 
@@ -28,7 +28,7 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
 
     constructor(
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
-        @inject(ITestManagementService) private readonly testManager: ITestManagementService,
+        @inject(ITestingService) private readonly testManager: ITestingService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
     ) {
         this.startupCompleted = createDeferred<void>();

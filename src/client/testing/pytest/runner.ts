@@ -1,4 +1,5 @@
 'use strict';
+
 import { inject, injectable } from 'inversify';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { noop } from '../../common/utils/misc';
@@ -6,8 +7,10 @@ import { IServiceContainer } from '../../ioc/types';
 import { PYTEST_PROVIDER } from '../common/constants';
 import { Options } from '../common/runner';
 import {
+    IArgumentsHelper,
+    IArgumentsService,
     ITestDebugLauncher,
-    ITestManager,
+    ITestManagerRunner,
     ITestResultsService,
     ITestRunner,
     IXUnitParser,
@@ -15,17 +18,21 @@ import {
     TestRunOptions,
     Tests,
 } from '../common/types';
-import { IArgumentsHelper, IArgumentsService, ITestManagerRunner } from '../types';
 
 const JunitXmlArgOld = '--junitxml';
 const JunitXmlArg = '--junit-xml';
 @injectable()
 export class TestManagerRunner implements ITestManagerRunner {
     private readonly argsService: IArgumentsService;
+
     private readonly argsHelper: IArgumentsHelper;
+
     private readonly testRunner: ITestRunner;
+
     private readonly xUnitParser: IXUnitParser;
+
     private readonly fs: IFileSystem;
+
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.argsService = serviceContainer.get<IArgumentsService>(IArgumentsService, PYTEST_PROVIDER);
         this.argsHelper = serviceContainer.get<IArgumentsHelper>(IArgumentsHelper);
@@ -33,10 +40,11 @@ export class TestManagerRunner implements ITestManagerRunner {
         this.xUnitParser = this.serviceContainer.get<IXUnitParser>(IXUnitParser);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
+
     public async runTest(
         testResultsService: ITestResultsService,
         options: TestRunOptions,
-        _: ITestManager,
+        // We ignore the ITestManager arg,
     ): Promise<Tests> {
         let testPaths: string[] = [];
         if (options.testsToRun && options.testsToRun.testFolder) {
@@ -52,8 +60,8 @@ export class TestManagerRunner implements ITestManagerRunner {
             testPaths = testPaths.concat(options.testsToRun.testFunction.map((f) => f.nameToRun));
         }
 
-        let deleteJUnitXmlFile: Function = noop;
-        const args = options.args;
+        let deleteJUnitXmlFile: () => void = noop;
+        const { args } = options;
         try {
             const xmlLogResult = await this.getJUnitXmlFile(args);
             const xmlLogFile = xmlLogResult.filePath;

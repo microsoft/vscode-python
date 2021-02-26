@@ -5,7 +5,7 @@
 
 import { expect, use } from 'chai';
 import { ArgumentsHelper } from '../../../client/testing/common/argumentsHelper';
-import { IArgumentsHelper } from '../../../client/testing/types';
+import { IArgumentsHelper } from '../../../client/testing/common/types';
 const assertArrays = require('chai-arrays');
 use(assertArrays);
 

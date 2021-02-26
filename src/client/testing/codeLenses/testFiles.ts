@@ -15,11 +15,11 @@ import {
     TextDocument,
     Uri,
 } from 'vscode';
+import { CommandSource } from '../../common/application/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import * as constants from '../../common/constants';
-import { CommandSource } from '../common/constants';
 import {
     ITestCollectionStorageService,
     TestFile,

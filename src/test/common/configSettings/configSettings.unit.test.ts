@@ -21,11 +21,11 @@ import {
     ILoggingSettings,
     ISortImportSettings,
     ITerminalSettings,
-    ITestingSettings,
     IWorkspaceSymbolSettings,
 } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
+import { ITestingSettings } from '../../../client/testing/configuration/types';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 
 suite('Python Settings', async () => {

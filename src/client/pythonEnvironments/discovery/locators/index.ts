@@ -16,7 +16,6 @@ import {
     CURRENT_PATH_SERVICE,
     GetInterpreterLocatorOptions,
     GLOBAL_VIRTUAL_ENV_SERVICE,
-    IComponentAdapter,
     IInterpreterLocatorHelper,
     IInterpreterLocatorService,
     KNOWN_PATH_SERVICE,
@@ -182,12 +181,6 @@ export class WorkspaceLocators extends LazyResourceBasedLocator {
     }
 }
 
-// The parts of IComponentAdapter used here.
-interface IComponent {
-    hasInterpreters: Promise<boolean | undefined>;
-    getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[] | undefined>;
-}
-
 /**
  * Facilitates locating Python interpreters.
  */
@@ -207,10 +200,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         Promise<PythonEnvironment[]>
     >();
 
-    constructor(
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
-    ) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this._hasInterpreters = createDeferred<boolean>();
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
@@ -231,12 +221,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     }
 
     public get hasInterpreters(): Promise<boolean> {
-        return this.pyenvs.hasInterpreters.then((res) => {
-            if (res !== undefined) {
-                return res;
-            }
-            return this._hasInterpreters.completed ? this._hasInterpreters.promise : Promise.resolve(false);
-        });
+        return this._hasInterpreters.completed ? this._hasInterpreters.promise : Promise.resolve(false);
     }
 
     /**
@@ -256,10 +241,6 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      */
     @traceDecorators.verbose('Get Interpreters')
     public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]> {
-        const envs = await this.pyenvs.getInterpreters(resource, options);
-        if (envs !== undefined) {
-            return envs;
-        }
         const locators = this.getLocators(options);
         const promises = locators.map(async (provider) => provider.getInterpreters(resource));
         locators.forEach((locator) => {
