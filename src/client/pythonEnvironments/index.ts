@@ -7,7 +7,7 @@ import { getOSType, OSType } from '../common/utils/platform';
 import { IDisposable } from '../common/utils/resourceLifecycle';
 import { ActivationResult, ExtensionState } from '../components';
 import { PythonEnvironments } from './api';
-import { getPersistentCache } from './base/envsCache';
+import { getPersistentCache, PythonEnvInfoCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
 import { ILocator } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
@@ -28,6 +28,7 @@ import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreL
 import { EnvironmentInfoService } from './info/environmentInfoService';
 import { isComponentEnabled, registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
 import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
+import { IExtensionContext } from '../common/types';
 
 /**
  * Set up the Python environments component (during extension activation).'
@@ -171,8 +172,8 @@ function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators {
     return locators;
 }
 
-async function createCachingLocator(ext: ExtensionState, locators: ILocator): Promise<CachingLocator> {
-    const storage = getGlobalStorage<PythonEnvInfo[]>(ext.context, 'PYTHON_ENV_INFO_CACHE');
+export async function createPythonEnvInfoCache(context: IExtensionContext): Promise<PythonEnvInfoCache> {
+    const storage = getGlobalStorage<PythonEnvInfo[]>(context, 'PYTHON_ENV_INFO_CACHE');
     const cache = await getPersistentCache(
         {
             load: async () => storage.get(),
@@ -182,5 +183,11 @@ async function createCachingLocator(ext: ExtensionState, locators: ILocator): Pr
         // So no further check for complete environments is needed.
         () => true, // "isComplete"
     );
+
+    return cache;
+}
+
+async function createCachingLocator(ext: ExtensionState, locators: ILocator): Promise<CachingLocator> {
+    const cache = await createPythonEnvInfoCache(ext.context);
     return new CachingLocator(cache, locators);
 }
