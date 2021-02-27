@@ -10,7 +10,8 @@ import { getLanguageConfiguration } from '../../client/language/languageConfigur
 const NEEDS_INDENT = [
     /^break$/,
     /^continue$/,
-    /^raise$/, // only re-raise
+    // raise is indented unless it's the only thing on the line
+    /^raise\b/,
     /^return\b/,
 ];
 const INDENT_ON_ENTER = [
@@ -37,7 +38,9 @@ const DEDENT_ON_ENTER = [
     ///^return\b/,
     /^break$/,
     /^continue$/,
-    /^raise\b/,
+    // For now we are mostly ignoring "return".
+    // See https://github.com/microsoft/vscode-python/issues/10583.
+    /^raise$/,
     /^pass\b/,
 ];
 
