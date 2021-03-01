@@ -47,6 +47,7 @@
         "Machine Learning",
         "Notebooks"
     ],
+    "requiresWorkspaceTrust": "onStart",
     "activationEvents": [
         "onLanguage:python",
         "onDebugResolve:python",
