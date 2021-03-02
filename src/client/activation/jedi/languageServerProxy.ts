@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import '../../common/extensions';
-// @ts-ignore pidusage does not work in strict mode
-import * as pidusage from 'pidusage';
 import { inject, injectable } from 'inversify';
 import {
     DidChangeConfigurationNotification,
@@ -35,6 +33,7 @@ import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 import { StopWatch } from '../../common/utils/stopWatch';
+import { getMemoryUsage } from '../../common/process/memory';
 
 @injectable()
 export class JediLanguageServerProxy implements ILanguageServerProxy {
@@ -226,7 +225,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         this.timer = setTimeout(() => this.checkJediLSPMemoryFootprint(), 15 * 1000);
     }
 
-    private sendJediMemoryTelemetry(): Promise<void> {
+    private async sendJediMemoryTelemetry(): Promise<void> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const proc: ChildProcess | undefined = (this.languageClient as any)._serverProcess as ChildProcess;
         if (
@@ -236,37 +235,29 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
             !this.pythonSettings ||
             this.pythonSettings.jediMemoryLimit === -1
         ) {
-            return Promise.resolve();
+            return;
         }
 
-        // Do not run pidusage over and over, wait for it to finish.
-        const deferred = createDeferred<void>();
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (pidusage as any).stat(proc.pid, (err: any, result: any) => {
-            if (err) {
-                this.pidUsageFailures.counter += 1;
-                // If this function fails 2 times in the last 60 seconds, lets not try ever again.
-                if (this.pidUsageFailures.timer.elapsedTime > 60 * 1000) {
-                    this.pidUsageFailures.counter = 0;
-                    this.pidUsageFailures.timer.reset();
-                }
-                traceError('Python Extension: (pidusage)', err);
-            } else if (result && result.memory && this.pythonSettings) {
-                const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 1024), 8192);
-                const restartJedi = false;
+        try {
+            const memory = await getMemoryUsage(proc.pid);
+            const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 1024), 8192) * 1024 * 1024;
+            if (memory > 0) {
                 const props = {
-                    memUse: result.memory,
-                    limit: limit * 1024 * 1024,
+                    memUse: memory,
+                    limit,
                     isUserDefinedLimit: limit !== 1024,
-                    restart: restartJedi,
+                    restart: false,
                 };
                 sendTelemetryEvent(EventName.JEDI_MEMORY, undefined, props);
             }
-
-            deferred.resolve();
-        });
-
-        return deferred.promise;
+        } catch (err) {
+            this.pidUsageFailures.counter += 1;
+            // If this function fails 2 times in the last 60 seconds, lets not try ever again.
+            if (this.pidUsageFailures.timer.elapsedTime > 60 * 1000) {
+                this.pidUsageFailures.counter = 0;
+                this.pidUsageFailures.timer.reset();
+            }
+            traceError('Python Extension: (pidusage-tree)', err);
+        }
     }
 }
