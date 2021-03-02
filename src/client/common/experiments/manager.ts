@@ -5,7 +5,7 @@
 
 'use strict';
 
-import { inject, injectable, named, optional } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as path from 'path';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -19,28 +19,20 @@ import {
     IConfigurationService,
     ICryptoUtils,
     IExperimentsManager,
-    IHttpClient,
     IOutputChannel,
     IPersistentState,
     IPersistentStateFactory,
     IPythonSettings,
 } from '../types';
-import { sleep } from '../utils/async';
 import { swallowExceptions } from '../utils/decorators';
 import { Experiments } from '../utils/localize';
 
-const EXPIRY_DURATION_MS = 30 * 60 * 1000;
-export const isDownloadedStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';
 export const experimentStorageKey = 'EXPERIMENT_STORAGE_KEY';
-export const downloadedExperimentStorageKey = 'DOWNLOADED_EXPERIMENTS_STORAGE_KEY';
 /**
  * Local experiments config file. We have this to ensure that experiments are used in the first session itself,
  * as about 40% of the users never come back for the second session.
  */
 const configFile = path.join(EXTENSION_ROOT_DIR, 'experiments.json');
-export const configUri = 'https://raw.githubusercontent.com/microsoft/vscode-python/main/experiments.json';
-export const EXPERIMENTS_EFFORT_TIMEOUT_MS = 2000;
-// The old experiments which are working fine using the `SHA512` algorithm
 export const oldExperimentSalts = ['ShowExtensionSurveyPrompt', 'ShowPlayIcon', 'AlwaysDisplayTestExplorer', 'LS'];
 
 /**
@@ -69,48 +61,27 @@ export class ExperimentsManager implements IExperimentsManager {
      * Keeps track of the experiments to be used in the current session
      */
     private experimentStorage: IPersistentState<ABExperiments | undefined>;
-    /**
-     * Keeps track of the downloaded experiments in the current session, to be used in the next startup
-     * Note experiments downloaded in the current session has to be distinguished
-     * from the experiments download in the previous session (experimentsStorage contains that), reason being the following
-     *
-     * THE REASON TO WHY WE NEED TWO STATE STORES USED TO STORE EXPERIMENTS:
-     * We do not intend to change experiments mid-session. To implement this, we should make sure that we do not replace
-     * the experiments used in the current session by the newly downloaded experiments. That's why we have a separate
-     * storage(downloadedExperimentsStorage) to store experiments downloaded in the current session.
-     * Function updateExperimentStorage() makes sure these are used in the next session.
-     */
-    private downloadedExperimentsStorage: IPersistentState<ABExperiments | undefined>;
+
     /**
      * Keeps track if the storage needs updating or not.
      * Note this has to be separate from the actual storage as
      * download storages by itself should not have an Expiry (so that it can be used in the next session even when download fails in the current session)
      */
-    private isDownloadedStorageValid: IPersistentState<boolean>;
     private activatedOnce: boolean = false;
     private settings!: IPythonSettings;
+
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
-        @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @optional() private experimentEffortTimeout: number = EXPERIMENTS_EFFORT_TIMEOUT_MS,
     ) {
-        this.isDownloadedStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(
-            isDownloadedStorageValidKey,
-            false,
-            EXPIRY_DURATION_MS,
-        );
         this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(
             experimentStorageKey,
             undefined,
         );
-        this.downloadedExperimentsStorage = this.persistentStateFactory.createGlobalPersistentState<
-            ABExperiments | undefined
-        >(downloadedExperimentStorageKey, undefined);
     }
 
     @swallowExceptions('Failed to activate experiments')
@@ -134,7 +105,6 @@ export class ExperimentsManager implements IExperimentsManager {
 
             this.output.appendLine(Experiments.inGroup().format(exp.name));
         }
-        this.initializeInBackground().ignoreErrors();
     }
 
     @traceDecorators.error('Failed to identify if user is in experiment')
@@ -198,33 +168,6 @@ export class ExperimentsManager implements IExperimentsManager {
     }
 
     /**
-     * Downloads experiments and updates downloaded storage for the next session given previously downloaded experiments are no longer valid
-     */
-    @traceDecorators.error('Failed to initialize experiments')
-    public async initializeInBackground(): Promise<void> {
-        if (this.isDownloadedStorageValid.value) {
-            return;
-        }
-        await this.downloadAndStoreExperiments();
-    }
-
-    /**
-     * Downloads experiments and updates storage
-     * @param storage The storage to store the experiments in. By default, downloaded storage for the next session is used.
-     */
-    @traceDecorators.error('Failed to download and store experiments')
-    public async downloadAndStoreExperiments(
-        storage: IPersistentState<ABExperiments | undefined> = this.downloadedExperimentsStorage,
-    ): Promise<void> {
-        const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false);
-        if (!this.areExperimentsValid(downloadedExperiments)) {
-            return;
-        }
-        await storage.updateValue(downloadedExperiments);
-        await this.isDownloadedStorageValid.updateValue(true);
-    }
-
-    /**
      * Checks if user falls between the range of the experiment
      * @param min The lower limit
      * @param max The upper limit
@@ -244,13 +187,9 @@ export class ExperimentsManager implements IExperimentsManager {
     }
 
     /**
-     * Do best effort to populate experiment storage. Attempt to update experiment storage by,
-     * * Using appropriate local data if available
-     * * Trying to download fresh experiments within 2 seconds to update storage
-     * Local data could be:
-     * * Experiments downloaded in the last session
-     *   - The function makes sure these are used in the current session
-     * * A default experiments file shipped with the extension
+     * Do best effort to populate experiment storage.
+     * Attempt to update experiment storage by using appropriate local data if available.
+     * Local data could be a default experiments file shipped with the extension.
      *   - Note this file is only used when experiment storage is empty, which is usually the case the first time the extension loads.
      *   - We have this local file to ensure that experiments are used in the first session itself,
      *     as about 40% of the users never come back for the second session.
@@ -258,24 +197,13 @@ export class ExperimentsManager implements IExperimentsManager {
     @swallowExceptions('Failed to update experiment storage')
     public async updateExperimentStorage(): Promise<void> {
         if (!process.env.VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE) {
-            // Step 1. Update experiment storage using downloaded experiments in the last session if any
-            if (Array.isArray(this.downloadedExperimentsStorage.value)) {
-                await this.experimentStorage.updateValue(this.downloadedExperimentsStorage.value);
-                return this.downloadedExperimentsStorage.updateValue(undefined);
-            }
-
             if (Array.isArray(this.experimentStorage.value)) {
                 // Experiment storage already contains latest experiments, do not use the following techniques
                 return;
             }
-
-            // Step 2. Do best effort to download the experiments within timeout and use it in the current session only
-            if ((await this.doBestEffortToPopulateExperiments()) === true) {
-                return;
-            }
         }
 
-        // Step 3. Update experiment storage using local experiments file if available
+        // Update experiment storage using local experiments file if available.
         if (await this.fs.fileExists(configFile)) {
             const content = await this.fs.readFile(configFile);
             try {
@@ -307,30 +235,6 @@ export class ExperimentsManager implements IExperimentsManager {
             }
         }
         return true;
-    }
-
-    /**
-     * Do best effort to download the experiments within timeout and use it in the current session only
-     */
-    public async doBestEffortToPopulateExperiments(): Promise<boolean> {
-        try {
-            const success = await Promise.race([
-                // Download and store experiments in the storage for the current session
-                this.downloadAndStoreExperiments(this.experimentStorage).then(() => true),
-                sleep(this.experimentEffortTimeout).then(() => false),
-            ]);
-            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success });
-            return success;
-        } catch (ex) {
-            sendTelemetryEvent(
-                EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE,
-                undefined,
-                { success: false, error: 'Downloading experiments failed with error' },
-                ex,
-            );
-            traceError('Effort to download experiments within timeout failed with error', ex);
-            return false;
-        }
     }
 
     public _activated(): boolean {
