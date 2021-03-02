@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 import { instance, mock, verify } from 'ts-mockito';
 
-import { AATesting } from '../../client/activation/aaTesting';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import { DownloadBetaChannelRule, DownloadDailyChannelRule } from '../../client/activation/common/downloadChannelRules';
@@ -171,12 +170,6 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
         ).once();
         verify(serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, DotNetLanguageServerProxy)).once();
         verify(serviceManager.add<ILanguageServerManager>(ILanguageServerManager, DotNetLanguageServerManager)).once();
-        verify(
-            serviceManager.addSingleton<IExtensionSingleActivationService>(
-                IExtensionSingleActivationService,
-                AATesting,
-            ),
-        ).once();
         verify(
             serviceManager.addSingleton<ILanguageServerOutputChannel>(
                 ILanguageServerOutputChannel,
