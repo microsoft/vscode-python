@@ -407,7 +407,7 @@ suite('Set Interpreter Command', () => {
             appShell.verifyAll();
         });
 
-        suite('Telemetry', async () => {
+        suite('SELECT_INTERPRETER_ENTERED_EXISTS telemetry', async () => {
             let getGlobalStorageStub: sinon.SinonStub;
             let sendTelemetryStub: sinon.SinonStub;
             let telemetryEvents: TelemetryEventType[] = [];
