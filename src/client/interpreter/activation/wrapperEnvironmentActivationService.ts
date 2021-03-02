@@ -5,17 +5,10 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { UseTerminalToGetActivatedEnvVars } from '../../common/experiments/groups';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import {
-    ICryptoUtils,
-    IDisposableRegistry,
-    IExperimentsManager,
-    IExtensionContext,
-    Resource,
-} from '../../common/types';
+import { ICryptoUtils, IDisposableRegistry, IExtensionContext, Resource } from '../../common/types';
 import { createDeferredFromPromise } from '../../common/utils/async';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -23,7 +16,6 @@ import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterService } from '../contracts';
 import { EnvironmentActivationService } from './service';
-import { TerminalEnvironmentActivationService } from './terminalEnvironmentActivationService';
 import { IEnvironmentActivationService } from './types';
 
 // We have code in terminal activation that waits for a min of 500ms.
@@ -39,9 +31,6 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
     private readonly cachePerResourceAndInterpreter = new Map<string, Promise<NodeJS.ProcessEnv | undefined>>();
     constructor(
         @inject(EnvironmentActivationService) private readonly procActivation: IEnvironmentActivationService,
-        @inject(TerminalEnvironmentActivationService)
-        private readonly terminalActivation: IEnvironmentActivationService,
-        @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
@@ -76,9 +65,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
         const procEnvVarsPromise = this.cacheCallback(procCacheKey, () =>
             this.getActivatedEnvVarsFromProc(resource, interpreter, allowExceptions),
         );
-        const terminalEnvVarsPromise = this.cacheCallback(terminalCacheKey, () =>
-            this.getActivatedEnvVarsFromTerminal(procEnvVarsPromise, resource, interpreter, allowExceptions),
-        );
+        const terminalEnvVarsPromise = this.cacheCallback(terminalCacheKey, () => procEnvVarsPromise);
 
         const procEnvVars = createDeferredFromPromise(procEnvVarsPromise);
         const terminalEnvVars = createDeferredFromPromise(terminalEnvVarsPromise);
@@ -164,32 +151,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
     ): Promise<NodeJS.ProcessEnv | undefined> {
         return this.procActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions);
     }
-    /**
-     * Get environment variables by activating a terminal.
-     * As a fallback use the `fallback` promise passed in (old approach).
-     */
-    private async getActivatedEnvVarsFromTerminal(
-        fallback: Promise<NodeJS.ProcessEnv | undefined>,
-        resource: Resource,
-        interpreter?: PythonEnvironment,
-        allowExceptions?: boolean,
-    ): Promise<NodeJS.ProcessEnv | undefined> {
-        if (!this.experiment.inExperiment(UseTerminalToGetActivatedEnvVars.experiment)) {
-            return fallback;
-        }
 
-        return this.terminalActivation
-            .getActivatedEnvironmentVariables(resource, interpreter, allowExceptions)
-            .then((vars) => {
-                // If no variables in terminal, then revert to old approach.
-                return vars || fallback;
-            })
-            .catch((ex) => {
-                // Swallow exceptions when using terminal env and revert to using old approach.
-                traceError('Failed to get variables using Terminal Service', ex);
-                return fallback;
-            });
-    }
     /**
      * Computes a key used to cache environment variables.
      * 1. If resource changes, then environment variables could be different, as user could have `.env` files or similar.

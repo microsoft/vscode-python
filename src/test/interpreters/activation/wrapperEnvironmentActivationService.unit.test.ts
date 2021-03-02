@@ -8,15 +8,13 @@ import { EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { CryptoUtils } from '../../../client/common/crypto';
-import { ExperimentsManager } from '../../../client/common/experiments/manager';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { ICryptoUtils, IExperimentsManager, IExtensionContext, Resource } from '../../../client/common/types';
+import { ICryptoUtils, IExtensionContext, Resource } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
-import { TerminalEnvironmentActivationService } from '../../../client/interpreter/activation/terminalEnvironmentActivationService';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { WrapperEnvironmentActivationService } from '../../../client/interpreter/activation/wrapperEnvironmentActivationService';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
@@ -26,8 +24,6 @@ import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnviro
 suite('Interpreters Activation - Python Environment Variables (wrap terminal and proc approach)', () => {
     let envActivationService: IEnvironmentActivationService;
     let procActivation: IEnvironmentActivationService;
-    let termActivation: IEnvironmentActivationService;
-    let experiment: IExperimentsManager;
     let interpreterService: IInterpreterService;
     let workspace: IWorkspaceService;
     let envVarsProvider: IEnvironmentVariablesProvider;
@@ -51,8 +47,6 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                             onDidChangeEnvVars = new EventEmitter<Resource>();
                             envVarsProvider = mock(EnvironmentVariablesProvider);
                             procActivation = mock(EnvironmentActivationService);
-                            termActivation = mock(TerminalEnvironmentActivationService);
-                            experiment = mock(ExperimentsManager);
                             interpreterService = mock(InterpreterService);
                             workspace = mock(WorkspaceService);
                             crypto = mock(CryptoUtils);
@@ -63,7 +57,6 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                 },
                             } as any;
                             when(crypto.createHash(anything(), anything(), anything())).thenCall((value) => value);
-                            when(experiment.inExperiment(anything())).thenReturn(true);
                             when(envVarsProvider.getCustomEnvironmentVariables(anything())).thenCall((value) =>
                                 Promise.resolve({
                                     key: (value || {}).toString(),
@@ -77,8 +70,6 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                             );
                             envActivationService = new WrapperEnvironmentActivationService(
                                 instance(procActivation),
-                                instance(termActivation),
-                                instance(experiment),
                                 instance(interpreterService),
                                 instance(envVarsProvider),
                                 extContext,
@@ -92,9 +83,6 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                             test('Environment variables returned by process provider should be used if terminal provider crashes', async () => {
                                 const expectedVars = { WOW: '1' };
                                 when(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).thenReject(new Error('kaboom'));
-                                when(
                                     procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
                                 ).thenResolve(expectedVars);
 
@@ -104,9 +92,6 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                 );
 
                                 assert.deepEqual(vars, expectedVars);
-                                verify(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).once();
                                 verify(
                                     procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
                                 ).once();
@@ -114,9 +99,6 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                             test('Use cached variables returned by process provider should be used if terminal provider crashes', async () => {
                                 const expectedVars = { WOW: '1' };
                                 when(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).thenReject(new Error('kaboom'));
-                                when(
                                     procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
                                 ).thenResolve(expectedVars);
 
@@ -127,9 +109,6 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
 
                                 assert.deepEqual(vars, expectedVars);
                                 verify(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).once();
-                                verify(
                                     procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
                                 ).once();
 
@@ -139,17 +118,11 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                 );
                                 assert.deepEqual(vars, expectedVars);
                                 verify(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).once();
-                                verify(
                                     procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
                                 ).once();
                             });
                             test('Environment variables returned by terminal provider should be used if that returns any variables', async () => {
                                 const expectedVars = { WOW: '1' };
-                                when(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).thenResolve(expectedVars);
                                 when(
                                     procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
                                 ).thenResolve({ somethingElse: '1' });
@@ -161,17 +134,11 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
 
                                 assert.deepEqual(vars, expectedVars);
                                 verify(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).once();
-                                verify(
                                     procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
                                 ).once();
                             });
                             test('Environment variables returned by terminal provider should be used if that returns any variables', async () => {
                                 const expectedVars = { WOW: '1' };
-                                when(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).thenResolve(expectedVars);
                                 when(
                                     procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
                                 ).thenResolve({ somethingElse: '1' });
@@ -182,9 +149,6 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                 );
 
                                 assert.deepEqual(vars, expectedVars);
-                                verify(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).once();
                                 verify(
                                     procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
                                 ).once();
@@ -195,17 +159,11 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                 );
                                 assert.deepEqual(vars, expectedVars);
                                 verify(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).once();
-                                verify(
                                     procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
                                 ).once();
                             });
                             test('Will not use cached info, if passing different resource or interpreter', async () => {
                                 const expectedVars = { WOW: '1' };
-                                when(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).thenResolve(expectedVars);
                                 when(
                                     procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
                                 ).thenResolve({ somethingElse: '1' });
@@ -216,9 +174,6 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                 );
 
                                 assert.deepEqual(vars, expectedVars);
-                                verify(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).once();
                                 verify(
                                     procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
                                 ).once();
@@ -230,84 +185,14 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                 );
                                 assert.deepEqual(vars, expectedVars);
                                 verify(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).once();
-                                verify(
                                     procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
                                 ).once();
-
-                                // Invoke again with a different resource.
-                                const newResource = Uri.file('New Resource');
-                                when(
-                                    termActivation.getActivatedEnvironmentVariables(
-                                        newResource,
-                                        anything(),
-                                        anything(),
-                                    ),
-                                ).thenResolve(undefined);
-                                when(
-                                    procActivation.getActivatedEnvironmentVariables(
-                                        newResource,
-                                        anything(),
-                                        anything(),
-                                    ),
-                                ).thenResolve({ NewVars: '1' });
-
-                                vars = await envActivationService.getActivatedEnvironmentVariables(
-                                    newResource,
-                                    undefined,
-                                );
-                                assert.deepEqual(vars, { NewVars: '1' });
-                                verify(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).twice();
-                                verify(
-                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).twice();
-
-                                // Invoke again with a different python interpreter.
-                                const newInterpreter: PythonEnvironment = {
-                                    architecture: Architecture.x64,
-                                    path: 'New',
-                                    sysPrefix: '',
-                                    sysVersion: '',
-                                    envType: EnvironmentType.Pipenv,
-                                };
-                                when(
-                                    termActivation.getActivatedEnvironmentVariables(
-                                        anything(),
-                                        newInterpreter,
-                                        anything(),
-                                    ),
-                                ).thenResolve({ NewPythonVars: '1' });
-                                when(
-                                    procActivation.getActivatedEnvironmentVariables(
-                                        anything(),
-                                        newInterpreter,
-                                        anything(),
-                                    ),
-                                ).thenResolve(undefined);
-
-                                vars = await envActivationService.getActivatedEnvironmentVariables(
-                                    newResource,
-                                    newInterpreter,
-                                );
-                                assert.deepEqual(vars, { NewPythonVars: '1' });
-                                verify(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).thrice();
-                                verify(
-                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).thrice();
                             });
                             test('Use variables from file cache', async function () {
                                 if (!storagePath) {
                                     return this.skip();
                                 }
                                 const expectedVars = { WOW: '1' };
-                                when(
-                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-                                ).thenResolve(undefined);
                                 when(
                                     procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything()),
                                 ).thenResolve(undefined);
