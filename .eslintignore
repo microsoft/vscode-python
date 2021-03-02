@@ -52,7 +52,6 @@ src/test/interpreters/autoSelection/rules/system.unit.test.ts
 src/test/interpreters/virtualEnvManager.unit.test.ts
 src/test/interpreters/pythonPathUpdaterFactory.unit.test.ts
 src/test/interpreters/activation/service.unit.test.ts
-src/test/interpreters/activation/wrapperEnvironmentActivationService.unit.test.ts
 src/test/interpreters/helpers.unit.test.ts
 src/test/interpreters/currentPathService.unit.test.ts
 src/test/interpreters/display/interpreterSelectionTip.unit.test.ts
@@ -313,9 +312,6 @@ src/client/interpreter/autoSelection/rules/settings.ts
 src/client/interpreter/autoSelection/rules/currentPath.ts
 src/client/interpreter/autoSelection/rules/cached.ts
 src/client/interpreter/autoSelection/rules/system.ts
-src/client/interpreter/activation/wrapperEnvironmentActivationService.ts
-src/client/interpreter/activation/terminalEnvironmentActivationService.ts
-src/client/interpreter/activation/preWarmVariables.ts
 src/client/interpreter/activation/service.ts
 src/client/interpreter/display/shebangCodeLensProvider.ts
 src/client/interpreter/display/index.ts

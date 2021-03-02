@@ -5,9 +5,7 @@
 
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
-import { PreWarmActivatedEnvironmentVariables } from './activation/preWarmVariables';
 import { EnvironmentActivationService } from './activation/service';
-import { TerminalEnvironmentActivationService } from './activation/terminalEnvironmentActivationService';
 import { IEnvironmentActivationService } from './activation/types';
 import { InterpreterAutoSelectionService } from './autoSelection/index';
 import { InterpreterEvaluation } from './autoSelection/interpreterSecurity/interpreterEvaluation';
@@ -154,11 +152,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
     );
 
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, CondaInheritEnvPrompt);
-
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        PreWarmActivatedEnvironmentVariables,
-    );
 }
 
 export function registerTypes(serviceManager: IServiceManager): void {
@@ -170,10 +163,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IEnvironmentActivationService>(
         EnvironmentActivationService,
         EnvironmentActivationService,
-    );
-    serviceManager.addSingleton<IEnvironmentActivationService>(
-        TerminalEnvironmentActivationService,
-        TerminalEnvironmentActivationService,
     );
     serviceManager.addSingleton<IEnvironmentActivationService>(
         IEnvironmentActivationService,
