@@ -12,12 +12,6 @@
         "max": 20
     },
     {
-        "name": "ShowPlayIcon - start",
-        "salt": "ShowPlayIcon",
-        "max": 100,
-        "min": 0
-    },
-    {
         "name": "ShowExtensionSurveyPrompt - enabled",
         "salt": "ShowExtensionSurveyPrompt",
         "max": 100,
@@ -28,42 +22,6 @@
         "salt": "ShowExtensionSurveyPrompt",
         "min": 0,
         "max": 40
-    },
-    {
-        "name": "DebugAdapterFactory - control",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "DebugAdapterFactory - experiment",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "PtvsdWheels37 - control",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "PtvsdWheels37 - experiment",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "Reload - control",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "Reload - experiment",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
     },
     {
         "name": "UseTerminalToGetActivatedEnvVars - experiment",
@@ -148,18 +106,6 @@
         "salt": "DeprecatePythonPath",
         "min": 80,
         "max": 100
-    },
-    {
-        "name": "RunByLine - experiment",
-        "salt": "RunByLine",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "RunByLine - control",
-        "salt": "RunByLine",
-        "min": 0,
-        "max": 0
     },
     {
         "name": "CustomEditorSupport - control",

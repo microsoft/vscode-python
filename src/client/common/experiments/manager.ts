@@ -41,7 +41,7 @@ const configFile = path.join(EXTENSION_ROOT_DIR, 'experiments.json');
 export const configUri = 'https://raw.githubusercontent.com/microsoft/vscode-python/main/experiments.json';
 export const EXPERIMENTS_EFFORT_TIMEOUT_MS = 2000;
 // The old experiments which are working fine using the `SHA512` algorithm
-export const oldExperimentSalts = ['ShowExtensionSurveyPrompt', 'ShowPlayIcon', 'AlwaysDisplayTestExplorer', 'LS'];
+export const oldExperimentSalts = ['ShowExtensionSurveyPrompt', 'AlwaysDisplayTestExplorer', 'LS'];
 
 /**
  * <DEPRECATED> Manages and stores experiments, implements the AB testing functionality
