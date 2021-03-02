@@ -302,10 +302,10 @@ export class JediProxy implements Disposable {
 
     private async checkJediMemoryFootprintImpl(): Promise<void> {
         if (!this.proc || this.proc.killed) {
-            return;
+            return Promise.resolve();
         }
         if (!this.shouldCheckJediMemoryFootprint()) {
-            return;
+            return Promise.resolve();
         }
         this.lastCmdIdProcessedForPidUsage = this.lastCmdIdProcessed;
 
@@ -345,7 +345,6 @@ export class JediProxy implements Disposable {
             deferred.resolve();
         });
 
-        // eslint-disable-next-line consistent-return
         return deferred.promise;
     }
 
