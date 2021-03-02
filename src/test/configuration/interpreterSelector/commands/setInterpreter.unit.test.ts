@@ -31,8 +31,13 @@ import {
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { EventName } from '../../../../client/telemetry/constants';
 import * as Telemetry from '../../../../client/telemetry';
-import { FindInterpreterVariants } from '../../../../client/common/experiments/groups';
+import { DiscoveryVariants, FindInterpreterVariants } from '../../../../client/common/experiments/groups';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
+import * as PersistentState from '../../../../client/common/persistentState';
+
+const untildify: (value: string) => string = require('untildify');
+
+type TelemetryEventType = { eventName: EventName; properties: Record<string, unknown> };
 
 suite('Set Interpreter Command', () => {
     let workspace: TypeMoq.IMock<IWorkspaceService>;
@@ -99,7 +104,7 @@ suite('Set Interpreter Command', () => {
     suite('Test method _pickInterpreter()', async () => {
         let _enterOrBrowseInterpreterPath: sinon.SinonStub;
         let sendTelemetryStub: sinon.SinonStub;
-        let telemetryEvent: { eventName: EventName; properties: { userAction: string } } | undefined;
+        let telemetryEvent: TelemetryEventType | undefined;
 
         const item: IInterpreterQuickPickItem = {
             description: '',
@@ -128,7 +133,7 @@ suite('Set Interpreter Command', () => {
             _enterOrBrowseInterpreterPath.resolves();
             sendTelemetryStub = sinon
                 .stub(Telemetry, 'sendTelemetryEvent')
-                .callsFake((eventName: EventName, _, properties: { userAction: string }) => {
+                .callsFake((eventName: EventName, _, properties: Record<string, unknown>) => {
                     telemetryEvent = {
                         eventName,
                         properties,
@@ -400,6 +405,206 @@ suite('Set Interpreter Command', () => {
             await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
 
             appShell.verifyAll();
+        });
+
+        suite('Telemetry', async () => {
+            let getGlobalStorageStub: sinon.SinonStub;
+            let sendTelemetryStub: sinon.SinonStub;
+            let telemetryEvents: TelemetryEventType[] = [];
+
+            setup(() => {
+                sendTelemetryStub = sinon
+                    .stub(Telemetry, 'sendTelemetryEvent')
+                    .callsFake((eventName: EventName, _, properties: Record<string, unknown>) => {
+                        telemetryEvents.push({
+                            eventName,
+                            properties,
+                        });
+                    });
+                getGlobalStorageStub = sinon.stub(PersistentState, 'getGlobalStorage');
+            });
+
+            teardown(() => {
+                telemetryEvents = [];
+                sinon.restore();
+                Telemetry._resetSharedProperties();
+            });
+
+            test('A telemetry event should be sent after manual entry of an intepreter path', async () => {
+                const state: InterpreterStateArgs = { path: undefined, workspace: undefined };
+                const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+                multiStepInput
+                    .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve('enteredPath'));
+                interpreterService
+                    .setup((i) => i.getInterpreterCache(TypeMoq.It.isAnyString()))
+                    .returns(() =>
+                        Promise.resolve({
+                            value: { fileHash: 'fileHash', info: undefined },
+                        } as IPersistentState<{
+                            fileHash: string;
+                            info?: PythonEnvironment;
+                        }>),
+                    );
+                experimentService
+                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoverWithFileWatching)))
+                    .returns(() => Promise.resolve(false));
+                experimentService
+                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoveryWithoutFileWatching)))
+                    .returns(() => Promise.resolve(false));
+
+                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+                const existsTelemetry = telemetryEvents[1];
+
+                sinon.assert.callCount(sendTelemetryStub, 2);
+                expect(existsTelemetry.eventName).to.equal(EventName.SELECT_INTERPRETER_ENTERED_EXISTS);
+            });
+
+            test('A telemetry event should be sent after browsing for an interpreter', async () => {
+                const state: InterpreterStateArgs = { path: undefined, workspace: undefined };
+                const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+                const expectedParams = {
+                    filters: undefined,
+                    openLabel: InterpreterQuickPickList.browsePath.openButtonLabel(),
+                    canSelectMany: false,
+                    title: InterpreterQuickPickList.browsePath.title(),
+                };
+                multiStepInput
+                    .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(items[0]));
+                appShell
+                    .setup((a) => a.showOpenDialog(expectedParams))
+                    .returns(() => Promise.resolve([{ fsPath: 'browsedPath' } as Uri]));
+                interpreterService
+                    .setup((i) => i.getInterpreterCache(TypeMoq.It.isAnyString()))
+                    .returns(() =>
+                        Promise.resolve({
+                            value: { fileHash: 'fileHash', info: undefined },
+                        } as IPersistentState<{
+                            fileHash: string;
+                            info?: PythonEnvironment;
+                        }>),
+                    );
+                experimentService
+                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoverWithFileWatching)))
+                    .returns(() => Promise.resolve(false));
+                experimentService
+                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoveryWithoutFileWatching)))
+                    .returns(() => Promise.resolve(false));
+                platformService.setup((p) => p.isWindows).returns(() => false);
+
+                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+                const existsTelemetry = telemetryEvents[1];
+
+                sinon.assert.callCount(sendTelemetryStub, 2);
+                expect(existsTelemetry.eventName).to.equal(EventName.SELECT_INTERPRETER_ENTERED_EXISTS);
+            });
+
+            type DiscoveredPropertyTestValues = { discovered: boolean; absolute: boolean };
+            const discoveredPropertyTestMatrix: DiscoveredPropertyTestValues[] = [
+                { discovered: true, absolute: true },
+                { discovered: true, absolute: false },
+                { discovered: false, absolute: false },
+                { discovered: false, absolute: true },
+            ];
+
+            const testNotInExperiment = async (
+                isDiscovered: boolean,
+                isAbsolutePath: boolean,
+            ): Promise<TelemetryEventType> => {
+                const interpreterPath = isAbsolutePath
+                    ? path.resolve(path.join('is', 'absolute', 'path'))
+                    : path.join('~', 'relative', 'path');
+                const state: InterpreterStateArgs = { path: undefined, workspace: undefined };
+                const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+                multiStepInput
+                    .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(interpreterPath));
+                interpreterService
+                    .setup((i) => i.getInterpreterCache(TypeMoq.It.isAnyString()))
+                    .returns(() =>
+                        Promise.resolve({
+                            value: { fileHash: 'fileHash', info: isDiscovered ? 'someInfo' : undefined },
+                        } as IPersistentState<{
+                            fileHash: string;
+                            info?: PythonEnvironment;
+                        }>),
+                    );
+                experimentService
+                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoverWithFileWatching)))
+                    .returns(() => Promise.resolve(false));
+                experimentService
+                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoveryWithoutFileWatching)))
+                    .returns(() => Promise.resolve(false));
+
+                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+                return telemetryEvents[1];
+            };
+
+            const testInExperiment = async (
+                isDiscovered: boolean,
+                isAbsolutePath: boolean,
+            ): Promise<TelemetryEventType> => {
+                const interpreterPath = isAbsolutePath
+                    ? path.resolve(path.join('is', 'absolute', 'path'))
+                    : path.join('~', 'relative', 'path');
+                getGlobalStorageStub.returns({
+                    get() {
+                        return [
+                            {
+                                executable: {
+                                    filename: isDiscovered ? untildify(interpreterPath) : 'something',
+                                },
+                            },
+                        ];
+                    },
+                    set() {
+                        return Promise.resolve();
+                    },
+                });
+                const state: InterpreterStateArgs = { path: undefined, workspace: undefined };
+                const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+                multiStepInput
+                    .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(interpreterPath));
+                experimentService
+                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoverWithFileWatching)))
+                    .returns(() => Promise.resolve(true));
+                experimentService
+                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoveryWithoutFileWatching)))
+                    .returns(() => Promise.resolve(true));
+
+                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+
+                return telemetryEvents[1];
+            };
+
+            for (const testValue of discoveredPropertyTestMatrix) {
+                test(`A telemetry event should be sent with the discovered prop set to ${
+                    testValue.discovered
+                } if the interpreter had ${
+                    testValue.discovered ? 'already' : 'not'
+                } been discovered (not in pythonDiscoveryModule experiment, with ${
+                    testValue.absolute ? 'an absolute' : 'a relative'
+                } path)`, async () => {
+                    const telemetryResult = await testNotInExperiment(testValue.discovered, testValue.absolute);
+
+                    expect(telemetryResult.properties).to.deep.equal({ discovered: testValue.discovered });
+                });
+
+                test(`A telemetry event should be sent with the discovered prop set to ${
+                    testValue.discovered
+                } if the interpreter had ${
+                    testValue.discovered ? 'already' : 'not'
+                } been discovered (in pythonDiscoveryModule experiment, with ${
+                    testValue.absolute ? 'an absolute' : 'a relative'
+                } path)`, async () => {
+                    const telemetryResult = await testInExperiment(testValue.discovered, testValue.absolute);
+
+                    expect(telemetryResult.properties).to.deep.equal({ discovered: testValue.discovered });
+                    sinon.restore();
+                });
+            }
         });
     });
 
