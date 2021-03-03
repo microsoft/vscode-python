@@ -1161,7 +1161,7 @@
                 "python.jediMemoryLimit": {
                     "type": "number",
                     "default": 0,
-                    "description": "Memory limit for the Jedi completion engine in megabytes. Zero (default) means 1024 MB. -1 means unlimited (disable memory limit check)",
+                    "description": "Memory limit for the Jedi completion engine in megabytes. Zero (default) means 3072 MB. -1 means unlimited (disable memory limit check)",
                     "scope": "resource"
                 },
                 "python.jediPath": {

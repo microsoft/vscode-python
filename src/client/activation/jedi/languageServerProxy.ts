@@ -240,7 +240,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
 
         try {
             const memory = await getMemoryUsage(proc.pid);
-            const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 1024), 8192) * 1024 * 1024;
+            const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 3072), 8192) * 1024 * 1024;
             if (memory > 0) {
                 const props = {
                     memUse: memory,

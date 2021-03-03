@@ -310,7 +310,7 @@ export class JediProxy implements Disposable {
 
         try {
             const memory = await getMemoryUsage(this.proc.pid);
-            const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 1024), 8192) * 1024 * 1024;
+            const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 3072), 8192) * 1024 * 1024;
             let restartJedi = false;
             if (memory > 0) {
                 restartJedi = memory > limit;
