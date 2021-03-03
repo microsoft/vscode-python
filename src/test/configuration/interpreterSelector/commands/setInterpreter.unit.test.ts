@@ -35,6 +35,8 @@ import { DiscoveryVariants, FindInterpreterVariants } from '../../../../client/c
 import { IComponentAdapter, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { PythonEnvInfo } from '../../../../client/pythonEnvironments/base/info';
 
+const untildify = require('untildify');
+
 type TelemetryEventType = { eventName: EventName; properties: Record<string, unknown> };
 
 suite('Set Interpreter Command', () => {
@@ -521,18 +523,22 @@ suite('Set Interpreter Command', () => {
                 pathType: SelectionPathType,
             ): Promise<TelemetryEventType> => {
                 let interpreterPath = '';
+                let expandedPath = '';
                 switch (pathType) {
                     case SelectionPathType.Absolute: {
                         interpreterPath = path.resolve(path.join('is', 'absolute', 'path'));
+                        expandedPath = interpreterPath;
                         break;
                     }
                     case SelectionPathType.HomeRelative: {
                         interpreterPath = path.join('~', 'relative', 'path');
+                        expandedPath = untildify(interpreterPath);
                         break;
                     }
                     case SelectionPathType.WorkspaceRelative:
                     default: {
                         interpreterPath = path.join('..', 'workspace', 'path');
+                        expandedPath = path.normalize(path.resolve(interpreterPath));
                     }
                 }
                 const state: InterpreterStateArgs = { path: undefined, workspace: undefined };
@@ -542,14 +548,15 @@ suite('Set Interpreter Command', () => {
                     .returns(() => Promise.resolve(interpreterPath));
                 interpreterService
                     .setup((i) => i.getInterpreterCache(TypeMoq.It.isAnyString()))
-                    .returns(() =>
-                        Promise.resolve({
+                    .returns((param) => {
+                        console.warn(`param: ${param} - expandedPath: ${expandedPath}`);
+                        return Promise.resolve({
                             value: { fileHash: 'fileHash', info: isDiscovered ? 'someInfo' : undefined },
                         } as IPersistentState<{
                             fileHash: string;
                             info?: PythonEnvironment;
-                        }>),
-                    );
+                        }>);
+                    });
                 experimentService
                     .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoverWithFileWatching)))
                     .returns(() => Promise.resolve(false));
@@ -566,22 +573,26 @@ suite('Set Interpreter Command', () => {
                 pathType: SelectionPathType,
             ): Promise<TelemetryEventType> => {
                 let interpreterPath = '';
+                let expandedPath = '';
                 switch (pathType) {
                     case SelectionPathType.Absolute: {
                         interpreterPath = path.resolve(path.join('is', 'absolute', 'path'));
+                        expandedPath = interpreterPath;
                         break;
                     }
                     case SelectionPathType.HomeRelative: {
-                        interpreterPath = path.join('~', 'relative', 'to', 'home', 'path');
+                        interpreterPath = path.join('~', 'relative', 'path');
+                        expandedPath = untildify(interpreterPath);
                         break;
                     }
                     case SelectionPathType.WorkspaceRelative:
                     default: {
                         interpreterPath = path.join('..', 'workspace', 'path');
+                        expandedPath = path.normalize(path.resolve(interpreterPath));
                     }
                 }
                 pyenvs
-                    .setup((p) => p.getInterpreterCache(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+                    .setup((p) => p.getInterpreterCache(expandedPath, TypeMoq.It.isAny()))
                     .returns(() =>
                         Promise.resolve(
                             isDiscovered
