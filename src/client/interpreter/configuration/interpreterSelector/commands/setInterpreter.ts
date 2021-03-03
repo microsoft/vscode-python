@@ -191,7 +191,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
      * @param selection Intepreter path that was either entered manually or picked by browsing through the filesystem.
      */
     private async sendInterpreterEntryTelemetry({ path: selection, workspace }: InterpreterStateArgs): Promise<void> {
-        let interpreterPath = untildify(selection);
+        let interpreterPath = path.normalize(untildify(selection));
 
         if (!path.isAbsolute(interpreterPath)) {
             interpreterPath = path.resolve(workspace?.fsPath || '', selection!);
