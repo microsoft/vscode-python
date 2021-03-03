@@ -500,21 +500,40 @@ suite('Set Interpreter Command', () => {
                 expect(existsTelemetry.eventName).to.equal(EventName.SELECT_INTERPRETER_ENTERED_EXISTS);
             });
 
-            type DiscoveredPropertyTestValues = { discovered: boolean; absolute: boolean };
+            enum SelectionPathType {
+                Absolute = 'absolute',
+                HomeRelative = 'home relative',
+                WorkspaceRelative = 'workspace relative',
+            }
+            type DiscoveredPropertyTestValues = { discovered: boolean; pathType: SelectionPathType };
             const discoveredPropertyTestMatrix: DiscoveredPropertyTestValues[] = [
-                { discovered: true, absolute: true },
-                { discovered: true, absolute: false },
-                { discovered: false, absolute: false },
-                { discovered: false, absolute: true },
+                { discovered: true, pathType: SelectionPathType.Absolute },
+                { discovered: true, pathType: SelectionPathType.HomeRelative },
+                { discovered: true, pathType: SelectionPathType.WorkspaceRelative },
+                { discovered: false, pathType: SelectionPathType.Absolute },
+                { discovered: false, pathType: SelectionPathType.HomeRelative },
+                { discovered: false, pathType: SelectionPathType.WorkspaceRelative },
             ];
 
             const testNotInExperiment = async (
                 isDiscovered: boolean,
-                isAbsolutePath: boolean,
+                pathType: SelectionPathType,
             ): Promise<TelemetryEventType> => {
-                const interpreterPath = isAbsolutePath
-                    ? path.resolve(path.join('is', 'absolute', 'path'))
-                    : path.join('~', 'relative', 'path');
+                let interpreterPath = '';
+                switch (pathType) {
+                    case SelectionPathType.Absolute: {
+                        interpreterPath = path.resolve(path.join('is', 'absolute', 'path'));
+                        break;
+                    }
+                    case SelectionPathType.HomeRelative: {
+                        interpreterPath = path.join('~', 'relative', 'path');
+                        break;
+                    }
+                    case SelectionPathType.WorkspaceRelative:
+                    default: {
+                        interpreterPath = path.join('..', 'workspace', 'path');
+                    }
+                }
                 const state: InterpreterStateArgs = { path: undefined, workspace: undefined };
                 const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
                 multiStepInput
@@ -543,11 +562,23 @@ suite('Set Interpreter Command', () => {
 
             const testInExperiment = async (
                 isDiscovered: boolean,
-                isAbsolutePath: boolean,
+                pathType: SelectionPathType,
             ): Promise<TelemetryEventType> => {
-                const interpreterPath = isAbsolutePath
-                    ? path.resolve(path.join('is', 'absolute', 'path'))
-                    : path.join('~', 'relative', 'path');
+                let interpreterPath = '';
+                switch (pathType) {
+                    case SelectionPathType.Absolute: {
+                        interpreterPath = path.resolve(path.join('is', 'absolute', 'path'));
+                        break;
+                    }
+                    case SelectionPathType.HomeRelative: {
+                        interpreterPath = path.join('~', 'relative', 'to', 'home', 'path');
+                        break;
+                    }
+                    case SelectionPathType.WorkspaceRelative:
+                    default: {
+                        interpreterPath = path.join('..', 'workspace', 'path');
+                    }
+                }
                 getGlobalStorageStub.returns({
                     get() {
                         return [
@@ -584,10 +615,10 @@ suite('Set Interpreter Command', () => {
                     testValue.discovered
                 } if the interpreter had ${
                     testValue.discovered ? 'already' : 'not'
-                } been discovered (not in pythonDiscoveryModule experiment, with ${
-                    testValue.absolute ? 'an absolute' : 'a relative'
-                } path)`, async () => {
-                    const telemetryResult = await testNotInExperiment(testValue.discovered, testValue.absolute);
+                } been discovered (not in pythonDiscoveryModule experiment, with a path that is ${
+                    testValue.pathType
+                })`, async () => {
+                    const telemetryResult = await testNotInExperiment(testValue.discovered, testValue.pathType);
 
                     expect(telemetryResult.properties).to.deep.equal({ discovered: testValue.discovered });
                 });
@@ -596,10 +627,10 @@ suite('Set Interpreter Command', () => {
                     testValue.discovered
                 } if the interpreter had ${
                     testValue.discovered ? 'already' : 'not'
-                } been discovered (in pythonDiscoveryModule experiment, with ${
-                    testValue.absolute ? 'an absolute' : 'a relative'
-                } path)`, async () => {
-                    const telemetryResult = await testInExperiment(testValue.discovered, testValue.absolute);
+                } been discovered (in pythonDiscoveryModule experiment, with a path that is ${
+                    testValue.pathType
+                })`, async () => {
+                    const telemetryResult = await testInExperiment(testValue.discovered, testValue.pathType);
 
                     expect(telemetryResult.properties).to.deep.equal({ discovered: testValue.discovered });
                     sinon.restore();
