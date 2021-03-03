@@ -90,18 +90,6 @@
         "max": 100
     },
     {
-        "name": "LocalZMQKernel - experiment",
-        "salt": "LocalZMQKernel",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "LocalZMQKernel - control",
-        "salt": "LocalZMQKernel",
-        "min": 0,
-        "max": 0
-    },
-    {
         "name": "CollectLSRequestTiming - experiment",
         "salt": "CollectLSRequestTiming",
         "min": 0,
@@ -122,18 +110,6 @@
     {
         "name": "CollectNodeLSRequestTiming - control",
         "salt": "CollectNodeLSRequestTiming",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "EnableIPyWidgets - experiment",
-        "salt": "EnableIPyWidgets",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "EnableIPyWidgets - control",
-        "salt": "EnableIPyWidgets",
         "min": 0,
         "max": 0
     },
@@ -160,23 +136,5 @@
         "salt": "RunByLine",
         "min": 0,
         "max": 0
-    },
-    {
-        "name": "CustomEditorSupport - control",
-        "salt": "CustomEditorSupport",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "CustomEditorSupport - experiment",
-        "salt": "CustomEditorSupport",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "NativeNotebook - experiment",
-        "salt": "CustomEditorSupport",
-        "max": 0,
-        "min": 0
     }
 ]
