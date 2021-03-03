@@ -165,7 +165,7 @@ export abstract class BaseInstaller {
             return null;
         }
     }
-    public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
+    public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean> {
         if (product === Product.unittest) {
             return true;
         }
@@ -674,7 +674,7 @@ export class ProductInstaller implements IInstaller {
     ): Promise<InstallerResponse> {
         return this.createInstaller(product).install(product, resource, cancel);
     }
-    public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
+    public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean> {
         return this.createInstaller(product).isInstalled(product, resource);
     }
     public translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string {

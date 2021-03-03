@@ -1859,4 +1859,15 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when we find an active integrated terminal running tensorboard.
      */
     [EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL]: never | undefined;
+    /**
+     * Telemetry event sent after attempting to install TensorBoard session dependencies.
+     * Note, this is only sent if install was attempted. It is not sent if the user opted
+     * not to install, or if all dependencies were already installed.
+     */
+    [EventName.TENSORBOARD_INSTALL_SESSION_DEPENDENCIES_RESULT]: {
+        wasProfilerPluginAttempted: boolean;
+        wasTensorBoardAttempted: boolean;
+        wasProfilerPluginInstalled: boolean;
+        wasTensorBoardInstalled: boolean;
+    };
 }
