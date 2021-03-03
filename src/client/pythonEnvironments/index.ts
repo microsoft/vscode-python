@@ -2,13 +2,11 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { getGlobalStorage } from '../common/persistentState';
 import { getOSType, OSType } from '../common/utils/platform';
 import { IDisposable } from '../common/utils/resourceLifecycle';
 import { ActivationResult, ExtensionState } from '../components';
 import { PythonEnvironments } from './api';
-import { getPersistentCache, PythonEnvInfoCache } from './base/envsCache';
-import { PythonEnvInfo } from './base/info';
+import { createPythonEnvInfoCache } from './base/envsCache';
 import { ILocator } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsReducer } from './base/locators/composite/environmentsReducer';
@@ -28,7 +26,6 @@ import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreL
 import { EnvironmentInfoService } from './info/environmentInfoService';
 import { isComponentEnabled, registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
 import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
-import { IExtensionContext } from '../common/types';
 
 /**
  * Set up the Python environments component (during extension activation).'
@@ -170,21 +167,6 @@ function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators {
     ]);
     ext.disposables.push(locators);
     return locators;
-}
-
-export async function createPythonEnvInfoCache(context: IExtensionContext): Promise<PythonEnvInfoCache> {
-    const storage = getGlobalStorage<PythonEnvInfo[]>(context, 'PYTHON_ENV_INFO_CACHE');
-    const cache = await getPersistentCache(
-        {
-            load: async () => storage.get(),
-            store: async (e) => storage.set(e),
-        },
-        // For now we assume that if when iteration is complete, the env is as complete as it's going to get.
-        // So no further check for complete environments is needed.
-        () => true, // "isComplete"
-    );
-
-    return cache;
 }
 
 async function createCachingLocator(ext: ExtensionState, locators: ILocator): Promise<CachingLocator> {
