@@ -88,7 +88,6 @@ export enum ProductType {
     RefactoringLibrary = 'RefactoringLibrary',
     WorkspaceSymbols = 'WorkspaceSymbols',
     DataScience = 'DataScience',
-    TensorBoard = 'TensorBoard',
 }
 
 export enum Product {
@@ -116,6 +115,7 @@ export enum Product {
     nbconvert = 22,
     pandas = 23,
     tensorboard = 24,
+    torchprofiler = 25,
 }
 
 export enum ModuleNamePurpose {
@@ -132,13 +132,18 @@ export interface IInstaller {
         cancel?: CancellationToken,
         isUpgrade?: boolean,
     ): Promise<InstallerResponse>;
-    install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
+    install(
+        product: Product,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken,
+        isUpgrade?: boolean,
+    ): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined>;
     isProductVersionCompatible(
         product: Product,
         semVerRequirement: string,
         resource?: InterpreterUri,
-    ): Promise<ProductInstallStatus | undefined>;
+    ): Promise<ProductInstallStatus>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 
