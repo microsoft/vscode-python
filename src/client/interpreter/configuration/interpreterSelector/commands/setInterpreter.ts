@@ -25,10 +25,9 @@ import {
     InputStep,
     IQuickPickParameters,
 } from '../../../../common/utils/multiStepInput';
-import { createPythonEnvInfoCache } from '../../../../pythonEnvironments';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
-import { IInterpreterService } from '../../../contracts';
+import { IComponentAdapter, IInterpreterService } from '../../../contracts';
 import {
     IFindInterpreterQuickPickItem,
     IInterpreterQuickPickItem,
@@ -57,6 +56,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         @inject(IExperimentService) readonly experiments: IExperimentService,
         @inject(IExtensionContext) readonly context: IExtensionContext,
         @inject(IInterpreterService) readonly interpreterService: IInterpreterService,
+        @inject(IComponentAdapter) readonly pyenvs: IComponentAdapter,
     ) {
         super(pythonPathUpdaterService, commandManager, applicationShell, workspaceService);
     }
@@ -199,8 +199,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
 
         let discovered: boolean;
         if (await inDiscoveryExperiment(this.experiments)) {
-            const cache = await createPythonEnvInfoCache(this.context);
-            const env = cache.getCachedEnvInfo(interpreterPath);
+            const env = await this.pyenvs.getInterpreterCache(interpreterPath, this.context);
             discovered = !!env;
         } else {
             const store = await this.interpreterService.getInterpreterCache(interpreterPath);

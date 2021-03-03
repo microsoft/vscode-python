@@ -32,10 +32,8 @@ import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { EventName } from '../../../../client/telemetry/constants';
 import * as Telemetry from '../../../../client/telemetry';
 import { DiscoveryVariants, FindInterpreterVariants } from '../../../../client/common/experiments/groups';
-import { IInterpreterService } from '../../../../client/interpreter/contracts';
-import * as PersistentState from '../../../../client/common/persistentState';
-
-const untildify: (value: string) => string = require('untildify');
+import { IComponentAdapter, IInterpreterService } from '../../../../client/interpreter/contracts';
+import { PythonEnvInfo } from '../../../../client/pythonEnvironments/base/info';
 
 type TelemetryEventType = { eventName: EventName; properties: Record<string, unknown> };
 
@@ -52,6 +50,7 @@ suite('Set Interpreter Command', () => {
     let experimentService: TypeMoq.IMock<IExperimentService>;
     let context: TypeMoq.IMock<IExtensionContext>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
+    let pyenvs: TypeMoq.IMock<IComponentAdapter>;
     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
     const folder2 = { name: 'two', uri: Uri.parse('two'), index: 2 };
 
@@ -66,6 +65,7 @@ suite('Set Interpreter Command', () => {
         pythonPathUpdater = TypeMoq.Mock.ofType<IPythonPathUpdaterServiceManager>();
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+        pyenvs = TypeMoq.Mock.ofType<IComponentAdapter>();
 
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         workspace.setup((w) => w.rootPath).returns(() => 'rootPath');
@@ -94,6 +94,7 @@ suite('Set Interpreter Command', () => {
             experimentService.object,
             context.object,
             interpreterService.object,
+            pyenvs.object,
         );
     });
 
@@ -156,6 +157,7 @@ suite('Set Interpreter Command', () => {
                 experimentService.object,
                 context.object,
                 interpreterService.object,
+                pyenvs.object,
             );
         });
         teardown(() => {
@@ -216,6 +218,7 @@ suite('Set Interpreter Command', () => {
                 experiments.object,
                 context.object,
                 interpreterService.object,
+                pyenvs.object,
             );
 
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
@@ -408,7 +411,6 @@ suite('Set Interpreter Command', () => {
         });
 
         suite('SELECT_INTERPRETER_ENTERED_EXISTS telemetry', async () => {
-            let getGlobalStorageStub: sinon.SinonStub;
             let sendTelemetryStub: sinon.SinonStub;
             let telemetryEvents: TelemetryEventType[] = [];
 
@@ -421,7 +423,6 @@ suite('Set Interpreter Command', () => {
                             properties,
                         });
                     });
-                getGlobalStorageStub = sinon.stub(PersistentState, 'getGlobalStorage');
             });
 
             teardown(() => {
@@ -579,20 +580,19 @@ suite('Set Interpreter Command', () => {
                         interpreterPath = path.join('..', 'workspace', 'path');
                     }
                 }
-                getGlobalStorageStub.returns({
-                    get() {
-                        return [
-                            {
-                                executable: {
-                                    filename: isDiscovered ? untildify(interpreterPath) : 'something',
-                                },
-                            },
-                        ];
-                    },
-                    set() {
-                        return Promise.resolve();
-                    },
-                });
+                pyenvs
+                    .setup((p) => p.getInterpreterCache(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+                    .returns(() =>
+                        Promise.resolve(
+                            isDiscovered
+                                ? ({
+                                      executable: {
+                                          filename: 'something',
+                                      },
+                                  } as PythonEnvInfo)
+                                : undefined,
+                        ),
+                    );
                 const state: InterpreterStateArgs = { path: undefined, workspace: undefined };
                 const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
                 multiStepInput
@@ -908,6 +908,7 @@ suite('Set Interpreter Command', () => {
                 experimentService.object,
                 context.object,
                 interpreterService.object,
+                pyenvs.object,
             );
             type InputStepType = () => Promise<InputStep<unknown> | void>;
             let inputStep!: InputStepType;
