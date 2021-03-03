@@ -1,9 +1,3 @@
-// Experiment to check whether to always display the test explorer.
-export enum AlwaysDisplayTestExplorerGroups {
-    control = 'AlwaysDisplayTestExplorer - control',
-    experiment = 'AlwaysDisplayTestExplorer - experiment',
-}
-
 // Experiment to check whether to show "Extension Survey prompt" or not.
 export enum ShowExtensionSurveyPrompt {
     control = 'ShowExtensionSurveyPrompt - control',

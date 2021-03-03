@@ -1036,7 +1036,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "AlwaysDisplayTestExplorer - experiment",
                             "ShowExtensionSurveyPrompt - enabled",
                             "Reload - experiment",
                             "AA_testing - experiment",
@@ -1065,7 +1064,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "AlwaysDisplayTestExplorer - experiment",
                             "ShowExtensionSurveyPrompt - enabled",
                             "Reload - experiment",
                             "AA_testing - experiment",

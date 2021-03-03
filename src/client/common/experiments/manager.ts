@@ -33,7 +33,7 @@ export const experimentStorageKey = 'EXPERIMENT_STORAGE_KEY';
  * as about 40% of the users never come back for the second session.
  */
 const configFile = path.join(EXTENSION_ROOT_DIR, 'experiments.json');
-export const oldExperimentSalts = ['ShowExtensionSurveyPrompt', 'ShowPlayIcon', 'AlwaysDisplayTestExplorer', 'LS'];
+export const oldExperimentSalts = ['ShowExtensionSurveyPrompt', 'ShowPlayIcon', 'LS'];
 
 /**
  * <DEPRECATED> Manages and stores experiments, implements the AB testing functionality

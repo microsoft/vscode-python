@@ -1,17 +1,5 @@
 [
     {
-        "name": "AlwaysDisplayTestExplorer - experiment",
-        "salt": "AlwaysDisplayTestExplorer",
-        "min": 80,
-        "max": 100
-    },
-    {
-        "name": "AlwaysDisplayTestExplorer - control",
-        "salt": "AlwaysDisplayTestExplorer",
-        "min": 0,
-        "max": 20
-    },
-    {
         "name": "ShowPlayIcon - start",
         "salt": "ShowPlayIcon",
         "max": 100,
