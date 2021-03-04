@@ -238,7 +238,7 @@ suite('A/B experiments', () => {
             when(appEnvironment.machineId).thenReturn('101');
             when(crypto.createHash(anything(), 'number', 'SHA512')).thenReturn(644);
             when(crypto.createHash(anything(), anything(), 'FNV')).thenReturn(1293);
-            expManager.isUserInRange(79, 94, 'ShowExtensionSurveyPrompt');
+            expManager.isUserInRange(79, 94, 'LS');
             verify(crypto.createHash(anything(), 'number', 'SHA512')).once();
             verify(crypto.createHash(anything(), anything(), 'FNV')).never();
         });
