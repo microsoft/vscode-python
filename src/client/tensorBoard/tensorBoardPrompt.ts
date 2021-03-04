@@ -5,8 +5,7 @@ import { inject, injectable } from 'inversify';
 import { once } from 'lodash';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
-import { NativeTensorBoard } from '../common/experiments/groups';
-import { IExperimentService, IPersistentState, IPersistentStateFactory } from '../common/types';
+import { IPersistentState, IPersistentStateFactory } from '../common/types';
 import { Common, TensorBoard } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -21,8 +20,6 @@ export class TensorBoardPrompt {
     private state: IPersistentState<boolean>;
 
     private enabled: boolean;
-
-    private inExperiment: Promise<boolean>;
 
     private enabledInCurrentSession = true;
 
@@ -39,23 +36,16 @@ export class TensorBoardPrompt {
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
-        @inject(IExperimentService) private experimentService: IExperimentService,
     ) {
         this.state = this.persistentStateFactory.createWorkspacePersistentState<boolean>(
             TensorBoardPromptStateKeys.ShowNativeTensorBoardPrompt,
             true,
         );
         this.enabled = this.isPromptEnabled();
-        this.inExperiment = this.isInExperiment();
     }
 
     public async showNativeTensorBoardPrompt(trigger: TensorBoardEntrypointTrigger): Promise<void> {
-        if (
-            (await this.inExperiment) &&
-            this.enabled &&
-            this.enabledInCurrentSession &&
-            !this.waitingForUserSelection
-        ) {
+        if (this.enabled && this.enabledInCurrentSession && !this.waitingForUserSelection) {
             const yes = Common.bannerLabelYes();
             const no = Common.bannerLabelNo();
             const doNotAskAgain = Common.doNotShowAgain();
@@ -96,10 +86,6 @@ export class TensorBoardPrompt {
 
     private isPromptEnabled(): boolean {
         return this.state.value;
-    }
-
-    private async isInExperiment(): Promise<boolean> {
-        return this.experimentService.inExperiment(NativeTensorBoard.experiment);
     }
 
     private async disablePrompt() {
