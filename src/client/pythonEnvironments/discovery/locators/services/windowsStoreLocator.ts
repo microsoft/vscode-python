@@ -147,6 +147,16 @@ export async function isWindowsStoreEnvironment(interpreterPath: string): Promis
 const pythonExeGlob = 'python3.{[0-9],[0-9][0-9]}.exe';
 
 /**
+ * This is a glob pattern which matches following dir names:
+ * PythonSoftwareFoundation.Python.3.9_qbz5n2kfra8p0
+ * PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0
+ *
+ * Note chokidar fails to match multiple digits using +([0-9]), even though the underlying glob pattern matcher
+ * they use (picomatch), or any other glob matcher does. Hence why we had to use {[0-9],[0-9][0-9]} instead.
+ */
+const storePythonDirGlob = 'PythonSoftwareFoundation.Python.3.{[0-9],[0-9][0-9]}_*';
+
+/**
  * Checks if a given path ends with python3.*.exe. Not all python executables are matched as
  * we do not want to return duplicate executables.
  * @param {string} interpreterPath : Path to python interpreter.
@@ -190,7 +200,7 @@ export class WindowsStoreLocator extends FSWatchingLocator {
 
     constructor() {
         super(getWindowsStoreAppsRoot, async () => this.kind, {
-            executableBaseGlob: pythonExeGlob,
+            executableBaseGlob: storePythonDirGlob,
             searchLocation: getWindowsStoreAppsRoot(),
             envStructure: PythonEnvStructure.Flat,
         });
