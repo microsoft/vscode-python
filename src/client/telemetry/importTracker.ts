@@ -70,7 +70,7 @@ export class ImportTracker implements IExtensionSingleActivationService {
         this.documentManager.textDocuments.forEach((d) => this.onOpenedOrSavedDocument(d));
     }
 
-    public static hasModuleImport(moduleName: string) {
+    public static hasModuleImport(moduleName: string): boolean {
         return this.sentMatches.has(moduleName);
     }
 

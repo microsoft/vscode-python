@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import Sinon, * as sinon from 'sinon';
 import { SemVer } from 'semver';
+import { anything } from 'ts-mockito';
 import { IApplicationShell, ICommandManager } from '../../client/common/application/types';
 import {
     IExperimentService,
@@ -19,7 +20,6 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { Architecture } from '../../client/common/utils/platform';
 import { PythonEnvironment, EnvironmentType } from '../../client/pythonEnvironments/info';
 import { PYTHON_PATH } from '../common';
-import { anything } from 'ts-mockito';
 import { TorchProfiler } from '../../client/common/experiments/groups';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 
@@ -89,271 +89,294 @@ suite('TensorBoard session creation', async () => {
             .resolves(isInTorchProfilerExperiment);
         sandbox.stub(ImportTracker, 'hasModuleImport').withArgs('torch').returns(hasTorchImports);
         sandbox.stub(installer, 'isProductVersionCompatible').resolves(tensorBoardInstallStatus);
-        sandbox
-            .stub(installer, 'isInstalled')
-            .withArgs(Product.torchprofiler, anything())
-            .resolves(isTorchProfilerPackageInstalled);
+        sandbox.stub(installer, 'isInstalled').resolves(isTorchProfilerPackageInstalled);
         errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-        errorMessageStub.resolves(installPromptSelection as any);
+        errorMessageStub.resolves(installPromptSelection);
     }
+    suite('Core functionality', async () => {
+        test('Golden path: TensorBoard session starts successfully and webview is shown', async () => {
+            sandbox.stub(experimentService, 'inExperiment').resolves(true);
+            errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
+            // Stub user selections
+            sandbox
+                .stub(applicationShell, 'showQuickPick')
+                .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
 
-    test('Show correct message if profiler is not installed but not PyTorch user and tensorboard needs upgrade', async () => {
-        configureStubs(true, false, ProductInstallStatus.NeedsUpgrade, false, 'Yes');
-        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-        const installStub = sandbox.stub(installer, 'install').resolves(InstallerResponse.Installed);
+            const session = (await commandManager.executeCommand(
+                'python.launchTensorBoard',
+                TensorBoardEntrypoint.palette,
+                TensorBoardEntrypointTrigger.palette,
+            )) as TensorBoardSession;
 
-        await commandManager.executeCommand(
-            'python.launchTensorBoard',
-            TensorBoardEntrypoint.palette,
-            TensorBoardEntrypointTrigger.palette,
-        );
-        assert.ok(installStub.calledOnce, 'Did not install anything');
-        assert.ok(installStub.args[0][0] === Product.tensorboard, 'Did not install tensorboard');
-        assert.ok(
-            installStub.args.filter((argsList) => argsList[0] === Product.torchprofiler).length === 0,
-            'Attempted to install profiler when not in experiment',
-        );
-        assert.ok(
-            errorMessageStub.calledOnceWith(
-                TensorBoard.upgradePrompt(),
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo(),
-            ),
-            'Wrong error message shown',
-        );
+            assert.ok(session.panel?.visible, 'Webview panel not shown on session creation golden path');
+            assert.ok(errorMessageStub.notCalled, 'Error message shown on session creation golden path');
+        });
+        test('When webview is closed, session is killed', async () => {
+            sandbox.stub(experimentService, 'inExperiment').resolves(true);
+            errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
+            // Stub user selections
+            sandbox
+                .stub(applicationShell, 'showQuickPick')
+                .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+
+            const session = (await commandManager.executeCommand(
+                'python.launchTensorBoard',
+                TensorBoardEntrypoint.palette,
+                TensorBoardEntrypointTrigger.palette,
+            )) as TensorBoardSession;
+
+            const { daemon, panel } = session;
+            assert.ok(panel?.visible, 'Webview panel not shown');
+            panel?.dispose();
+            assert.ok(session.panel === undefined, 'Webview still visible');
+            assert.ok(daemon?.killed, 'TensorBoard session process not killed after webview closed');
+        });
+        test('When user selects file picker, display file picker', async () => {
+            sandbox.stub(experimentService, 'inExperiment').resolves(true);
+            errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
+            // Stub user selections
+            sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.selectAnotherFolder() });
+            const filePickerStub = sandbox.stub(applicationShell, 'showOpenDialog');
+
+            // Create session
+            await commandManager.executeCommand(
+                'python.launchTensorBoard',
+                TensorBoardEntrypoint.palette,
+                TensorBoardEntrypointTrigger.palette,
+            );
+
+            assert.ok(filePickerStub.called, 'User requests to select another folder and file picker was not shown');
+        });
     });
+    suite('Installation prompt message', async () => {
+        async function createSessionAndVerifyMessage(message: string) {
+            await commandManager.executeCommand(
+                'python.launchTensorBoard',
+                TensorBoardEntrypoint.palette,
+                TensorBoardEntrypointTrigger.palette,
+            );
+            assert.ok(
+                errorMessageStub.calledOnceWith(message, Common.bannerLabelYes(), Common.bannerLabelNo()),
+                'Wrong error message shown',
+            );
+        }
+        suite('Install profiler package + upgrade tensorboard', async () => {
+            async function runTest() {
+                sandbox
+                    .stub(applicationShell, 'showQuickPick')
+                    .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+                const installStub = sandbox.stub(installer, 'install').resolves(InstallerResponse.Installed);
+                await createSessionAndVerifyMessage(TensorBoard.installTensorBoardAndProfilerPluginPrompt());
+                assert.ok(installStub.calledTwice, 'Did not install anything');
+                assert.ok(installStub.args[0][0] === Product.tensorboard, 'Did not install tensorboard');
+                assert.ok(installStub.args[1][0] === Product.torchprofiler, 'Did not install torch profiler');
+            }
+            test('Show correct message if profiler package is not installed and user is in experiment and tensorboard needs upgrade', async () => {
+                configureStubs(true, true, ProductInstallStatus.NeedsUpgrade, false, 'Yes');
+                await runTest();
+            });
+            test('Show correct message if neither profiler package nor TensorBoard are installed', async () => {
+                configureStubs(true, true, ProductInstallStatus.NotInstalled, false, 'Yes');
+                await runTest();
+            });
+        });
+        suite('Install tensorboard only', async () => {
+            async function runTest() {
+                sandbox
+                    .stub(applicationShell, 'showQuickPick')
+                    .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+                await createSessionAndVerifyMessage(TensorBoard.installPrompt());
+            }
+            test('Show correct message if profiler package not installed but user is not in experiment and tensorboard is not installed', async () => {
+                configureStubs(false, false, ProductInstallStatus.NotInstalled, false, 'No');
+                await runTest();
+            });
+            test('Show correct message if profiler package is installed and user is in experiment and tensorboard is not installed', async () => {
+                configureStubs(true, true, ProductInstallStatus.NotInstalled, true, 'No');
+                await runTest();
+            });
+        });
+        suite('Upgrade tensorboard only', async () => {
+            async function runTest() {
+                sandbox
+                    .stub(applicationShell, 'showQuickPick')
+                    .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+                const installStub = sandbox.stub(installer, 'install').resolves(InstallerResponse.Installed);
+                await createSessionAndVerifyMessage(TensorBoard.upgradePrompt());
 
-    test('Show correct message if profiler not installed but user is not in experiment and tensorboard needs upgrade', async () => {
-        configureStubs(false, true, ProductInstallStatus.NeedsUpgrade, false, 'Yes');
-        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-        const installStub = sandbox.stub(installer, 'install').resolves(InstallerResponse.Installed);
+                assert.ok(installStub.calledOnce, 'Did not install anything');
+                assert.ok(installStub.args[0][0] === Product.tensorboard, 'Did not install tensorboard');
+                assert.ok(
+                    installStub.args.filter((argsList) => argsList[0] === Product.torchprofiler).length === 0,
+                    'Attempted to install profiler when not in experiment',
+                );
+            }
+            test('Show correct message if profiler package is not installed but not PyTorch user and tensorboard needs upgrade', async () => {
+                configureStubs(true, false, ProductInstallStatus.NeedsUpgrade, false, 'Yes');
+                await runTest();
+            });
+            test('Show correct message if profiler package not installed but user is not in experiment and tensorboard needs upgrade', async () => {
+                configureStubs(false, true, ProductInstallStatus.NeedsUpgrade, false, 'Yes');
+                await runTest();
+            });
+            test('Show correct message if profiler package is installed and tensorboard needs upgrade', async () => {
+                configureStubs(true, true, ProductInstallStatus.NeedsUpgrade, true, 'Yes');
+                await runTest();
+            });
+        });
+        suite('Install profiler only', async () => {
+            test('Show correct message if profiler package not installed and tensorboard is installed', async () => {
+                configureStubs(true, true, ProductInstallStatus.Installed, false, 'Yes');
+                sandbox
+                    .stub(applicationShell, 'showQuickPick')
+                    .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+                // Ensure we ask to install the profiler package and that it resolves to a cancellation
+                sandbox
+                    .stub(installer, 'install')
+                    .withArgs(Product.torchprofiler, anything(), anything())
+                    .resolves(InstallerResponse.Ignore);
 
-        await commandManager.executeCommand(
-            'python.launchTensorBoard',
-            TensorBoardEntrypoint.palette,
-            TensorBoardEntrypointTrigger.palette,
-        );
-        assert.ok(installStub.calledOnce, 'Did not install anything');
-        assert.ok(installStub.args[0][0] === Product.tensorboard, 'Did not install tensorboard');
-        assert.ok(
-            installStub.args.filter((argsList) => argsList[0] === Product.torchprofiler).length === 0,
-            'Attempted to install profiler when not in experiment',
-        );
-        assert.ok(
-            errorMessageStub.calledOnceWith(
-                TensorBoard.upgradePrompt(),
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo(),
-            ),
-            'Wrong error message shown',
-        );
+                const session = (await commandManager.executeCommand(
+                    'python.launchTensorBoard',
+                    TensorBoardEntrypoint.palette,
+                    TensorBoardEntrypointTrigger.palette,
+                )) as TensorBoardSession;
+
+                assert.ok(session.panel?.visible, 'Webview panel not shown, expected successful session creation');
+                assert.ok(
+                    errorMessageStub.calledOnceWith(
+                        TensorBoard.installProfilerPluginPrompt(),
+                        Common.bannerLabelYes(),
+                        Common.bannerLabelNo(),
+                    ),
+                    'Wrong error message shown',
+                );
+            });
+        });
     });
-    test('If TensorBoard is not installed and user chooses not to install, do not show error', async () => {
-        configureStubs(true, true, ProductInstallStatus.NotInstalled, false, 'Yes');
-        sandbox.stub(installer, 'install').resolves(InstallerResponse.Ignore);
+    suite('Error messages', async () => {
+        test('If user cancels starting TensorBoard session, do not show error', async () => {
+            sandbox
+                .stub(applicationShell, 'showQuickPick')
+                .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+            sandbox.stub(applicationShell, 'withProgress').resolves('canceled');
+            errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
 
-        await commandManager.executeCommand(
-            'python.launchTensorBoard',
-            TensorBoardEntrypoint.palette,
-            TensorBoardEntrypointTrigger.palette,
-        );
+            await commandManager.executeCommand(
+                'python.launchTensorBoard',
+                TensorBoardEntrypoint.palette,
+                TensorBoardEntrypointTrigger.palette,
+            );
 
-        assert.ok(
-            errorMessageStub.calledOnceWith(
-                TensorBoard.installTensorBoardAndProfilerPluginPrompt(),
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo(),
-            ),
-            'User opted not to install and error was shown',
-        );
+            assert.ok(errorMessageStub.notCalled, 'User canceled session start and error was shown');
+        });
+        test('If existing install of TensorBoard is outdated and user cancels installation, do not show error', async () => {
+            sandbox.stub(experimentService, 'inExperiment').resolves(true);
+            errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
+            sandbox.stub(installer, 'isProductVersionCompatible').resolves(ProductInstallStatus.NeedsUpgrade);
+            sandbox.stub(installer, 'install').resolves(InstallerResponse.Ignore);
+            const quickPickStub = sandbox.stub(applicationShell, 'showQuickPick');
+
+            await commandManager.executeCommand(
+                'python.launchTensorBoard',
+                TensorBoardEntrypoint.palette,
+                TensorBoardEntrypointTrigger.palette,
+            );
+
+            assert.ok(quickPickStub.notCalled, 'User opted not to upgrade and we proceeded to create session');
+        });
+        test('If TensorBoard is not installed and user chooses not to install, do not show error', async () => {
+            configureStubs(true, true, ProductInstallStatus.NotInstalled, false, 'Yes');
+            sandbox.stub(installer, 'install').resolves(InstallerResponse.Ignore);
+
+            await commandManager.executeCommand(
+                'python.launchTensorBoard',
+                TensorBoardEntrypoint.palette,
+                TensorBoardEntrypointTrigger.palette,
+            );
+
+            assert.ok(
+                errorMessageStub.calledOnceWith(
+                    TensorBoard.installTensorBoardAndProfilerPluginPrompt(),
+                    Common.bannerLabelYes(),
+                    Common.bannerLabelNo(),
+                ),
+                'User opted not to install and error was shown',
+            );
+        });
+        test('If user does not select a logdir, do not show error', async () => {
+            sandbox.stub(experimentService, 'inExperiment').resolves(true);
+            errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
+            // Stub user selections
+            sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.selectAFolder() });
+            sandbox.stub(applicationShell, 'showOpenDialog').resolves(undefined);
+
+            // Create session
+            await commandManager.executeCommand(
+                'python.launchTensorBoard',
+                TensorBoardEntrypoint.palette,
+                TensorBoardEntrypointTrigger.palette,
+            );
+
+            assert.ok(errorMessageStub.notCalled, 'User opted not to select a logdir and error was shown');
+        });
+        test('If starting TensorBoard times out, show error', async () => {
+            sandbox
+                .stub(applicationShell, 'showQuickPick')
+                .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+            sandbox.stub(applicationShell, 'withProgress').resolves(60_000);
+            errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
+
+            await commandManager.executeCommand(
+                'python.launchTensorBoard',
+                TensorBoardEntrypoint.palette,
+                TensorBoardEntrypointTrigger.palette,
+            );
+
+            assert.ok(errorMessageStub.called, 'TensorBoard timed out but no error was shown');
+        });
     });
-    test('If installing the profiler package fails, continue to create session', async () => {
-        configureStubs(true, true, ProductInstallStatus.Installed, false, 'Yes');
-        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-        // Ensure we ask to install the profiler package and that it resolves to a cancellation
-        sandbox
-            .stub(installer, 'install')
-            .withArgs(Product.torchprofiler, anything(), anything())
-            .resolves(InstallerResponse.Ignore);
+    suite('Profiler package', async () => {
+        test('If installing the profiler package fails, continue to create session', async () => {
+            configureStubs(true, true, ProductInstallStatus.Installed, false, 'Yes');
+            sandbox
+                .stub(applicationShell, 'showQuickPick')
+                .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+            // Ensure we ask to install the profiler package and that it resolves to a cancellation
+            sandbox
+                .stub(installer, 'install')
+                .withArgs(Product.torchprofiler, anything(), anything())
+                .resolves(InstallerResponse.Ignore);
 
-        const session = (await commandManager.executeCommand(
-            'python.launchTensorBoard',
-            TensorBoardEntrypoint.palette,
-            TensorBoardEntrypointTrigger.palette,
-        )) as TensorBoardSession;
+            const session = (await commandManager.executeCommand(
+                'python.launchTensorBoard',
+                TensorBoardEntrypoint.palette,
+                TensorBoardEntrypointTrigger.palette,
+            )) as TensorBoardSession;
 
-        assert.ok(session.panel?.visible, 'Webview panel not shown, expected successful session creation');
-        assert.ok(
-            errorMessageStub.calledOnceWith(
-                TensorBoard.installProfilerPluginPrompt(),
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo(),
-            ),
-            'Wrong error message shown',
-        );
-    });
-    test('Show correct message if neither profiler package nor TensorBoard are installed', async () => {
-        configureStubs(true, true, ProductInstallStatus.NotInstalled, false, 'Yes');
-        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-        sandbox.stub(installer, 'install').resolves(InstallerResponse.Installed);
+            assert.ok(session.panel?.visible, 'Webview panel not shown, expected successful session creation');
+        });
+        test('If user is not in torch profiler experiment, do not prompt to install profiler package', async () => {
+            sandbox
+                .stub(applicationShell, 'showQuickPick')
+                .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+            errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
+            sandbox.stub(experimentService, 'inExperiment').withArgs(TorchProfiler.experiment).resolves(false);
+            sandbox.stub(installer, 'isInstalled').withArgs(Product.torchprofiler).resolves(false);
+            const installTorchProfilerPackageStub = sandbox
+                .stub(installer, 'install')
+                .withArgs(Product.torchprofiler, anything(), anything());
 
-        await commandManager.executeCommand(
-            'python.launchTensorBoard',
-            TensorBoardEntrypoint.palette,
-            TensorBoardEntrypointTrigger.palette,
-        );
+            const session = (await commandManager.executeCommand(
+                'python.launchTensorBoard',
+                TensorBoardEntrypoint.palette,
+                TensorBoardEntrypointTrigger.palette,
+            )) as TensorBoardSession;
 
-        assert.ok(
-            errorMessageStub.calledOnceWith(
-                TensorBoard.installTensorBoardAndProfilerPluginPrompt(),
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo(),
-            ),
-            'Wrong error message shown',
-        );
-    });
-    test('Show correct message if profiler not installed but user is not in experiment and tensorboard is not installed', async () => {
-        configureStubs(false, false, ProductInstallStatus.NotInstalled, false, 'No');
-        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-
-        await commandManager.executeCommand(
-            'python.launchTensorBoard',
-            TensorBoardEntrypoint.palette,
-            TensorBoardEntrypointTrigger.palette,
-        );
-        assert.ok(
-            errorMessageStub.calledOnceWith(
-                TensorBoard.installPrompt(),
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo(),
-            ),
-            'Wrong error message shown',
-        );
-    });
-    test('If user cancels starting TensorBoard session, do not show error', async () => {
-        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-        sandbox.stub(applicationShell, 'withProgress').resolves('canceled');
-        errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-
-        await commandManager.executeCommand(
-            'python.launchTensorBoard',
-            TensorBoardEntrypoint.palette,
-            TensorBoardEntrypointTrigger.palette,
-        );
-
-        assert.ok(errorMessageStub.notCalled, 'User canceled session start and error was shown');
-    });
-    test('If starting TensorBoard times out, show error', async () => {
-        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-        sandbox.stub(applicationShell, 'withProgress').resolves(60_000);
-        errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-
-        await commandManager.executeCommand(
-            'python.launchTensorBoard',
-            TensorBoardEntrypoint.palette,
-            TensorBoardEntrypointTrigger.palette,
-        );
-
-        assert.ok(errorMessageStub.called, 'TensorBoard timed out but no error was shown');
-    });
-    test('Golden path: TensorBoard session starts successfully and webview is shown', async () => {
-        sandbox.stub(experimentService, 'inExperiment').resolves(true);
-        errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-        // Stub user selections
-        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-
-        const session = (await commandManager.executeCommand(
-            'python.launchTensorBoard',
-            TensorBoardEntrypoint.palette,
-            TensorBoardEntrypointTrigger.palette,
-        )) as TensorBoardSession;
-
-        assert.ok(session.panel?.visible, 'Webview panel not shown on session creation golden path');
-        assert.ok(errorMessageStub.notCalled, 'Error message shown on session creation golden path');
-    });
-    test('When webview is closed, session is killed', async () => {
-        sandbox.stub(experimentService, 'inExperiment').resolves(true);
-        errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-        // Stub user selections
-        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-
-        const session = (await commandManager.executeCommand(
-            'python.launchTensorBoard',
-            TensorBoardEntrypoint.palette,
-            TensorBoardEntrypointTrigger.palette,
-        )) as TensorBoardSession;
-
-        const { daemon, panel } = session;
-        assert.ok(panel?.visible, 'Webview panel not shown');
-        panel?.dispose();
-        assert.ok(session.panel === undefined, 'Webview still visible');
-        assert.ok(daemon?.killed, 'TensorBoard session process not killed after webview closed');
-    });
-    test('When user selects file picker, display file picker', async () => {
-        sandbox.stub(experimentService, 'inExperiment').resolves(true);
-        errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-        // Stub user selections
-        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.selectAnotherFolder() });
-        const filePickerStub = sandbox.stub(applicationShell, 'showOpenDialog');
-
-        // Create session
-        await commandManager.executeCommand(
-            'python.launchTensorBoard',
-            TensorBoardEntrypoint.palette,
-            TensorBoardEntrypointTrigger.palette,
-        );
-
-        assert.ok(filePickerStub.called, 'User requests to select another folder and file picker was not shown');
-    });
-    test('If user does not select a logdir, do not show error', async () => {
-        sandbox.stub(experimentService, 'inExperiment').resolves(true);
-        errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-        // Stub user selections
-        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.selectAFolder() });
-        sandbox.stub(applicationShell, 'showOpenDialog').resolves(undefined);
-
-        // Create session
-        await commandManager.executeCommand(
-            'python.launchTensorBoard',
-            TensorBoardEntrypoint.palette,
-            TensorBoardEntrypointTrigger.palette,
-        );
-
-        assert.ok(errorMessageStub.notCalled, 'User opted not to select a logdir and error was shown');
-    });
-    test('If existing install of TensorBoard is outdated and user cancels installation, do not show error', async () => {
-        sandbox.stub(experimentService, 'inExperiment').resolves(true);
-        errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-        sandbox.stub(installer, 'isProductVersionCompatible').resolves(ProductInstallStatus.NeedsUpgrade);
-        sandbox.stub(installer, 'install').resolves(InstallerResponse.Ignore);
-        const quickPickStub = sandbox.stub(applicationShell, 'showQuickPick');
-
-        await commandManager.executeCommand(
-            'python.launchTensorBoard',
-            TensorBoardEntrypoint.palette,
-            TensorBoardEntrypointTrigger.palette,
-        );
-
-        assert.ok(quickPickStub.notCalled, 'User opted not to upgrade and we proceeded to create session');
-    });
-    test('If user is not in torch profiler experiment, do not prompt to install profiler package', async () => {
-        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-        errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-        sandbox.stub(experimentService, 'inExperiment').withArgs(TorchProfiler.experiment).resolves(false);
-        sandbox.stub(installer, 'isInstalled').withArgs(Product.torchprofiler).resolves(false);
-        const installTorchProfilerPackageStub = sandbox
-            .stub(installer, 'install')
-            .withArgs(Product.torchprofiler, anything(), anything());
-
-        const session = (await commandManager.executeCommand(
-            'python.launchTensorBoard',
-            TensorBoardEntrypoint.palette,
-            TensorBoardEntrypointTrigger.palette,
-        )) as TensorBoardSession;
-
-        // Torch profiler status should be irrelevant to tensorboard session start
-        assert.ok(session.panel?.visible, 'Webview panel not shown, expected successful session creation');
-        assert.ok(errorMessageStub.notCalled, 'Error message shown when all dependencies were present');
-        assert.ok(installTorchProfilerPackageStub.notCalled);
+            // Torch profiler status should be irrelevant to tensorboard session start
+            assert.ok(session.panel?.visible, 'Webview panel not shown, expected successful session creation');
+            assert.ok(errorMessageStub.notCalled, 'Error message shown when all dependencies were present');
+            assert.ok(installTorchProfilerPackageStub.notCalled);
+        });
     });
 });
