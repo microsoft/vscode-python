@@ -150,6 +150,9 @@ suite('TensorBoard session creation', async () => {
     });
     suite('Installation prompt message', async () => {
         async function createSessionAndVerifyMessage(message: string) {
+            sandbox
+                .stub(applicationShell, 'showQuickPick')
+                .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
             await commandManager.executeCommand(
                 'python.launchTensorBoard',
                 TensorBoardEntrypoint.palette,
@@ -162,70 +165,23 @@ suite('TensorBoard session creation', async () => {
         }
         suite('Install profiler package + upgrade tensorboard', async () => {
             async function runTest() {
-                sandbox
-                    .stub(applicationShell, 'showQuickPick')
-                    .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
                 const installStub = sandbox.stub(installer, 'install').resolves(InstallerResponse.Installed);
                 await createSessionAndVerifyMessage(TensorBoard.installTensorBoardAndProfilerPluginPrompt());
                 assert.ok(installStub.calledTwice, 'Did not install anything');
                 assert.ok(installStub.args[0][0] === Product.tensorboard, 'Did not install tensorboard');
                 assert.ok(installStub.args[1][0] === Product.torchprofiler, 'Did not install torch profiler');
             }
-            test('Show correct message if profiler package is not installed and user is in experiment and tensorboard needs upgrade', async () => {
+            test('In experiment: true, has torch imports: true, is profiler package installed: false, TensorBoard needs upgrade', async () => {
                 configureStubs(true, true, ProductInstallStatus.NeedsUpgrade, false, 'Yes');
                 await runTest();
             });
-            test('Show correct message if neither profiler package nor TensorBoard are installed', async () => {
+            test('In experiment: true, has torch imports: true, is profiler package installed: false, TensorBoard not installed', async () => {
                 configureStubs(true, true, ProductInstallStatus.NotInstalled, false, 'Yes');
                 await runTest();
             });
         });
-        suite('Install tensorboard only', async () => {
-            async function runTest() {
-                sandbox
-                    .stub(applicationShell, 'showQuickPick')
-                    .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-                await createSessionAndVerifyMessage(TensorBoard.installPrompt());
-            }
-            test('Show correct message if profiler package not installed but user is not in experiment and tensorboard is not installed', async () => {
-                configureStubs(false, false, ProductInstallStatus.NotInstalled, false, 'No');
-                await runTest();
-            });
-            test('Show correct message if profiler package is installed and user is in experiment and tensorboard is not installed', async () => {
-                configureStubs(true, true, ProductInstallStatus.NotInstalled, true, 'No');
-                await runTest();
-            });
-        });
-        suite('Upgrade tensorboard only', async () => {
-            async function runTest() {
-                sandbox
-                    .stub(applicationShell, 'showQuickPick')
-                    .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-                const installStub = sandbox.stub(installer, 'install').resolves(InstallerResponse.Installed);
-                await createSessionAndVerifyMessage(TensorBoard.upgradePrompt());
-
-                assert.ok(installStub.calledOnce, 'Did not install anything');
-                assert.ok(installStub.args[0][0] === Product.tensorboard, 'Did not install tensorboard');
-                assert.ok(
-                    installStub.args.filter((argsList) => argsList[0] === Product.torchprofiler).length === 0,
-                    'Attempted to install profiler when not in experiment',
-                );
-            }
-            test('Show correct message if profiler package is not installed but not PyTorch user and tensorboard needs upgrade', async () => {
-                configureStubs(true, false, ProductInstallStatus.NeedsUpgrade, false, 'Yes');
-                await runTest();
-            });
-            test('Show correct message if profiler package not installed but user is not in experiment and tensorboard needs upgrade', async () => {
-                configureStubs(false, true, ProductInstallStatus.NeedsUpgrade, false, 'Yes');
-                await runTest();
-            });
-            test('Show correct message if profiler package is installed and tensorboard needs upgrade', async () => {
-                configureStubs(true, true, ProductInstallStatus.NeedsUpgrade, true, 'Yes');
-                await runTest();
-            });
-        });
         suite('Install profiler only', async () => {
-            test('Show correct message if profiler package not installed and tensorboard is installed', async () => {
+            test('In experiment: true, has torch imports: true, is profiler package installed: false, TensorBoard installed', async () => {
                 configureStubs(true, true, ProductInstallStatus.Installed, false, 'Yes');
                 sandbox
                     .stub(applicationShell, 'showQuickPick')
@@ -251,6 +207,88 @@ suite('TensorBoard session creation', async () => {
                     ),
                     'Wrong error message shown',
                 );
+            });
+        });
+        suite('Install tensorboard only', async () => {
+            [false, true].forEach(async (inExperiment) => {
+                [false, true].forEach(async (hasTorchImports) => {
+                    [false, true].forEach(async (isTorchProfilerPackageInstalled) => {
+                        if (!(inExperiment && hasTorchImports && !isTorchProfilerPackageInstalled)) {
+                            test(`In experiment: ${inExperiment}, has torch imports: ${hasTorchImports}, is profiler package installed: ${isTorchProfilerPackageInstalled}, TensorBoard not installed`, async () => {
+                                configureStubs(
+                                    inExperiment,
+                                    hasTorchImports,
+                                    ProductInstallStatus.NotInstalled,
+                                    isTorchProfilerPackageInstalled,
+                                    'No',
+                                );
+                                await createSessionAndVerifyMessage(TensorBoard.installPrompt());
+                            });
+                        }
+                    });
+                });
+            });
+        });
+        suite('Upgrade tensorboard only', async () => {
+            async function runTest() {
+                const installStub = sandbox.stub(installer, 'install').resolves(InstallerResponse.Installed);
+                await createSessionAndVerifyMessage(TensorBoard.upgradePrompt());
+
+                assert.ok(installStub.calledOnce, 'Did not install anything');
+                assert.ok(installStub.args[0][0] === Product.tensorboard, 'Did not install tensorboard');
+                assert.ok(
+                    installStub.args.filter((argsList) => argsList[0] === Product.torchprofiler).length === 0,
+                    'Unexpected attempt to install profiler package',
+                );
+            }
+            [false, true].forEach(async (inExperiment) => {
+                [false, true].forEach(async (hasTorchImports) => {
+                    [false, true].forEach(async (isTorchProfilerPackageInstalled) => {
+                        if (!(inExperiment && hasTorchImports && !isTorchProfilerPackageInstalled)) {
+                            test(`In experiment: ${inExperiment}, has torch imports: ${hasTorchImports}, is profiler package installed: ${isTorchProfilerPackageInstalled}, TensorBoard needs upgrade`, async () => {
+                                configureStubs(
+                                    inExperiment,
+                                    hasTorchImports,
+                                    ProductInstallStatus.NeedsUpgrade,
+                                    isTorchProfilerPackageInstalled,
+                                    'Yes',
+                                );
+                                await runTest();
+                            });
+                        }
+                    });
+                });
+            });
+        });
+        suite('No prompt', async () => {
+            async function runTest() {
+                sandbox
+                    .stub(applicationShell, 'showQuickPick')
+                    .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+                await commandManager.executeCommand(
+                    'python.launchTensorBoard',
+                    TensorBoardEntrypoint.palette,
+                    TensorBoardEntrypointTrigger.palette,
+                );
+                assert.ok(errorMessageStub.notCalled, 'Prompt was unexpectedly shown');
+            }
+            [false, true].forEach(async (inExperiment) => {
+                [false, true].forEach(async (hasTorchImports) => {
+                    [false, true].forEach(async (isTorchProfilerPackageInstalled) => {
+                        if (!(inExperiment && hasTorchImports && !isTorchProfilerPackageInstalled)) {
+                            test(`In experiment: ${inExperiment}, has torch imports: ${hasTorchImports}, is profiler package installed: ${isTorchProfilerPackageInstalled}, TensorBoard installed`, async () => {
+                                configureStubs(
+                                    inExperiment,
+                                    hasTorchImports,
+                                    ProductInstallStatus.Installed,
+                                    isTorchProfilerPackageInstalled,
+                                    'Yes',
+                                );
+                                await runTest();
+                            });
+                        }
+                    });
+                });
             });
         });
     });
