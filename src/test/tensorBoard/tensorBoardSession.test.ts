@@ -169,7 +169,10 @@ suite('TensorBoard session creation', async () => {
                 await createSessionAndVerifyMessage(TensorBoard.installTensorBoardAndProfilerPluginPrompt());
                 assert.ok(installStub.calledTwice, 'Did not install anything');
                 assert.ok(installStub.args[0][0] === Product.tensorboard, 'Did not install tensorboard');
-                assert.ok(installStub.args[1][0] === Product.torchprofiler, 'Did not install torch profiler');
+                assert.ok(
+                    installStub.args[1][0] === Product.torchProfilerInstallName,
+                    'Did not install torch profiler',
+                );
             }
             test('In experiment: true, has torch imports: true, is profiler package installed: false, TensorBoard needs upgrade', async () => {
                 configureStubs(true, true, ProductInstallStatus.NeedsUpgrade, false, 'Yes');
@@ -189,7 +192,7 @@ suite('TensorBoard session creation', async () => {
                 // Ensure we ask to install the profiler package and that it resolves to a cancellation
                 sandbox
                     .stub(installer, 'install')
-                    .withArgs(Product.torchprofiler, anything(), anything())
+                    .withArgs(Product.torchProfilerInstallName, anything(), anything())
                     .resolves(InstallerResponse.Ignore);
 
                 const session = (await commandManager.executeCommand(
@@ -237,7 +240,8 @@ suite('TensorBoard session creation', async () => {
                 assert.ok(installStub.calledOnce, 'Did not install anything');
                 assert.ok(installStub.args[0][0] === Product.tensorboard, 'Did not install tensorboard');
                 assert.ok(
-                    installStub.args.filter((argsList) => argsList[0] === Product.torchprofiler).length === 0,
+                    installStub.args.filter((argsList) => argsList[0] === Product.torchProfilerInstallName).length ===
+                        0,
                     'Unexpected attempt to install profiler package',
                 );
             }
@@ -381,7 +385,7 @@ suite('TensorBoard session creation', async () => {
             // Ensure we ask to install the profiler package and that it resolves to a cancellation
             sandbox
                 .stub(installer, 'install')
-                .withArgs(Product.torchprofiler, anything(), anything())
+                .withArgs(Product.torchProfilerInstallName, anything(), anything())
                 .resolves(InstallerResponse.Ignore);
 
             const session = (await commandManager.executeCommand(
@@ -390,6 +394,18 @@ suite('TensorBoard session creation', async () => {
                 TensorBoardEntrypointTrigger.palette,
             )) as TensorBoardSession;
 
+            assert.ok(session.panel?.visible, 'Webview panel not shown, expected successful session creation');
+        });
+        test('If user opts not to install profiler package and tensorboard is already installed, continue to create session', async () => {
+            configureStubs(true, true, ProductInstallStatus.Installed, false, 'No');
+            sandbox
+                .stub(applicationShell, 'showQuickPick')
+                .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+            const session = (await commandManager.executeCommand(
+                'python.launchTensorBoard',
+                TensorBoardEntrypoint.palette,
+                TensorBoardEntrypointTrigger.palette,
+            )) as TensorBoardSession;
             assert.ok(session.panel?.visible, 'Webview panel not shown, expected successful session creation');
         });
     });

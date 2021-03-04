@@ -115,7 +115,8 @@ export enum Product {
     nbconvert = 22,
     pandas = 23,
     tensorboard = 24,
-    torchprofiler = 25,
+    torchProfilerInstallName = 25,
+    torchProfilerImportName = 26,
 }
 
 export enum ModuleNamePurpose {

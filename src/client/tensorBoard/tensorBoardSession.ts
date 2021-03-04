@@ -144,7 +144,7 @@ export class TensorBoardSession {
         // First see what dependencies we're missing
         let [tensorboardInstallStatus, profilerPluginInstallStatus] = await Promise.all([
             this.installer.isProductVersionCompatible(Product.tensorboard, '>= 2.4.1', interpreter),
-            this.installer.isInstalled(Product.torchprofiler, interpreter),
+            this.installer.isInstalled(Product.torchProfilerImportName, interpreter),
         ]);
         const isTorchUserAndInExperiment = ImportTracker.hasModuleImport('torch') && this.isInTorchProfilerExperiment;
         const needsTensorBoardInstall = tensorboardInstallStatus !== ProductInstallStatus.Installed;
@@ -164,7 +164,9 @@ export class TensorBoardSession {
             tensorboardInstallStatus,
             isTorchUserAndInExperiment && !profilerPluginInstallStatus,
         );
-        if (selection !== Common.bannerLabelYes()) {
+        if (selection !== Common.bannerLabelYes() && !needsTensorBoardInstall) {
+            return true;
+        } else if (selection !== Common.bannerLabelYes()) {
             return false;
         }
 
@@ -189,14 +191,14 @@ export class TensorBoardSession {
         }
         // If need to install torch.profiler and it's not already installed, add it to our list of promises
         if (needsProfilerPluginInstall) {
-            installPromises.push(this.installer.install(Product.torchprofiler, interpreter, installerToken));
+            installPromises.push(this.installer.install(Product.torchProfilerInstallName, interpreter, installerToken));
         }
         await Promise.race([Promise.all(installPromises), cancellationPromise]);
 
         // Check install status again after installing
         [tensorboardInstallStatus, profilerPluginInstallStatus] = await Promise.all([
             this.installer.isProductVersionCompatible(Product.tensorboard, '>= 2.4.1', interpreter),
-            this.installer.isInstalled(Product.torchprofiler, interpreter),
+            this.installer.isInstalled(Product.torchProfilerImportName, interpreter),
         ]);
         // Send telemetry regarding results of install
         sendTelemetryEvent(EventName.TENSORBOARD_INSTALL_SESSION_DEPENDENCIES_RESULT, undefined, {

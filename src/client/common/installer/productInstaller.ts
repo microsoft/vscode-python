@@ -46,7 +46,9 @@ export const CTagsInstallationScript =
 
 // Products which may not be available to install from certain package registries, keyed by product name
 // Installer implementations can check this to determine a suitable installation channel for a product
-const UnsupportedChannelsForProduct = new Map<Product, Set<string>>([[Product.torchprofiler, new Set(['Conda'])]]);
+const UnsupportedChannelsForProduct = new Map<Product, Set<string>>([
+    [Product.torchProfilerInstallName, new Set(['Conda'])],
+]);
 
 export abstract class BaseInstaller {
     private static readonly PromptPromises = new Map<string, Promise<InstallerResponse>>();
@@ -749,8 +751,10 @@ function translateProductToModule(product: Product, purpose: ModuleNamePurpose):
             return 'kernelspec';
         case Product.tensorboard:
             return 'tensorboard';
-        case Product.torchprofiler:
+        case Product.torchProfilerInstallName:
             return 'torch-tb-profiler';
+        case Product.torchProfilerImportName:
+            return 'torch_tb_profiler';
         default: {
             throw new Error(`Product ${product} cannot be installed as a Python Module.`);
         }

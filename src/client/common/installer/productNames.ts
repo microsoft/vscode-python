@@ -19,4 +19,5 @@ ProductNames.set(Product.pytest, 'pytest');
 ProductNames.set(Product.yapf, 'yapf');
 ProductNames.set(Product.rope, 'rope');
 ProductNames.set(Product.tensorboard, 'tensorboard');
-ProductNames.set(Product.torchprofiler, 'torch-tb-profiler');
+ProductNames.set(Product.torchProfilerInstallName, 'torch-tb-profiler');
+ProductNames.set(Product.torchProfilerImportName, 'torch_tb_profiler');
