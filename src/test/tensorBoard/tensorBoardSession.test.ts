@@ -75,13 +75,57 @@ suite('TensorBoard session creation', async () => {
         await closeActiveWindows();
         sandbox.restore();
     });
-    test('Show correct message if profiler not installed but user is not in experiment and tensorboard needs upgrade', async () => {
-        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-        sandbox.stub(experimentService, 'inExperiment').withArgs(TorchProfiler.experiment).resolves(false);
+
+    function configureStubs(
+        isInTorchProfilerExperiment: boolean,
+        hasTorchImports: boolean,
+        tensorBoardInstallStatus: ProductInstallStatus,
+        isTorchProfilerPackageInstalled: boolean,
+        installPromptSelection: 'Yes' | 'No',
+    ) {
+        sandbox
+            .stub(experimentService, 'inExperiment')
+            .withArgs(TorchProfiler.experiment)
+            .resolves(isInTorchProfilerExperiment);
+        sandbox.stub(ImportTracker, 'hasModuleImport').withArgs('torch').returns(hasTorchImports);
+        sandbox.stub(installer, 'isProductVersionCompatible').resolves(tensorBoardInstallStatus);
+        sandbox
+            .stub(installer, 'isInstalled')
+            .withArgs(Product.torchprofiler, anything())
+            .resolves(isTorchProfilerPackageInstalled);
         errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-        errorMessageStub.resolves(Common.bannerLabelYes() as any);
-        sandbox.stub(installer, 'isInstalled').withArgs(Product.torchprofiler, anything()).resolves(false);
-        sandbox.stub(installer, 'isProductVersionCompatible').resolves(ProductInstallStatus.NeedsUpgrade);
+        errorMessageStub.resolves(installPromptSelection as any);
+    }
+
+    test('Show correct message if profiler is not installed but not PyTorch user and tensorboard needs upgrade', async () => {
+        configureStubs(true, false, ProductInstallStatus.NeedsUpgrade, false, 'Yes');
+        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+        const installStub = sandbox.stub(installer, 'install').resolves(InstallerResponse.Installed);
+
+        await commandManager.executeCommand(
+            'python.launchTensorBoard',
+            TensorBoardEntrypoint.palette,
+            TensorBoardEntrypointTrigger.palette,
+        );
+        assert.ok(installStub.calledOnce, 'Did not install anything');
+        assert.ok(installStub.args[0][0] === Product.tensorboard, 'Did not install tensorboard');
+        assert.ok(
+            installStub.args.filter((argsList) => argsList[0] === Product.torchprofiler).length === 0,
+            'Attempted to install profiler when not in experiment',
+        );
+        assert.ok(
+            errorMessageStub.calledOnceWith(
+                TensorBoard.upgradePrompt(),
+                Common.bannerLabelYes(),
+                Common.bannerLabelNo(),
+            ),
+            'Wrong error message shown',
+        );
+    });
+
+    test('Show correct message if profiler not installed but user is not in experiment and tensorboard needs upgrade', async () => {
+        configureStubs(false, true, ProductInstallStatus.NeedsUpgrade, false, 'Yes');
+        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
         const installStub = sandbox.stub(installer, 'install').resolves(InstallerResponse.Installed);
 
         await commandManager.executeCommand(
@@ -105,13 +149,8 @@ suite('TensorBoard session creation', async () => {
         );
     });
     test('If TensorBoard is not installed and user chooses not to install, do not show error', async () => {
-        sandbox.stub(experimentService, 'inExperiment').resolves(true);
-        sandbox.stub(ImportTracker, 'hasModuleImport').withArgs('torch').returns(true);
-        sandbox.stub(installer, 'isProductVersionCompatible').resolves(ProductInstallStatus.NotInstalled);
-        sandbox.stub(installer, 'isInstalled').resolves(false);
+        configureStubs(true, true, ProductInstallStatus.NotInstalled, false, 'Yes');
         sandbox.stub(installer, 'install').resolves(InstallerResponse.Ignore);
-        errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-        errorMessageStub.resolves(Common.bannerLabelYes() as any);
 
         await commandManager.executeCommand(
             'python.launchTensorBoard',
@@ -129,12 +168,7 @@ suite('TensorBoard session creation', async () => {
         );
     });
     test('If installing the profiler package fails, continue to create session', async () => {
-        sandbox.stub(experimentService, 'inExperiment').withArgs(TorchProfiler.experiment).resolves(true);
-        sandbox.stub(ImportTracker, 'hasModuleImport').withArgs('torch').returns(true);
-        sandbox.stub(installer, 'isInstalled').resolves(false);
-        // Stub user selections
-        errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-        errorMessageStub.resolves(Common.bannerLabelYes() as any);
+        configureStubs(true, true, ProductInstallStatus.Installed, false, 'Yes');
         sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
         // Ensure we ask to install the profiler package and that it resolves to a cancellation
         sandbox
@@ -159,16 +193,8 @@ suite('TensorBoard session creation', async () => {
         );
     });
     test('Show correct message if neither profiler package nor TensorBoard are installed', async () => {
-        sandbox.stub(experimentService, 'inExperiment').resolves(true);
-        sandbox.stub(ImportTracker, 'hasModuleImport').withArgs('torch').returns(true);
-        errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-        errorMessageStub.resolves(Common.bannerLabelYes() as any);
+        configureStubs(true, true, ProductInstallStatus.NotInstalled, false, 'Yes');
         sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-        sandbox.stub(installer, 'isInstalled').withArgs(Product.torchprofiler, anything()).resolves(false);
-        sandbox
-            .stub(installer, 'isProductVersionCompatible')
-            .withArgs(Product.tensorboard, anything(), anything())
-            .resolves(ProductInstallStatus.NotInstalled);
         sandbox.stub(installer, 'install').resolves(InstallerResponse.Installed);
 
         await commandManager.executeCommand(
@@ -187,11 +213,8 @@ suite('TensorBoard session creation', async () => {
         );
     });
     test('Show correct message if profiler not installed but user is not in experiment and tensorboard is not installed', async () => {
+        configureStubs(false, false, ProductInstallStatus.NotInstalled, false, 'No');
         sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-        sandbox.stub(experimentService, 'inExperiment').withArgs(TorchProfiler.experiment).resolves(false);
-        errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-        sandbox.stub(installer, 'isInstalled').withArgs(Product.torchprofiler, anything()).resolves(false);
-        sandbox.stub(installer, 'isProductVersionCompatible').resolves(ProductInstallStatus.NotInstalled);
 
         await commandManager.executeCommand(
             'python.launchTensorBoard',
