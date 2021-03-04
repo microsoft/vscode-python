@@ -96,7 +96,7 @@ suite('TensorBoard code lens provider', () => {
             sandbox.stub(experimentService, 'inExperiment').resolves(true);
             codeLensProvider = serviceManager.get<TensorBoardImportCodeLensProvider>(TensorBoardImportCodeLensProvider);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (codeLensProvider as any).activateInternal();
+            await (codeLensProvider as any).activate();
             spy = sandbox.spy(codeLensProvider, 'provideCodeLenses');
         });
         teardown(() => {
