@@ -42,8 +42,7 @@ suite('TensorBoard code lens provider', () => {
             codeLensProvider = serviceManager.get<TensorBoardNbextensionCodeLensProvider>(
                 TensorBoardNbextensionCodeLensProvider,
             );
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (codeLensProvider as any).activateInternal();
+            await codeLensProvider.activate();
         });
         teardown(async () => {
             sandbox.restore();
@@ -95,8 +94,7 @@ suite('TensorBoard code lens provider', () => {
             experimentService = serviceManager.get<IExperimentService>(IExperimentService);
             sandbox.stub(experimentService, 'inExperiment').resolves(true);
             codeLensProvider = serviceManager.get<TensorBoardImportCodeLensProvider>(TensorBoardImportCodeLensProvider);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (codeLensProvider as any).activate();
+            await codeLensProvider.activate();
             spy = sandbox.spy(codeLensProvider, 'provideCodeLenses');
         });
         teardown(() => {
