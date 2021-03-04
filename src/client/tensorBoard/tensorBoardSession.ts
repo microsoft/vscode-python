@@ -162,7 +162,7 @@ export class TensorBoardSession {
         // Ask the user if they want to install packages to start a TensorBoard session
         const selection = await this.promptToInstall(
             tensorboardInstallStatus,
-            isTorchUserAndInExperiment && profilerPluginInstallStatus,
+            isTorchUserAndInExperiment && !profilerPluginInstallStatus,
         );
         if (selection !== Common.bannerLabelYes()) {
             return false;
