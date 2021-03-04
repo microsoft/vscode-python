@@ -97,7 +97,7 @@ export class PythonSettings implements IPythonSettings {
 
     public jediPath = '';
 
-    public jediMemoryLimit = 1024;
+    public jediMemoryLimit = 3072;
 
     public envFile = '';
 
