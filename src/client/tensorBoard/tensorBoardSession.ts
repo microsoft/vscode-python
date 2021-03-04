@@ -105,7 +105,7 @@ export class TensorBoardSession {
             // PyTorch user already has TensorBoard, just ask if they want the profiler plugin
             message = TensorBoard.installProfilerPluginPrompt();
         } else if (shouldInstallProfilerPlugin) {
-            // PyTorch user doesn't have TensorBoard or the profiler plugin
+            // PyTorch user doesn't have compatible TensorBoard or the profiler plugin
             message = TensorBoard.installTensorBoardAndProfilerPluginPrompt();
         } else if (isUpgrade) {
             // Not a PyTorch user and needs upgrade, don't need to mention profiler plugin
