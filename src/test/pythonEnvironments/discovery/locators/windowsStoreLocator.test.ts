@@ -27,13 +27,12 @@ class WindowsStoreEnvs {
 
     public async create(version: string): Promise<string> {
         const dirName = path.join(this.storeAppRoot, `PythonSoftwareFoundation.Python.${version}_qbz5n2kfra8p0`);
-        const mainExe = path.join(this.storeAppRoot, `python${version}.exe`);
-        const subExe = path.join(dirName, `python${version}.exe`);
+        const filename = path.join(this.storeAppRoot, `python${version}.exe`);
         try {
-            await fs.createFile(mainExe);
-            this.executables.push(mainExe);
+            await fs.createFile(filename);
+            this.executables.push(filename);
         } catch (err) {
-            throw new Error(`Failed to create Windows Apps executable ${mainExe}, Error: ${err}`);
+            throw new Error(`Failed to create Windows Apps executable ${filename}, Error: ${err}`);
         }
         try {
             await fs.mkdir(dirName);
@@ -41,21 +40,13 @@ class WindowsStoreEnvs {
         } catch (err) {
             throw new Error(`Failed to create Windows Apps directory ${dirName}, Error: ${err}`);
         }
-        try {
-            await fs.createFile(subExe);
-            this.executables.push(subExe);
-        } catch (err) {
-            throw new Error(`Failed to create Windows Apps executable ${subExe}, Error: ${err}`);
-        }
-        return mainExe;
+        return filename;
     }
 
     public async update(version: string): Promise<void> {
         const dirName = path.join(this.storeAppRoot, `PythonSoftwareFoundation.Python.${version}_qbz5n2kfra8p0`);
-        const fileName = path.join(dirName, `python${version}.exe`);
         try {
-            await fs.remove(fileName);
-            await fs.createFile(fileName);
+            await fs.utimes(dirName, Date.now(), Date.now());
         } catch (err) {
             throw new Error(`Failed to update Windows Apps executable ${dirName}, Error: ${err}`);
         }
