@@ -373,9 +373,7 @@ suite('TensorBoard session creation', async () => {
 
             assert.ok(errorMessageStub.called, 'TensorBoard timed out but no error was shown');
         });
-    });
-    suite('Profiler package', async () => {
-        test('If installing the profiler package fails, continue to create session', async () => {
+        test('If installing the profiler package fails, do not show error, continue to create session', async () => {
             configureStubs(true, true, ProductInstallStatus.Installed, false, 'Yes');
             sandbox
                 .stub(applicationShell, 'showQuickPick')
@@ -393,28 +391,6 @@ suite('TensorBoard session creation', async () => {
             )) as TensorBoardSession;
 
             assert.ok(session.panel?.visible, 'Webview panel not shown, expected successful session creation');
-        });
-        test('If user is not in torch profiler experiment, do not prompt to install profiler package', async () => {
-            sandbox
-                .stub(applicationShell, 'showQuickPick')
-                .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-            errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-            sandbox.stub(experimentService, 'inExperiment').withArgs(TorchProfiler.experiment).resolves(false);
-            sandbox.stub(installer, 'isInstalled').withArgs(Product.torchprofiler).resolves(false);
-            const installTorchProfilerPackageStub = sandbox
-                .stub(installer, 'install')
-                .withArgs(Product.torchprofiler, anything(), anything());
-
-            const session = (await commandManager.executeCommand(
-                'python.launchTensorBoard',
-                TensorBoardEntrypoint.palette,
-                TensorBoardEntrypointTrigger.palette,
-            )) as TensorBoardSession;
-
-            // Torch profiler status should be irrelevant to tensorboard session start
-            assert.ok(session.panel?.visible, 'Webview panel not shown, expected successful session creation');
-            assert.ok(errorMessageStub.notCalled, 'Error message shown when all dependencies were present');
-            assert.ok(installTorchProfilerPackageStub.notCalled);
         });
     });
 });
