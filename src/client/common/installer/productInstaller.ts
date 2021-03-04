@@ -46,6 +46,7 @@ export const CTagsInstallationScript =
 
 // Products which may not be available to install from certain package registries, keyed by product name
 // Installer implementations can check this to determine a suitable installation channel for a product
+// This is temporary and can be removed when https://github.com/microsoft/vscode-jupyter/issues/5034 is unblocked
 const UnsupportedChannelsForProduct = new Map<Product, Set<string>>([
     [Product.torchProfilerInstallName, new Set(['Conda'])],
 ]);
@@ -591,14 +592,21 @@ export class DataScienceInstaller extends BaseInstaller {
             .getInstallationChannels(interpreter);
 
         // Pick an installerModule based on whether the interpreter is conda or not. Default is pip.
+        const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
         let installerModule;
-        if (interpreter.envType === 'Conda' && !UnsupportedChannelsForProduct.get(product)?.has('Conda')) {
+        const isAvailableThroughConda = !UnsupportedChannelsForProduct.get(product)?.has('Conda');
+        if (interpreter.envType === 'Conda' && isAvailableThroughConda) {
             installerModule = channels.find((v) => v.name === 'Conda');
+        } else if (interpreter.envType === 'Conda' && !isAvailableThroughConda) {
+            // This case is temporary and can be removed when https://github.com/microsoft/vscode-jupyter/issues/5034 is unblocked
+            traceInfo(
+                `Interpreter type is conda but package ${moduleName} is not available through conda, using pip instead.`,
+            );
+            installerModule = channels.find((v) => v.name === 'Pip');
         } else {
             installerModule = channels.find((v) => v.name === 'Pip');
         }
 
-        const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
         if (!installerModule) {
             this.appShell.showErrorMessage(Installer.couldNotInstallLibrary().format(moduleName)).then(noop, noop);
             return InstallerResponse.Ignore;
