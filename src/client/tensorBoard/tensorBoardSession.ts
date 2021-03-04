@@ -166,7 +166,8 @@ export class TensorBoardSession {
         );
         if (selection !== Common.bannerLabelYes() && !needsTensorBoardInstall) {
             return true;
-        } else if (selection !== Common.bannerLabelYes()) {
+        }
+        if (selection !== Common.bannerLabelYes()) {
             return false;
         }
 
@@ -178,22 +179,19 @@ export class TensorBoardSession {
             defaultValue: InstallerResponse.Ignore,
             token: installerToken,
         });
-        const installPromises = [];
-        if (needsTensorBoardInstall) {
-            installPromises.push(
-                this.installer.install(
-                    Product.tensorboard,
-                    interpreter,
-                    installerToken,
-                    tensorboardInstallStatus === ProductInstallStatus.NeedsUpgrade,
-                ),
-            );
-        }
+        let installPromise;
         // If need to install torch.profiler and it's not already installed, add it to our list of promises
         if (needsProfilerPluginInstall) {
-            installPromises.push(this.installer.install(Product.torchProfilerInstallName, interpreter, installerToken));
+            installPromise = this.installer.install(Product.torchProfilerInstallName, interpreter, installerToken);
+        } else if (needsTensorBoardInstall) {
+            installPromise = this.installer.install(
+                Product.tensorboard,
+                interpreter,
+                installerToken,
+                tensorboardInstallStatus === ProductInstallStatus.NeedsUpgrade,
+            );
         }
-        await Promise.race([Promise.all(installPromises), cancellationPromise]);
+        await Promise.race([installPromise, cancellationPromise]);
 
         // Check install status again after installing
         [tensorboardInstallStatus, profilerPluginInstallStatus] = await Promise.all([

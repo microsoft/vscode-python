@@ -167,10 +167,9 @@ suite('TensorBoard session creation', async () => {
             async function runTest() {
                 const installStub = sandbox.stub(installer, 'install').resolves(InstallerResponse.Installed);
                 await createSessionAndVerifyMessage(TensorBoard.installTensorBoardAndProfilerPluginPrompt());
-                assert.ok(installStub.calledTwice, 'Did not install anything');
-                assert.ok(installStub.args[0][0] === Product.tensorboard, 'Did not install tensorboard');
+                assert.ok(installStub.calledOnce, 'Did not install anything');
                 assert.ok(
-                    installStub.args[1][0] === Product.torchProfilerInstallName,
+                    installStub.args[0][0] === Product.torchProfilerInstallName,
                     'Did not install torch profiler',
                 );
             }
