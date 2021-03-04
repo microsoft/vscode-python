@@ -143,7 +143,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             // User entered text in the filter box to enter path to python, store it
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'enter' });
             state.path = selection;
-            await this.sendInterpreterEntryTelemetry(state);
+            await this.sendInterpreterEntryTelemetry(selection, state.workspace);
         } else if (selection && selection.label === InterpreterQuickPickList.browsePath.label()) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'browse' });
             const filtersKey = 'Executables';
@@ -157,7 +157,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             });
             if (uris && uris.length > 0) {
                 state.path = uris[0].fsPath;
-                await this.sendInterpreterEntryTelemetry(state);
+                await this.sendInterpreterEntryTelemetry(state.path!, state.workspace);
             }
         }
     }
@@ -190,11 +190,11 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
      *
      * @param selection Intepreter path that was either entered manually or picked by browsing through the filesystem.
      */
-    private async sendInterpreterEntryTelemetry({ path: selection, workspace }: InterpreterStateArgs): Promise<void> {
+    private async sendInterpreterEntryTelemetry(selection: string, workspace: Resource): Promise<void> {
         let interpreterPath = path.normalize(untildify(selection));
 
         if (!path.isAbsolute(interpreterPath)) {
-            interpreterPath = path.resolve(workspace?.fsPath || '', selection!);
+            interpreterPath = path.resolve(workspace?.fsPath || '', selection);
         }
 
         let discovered: boolean;
