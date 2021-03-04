@@ -43,12 +43,14 @@ class WindowsStoreEnvs {
         return filename;
     }
 
-    public async update(basename: string): Promise<void> {
-        const filename = path.join(this.storeAppRoot, basename);
+    public async update(version: string): Promise<void> {
+        // On update windows store removes the directory and re-adds it.
+        const dirName = path.join(this.storeAppRoot, `PythonSoftwareFoundation.Python.${version}_qbz5n2kfra8p0`);
         try {
-            await fs.writeFile(filename, 'Environment has been updated');
+            await fs.rmdir(dirName);
+            await fs.mkdir(dirName);
         } catch (err) {
-            throw new Error(`Failed to update Windows Apps executable ${filename}, Error: ${err}`);
+            throw new Error(`Failed to update Windows Apps directory ${dirName}, Error: ${err}`);
         }
     }
 
@@ -184,7 +186,7 @@ suite('Windows Store Locator', async () => {
             deferred.resolve();
         });
 
-        await windowsStoreEnvs.update('python3.4.exe');
+        await windowsStoreEnvs.update('3.4');
         await waitForChangeToBeDetected(deferred);
         const isFound = await isLocated(executable);
 
