@@ -5,8 +5,6 @@
 
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
-// @ts-ignore pidusage does not work in strict mode
-import * as pidusage from 'pidusage';
 import { CancellationToken, CancellationTokenSource, CompletionItemKind, Disposable, SymbolKind, Uri } from 'vscode';
 import '../common/extensions';
 import { IS_WINDOWS } from '../common/platform/constants';
@@ -24,6 +22,7 @@ import { PythonEnvironment } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { traceError, traceWarning } from '../common/logger';
+import { getMemoryUsage } from '../common/process/memory';
 
 const pythonVSCodeTypeMappings = new Map<string, CompletionItemKind>();
 pythonVSCodeTypeMappings.set('none', CompletionItemKind.Value);
@@ -309,44 +308,36 @@ export class JediProxy implements Disposable {
         }
         this.lastCmdIdProcessedForPidUsage = this.lastCmdIdProcessed;
 
-        // Do not run pidusage over and over, wait for it to finish.
-        const deferred = createDeferred<void>();
-        (pidusage as any).stat(this.proc.pid, async (err: any, result: any) => {
-            if (err) {
-                this.pidUsageFailures.counter += 1;
-                // If this function fails 2 times in the last 60 seconds, lets not try ever again.
-                if (this.pidUsageFailures.timer.elapsedTime > 60 * 1000) {
-                    this.ignoreJediMemoryFootprint = this.pidUsageFailures.counter > 2;
-                    this.pidUsageFailures.counter = 0;
-                    this.pidUsageFailures.timer.reset();
-                }
-                traceError('Python Extension: (pidusage)', err);
-            } else {
-                const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 1024), 8192);
-                let restartJedi = false;
-                if (result && result.memory) {
-                    restartJedi = result.memory > limit * 1024 * 1024;
-                    const props = {
-                        memUse: result.memory,
-                        limit: limit * 1024 * 1024,
-                        isUserDefinedLimit: limit !== 1024,
-                        restart: restartJedi,
-                    };
-                    sendTelemetryEvent(EventName.JEDI_MEMORY, undefined, props);
-                }
-                if (restartJedi) {
-                    traceWarning(
-                        `IntelliSense process memory consumption exceeded limit of ${limit} MB and process will be restarted.\nThe limit is controlled by the 'python.jediMemoryLimit' setting.`,
-                    );
-                    await this.restartLanguageServer();
-                }
+        try {
+            const memory = await getMemoryUsage(this.proc.pid);
+            const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 3072), 8192) * 1024 * 1024;
+            let restartJedi = false;
+            if (memory > 0) {
+                restartJedi = memory > limit;
+                const props = {
+                    memUse: memory,
+                    limit,
+                    isUserDefinedLimit: limit !== 1024,
+                    restart: restartJedi,
+                };
+                sendTelemetryEvent(EventName.JEDI_MEMORY, undefined, props);
             }
-
-            deferred.resolve();
-        });
-
-        // eslint-disable-next-line consistent-return
-        return deferred.promise;
+            if (restartJedi) {
+                traceWarning(
+                    `IntelliSense process memory consumption exceeded limit of ${limit} MB and process will be restarted.\nThe limit is controlled by the 'python.jediMemoryLimit' setting.`,
+                );
+                await this.restartLanguageServer();
+            }
+        } catch (err) {
+            this.pidUsageFailures.counter += 1;
+            // If this function fails 2 times in the last 60 seconds, lets not try ever again.
+            if (this.pidUsageFailures.timer.elapsedTime > 60 * 1000) {
+                this.ignoreJediMemoryFootprint = this.pidUsageFailures.counter > 2;
+                this.pidUsageFailures.counter = 0;
+                this.pidUsageFailures.timer.reset();
+            }
+            traceError('Python Extension: (pidusage-tree)', err);
+        }
     }
 
     // @debounce(1500)
