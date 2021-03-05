@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import * as typemoq from 'typemoq';
-import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { IServiceManager } from '../../client/ioc/types';
-import { ExtensionActivationForTerminalActivation, TerminalAutoActivation } from '../../client/terminals/activation';
+import { TerminalAutoActivation } from '../../client/terminals/activation';
 import { CodeExecutionManager } from '../../client/terminals/codeExecution/codeExecutionManager';
 import { DjangoShellCodeExecutionProvider } from '../../client/terminals/codeExecution/djangoShellCodeExecution';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
@@ -25,7 +24,6 @@ suite('Terminal - Service Registry', () => {
             [ICodeExecutionHelper, CodeExecutionHelper],
             [ICodeExecutionManager, CodeExecutionManager],
             [ICodeExecutionService, DjangoShellCodeExecutionProvider, 'djangoShell'],
-            [IExtensionSingleActivationService, ExtensionActivationForTerminalActivation],
             [ICodeExecutionService, ReplProvider, 'repl'],
             [ITerminalAutoActivation, TerminalAutoActivation],
             [ICodeExecutionService, TerminalCodeExecutionProvider, 'standard'],

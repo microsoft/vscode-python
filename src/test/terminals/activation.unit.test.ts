@@ -2,21 +2,18 @@
 // Licensed under the MIT License.
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import * as TypeMoq from 'typemoq';
-import { EventEmitter, Extension, Terminal } from 'vscode';
+import { EventEmitter, Terminal } from 'vscode';
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { TerminalManager } from '../../client/common/application/terminalManager';
-import { IActiveResourceService, ICommandManager, ITerminalManager } from '../../client/common/application/types';
-import { CODE_RUNNER_EXTENSION_ID } from '../../client/common/constants';
+import { IActiveResourceService, ITerminalManager } from '../../client/common/application/types';
 import { TerminalActivator } from '../../client/common/terminal/activator';
 import { ITerminalActivator } from '../../client/common/terminal/types';
-import { IExtensions } from '../../client/common/types';
-import { ExtensionActivationForTerminalActivation, TerminalAutoActivation } from '../../client/terminals/activation';
+import { TerminalAutoActivation } from '../../client/terminals/activation';
 import { ITerminalAutoActivation } from '../../client/terminals/types';
 import { noop } from '../core';
 
 suite('Terminal', () => {
-    suite('Terminal - Terminal Activation', () => {
+    suite('Terminal Auto Activation', () => {
         let autoActivation: ITerminalAutoActivation;
         let manager: ITerminalManager;
         let activator: ITerminalActivator;
@@ -79,69 +76,6 @@ suite('Terminal', () => {
 
             // The terminal should get activated.
             verify(activator.activateEnvironmentInTerminal(anything(), anything())).never();
-        });
-    });
-    suite('Terminal - Extension Activation', () => {
-        let commands: TypeMoq.IMock<ICommandManager>;
-        let extensions: TypeMoq.IMock<IExtensions>;
-        let extensionsChangeEvent: EventEmitter<void>;
-        let activation: ExtensionActivationForTerminalActivation;
-        setup(() => {
-            commands = TypeMoq.Mock.ofType<ICommandManager>(undefined, TypeMoq.MockBehavior.Strict);
-            extensions = TypeMoq.Mock.ofType<IExtensions>(undefined, TypeMoq.MockBehavior.Strict);
-            extensionsChangeEvent = new EventEmitter<void>();
-            extensions.setup((e) => e.onDidChange).returns(() => extensionsChangeEvent.event);
-        });
-
-        teardown(() => {
-            extensionsChangeEvent.dispose();
-        });
-
-        function verifyAll() {
-            commands.verifyAll();
-            extensions.verifyAll();
-        }
-
-        test("If code runner extension is installed, don't show the play icon", async () => {
-            const extension = TypeMoq.Mock.ofType<Extension<any>>(undefined, TypeMoq.MockBehavior.Strict);
-            extensions
-                .setup((e) => e.getExtension(CODE_RUNNER_EXTENSION_ID))
-                .returns(() => extension.object)
-                .verifiable(TypeMoq.Times.once());
-            activation = new ExtensionActivationForTerminalActivation(commands.object, extensions.object, []);
-
-            commands
-                .setup((c) => c.executeCommand('setContext', 'python.showPlayIcon', true))
-                .returns(() => Promise.resolve())
-                .verifiable(TypeMoq.Times.never());
-            commands
-                .setup((c) => c.executeCommand('setContext', 'python.showPlayIcon', false))
-                .returns(() => Promise.resolve())
-                .verifiable(TypeMoq.Times.once());
-
-            await activation.activate();
-
-            verifyAll();
-        });
-
-        test('If code runner extension is not installed, show the play icon', async () => {
-            extensions
-                .setup((e) => e.getExtension(CODE_RUNNER_EXTENSION_ID))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
-            activation = new ExtensionActivationForTerminalActivation(commands.object, extensions.object, []);
-
-            commands
-                .setup((c) => c.executeCommand('setContext', 'python.showPlayIcon', true))
-                .returns(() => Promise.resolve())
-                .verifiable(TypeMoq.Times.once());
-            commands
-                .setup((c) => c.executeCommand('setContext', 'python.showPlayIcon', false))
-                .returns(() => Promise.resolve())
-                .verifiable(TypeMoq.Times.never());
-
-            await activation.activate();
-            verifyAll();
         });
     });
 });
