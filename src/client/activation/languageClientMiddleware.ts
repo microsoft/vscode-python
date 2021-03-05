@@ -7,6 +7,7 @@ import {
     CodeLens,
     Command,
     CompletionItem,
+    CompletionList,
     Declaration as VDeclaration,
     Definition,
     DefinitionLink,
@@ -118,6 +119,8 @@ export class LanguageClientMiddleware implements Middleware {
             this.eventName = EventName.PYTHON_LANGUAGE_SERVER_REQUEST;
         } else if (serverType === LanguageServerType.Node) {
             this.eventName = EventName.LANGUAGE_SERVER_REQUEST;
+        } else if (serverType === LanguageServerType.JediLSP) {
+            this.eventName = EventName.JEDI_LANGUAGE_SERVER_REQUEST;
         } else {
             return;
         }
@@ -201,11 +204,23 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/completion', debounceFrequentCall)
+    @captureTelemetryForLSPMethod(
+        'textDocument/completion',
+        debounceFrequentCall,
+        LanguageClientMiddleware.completionLengthMeasure,
+    )
     public provideCompletionItem() {
         if (this.connected) {
             return this.callNext('provideCompletionItem', arguments);
         }
+    }
+
+    private static completionLengthMeasure(
+        _obj: LanguageClientMiddleware,
+        result: CompletionItem[] | CompletionList,
+    ): Record<string, number> {
+        const resultLength = Array.isArray(result) ? result.length : result.items.length;
+        return { resultLength };
     }
 
     @captureTelemetryForLSPMethod('textDocument/hover', debounceFrequentCall)
@@ -365,7 +380,11 @@ export class LanguageClientMiddleware implements Middleware {
     }
 }
 
-function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: number) {
+function captureTelemetryForLSPMethod(
+    method: string,
+    debounceMilliseconds: number,
+    lazyMeasures?: (this_: any, result: any) => Record<string, number>,
+) {
     return function (_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
 
@@ -403,16 +422,24 @@ function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: numb
             };
 
             const stopWatch = new StopWatch();
+            const sendTelemetry = (result: any) => {
+                let measures: number | Record<string, number> = stopWatch.elapsedTime;
+                if (lazyMeasures) {
+                    measures = {
+                        duration: measures,
+                        ...lazyMeasures(this, result),
+                    };
+                }
+                sendTelemetryEvent(eventName, measures, properties);
+            };
 
-            const result = originalMethod.apply(this, args);
+            let result = originalMethod.apply(this, args);
 
-            if (result && isThenable<void>(result)) {
-                result.then(() => {
-                    sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
-                });
-            } else {
-                sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
+            if (isThenable<any>(result)) {
+                return result.then(sendTelemetry);
             }
+
+            sendTelemetry(result);
 
             return result;
         };

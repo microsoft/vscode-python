@@ -1299,6 +1299,8 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the language server
+     *
+     * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
@@ -1367,6 +1369,8 @@ export interface IEventNamePropertyMapping {
     [EventName.LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the Node.js server
+     *
+     * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.LANGUAGE_SERVER_REQUEST]: unknown;
     /**
@@ -1403,6 +1407,8 @@ export interface IEventNamePropertyMapping {
     [EventName.JEDI_LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the Node.js server
+     *
+     * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.JEDI_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
