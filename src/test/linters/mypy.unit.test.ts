@@ -86,7 +86,7 @@ Found 2 errors in 2 files (checked 1 source file)
             [lines[2], undefined],
         ];
         for (const [line, expected] of tests) {
-            const msg = parseLine(line, getRegex('foo/bar.py'), LinterId.MyPy);
+            const msg = parseLine(line, getRegex('foo/bar.py'), LinterId.MyPy, 1);
 
             expect(msg).to.deep.equal(expected);
         }
