@@ -199,8 +199,14 @@ export class WindowsStoreLocator extends FSWatchingLocator {
     private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
 
     constructor() {
+        // We have to watch the directory instead of the executable here because
+        // FS events are not triggered for `*.exe` in the WindowsApps folder. The
+        // .exe files here are reparse points and not real files. Watching the
+        // PythonSoftwareFoundation directory will trigger both for new install
+        // and update case. Update is handled by deleting and recreating the
+        // PythonSoftwareFoundation directory.
         super(getWindowsStoreAppsRoot, async () => this.kind, {
-            executableBaseGlob: storePythonDirGlob,
+            baseGlob: storePythonDirGlob,
             searchLocation: getWindowsStoreAppsRoot(),
             envStructure: PythonEnvStructure.Flat,
         });

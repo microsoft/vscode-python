@@ -30,16 +30,16 @@ class WindowsStoreEnvs {
         const filename = path.join(this.storeAppRoot, `python${version}.exe`);
         try {
             await fs.createFile(filename);
-            this.executables.push(filename);
         } catch (err) {
             throw new Error(`Failed to create Windows Apps executable ${filename}, Error: ${err}`);
         }
         try {
             await fs.mkdir(dirName);
-            this.dirs.push(dirName);
         } catch (err) {
             throw new Error(`Failed to create Windows Apps directory ${dirName}, Error: ${err}`);
         }
+        this.executables.push(filename);
+        this.dirs.push(dirName);
         return filename;
     }
 
