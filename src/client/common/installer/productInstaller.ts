@@ -6,7 +6,7 @@ import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ILinterManager, LinterId } from '../../linters/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
@@ -47,8 +47,8 @@ export const CTagsInstallationScript =
 // Products which may not be available to install from certain package registries, keyed by product name
 // Installer implementations can check this to determine a suitable installation channel for a product
 // This is temporary and can be removed when https://github.com/microsoft/vscode-jupyter/issues/5034 is unblocked
-const UnsupportedChannelsForProduct = new Map<Product, Set<string>>([
-    [Product.torchProfilerInstallName, new Set(['Conda'])],
+const UnsupportedChannelsForProduct = new Map<Product, Set<EnvironmentType>>([
+    [Product.torchProfilerInstallName, new Set([EnvironmentType.Conda])],
 ]);
 
 export abstract class BaseInstaller {
@@ -594,10 +594,10 @@ export class DataScienceInstaller extends BaseInstaller {
         // Pick an installerModule based on whether the interpreter is conda or not. Default is pip.
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
         let installerModule;
-        const isAvailableThroughConda = !UnsupportedChannelsForProduct.get(product)?.has('Conda');
-        if (interpreter.envType === 'Conda' && isAvailableThroughConda) {
-            installerModule = channels.find((v) => v.name === 'Conda');
-        } else if (interpreter.envType === 'Conda' && !isAvailableThroughConda) {
+        const isAvailableThroughConda = !UnsupportedChannelsForProduct.get(product)?.has(EnvironmentType.Conda);
+        if (interpreter.envType === EnvironmentType.Conda && isAvailableThroughConda) {
+            installerModule = channels.find((v) => v.name === EnvironmentType.Conda);
+        } else if (interpreter.envType === EnvironmentType.Conda && !isAvailableThroughConda) {
             // This case is temporary and can be removed when https://github.com/microsoft/vscode-jupyter/issues/5034 is unblocked
             traceInfo(
                 `Interpreter type is conda but package ${moduleName} is not available through conda, using pip instead.`,
