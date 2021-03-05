@@ -22,9 +22,11 @@ export class PythonEnvsReducer implements ILocator {
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const environments = await getEnvs(this.iterEnvs());
-        const environment = environments.find((e) => areSameEnv(e, env));
+        let environment: string | PythonEnvInfo | undefined = environments.find((e) => areSameEnv(e, env));
         if (!environment) {
-            return undefined;
+            // It isn't one we've reduced, but fall back
+            // to the wrapped locator anyway.
+            environment = env;
         }
         return this.parentLocator.resolveEnv(environment);
     }
@@ -54,6 +56,10 @@ async function* iterEnvsIterator(
                 state.done = true;
                 checkIfFinishedAndNotify(state, didUpdate);
                 listener.dispose();
+            } else if (event.update === undefined) {
+                throw new Error(
+                    'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in reducer',
+                );
             } else if (seen[event.index] !== undefined) {
                 state.pending += 1;
                 resolveDifferencesInBackground(event.index, event.update, state, didUpdate, seen).ignoreErrors();

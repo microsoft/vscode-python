@@ -8,7 +8,9 @@ import { uniq } from 'lodash';
 import { Event } from 'vscode';
 import { getSearchPathEntries } from '../../../../common/utils/exec';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
-import { isStandardPythonBinary } from '../../../common/commonUtils';
+import { iterPythonExecutablesInDir, looksLikeBasicGlobalPython } from '../../../common/commonUtils';
+import { isPyenvShimDir } from '../../../discovery/locators/services/pyenvLocator';
+import { isWindowsStoreDir } from '../../../discovery/locators/services/windowsStoreLocator';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../info';
 import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { Locators } from '../../locators';
@@ -31,6 +33,17 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
 
     constructor() {
         const dirLocators: (ILocator & IDisposable)[] = getSearchPathEntries()
+            .filter((dirname) => {
+                // Filter out following directories:
+                // 1. Windows Store app directories: We have a store app locator that handles this. The
+                //    python.exe available in these directories might not be python. It can be a store
+                //    install shortcut that takes you to windows store.
+                //
+                // 2. Filter out pyenv shims: They are not actual python binaries, they are used to launch
+                //    the binaries specified in .python-version file in the cwd. We should not be reporting
+                //    those binaries as environments.
+                return !isWindowsStoreDir(dirname) && !isPyenvShimDir(dirname);
+            })
             // Build a locator for each directory.
             .map((dirname) => getDirFilesLocator(dirname, PythonEnvKind.Unknown));
         this.disposables.push(...dirLocators);
@@ -55,12 +68,26 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
     }
 }
 
+async function* getExecutables(dirname: string): AsyncIterableIterator<string> {
+    for await (const entry of iterPythonExecutablesInDir(dirname)) {
+        if (await looksLikeBasicGlobalPython(entry)) {
+            yield entry.filename;
+        }
+    }
+}
+
 function getDirFilesLocator(
     // These are passed through to DirFilesLocator.
     dirname: string,
     kind: PythonEnvKind,
 ): ILocator & IDisposable {
-    const locator = new DirFilesLocator(dirname, kind);
+    // For now we do not bother using a locator that watches for changes
+    // in the directory.  If we did then we would use
+    // `DirFilesWatchingLocator`, but only if not \\windows\system32 and
+    // the `isDirWatchable()` (from fsWatchingLocator.ts) returns true.
+    const locator = new DirFilesLocator(dirname, kind, getExecutables);
+    const dispose = async () => undefined;
+
     // Really we should be checking for symlinks or something more
     // sophisticated.  Also, this should be done in ReducingLocator
     // rather than in each low-level locator.  In the meantime we
@@ -68,18 +95,14 @@ function getDirFilesLocator(
     async function* iterEnvs(query: PythonLocatorQuery): IPythonEnvsIterator {
         const envs = await getEnvs(locator.iterEnvs(query));
         for (const env of envs) {
-            if (isStandardPythonBinary(env.executable?.filename || '')) {
-                env.source = env.source
-                    ? uniq([...env.source, PythonEnvSource.PathEnvVar])
-                    : [PythonEnvSource.PathEnvVar];
-                yield env;
-            }
+            env.source = env.source ? uniq([...env.source, PythonEnvSource.PathEnvVar]) : [PythonEnvSource.PathEnvVar];
+            yield env;
         }
     }
     async function resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executable = typeof env === 'string' ? env : env.executable?.filename || '';
 
-        if (!isStandardPythonBinary(executable)) {
+        if (!(await looksLikeBasicGlobalPython(executable))) {
             return undefined;
         }
         const resolved = await locator.resolveEnv(env);
@@ -95,7 +118,7 @@ function getDirFilesLocator(
     return {
         iterEnvs,
         resolveEnv,
+        dispose,
         onChanged: locator.onChanged,
-        dispose: () => locator.dispose(),
     };
 }

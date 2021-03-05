@@ -15,11 +15,12 @@ import {
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
 import './extensions';
-import { IInterpreterAutoSeletionProxyService, IInterpreterSecurityService } from '../interpreter/autoSelection/types';
+import { IInterpreterAutoSelectionProxyService, IInterpreterSecurityService } from '../interpreter/autoSelection/types';
 import { LogLevel } from '../logging/levels';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { sendSettingTelemetry } from '../telemetry/envFileTelemetry';
+import { ITestingSettings } from '../testing/configuration/types';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { DEFAULT_INTERPRETER_SETTING, isTestExecution } from './constants';
@@ -30,6 +31,7 @@ import * as internalPython from './process/internal/python';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
+    IDefaultLanguageServer,
     IExperiments,
     IExperimentsManager,
     IFormattingSettings,
@@ -39,7 +41,6 @@ import {
     IPythonSettings,
     ISortImportSettings,
     ITerminalSettings,
-    ITestingSettings,
     IWorkspaceSymbolSettings,
     LoggingLevelSettingType,
     Resource,
@@ -96,7 +97,7 @@ export class PythonSettings implements IPythonSettings {
 
     public jediPath = '';
 
-    public jediMemoryLimit = 1024;
+    public jediMemoryLimit = 3072;
 
     public envFile = '';
 
@@ -158,11 +159,12 @@ export class PythonSettings implements IPythonSettings {
 
     constructor(
         workspaceFolder: Resource,
-        private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
+        private readonly interpreterAutoSelectionService: IInterpreterAutoSelectionProxyService,
         workspace?: IWorkspaceService,
         private readonly experimentsManager?: IExperimentsManager,
         private readonly interpreterPathService?: IInterpreterPathService,
         private readonly interpreterSecurityService?: IInterpreterSecurityService,
+        private readonly defaultJedi?: IDefaultLanguageServer,
     ) {
         this.workspace = workspace || new WorkspaceService();
         this.workspaceRoot = workspaceFolder;
@@ -171,11 +173,12 @@ export class PythonSettings implements IPythonSettings {
 
     public static getInstance(
         resource: Uri | undefined,
-        interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
+        interpreterAutoSelectionService: IInterpreterAutoSelectionProxyService,
         workspace?: IWorkspaceService,
         experimentsManager?: IExperimentsManager,
         interpreterPathService?: IInterpreterPathService,
         interpreterSecurityService?: IInterpreterSecurityService,
+        defaultJedi?: IDefaultLanguageServer,
     ): PythonSettings {
         workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
@@ -189,6 +192,7 @@ export class PythonSettings implements IPythonSettings {
                 experimentsManager,
                 interpreterPathService,
                 interpreterSecurityService,
+                defaultJedi,
             );
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
             // Pass null to avoid VSC from complaining about not passing in a value.
@@ -277,7 +281,10 @@ export class PythonSettings implements IPythonSettings {
 
         this.useIsolation = systemVariables.resolveAny(pythonSettings.get<boolean>('useIsolation', true))!;
 
-        let ls = pythonSettings.get<LanguageServerType>('languageServer') ?? LanguageServerType.Jedi;
+        const defaultServer = this.defaultJedi
+            ? this.defaultJedi.defaultLSType
+            : pythonSettings.get<LanguageServerType>('languageServer');
+        let ls = defaultServer ?? LanguageServerType.Jedi;
         ls = systemVariables.resolveAny(ls);
         if (!Object.values(LanguageServerType).includes(ls)) {
             ls = LanguageServerType.Jedi;

@@ -23,13 +23,11 @@ export class JediLanguageClientFactory implements ILanguageClientFactory {
         clientOptions: LanguageClientOptions,
     ): Promise<LanguageClient> {
         // Just run the language server using a module
-        const jediServerModulePath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'runJediLanguageServer.py');
+        const lsScriptPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'runJediLanguageServer.py');
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
-        const pythonPath = interpreter ? interpreter.path : 'python';
-        const args = [jediServerModulePath];
         const serverOptions: ServerOptions = {
-            command: pythonPath,
-            args,
+            command: interpreter ? interpreter.path : 'python',
+            args: [lsScriptPath],
         };
 
         // eslint-disable-next-line global-require

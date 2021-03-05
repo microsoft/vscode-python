@@ -14,6 +14,7 @@ import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnviro
 import { parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvUpdatedEvent } from '../../../../../client/pythonEnvironments/base/locator';
 import { PythonEnvsResolver } from '../../../../../client/pythonEnvironments/base/locators/composite/environmentsResolver';
+import { getEnvs as getEnvsWithUpdates } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import * as ExternalDep from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import { EnvironmentInfoService } from '../../../../../client/pythonEnvironments/info/environmentInfoService';
@@ -111,6 +112,30 @@ suite('Python envs locator - Environments Resolver', () => {
                 null,
             ];
             assert.deepEqual(onUpdatedEvents, expectedUpdates);
+        });
+
+        test('If fetching interpreter info fails, it is not reported in the final list of envs', async () => {
+            // Arrange
+            stubShellExec.returns(
+                new Promise<ExecutionResult<string>>((resolve) => {
+                    resolve({
+                        stderr: 'Kaboom',
+                        stdout: '',
+                    });
+                }),
+            );
+            const env1 = createNamedEnv('env1', '3.5.12b1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec1'));
+            const env2 = createNamedEnv('env2', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
+            const environmentsToBeIterated = [env1, env2];
+            const parentLocator = new SimpleLocator(environmentsToBeIterated);
+            const resolver = new PythonEnvsResolver(parentLocator, envInfoService, () => true);
+
+            // Act
+            const iterator = resolver.iterEnvs();
+            const envs = await getEnvsWithUpdates(iterator);
+
+            // Assert
+            assert.deepEqual(envs, []);
         });
 
         test('Updates to environments from the incoming iterator are sent correctly followed by the null event', async () => {
@@ -254,10 +279,41 @@ suite('Python envs locator - Environments Resolver', () => {
             assert.deepEqual(expected, createExpectedEnvInfo(resolvedEnvReturnedByReducer));
         });
 
-        test('If the parent locator resolves environment, but fetching interpreter info returns undefined, return undefined', async () => {
+        test('If the parent locator resolves environment, but running interpreter info throws error, return undefined', async () => {
             stubShellExec.returns(
                 new Promise<ExecutionResult<string>>((_resolve, reject) => {
                     reject();
+                }),
+            );
+            const env = createNamedEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
+            const resolvedEnvReturnedByReducer = createNamedEnv(
+                'env1',
+                '3.8.1',
+                PythonEnvKind.Conda,
+                'resolved/path/to/exec',
+            );
+            const parentLocator = new SimpleLocator([], {
+                resolve: async (e: PythonEnvInfo) => {
+                    if (e === env) {
+                        return resolvedEnvReturnedByReducer;
+                    }
+                    throw new Error('Incorrect environment sent to the resolver');
+                },
+            });
+            const resolver = new PythonEnvsResolver(parentLocator, envInfoService, () => true);
+
+            const expected = await resolver.resolveEnv(env);
+
+            assert.deepEqual(expected, undefined);
+        });
+
+        test('If fetching interpreter info fails with stderr, return undefined', async () => {
+            stubShellExec.returns(
+                new Promise<ExecutionResult<string>>((resolve) => {
+                    resolve({
+                        stderr: 'Kaboom',
+                        stdout: '',
+                    });
                 }),
             );
             const env = createNamedEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));

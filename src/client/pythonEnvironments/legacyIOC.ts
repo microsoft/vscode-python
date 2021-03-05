@@ -9,7 +9,7 @@ import { DiscoveryVariants } from '../common/experiments/groups';
 import { traceError } from '../common/logger';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { IDisposableRegistry, Resource } from '../common/types';
-import { getVersionString, parseVersion } from '../common/utils/version';
+import { getVersionString } from '../common/utils/version';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -18,6 +18,7 @@ import {
     GLOBAL_VIRTUAL_ENV_SERVICE,
     IComponentAdapter,
     ICondaService,
+    ICondaLocatorService,
     IInterpreterLocatorHelper,
     IInterpreterLocatorProgressService,
     IInterpreterLocatorService,
@@ -32,6 +33,8 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
+import { VirtualEnvironmentManager } from '../interpreter/virtualEnvs';
+import { IVirtualEnvironmentManager } from '../interpreter/virtualEnvs/types';
 import { IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, PythonReleaseLevel } from './base/info';
 import { buildEnvInfo } from './base/info/env';
@@ -46,6 +49,7 @@ import { CondaEnvironmentInfo, isCondaEnvironment } from './discovery/locators/s
 import { CondaEnvFileService } from './discovery/locators/services/condaEnvFileService';
 import { CondaEnvService } from './discovery/locators/services/condaEnvService';
 import { CondaService } from './discovery/locators/services/condaService';
+import { CondaLocatorService } from './discovery/locators/services/condaLocatorService';
 import { CurrentPathService, PythonInPathCommandProvider } from './discovery/locators/services/currentPathService';
 import {
     GlobalVirtualEnvironmentsSearchPathProvider,
@@ -64,6 +68,8 @@ import {
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
 import { EnvironmentType, PythonEnvironment } from './info';
 import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
+import { parseBasicVersion } from './base/info/pythonVersion';
+import { PythonVersion } from './info/pythonVersion';
 
 const convertedKinds = new Map(
     Object.entries({
@@ -81,7 +87,7 @@ const convertedKinds = new Map(
 );
 
 function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
-    const { name, location, executable, arch, kind, searchLocation, version, distro } = info;
+    const { name, location, executable, arch, kind, version, distro } = info;
     const { filename, sysPrefix } = executable;
     const env: PythonEnvironment = {
         sysPrefix,
@@ -98,25 +104,31 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     }
     // Otherwise it stays Unknown.
 
-    if (searchLocation !== undefined) {
-        if (kind === PythonEnvKind.Pipenv) {
-            env.pipEnvWorkspaceFolder = searchLocation.fsPath;
-        }
-    }
-
     if (version !== undefined) {
         const { release, sysVersion } = version;
+        const versionPrefix = getVersionString(version);
+        let versionStr;
+
         if (release === undefined) {
-            const versionStr = `${getVersionString(version)}-final`;
-            env.version = parseVersion(versionStr);
+            versionStr = `${versionPrefix}-final`;
             env.sysVersion = '';
         } else {
             const { level, serial } = release;
             const releaseStr = level === PythonReleaseLevel.Final ? 'final' : `${level}${serial}`;
-            const versionStr = `${getVersionString(version)}-${releaseStr}`;
-            env.version = parseVersion(versionStr);
+            versionStr = `${versionPrefix}-${releaseStr}`;
             env.sysVersion = sysVersion;
         }
+
+        const result = parseBasicVersion(versionStr)[0];
+        const semverLikeVersion: PythonVersion = {
+            raw: versionPrefix,
+            major: result.major,
+            minor: result.minor,
+            patch: result.micro,
+            build: [],
+            prerelease: [],
+        };
+        env.version = semverLikeVersion;
     }
 
     if (distro !== undefined && distro.org !== '') {
@@ -128,8 +140,7 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     return env;
 }
 
-// Shouldn't be used outside of the discovery component.
-export async function inDiscoveryExperiment(): Promise<boolean> {
+export async function isComponentEnabled(): Promise<boolean> {
     const results = await Promise.all([
         inExperiment(DiscoveryVariants.discoverWithFileWatching),
         inExperiment(DiscoveryVariants.discoveryWithoutFileWatching),
@@ -141,14 +152,11 @@ export interface IPythonEnvironments extends ILocator {}
 
 @injectable()
 class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationService {
-    // this will be set based on experiment
-    private enabled = false;
-
     private readonly refreshing = new vscode.EventEmitter<void>();
 
     private readonly refreshed = new vscode.EventEmitter<void>();
 
-    private allowOnSuggestionRefresh = false;
+    private allowOnSuggestionRefresh = true;
 
     constructor(
         // The adapter only wraps one thing: the component API.
@@ -158,7 +166,6 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     ) {}
 
     public async activate(): Promise<void> {
-        this.enabled = await inDiscoveryExperiment();
         this.disposables.push(
             this.api.onChanged((e) => {
                 const query = {
@@ -190,14 +197,12 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     }
 
     // Implements IInterpreterLocatorProgressHandler
-
-    // A result of `undefined` means "Fall back to the old code!"
-    public get onRefreshing(): vscode.Event<void> | undefined {
-        return this.enabled ? this.refreshing.event : undefined;
+    public get onRefreshing(): vscode.Event<void> {
+        return this.refreshing.event;
     }
 
-    public get onRefreshed(): vscode.Event<void> | undefined {
-        return this.enabled ? this.refreshed.event : undefined;
+    public get onRefreshed(): vscode.Event<void> {
+        return this.refreshed.event;
     }
 
     // Implements IInterpreterHelper
@@ -361,7 +366,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
 }
 
 export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): Promise<void> {
-    const inExp = await inDiscoveryExperiment().catch((ex) => {
+    const inExp = await isComponentEnabled().catch((ex) => {
         // This is mainly to support old tests, where IExperimentService was registered
         // out of sequence / or not registered, so this throws an error. But we do not
         // care about that error as we don't care about IExperimentService in old tests.
@@ -440,11 +445,16 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
             WindowsRegistryService,
             WINDOWS_REGISTRY_SERVICE,
         );
+        serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
+        serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            PipEnvService,
+            PIPENV_SERVICE,
+        );
+        serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
+        serviceManager.addSingleton<ICondaLocatorService>(ICondaLocatorService, CondaLocatorService);
     }
-    serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
-
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
-    serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
 }
 
 export function registerNewDiscoveryForIOC(

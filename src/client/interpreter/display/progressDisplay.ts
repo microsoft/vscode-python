@@ -16,10 +16,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { IComponentAdapter, IInterpreterLocatorProgressService } from '../contracts';
 
 // The parts of IComponentAdapter used here.
-export interface IComponent {
-    readonly onRefreshing: Event<void> | undefined;
-    readonly onRefreshed: Event<void> | undefined;
-}
 @injectable()
 export class InterpreterLocatorProgressStatubarHandler implements IExtensionSingleActivationService {
     private deferred: Deferred<void> | undefined;
@@ -31,13 +27,13 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
         @inject(IServiceContainer)
         private readonly serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) private readonly disposables: Disposable[],
-        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {}
 
     public async activate(): Promise<void> {
-        let onRefreshing: Event<void> | undefined;
-        let onRefreshed: Event<void> | undefined;
+        let onRefreshing: Event<void>;
+        let onRefreshed: Event<void>;
 
         if (await inDiscoveryExperiment(this.experimentService)) {
             onRefreshing = this.pyenvs.onRefreshing;
@@ -50,12 +46,8 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
             onRefreshed = progressService.onRefreshed;
         }
 
-        if (onRefreshing) {
-            onRefreshing(() => this.showProgress(), this, this.disposables);
-        }
-        if (onRefreshed) {
-            onRefreshed(() => this.hideProgress(), this, this.disposables);
-        }
+        onRefreshing(() => this.showProgress(), this, this.disposables);
+        onRefreshed(() => this.hideProgress(), this, this.disposables);
     }
 
     @traceDecorators.verbose('Display locator refreshing progress')

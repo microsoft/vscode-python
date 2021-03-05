@@ -13,7 +13,7 @@ import { InterpreterAutoSelectionService } from './autoSelection/index';
 import { InterpreterEvaluation } from './autoSelection/interpreterSecurity/interpreterEvaluation';
 import { InterpreterSecurityService } from './autoSelection/interpreterSecurity/interpreterSecurityService';
 import { InterpreterSecurityStorage } from './autoSelection/interpreterSecurity/interpreterSecurityStorage';
-import { InterpreterAutoSeletionProxyService } from './autoSelection/proxy';
+import { InterpreterAutoSelectionProxyService } from './autoSelection/proxy';
 import { CachedInterpretersAutoSelectionRule } from './autoSelection/rules/cached';
 import { CurrentPathInterpretersAutoSelectionRule } from './autoSelection/rules/currentPath';
 import { SettingsInterpretersAutoSelectionRule } from './autoSelection/rules/settings';
@@ -24,7 +24,7 @@ import {
     AutoSelectionRule,
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
     IInterpreterEvaluation,
     IInterpreterSecurityService,
     IInterpreterSecurityStorage,
@@ -57,18 +57,16 @@ import { InterpreterHelper } from './helpers';
 import { InterpreterService } from './interpreterService';
 import { InterpreterVersionService } from './interpreterVersion';
 import { CondaInheritEnvPrompt } from './virtualEnvs/condaInheritEnvPrompt';
-import { VirtualEnvironmentManager } from './virtualEnvs/index';
-import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 import { VirtualEnvironmentPrompt } from './virtualEnvs/virtualEnvPrompt';
 
 /**
  * Register all the new types inside this method.
- * This method is created for testing purposes. Registers all interpreter types except `IInterpreterAutoSeletionProxyService`, `IEnvironmentActivationService`.
+ * This method is created for testing purposes. Registers all interpreter types except `IInterpreterAutoSelectionProxyService`, `IEnvironmentActivationService`.
  * See use case in `src\test\serviceRegistry.ts` for details
  * @param serviceManager
  */
 
-export function registerInterpreterTypes(serviceManager: IServiceManager) {
+export function registerInterpreterTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         InterpreterSecurityStorage,
@@ -89,7 +87,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInterpreterSecurityStorage>(IInterpreterSecurityStorage, InterpreterSecurityStorage);
     serviceManager.addSingleton<IInterpreterSecurityService>(IInterpreterSecurityService, InterpreterSecurityService);
 
-    serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, VirtualEnvironmentPrompt);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
@@ -164,11 +161,11 @@ export function registerInterpreterTypes(serviceManager: IServiceManager) {
     );
 }
 
-export function registerTypes(serviceManager: IServiceManager) {
+export function registerTypes(serviceManager: IServiceManager): void {
     registerInterpreterTypes(serviceManager);
-    serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
-        IInterpreterAutoSeletionProxyService,
-        InterpreterAutoSeletionProxyService,
+    serviceManager.addSingleton<IInterpreterAutoSelectionProxyService>(
+        IInterpreterAutoSelectionProxyService,
+        InterpreterAutoSelectionProxyService,
     );
     serviceManager.addSingleton<IEnvironmentActivationService>(
         EnvironmentActivationService,

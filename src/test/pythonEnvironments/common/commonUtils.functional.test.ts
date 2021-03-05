@@ -29,8 +29,8 @@ suite('pyenvs common utils - finding Python executables', () => {
         const results: string[] = [];
         const root = path.join(datadir, rootName);
         const executables = findInterpretersInDir(root, maxDepth, filterDir);
-        for await (const filename of executables) {
-            results.push(filename);
+        for await (const entry of executables) {
+            results.push(entry.filename);
         }
         return results;
     }

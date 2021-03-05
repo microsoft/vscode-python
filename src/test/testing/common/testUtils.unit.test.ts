@@ -22,13 +22,15 @@ import {
     FlattenedTestFunction,
     FlattenedTestSuite,
     SubtestParent,
+    TestDataItem,
+    TestDataItemType,
     TestFile,
     TestFolder,
     TestFunction,
     Tests,
     TestSuite,
+    TestWorkspaceFolder,
 } from '../../../client/testing/common/types';
-import { TestDataItem, TestDataItemType, TestWorkspaceFolder } from '../../../client/testing/types';
 
 function longestCommonSubstring(strings: string[]): string {
     strings = strings.concat().sort();

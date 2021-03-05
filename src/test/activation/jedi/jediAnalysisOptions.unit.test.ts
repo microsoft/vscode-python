@@ -1,0 +1,93 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { expect } from 'chai';
+import * as path from 'path';
+import { anything, instance, mock, when } from 'ts-mockito';
+import { EventEmitter, Uri, WorkspaceFolder } from 'vscode';
+import { JediLanguageServerAnalysisOptions } from '../../../client/activation/jedi/analysisOptions';
+import { ILanguageServerAnalysisOptions, ILanguageServerOutputChannel } from '../../../client/activation/types';
+import { IWorkspaceService } from '../../../client/common/application/types';
+import { WorkspaceService } from '../../../client/common/application/workspace';
+import { ConfigurationService } from '../../../client/common/configuration/service';
+import { IConfigurationService } from '../../../client/common/types';
+import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+
+suite('Jedi LSP - analysis Options', () => {
+    const workspacePath = path.join('this', 'is', 'fake', 'workspace', 'path');
+    const expectedWorkspacePath = path.sep + workspacePath;
+
+    let envVarsProvider: IEnvironmentVariablesProvider;
+    let lsOutputChannel: ILanguageServerOutputChannel;
+    let configurationService: IConfigurationService;
+    let workspaceService: IWorkspaceService;
+
+    let analysisOptions: ILanguageServerAnalysisOptions;
+
+    class MockWorkspaceFolder implements WorkspaceFolder {
+        public uri: Uri;
+
+        public name: string;
+
+        public ownedResources = new Set<string>();
+
+        constructor(folder: string, public index: number = 0) {
+            this.uri = Uri.file(folder);
+            this.name = folder;
+        }
+    }
+
+    setup(() => {
+        envVarsProvider = mock(IEnvironmentVariablesProvider);
+        lsOutputChannel = mock(ILanguageServerOutputChannel);
+        configurationService = mock(ConfigurationService);
+        workspaceService = mock(WorkspaceService);
+
+        const onDidChangeEnvVariables = new EventEmitter<Uri | undefined>();
+        when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(onDidChangeEnvVariables.event);
+
+        analysisOptions = new JediLanguageServerAnalysisOptions(
+            instance(envVarsProvider),
+            instance(lsOutputChannel),
+            instance(configurationService),
+            instance(workspaceService),
+        );
+    });
+    test('Without extraPaths provided and no workspace', async () => {
+        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when(configurationService.getSettings(anything())).thenReturn({} as any);
+        analysisOptions.initialize(undefined, undefined);
+
+        const result = await analysisOptions.getAnalysisOptions();
+        expect(result.initializationOptions.workspace.extraPaths).to.deep.equal([]);
+    });
+
+    test('Without extraPaths provided', async () => {
+        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(new MockWorkspaceFolder(workspacePath));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when(configurationService.getSettings(anything())).thenReturn({} as any);
+        analysisOptions.initialize(undefined, undefined);
+
+        const result = await analysisOptions.getAnalysisOptions();
+        expect(result.initializationOptions.workspace.extraPaths).to.deep.equal([expectedWorkspacePath]);
+    });
+
+    test('With extraPaths provided', async () => {
+        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(new MockWorkspaceFolder(workspacePath));
+        when(configurationService.getSettings(anything())).thenReturn({
+            // We expect a distinct set of paths back, using __dirname to test absolute path
+            autoComplete: { extraPaths: [__dirname, 'relative/pathB', 'relative/pathB'] },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
+        analysisOptions.initialize(undefined, undefined);
+
+        const result = await analysisOptions.getAnalysisOptions();
+
+        expect(result.initializationOptions.workspace.extraPaths).to.deep.equal([
+            expectedWorkspacePath,
+            __dirname,
+            path.join(expectedWorkspacePath, 'relative/pathB'),
+        ]);
+    });
+});

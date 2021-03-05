@@ -27,15 +27,16 @@ export async function waitForPromise<T>(promise: Promise<T>, timeout: number): P
     });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export function isThenable<T>(v: any): v is Thenable<T> {
     return typeof v?.then === 'function';
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export function isPromise<T>(v: any): v is Promise<T> {
     return typeof v?.then === 'function' && typeof v?.catch === 'function';
 }
 
-//======================
 // Deferred
 
 export interface Deferred<T> {
@@ -44,47 +45,56 @@ export interface Deferred<T> {
     readonly rejected: boolean;
     readonly completed: boolean;
     resolve(value?: T | PromiseLike<T>): void;
-
-    reject(reason?: any): void;
+    reject(reason?: string | Error | Record<string, unknown>): void;
 }
 
 class DeferredImpl<T> implements Deferred<T> {
-    private _resolve!: (value?: T | PromiseLike<T>) => void;
+    private _resolve!: (value: T | PromiseLike<T>) => void;
 
-    private _reject!: (reason?: any) => void;
-    private _resolved: boolean = false;
-    private _rejected: boolean = false;
+    private _reject!: (reason?: string | Error | Record<string, unknown>) => void;
+
+    private _resolved = false;
+
+    private _rejected = false;
+
     private _promise: Promise<T>;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(private scope: any = null) {
         this._promise = new Promise<T>((res, rej) => {
             this._resolve = res;
             this._reject = rej;
         });
     }
-    public resolve(_value?: T | PromiseLike<T>) {
-        this._resolve.apply(this.scope ? this.scope : this, arguments as any);
+
+    public resolve(_value: T | PromiseLike<T>) {
+        this._resolve.apply(this.scope ? this.scope : this, [_value]);
         this._resolved = true;
     }
 
-    public reject(_reason?: any) {
-        this._reject.apply(this.scope ? this.scope : this, arguments as any);
+    public reject(_reason?: string | Error | Record<string, unknown>) {
+        this._reject.apply(this.scope ? this.scope : this, [_reason]);
         this._rejected = true;
     }
+
     get promise(): Promise<T> {
         return this._promise;
     }
+
     get resolved(): boolean {
         return this._resolved;
     }
+
     get rejected(): boolean {
         return this._rejected;
     }
+
     get completed(): boolean {
         return this._rejected || this._resolved;
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export function createDeferred<T>(scope: any = null): Deferred<T> {
     return new DeferredImpl<T>(scope);
 }
@@ -92,9 +102,9 @@ export function createDeferred<T>(scope: any = null): Deferred<T> {
 export function createDeferredFrom<T>(...promises: Promise<T>[]): Deferred<T> {
     const deferred = createDeferred<T>();
     Promise.all<T>(promises)
-
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .then(deferred.resolve.bind(deferred) as any)
-
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .catch(deferred.reject.bind(deferred) as any);
 
     return deferred;
@@ -105,7 +115,6 @@ export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
     return deferred;
 }
 
-//================================
 // iterators
 
 export interface IAsyncIterator<T> extends AsyncIterator<T, void>, Partial<AsyncIterable<T>> {}
@@ -116,7 +125,9 @@ export interface IAsyncIterableIterator<T> extends IAsyncIterator<T>, AsyncItera
  * An iterator that yields nothing.
  */
 export function iterEmpty<T>(): IAsyncIterableIterator<T> {
-    return ((async function* () {})() as unknown) as IAsyncIterableIterator<T>;
+    return ((async function* () {
+        /** No body. */
+    })() as unknown) as IAsyncIterableIterator<T>;
 }
 
 type NextResult<T> = { index: number } & (
@@ -133,7 +144,9 @@ async function getNext<T>(it: AsyncIterator<T, T | void>, indexMaybe?: number): 
     }
 }
 
-export const NEVER: Promise<unknown> = new Promise(() => {});
+export const NEVER: Promise<unknown> = new Promise(() => {
+    /** No body. */
+});
 
 /**
  * Yield everything produced by the given iterators as soon as each is ready.
@@ -153,7 +166,10 @@ export async function* chain<T>(
     const promises = iterators.map(getNext);
     let numRunning = iterators.length;
     while (numRunning > 0) {
+        // Promise.race will not fail, because each promise calls getNext,
+        // Which handles failures by wrapping each iterator in a try/catch block.
         const { index, result, err } = await Promise.race(promises);
+
         if (err !== null) {
             promises[index] = NEVER as Promise<NextResult<T>>;
             numRunning -= 1;

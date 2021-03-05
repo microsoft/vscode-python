@@ -14,7 +14,7 @@ import { wrapCancellationTokens } from '../cancellation';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from '../process/internal/python';
-import { ITerminalServiceFactory } from '../terminal/types';
+import { ITerminalServiceFactory, TerminalCreationOptions } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
 import { Products } from '../utils/localize';
 import { isResource } from '../utils/misc';
@@ -36,10 +36,16 @@ export abstract class ModuleInstaller implements IModuleInstaller {
     ): Promise<void> {
         sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName });
         const uri = isResource(resource) ? resource : undefined;
+        const options: TerminalCreationOptions = {};
+        if (isResource(resource)) {
+            options.resource = uri;
+        } else {
+            options.interpreter = resource;
+        }
         const executionInfo = await this.getExecutionInfo(name, resource, isUpgrade);
         const terminalService = this.serviceContainer
             .get<ITerminalServiceFactory>(ITerminalServiceFactory)
-            .getTerminalService(uri);
+            .getTerminalService(options);
         const install = async (token?: CancellationToken) => {
             const executionInfoArgs = await this.processInstallArgs(executionInfo.args, resource);
             if (executionInfo.moduleName) {

@@ -1,20 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fsextra from 'fs-extra';
 import { Container } from 'inversify';
-import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Memento, OutputChannel, Uri } from 'vscode';
+import { Disposable, Memento, OutputChannel } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
 import { IS_WINDOWS } from '../client/common/platform/constants';
-import { convertStat, FileSystem, FileSystemUtils, RawFileSystem } from '../client/common/platform/fileSystem';
+import { FileSystem } from '../client/common/platform/fileSystem';
 import { PathUtils } from '../client/common/platform/pathUtils';
 import { PlatformService } from '../client/common/platform/platformService';
 import { RegistryImplementation } from '../client/common/platform/registry';
 import { registerTypes as platformRegisterTypes } from '../client/common/platform/serviceRegistry';
-import { FileStat, FileType, IFileSystem, IPlatformService, IRegistry } from '../client/common/platform/types';
+import { IFileSystem, IPlatformService, IRegistry } from '../client/common/platform/types';
 import { BufferDecoder } from '../client/common/process/decoder';
 import { ProcessService } from '../client/common/process/proc';
 import { PythonExecutionFactory } from '../client/common/process/pythonExecutionFactory';
@@ -37,14 +35,13 @@ import {
     IsWindows,
     WORKSPACE_MEMENTO,
 } from '../client/common/types';
-import { createDeferred } from '../client/common/utils/async';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
 import { registerTypes as formattersRegisterTypes } from '../client/formatters/serviceRegistry';
 import { EnvironmentActivationService } from '../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../client/interpreter/activation/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
 } from '../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../client/interpreter/contracts';
 import { InterpreterService } from '../client/interpreter/interpreterService';
@@ -53,114 +50,15 @@ import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { registerTypes as lintersRegisterTypes } from '../client/linters/serviceRegistry';
-import { TEST_OUTPUT_CHANNEL } from '../client/testing/common/constants';
+import { TEST_OUTPUT_CHANNEL } from '../client/testing/constants';
 import { registerTypes as unittestsRegisterTypes } from '../client/testing/serviceRegistry';
+import { LegacyFileSystem } from './legacyFileSystem';
 import { MockOutputChannel } from './mockClasses';
 import { MockAutoSelectionService } from './mocks/autoSelector';
 import { MockMemento } from './mocks/mementos';
 import { MockProcessService } from './mocks/proc';
 import { MockProcess } from './mocks/process';
 import { registerForIOC } from './pythonEnvironments/legacyIOC';
-
-// This is necessary for unit tests and functional tests, since they
-// do not run under VS Code so they do not have access to the actual
-// "vscode" namespace.
-export class FakeVSCodeFileSystemAPI {
-    public async readFile(uri: Uri): Promise<Uint8Array> {
-        return fsextra.readFile(uri.fsPath);
-    }
-    public async writeFile(uri: Uri, content: Uint8Array): Promise<void> {
-        return fsextra.writeFile(uri.fsPath, Buffer.from(content));
-    }
-    public async delete(uri: Uri, _options?: { recursive: boolean; useTrash: boolean }): Promise<void> {
-        return (
-            fsextra
-                // Make sure the file exists before deleting.
-                .stat(uri.fsPath)
-                .then(() => fsextra.remove(uri.fsPath))
-        );
-    }
-    public async stat(uri: Uri): Promise<FileStat> {
-        const filename = uri.fsPath;
-
-        let filetype = FileType.Unknown;
-        let stat = await fsextra.lstat(filename);
-        if (stat.isSymbolicLink()) {
-            filetype = FileType.SymbolicLink;
-            stat = await fsextra.stat(filename);
-        }
-        if (stat.isFile()) {
-            filetype |= FileType.File;
-        } else if (stat.isDirectory()) {
-            filetype |= FileType.Directory;
-        }
-        return convertStat(stat, filetype);
-    }
-    public async readDirectory(uri: Uri): Promise<[string, FileType][]> {
-        const names: string[] = await fsextra.readdir(uri.fsPath);
-        const promises = names.map((name) => {
-            const filename = path.join(uri.fsPath, name);
-            return (
-                fsextra
-                    // Get the lstat info and deal with symlinks if necessary.
-                    .lstat(filename)
-                    .then(async (stat) => {
-                        let filetype = FileType.Unknown;
-                        if (stat.isFile()) {
-                            filetype = FileType.File;
-                        } else if (stat.isDirectory()) {
-                            filetype = FileType.Directory;
-                        } else if (stat.isSymbolicLink()) {
-                            filetype = FileType.SymbolicLink;
-                            stat = await fsextra.stat(filename);
-                            if (stat.isFile()) {
-                                filetype |= FileType.File;
-                            } else if (stat.isDirectory()) {
-                                filetype |= FileType.Directory;
-                            }
-                        }
-                        return [name, filetype] as [string, FileType];
-                    })
-                    .catch(() => [name, FileType.Unknown] as [string, FileType])
-            );
-        });
-        return Promise.all(promises);
-    }
-    public async createDirectory(uri: Uri): Promise<void> {
-        return fsextra.mkdirp(uri.fsPath);
-    }
-    public async copy(src: Uri, dest: Uri): Promise<void> {
-        const deferred = createDeferred<void>();
-        const rs = fsextra
-            // Set an error handler on the stream.
-            .createReadStream(src.fsPath)
-            .on('error', (err) => {
-                deferred.reject(err);
-            });
-        const ws = fsextra
-            .createWriteStream(dest.fsPath)
-            // Set an error & close handler on the stream.
-            .on('error', (err) => {
-                deferred.reject(err);
-            })
-            .on('close', () => {
-                deferred.resolve();
-            });
-        rs.pipe(ws);
-        return deferred.promise;
-    }
-    public async rename(src: Uri, dest: Uri): Promise<void> {
-        return fsextra.rename(src.fsPath, dest.fsPath);
-    }
-}
-export class LegacyFileSystem extends FileSystem {
-    constructor() {
-        super();
-        const vscfs = new FakeVSCodeFileSystemAPI();
-        const raw = RawFileSystem.withDefaults(undefined, vscfs);
-        this.utils = FileSystemUtils.withDefaults(raw);
-    }
-}
 
 export class IocContainer {
     // This may be set (before any registration happens) to indicate
@@ -170,12 +68,13 @@ export class IocContainer {
     public useVSCodeAPI = true;
 
     public readonly serviceManager: IServiceManager;
+
     public readonly serviceContainer: IServiceContainer;
 
     private disposables: Disposable[] = [];
 
     constructor() {
-        const cont = new Container();
+        const cont = new Container({ skipBaseClassChecks: true });
         this.serviceManager = new ServiceManager(cont);
         this.serviceContainer = new ServiceContainer(cont);
 
@@ -199,33 +98,33 @@ export class IocContainer {
             IInterpreterAutoSelectionService,
             MockAutoSelectionService,
         );
-        this.serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
-            IInterpreterAutoSeletionProxyService,
+        this.serviceManager.addSingleton<IInterpreterAutoSelectionProxyService>(
+            IInterpreterAutoSelectionProxyService,
             MockAutoSelectionService,
         );
     }
+
     public async dispose(): Promise<void> {
         for (const disposable of this.disposables) {
-            if (!disposable) {
-                continue;
-            }
-
-            const promise = disposable.dispose() as Promise<any>;
-            if (promise) {
-                await promise;
+            if (disposable) {
+                const promise = disposable.dispose() as Promise<unknown>;
+                if (promise) {
+                    await promise;
+                }
             }
         }
         this.disposables = [];
         this.serviceManager.dispose();
     }
 
-    public registerCommonTypes(registerFileSystem: boolean = true) {
+    public registerCommonTypes(registerFileSystem = true): void {
         commonRegisterTypes(this.serviceManager);
         if (registerFileSystem) {
             this.registerFileSystemTypes();
         }
     }
-    public registerFileSystemTypes() {
+
+    public registerFileSystemTypes(): void {
         this.serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
         this.serviceManager.addSingleton<IFileSystem>(
             IFileSystem,
@@ -233,7 +132,8 @@ export class IocContainer {
             this.useVSCodeAPI ? FileSystem : LegacyFileSystem,
         );
     }
-    public registerProcessTypes() {
+
+    public registerProcessTypes(): void {
         processRegisterTypes(this.serviceManager);
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
@@ -246,29 +146,37 @@ export class IocContainer {
             instance(mockEnvironmentActivationService),
         );
     }
-    public registerVariableTypes() {
+
+    public registerVariableTypes(): void {
         variableRegisterTypes(this.serviceManager);
     }
-    public registerUnitTestTypes() {
+
+    public registerUnitTestTypes(): void {
         unittestsRegisterTypes(this.serviceManager);
     }
-    public registerLinterTypes() {
+
+    public registerLinterTypes(): void {
         lintersRegisterTypes(this.serviceManager);
     }
-    public registerFormatterTypes() {
+
+    public registerFormatterTypes(): void {
         formattersRegisterTypes(this.serviceManager);
     }
-    public registerPlatformTypes() {
+
+    public registerPlatformTypes(): void {
         platformRegisterTypes(this.serviceManager);
     }
-    public registerInterpreterTypes() {
-        // This method registers all interpreter types except `IInterpreterAutoSeletionProxyService` & `IEnvironmentActivationService`, as it's already registered in the constructor & registerMockProcessTypes() respectively
+
+    public registerInterpreterTypes(): void {
+        // This method registers all interpreter types except `IInterpreterAutoSelectionProxyService` & `IEnvironmentActivationService`, as it's already registered in the constructor & registerMockProcessTypes() respectively
         registerInterpreterTypes(this.serviceManager);
     }
-    public registerMockProcessTypes() {
+
+    public registerMockProcessTypes(): void {
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
         const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const processService = new MockProcessService(new ProcessService(new BufferDecoder(), process.env as any));
         processServiceFactory.setup((f) => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService));
         this.serviceManager.addSingletonInstance<IProcessServiceFactory>(
@@ -296,13 +204,13 @@ export class IocContainer {
         );
     }
 
-    public async registerMockInterpreterTypes() {
+    public async registerMockInterpreterTypes(): Promise<void> {
         this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
         this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
         await registerForIOC(this.serviceManager, this.serviceContainer);
     }
 
-    public registerMockProcess() {
+    public registerMockProcess(): void {
         this.serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
 
         this.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);

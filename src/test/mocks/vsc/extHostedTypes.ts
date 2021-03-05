@@ -7,14 +7,14 @@
 // import * as crypto from 'crypto';
 
 import { relative } from 'path';
-import * as vscode from 'vscode';
+import type * as vscode from 'vscode';
 import { vscMockHtmlContent } from './htmlContent';
 import { vscMockStrings } from './strings';
 import { vscUri } from './uri';
 import { generateUuid } from './uuid';
 
 export namespace vscMockExtHostedTypes {
-    export enum CellKind {
+    export enum NotebookCellKind {
         Markdown = 1,
         Code = 2,
     }
@@ -544,6 +544,32 @@ export namespace vscMockExtHostedTypes {
     }
 
     export class WorkspaceEdit implements vscode.WorkspaceEdit {
+        appendNotebookCellOutput(
+            _uri: vscode.Uri,
+            _index: number,
+            _outputs: vscode.NotebookCellOutput[],
+            _metadata?: vscode.WorkspaceEditEntryMetadata,
+        ): void {
+            // Noop
+        }
+        replaceNotebookCellOutputItems(
+            _uri: vscode.Uri,
+            _index: number,
+            _outputId: string,
+            _items: vscode.NotebookCellOutputItem[],
+            _metadata?: vscode.WorkspaceEditEntryMetadata,
+        ): void {
+            // Noop
+        }
+        appendNotebookCellOutputItems(
+            _uri: vscode.Uri,
+            _index: number,
+            _outputId: string,
+            _items: vscode.NotebookCellOutputItem[],
+            _metadata?: vscode.WorkspaceEditEntryMetadata,
+        ): void {
+            // Noop
+        }
         replaceNotebookMetadata(_uri: vscode.Uri, _value: vscode.NotebookDocumentMetadata): void {
             //
         }
@@ -560,7 +586,7 @@ export namespace vscMockExtHostedTypes {
         replaceNotebookCellOutput(
             _uri: vscode.Uri,
             _index: number,
-            _outputs: vscode.CellOutput[],
+            _outputs: vscode.NotebookCellOutput[],
             _metadata?: vscode.WorkspaceEditEntryMetadata,
         ): void {
             // Noop.
@@ -2166,6 +2192,6 @@ export namespace vscMockExtHostedTypes {
     }
 
     export class QuickInputButtons {
-        static readonly Back: vscode.QuickInputButton = { iconPath: 'back' };
+        static readonly Back: vscode.QuickInputButton = { iconPath: vscUri.URI.file('back') };
     }
 }

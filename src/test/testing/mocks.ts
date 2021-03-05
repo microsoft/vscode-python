@@ -12,10 +12,10 @@ import {
     IUnitTestSocketServer,
     LaunchOptions,
     TestDiscoveryOptions,
-    TestProvider,
     Tests,
     TestsToRun,
 } from '../../client/testing/common/types';
+import { TestProvider } from '../../client/testing/types';
 
 @injectable()
 export class MockDebugLauncher implements ITestDebugLauncher, Disposable {

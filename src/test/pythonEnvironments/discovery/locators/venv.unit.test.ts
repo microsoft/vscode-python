@@ -12,7 +12,7 @@ import { PlatformService } from '../../../../client/common/platform/platformServ
 import { IConfigurationService, ICurrentProcess, IPythonSettings } from '../../../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
 } from '../../../../client/interpreter/autoSelection/types';
 import { IVirtualEnvironmentManager } from '../../../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../../../client/ioc/container';
@@ -56,8 +56,8 @@ suite('Virtual environments', () => {
             IInterpreterAutoSelectionService,
             MockAutoSelectionService,
         );
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
-            IInterpreterAutoSeletionProxyService,
+        serviceManager.addSingleton<IInterpreterAutoSelectionProxyService>(
+            IInterpreterAutoSelectionProxyService,
             MockAutoSelectionService,
         );
     });

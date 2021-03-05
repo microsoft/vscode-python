@@ -24,12 +24,12 @@ import { IStartPage } from './common/startPage/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IExperimentsManager,
     IFeatureDeprecationManager,
     IOutputChannel,
 } from './common/types';
 import { noop } from './common/utils/misc';
-import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
@@ -52,22 +52,22 @@ import { setExtensionInstallTelemetryProperties } from './telemetry/extensionIns
 import { registerTypes as tensorBoardRegisterTypes } from './tensorBoard/serviceRegistry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
-import { ITestContextService } from './testing/common/types';
 import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from './testing/navigation/types';
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
+import { ITestingService } from './testing/types';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 
 // components
-// import * as pythonEnvironments from './pythonEnvironments';
+import * as pythonEnvironments from './pythonEnvironments';
 
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
+import { setDefaultLanguageServerByExperiment } from './common/experiments/helpers';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
     ext: ExtensionState,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _components: Components,
+    components: Components,
 ): Promise<ActivationResult[]> {
     // Note that each activation returns a promise that resolves
     // when that activation completes.  However, it might have started
@@ -78,17 +78,19 @@ export async function activateComponents(
     // `Promise.all()`, etc.) will flatten nested promises.  Thus
     // activation resolves `ActivationResult`, which can safely wrap
     // the "inner" promise.
+
+    // TODO: As of now activateLegacy() registers various classes which might
+    // be required while activating components. Once registration from
+    // activateLegacy() are moved before we activate other components, we can
+    // activate them parallelly with the other components.
+    // https://github.com/microsoft/vscode-python/issues/15380
+    // These will go away eventually once everything is refactored into components.
+    const legacyActivationResult = await activateLegacy(ext);
     const promises: Promise<ActivationResult>[] = [
-        // TODO: For now the extension should only interact with the component via the component adapter,
-        // which takes care of putting the component behind the experiment flag. It already activates the
-        // component among other things, hence the following is not needed.
-        // pythonEnvironments.activate(components.pythonEnvs),
-        // If we need to activate, we need to use the adapter:
-        // https://github.com/microsoft/vscode-python/issues/14984
-        // These will go away eventually.
-        activateLegacy(ext),
+        // More component activations will go here
+        pythonEnvironments.activate(components.pythonEnvs),
     ];
-    return Promise.all(promises);
+    return Promise.all([legacyActivationResult, ...promises]);
 }
 
 /// //////////////////////////
@@ -116,7 +118,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const { enableProposedApi } = applicationEnv.packageJson;
     serviceManager.addSingletonInstance<boolean>(UseProposedApi, enableProposedApi);
     // Feature specific registrations.
-    variableRegisterTypes(serviceManager);
     unitTestsRegisterTypes(serviceManager);
     lintersRegisterTypes(serviceManager);
     interpretersRegisterTypes(serviceManager);
@@ -125,6 +126,10 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
     tensorBoardRegisterTypes(serviceManager);
+
+    const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
+    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    await setDefaultLanguageServerByExperiment(experimentService, workspaceService, serviceManager);
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
@@ -168,7 +173,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     serviceContainer.get<ITestCodeNavigatorCommandHandler>(ITestCodeNavigatorCommandHandler).register();
     serviceContainer.get<ITestExplorerCommandHandler>(ITestExplorerCommandHandler).register();
     serviceContainer.get<ILanguageServerExtension>(ILanguageServerExtension).register();
-    serviceContainer.get<ITestContextService>(ITestContextService).register();
+    serviceContainer.get<ITestingService>(ITestingService).register();
 
     // "activate" everything else
 
@@ -186,7 +191,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
-    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     interpreterManager
         .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
         .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));

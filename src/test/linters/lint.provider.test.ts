@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import { Container } from 'inversify';
@@ -23,7 +24,7 @@ import {
 import { createDeferred } from '../../client/common/utils/async';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -61,7 +62,7 @@ suite('Linting - Provider', () => {
 
         fs = TypeMoq.Mock.ofType<IFileSystem>();
         fs.setup((x) => x.fileExists(TypeMoq.It.isAny())).returns(
-            () => new Promise<boolean>((resolve, _reject) => resolve(true)),
+            () => new Promise<boolean>((resolve) => resolve(true)),
         );
         fs.setup((x) => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fs.object);
@@ -105,8 +106,8 @@ suite('Linting - Provider', () => {
             IInterpreterAutoSelectionService,
             MockAutoSelectionService,
         );
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
-            IInterpreterAutoSeletionProxyService,
+        serviceManager.addSingleton<IInterpreterAutoSelectionProxyService>(
+            IInterpreterAutoSelectionProxyService,
             MockAutoSelectionService,
         );
         serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);

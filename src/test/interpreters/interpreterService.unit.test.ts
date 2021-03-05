@@ -33,7 +33,7 @@ import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import {
@@ -51,6 +51,8 @@ import * as hashApi from '../../client/pythonEnvironments/discovery/locators/ser
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { PYTHON_PATH } from '../common';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 use(chaiAsPromised);
 
@@ -156,8 +158,8 @@ suite('Interpreters service', () => {
             IInterpreterAutoSelectionService,
             MockAutoSelectionService,
         );
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
-            IInterpreterAutoSeletionProxyService,
+        serviceManager.addSingleton<IInterpreterAutoSelectionProxyService>(
+            IInterpreterAutoSelectionProxyService,
             MockAutoSelectionService,
         );
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService.object);
@@ -202,7 +204,7 @@ suite('Interpreters service', () => {
                 .returns(() => undefined);
             workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
             workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
-            let activeTextEditorChangeHandler: Function | undefined;
+            let activeTextEditorChangeHandler: (e: TextEditor | undefined) => any | undefined;
             documentManager
                 .setup((d) => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns((handler) => {
@@ -232,7 +234,7 @@ suite('Interpreters service', () => {
                 .returns(() => undefined);
             workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
             workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
-            let activeTextEditorChangeHandler: Function | undefined;
+            let activeTextEditorChangeHandler: (e?: TextEditor | undefined) => any | undefined;
             documentManager
                 .setup((d) => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns((handler) => {
@@ -247,7 +249,7 @@ suite('Interpreters service', () => {
             interpreterDisplay.verify((i) => i.refresh(TypeMoq.It.isValue(undefined)), TypeMoq.Times.never());
         });
 
-        test('If user belongs to Deprecate Pythonpath experiment, register the correct handler', async () => {
+        test('If user belongs to Deprecate pythonPath experiment, register the correct handler', async () => {
             const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
@@ -257,7 +259,9 @@ suite('Interpreters service', () => {
                 .returns(() => undefined);
             workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
             workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
-            let interpreterPathServiceHandler: Function | undefined;
+            let interpreterPathServiceHandler: (e: InterpreterConfigurationScope) => any | undefined = () => {
+                return 0;
+            };
             documentManager
                 .setup((d) => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => {
@@ -278,7 +282,9 @@ suite('Interpreters service', () => {
                 .verifiable(TypeMoq.Times.once());
             interpreterPathService
                 .setup((d) => d.onDidChange(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                .callback((cb) => (interpreterPathServiceHandler = cb))
+                .callback((cb) => {
+                    interpreterPathServiceHandler = cb;
+                })
                 .returns(() => {
                     return { dispose: noop };
                 });
@@ -431,6 +437,88 @@ suite('Interpreters service', () => {
 
             expect(displayName).to.not.equal(expectedDisplayName);
             expect(getInterpreterHashStub.calledOnce).to.equal(true);
+            persistentStateFactory.verifyAll();
+        });
+    });
+
+    suite('Display name with incomplete interpreter versions', () => {
+        let getInterpreterHashStub: sinon.SinonStub;
+
+        setup(() => {
+            setupSuite();
+            fileSystem.reset();
+            persistentStateFactory.reset();
+            getInterpreterHashStub = sinon.stub(hashApi, 'getInterpreterHash');
+
+            const fileHash = 'file_hash';
+            getInterpreterHashStub.resolves(fileHash);
+        });
+
+        teardown(() => {
+            getInterpreterHashStub.restore();
+        });
+
+        test('Python version without micro version should be displayed as X.Y and not default to X.Y.0', async () => {
+            persistentStateFactory
+                .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => {
+                    const state = {
+                        updateValue: () => Promise.resolve(),
+                        value: undefined,
+                    };
+                    return state as any;
+                })
+                .verifiable(TypeMoq.Times.once());
+
+            const interpreterInfo: Partial<PythonEnvironment> = {
+                version: {
+                    major: 2,
+                    minor: 7,
+                    patch: -1,
+                    raw: 'something',
+                    prerelease: [],
+                    build: [],
+                },
+            };
+            const expectedDisplayName = 'Python 2.7';
+
+            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
+            const displayName = await service.getDisplayName(interpreterInfo, undefined).catch(() => '');
+
+            expect(displayName).to.equal(expectedDisplayName);
+            expect(getInterpreterHashStub.notCalled).to.equal(true);
+            persistentStateFactory.verifyAll();
+        });
+
+        test('Python version without minor or micro version should be displayed as X and not default to X.0.0', async () => {
+            persistentStateFactory
+                .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => {
+                    const state = {
+                        updateValue: () => Promise.resolve(),
+                        value: undefined,
+                    };
+                    return state as any;
+                })
+                .verifiable(TypeMoq.Times.once());
+
+            const interpreterInfo: Partial<PythonEnvironment> = {
+                version: {
+                    major: 3,
+                    minor: -1,
+                    patch: -1,
+                    raw: 'something',
+                    prerelease: [],
+                    build: [],
+                },
+            };
+            const expectedDisplayName = 'Python 3';
+
+            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
+            const displayName = await service.getDisplayName(interpreterInfo, undefined).catch(() => '');
+
+            expect(displayName).to.equal(expectedDisplayName);
+            expect(getInterpreterHashStub.notCalled).to.equal(true);
             persistentStateFactory.verifyAll();
         });
     });

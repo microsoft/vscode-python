@@ -4,9 +4,10 @@
 
 import * as React from 'react';
 import '../../client/common/extensions';
+import { SharedMessages } from '../../client/common/startPage/messages';
 import { ISettingPackage, IStartPageMapping, StartPageMessages } from '../../client/common/startPage/types';
 import { Image, ImageName } from '../react-common/image';
-import { getLocString } from '../react-common/locReactSide';
+import { getLocString, storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import './startPage.css';
 
@@ -73,7 +74,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                     </div>
                     <div className="block">
                         <div className="text" onClick={this.openBlankNotebook} role="button">
-                            {getLocString('StartPage.CreateJupyterNotebook', 'Create a Jupyter Notebook')}
+                            {getLocString('StartPage.createJupyterNotebook', 'Create a Jupyter Notebook')}
                         </div>
                         {this.renderNotebookDescription()}
                     </div>
@@ -146,9 +147,20 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     }
 
     public handleMessage = (msg: string, payload?: any) => {
-        if (msg === StartPageMessages.SendSetting) {
-            this.releaseNotes.showAgainSetting = payload.showAgainSetting;
-            this.setState({});
+        switch (msg) {
+            case StartPageMessages.SendSetting:
+                this.releaseNotes.showAgainSetting = payload.showAgainSetting;
+                this.setState({});
+                break;
+
+            case SharedMessages.LocInit:
+                // Initialize localization.
+                const locJSON = JSON.parse(payload);
+                storeLocStrings(locJSON);
+                break;
+
+            default:
+                break;
         }
 
         return false;

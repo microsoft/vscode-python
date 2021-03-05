@@ -96,6 +96,7 @@ suite('Debugging - Adapter Factory', () => {
             type: 'python',
             workspaceFolder,
             customRequest: () => Promise.resolve(),
+            getDebugProtocolBreakpoint: () => Promise.resolve(undefined),
         };
     }
 

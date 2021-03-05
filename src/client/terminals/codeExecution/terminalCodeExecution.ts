@@ -73,7 +73,10 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     }
     private getTerminalService(resource?: Uri): ITerminalService {
         if (!this._terminalService) {
-            this._terminalService = this.terminalServiceFactory.getTerminalService(resource, this.terminalTitle);
+            this._terminalService = this.terminalServiceFactory.getTerminalService({
+                resource,
+                title: this.terminalTitle,
+            });
             this.disposables.push(
                 this._terminalService.onDidCloseTerminal(() => {
                     this.replActive = undefined;

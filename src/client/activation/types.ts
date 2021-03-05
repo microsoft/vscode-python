@@ -17,8 +17,8 @@ import {
 } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
 import * as lsp from 'vscode-languageserver-protocol';
-import { NugetPackage } from '../common/nuget/types';
-import { IDisposable, IOutputChannel, LanguageServerDownloadChannels, Resource } from '../common/types';
+import type { NugetPackage } from '../common/nuget/types';
+import type { IDisposable, IOutputChannel, LanguageServerDownloadChannels, Resource } from '../common/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 
 export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
@@ -64,6 +64,7 @@ export interface IExtensionActivationService {
 
 export enum LanguageServerType {
     Jedi = 'Jedi',
+    JediLSP = 'JediLSP',
     Microsoft = 'Microsoft',
     Node = 'Pylance',
     None = 'None',
@@ -173,7 +174,7 @@ export interface ILanguageServerManager extends IDisposable {
 export const ILanguageServerExtension = Symbol('ILanguageServerExtension');
 export interface ILanguageServerExtension extends IDisposable {
     readonly invoked: Event<void>;
-    loadExtensionArgs?: {};
+    loadExtensionArgs?: unknown;
     register(): void;
 }
 export const ILanguageServerProxy = Symbol('ILanguageServerProxy');
@@ -194,7 +195,7 @@ export interface ILanguageServerProxy extends IDisposable {
      * @param {{}} [args]
      * @memberof ILanguageServerProxy
      */
-    loadExtension(args?: {}): void;
+    loadExtension(args?: unknown): void;
 }
 
 export enum PlatformName {

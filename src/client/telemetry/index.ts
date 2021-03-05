@@ -12,6 +12,7 @@ import { traceError, traceInfo } from '../common/logger';
 import { Telemetry } from '../common/startPage/constants';
 import type { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
+import { isPromise } from '../common/utils/async';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
@@ -23,7 +24,7 @@ import {
     TensorBoardSessionStartResult,
     TensorBoardEntrypoint,
 } from '../tensorBoard/constants';
-import { TestProvider } from '../testing/common/types';
+import { TestProvider } from '../testing/types';
 import { EventName, PlatformErrors } from './constants';
 import type { LinterTrigger, TestTool } from './types';
 
@@ -102,7 +103,7 @@ export function clearTelemetryReporter(): void {
 
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
-    durationMs?: Record<string, number> | number,
+    measuresOrDurationMs?: Record<string, number> | number,
     properties?: P[E],
     ex?: Error,
 ): void {
@@ -110,7 +111,10 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         return;
     }
     const reporter = getTelemetryReporter();
-    const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs || undefined;
+    const measures =
+        typeof measuresOrDurationMs === 'number'
+            ? { duration: measuresOrDurationMs }
+            : measuresOrDurationMs || undefined;
     const customProperties: Record<string, string> = {};
     const eventNameSent = eventName as string;
 
@@ -175,10 +179,12 @@ type TypedMethodDescriptor<T> = (
     descriptor: TypedPropertyDescriptor<T>,
 ) => TypedPropertyDescriptor<T> | void;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isPromise(object: any): object is Promise<void> {
-    return typeof object.then === 'function' && typeof object.catch === 'function';
-}
+// The following code uses "any" in many places, as TS does not have rich support
+// for typing decorators. Specifically, while it is possible to write types which
+// encode the signature of the wrapped function, TS fails to actually infer the
+// type of "this" and the signature at call sites, instead choosing to infer
+// based on other hints (like the closure parameters), which ends up making it
+// no safer than "any" (and sometimes misleading enough to be more unsafe).
 
 /**
  * Decorates a method, sending a telemetry event with the given properties.
@@ -188,13 +194,18 @@ function isPromise(object: any): object is Promise<void> {
  * @param failureEventName If the decorated method returns a Promise and fails, send this event instead of eventName.
  * @param lazyProperties A static function on the decorated class which returns extra properties to add to the event.
  * This can be used to provide properties which are only known at runtime (after the decorator has executed).
+ * @param lazyMeasures A static function on the decorated class which returns extra measures to add to the event.
+ * This can be used to provide measures which are only known at runtime (after the decorator has executed).
  */
 export function captureTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     properties?: P[E],
     captureDuration = true,
     failureEventName?: E,
-    lazyProperties?: (obj: This) => P[E],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    lazyProperties?: (obj: This, result?: any) => P[E],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    lazyMeasures?: (obj: This, result?: any) => Record<string, number>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
     return function (
@@ -209,20 +220,30 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
         descriptor.value = function (this: This, ...args: any[]) {
             // Legacy case; fast path that sends event before method executes.
             // Does not set "failed" if the result is a Promise and throws an exception.
-            if (!captureDuration && !lazyProperties) {
+            if (!captureDuration && !lazyProperties && !lazyMeasures) {
                 sendTelemetryEvent(eventName, undefined, properties);
 
                 return originalMethod.apply(this, args);
             }
 
-            const props = () => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const getProps = (result?: any) => {
                 if (lazyProperties) {
-                    return { ...properties, ...lazyProperties(this) };
+                    return { ...properties, ...lazyProperties(this, result) };
                 }
                 return properties;
             };
 
             const stopWatch = captureDuration ? new StopWatch() : undefined;
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const getMeasures = (result?: any) => {
+                const measures = stopWatch ? { duration: stopWatch.elapsedTime } : undefined;
+                if (lazyMeasures) {
+                    return { ...measures, ...lazyMeasures(this, result) };
+                }
+                return measures;
+            };
 
             const result = originalMethod.apply(this, args);
 
@@ -230,15 +251,15 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
             if (result && isPromise(result)) {
                 result
                     .then((data) => {
-                        sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
+                        sendTelemetryEvent(eventName, getMeasures(data), getProps(data));
                         return data;
                     })
                     .catch((ex) => {
-                        const failedProps: P[E] = { ...props(), failed: true } as P[E] & FailedEventType;
-                        sendTelemetryEvent(failureEventName || eventName, stopWatch?.elapsedTime, failedProps, ex);
+                        const failedProps: P[E] = { ...getProps(), failed: true } as P[E] & FailedEventType;
+                        sendTelemetryEvent(failureEventName || eventName, getMeasures(), failedProps, ex);
                     });
             } else {
-                sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
+                sendTelemetryEvent(eventName, getMeasures(result), getProps(result));
             }
 
             return result;
@@ -294,6 +315,8 @@ type FailedEventType = { failed: true };
 export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when providing completion items for the given position and document.
+     *
+     * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.COMPLETION]: never | undefined;
     /**
@@ -922,6 +945,10 @@ export interface IEventNamePropertyMapping {
         action: 'escape' | 'selected';
     };
     /**
+     * Telemetry event sent when the user select to either enter or find the interpreter from the quickpick.
+     */
+    [EventName.SELECT_INTERPRETER_ENTER_OR_FIND]: never | undefined;
+    /**
      * Telemetry event sent with details after updating the python interpreter
      */
     [EventName.PYTHON_INTERPRETER]: {
@@ -1272,6 +1299,8 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the language server
+     *
+     * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
@@ -1340,6 +1369,8 @@ export interface IEventNamePropertyMapping {
     [EventName.LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the Node.js server
+     *
+     * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.LANGUAGE_SERVER_REQUEST]: unknown;
     /**
@@ -1352,6 +1383,34 @@ export interface IEventNamePropertyMapping {
          */
         userAction: string;
     };
+    /**
+     * Telemetry event sent when Jedi Language Server is started for workspace (workspace folder in case of multi-root)
+     */
+    [EventName.JEDI_LANGUAGE_SERVER_ENABLED]: {
+        lsVersion?: string;
+    };
+    /**
+     * Telemetry event sent when Jedi Language Server server is ready to receive messages
+     */
+    [EventName.JEDI_LANGUAGE_SERVER_READY]: {
+        lsVersion?: string;
+    };
+    /**
+     * Telemetry event sent when starting Node.js server
+     */
+    [EventName.JEDI_LANGUAGE_SERVER_STARTUP]: {
+        lsVersion?: string;
+    };
+    /**
+     * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
+     */
+    [EventName.JEDI_LANGUAGE_SERVER_TELEMETRY]: unknown;
+    /**
+     * Telemetry sent when the client makes a request to the Node.js server
+     *
+     * This event also has a measure, "resultLength", which records the number of completions provided.
+     */
+    [EventName.JEDI_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
      * Telemetry captured for enabling reload.
      */
@@ -1806,4 +1865,15 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when we find an active integrated terminal running tensorboard.
      */
     [EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL]: never | undefined;
+    /**
+     * Telemetry event sent after attempting to install TensorBoard session dependencies.
+     * Note, this is only sent if install was attempted. It is not sent if the user opted
+     * not to install, or if all dependencies were already installed.
+     */
+    [EventName.TENSORBOARD_INSTALL_SESSION_DEPENDENCIES_RESULT]: {
+        wasProfilerPluginAttempted: boolean;
+        wasTensorBoardAttempted: boolean;
+        wasProfilerPluginInstalled: boolean;
+        wasTensorBoardInstalled: boolean;
+    };
 }

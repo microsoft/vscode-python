@@ -10,8 +10,8 @@ import { IWorkspaceService } from '../../common/application/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ITestConfigSettingsService } from '../types';
-import { ITestsHelper, TestProvider } from './types';
+import { TestProvider } from '../types';
+import { ITestConfigSettingsService, ITestsHelper } from './types';
 
 @injectable()
 export class EnablementTracker implements IExtensionSingleActivationService {

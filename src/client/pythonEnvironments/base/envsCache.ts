@@ -103,6 +103,14 @@ export interface IEnvsCache {
     filterEnvs(query: Partial<PythonEnvInfo>): PythonEnvInfo[] | undefined;
 
     /**
+     * Return cached environment information for a given interpreter path if it exists,
+     * otherwise return `undefined`.
+     *
+     * @param path Path to a Python interpreter.
+     */
+    getCachedEnvInfo(path: string): PythonEnvInfo | undefined;
+
+    /**
      * Writes the content of the in-memory cache to persistent storage.
      */
     flush(): Promise<void>;
@@ -136,6 +144,10 @@ export class PythonEnvInfoCache implements IEnvsCache {
 
     public filterEnvs(query: Partial<PythonEnvInfo>): PythonEnvInfo[] | undefined {
         return this.inMemory?.filter((info) => areSameEnv(info, query));
+    }
+
+    public getCachedEnvInfo(path: string): PythonEnvInfo | undefined {
+        return this.inMemory?.lookUp(path);
     }
 
     public async clearAndReloadFromStorage(): Promise<void> {

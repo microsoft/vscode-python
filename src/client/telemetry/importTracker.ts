@@ -48,7 +48,7 @@ const testExecution = isTestExecution();
 export class ImportTracker implements IExtensionSingleActivationService {
     private pendingChecks = new Map<string, NodeJS.Timer>();
 
-    private sentMatches: Set<string> = new Set<string>();
+    private static sentMatches: Set<string> = new Set<string>();
 
     // eslint-disable-next-line global-require
     private hashFn = require('hash.js').sha256;
@@ -68,6 +68,10 @@ export class ImportTracker implements IExtensionSingleActivationService {
     public async activate(): Promise<void> {
         // Act like all of our open documents just opened; our timeout will make sure this is delayed.
         this.documentManager.textDocuments.forEach((d) => this.onOpenedOrSavedDocument(d));
+    }
+
+    public static hasModuleImport(moduleName: string): boolean {
+        return this.sentMatches.has(moduleName);
     }
 
     private onOpenedOrSavedDocument(document: TextDocument) {
@@ -108,10 +112,10 @@ export class ImportTracker implements IExtensionSingleActivationService {
 
     private sendTelemetry(packageName: string) {
         // No need to send duplicate telemetry or waste CPU cycles on an unneeded hash.
-        if (this.sentMatches.has(packageName)) {
+        if (ImportTracker.sentMatches.has(packageName)) {
             return;
         }
-        this.sentMatches.add(packageName);
+        ImportTracker.sentMatches.add(packageName);
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
         const hash = this.hashFn().update(packageName).digest('hex');

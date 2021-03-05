@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fs from 'fs';
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../../common/process/types';
-import { IExperimentService } from '../../common/types';
+import { ExecutionResult, SpawnOptions } from '../../common/process/types';
+import { IExperimentService, IDisposable } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { normalizeFilename } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
-import { IDisposable } from '../../common/utils/resourceLifecycle';
 import { IServiceContainer } from '../../ioc/types';
+import { plainExec, shellExec } from '../../common/process/rawProcessApis';
+import { BufferDecoder } from '../../common/process/decoder';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
@@ -20,18 +20,31 @@ export function initializeExternalDependencies(serviceContainer: IServiceContain
 
 // processes
 
-function getProcessFactory(): IProcessServiceFactory {
-    return internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+/**
+ * Specialized version of the more generic shellExecute function to use only in
+ * cases where we don't need to pass custom environment variables read from env
+ * files or execution options.
+ */
+export async function shellExecute(
+    command: string,
+    timeout: number,
+    disposables?: Set<IDisposable>,
+): Promise<ExecutionResult<string>> {
+    return shellExec(command, { timeout }, undefined, disposables);
 }
 
-export async function shellExecute(command: string, timeout: number): Promise<ExecutionResult<string>> {
-    const proc = await getProcessFactory().create();
-    return proc.shellExec(command, { timeout });
-}
-
-export async function exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
-    const proc = await getProcessFactory().create();
-    return proc.exec(file, args, options);
+/**
+ * Specialized version of the more generic exec function to use only in
+ * cases where we don't need to pass custom environment variables read from
+ * env files.
+ */
+export async function exec(
+    file: string,
+    args: string[],
+    options: SpawnOptions = {},
+    disposables?: Set<IDisposable>,
+): Promise<ExecutionResult<string>> {
+    return plainExec(file, args, options, new BufferDecoder(), undefined, disposables);
 }
 
 // filesystem
@@ -53,10 +66,6 @@ export function isParentPath(filePath: string, parentPath: string): boolean {
     return normCasePath(filePath).startsWith(normCasePath(parentPath));
 }
 
-export function listDir(dirname: string): Promise<fs.Dirent[]> {
-    return fs.promises.readdir(dirname, { withFileTypes: true });
-}
-
 export async function isDirectory(filename: string): Promise<boolean> {
     const stat = await fsapi.lstat(filename);
     return stat.isDirectory();
@@ -64,6 +73,10 @@ export async function isDirectory(filename: string): Promise<boolean> {
 
 export function normalizePath(filename: string): string {
     return normalizeFilename(filename);
+}
+
+export function resolvePath(filename: string): string {
+    return path.resolve(filename);
 }
 
 export function normCasePath(filePath: string): string {
@@ -88,23 +101,45 @@ export async function getFileInfo(filePath: string): Promise<{ ctime: number; mt
     }
 }
 
-export async function resolveSymbolicLink(filepath: string): Promise<string> {
-    const stats = await fsapi.lstat(filepath);
+export async function resolveSymbolicLink(absPath: string): Promise<string> {
+    const stats = await fsapi.lstat(absPath);
     if (stats.isSymbolicLink()) {
-        const link = await fsapi.readlink(filepath);
-        return resolveSymbolicLink(link);
+        const link = await fsapi.readlink(absPath);
+        // Result from readlink is not guaranteed to be an absolute path. For eg. on Mac it resolves
+        // /usr/local/bin/python3.9 -> ../../../Library/Frameworks/Python.framework/Versions/3.9/bin/python3.9
+        //
+        // The resultant path is reported relative to the symlink directory we resolve. Convert that to absolute path.
+        const absLinkPath = path.isAbsolute(link) ? link : path.resolve(path.dirname(absPath), link);
+        return resolveSymbolicLink(absLinkPath);
     }
-    return filepath;
+    return absPath;
 }
 
-export async function* getSubDirs(root: string): AsyncIterableIterator<string> {
-    const dirContents = await fsapi.readdir(root);
+/**
+ * Returns full path to sub directories of a given directory.
+ * @param {string} root : path to get sub-directories from.
+ * @param options : If called with `resolveSymlinks: true`, then symlinks found in
+ *                  the directory are resolved and if they resolve to directories
+ *                  then resolved values are returned.
+ */
+export async function* getSubDirs(
+    root: string,
+    options?: { resolveSymlinks?: boolean },
+): AsyncIterableIterator<string> {
+    const dirContents = await fsapi.promises.readdir(root, { withFileTypes: true });
     const generators = dirContents.map((item) => {
         async function* generator() {
-            const stat = await fsapi.lstat(path.join(root, item));
-
-            if (stat.isDirectory()) {
-                yield item;
+            const fullPath = path.join(root, item.name);
+            if (item.isDirectory()) {
+                yield fullPath;
+            } else if (options?.resolveSymlinks && item.isSymbolicLink()) {
+                // The current FS item is a symlink. It can potentially be a file
+                // or a directory. Resolve it first and then check if it is a directory.
+                const resolvedPath = await resolveSymbolicLink(fullPath);
+                const resolvedPathStat = await fsapi.lstat(resolvedPath);
+                if (resolvedPathStat.isDirectory()) {
+                    yield resolvedPath;
+                }
             }
         }
 

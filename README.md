@@ -1,6 +1,12 @@
 # Python extension for Visual Studio Code
 
-A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the language: >=3.6), including features such as IntelliSense, linting, debugging, code navigation, code formatting, Jupyter notebook support, refactoring, variable explorer, test explorer, and more!
+A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the language: >=3.6), including features such as IntelliSense, linting, debugging, code navigation, code formatting, refactoring, variable explorer, test explorer, and more!
+
+Additionally, the Python extension gives you an optimal and feature-rich experience for working with Jupyter notebooks through the [Jupyter extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter).
+
+<img src=https://raw.githubusercontent.com/microsoft/vscode-python/main/icon.png width=35 height=35 style="padding:10px">
+
+<img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/icon.png width=35 height=35 style="padding:10px">
 
 ## Quick start
 
@@ -82,7 +88,7 @@ The extension is available in multiple languages: `de`, `en`, `es`, `fa`, `fr`, 
 -   Contributions are always welcome! Please see our [contributing guide](https://github.com/Microsoft/vscode-python/blob/main/CONTRIBUTING.md) for more details
 -   Any and all feedback is appreciated and welcome!
     -   If someone has already [filed an issue](https://github.com/Microsoft/vscode-python) that encompasses your feedback, please leave a 👍/👎 reaction on the issue
-    -   Otherwise please file a new issue
+    -   Otherwise please start a [new discussion](https://github.com/microsoft/vscode-python/discussions/categories/ideas)
 -   If you're interested in the development of the extension, you can read about our [development process](https://github.com/Microsoft/vscode-python/blob/main/CONTRIBUTING.md#development-process)
 
 ## Data and telemetry

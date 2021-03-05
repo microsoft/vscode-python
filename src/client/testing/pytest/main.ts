@@ -6,23 +6,31 @@ import { IServiceContainer } from '../../ioc/types';
 import { PYTEST_PROVIDER } from '../common/constants';
 import { BaseTestManager } from '../common/managers/baseTestManager';
 import {
+    IArgumentsService,
+    IPythonTestMessage,
+    ITestManagerRunner,
     ITestMessageService,
     ITestsHelper,
     TestDiscoveryOptions,
+    TestFilter,
     TestRunOptions,
     Tests,
     TestsToRun,
 } from '../common/types';
-import { IArgumentsService, IPythonTestMessage, ITestManagerRunner, TestFilter } from '../types';
 
 export class TestManager extends BaseTestManager {
     private readonly argsService: IArgumentsService;
+
     private readonly helper: ITestsHelper;
+
     private readonly runner: ITestManagerRunner;
+
     private readonly testMessageService: ITestMessageService;
-    public get enabled() {
+
+    public get enabled(): boolean {
         return this.settings.testing.pytestEnabled;
     }
+
     constructor(workspaceFolder: Uri, rootDirectory: string, serviceContainer: IServiceContainer) {
         super(PYTEST_PROVIDER, Product.pytest, workspaceFolder, rootDirectory, serviceContainer);
         this.argsService = this.serviceContainer.get<IArgumentsService>(IArgumentsService, this.testProvider);
@@ -33,6 +41,7 @@ export class TestManager extends BaseTestManager {
             this.testProvider,
         );
     }
+
     public getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions {
         const args = this.settings.testing.pytestArgs.slice(0);
         return {
@@ -44,6 +53,7 @@ export class TestManager extends BaseTestManager {
             outChannel: this.outputChannel,
         };
     }
+
     public async runTestImpl(
         tests: Tests,
         testsToRun?: TestsToRun,

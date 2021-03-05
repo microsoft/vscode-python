@@ -7,7 +7,7 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, OutputChannel, Uri } from 'vscode';
 import { CommandManager } from '../../../../client/common/application/commandManager';
-import { ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
+import { CommandSource, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { PythonSettings } from '../../../../client/common/configSettings';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
@@ -22,31 +22,36 @@ import {
 } from '../../../../client/common/types';
 import { ServiceContainer } from '../../../../client/ioc/container';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { CommandSource, TEST_OUTPUT_CHANNEL } from '../../../../client/testing/common/constants';
 import { TestCollectionStorageService } from '../../../../client/testing/common/services/storageService';
 import { TestResultsService } from '../../../../client/testing/common/services/testResultsService';
 import { TestsStatusUpdaterService } from '../../../../client/testing/common/services/testsStatusService';
 import { UnitTestDiagnosticService } from '../../../../client/testing/common/services/unitTestDiagnosticService';
 import { TestsHelper } from '../../../../client/testing/common/testUtils';
 import {
+    IArgumentsService,
     ITestCollectionStorageService,
+    ITestDiagnosticService,
     ITestDiscoveryService,
     ITestManager,
+    ITestManagerRunner,
     ITestMessageService,
     ITestResultsService,
     ITestsHelper,
     ITestsStatusUpdaterService,
+    TestDiscoveryOptions,
 } from '../../../../client/testing/common/types';
+import { TEST_OUTPUT_CHANNEL } from '../../../../client/testing/constants';
 import { TestManager as NoseTestManager } from '../../../../client/testing/nosetest/main';
 import { TestManager as PyTestTestManager } from '../../../../client/testing/pytest/main';
 import { ArgumentsService } from '../../../../client/testing/pytest/services/argsService';
 import { TestDiscoveryService } from '../../../../client/testing/pytest/services/discoveryService';
 import { TestMessageService } from '../../../../client/testing/pytest/services/testMessageService';
-import { IArgumentsService, ITestDiagnosticService, ITestManagerRunner } from '../../../../client/testing/types';
 import { TestManager as UnitTestTestManager } from '../../../../client/testing/unittest/main';
 import { TestManagerRunner } from '../../../../client/testing/unittest/runner';
 import { noop } from '../../../core';
 import { MockOutputChannel } from '../../../mockClasses';
+
+const IGNORED_OPTIONS = ({} as unknown) as TestDiscoveryOptions;
 
 suite('Unit Tests - Base Test Manager', () => {
     [
@@ -70,7 +75,9 @@ suite('Unit Tests - Base Test Manager', () => {
             let testDiscoveryService: ITestDiscoveryService;
             let installer: IInstaller;
             const sandbox = sinon.createSandbox();
+
             suiteTeardown(() => sandbox.restore());
+
             setup(() => {
                 serviceContainer = mock(ServiceContainer);
                 settings = mock(PythonSettings);
@@ -132,8 +139,9 @@ suite('Unit Tests - Base Test Manager', () => {
                 when(commandManager.executeCommand(anything(), anything(), anything())).thenResolve();
 
                 sandbox.restore();
-                sandbox.stub(item.class.prototype, 'getDiscoveryOptions').callsFake(() => ({} as any));
+                sandbox.stub(item.class.prototype, 'getDiscoveryOptions').callsFake(() => IGNORED_OPTIONS);
 
+                // eslint-disable-next-line new-cap
                 testManager = new item.class(workspaceFolder, workspaceFolder.fsPath, instance(serviceContainer));
             });
 
@@ -144,54 +152,51 @@ suite('Unit Tests - Base Test Manager', () => {
 
                 verify(commandManager.executeCommand('setContext', 'testsDiscovered', true)).once();
             });
-            test('When failing to discover tests prompt to install test framework', async function () {
-                if (item.name === 'unittest') {
-                    return this.skip();
-                }
 
-                when(testDiscoveryService.discoverTests(anything())).thenReject(new ModuleNotInstalledError('Kaboom'));
-                when(installer.isInstalled(anything(), anything())).thenResolve(false);
-                when(installer.promptToInstall(anything(), anything())).thenResolve();
+            if (item.name !== 'unittest') {
+                test('When failing to discover tests prompt to install test framework', async () => {
+                    when(testDiscoveryService.discoverTests(anything())).thenReject(
+                        new ModuleNotInstalledError('Kaboom'),
+                    );
+                    when(installer.isInstalled(anything(), anything())).thenResolve(false);
+                    when(installer.promptToInstall(anything(), anything())).thenResolve();
 
-                // We don't care about failures in running code
-                // Just test our expectations, ignore everything else.
-                await testManager.discoverTests(CommandSource.ui, true, false, true).catch(noop);
+                    // We don't care about failures in running code
+                    // Just test our expectations, ignore everything else.
+                    await testManager.discoverTests(CommandSource.ui, true, false, true).catch(noop);
 
-                verify(installer.isInstalled(anything(), anything())).once();
-                verify(installer.promptToInstall(anything(), anything())).once();
-            });
-            test('When failing to discover tests do not prompt to install test framework', async function () {
-                if (item.name === 'unittest') {
-                    return this.skip();
-                }
+                    verify(installer.isInstalled(anything(), anything())).once();
+                    verify(installer.promptToInstall(anything(), anything())).once();
+                });
 
-                when(testDiscoveryService.discoverTests(anything())).thenReject(new Error('Kaboom'));
-                when(installer.isInstalled(anything(), anything())).thenResolve(false);
-                when(installer.promptToInstall(anything(), anything())).thenResolve();
+                test('When failing to discover tests do not prompt to install test framework', async () => {
+                    when(testDiscoveryService.discoverTests(anything())).thenReject(new Error('Kaboom'));
+                    when(installer.isInstalled(anything(), anything())).thenResolve(false);
+                    when(installer.promptToInstall(anything(), anything())).thenResolve();
 
-                // We don't care about failures in running code
-                // Just test our expectations, ignore everything else.
-                await testManager.discoverTests(CommandSource.ui, true, false, true).catch(noop);
+                    // We don't care about failures in running code
+                    // Just test our expectations, ignore everything else.
+                    await testManager.discoverTests(CommandSource.ui, true, false, true).catch(noop);
 
-                verify(installer.isInstalled(anything(), anything())).never();
-                verify(installer.promptToInstall(anything(), anything())).never();
-            });
-            test('When failing to discover tests do not prompt to install test framework if installed', async function () {
-                if (item.name === 'unittest') {
-                    return this.skip();
-                }
+                    verify(installer.isInstalled(anything(), anything())).never();
+                    verify(installer.promptToInstall(anything(), anything())).never();
+                });
 
-                when(testDiscoveryService.discoverTests(anything())).thenReject(new ModuleNotInstalledError('Kaboom'));
-                when(installer.isInstalled(anything(), anything())).thenResolve(true);
-                when(installer.promptToInstall(anything(), anything())).thenResolve();
+                test('When failing to discover tests do not prompt to install test framework if installed', async () => {
+                    when(testDiscoveryService.discoverTests(anything())).thenReject(
+                        new ModuleNotInstalledError('Kaboom'),
+                    );
+                    when(installer.isInstalled(anything(), anything())).thenResolve(true);
+                    when(installer.promptToInstall(anything(), anything())).thenResolve();
 
-                // We don't care about failures in running code
-                // Just test our expectations, ignore everything else.
-                await testManager.discoverTests(CommandSource.ui, true, false, true).catch(noop);
+                    // We don't care about failures in running code
+                    // Just test our expectations, ignore everything else.
+                    await testManager.discoverTests(CommandSource.ui, true, false, true).catch(noop);
 
-                verify(installer.isInstalled(anything(), anything())).once();
-                verify(installer.promptToInstall(anything(), anything())).never();
-            });
+                    verify(installer.isInstalled(anything(), anything())).once();
+                    verify(installer.promptToInstall(anything(), anything())).never();
+                });
+            }
         });
     });
 });

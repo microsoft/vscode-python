@@ -13,6 +13,7 @@ import { UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
 import { TestsHelper } from '../../../client/testing/common/testUtils';
 import { TestFlatteningVisitor } from '../../../client/testing/common/testVisitors/flatteningVisitor';
 import {
+    IArgumentsHelper,
     ITestDiscoveryService,
     ITestRunner,
     ITestsParser,
@@ -21,7 +22,6 @@ import {
     Tests,
     UnitTestParserOptions,
 } from '../../../client/testing/common/types';
-import { IArgumentsHelper } from '../../../client/testing/types';
 import { TestDiscoveryService } from '../../../client/testing/unittest/services/discoveryService';
 import { TestsParser } from '../../../client/testing/unittest/services/parserService';
 

@@ -76,14 +76,20 @@ export function getLanguageConfiguration(): LanguageConfiguration {
             },
             // outdent on enter (block-ending statements)
             {
+                /**
+                 * This does not handle all cases. Notable omissions here are
+                 * "return" and "raise" which are complicated by the need to
+                 * only outdent when the cursor is at the end of an expression
+                 * rather than, say, between the parentheses of a tail-call or
+                 * exception construction. (see issue #10583)
+                 */
                 beforeText: verboseRegExp(`
                     ^
                     (?:
                         (?:
                             \\s*
                             (?:
-                                pass |
-                                raise \\s+ [^#\\s] [^#]*
+                                pass
                             )
                         ) |
                         (?:

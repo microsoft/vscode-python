@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import { Socket } from 'net';
@@ -19,10 +20,12 @@ import {
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
 import { LogLevel } from '../logging/levels';
-import { CommandsWithoutArgs } from './application/commands';
-import { ExtensionChannels } from './insidersBuild/types';
-import { InterpreterUri } from './installer/types';
+import type { CommandsWithoutArgs } from './application/commands';
+import type { ExtensionChannels } from './insidersBuild/types';
+import type { InterpreterUri } from './installer/types';
 import { EnvironmentVariables } from './variables/types';
+import { ITestingSettings } from '../testing/configuration/types';
+
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel {}
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
@@ -85,7 +88,6 @@ export enum ProductType {
     RefactoringLibrary = 'RefactoringLibrary',
     WorkspaceSymbols = 'WorkspaceSymbols',
     DataScience = 'DataScience',
-    TensorBoard = 'TensorBoard',
 }
 
 export enum Product {
@@ -113,6 +115,8 @@ export enum Product {
     nbconvert = 22,
     pandas = 23,
     tensorboard = 24,
+    torchProfilerInstallName = 25,
+    torchProfilerImportName = 26,
 }
 
 export enum ModuleNamePurpose {
@@ -129,13 +133,18 @@ export interface IInstaller {
         cancel?: CancellationToken,
         isUpgrade?: boolean,
     ): Promise<InstallerResponse>;
-    install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
-    isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined>;
+    install(
+        product: Product,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken,
+        isUpgrade?: boolean,
+    ): Promise<InstallerResponse>;
+    isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean>;
     isProductVersionCompatible(
         product: Product,
         semVerRequirement: string,
         resource?: InterpreterUri,
-    ): Promise<ProductInstallStatus | undefined>;
+    ): Promise<ProductInstallStatus>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 
@@ -168,6 +177,7 @@ export interface ICurrentProcess {
     readonly stdout: NodeJS.WriteStream;
     readonly stdin: NodeJS.ReadStream;
     readonly execPath: string;
+    // eslint-disable-next-line @typescript-eslint/ban-types
     on(event: string | symbol, listener: Function): this;
 }
 
@@ -208,20 +218,6 @@ export interface ISortImportSettings {
     readonly args: string[];
 }
 
-export interface ITestingSettings {
-    readonly promptToConfigure: boolean;
-    readonly debugPort: number;
-    readonly nosetestsEnabled: boolean;
-    nosetestPath: string;
-    nosetestArgs: string[];
-    readonly pytestEnabled: boolean;
-    pytestPath: string;
-    pytestArgs: string[];
-    readonly unittestEnabled: boolean;
-    unittestArgs: string[];
-    cwd?: string;
-    readonly autoTestDiscoverOnSaveEnabled: boolean;
-}
 export interface IPylintCategorySeverity {
     readonly convention: DiagnosticSeverity;
     readonly refactor: DiagnosticSeverity;
@@ -358,14 +354,28 @@ export const IConfigurationService = Symbol('IConfigurationService');
 export interface IConfigurationService {
     getSettings(resource?: Uri): IPythonSettings;
     isTestExecution(): boolean;
-    updateSetting(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
+    updateSetting(setting: string, value?: unknown, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
     updateSectionSetting(
         section: string,
         setting: string,
-        value?: {},
+        value?: unknown,
         resource?: Uri,
         configTarget?: ConfigurationTarget,
     ): Promise<void>;
+}
+
+/**
+ * Carries various tool execution path settings. For eg. pipenvPath, condaPath, pytestPath etc. These can be
+ * potentially used in discovery, autoselection, activation, installers, execution etc. And so should be a
+ * common interface to all the components.
+ */
+export const IToolExecutionPath = Symbol('IToolExecutionPath');
+export interface IToolExecutionPath {
+    readonly executable: string;
+}
+export enum ToolExecutionPath {
+    pipenv = 'pipenv',
+    // Gradually populate this list with tools as they come up.
 }
 
 export const ISocketServer = Symbol('ISocketServer');
@@ -439,7 +449,7 @@ export interface IExtensions {
      * All extensions currently known to the system.
      */
 
-    readonly all: readonly Extension<any>[];
+    readonly all: readonly Extension<unknown>[];
 
     /**
      * An event which fires when `extensions.all` changes. This can happen when extensions are
@@ -454,7 +464,7 @@ export interface IExtensions {
      * @return An extension or `undefined`.
      */
 
-    getExtension(extensionId: string): Extension<any> | undefined;
+    getExtension(extensionId: string): Extension<unknown> | undefined;
 
     /**
      * Get an extension its full identifier in the form of: `publisher.name`.
@@ -475,11 +485,11 @@ export interface IPythonExtensionBanner {
     readonly enabled: boolean;
     showBanner(): Promise<void>;
 }
-export const BANNER_NAME_PROPOSE_LS: string = 'ProposePylance';
+export const BANNER_NAME_PROPOSE_LS = 'ProposePylance';
 
 export type DeprecatedSettingAndValue = {
     setting: string;
-    values?: {}[];
+    values?: unknown[];
 };
 
 export type DeprecatedFeatureInfo = {
@@ -605,4 +615,17 @@ export interface IInterpreterPathService {
     inspect(resource: Resource): InspectInterpreterSettingType;
     update(resource: Resource, configTarget: ConfigurationTarget, value: string | undefined): Promise<void>;
     copyOldInterpreterStorageValuesToNew(resource: Uri | undefined): Promise<void>;
+}
+
+/**
+ * Interface used to retrieve the default language server to use when in experiment
+ *
+ * Note: This is added to get around a problem that the config service is not `async`.
+ * Adding experiment check there would mean touching the entire extension. For simplicity
+ * this is a solution.
+ */
+export const IDefaultLanguageServer = Symbol('IDefaultLanguageServer');
+
+export interface IDefaultLanguageServer {
+    readonly defaultLSType: LanguageServerType;
 }

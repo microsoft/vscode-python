@@ -8,7 +8,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IWorkspaceService } from '../application/types';
 import { IFileSystem } from '../platform/types';
-import { isUri } from '../utils/misc';
 import { TerminalService } from './service';
 import { SynchronousTerminalService } from './syncTerminalService';
 import { ITerminalService, ITerminalServiceFactory, TerminalCreationOptions } from './types';
@@ -24,23 +23,11 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
     ) {
         this.terminalServices = new Map<string, TerminalService>();
     }
-    public getTerminalService(options?: TerminalCreationOptions): ITerminalService;
-    public getTerminalService(resource?: Uri, title?: string): ITerminalService;
-    public getTerminalService(arg1?: Uri | TerminalCreationOptions, arg2?: string): ITerminalService {
-        const resource = isUri(arg1) ? arg1 : undefined;
-        const title = isUri(arg1) ? undefined : arg1?.title || arg2;
+    public getTerminalService(options: TerminalCreationOptions): ITerminalService {
+        const resource = options?.resource;
+        const title = options?.title;
         const terminalTitle = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
-        const interpreter = isUri(arg1) ? undefined : arg1?.interpreter;
-        const hideFromUser = isUri(arg1) ? false : arg1?.hideFromUser === true;
-        const env = isUri(arg1) ? undefined : arg1?.env;
-
-        const options: TerminalCreationOptions = {
-            env,
-            hideFromUser,
-            interpreter,
-            resource,
-            title,
-        };
+        const interpreter = options?.interpreter;
         const id = this.getTerminalId(terminalTitle, resource, interpreter);
         if (!this.terminalServices.has(id)) {
             const terminalService = new TerminalService(this.serviceContainer, options);

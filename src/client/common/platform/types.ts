@@ -7,7 +7,7 @@ import { SemVer } from 'semver';
 import * as vscode from 'vscode';
 import { Architecture, OSType } from '../utils/platform';
 
-//===========================
+//= ==========================
 // registry
 
 export enum RegistryHive {
@@ -21,7 +21,7 @@ export interface IRegistry {
     getValue(key: string, hive: RegistryHive, arch?: Architecture, name?: string): Promise<string | undefined | null>;
 }
 
-//===========================
+//= ==========================
 // platform
 
 export const IsWindows = Symbol('IS_WINDOWS');
@@ -41,7 +41,7 @@ export interface IPlatformService {
     getVersion(): Promise<SemVer>;
 }
 
-//===========================
+//= ==========================
 // temp FS
 
 export type TemporaryFile = { filePath: string } & vscode.Disposable;
@@ -51,7 +51,7 @@ export interface ITempFileSystem {
     createFile(suffix: string, mode?: number): Promise<TemporaryFile>;
 }
 
-//===========================
+//= ==========================
 // FS paths
 
 // The low-level file path operations used by the extension.
@@ -87,9 +87,10 @@ export interface IFileSystemPathUtils {
     getDisplayName(pathValue: string, cwd?: string): string;
 }
 
-//===========================
+//= ==========================
 // filesystem operations
 
+// We could use FileType from utils/filesystem.ts, but it's simpler this way.
 export import FileType = vscode.FileType;
 export import FileStat = vscode.FileStat;
 export type ReadStream = fs.ReadStream;
@@ -106,7 +107,7 @@ export interface IRawFileSystem {
     // Move the file to a different location (and/or rename it).
     move(src: string, tgt: string): Promise<void>;
 
-    //***********************
+    //* **********************
     // files
 
     // Return the raw bytes of the given file.
@@ -114,7 +115,7 @@ export interface IRawFileSystem {
     // Return the text of the given file (decoded from UTF-8).
     readText(filename: string): Promise<string>;
     // Write the given text to the file (UTF-8 encoded).
-    writeText(filename: string, data: {}): Promise<void>;
+    writeText(filename: string, data: string | Buffer): Promise<void>;
     // Write the given text to the end of the file (UTF-8 encoded).
     appendText(filename: string, text: string): Promise<void>;
     // Copy a file.
@@ -122,7 +123,7 @@ export interface IRawFileSystem {
     // Delete a file.
     rmfile(filename: string): Promise<void>;
 
-    //***********************
+    //* **********************
     // directories
 
     // Create the directory and any missing parent directories.
@@ -134,7 +135,7 @@ export interface IRawFileSystem {
     // Return the contents of the directory.
     listdir(dirname: string): Promise<[string, FileType][]>;
 
-    //***********************
+    //* **********************
     // not async
 
     // Get information about a file (resolve symlinks).
@@ -154,14 +155,14 @@ export interface IFileSystemUtils {
     readonly pathUtils: IFileSystemPathUtils;
     readonly tmp: ITempFileSystem;
 
-    //***********************
+    //* **********************
     // aliases
 
     createDirectory(dirname: string): Promise<void>;
     deleteDirectory(dirname: string): Promise<void>;
     deleteFile(filename: string): Promise<void>;
 
-    //***********************
+    //* **********************
     // helpers
 
     // Determine if the file exists, optionally requiring the type.
@@ -183,7 +184,7 @@ export interface IFileSystemUtils {
     // Get the paths of all files matching the pattern.
     search(globPattern: string): Promise<string[]>;
 
-    //***********************
+    //* **********************
     // helpers (non-async)
 
     fileExistsSync(path: string): boolean;

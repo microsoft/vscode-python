@@ -5,23 +5,24 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
-import { ICommandManager, IWorkspaceService } from '../../common/application/types';
+import { CommandSource, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { CommandSource } from '../common/constants';
 import { getChildren, getParent, getTestDataItemType } from '../common/testUtils';
-import { ITestCollectionStorageService, Tests, TestStatus } from '../common/types';
 import {
+    ITestCollectionStorageService,
     ITestDataItemResource,
     ITestManagementService,
     ITestTreeViewProvider,
     TestDataItem,
     TestDataItemType,
+    Tests,
+    TestStatus,
     TestWorkspaceFolder,
     WorkspaceTestStatus,
-} from '../types';
+} from '../common/types';
 import { TestTreeItem } from './testTreeViewItem';
 
 @injectable()

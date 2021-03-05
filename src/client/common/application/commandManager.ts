@@ -74,7 +74,7 @@ export class CommandManager implements ICommandManager {
         U extends ICommandNameArgumentTypeMapping[E]
     >(command: E, ...rest: U): Thenable<T | undefined> {
         if (command.includes('jupyter') && !this.jupyterExtensionDependencyManager.isJupyterExtensionInstalled) {
-            return this.jupyterExtensionDependencyManager.installJupyterExtension();
+            return this.jupyterExtensionDependencyManager.installJupyterExtension(this);
         } else {
             return commands.executeCommand<T>(command, ...rest);
         }

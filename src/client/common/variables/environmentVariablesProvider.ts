@@ -5,19 +5,25 @@ import { inject, injectable, optional } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
+import { PythonSettings } from '../configSettings';
 import { traceVerbose } from '../logger';
 import { IPlatformService } from '../platform/types';
-import { IConfigurationService, ICurrentProcess, IDisposableRegistry } from '../types';
+import { ICurrentProcess, IDisposableRegistry } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
+import { SystemVariables } from './systemVariables';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 
 const CACHE_DURATION = 60 * 60 * 1000;
 @injectable()
 export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvider, Disposable {
     public trackedWorkspaceFolders = new Set<string>();
+
     private fileWatchers = new Map<string, FileSystemWatcher>();
+
     private disposables: Disposable[] = [];
+
     private changeEventEmitter: EventEmitter<Uri | undefined>;
+
     private readonly envVarCaches = new Map<string, InMemoryCache<EnvironmentVariables>>();
 
     constructor(
@@ -25,7 +31,6 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ICurrentProcess) private process: ICurrentProcess,
         @optional() private cacheDuration: number = CACHE_DURATION,
     ) {
@@ -39,7 +44,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         return this.changeEventEmitter.event;
     }
 
-    public dispose() {
+    public dispose(): void {
         this.changeEventEmitter.dispose();
         this.fileWatchers.forEach((watcher) => {
             if (watcher) {
@@ -69,6 +74,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         cache.data = { ...vars };
         return vars;
     }
+
     public async _getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
         let mergedVars = await this.getCustomEnvironmentVariables(resource);
         if (!mergedVars) {
@@ -85,14 +91,22 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         }
         return mergedVars;
     }
+
     public async getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined> {
-        const settings = this.configurationService.getSettings(resource);
+        const systemVariables: SystemVariables = new SystemVariables(
+            undefined,
+            PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri?.fsPath,
+            this.workspaceService,
+        );
+        const envFileSetting = this.workspaceService.getConfiguration('python', resource).get<string>('envFile');
+        const envFile = systemVariables.resolveAny(envFileSetting)!;
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
-        this.createFileWatcher(settings.envFile, workspaceFolderUri);
-        return this.envVarsService.parseFile(settings.envFile, this.process.env);
+        this.createFileWatcher(envFile, workspaceFolderUri);
+        return this.envVarsService.parseFile(envFile, this.process.env);
     }
-    public configurationChanged(e: ConfigurationChangeEvent) {
+
+    public configurationChanged(e: ConfigurationChangeEvent): void {
         this.trackedWorkspaceFolders.forEach((item) => {
             const uri = item && item.length > 0 ? Uri.file(item) : undefined;
             if (e.affectsConfiguration('python.envFile', uri)) {
@@ -100,7 +114,8 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
             }
         });
     }
-    public createFileWatcher(envFile: string, workspaceFolderUri?: Uri) {
+
+    public createFileWatcher(envFile: string, workspaceFolderUri?: Uri): void {
         if (this.fileWatchers.has(envFile)) {
             return;
         }
@@ -112,9 +127,10 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
             this.disposables.push(envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(workspaceFolderUri)));
         }
     }
+
     private getWorkspaceFolderUri(resource?: Uri): Uri | undefined {
         if (!resource) {
-            return;
+            return undefined;
         }
         const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource!);
         return workspaceFolder ? workspaceFolder.uri : undefined;

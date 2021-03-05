@@ -1,10 +1,12 @@
+/* eslint-disable class-methods-use-this */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ICondaService } from '../../interpreter/contracts';
+import { ICondaService, ICondaLocatorService, IComponentAdapter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { ExecutionInfo, IConfigurationService } from '../types';
+import { inDiscoveryExperiment } from '../experiments/helpers';
+import { ExecutionInfo, IConfigurationService, IExperimentService } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
 import { InterpreterUri } from './types';
@@ -16,6 +18,9 @@ import { InterpreterUri } from './types';
 export class CondaInstaller extends ModuleInstaller {
     public _isCondaAvailable: boolean | undefined;
 
+    // Unfortunately inversify requires the number of args in constructor to be explictly
+    // specified as more than its base class. So we need the constructor.
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }
@@ -24,7 +29,7 @@ export class CondaInstaller extends ModuleInstaller {
         return 'Conda';
     }
 
-    public get displayName() {
+    public get displayName(): string {
         return 'Conda';
     }
 
@@ -67,7 +72,11 @@ export class CondaInstaller extends ModuleInstaller {
         const pythonPath = isResource(resource)
             ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
             : resource.path;
-        const info = await condaService.getCondaEnvironment(pythonPath);
+        const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
+        const condaLocatorService = (await inDiscoveryExperiment(experimentService))
+            ? this.serviceContainer.get<IComponentAdapter>(IComponentAdapter)
+            : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const info = await condaLocatorService.getCondaEnvironment(pythonPath);
         const args = [isUpgrade ? 'update' : 'install'];
 
         // Temporarily ensure tensorboard is installed from the conda-forge
@@ -96,7 +105,10 @@ export class CondaInstaller extends ModuleInstaller {
      * Is the provided interprter a conda environment
      */
     private async isCurrentEnvironmentACondaEnvironment(resource?: InterpreterUri): Promise<boolean> {
-        const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
+        const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
+        const condaService = (await inDiscoveryExperiment(experimentService))
+            ? this.serviceContainer.get<IComponentAdapter>(IComponentAdapter)
+            : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
         const pythonPath = isResource(resource)
             ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
             : resource.path;

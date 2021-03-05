@@ -6,8 +6,15 @@ import { CancellationTokenSource } from 'vscode';
 import { IServiceContainer } from '../../../ioc/types';
 import { NOSETEST_PROVIDER } from '../../common/constants';
 import { Options } from '../../common/runner';
-import { ITestDiscoveryService, ITestRunner, ITestsParser, TestDiscoveryOptions, Tests } from '../../common/types';
-import { IArgumentsService, TestFilter } from '../../types';
+import {
+    IArgumentsService,
+    ITestDiscoveryService,
+    ITestRunner,
+    ITestsParser,
+    TestDiscoveryOptions,
+    TestFilter,
+    Tests,
+} from '../../common/types';
 
 @injectable()
 export class TestDiscoveryService implements ITestDiscoveryService {

@@ -7,12 +7,7 @@ import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode
 
 import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/checks/lsNotSupported';
 import { IDiagnosticsService } from '../application/diagnostics/types';
-import {
-    IApplicationEnvironment,
-    IApplicationShell,
-    ICommandManager,
-    IWorkspaceService,
-} from '../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { traceError } from '../common/logger';
 import {
@@ -55,11 +50,17 @@ interface IActivatedServer {
 export class LanguageServerExtensionActivationService
     implements IExtensionActivationService, ILanguageServerCache, Disposable {
     private cache = new Map<string, Promise<RefCountedLanguageServer>>();
+
     private activatedServer?: IActivatedServer;
+
     private readonly workspaceService: IWorkspaceService;
+
     private readonly output: OutputChannel;
+
     private readonly interpreterService: IInterpreterService;
+
     private readonly languageServerChangeHandler: LanguageServerChangeHandler;
+
     private resource!: Resource;
 
     constructor(
@@ -84,8 +85,9 @@ export class LanguageServerExtensionActivationService
             this.getCurrentLanguageServerType(),
             this.serviceContainer.get<IExtensions>(IExtensions),
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
-            this.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment),
             this.serviceContainer.get<ICommandManager>(ICommandManager),
+            this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
+            this.serviceContainer.get<IConfigurationService>(IConfigurationService),
         );
         disposables.push(this.languageServerChangeHandler);
     }
@@ -138,7 +140,7 @@ export class LanguageServerExtensionActivationService
         return result;
     }
 
-    public dispose() {
+    public dispose(): void {
         if (this.activatedServer) {
             this.activatedServer.server.dispose();
         }
@@ -185,8 +187,8 @@ export class LanguageServerExtensionActivationService
         );
     }
 
-    protected async onWorkspaceFoldersChanged() {
-        //If an activated workspace folder was removed, dispose its activator
+    protected async onWorkspaceFoldersChanged(): Promise<void> {
+        // If an activated workspace folder was removed, dispose its activator
         const workspaceKeys = await Promise.all(
             this.workspaceService.workspaceFolders!.map((workspaceFolder) => this.getKey(workspaceFolder.uri)),
         );
@@ -241,6 +243,7 @@ export class LanguageServerExtensionActivationService
             if (serverType === LanguageServerType.Jedi) {
                 throw ex;
             }
+            traceError(ex);
             this.output.appendLine(LanguageService.lsFailedToStart());
             serverType = LanguageServerType.Jedi;
             server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
@@ -263,6 +266,9 @@ export class LanguageServerExtensionActivationService
             case LanguageServerType.Jedi:
                 outputLine = LanguageService.startingJedi();
                 break;
+            case LanguageServerType.JediLSP:
+                outputLine = LanguageService.startingJediLSP();
+                break;
             case LanguageServerType.Microsoft:
                 outputLine = LanguageService.startingMicrosoft();
                 break;
@@ -273,7 +279,7 @@ export class LanguageServerExtensionActivationService
                 outputLine = LanguageService.startingNone();
                 break;
             default:
-                throw new Error('Unknown langauge server type in activator.');
+                throw new Error('Unknown language server type in activator.');
         }
         this.output.appendLine(outputLine);
     }
@@ -304,7 +310,7 @@ export class LanguageServerExtensionActivationService
             resource,
             workspacePathNameForGlobalWorkspaces,
         );
-        interpreter = interpreter ? interpreter : await this.interpreterService.getActiveInterpreter(resource);
+        interpreter = interpreter || (await this.interpreterService.getActiveInterpreter(resource));
         const interperterPortion = interpreter ? `${interpreter.path}-${interpreter.envName}` : '';
         return `${resourcePortion}-${interperterPortion}`;
     }

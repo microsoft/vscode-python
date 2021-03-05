@@ -22,11 +22,11 @@ import {
     TestFile,
     TestFolder,
     TestFunction,
+    ITestManagementService,
     Tests,
     TestSuite,
 } from '../../../client/testing/common/types';
 import { TestTreeViewProvider } from '../../../client/testing/explorer/testTreeViewProvider';
-import { ITestManagementService } from '../../../client/testing/types';
 
 /**
  * Disposable class that doesn't do anything, help for event-registration against

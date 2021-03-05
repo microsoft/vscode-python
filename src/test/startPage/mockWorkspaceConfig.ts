@@ -37,8 +37,11 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
               key: string;
               defaultValue?: T | undefined;
               globalValue?: T | undefined;
+              globalLanguageValue?: T | undefined;
               workspaceValue?: T | undefined;
+              workspaceLanguageValue?: T | undefined;
               workspaceFolderValue?: T | undefined;
+              workspaceFolderLanguageValue?: T | undefined;
           }
         | undefined {
         return this.values.get(section);

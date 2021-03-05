@@ -1,11 +1,21 @@
 import { Uri } from 'vscode';
+import { CommandSource } from '../../common/application/types';
 import { Product } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
-import { CommandSource, UNITTEST_PROVIDER } from '../common/constants';
+import { UNITTEST_PROVIDER } from '../common/constants';
 import { BaseTestManager } from '../common/managers/baseTestManager';
-import { ITestsHelper, TestDiscoveryOptions, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
-import { IArgumentsService, ITestManagerRunner, TestFilter } from '../types';
+import {
+    IArgumentsService,
+    ITestManagerRunner,
+    ITestsHelper,
+    TestDiscoveryOptions,
+    TestFilter,
+    TestRunOptions,
+    Tests,
+    TestStatus,
+    TestsToRun,
+} from '../common/types';
 
 export class TestManager extends BaseTestManager {
     private readonly argsService: IArgumentsService;

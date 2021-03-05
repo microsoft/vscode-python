@@ -1,16 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
+
 import '../../extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 
-import { ICondaService } from '../../../interpreter/contracts';
+import { IComponentAdapter, ICondaLocatorService, ICondaService } from '../../../interpreter/contracts';
 import { IPlatformService } from '../../platform/types';
-import { IConfigurationService } from '../../types';
+import { IConfigurationService, IExperimentService } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
+import { IServiceContainer } from '../../../ioc/types';
+import { inDiscoveryExperiment } from '../../experiments/helpers';
 
 // Version number of conda that requires we call activate with 'conda activate' instead of just 'activate'
 const CondaRequiredMajor = 4;
@@ -26,12 +30,16 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IPlatformService) private platform: IPlatformService,
         @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(IExperimentService) private experimentService: IExperimentService,
+        @inject(IComponentAdapter) private pyenvs: IComponentAdapter,
     ) {}
 
     /**
      * Is the given shell supported for activating a conda env?
      */
-    public isShellSupported(_targetShell: TerminalShellType): boolean {
+    // eslint-disable-next-line class-methods-use-this
+    public isShellSupported(): boolean {
         return true;
     }
 
@@ -42,7 +50,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         resource: Uri | undefined,
         targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
-        const pythonPath = this.configService.getSettings(resource).pythonPath;
+        const { pythonPath } = this.configService.getSettings(resource);
         return this.getActivationCommandsForInterpreter(pythonPath, targetShell);
     }
 
@@ -54,9 +62,12 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         pythonPath: string,
         targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
-        const envInfo = await this.condaService.getCondaEnvironment(pythonPath);
+        const condaLocatorService = (await inDiscoveryExperiment(this.experimentService))
+            ? this.pyenvs
+            : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const envInfo = await condaLocatorService.getCondaEnvironment(pythonPath);
         if (!envInfo) {
-            return;
+            return undefined;
         }
 
         const condaEnv = envInfo.name.length > 0 ? envInfo.name : envInfo.path;
@@ -72,7 +83,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                 versionInfo.minor >= CondaRequiredMinorForPowerShell &&
                 (targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore)
             ) {
-                return this.getPowershellCommands(condaEnv);
+                return _getPowershellCommands(condaEnv);
             }
             if (versionInfo.minor >= CondaRequiredMinor) {
                 // New version.
@@ -88,23 +99,22 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         switch (targetShell) {
             case TerminalShellType.powershell:
             case TerminalShellType.powershellCore:
-                return this.getPowershellCommands(condaEnv);
+                return _getPowershellCommands(condaEnv);
 
             // TODO: Do we really special-case fish on Windows?
             case TerminalShellType.fish:
-                return this.getFishCommands(condaEnv, await this.condaService.getCondaFile());
+                return getFishCommands(condaEnv, await this.condaService.getCondaFile());
 
             default:
                 if (this.platform.isWindows) {
                     return this.getWindowsCommands(condaEnv);
-                } else {
-                    return this.getUnixCommands(condaEnv, await this.condaService.getCondaFile());
                 }
+                return getUnixCommands(condaEnv, await this.condaService.getCondaFile());
         }
     }
 
     public async getWindowsActivateCommand(): Promise<string> {
-        let activateCmd: string = 'activate';
+        let activateCmd = 'activate';
 
         const condaExePath = await this.condaService.getCondaFile();
 
@@ -122,28 +132,25 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         const activate = await this.getWindowsActivateCommand();
         return [`${activate} ${condaEnv.toCommandArgument()}`];
     }
-    /**
-     * The expectation is for the user to configure Powershell for Conda.
-     * Hence we just send the command `conda activate ...`.
-     * This configuration is documented on Conda.
-     * Extension will not attempt to work around issues by trying to setup shell for user.
-     *
-     * @param {string} condaEnv
-     * @returns {(Promise<string[] | undefined>)}
-     * @memberof CondaActivationCommandProvider
-     */
-    public async getPowershellCommands(condaEnv: string): Promise<string[] | undefined> {
-        return [`conda activate ${condaEnv.toCommandArgument()}`];
-    }
+}
 
-    public async getFishCommands(condaEnv: string, condaFile: string): Promise<string[] | undefined> {
-        // https://github.com/conda/conda/blob/be8c08c083f4d5e05b06bd2689d2cd0d410c2ffe/shell/etc/fish/conf.d/conda.fish#L18-L28
-        return [`${condaFile.fileToCommandArgument()} activate ${condaEnv.toCommandArgument()}`];
-    }
+/**
+ * The expectation is for the user to configure Powershell for Conda.
+ * Hence we just send the command `conda activate ...`.
+ * This configuration is documented on Conda.
+ * Extension will not attempt to work around issues by trying to setup shell for user.
+ */
+export async function _getPowershellCommands(condaEnv: string): Promise<string[] | undefined> {
+    return [`conda activate ${condaEnv.toCommandArgument()}`];
+}
 
-    public async getUnixCommands(condaEnv: string, condaFile: string): Promise<string[] | undefined> {
-        const condaDir = path.dirname(condaFile);
-        const activateFile = path.join(condaDir, 'activate');
-        return [`source ${activateFile.fileToCommandArgument()} ${condaEnv.toCommandArgument()}`];
-    }
+async function getFishCommands(condaEnv: string, condaFile: string): Promise<string[] | undefined> {
+    // https://github.com/conda/conda/blob/be8c08c083f4d5e05b06bd2689d2cd0d410c2ffe/shell/etc/fish/conf.d/conda.fish#L18-L28
+    return [`${condaFile.fileToCommandArgument()} activate ${condaEnv.toCommandArgument()}`];
+}
+
+async function getUnixCommands(condaEnv: string, condaFile: string): Promise<string[] | undefined> {
+    const condaDir = path.dirname(condaFile);
+    const activateFile = path.join(condaDir, 'activate');
+    return [`source ${activateFile.fileToCommandArgument()} ${condaEnv.toCommandArgument()}`];
 }

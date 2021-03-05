@@ -3,6 +3,7 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
+import { getOSType, OSType } from '../../../../../client/common/utils/platform';
 import { Disposables } from '../../../../../client/common/utils/resourceLifecycle';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
 import { IPythonEnvsIterator } from '../../../../../client/pythonEnvironments/base/locator';
@@ -14,6 +15,8 @@ import * as externalDeps from '../../../../../client/pythonEnvironments/common/e
 import * as binWatcher from '../../../../../client/pythonEnvironments/common/pythonBinariesWatcher';
 
 suite('File System Watching Locator Tests', () => {
+    const baseDir = '/this/is/a/fake/path';
+    const callback = async () => Promise.resolve(PythonEnvKind.System);
     let inExperimentStub: sinon.SinonStub;
     let watchLocationStub: sinon.SinonStub;
 
@@ -30,13 +33,13 @@ suite('File System Watching Locator Tests', () => {
     });
 
     class TestWatcher extends FSWatchingLocator {
-        constructor(watcherKind: FSWatcherKind) {
-            super(
-                () => '/this/is/a/fake/path',
-                async () => Promise.resolve(PythonEnvKind.System),
-                {},
-                watcherKind,
-            );
+        constructor(
+            watcherKind: FSWatcherKind,
+            opts: {
+                envStructure?: binWatcher.PythonEnvStructure;
+            } = {},
+        ) {
+            super(() => baseDir, callback, opts, watcherKind);
         }
 
         public async initialize() {
@@ -54,24 +57,65 @@ suite('File System Watching Locator Tests', () => {
         }
     }
 
-    const watcherKinds = [FSWatcherKind.Global, FSWatcherKind.Workspace];
-    const watcherExperiment = [true, false];
-
-    watcherKinds.forEach((watcherKind) => {
-        watcherExperiment.forEach((experiment) => {
-            test(`When watcher experiment is ${experiment} and watching ${FSWatcherKind[watcherKind]}`, async () => {
-                inExperimentStub.resolves(experiment);
-
-                const testWatcher = new TestWatcher(watcherKind);
-                await testWatcher.initialize();
-
-                // Watcher should be called for all workspace locators. For global locators it should be called only if
-                // the watcher experiment allows it
-                if ((watcherKind === FSWatcherKind.Global && experiment) || watcherKind === FSWatcherKind.Workspace) {
-                    assert.ok(watchLocationStub.calledOnce);
-                } else {
-                    assert.ok(watchLocationStub.notCalled);
+    [
+        binWatcher.PythonEnvStructure.Standard,
+        binWatcher.PythonEnvStructure.Flat,
+        // `undefined` means "use the default".
+        undefined,
+    ].forEach((envStructure) => {
+        suite(`${envStructure || 'default'} structure`, () => {
+            const expected =
+                getOSType() === OSType.Windows
+                    ? [
+                          // The first one is the basename glob.
+                          'python.exe',
+                          '*/python.exe',
+                          '*/Scripts/python.exe',
+                      ]
+                    : [
+                          // The first one is the basename glob.
+                          'python',
+                          '*/python',
+                          '*/bin/python',
+                      ];
+            if (envStructure === binWatcher.PythonEnvStructure.Flat) {
+                while (expected.length > 1) {
+                    expected.pop();
                 }
+            }
+
+            const watcherKinds = [FSWatcherKind.Global, FSWatcherKind.Workspace];
+            const watcherExperiment = [true, false];
+
+            const opts = {
+                envStructure,
+            };
+
+            watcherKinds.forEach((watcherKind) => {
+                suite(`watching ${FSWatcherKind[watcherKind]}`, () => {
+                    watcherExperiment.forEach((experiment) => {
+                        test(`${experiment ? '' : 'not '}in experiment`, async () => {
+                            inExperimentStub.resolves(experiment);
+
+                            const testWatcher = new TestWatcher(watcherKind, opts);
+                            await testWatcher.initialize();
+
+                            // Watcher should be called for all workspace locators. For global locators it should be called only if
+                            // the watcher experiment allows it
+                            if (
+                                (watcherKind === FSWatcherKind.Global && experiment) ||
+                                watcherKind === FSWatcherKind.Workspace
+                            ) {
+                                assert.equal(watchLocationStub.callCount, expected.length);
+                                expected.forEach((glob) => {
+                                    assert.ok(watchLocationStub.calledWithMatch(baseDir, sinon.match.any, glob));
+                                });
+                            } else {
+                                assert.ok(watchLocationStub.notCalled);
+                            }
+                        });
+                    });
+                });
             });
         });
     });

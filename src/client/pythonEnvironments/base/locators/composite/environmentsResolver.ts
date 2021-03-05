@@ -30,11 +30,11 @@ export class PythonEnvsResolver implements ILocator {
         if (!environment) {
             return undefined;
         }
-        const interpreterInfo = await this.environmentInfoService.getEnvironmentInfo(environment.executable.filename);
-        if (!interpreterInfo) {
+        const info = await this.environmentInfoService.getEnvironmentInfo(environment.executable.filename);
+        if (!info) {
             return undefined;
         }
-        return getResolvedEnv(interpreterInfo, environment);
+        return getResolvedEnv(info, environment);
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
@@ -61,6 +61,10 @@ export class PythonEnvsResolver implements ILocator {
                     state.done = true;
                     checkIfFinishedAndNotify(state, didUpdate);
                     listener.dispose();
+                } else if (event.update === undefined) {
+                    throw new Error(
+                        'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in resolver',
+                    );
                 } else if (seen[event.index] !== undefined) {
                     seen[event.index] = event.update;
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
@@ -97,14 +101,15 @@ export class PythonEnvsResolver implements ILocator {
         state.pending += 1;
         // It's essential we increment the pending call count before any asynchronus calls in this method.
         // We want this to be run even when `resolveInBackground` is called in background.
-        const interpreterInfo = await this.environmentInfoService.getEnvironmentInfo(
-            seen[envIndex].executable.filename,
-        );
-        if (interpreterInfo) {
-            const resolvedEnv = getResolvedEnv(interpreterInfo, seen[envIndex]);
-            const old = seen[envIndex];
+        const info = await this.environmentInfoService.getEnvironmentInfo(seen[envIndex].executable.filename);
+        const old = seen[envIndex];
+        if (info) {
+            const resolvedEnv = getResolvedEnv(info, seen[envIndex]);
             seen[envIndex] = resolvedEnv;
             didUpdate.fire({ old, index: envIndex, update: resolvedEnv });
+        } else {
+            // Send update that the environment is not valid.
+            didUpdate.fire({ old, index: envIndex, update: undefined });
         }
         state.pending -= 1;
         checkIfFinishedAndNotify(state, didUpdate);

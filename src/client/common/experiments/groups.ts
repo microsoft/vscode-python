@@ -1,9 +1,3 @@
-// Experiment to check whether to always display the test explorer.
-export enum AlwaysDisplayTestExplorerGroups {
-    control = 'AlwaysDisplayTestExplorer - control',
-    experiment = 'AlwaysDisplayTestExplorer - experiment',
-}
-
 // Experiment to check whether to show "Extension Survey prompt" or not.
 export enum ShowExtensionSurveyPrompt {
     control = 'ShowExtensionSurveyPrompt - control',
@@ -69,7 +63,7 @@ export enum SurveyAndInterpreterTipNotification {
 
 // Experiment to switch Jedi to use an LSP instead of direct providers
 export enum JediLSP {
-    experiment = 'jediLSP',
+    experiment = 'pythonJediLSP',
 }
 // Experiment to show a prompt asking users to join python mailing list.
 export enum JoinMailingListPromptVariants {
@@ -99,4 +93,16 @@ export enum LinterInstallationPromptVariants {
 export enum DiscoveryVariants {
     discoverWithFileWatching = 'pythonDiscoveryModule',
     discoveryWithoutFileWatching = 'pythonDiscoveryModuleWithoutWatcher',
+}
+
+// Find Interpreter suggestion experiment variants
+export enum FindInterpreterVariants {
+    findLast = 'pythonFindInterpreter',
+}
+
+// Feature gate to control whether we install the PyTorch profiler package
+// torch.profiler release is being delayed till end of March. This allows us
+// to turn on the profiler plugin install functionality between releases
+export enum TorchProfiler {
+    experiment = 'PythonPyTorchProfiler',
 }

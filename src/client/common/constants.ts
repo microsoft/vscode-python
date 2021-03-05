@@ -79,6 +79,7 @@ export namespace Octicons {
     export const Test_Skip = '$(circle-slash)';
     export const Downloading = '$(cloud-download)';
     export const Installing = '$(desktop-download)';
+    export const Search_Stop = '$(search-stop)';
 }
 
 export const Button_Text_Tests_View_Output = 'View Output';

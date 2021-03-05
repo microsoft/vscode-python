@@ -13,6 +13,7 @@ import { ILocator } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsReducer } from './base/locators/composite/environmentsReducer';
 import { PythonEnvsResolver } from './base/locators/composite/environmentsResolver';
+import { WindowsPathEnvVarLocator } from './base/locators/lowLevel/windowsKnownPathsLocator';
 import { WorkspaceVirtualEnvironmentLocator } from './base/locators/lowLevel/workspaceVirtualEnvLocator';
 import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
@@ -25,7 +26,7 @@ import { PyenvLocator } from './discovery/locators/services/pyenvLocator';
 import { WindowsRegistryLocator } from './discovery/locators/services/windowsRegistryLocator';
 import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreLocator';
 import { EnvironmentInfoService } from './info/environmentInfoService';
-import { registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
+import { isComponentEnabled, registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
 import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
 
 /**
@@ -59,6 +60,12 @@ export async function initialize(ext: ExtensionState): Promise<PythonEnvironment
  * Make use of the component (e.g. register with VS Code).
  */
 export async function activate(api: PythonEnvironments): Promise<ActivationResult> {
+    if (!(await isComponentEnabled())) {
+        return {
+            fullyReady: Promise.resolve(),
+        };
+    }
+
     // Force an initial background refresh of the environments.
     getEnvs(api.iterEnvs())
         // Don't wait for it to finish.
@@ -117,7 +124,7 @@ function createNonWorkspaceLocators(ext: ExtensionState): ILocator[] {
             // Windows specific locators go here.
             new WindowsRegistryLocator(),
             new WindowsStoreLocator(),
-            // new WindowsPathEnvVarLocator(),
+            new WindowsPathEnvVarLocator(),
         ];
     } else {
         locators = [

@@ -402,12 +402,14 @@ export interface ITestScenarioDetails {
     failedRunOutput?: string;
 }
 
+const IGNORED_RESOURCE = (undefined as unknown) as vscode.Uri;
+const IGNORED_TESTS_TO_RUN = (undefined as unknown) as TestsToRun;
 export const testScenarios: ITestScenarioDetails[] = [
     {
         scenarioName: 'Run Tests',
         discoveryOutput: 'one.output',
         runOutput: 'one.xml',
-        testsToRun: undefined as any,
+        testsToRun: IGNORED_TESTS_TO_RUN,
         testDetails: allTestDetails.filter(() => {
             return true;
         }),
@@ -426,6 +428,7 @@ export const testScenarios: ITestScenarioDetails[] = [
                     functions: [],
                     suites: [],
                     time: 0,
+                    resource: IGNORED_RESOURCE,
                 },
             ],
             testFolder: [],
@@ -440,7 +443,7 @@ export const testScenarios: ITestScenarioDetails[] = [
         scenarioName: 'Run Specific Test Suite',
         discoveryOutput: 'four.output',
         runOutput: 'four.xml',
-        testsToRun: undefined as any,
+        testsToRun: IGNORED_TESTS_TO_RUN,
         testSuiteIndex: 0,
         testDetails: allTestDetails.filter((td) => {
             return td.className === 'test_root.Test_Root_test1';
@@ -450,7 +453,7 @@ export const testScenarios: ITestScenarioDetails[] = [
         scenarioName: 'Run Specific Test Function',
         discoveryOutput: 'five.output',
         runOutput: 'five.xml',
-        testsToRun: undefined as any,
+        testsToRun: IGNORED_TESTS_TO_RUN,
         testFunctionIndex: 0,
         testDetails: allTestDetails.filter((td) => {
             return td.testName === 'test_Root_A';
@@ -460,8 +463,9 @@ export const testScenarios: ITestScenarioDetails[] = [
         scenarioName: 'Run Failed Tests',
         discoveryOutput: 'two.output',
         runOutput: 'two.xml',
-        testsToRun: undefined as any,
-        testDetails: allTestDetails.filter((_td) => {
+        testsToRun: IGNORED_TESTS_TO_RUN,
+        // We ignore the "td" arg to the filter callback.
+        testDetails: allTestDetails.filter(() => {
             return true;
         }),
         shouldRunFailed: true,

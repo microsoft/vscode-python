@@ -1,5 +1,96 @@
 # Changelog
 
+## 2021.2.0-rc (8 February 2021)
+
+### Enhancements
+
+1. Use Language Server Protocol to work with Jedi.
+   ([#11995](https://github.com/Microsoft/vscode-python/issues/11995))
+
+### Fixes
+
+1. Don't suggest insiders program nor show start page when in Codespaces.
+   ([#14833](https://github.com/Microsoft/vscode-python/issues/14833))
+1. Fix description of `Pyramid` debug config.
+   (thanks [vvijayalakshmi21](https://github.com/vvijayalakshmi21/))
+   ([#5479](https://github.com/Microsoft/vscode-python/issues/5479))
+1. Refactored the Enable Linting command to provide the user with a choice of "Enable" or "Disable" linting to make it more intuitive. (thanks [henryboisdequin](https://github.com/henryboisdequin))
+   ([#8800](https://github.com/Microsoft/vscode-python/issues/8800))
+1. Fix marketplace links in popups opening a non-browser VS Code instance in Codespaces.
+   ([#14264](https://github.com/Microsoft/vscode-python/issues/14264))
+1. Fixed the error command suggested when attempting to use "debug tests" configuration
+   (Thanks [Shahzaib paracha](https://github.com/ShahzaibParacha))
+   ([#14729](https://github.com/Microsoft/vscode-python/issues/14729))
+1. Single test run fails sometimes if there is an error in unrelated file imported during discovery.
+   (thanks [Szymon Janota](https://github.com/sjanota/))
+   ([#15147](https://github.com/Microsoft/vscode-python/issues/15147))
+1. Re-enable localization on the start page. It was accidentally
+   disabled in October when the Jupyter extension was split out.
+   ([#15232](https://github.com/Microsoft/vscode-python/issues/15232))
+1. Ensure target environment is activated in the terminal when running install scripts.
+   ([#15285](https://github.com/Microsoft/vscode-python/issues/15285))
+1. Allow support for using notebook APIs in the VS code stable build.
+   ([#15364](https://github.com/Microsoft/vscode-python/issues/15364))
+
+### Code Health
+
+1. Raised the minimum required VS Code version to 1.51.
+   ([#15237](https://github.com/Microsoft/vscode-python/issues/15237))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2021.1.0 (21 January 2021)
 
 ### Enhancements
@@ -562,6 +653,10 @@ part of!
    ([#14182](https://github.com/Microsoft/vscode-python/issues/14182))
 1. Fix exporting from the interactive window.
    ([#14210](https://github.com/Microsoft/vscode-python/issues/14210))
+1. Fix for CVE-2020-16977
+   ([CVE-2020-16977](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2020-16977))
+1. Fix for CVE-2020-17163
+   ([CVE-2020-17163](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2020-17163))
 
 ### Thanks
 

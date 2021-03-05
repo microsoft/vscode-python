@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import '../../common/extensions';
-
 import { inject, injectable } from 'inversify';
 import {
     DidChangeConfigurationNotification,
@@ -11,9 +10,16 @@ import {
     State,
 } from 'vscode-languageclient/node';
 
+import { ChildProcess } from 'child_process';
 import { DeprecatePythonPath } from '../../common/experiments/groups';
 import { traceDecorators, traceError } from '../../common/logger';
-import { IConfigurationService, IExperimentsManager, IInterpreterPathService, Resource } from '../../common/types';
+import {
+    IConfigurationService,
+    IExperimentsManager,
+    IInterpreterPathService,
+    IPythonSettings,
+    Resource,
+} from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
@@ -21,11 +27,13 @@ import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ITestManagementService } from '../../testing/types';
+import { ITestingService } from '../../testing/types';
 import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
+import { StopWatch } from '../../common/utils/stopWatch';
+import { getMemoryUsage } from '../../common/process/memory';
 
 @injectable()
 export class JediLanguageServerProxy implements ILanguageServerProxy {
@@ -41,12 +49,18 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
 
     private lsVersion: string | undefined;
 
+    private pidUsageFailures = { timer: new StopWatch(), counter: 0 };
+
+    private pythonSettings: IPythonSettings | undefined;
+
+    private timer?: NodeJS.Timer | number;
+
     constructor(
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
-        @inject(ITestManagementService) private readonly testManager: ITestManagementService,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(ITestingService) private readonly testManager: ITestingService,
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
     ) {
         this.startupCompleted = createDeferred<void>();
     }
@@ -64,14 +78,22 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
             this.languageClient.stop().then(noop, (ex) => traceError('Stopping language client failed', ex));
             this.languageClient = undefined;
         }
+
         if (this.cancellationStrategy) {
             this.cancellationStrategy.dispose();
             this.cancellationStrategy = undefined;
         }
+
+        if (this.timer) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            clearTimeout(this.timer as any);
+        }
+
         while (this.disposables.length > 0) {
             const d = this.disposables.shift()!;
             d.dispose();
         }
+
         if (this.startupCompleted.completed) {
             this.startupCompleted.reject(new Error('Disposed language server'));
             this.startupCompleted = createDeferred<void>();
@@ -81,7 +103,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
 
     @traceDecorators.error('Failed to start language server')
     @captureTelemetry(
-        EventName.LANGUAGE_SERVER_ENABLED,
+        EventName.JEDI_LANGUAGE_SERVER_ENABLED,
         undefined,
         true,
         undefined,
@@ -93,6 +115,8 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         options: LanguageClientOptions,
     ): Promise<void> {
         if (!this.languageClient) {
+            this.pythonSettings = this.configurationService.getSettings(resource);
+
             this.lsVersion =
                 (options.middleware ? (<LanguageClientMiddleware>options.middleware).serverVersion : undefined) ??
                 '0.19.3';
@@ -107,7 +131,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
                 // late the server may have already sent a message (which leads to failures). Register
                 // these on the state change to running to ensure they are ready soon enough.
                 if (e.newState === State.Running) {
-                    this.registerHandlers(resource);
+                    this.registerHandlers();
                 }
             });
 
@@ -120,6 +144,12 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
             }
 
             await this.registerTestServices();
+
+            try {
+                await this.checkJediLSPMemoryFootprint();
+            } catch (ex) {
+                // Ignore errors
+            }
         } else {
             await this.startupCompleted.promise;
         }
@@ -131,7 +161,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
     }
 
     @captureTelemetry(
-        EventName.LANGUAGE_SERVER_READY,
+        EventName.JEDI_LANGUAGE_SERVER_READY,
         undefined,
         true,
         undefined,
@@ -155,7 +185,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         await this.testManager.activate(new LanguageServerSymbolProvider(this.languageClient));
     }
 
-    private registerHandlers(resource: Resource) {
+    private registerHandlers() {
         if (this.disposed) {
             // Check if it got disposed in the interim.
             return;
@@ -167,7 +197,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
             this.disposables.push(
                 this.interpreterPathService.onDidChange(() => {
-                    // Manually send didChangeConfiguration in order to get the server to requery
+                    // Manually send didChangeConfiguration in order to get the server to re-query
                     // the workspace configurations (to then pick up pythonPath set in the middleware).
                     // This is needed as interpreter changes via the interpreter path service happen
                     // outside of VS Code's settings (which would mean VS Code sends the config updates itself).
@@ -177,18 +207,57 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
                 }),
             );
         }
+    }
 
-        const settings = this.configurationService.getSettings(resource);
-        if (settings.downloadLanguageServer) {
-            this.languageClient!.onTelemetry((telemetryEvent) => {
-                const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
-                const formattedProperties = {
-                    ...telemetryEvent.Properties,
-                    // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
-                    method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
+    private async checkJediLSPMemoryFootprint() {
+        // Check memory footprint periodically. Do not check on every request due to
+        // the performance impact. See https://github.com/soyuka/pidusage - on Windows
+        // it is using wmic which means spawning cmd.exe process on every request.
+        if (this.pythonSettings && this.pythonSettings.jediMemoryLimit === -1) {
+            return;
+        }
+
+        await this.sendJediMemoryTelemetry();
+        if (this.timer) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            clearTimeout(this.timer as any);
+        }
+        this.timer = setTimeout(() => this.checkJediLSPMemoryFootprint(), 15 * 1000);
+    }
+
+    private async sendJediMemoryTelemetry(): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const proc: ChildProcess | undefined = (this.languageClient as any)._serverProcess as ChildProcess;
+        if (
+            !proc ||
+            proc.killed ||
+            this.pidUsageFailures.counter > 2 ||
+            !this.pythonSettings ||
+            this.pythonSettings.jediMemoryLimit === -1
+        ) {
+            return;
+        }
+
+        try {
+            const memory = await getMemoryUsage(proc.pid);
+            const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 3072), 8192) * 1024 * 1024;
+            if (memory > 0) {
+                const props = {
+                    memUse: memory,
+                    limit,
+                    isUserDefinedLimit: limit !== 1024,
+                    restart: false,
                 };
-                sendTelemetryEvent(eventName, telemetryEvent.Measurements, formattedProperties);
-            });
+                sendTelemetryEvent(EventName.JEDI_MEMORY, undefined, props);
+            }
+        } catch (err) {
+            this.pidUsageFailures.counter += 1;
+            // If this function fails 2 times in the last 60 seconds, lets not try ever again.
+            if (this.pidUsageFailures.timer.elapsedTime > 60 * 1000) {
+                this.pidUsageFailures.counter = 0;
+                this.pidUsageFailures.timer.reset();
+            }
+            traceError('Python Extension: (pidusage-tree)', err);
         }
     }
 }

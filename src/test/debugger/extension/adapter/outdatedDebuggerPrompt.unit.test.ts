@@ -63,6 +63,7 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
             type: 'python',
             workspaceFolder,
             customRequest: () => Promise.resolve(),
+            getDebugProtocolBreakpoint: () => Promise.resolve(undefined),
         };
     }
 

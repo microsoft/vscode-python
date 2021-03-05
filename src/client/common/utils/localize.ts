@@ -5,7 +5,10 @@
 
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { Octicons } from '../constants';
 import { FileSystem } from '../platform/fileSystem';
+
+/* eslint-disable @typescript-eslint/no-namespace, no-shadow */
 
 // External callers of localize use these tables to retrieve localized values.
 export namespace Diagnostics {
@@ -112,10 +115,6 @@ export namespace Pylance {
     export const tryItNow = localize('Pylance.tryItNow', 'Try it now');
     export const remindMeLater = localize('Pylance.remindMeLater', 'Remind me later');
 
-    export const installPylanceMessage = localize(
-        'Pylance.installPylanceMessage',
-        'Pylance extension is not installed. Click Yes to open Pylance installation page.',
-    );
     export const pylanceNotInstalledMessage = localize(
         'Pylance.pylanceNotInstalledMessage',
         'Pylance extension is not installed.',
@@ -124,6 +123,13 @@ export namespace Pylance {
         'Pylance.pylanceInstalledReloadPromptMessage',
         'Pylance extension is now installed. Reload window to activate?',
     );
+
+    export const pylanceRevertToJediPrompt = localize(
+        'Pylance.pylanceRevertToJediPrompt',
+        'The Pylance extension is not installed but the python.languageServer value is set to "Pylance". Would you like to install the Pylance extension to use Pylance, or revert back to Jedi?',
+    );
+    export const pylanceInstallPylance = localize('Pylance.pylanceInstallPylance', 'Install Pylance');
+    export const pylanceRevertToJedi = localize('Pylance.pylanceRevertToJedi', 'Revert to Jedi');
 }
 
 export namespace Jupyter {
@@ -170,6 +176,14 @@ export namespace TensorBoard {
         'TensorBoard.installPrompt',
         'The package TensorBoard is required to launch a TensorBoard session. Would you like to install it?',
     );
+    export const installTensorBoardAndProfilerPluginPrompt = localize(
+        'TensorBoard.installTensorBoardAndProfilerPluginPrompt',
+        'TensorBoard >= 2.4.1 and the PyTorch Profiler TensorBoard plugin are required. Would you like to install these packages?',
+    );
+    export const installProfilerPluginPrompt = localize(
+        'TensorBoard.installProfilerPluginPrompt',
+        'We recommend installing the PyTorch Profiler TensorBoard plugin. Would you like to install the package?',
+    );
     export const upgradePrompt = localize(
         'TensorBoard.upgradePrompt',
         'Integrated TensorBoard support is only available for TensorBoard >= 2.4.1. Would you like to upgrade your copy of TensorBoard?',
@@ -191,6 +205,7 @@ export namespace LanguageService {
         'Starting Microsoft Python language server.',
     );
     export const startingPylance = localize('LanguageService.startingPylance', 'Starting Pylance language server.');
+    export const startingJediLSP = localize('LanguageService.startingJediLSP', 'Starting Jedi language server.');
     export const startingNone = localize(
         'LanguageService.startingNone',
         'Editor support is inactive since language server is set to None.',
@@ -272,6 +287,19 @@ export namespace InterpreterQuickPickList {
         detail: localize('InterpreterQuickPickList.enterPath.detail', 'Enter path or find an existing interpreter'),
         label: localize('InterpreterQuickPickList.enterPath.label', 'Enter interpreter path...'),
         placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python interpreter.'),
+    };
+    export const findPath = {
+        detail: localize(
+            'InterpreterQuickPickList.findPath.detail',
+            'Browse the file system to find a Python interpreter.',
+        ),
+        label: (): string => {
+            const labelText = localize(
+                'InterpreterQuickPickList.findPath.label',
+                "I can't find the interpreter I want to select...",
+            );
+            return `${Octicons.Search_Stop} ${labelText()}`;
+        },
     };
     export const browsePath = {
         label: localize('InterpreterQuickPickList.browsePath.label', 'Find...'),
@@ -575,14 +603,14 @@ let askedForCollection: Record<string, string> = {};
 let loadedLocale: string;
 
 // This is exported only for testing purposes.
-export function _resetCollections() {
+export function _resetCollections(): void {
     loadedLocale = '';
     loadedCollection = undefined;
     askedForCollection = {};
 }
 
 // This is exported only for testing purposes.
-export function _getAskedForCollection() {
+export function _getAskedForCollection(): Record<string, string> {
     return askedForCollection;
 }
 
@@ -601,7 +629,7 @@ export function getCollectionJSON(): string {
 
 export function localize(key: string, defValue?: string) {
     // Return a pointer to function so that we refetch it on each call.
-    return () => {
+    return (): string => {
         return getString(key, defValue);
     };
 }

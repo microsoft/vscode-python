@@ -24,25 +24,37 @@ import { TestsHelper } from './common/testUtils';
 import { TestFlatteningVisitor } from './common/testVisitors/flatteningVisitor';
 import { TestResultResetVisitor } from './common/testVisitors/resultResetVisitor';
 import {
+    IArgumentsHelper,
+    IArgumentsService,
     ITestCollectionStorageService,
+    ITestConfigSettingsService,
+    ITestConfigurationManagerFactory,
+    ITestConfigurationService,
     ITestContextService,
+    ITestDataItemResource,
     ITestDebugLauncher,
+    ITestDiagnosticService,
     ITestDiscoveryService,
+    ITestDisplay,
+    ITestManagementService,
     ITestManager,
     ITestManagerFactory,
+    ITestManagerRunner,
     ITestManagerService,
     ITestManagerServiceFactory,
     ITestMessageService,
+    ITestResultDisplay,
     ITestResultsService,
     ITestRunner,
     ITestsHelper,
     ITestsParser,
     ITestsStatusUpdaterService,
+    ITestTreeViewProvider,
     ITestVisitor,
+    IUnitTestHelper,
     IUnitTestSocketServer,
     IWorkspaceTestManagerService,
     IXUnitParser,
-    TestProvider,
 } from './common/types';
 import { UpdateTestSettingService } from './common/updateTestSettings';
 import { XUnitParser } from './common/xUnitParser';
@@ -54,7 +66,7 @@ import { TestExplorerCommandHandler } from './explorer/commandHandlers';
 import { FailedTestHandler } from './explorer/failedTestHandler';
 import { TestTreeViewProvider } from './explorer/testTreeViewProvider';
 import { TreeViewService } from './explorer/treeView';
-import { UnitTestManagementService } from './main';
+import { TestingService, UnitTestManagementService } from './main';
 import { registerTypes as registerNavigationTypes } from './navigation/serviceRegistry';
 import { ITestExplorerCommandHandler } from './navigation/types';
 import { TestManager as NoseTestManager } from './nosetest/main';
@@ -67,21 +79,7 @@ import { TestManagerRunner as PytestManagerRunner } from './pytest/runner';
 import { ArgumentsService as PyTestArgumentsService } from './pytest/services/argsService';
 import { TestDiscoveryService as PytestTestDiscoveryService } from './pytest/services/discoveryService';
 import { TestMessageService } from './pytest/services/testMessageService';
-import {
-    IArgumentsHelper,
-    IArgumentsService,
-    ITestConfigSettingsService,
-    ITestConfigurationManagerFactory,
-    ITestConfigurationService,
-    ITestDataItemResource,
-    ITestDiagnosticService,
-    ITestDisplay,
-    ITestManagementService,
-    ITestManagerRunner,
-    ITestResultDisplay,
-    ITestTreeViewProvider,
-    IUnitTestHelper,
-} from './types';
+import { ITestingService, TestProvider } from './types';
 import { UnitTestHelper } from './unittest/helper';
 import { TestManager as UnitTestTestManager } from './unittest/main';
 import { TestManagerRunner as UnitTestTestManagerRunner } from './unittest/runner';
@@ -135,6 +133,8 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<ITestConfigurationService>(ITestConfigurationService, UnitTestConfigurationService);
     serviceManager.addSingleton<ITestManagementService>(ITestManagementService, UnitTestManagementService);
+    serviceManager.addSingleton<ITestingService>(ITestingService, TestingService);
+
     serviceManager.addSingleton<ITestResultDisplay>(ITestResultDisplay, TestResultDisplay);
     serviceManager.addSingleton<ITestDisplay>(ITestDisplay, TestDisplay);
     serviceManager.addSingleton<ITestConfigSettingsService>(ITestConfigSettingsService, TestConfigSettingsService);

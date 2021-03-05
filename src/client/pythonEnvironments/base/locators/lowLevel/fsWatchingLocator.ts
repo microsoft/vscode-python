@@ -1,20 +1,50 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Uri } from 'vscode';
+import * as fs from 'fs';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { DiscoveryVariants } from '../../../../common/experiments/groups';
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
+import { logError } from '../../../../logging';
 import { getEnvironmentDirFromPath } from '../../../common/commonUtils';
 import { inExperiment } from '../../../common/externalDependencies';
-import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
+import {
+    PythonEnvStructure,
+    resolvePythonExeGlobs,
+    watchLocationForPythonBinaries,
+} from '../../../common/pythonBinariesWatcher';
 import { PythonEnvKind } from '../../info';
 import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
 
 export enum FSWatcherKind {
     Global, // Watcher observes a global location such as ~/.envs, %LOCALAPPDATA%/Microsoft/WindowsApps.
     Workspace, // Watchers observes directory in the user's currently open workspace.
+}
+
+type DirUnwatchableReason = 'too many files' | undefined;
+
+/**
+ * Determine if the directory is watchable.
+ */
+export function checkDirWatchable(dirname: string): DirUnwatchableReason {
+    let names: string[];
+    try {
+        names = fs.readdirSync(dirname);
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            // We treat a missing directory as watchable since it should
+            // be watchable if created later.
+            return undefined;
+        }
+        throw err; // re-throw
+    }
+    // The limit here is an educated guess.
+    if (names.length > 200) {
+        return 'too many files';
+    }
+    return undefined;
 }
 
 /**
@@ -46,6 +76,10 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
              * Location affected by the event. If not provided, a default search location is used.
              */
             searchLocation?: string;
+            /**
+             * The Python env structure to watch.
+             */
+            envStructure?: PythonEnvStructure;
         } = {},
         private readonly watcherKind: FSWatcherKind = FSWatcherKind.Global,
     ) {
@@ -58,22 +92,31 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
         if (typeof roots === 'string') {
             roots = [roots];
         }
+        const promises = roots.map(async (root) => {
+            // Note that we only check the root dir.  Any directories
+            // that might be watched due to a glob are not checked.
+            const unwatchable = await checkDirWatchable(root);
+            if (unwatchable) {
+                logError(`dir "${root}" is not watchable (${unwatchable})`);
+                return undefined;
+            }
+            return root;
+        });
+        const watchableRoots = (await Promise.all(promises)).filter((root) => !!root) as string[];
 
         // Enable all workspace watchers.
-        let enableGlobalWatchers = true;
         if (this.watcherKind === FSWatcherKind.Global) {
             // Enable global watchers only if the experiment allows it.
-            enableGlobalWatchers = await inExperiment(DiscoveryVariants.discoverWithFileWatching);
+            const enableGlobalWatchers = await inExperiment(DiscoveryVariants.discoverWithFileWatching);
+            if (!enableGlobalWatchers) {
+                return;
+            }
         }
 
-        roots.forEach((root) => {
-            if (enableGlobalWatchers) {
-                this.startWatcher(root);
-            }
-        });
+        watchableRoots.forEach((root) => this.startWatchers(root));
     }
 
-    private startWatcher(root: string): void {
+    private startWatchers(root: string): void {
         const callback = async (type: FileChangeType, executable: string) => {
             if (type === FileChangeType.Created) {
                 if (this.opts.delayOnCreated !== undefined) {
@@ -98,6 +141,13 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
             );
             this.emitter.fire({ type, kind, searchLocation });
         };
-        this.disposables.push(watchLocationForPythonBinaries(root, callback, this.opts.executableBaseGlob));
+
+        const globs = resolvePythonExeGlobs(
+            this.opts.executableBaseGlob,
+            // The structure determines which globs are returned.
+            this.opts.envStructure,
+        );
+        const watchers = globs.map((g) => watchLocationForPythonBinaries(root, callback, g));
+        this.disposables.push(...watchers);
     }
 }

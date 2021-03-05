@@ -7,25 +7,31 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IAsyncDisposableRegistry, IDisposableRegistry, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { IInterpreterAutoSeletionProxyService } from './types';
+import { IInterpreterAutoSelectionProxyService } from './types';
 
 @injectable()
-export class InterpreterAutoSeletionProxyService implements IInterpreterAutoSeletionProxyService {
+export class InterpreterAutoSelectionProxyService implements IInterpreterAutoSelectionProxyService {
     private readonly didAutoSelectedInterpreterEmitter = new EventEmitter<void>();
-    private instance?: IInterpreterAutoSeletionProxyService;
+
+    private instance?: IInterpreterAutoSelectionProxyService;
+
     constructor(@inject(IDisposableRegistry) private readonly disposables: IAsyncDisposableRegistry) {}
-    public registerInstance(instance: IInterpreterAutoSeletionProxyService): void {
+
+    public registerInstance(instance: IInterpreterAutoSelectionProxyService): void {
         this.instance = instance;
         this.disposables.push(
             this.instance.onDidChangeAutoSelectedInterpreter(() => this.didAutoSelectedInterpreterEmitter.fire()),
         );
     }
+
     public get onDidChangeAutoSelectedInterpreter(): Event<void> {
         return this.didAutoSelectedInterpreterEmitter.event;
     }
+
     public getAutoSelectedInterpreter(resource: Resource): PythonEnvironment | undefined {
         return this.instance ? this.instance.getAutoSelectedInterpreter(resource) : undefined;
     }
+
     public async setWorkspaceInterpreter(resource: Uri, interpreter: PythonEnvironment | undefined): Promise<void> {
         return this.instance ? this.instance.setWorkspaceInterpreter(resource, interpreter) : undefined;
     }

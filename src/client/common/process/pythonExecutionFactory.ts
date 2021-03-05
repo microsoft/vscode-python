@@ -5,7 +5,7 @@ import { gte } from 'semver';
 
 import { Uri } from 'vscode';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { IComponentAdapter, ICondaService } from '../../interpreter/contracts';
+import { IComponentAdapter, ICondaLocatorService, ICondaService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
 import { inDiscoveryExperiment } from '../experiments/helpers';
@@ -112,9 +112,12 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processServicePromise = processService
             ? Promise.resolve(processService)
             : this.processServiceFactory.create(resource);
+        const condaLocatorService = (await inDiscoveryExperiment(this.experimentService))
+            ? this.serviceContainer.get<IComponentAdapter>(IComponentAdapter)
+            : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
         const [condaVersion, condaEnvironment, condaFile, procService] = await Promise.all([
             this.condaService.getCondaVersion(),
-            this.condaService.getCondaEnvironment(pythonPath),
+            condaLocatorService.getCondaEnvironment(pythonPath),
             this.condaService.getCondaFile(),
             processServicePromise,
         ]);

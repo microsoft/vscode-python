@@ -17,6 +17,7 @@ import {
     IOutputChannel,
     WORKSPACE_MEMENTO,
 } from './common/types';
+import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { OutputChannelNames } from './common/utils/localize';
 import { ExtensionState } from './components';
 import { ServiceContainer } from './ioc/container';
@@ -25,7 +26,7 @@ import { IServiceContainer, IServiceManager } from './ioc/types';
 import { addOutputChannelLogging } from './logging';
 import * as pythonEnvironments from './pythonEnvironments';
 import { PythonEnvironments } from './pythonEnvironments/api';
-import { TEST_OUTPUT_CHANNEL } from './testing/common/constants';
+import { TEST_OUTPUT_CHANNEL } from './testing/constants';
 
 // The code in this module should do nothing more complex than register
 // objects to DI and simple init (e.g. no side effects).  That implies
@@ -69,6 +70,7 @@ export function initializeStandard(ext: ExtensionState): void {
     const { serviceManager } = ext.legacyIOC;
     // Core registrations (non-feature specific).
     commonRegisterTypes(serviceManager);
+    variableRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
 

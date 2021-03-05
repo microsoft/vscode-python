@@ -9,7 +9,7 @@ import { Uri } from 'vscode';
 import { IFormatterHelper } from '../../formatters/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ILinterManager } from '../../linters/types';
-import { ITestsHelper } from '../../testing/common/types';
+import { ITestingService } from '../../testing/types';
 import { IConfigurationService, IInstaller, ModuleNamePurpose, Product } from '../types';
 import { IProductPathService } from './types';
 
@@ -78,7 +78,7 @@ export class TestFrameworkProductPathService extends BaseProductPathsService {
         super(serviceContainer);
     }
     public getExecutableNameFromSettings(product: Product, resource?: Uri): string {
-        const testHelper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
+        const testHelper = this.serviceContainer.get<ITestingService>(ITestingService);
         const settingsPropNames = testHelper.getSettingsPropertyNames(product);
         if (!settingsPropNames.pathName) {
             // E.g. in the case of UnitTests we don't allow customizing the paths.
@@ -101,16 +101,6 @@ export class RefactoringLibraryProductPathService extends BaseProductPathsServic
 
 @injectable()
 export class DataScienceProductPathService extends BaseProductPathsService {
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer);
-    }
-    public getExecutableNameFromSettings(product: Product, _?: Uri): string {
-        return this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);
-    }
-}
-
-@injectable()
-export class TensorBoardProductPathService extends BaseProductPathsService {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }

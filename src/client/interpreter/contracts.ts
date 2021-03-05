@@ -32,6 +32,9 @@ export interface IVirtualEnvironmentsSearchPathProvider {
 
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
+    // InterpreterLocatorProgressStatubarHandler
+    readonly onRefreshing: Event<void>;
+    readonly onRefreshed: Event<void>;
     // VirtualEnvPrompt
     onDidCreate(resource: Resource, callback: () => void): Disposable;
     // IInterpreterLocatorService
@@ -77,16 +80,26 @@ export interface IInterpreterLocatorService extends Disposable {
 }
 
 export const ICondaService = Symbol('ICondaService');
-
+/**
+ * Interface carries the properties which are not available via the discovery component interface.
+ */
 export interface ICondaService {
-    readonly condaEnvironmentsFile: string | undefined;
     getCondaFile(): Promise<string>;
     isCondaAvailable(): Promise<boolean>;
     getCondaVersion(): Promise<SemVer | undefined>;
+    getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined>;
+}
+
+export const ICondaLocatorService = Symbol('ICondaLocatorService');
+/**
+ * @deprecated Use the new discovery component when in experiment, use this otherwise.
+ */
+export interface ICondaLocatorService {
+    readonly condaEnvironmentsFile: string | undefined;
+    getCondaFile(): Promise<string>;
     getCondaInfo(): Promise<CondaInfo | undefined>;
     getCondaEnvironments(ignoreCache: boolean): Promise<CondaEnvironmentInfo[] | undefined>;
     getInterpreterPath(condaEnvironmentPath: string): string;
-    getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined>;
     isCondaEnvironment(interpreterPath: string): Promise<boolean>;
     getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
 }

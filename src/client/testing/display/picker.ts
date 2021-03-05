@@ -1,21 +1,20 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { QuickPickItem, Uri } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../common/application/types';
+import { CommandSource, IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IServiceContainer } from '../../ioc/types';
-import { CommandSource } from '../common/constants';
 import {
     FlattenedTestFunction,
     ITestCollectionStorageService,
+    ITestDisplay,
     TestFile,
     TestFunction,
     Tests,
     TestStatus,
     TestsToRun,
 } from '../common/types';
-import { ITestDisplay } from '../types';
 
 @injectable()
 export class TestDisplay implements ITestDisplay {

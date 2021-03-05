@@ -43,7 +43,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILanguageServerAnalysisOptions)
-        @named(LanguageServerType.Jedi)
+        @named(LanguageServerType.JediLSP)
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(ICommandManager) commandManager: ICommandManager,
     ) {
@@ -121,7 +121,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
     }
 
     @captureTelemetry(
-        EventName.LANGUAGE_SERVER_STARTUP,
+        EventName.JEDI_LANGUAGE_SERVER_STARTUP,
         undefined,
         true,
         undefined,
@@ -134,7 +134,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         const options = await this.analysisOptions.getAnalysisOptions();
         this.middleware = new LanguageClientMiddleware(
             this.serviceContainer,
-            LanguageServerType.Jedi,
+            LanguageServerType.JediLSP,
             () => this.languageServerProxy?.languageClient,
             this.lsVersion,
         );

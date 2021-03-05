@@ -7,7 +7,6 @@ import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { ConfigurationTarget, Disposable, Uri, workspace } from 'vscode';
 import { WorkspaceService } from '../../../client/common/application/workspace';
-import { ConfigurationService } from '../../../client/common/configuration/service';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposableRegistry, IPathUtils } from '../../../client/common/types';
@@ -35,7 +34,7 @@ suite('Multiroot Environment Variables Provider', () => {
     const pathVariableName = getSearchPathEnvVarNames()[0];
     suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
-            return this.skip();
+            this.skip();
         }
         await clearPythonPathInWorkspaceFolder(workspace4Path);
         await updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
@@ -76,14 +75,12 @@ suite('Multiroot Environment Variables Provider', () => {
         const variablesService = new EnvironmentVariablesService(pathUtils, fs);
         const disposables = ioc.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         ioc.serviceManager.addSingletonInstance(IInterpreterAutoSelectionService, new MockAutoSelectionService());
-        const cfgService = new ConfigurationService(ioc.serviceContainer);
         const workspaceService = new WorkspaceService();
         return new EnvironmentVariablesProvider(
             variablesService,
             disposables,
             new PlatformService(),
             workspaceService,
-            cfgService,
             mockProcess,
         );
     }
@@ -181,7 +178,7 @@ suite('Multiroot Environment Variables Provider', () => {
         // this test is flaky on windows (likely the value of the path property
         // has incorrect path separator chars). Tracked by GH #4756
         if (isOs(OSType.Windows)) {
-            return this.skip();
+            this.skip();
         }
 
         await updateSetting('envFile', '${workspaceRoot}/.env', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);

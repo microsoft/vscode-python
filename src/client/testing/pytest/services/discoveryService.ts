@@ -5,17 +5,26 @@ import { inject, injectable } from 'inversify';
 import { CancellationTokenSource } from 'vscode';
 import { IServiceContainer } from '../../../ioc/types';
 import { PYTEST_PROVIDER } from '../../common/constants';
-import { ITestDiscoveryService, ITestsHelper, TestDiscoveryOptions, Tests } from '../../common/types';
-import { IArgumentsService, TestFilter } from '../../types';
+import {
+    IArgumentsService,
+    ITestDiscoveryService,
+    ITestsHelper,
+    TestDiscoveryOptions,
+    TestFilter,
+    Tests,
+} from '../../common/types';
 
 @injectable()
 export class TestDiscoveryService implements ITestDiscoveryService {
     private argsService: IArgumentsService;
+
     private helper: ITestsHelper;
+
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.argsService = this.serviceContainer.get<IArgumentsService>(IArgumentsService, PYTEST_PROVIDER);
         this.helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
     }
+
     public async discoverTests(options: TestDiscoveryOptions): Promise<Tests> {
         const args = this.buildTestCollectionArgs(options);
 
@@ -41,7 +50,8 @@ export class TestDiscoveryService implements ITestDiscoveryService {
 
         return this.helper.mergeTests(results);
     }
-    protected buildTestCollectionArgs(options: TestDiscoveryOptions) {
+
+    protected buildTestCollectionArgs(options: TestDiscoveryOptions): string[] {
         // Remove unwnted arguments (which happen to be test directories & test specific args).
         const args = this.argsService.filterArguments(options.args, TestFilter.discovery);
         if (options.ignoreCache && args.indexOf('--cache-clear') === -1) {
@@ -53,6 +63,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
         args.splice(0, 0, '--rootdir', options.workspaceFolder.fsPath);
         return args;
     }
+
     protected async discoverTestsInTestDirectory(options: TestDiscoveryOptions): Promise<Tests> {
         const token = options.token ? options.token : new CancellationTokenSource().token;
         const discoveryOptions = { ...options };
@@ -61,7 +72,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
 
         const discoveryService = this.serviceContainer.get<ITestDiscoveryService>(ITestDiscoveryService, 'common');
         if (discoveryOptions.token && discoveryOptions.token.isCancellationRequested) {
-            return Promise.reject<Tests>('cancelled');
+            return Promise.reject<Tests>(new Error('cancelled'));
         }
 
         return discoveryService.discoverTests(discoveryOptions);

@@ -18,14 +18,16 @@ import {
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import '../../../client/common/extensions';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { IConfigurationService, IPythonSettings, ITestingSettings } from '../../../client/common/types';
+import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
 import { IDebugEnvironmentVariablesService } from '../../../client/debugger/extension/configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from '../../../client/debugger/extension/configuration/resolvers/launch';
 import { DebugOptions } from '../../../client/debugger/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { DebugLauncher } from '../../../client/testing/common/debugLauncher';
-import { LaunchOptions, TestProvider } from '../../../client/testing/common/types';
+import { LaunchOptions } from '../../../client/testing/common/types';
+import { ITestingSettings } from '../../../client/testing/configuration/types';
+import { TestProvider } from '../../../client/testing/types';
 import { isOs, OSType } from '../../common';
 
 use(chaiAsPromised);

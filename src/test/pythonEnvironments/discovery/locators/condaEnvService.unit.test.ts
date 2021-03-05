@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { IPersistentStateFactory } from '../../../../client/common/types';
-import { ICondaService, IInterpreterHelper } from '../../../../client/interpreter/contracts';
+import { ICondaLocatorService, IInterpreterHelper } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import {
@@ -21,7 +21,7 @@ const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', '
 suite('Interpreters from Conda Environments', () => {
     let ioc: UnitTestIocContainer;
     let condaProvider: CondaEnvService;
-    let condaService: TypeMoq.IMock<ICondaService>;
+    let condaService: TypeMoq.IMock<ICondaLocatorService>;
     let interpreterHelper: TypeMoq.IMock<InterpreterHelper>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     setup(async () => {
@@ -36,7 +36,7 @@ suite('Interpreters from Conda Environments', () => {
             .setup((s) => s.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => state);
 
-        condaService = TypeMoq.Mock.ofType<ICondaService>();
+        condaService = TypeMoq.Mock.ofType<ICondaLocatorService>();
         interpreterHelper = TypeMoq.Mock.ofType<InterpreterHelper>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         condaProvider = new CondaEnvService(
@@ -53,7 +53,7 @@ suite('Interpreters from Conda Environments', () => {
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
     }
-    function _parseCondaInfo(info: CondaInfo, conda: ICondaService, fs: IFileSystem, h: IInterpreterHelper) {
+    function _parseCondaInfo(info: CondaInfo, conda: ICondaLocatorService, fs: IFileSystem, h: IInterpreterHelper) {
         return parseCondaInfo(info, conda.getInterpreterPath, fs.fileExists, h.getInterpreterInformation);
     }
 

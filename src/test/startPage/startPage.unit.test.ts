@@ -5,7 +5,7 @@
 
 import * as assert from 'assert';
 import * as typemoq from 'typemoq';
-import { Memento } from 'vscode';
+import { ExtensionContext } from 'vscode';
 import {
     IApplicationEnvironment,
     IApplicationShell,
@@ -34,7 +34,7 @@ suite('StartPage tests', () => {
     let appShell: typemoq.IMock<IApplicationShell>;
     let context: typemoq.IMock<IExtensionContext>;
     let appEnvironment: typemoq.IMock<IApplicationEnvironment>;
-    let memento: typemoq.IMock<Memento>;
+    let memento: typemoq.IMock<ExtensionContext['globalState']>;
     const dummySettings = new PythonSettings(undefined, new MockAutoSelectionService());
 
     function setupVersions(savedVersion: string, actualVersion: string) {
@@ -67,7 +67,7 @@ suite('StartPage tests', () => {
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         context = typemoq.Mock.ofType<IExtensionContext>();
         appEnvironment = typemoq.Mock.ofType<IApplicationEnvironment>();
-        memento = typemoq.Mock.ofType<Memento>();
+        memento = typemoq.Mock.ofType<ExtensionContext['globalState']>();
 
         configuration.setup((cs) => cs.getSettings(undefined)).returns(() => dummySettings);
 

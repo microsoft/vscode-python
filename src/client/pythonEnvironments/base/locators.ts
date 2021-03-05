@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { EventEmitter } from 'vscode';
 import { chain } from '../../common/utils/async';
+import { Disposables } from '../../common/utils/resourceLifecycle';
 import { PythonEnvInfo } from './info';
 import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from './locator';
 import { PythonEnvsWatchers } from './watchers';
@@ -18,23 +18,27 @@ export function combineIterators(iterators: IPythonEnvsIterator[]): IPythonEnvsI
         return result;
     }
 
-    const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
-    let numActive = events.length;
-    events.forEach((event) => {
-        event!((e: PythonEnvUpdatedEvent | null) => {
-            // NOSONAR
-            if (e === null) {
-                numActive -= 1;
-                if (numActive === 0) {
-                    // All the sub-events are done so we're done.
-                    emitter.fire(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    result.onUpdated = (handleEvent: (e: PythonEnvUpdatedEvent | null) => any) => {
+        const disposables = new Disposables();
+        let numActive = events.length;
+        events.forEach((event) => {
+            const disposable = event!((e: PythonEnvUpdatedEvent | null) => {
+                // NOSONAR
+                if (e === null) {
+                    numActive -= 1;
+                    if (numActive === 0) {
+                        // All the sub-events are done so we're done.
+                        handleEvent(null);
+                    }
+                } else {
+                    handleEvent(e);
                 }
-            } else {
-                emitter.fire(e);
-            }
+            });
+            disposables.push(disposable);
         });
-    });
-    result.onUpdated = emitter.event;
+        return disposables;
+    };
     return result;
 }
 

@@ -34,7 +34,6 @@ import {
     IInterpreterStatusbarVisibilityFilter,
 } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
-import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 
@@ -55,7 +54,6 @@ suite('Interpreters Display', () => {
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
-    let virtualEnvMgr: TypeMoq.IMock<IVirtualEnvironmentManager>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let disposableRegistry: Disposable[];
     let statusBar: TypeMoq.IMock<StatusBarItem>;
@@ -71,7 +69,6 @@ suite('Interpreters Display', () => {
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        virtualEnvMgr = TypeMoq.Mock.ofType<IVirtualEnvironmentManager>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
         disposableRegistry = [];
@@ -94,9 +91,6 @@ suite('Interpreters Display', () => {
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService)))
             .returns(() => interpreterService.object);
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IVirtualEnvironmentManager)))
-            .returns(() => virtualEnvMgr.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => disposableRegistry);
         serviceContainer
@@ -227,9 +221,6 @@ suite('Interpreters Display', () => {
         interpreterHelper
             .setup((v) => v.getInterpreterInformation(TypeMoq.It.isValue(pythonPath)))
             .returns(() => Promise.resolve(undefined));
-        virtualEnvMgr
-            .setup((v) => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath)))
-            .returns(() => Promise.resolve(''));
 
         await interpreterDisplay.refresh(resource);
 
@@ -251,9 +242,6 @@ suite('Interpreters Display', () => {
             path: pythonPath,
         };
         fileSystem.setup((fs) => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
-        virtualEnvMgr
-            .setup((v) => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath)))
-            .returns(() => Promise.resolve(''));
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(resource)))
             .returns(() => Promise.resolve(activeInterpreter))

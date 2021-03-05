@@ -13,7 +13,7 @@ import {
     getInterpreterPathFromDir,
     getPythonVersionFromPath,
 } from '../../../common/commonUtils';
-import { getFileInfo, getSubDirs, pathExists } from '../../../common/externalDependencies';
+import { arePathsSame, getFileInfo, getSubDirs, pathExists } from '../../../common/externalDependencies';
 
 function getPyenvDir(): string {
     // Check if the pyenv environment variables exist: PYENV on Windows, PYENV_ROOT on Unix.
@@ -35,6 +35,17 @@ function getPyenvDir(): string {
 
 function getPyenvVersionsDir(): string {
     return path.join(getPyenvDir(), 'versions');
+}
+
+/**
+ * Checks if a given directory path is same as `pyenv` shims path. This checks
+ * `~/.pyenv/shims` on posix and `~/.pyenv/pyenv-win/shims` on windows.
+ * @param {string} dirPath: Absolute path to any directory
+ * @returns {boolean}: Returns true if the patch is same as `pyenv` shims directory.
+ */
+export function isPyenvShimDir(dirPath: string): boolean {
+    const shimPath = path.join(getPyenvDir(), 'shims');
+    return arePathsSame(shimPath, dirPath) || arePathsSame(`${shimPath}${path.sep}`, dirPath);
 }
 
 /**
@@ -248,15 +259,15 @@ export function parsePyenvVersion(str: string): Promise<IPyenvVersionStrings | u
 async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
     const pyenvVersionDir = getPyenvVersionsDir();
 
-    const subDirs = getSubDirs(pyenvVersionDir);
-    for await (const subDir of subDirs) {
-        const envDir = path.join(pyenvVersionDir, subDir);
-        const interpreterPath = await getInterpreterPathFromDir(envDir);
+    const subDirs = getSubDirs(pyenvVersionDir, { resolveSymlinks: true });
+    for await (const subDirPath of subDirs) {
+        const envDirName = path.basename(subDirPath);
+        const interpreterPath = await getInterpreterPathFromDir(subDirPath);
 
         if (interpreterPath) {
             // The sub-directory name sometimes can contain distro and python versions.
             // here we attempt to extract the texts out of the name.
-            const versionStrings = await parsePyenvVersion(subDir);
+            const versionStrings = await parsePyenvVersion(envDirName);
 
             // Here we look for near by files, or config files to see if we can get python version info
             // without running python itself.
@@ -279,7 +290,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
             // `pyenv local|global <env-name>` or `pyenv shell <env-name>`
             //
             // For the display name we are going to treat these as `pyenv` environments.
-            const display = `${subDir}:pyenv`;
+            const display = `${envDirName}:pyenv`;
 
             const org = versionStrings && versionStrings.distro ? versionStrings.distro : '';
 
@@ -288,14 +299,14 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
             const envInfo = buildEnvInfo({
                 kind: PythonEnvKind.Pyenv,
                 executable: interpreterPath,
-                location: envDir,
+                location: subDirPath,
                 version: pythonVersion,
                 source: [PythonEnvSource.Pyenv],
                 display,
                 org,
                 fileInfo,
             });
-            envInfo.name = subDir;
+            envInfo.name = envDirName;
 
             yield envInfo;
         }

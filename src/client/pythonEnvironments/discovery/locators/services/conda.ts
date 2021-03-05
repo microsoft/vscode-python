@@ -9,6 +9,7 @@ import { parseVersion } from '../../../base/info/pythonVersion';
 
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
+import { IDisposable } from '../../../../common/types';
 
 export const AnacondaCompanyNames = ['Anaconda, Inc.', 'Continuum Analytics, Inc.'];
 
@@ -326,8 +327,19 @@ export class Conda {
      * Corresponds to "conda info --json".
      */
     public async getInfo(): Promise<CondaInfo> {
-        const result = await exec(this.command, ['info', '--json']);
+        const disposables = new Set<IDisposable>();
+        const result = await exec(this.command, ['info', '--json'], {}, disposables);
         traceVerbose(`conda info --json: ${result.stdout}`);
+
+        // Ensure the process we started is cleaned up.
+        disposables.forEach((p) => {
+            try {
+                p.dispose();
+            } catch {
+                // ignore.
+            }
+        });
+
         return JSON.parse(result.stdout);
     }
 

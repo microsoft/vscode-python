@@ -16,7 +16,7 @@ import { IPersistentStateFactory, Resource } from '../../../client/common/types'
 import { createDeferred } from '../../../client/common/utils/async';
 import { InterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection';
 import { InterpreterSecurityService } from '../../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
-import { InterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/proxy';
+import { InterpreterAutoSelectionProxyService } from '../../../client/interpreter/autoSelection/proxy';
 import { CachedInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/cached';
 import { CurrentPathInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/currentPath';
 import { SettingsInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/settings';
@@ -25,12 +25,14 @@ import { WindowsRegistryInterpretersAutoSelectionRule } from '../../../client/in
 import { WorkspaceVirtualEnvInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/workspaceEnv';
 import {
     IInterpreterAutoSelectionRule,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSelectionProxyService,
     IInterpreterSecurityService,
 } from '../../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper } from '../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 const preferredGlobalInterpreter = 'preferredGlobalPyInterpreter';
 
@@ -47,15 +49,17 @@ suite('Interpreters - Auto Selection', () => {
     let workspaceInterpreter: IInterpreterAutoSelectionRule;
     let state: PersistentState<PythonEnvironment | undefined>;
     let helper: IInterpreterHelper;
-    let proxy: IInterpreterAutoSeletionProxyService;
+    let proxy: IInterpreterAutoSelectionProxyService;
     let interpreterSecurityService: IInterpreterSecurityService;
     class InterpreterAutoSelectionServiceTest extends InterpreterAutoSelectionService {
         public initializeStore(resource: Resource): Promise<void> {
             return super.initializeStore(resource);
         }
+
         public storeAutoSelectedInterpreter(resource: Resource, interpreter: PythonEnvironment | undefined) {
             return super.storeAutoSelectedInterpreter(resource, interpreter);
         }
+
         public getAutoSelectedWorkspacePromises() {
             return this.autoSelectedWorkspacePromises;
         }
@@ -73,7 +77,7 @@ suite('Interpreters - Auto Selection', () => {
         userDefinedInterpreter = mock(SettingsInterpretersAutoSelectionRule);
         workspaceInterpreter = mock(WorkspaceVirtualEnvInterpretersAutoSelectionRule);
         helper = mock(InterpreterHelper);
-        proxy = mock(InterpreterAutoSeletionProxyService);
+        proxy = mock(InterpreterAutoSelectionProxyService);
         when(interpreterSecurityService.isSafe(anything())).thenReturn(undefined);
 
         autoSelectionService = new InterpreterAutoSelectionServiceTest(
@@ -105,7 +109,9 @@ suite('Interpreters - Auto Selection', () => {
     });
     test('Run rules in background', async () => {
         let eventFired = false;
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
+            eventFired = true;
+        });
         autoSelectionService.initializeStore = () => Promise.resolve();
         await autoSelectionService.autoSelectInterpreter(undefined);
 
@@ -129,7 +135,9 @@ suite('Interpreters - Auto Selection', () => {
     });
     test('Run userDefineInterpreter as the first rule', async () => {
         let eventFired = false;
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
+            eventFired = true;
+        });
         autoSelectionService.initializeStore = () => Promise.resolve();
 
         await autoSelectionService.autoSelectInterpreter(undefined);
@@ -140,8 +148,12 @@ suite('Interpreters - Auto Selection', () => {
     test('Initialize the store', async () => {
         let initialize = false;
         let eventFired = false;
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
-        autoSelectionService.initializeStore = async () => (initialize = true as any);
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
+            eventFired = true;
+        });
+        autoSelectionService.initializeStore = async () => {
+            initialize = true;
+        };
 
         await autoSelectionService.autoSelectInterpreter(undefined);
 
@@ -211,7 +223,9 @@ suite('Interpreters - Auto Selection', () => {
                 undefined,
             ),
         ).thenReturn(instance(state));
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
+            eventFired = true;
+        });
 
         await autoSelectionService.initializeStore(undefined);
         await autoSelectionService.storeAutoSelectedInterpreter(undefined, interpreterInfo);
@@ -221,7 +235,7 @@ suite('Interpreters - Auto Selection', () => {
         expect(selectedInterpreter).to.deep.equal(interpreterInfo);
         expect(eventFired).to.deep.equal(false, 'event fired');
     });
-    test('If interpreter chosen is unsafe, return `undefined` as the autoselected interpreter', async () => {
+    test('If interpreter chosen is unsafe, return `undefined` as the auto-selected interpreter', async () => {
         const interpreterInfo = { path: 'pythonPath' } as any;
         autoSelectionService._getAutoSelectedInterpreter = () => interpreterInfo;
         reset(interpreterSecurityService);
@@ -241,7 +255,9 @@ suite('Interpreters - Auto Selection', () => {
                 undefined,
             ),
         ).thenReturn(instance(state));
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
+            eventFired = true;
+        });
         when(state.value).thenReturn(interpreterInfoInState);
         when(workspaceService.getWorkspaceFolderIdentifier(undefined, anything())).thenReturn('');
 
@@ -265,7 +281,9 @@ suite('Interpreters - Auto Selection', () => {
                 undefined,
             ),
         ).thenReturn(instance(state));
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
+            eventFired = true;
+        });
         when(state.value).thenReturn(interpreterInfoInState);
         when(workspaceService.getWorkspaceFolderIdentifier(undefined, anything())).thenReturn('');
 
@@ -307,7 +325,9 @@ suite('Interpreters - Auto Selection', () => {
             ),
         ).thenReturn(instance(state));
         when(workspaceService.getWorkspaceFolder(resource)).thenReturn({ name: '', index: 0, uri: resource });
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
+            eventFired = true;
+        });
         when(workspaceService.getWorkspaceFolderIdentifier(undefined, anything())).thenReturn('');
 
         await autoSelectionService.initializeStore(undefined);

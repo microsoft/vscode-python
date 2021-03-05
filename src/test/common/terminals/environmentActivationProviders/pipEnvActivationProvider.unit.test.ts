@@ -9,12 +9,14 @@ import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
+import { DiscoveryVariants } from '../../../../client/common/experiments/groups';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { PipEnvActivationCommandProvider } from '../../../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../../client/common/terminal/types';
+import { IExperimentService, IToolExecutionPath } from '../../../../client/common/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
-import { IInterpreterService, IPipEnvService } from '../../../../client/interpreter/contracts';
+import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 
@@ -24,23 +26,28 @@ suite('Terminals Activation - Pipenv', () => {
             let pipenvExecFile = 'pipenv';
             let activationProvider: ITerminalActivationCommandProvider;
             let interpreterService: IInterpreterService;
-            let pipenvService: TypeMoq.IMock<IPipEnvService>;
+            let pipEnvExecution: TypeMoq.IMock<IToolExecutionPath>;
             let workspaceService: IWorkspaceService;
             let fs: IFileSystem;
+            let experimentService: IExperimentService;
             setup(() => {
                 interpreterService = mock(InterpreterService);
                 fs = mock(FileSystem);
                 workspaceService = mock(WorkspaceService);
                 interpreterService = mock(InterpreterService);
-                pipenvService = TypeMoq.Mock.ofType<IPipEnvService>();
+                experimentService = mock<IExperimentService>();
+                when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
+                when(experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching)).thenResolve(false);
+                pipEnvExecution = TypeMoq.Mock.ofType<IToolExecutionPath>();
                 activationProvider = new PipEnvActivationCommandProvider(
                     instance(interpreterService),
-                    pipenvService.object,
+                    pipEnvExecution.object,
                     instance(workspaceService),
                     instance(fs),
+                    instance(experimentService),
                 );
 
-                pipenvService.setup((p) => p.executable).returns(() => pipenvExecFile);
+                pipEnvExecution.setup((p) => p.executable).returns(() => pipenvExecFile);
             });
 
             test('No commands for no interpreter', async () => {
@@ -59,6 +66,7 @@ suite('Terminals Activation - Pipenv', () => {
                 for (const interpreterType of nonPipInterpreterTypes) {
                     when(interpreterService.getActiveInterpreter(resource)).thenResolve({
                         type: interpreterType,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     } as any);
 
                     for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {
@@ -71,6 +79,7 @@ suite('Terminals Activation - Pipenv', () => {
             test('pipenv shell is returned for pipenv interpeter', async () => {
                 when(interpreterService.getActiveInterpreter(resource)).thenResolve({
                     envType: EnvironmentType.Pipenv,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any);
 
                 for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {
@@ -83,6 +92,7 @@ suite('Terminals Activation - Pipenv', () => {
                 pipenvExecFile = 'my pipenv';
                 when(interpreterService.getActiveInterpreter(resource)).thenResolve({
                     envType: EnvironmentType.Pipenv,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any);
 
                 for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {

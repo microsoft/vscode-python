@@ -11,7 +11,6 @@ import os
 import sys
 import tempfile
 import unittest
-import warnings
 
 import pytest
 import _pytest.doctest
@@ -108,7 +107,15 @@ class StubPytestItem(util.StubProxy):
 
         attrs.setdefault("user_properties", [])
 
-        self.__dict__.update(attrs)
+        slots = getattr(type(self), "__slots__", None)
+        if slots:
+            for name, value in attrs.items():
+                if name in self.__slots__:
+                    setattr(self, name, value)
+                else:
+                    self.__dict__[name] = value
+        else:
+            self.__dict__.update(attrs)
 
         if "own_markers" not in attrs:
             self.own_markers = ()
@@ -130,6 +137,14 @@ class StubPytestItem(util.StubProxy):
 
 
 class StubSubtypedItem(StubPytestItem):
+    @classmethod
+    def from_args(cls, *args, **kwargs):
+        if not hasattr(cls, "from_parent"):
+            return cls(*args, **kwargs)
+        self = cls.from_parent(None, name=kwargs["name"], runner=None, dtest=None)
+        self.__init__(*args, **kwargs)
+        return self
+
     def __init__(self, *args, **kwargs):
         super(StubSubtypedItem, self).__init__(*args, **kwargs)
         if "nodeid" in self.__dict__:
@@ -147,13 +162,7 @@ class StubFunctionItem(StubSubtypedItem, pytest.Function):
 
 
 def create_stub_function_item(*args, **kwargs):
-    # StubFunctionItem should not be calling __init__(), but instead from_parent().
-    # Unfortunately the detangling is massive due to the complexity of the test
-    # harness, so we are punting in hopes that we rewrite test discovery before
-    # pytest removes this functionality.
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        return StubFunctionItem(*args, **kwargs)
+    return StubFunctionItem.from_args(*args, **kwargs)
 
 
 class StubDoctestItem(StubSubtypedItem, _pytest.doctest.DoctestItem):
@@ -161,13 +170,7 @@ class StubDoctestItem(StubSubtypedItem, _pytest.doctest.DoctestItem):
 
 
 def create_stub_doctest_item(*args, **kwargs):
-    # StubDoctestItem should not be calling __init__(), but instead from_parent().
-    # Unfortunately the detangling is massive due to the complexity of the test
-    # harness, so we are punting in hopes that we rewrite test discovery before
-    # pytest removes this functionality.
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        return StubDoctestItem(*args, **kwargs)
+    return StubDoctestItem.from_args(*args, **kwargs)
 
 
 class StubPytestSession(util.StubProxy):
@@ -210,6 +213,7 @@ def generate_parse_item(pathsep):
         return adapter_util.fix_fileid(
             *args,
             **dict(
+                # dependency injection
                 _normcase=normcase,
                 _pathsep=pathsep,
             )
@@ -219,6 +223,7 @@ def generate_parse_item(pathsep):
         return pytest_item._normalize_test_id(
             *args,
             **dict(
+                # dependency injection
                 _fix_fileid=_fix_fileid,
                 _pathsep=pathsep,
             )
@@ -228,6 +233,7 @@ def generate_parse_item(pathsep):
         return pytest_item._iter_nodes(
             *args,
             **dict(
+                # dependency injection
                 _normalize_test_id=_normalize_test_id,
                 _normcase=normcase,
                 _pathsep=pathsep,
@@ -238,6 +244,7 @@ def generate_parse_item(pathsep):
         return pytest_item._parse_node_id(
             *args,
             **dict(
+                # dependency injection
                 _iter_nodes=_iter_nodes,
             )
         )
@@ -247,6 +254,7 @@ def generate_parse_item(pathsep):
         return pytest_item._split_fspath(
             *args,
             **dict(
+                # dependency injection
                 _normcase=normcase,
             )
         )
@@ -256,6 +264,7 @@ def generate_parse_item(pathsep):
         return pytest_item._matches_relfile(
             *args,
             **dict(
+                # dependency injection
                 _normcase=normcase,
                 _pathsep=pathsep,
             )
@@ -265,6 +274,7 @@ def generate_parse_item(pathsep):
         return pytest_item._is_legacy_wrapper(
             *args,
             **dict(
+                # dependency injection
                 _pathsep=pathsep,
             )
         )
@@ -273,6 +283,7 @@ def generate_parse_item(pathsep):
         return pytest_item._get_location(
             *args,
             **dict(
+                # dependency injection
                 _matches_relfile=_matches_relfile,
                 _is_legacy_wrapper=_is_legacy_wrapper,
                 _pathsep=pathsep,
@@ -284,6 +295,7 @@ def generate_parse_item(pathsep):
         return pytest_item.parse_item(
             item,
             **dict(
+                # dependency injection
                 _parse_node_id=_parse_node_id,
                 _split_fspath=_split_fspath,
                 _get_location=_get_location,
@@ -352,6 +364,7 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(
             stub.calls,
             [
+                # There's only one call.
                 ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
             ],
         )

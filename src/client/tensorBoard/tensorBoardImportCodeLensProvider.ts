@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { once } from 'lodash';
-import { CodeLens, Command, languages, Position, Range, TextDocument } from 'vscode';
+import { CancellationToken, CodeLens, Command, languages, Position, Range, TextDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { Commands, PYTHON } from '../common/constants';
 import { NativeTensorBoard } from '../common/experiments/groups';
@@ -33,7 +33,7 @@ export class TensorBoardImportCodeLensProvider implements IExtensionSingleActiva
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public provideCodeLenses(document: TextDocument): CodeLens[] {
+    public provideCodeLenses(document: TextDocument, cancelToken: CancellationToken): CodeLens[] {
         const command: Command = {
             title: TensorBoard.launchNativeTensorBoardSessionCodeLens(),
             command: Commands.LaunchTensorBoard,
@@ -43,6 +43,9 @@ export class TensorBoardImportCodeLensProvider implements IExtensionSingleActiva
         };
         const codelenses: CodeLens[] = [];
         for (let index = 0; index < document.lineCount; index += 1) {
+            if (cancelToken.isCancellationRequested) {
+                return codelenses;
+            }
             const line = document.lineAt(index);
             if (containsTensorBoardImport([line.text])) {
                 const range = new Range(new Position(line.lineNumber, 0), new Position(line.lineNumber, 1));
