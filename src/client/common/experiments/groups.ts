@@ -10,12 +10,6 @@ export enum WebAppReload {
     experiment = 'Reload - experiment',
 }
 
-// Dummy experiment added to validate metrics of A/B testing
-export enum ValidateABTesting {
-    control = 'AA_testing - control',
-    experiment = 'AA_testing - experiment',
-}
-
 // Collect language server request timings.
 export enum CollectLSRequestTiming {
     control = 'CollectLSRequestTiming - control',
