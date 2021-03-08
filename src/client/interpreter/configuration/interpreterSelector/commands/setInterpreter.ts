@@ -9,15 +9,8 @@ import { QuickPickItem } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands } from '../../../../common/constants';
 import { FindInterpreterVariants } from '../../../../common/experiments/groups';
-import { inDiscoveryExperiment } from '../../../../common/experiments/helpers';
 import { IPlatformService } from '../../../../common/platform/types';
-import {
-    IConfigurationService,
-    IExperimentService,
-    IExtensionContext,
-    IPathUtils,
-    Resource,
-} from '../../../../common/types';
+import { IConfigurationService, IExperimentService, IPathUtils, Resource } from '../../../../common/types';
 import { InterpreterQuickPickList } from '../../../../common/utils/localize';
 import {
     IMultiStepInput,
@@ -27,7 +20,6 @@ import {
 } from '../../../../common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
-import { IComponentAdapter, IInterpreterService } from '../../../contracts';
 import {
     IFindInterpreterQuickPickItem,
     IInterpreterQuickPickItem,
@@ -54,9 +46,6 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IExperimentService) readonly experiments: IExperimentService,
-        @inject(IExtensionContext) readonly context: IExtensionContext,
-        @inject(IInterpreterService) readonly interpreterService: IInterpreterService,
-        @inject(IComponentAdapter) readonly pyenvs: IComponentAdapter,
     ) {
         super(pythonPathUpdaterService, commandManager, applicationShell, workspaceService);
     }
@@ -112,7 +101,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'escape' });
         } else if (selection.label === manualEntrySuggestion.label) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_OR_FIND);
-            return this._enterOrBrowseInterpreterPath(input, state);
+            return this._enterOrBrowseInterpreterPath(input, state, interpreterSuggestions);
         } else {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'selected' });
             state.path = (selection as IInterpreterQuickPickItem).path;
@@ -125,6 +114,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     public async _enterOrBrowseInterpreterPath(
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs,
+        suggestions: IInterpreterQuickPickItem[],
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         const items: QuickPickItem[] = [
             {
@@ -143,7 +133,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             // User entered text in the filter box to enter path to python, store it
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'enter' });
             state.path = selection;
-            await this.sendInterpreterEntryTelemetry(selection, state.workspace);
+            await this.sendInterpreterEntryTelemetry(selection, state.workspace, suggestions);
         } else if (selection && selection.label === InterpreterQuickPickList.browsePath.label()) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'browse' });
             const filtersKey = 'Executables';
@@ -157,7 +147,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             });
             if (uris && uris.length > 0) {
                 state.path = uris[0].fsPath;
-                await this.sendInterpreterEntryTelemetry(state.path!, state.workspace);
+                await this.sendInterpreterEntryTelemetry(state.path!, state.workspace, suggestions);
             }
         }
     }
@@ -184,27 +174,36 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     }
 
     /**
-     * Check if the interpreter that was entered exists in the cache.
+     * Check if the interpreter that was entered exists in the list of suggestions.
      * If it does, it means that it had already been discovered,
      * and we didn't do a good job of surfacing it.
      *
      * @param selection Intepreter path that was either entered manually or picked by browsing through the filesystem.
      */
-    private async sendInterpreterEntryTelemetry(selection: string, workspace: Resource): Promise<void> {
+    // eslint-disable-next-line class-methods-use-this
+    private async sendInterpreterEntryTelemetry(
+        selection: string,
+        workspace: Resource,
+        suggestions: IInterpreterQuickPickItem[],
+    ): Promise<void> {
         let interpreterPath = path.normalize(untildify(selection));
 
         if (!path.isAbsolute(interpreterPath)) {
             interpreterPath = path.resolve(workspace?.fsPath || '', selection);
         }
 
-        let discovered: boolean;
-        if (await inDiscoveryExperiment(this.experiments)) {
-            const env = await this.pyenvs.getInterpreterCache(interpreterPath, this.context);
-            discovered = !!env;
-        } else {
-            const store = await this.interpreterService.getInterpreterCache(interpreterPath);
-            discovered = store.value && store.value.info !== undefined;
-        }
+        const expandedPaths = suggestions.map((s) => {
+            const suggestionPath = s.interpreter.path;
+            let expandedPath = path.normalize(untildify(suggestionPath));
+
+            if (!path.isAbsolute(suggestionPath)) {
+                expandedPath = path.resolve(workspace?.fsPath || '', suggestionPath);
+            }
+
+            return expandedPath;
+        });
+
+        const discovered = expandedPaths.includes(interpreterPath);
 
         sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTERED_EXISTS, undefined, { discovered });
 
