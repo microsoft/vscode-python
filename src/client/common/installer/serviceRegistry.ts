@@ -18,7 +18,6 @@ import {
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
-    TensorBoardProductPathService,
     TestFrameworkProductPathService,
 } from './productPath';
 import { ProductService } from './productService';
@@ -75,11 +74,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         IProductPathService,
         DataScienceProductPathService,
         ProductType.DataScience,
-    );
-    serviceManager.addSingleton<IProductPathService>(
-        IProductPathService,
-        TensorBoardProductPathService,
-        ProductType.TensorBoard,
     );
     serviceManager.addSingleton<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);
 }
