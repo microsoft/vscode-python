@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import Sinon, * as sinon from 'sinon';
 import { SemVer } from 'semver';
 import { anything } from 'ts-mockito';
-import { workspace } from 'vscode';
+import { workspace, WorkspaceConfiguration } from 'vscode';
 import {
     IExperimentService,
     IInstaller,
@@ -44,6 +44,8 @@ suite('TensorBoard session creation', async () => {
     let commandManager: ICommandManager;
     let experimentService: IExperimentService;
     let installer: IInstaller;
+    let initialValue: string | undefined;
+    let workspaceConfiguration: WorkspaceConfiguration;
 
     suiteSetup(function () {
         if (process.env.CI_PYTHON_VERSION === '2.7') {
@@ -70,9 +72,13 @@ suite('TensorBoard session creation', async () => {
         applicationShell = serviceManager.get<IApplicationShell>(IApplicationShell);
         commandManager = serviceManager.get<ICommandManager>(ICommandManager);
         installer = serviceManager.get<IInstaller>(IInstaller);
+        workspaceConfiguration = workspace.getConfiguration('python.tensorBoard');
+        initialValue = workspaceConfiguration.get('logDirectory');
+        await workspaceConfiguration.update('logDirectory', undefined, false);
     });
 
     teardown(async () => {
+        await workspaceConfiguration.update('logDirectory', initialValue, false);
         await closeActiveWindows();
         sandbox.restore();
     });
@@ -414,8 +420,6 @@ suite('TensorBoard session creation', async () => {
             .stub(applicationShell, 'showQuickPick')
             .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
         errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-        const workspaceConfiguration = workspace.getConfiguration('python.tensorBoard');
-        const initialValue = workspaceConfiguration.get('logDirectory');
         await workspaceConfiguration.update('logDirectory', 'logs/fit', false);
 
         const session = (await commandManager.executeCommand(
@@ -430,7 +434,5 @@ suite('TensorBoard session creation', async () => {
             selectDirectoryStub.notCalled,
             'Prompted user to select log directory although setting was specified',
         );
-
-        await workspaceConfiguration.update('logDirectory', initialValue, false);
     });
 });

@@ -256,8 +256,10 @@ export class TensorBoardSession {
         if (this.workspaceService.workspaceFolders && this.workspaceService.workspaceFolders.length > 0) {
             const workspace = this.workspaceService.workspaceFolders[0];
             const setting = this.workspaceService.getConfiguration('python.tensorBoard', workspace.uri);
-            if (setting && setting.has('logDirectory')) {
-                return setting.get('logDirectory');
+            const settingValue = setting.get<string>('logDirectory');
+            if (settingValue) {
+                traceInfo(`Using log directory specified by python.tensorBoard.logDirectory setting: ${settingValue}`);
+                return settingValue;
             }
         }
         // No log directory in settings. Ask the user which directory to use
