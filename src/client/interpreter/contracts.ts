@@ -55,6 +55,7 @@ export interface IComponentAdapter {
     getWinRegInterpreters(resource: Resource): Promise<PythonEnvironment[]>;
     // IInterpreterService
     getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<PythonEnvironment>;
+
     // IInterpreterHelper
     // Undefined is expected on this API, if the environment info retrieval fails.
     getInterpreterInformation(pythonPath: string): Promise<Partial<PythonEnvironment> | undefined>;
