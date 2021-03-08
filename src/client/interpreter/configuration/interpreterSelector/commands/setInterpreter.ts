@@ -45,7 +45,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(IExperimentService) readonly experiments: IExperimentService,
+        @inject(IExperimentService) private readonly experiments: IExperimentService,
     ) {
         super(pythonPathUpdaterService, commandManager, applicationShell, workspaceService);
     }
