@@ -19,7 +19,7 @@ interface IServiceRegistry {
     ): void;
 }
 
-export function registerTypes(serviceManager: IServiceRegistry) {
+export function registerTypes(serviceManager: IServiceRegistry): void {
     serviceManager.addSingleton<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
 
     serviceManager.addSingleton<ICodeExecutionManager>(ICodeExecutionManager, CodeExecutionManager);

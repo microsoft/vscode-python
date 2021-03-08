@@ -59,8 +59,6 @@ src/test/interpreters/display.unit.test.ts
 
 src/test/configuration/interpreterSelector/interpreterSelector.unit.test.ts
 
-src/test/terminals/serviceRegistry.unit.test.ts
-src/test/terminals/activation.unit.test.ts
 src/test/terminals/codeExecution/terminalCodeExec.unit.test.ts
 src/test/terminals/codeExecution/helper.test.ts
 src/test/terminals/codeExecution/codeExecutionManager.unit.test.ts
@@ -328,8 +326,6 @@ src/client/typeFormatters/codeBlockFormatProvider.ts
 src/client/typeFormatters/onEnterFormatter.ts
 src/client/typeFormatters/dispatcher.ts
 
-src/client/terminals/serviceRegistry.ts
-src/client/terminals/activation.ts
 src/client/terminals/codeExecution/helper.ts
 src/client/terminals/codeExecution/terminalCodeExecution.ts
 src/client/terminals/codeExecution/codeExecutionManager.ts

@@ -32,7 +32,7 @@ suite('Terminal - Service Registry', () => {
                 services
                     .setup((s) =>
                         s.addSingleton(
-                            typemoq.It.isValue(args[0] as any),
+                            typemoq.It.is((v) => args[0] === v),
                             typemoq.It.is((value) => args[1] === value),
                         ),
                     )
@@ -41,10 +41,10 @@ suite('Terminal - Service Registry', () => {
                 services
                     .setup((s) =>
                         s.addSingleton(
-                            typemoq.It.isValue(args[0] as any),
+                            typemoq.It.is((v) => args[0] === v),
                             typemoq.It.is((value) => args[1] === value),
 
-                            typemoq.It.isValue(args[2] as any),
+                            typemoq.It.isValue((args[2] as unknown) as string),
                         ),
                     )
                     .verifiable(typemoq.Times.once());

@@ -64,7 +64,7 @@ suite('Terminal', () => {
         test('Should activate terminal', async () => {
             // Trigger opening a terminal.
 
-            await ((onDidOpenTerminalEventEmitter.fire(terminal) as any) as Promise<void>);
+            await ((onDidOpenTerminalEventEmitter.fire(terminal) as unknown) as Promise<void>);
 
             // The terminal should get activated.
             verify(activator.activateEnvironmentInTerminal(terminal, anything())).once();
@@ -72,7 +72,7 @@ suite('Terminal', () => {
         test('Should not activate terminal if name starts with specific prefix', async () => {
             // Trigger opening a terminal.
 
-            await ((onDidOpenTerminalEventEmitter.fire(nonActivatedTerminal) as any) as Promise<void>);
+            await ((onDidOpenTerminalEventEmitter.fire(nonActivatedTerminal) as unknown) as Promise<void>);
 
             // The terminal should get activated.
             verify(activator.activateEnvironmentInTerminal(anything(), anything())).never();
