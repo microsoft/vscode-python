@@ -10,13 +10,7 @@ import { ConfigurationTarget, OpenDialogOptions, QuickPickItem, Uri } from 'vsco
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IPlatformService } from '../../../../client/common/platform/types';
-import {
-    IConfigurationService,
-    IExperimentService,
-    IExtensionContext,
-    IPersistentState,
-    IPythonSettings,
-} from '../../../../client/common/types';
+import { IConfigurationService, IExperimentService, IPythonSettings } from '../../../../client/common/types';
 import { InterpreterQuickPickList, Interpreters } from '../../../../client/common/utils/localize';
 import { IMultiStepInput, IMultiStepInputFactory, InputStep } from '../../../../client/common/utils/multiStepInput';
 import {
@@ -31,9 +25,7 @@ import {
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { EventName } from '../../../../client/telemetry/constants';
 import * as Telemetry from '../../../../client/telemetry';
-import { DiscoveryVariants, FindInterpreterVariants } from '../../../../client/common/experiments/groups';
-import { IComponentAdapter, IInterpreterService } from '../../../../client/interpreter/contracts';
-import { PythonEnvInfo } from '../../../../client/pythonEnvironments/base/info';
+import { FindInterpreterVariants } from '../../../../client/common/experiments/groups';
 
 const untildify = require('untildify');
 
@@ -50,9 +42,6 @@ suite('Set Interpreter Command', () => {
     let platformService: TypeMoq.IMock<IPlatformService>;
     let multiStepInputFactory: TypeMoq.IMock<IMultiStepInputFactory>;
     let experimentService: TypeMoq.IMock<IExperimentService>;
-    let context: TypeMoq.IMock<IExtensionContext>;
-    let interpreterService: TypeMoq.IMock<IInterpreterService>;
-    let pyenvs: TypeMoq.IMock<IComponentAdapter>;
     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
     const folder2 = { name: 'two', uri: Uri.parse('two'), index: 2 };
 
@@ -67,7 +56,6 @@ suite('Set Interpreter Command', () => {
         pythonPathUpdater = TypeMoq.Mock.ofType<IPythonPathUpdaterServiceManager>();
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-        pyenvs = TypeMoq.Mock.ofType<IComponentAdapter>();
 
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         workspace.setup((w) => w.rootPath).returns(() => 'rootPath');
@@ -76,10 +64,6 @@ suite('Set Interpreter Command', () => {
         experimentService
             .setup((x) => x.inExperiment(TypeMoq.It.isValue(FindInterpreterVariants.findLast)))
             .returns(() => Promise.resolve(false));
-
-        context = TypeMoq.Mock.ofType<IExtensionContext>();
-
-        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
 
         configurationService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
 
@@ -94,9 +78,6 @@ suite('Set Interpreter Command', () => {
             interpreterSelector.object,
             workspace.object,
             experimentService.object,
-            context.object,
-            interpreterService.object,
-            pyenvs.object,
         );
     });
 
@@ -157,9 +138,6 @@ suite('Set Interpreter Command', () => {
                 interpreterSelector.object,
                 workspace.object,
                 experimentService.object,
-                context.object,
-                interpreterService.object,
-                pyenvs.object,
             );
         });
         teardown(() => {
@@ -218,9 +196,6 @@ suite('Set Interpreter Command', () => {
                 interpreterSelector.object,
                 workspace.object,
                 experiments.object,
-                context.object,
-                interpreterService.object,
-                pyenvs.object,
             );
 
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
@@ -320,7 +295,7 @@ suite('Set Interpreter Command', () => {
                 .returns(() => Promise.resolve((undefined as unknown) as QuickPickItem))
                 .verifiable(TypeMoq.Times.once());
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
 
             multiStepInput.verifyAll();
         });
@@ -331,18 +306,8 @@ suite('Set Interpreter Command', () => {
             multiStepInput
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve('enteredPath'));
-            interpreterService
-                .setup((i) => i.getInterpreterCache(TypeMoq.It.isAnyString()))
-                .returns(() =>
-                    Promise.resolve({
-                        value: { fileHash: 'fileHash', info: undefined },
-                    } as IPersistentState<{
-                        fileHash: string;
-                        info?: PythonEnvironment;
-                    }>),
-                );
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
 
             expect(state.path).to.equal('enteredPath', '');
         });
@@ -355,18 +320,8 @@ suite('Set Interpreter Command', () => {
             appShell
                 .setup((a) => a.showOpenDialog(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([expectedPathUri]));
-            interpreterService
-                .setup((i) => i.getInterpreterCache(TypeMoq.It.isAnyString()))
-                .returns(() =>
-                    Promise.resolve({
-                        value: { fileHash: 'fileHash', info: undefined },
-                    } as IPersistentState<{
-                        fileHash: string;
-                        info?: PythonEnvironment;
-                    }>),
-                );
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
 
             expect(state.path).to.equal(expectedPathUri.fsPath, '');
         });
@@ -389,7 +344,7 @@ suite('Set Interpreter Command', () => {
                 .verifiable(TypeMoq.Times.once());
             platformService.setup((p) => p.isWindows).returns(() => true);
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
 
             appShell.verifyAll();
         });
@@ -407,7 +362,7 @@ suite('Set Interpreter Command', () => {
             appShell.setup((a) => a.showOpenDialog(expectedParams)).verifiable(TypeMoq.Times.once());
             platformService.setup((p) => p.isWindows).returns(() => false);
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
 
             appShell.verifyAll();
         });
@@ -439,24 +394,8 @@ suite('Set Interpreter Command', () => {
                 multiStepInput
                     .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve('enteredPath'));
-                interpreterService
-                    .setup((i) => i.getInterpreterCache(TypeMoq.It.isAnyString()))
-                    .returns(() =>
-                        Promise.resolve({
-                            value: { fileHash: 'fileHash', info: undefined },
-                        } as IPersistentState<{
-                            fileHash: string;
-                            info?: PythonEnvironment;
-                        }>),
-                    );
-                experimentService
-                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoverWithFileWatching)))
-                    .returns(() => Promise.resolve(false));
-                experimentService
-                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoveryWithoutFileWatching)))
-                    .returns(() => Promise.resolve(false));
 
-                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
                 const existsTelemetry = telemetryEvents[1];
 
                 sinon.assert.callCount(sendTelemetryStub, 2);
@@ -478,25 +417,9 @@ suite('Set Interpreter Command', () => {
                 appShell
                     .setup((a) => a.showOpenDialog(expectedParams))
                     .returns(() => Promise.resolve([{ fsPath: 'browsedPath' } as Uri]));
-                interpreterService
-                    .setup((i) => i.getInterpreterCache(TypeMoq.It.isAnyString()))
-                    .returns(() =>
-                        Promise.resolve({
-                            value: { fileHash: 'fileHash', info: undefined },
-                        } as IPersistentState<{
-                            fileHash: string;
-                            info?: PythonEnvironment;
-                        }>),
-                    );
-                experimentService
-                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoverWithFileWatching)))
-                    .returns(() => Promise.resolve(false));
-                experimentService
-                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoveryWithoutFileWatching)))
-                    .returns(() => Promise.resolve(false));
                 platformService.setup((p) => p.isWindows).returns(() => false);
 
-                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
                 const existsTelemetry = telemetryEvents[1];
 
                 sinon.assert.callCount(sendTelemetryStub, 2);
@@ -518,8 +441,8 @@ suite('Set Interpreter Command', () => {
                 { discovered: false, pathType: SelectionPathType.WorkspaceRelative },
             ];
 
-            const testNotInExperiment = async (
-                isDiscovered: boolean,
+            const testDiscovered = async (
+                discovered: boolean,
                 pathType: SelectionPathType,
             ): Promise<TelemetryEventType> => {
                 let interpreterPath = '';
@@ -546,78 +469,18 @@ suite('Set Interpreter Command', () => {
                 multiStepInput
                     .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(interpreterPath));
-                interpreterService
-                    .setup((i) => i.getInterpreterCache(TypeMoq.It.isAnyString()))
-                    .returns((param) => {
-                        console.warn(`param: ${param} - expandedPath: ${expandedPath}`);
-                        return Promise.resolve({
-                            value: { fileHash: 'fileHash', info: isDiscovered ? 'someInfo' : undefined },
-                        } as IPersistentState<{
-                            fileHash: string;
-                            info?: PythonEnvironment;
-                        }>);
-                    });
-                experimentService
-                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoverWithFileWatching)))
-                    .returns(() => Promise.resolve(false));
-                experimentService
-                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoveryWithoutFileWatching)))
-                    .returns(() => Promise.resolve(false));
 
-                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
-                return telemetryEvents[1];
-            };
+                const suggestions = [
+                    { interpreter: { path: 'path/to/an/interpreter/' } },
+                    { interpreter: { path: '~/path/to/another/interpreter' } },
+                    { interpreter: { path: './.myvenv/bin/python' } },
+                ] as IInterpreterQuickPickItem[];
 
-            const testInExperiment = async (
-                isDiscovered: boolean,
-                pathType: SelectionPathType,
-            ): Promise<TelemetryEventType> => {
-                let interpreterPath = '';
-                let expandedPath = '';
-                switch (pathType) {
-                    case SelectionPathType.Absolute: {
-                        interpreterPath = path.resolve(path.join('is', 'absolute', 'path'));
-                        expandedPath = interpreterPath;
-                        break;
-                    }
-                    case SelectionPathType.HomeRelative: {
-                        interpreterPath = path.join('~', 'relative', 'path');
-                        expandedPath = untildify(interpreterPath);
-                        break;
-                    }
-                    case SelectionPathType.WorkspaceRelative:
-                    default: {
-                        interpreterPath = path.join('..', 'workspace', 'path');
-                        expandedPath = path.normalize(path.resolve(interpreterPath));
-                    }
+                if (discovered) {
+                    suggestions.push({ interpreter: { path: expandedPath } } as IInterpreterQuickPickItem);
                 }
-                pyenvs
-                    .setup((p) => p.getInterpreterCache(expandedPath, TypeMoq.It.isAny()))
-                    .returns(() =>
-                        Promise.resolve(
-                            isDiscovered
-                                ? ({
-                                      executable: {
-                                          filename: 'something',
-                                      },
-                                  } as PythonEnvInfo)
-                                : undefined,
-                        ),
-                    );
-                const state: InterpreterStateArgs = { path: undefined, workspace: undefined };
-                const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
-                multiStepInput
-                    .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(interpreterPath));
-                experimentService
-                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoverWithFileWatching)))
-                    .returns(() => Promise.resolve(true));
-                experimentService
-                    .setup((x) => x.inExperiment(TypeMoq.It.isValue(DiscoveryVariants.discoveryWithoutFileWatching)))
-                    .returns(() => Promise.resolve(true));
 
-                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
-
+                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, suggestions);
                 return telemetryEvents[1];
             };
 
@@ -626,25 +489,10 @@ suite('Set Interpreter Command', () => {
                     testValue.discovered
                 } if the interpreter had ${
                     testValue.discovered ? 'already' : 'not'
-                } been discovered (not in pythonDiscoveryModule experiment, with a path that is ${
-                    testValue.pathType
-                })`, async () => {
-                    const telemetryResult = await testNotInExperiment(testValue.discovered, testValue.pathType);
+                } been discovered, with an interpreter path path that is ${testValue.pathType})`, async function () {
+                    const telemetryResult = await testDiscovered(testValue.discovered, testValue.pathType);
 
                     expect(telemetryResult.properties).to.deep.equal({ discovered: testValue.discovered });
-                });
-
-                test(`A telemetry event should be sent with the discovered prop set to ${
-                    testValue.discovered
-                } if the interpreter had ${
-                    testValue.discovered ? 'already' : 'not'
-                } been discovered (in pythonDiscoveryModule experiment, with a path that is ${
-                    testValue.pathType
-                })`, async () => {
-                    const telemetryResult = await testInExperiment(testValue.discovered, testValue.pathType);
-
-                    expect(telemetryResult.properties).to.deep.equal({ discovered: testValue.discovered });
-                    sinon.restore();
                 });
             }
         });
@@ -917,9 +765,6 @@ suite('Set Interpreter Command', () => {
                 interpreterSelector.object,
                 workspace.object,
                 experimentService.object,
-                context.object,
-                interpreterService.object,
-                pyenvs.object,
             );
             type InputStepType = () => Promise<InputStep<unknown> | void>;
             let inputStep!: InputStepType;
