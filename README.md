@@ -4,9 +4,7 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 
 Additionally, the Python extension gives you an optimal and feature-rich experience for working with Jupyter notebooks through the [Jupyter extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter).
 
-<img src=https://raw.githubusercontent.com/microsoft/vscode-python/main/icon.png width=35 height=35 style="padding:10px">
-
-<img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/icon.png width=35 height=35 style="padding:10px">
+<img src=https://raw.githubusercontent.com/microsoft/vscode-python/main/icon.png width=35 height=35 style="padding:10px"> <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/icon.png width=35 height=35 style="padding:10px"> 
 
 ## Quick start
 

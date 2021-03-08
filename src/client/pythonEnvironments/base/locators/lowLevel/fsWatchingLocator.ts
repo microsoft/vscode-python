@@ -65,9 +65,9 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
         private readonly getKind: (executable: string) => Promise<PythonEnvKind>,
         private readonly opts: {
             /**
-             * Glob which represents basename of the executable to watch.
+             * Glob which represents basename of the executable or directory to watch.
              */
-            executableBaseGlob?: string;
+            baseGlob?: string;
             /**
              * Time to wait before handling an environment-created event.
              */
@@ -143,7 +143,7 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
         };
 
         const globs = resolvePythonExeGlobs(
-            this.opts.executableBaseGlob,
+            this.opts.baseGlob,
             // The structure determines which globs are returned.
             this.opts.envStructure,
         );
