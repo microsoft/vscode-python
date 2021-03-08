@@ -176,6 +176,14 @@ export namespace TensorBoard {
         'TensorBoard.installPrompt',
         'The package TensorBoard is required to launch a TensorBoard session. Would you like to install it?',
     );
+    export const installTensorBoardAndProfilerPluginPrompt = localize(
+        'TensorBoard.installTensorBoardAndProfilerPluginPrompt',
+        'TensorBoard >= 2.4.1 and the PyTorch Profiler TensorBoard plugin are required. Would you like to install these packages?',
+    );
+    export const installProfilerPluginPrompt = localize(
+        'TensorBoard.installProfilerPluginPrompt',
+        'We recommend installing the PyTorch Profiler TensorBoard plugin. Would you like to install the package?',
+    );
     export const upgradePrompt = localize(
         'TensorBoard.upgradePrompt',
         'Integrated TensorBoard support is only available for TensorBoard >= 2.4.1. Would you like to upgrade your copy of TensorBoard?',

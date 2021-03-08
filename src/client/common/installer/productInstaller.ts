@@ -6,10 +6,9 @@ import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ILinterManager, LinterId } from '../../linters/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { TensorBoardPromptSelection } from '../../tensorBoard/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { LinterInstallationPromptVariants } from '../experiments/groups';
@@ -29,7 +28,7 @@ import {
     Product,
     ProductType,
 } from '../types';
-import { Common, Installer, Linters, TensorBoard } from '../utils/localize';
+import { Common, Installer, Linters } from '../utils/localize';
 import { isResource, noop } from '../utils/misc';
 import { ProductNames } from './productNames';
 import {
@@ -44,6 +43,13 @@ export { Product } from '../types';
 
 export const CTagsInstallationScript =
     os.platform() === 'darwin' ? 'brew install ctags' : 'sudo apt-get install exuberant-ctags';
+
+// Products which may not be available to install from certain package registries, keyed by product name
+// Installer implementations can check this to determine a suitable installation channel for a product
+// This is temporary and can be removed when https://github.com/microsoft/vscode-jupyter/issues/5034 is unblocked
+const UnsupportedChannelsForProduct = new Map<Product, Set<EnvironmentType>>([
+    [Product.torchProfilerInstallName, new Set([EnvironmentType.Conda])],
+]);
 
 export abstract class BaseInstaller {
     private static readonly PromptPromises = new Map<string, Promise<InstallerResponse>>();
@@ -162,7 +168,7 @@ export abstract class BaseInstaller {
             return null;
         }
     }
-    public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
+    public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean> {
         if (product === Product.unittest) {
             return true;
         }
@@ -586,14 +592,21 @@ export class DataScienceInstaller extends BaseInstaller {
             .getInstallationChannels(interpreter);
 
         // Pick an installerModule based on whether the interpreter is conda or not. Default is pip.
+        const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
         let installerModule;
-        if (interpreter.envType === 'Conda') {
-            installerModule = channels.find((v) => v.name === 'Conda');
+        const isAvailableThroughConda = !UnsupportedChannelsForProduct.get(product)?.has(EnvironmentType.Conda);
+        if (interpreter.envType === EnvironmentType.Conda && isAvailableThroughConda) {
+            installerModule = channels.find((v) => v.name === EnvironmentType.Conda);
+        } else if (interpreter.envType === EnvironmentType.Conda && !isAvailableThroughConda) {
+            // This case is temporary and can be removed when https://github.com/microsoft/vscode-jupyter/issues/5034 is unblocked
+            traceInfo(
+                `Interpreter type is conda but package ${moduleName} is not available through conda, using pip instead.`,
+            );
+            installerModule = channels.find((v) => v.name === 'Pip');
         } else {
             installerModule = channels.find((v) => v.name === 'Pip');
         }
 
-        const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
         if (!installerModule) {
             this.appShell.showErrorMessage(Installer.couldNotInstallLibrary().format(moduleName)).then(noop, noop);
             return InstallerResponse.Ignore;
@@ -626,33 +639,6 @@ export class DataScienceInstaller extends BaseInstaller {
             return this.install(product, resource, cancel);
         }
         return InstallerResponse.Ignore;
-    }
-}
-
-export class TensorBoardInstaller extends DataScienceInstaller {
-    protected async promptToInstallImplementation(
-        product: Product,
-        resource: Uri,
-        cancel: CancellationToken,
-        isUpgrade?: boolean,
-    ): Promise<InstallerResponse> {
-        sendTelemetryEvent(EventName.TENSORBOARD_INSTALL_PROMPT_SHOWN);
-        // Show a prompt message specific to TensorBoard
-        const yes = Common.bannerLabelYes();
-        const no = Common.bannerLabelNo();
-        const message = isUpgrade ? TensorBoard.upgradePrompt() : TensorBoard.installPrompt();
-        const selection = await this.appShell.showErrorMessage(message, ...[yes, no]);
-        let telemetrySelection = TensorBoardPromptSelection.None;
-        if (selection === yes) {
-            telemetrySelection = TensorBoardPromptSelection.Yes;
-        } else if (selection === no) {
-            telemetrySelection = TensorBoardPromptSelection.No;
-        }
-        sendTelemetryEvent(EventName.TENSORBOARD_INSTALL_PROMPT_SELECTION, undefined, {
-            selection: telemetrySelection,
-            operationType: isUpgrade ? 'upgrade' : 'install',
-        });
-        return selection === yes ? this.install(product, resource, cancel, isUpgrade) : InstallerResponse.Ignore;
     }
 }
 
@@ -698,7 +684,7 @@ export class ProductInstaller implements IInstaller {
     ): Promise<InstallerResponse> {
         return this.createInstaller(product).install(product, resource, cancel);
     }
-    public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
+    public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean> {
         return this.createInstaller(product).isInstalled(product, resource);
     }
     public translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string {
@@ -719,8 +705,6 @@ export class ProductInstaller implements IInstaller {
                 return new RefactoringLibraryInstaller(this.serviceContainer, this.outputChannel);
             case ProductType.DataScience:
                 return new DataScienceInstaller(this.serviceContainer, this.outputChannel);
-            case ProductType.TensorBoard:
-                return new TensorBoardInstaller(this.serviceContainer, this.outputChannel);
             default:
                 break;
         }
@@ -775,6 +759,10 @@ function translateProductToModule(product: Product, purpose: ModuleNamePurpose):
             return 'kernelspec';
         case Product.tensorboard:
             return 'tensorboard';
+        case Product.torchProfilerInstallName:
+            return 'torch-tb-profiler';
+        case Product.torchProfilerImportName:
+            return 'torch_tb_profiler';
         default: {
             throw new Error(`Product ${product} cannot be installed as a Python Module.`);
         }

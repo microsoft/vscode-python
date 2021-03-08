@@ -740,6 +740,10 @@
                                 "description": "Debug only user-written code.",
                                 "default": true
                             },
+                            "debugAdapterPath": {
+                                "type": "string",
+                                "description": "Path (fully qualified) to the python debug adapter executable."
+                            },
                             "gevent": {
                                 "type": "boolean",
                                 "description": "Enable debugging of gevent monkey-patched code.",
@@ -829,6 +833,10 @@
                                 "type": "boolean",
                                 "description": "Debug only user-written code.",
                                 "default": true
+                            },
+                            "debugAdapterPath": {
+                                "type": "string",
+                                "description": "Path (fully qualified) to the python debug adapter executable."
                             }
                         }
                     },
@@ -918,6 +926,10 @@
                                 "type": "boolean",
                                 "description": "Debug only user-written code.",
                                 "default": true
+                            },
+                            "debugAdapterPath": {
+                                "type": "string",
+                                "description": "Path (fully qualified) to the python debug adapter executable."
                             },
                             "django": {
                                 "type": "boolean",
