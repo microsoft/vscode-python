@@ -4,8 +4,6 @@
 /* eslint-disable max-classes-per-file */
 
 import { cloneDeep } from 'lodash';
-import { getGlobalStorage } from '../../common/persistentState';
-import { IExtensionContext } from '../../common/types';
 import { PythonEnvInfo } from './info';
 import { areSameEnv, getEnvExecutable, haveSameExecutables } from './info/env';
 
@@ -179,20 +177,5 @@ export async function getPersistentCache(
 ): Promise<PythonEnvInfoCache> {
     const cache = new PythonEnvInfoCache(storage, isComplete);
     await cache.clearAndReloadFromStorage();
-    return cache;
-}
-
-export async function createPythonEnvInfoCache(context: IExtensionContext): Promise<PythonEnvInfoCache> {
-    const storage = getGlobalStorage<PythonEnvInfo[]>(context, 'PYTHON_ENV_INFO_CACHE');
-    const cache = await getPersistentCache(
-        {
-            load: async () => storage.get(),
-            store: async (e) => storage.set(e),
-        },
-        // For now we assume that if when iteration is complete, the env is as complete as it's going to get.
-        // So no further check for complete environments is needed.
-        () => true, // "isComplete"
-    );
-
     return cache;
 }

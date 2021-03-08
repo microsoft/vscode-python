@@ -8,7 +8,7 @@ import { IExtensionSingleActivationService } from '../activation/types';
 import { DiscoveryVariants } from '../common/experiments/groups';
 import { traceError } from '../common/logger';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
-import { IDisposableRegistry, IExtensionContext, Resource } from '../common/types';
+import { IDisposableRegistry, Resource } from '../common/types';
 import { getVersionString } from '../common/utils/version';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -70,7 +70,6 @@ import { EnvironmentType, PythonEnvironment } from './info';
 import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
 import { parseBasicVersion } from './base/info/pythonVersion';
 import { PythonVersion } from './info/pythonVersion';
-import { createPythonEnvInfoCache } from './base/envsCache';
 
 const convertedKinds = new Map(
     Object.entries({
@@ -234,15 +233,6 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         }
         const env = await this.api.resolveEnv(info);
         return convertEnvInfo(env ?? buildEnvInfo({ executable: pythonPath }));
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    public async getInterpreterCache(
-        pythonPath: string,
-        context: IExtensionContext,
-    ): Promise<PythonEnvInfo | undefined> {
-        const cache = await createPythonEnvInfoCache(context);
-        return cache.getCachedEnvInfo(pythonPath);
     }
 
     // Implements ICondaService

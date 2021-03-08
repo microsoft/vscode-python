@@ -2,11 +2,13 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
+import { getGlobalStorage } from '../common/persistentState';
 import { getOSType, OSType } from '../common/utils/platform';
 import { IDisposable } from '../common/utils/resourceLifecycle';
 import { ActivationResult, ExtensionState } from '../components';
 import { PythonEnvironments } from './api';
-import { createPythonEnvInfoCache } from './base/envsCache';
+import { getPersistentCache } from './base/envsCache';
+import { PythonEnvInfo } from './base/info';
 import { ILocator } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsReducer } from './base/locators/composite/environmentsReducer';
@@ -170,6 +172,15 @@ function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators {
 }
 
 async function createCachingLocator(ext: ExtensionState, locators: ILocator): Promise<CachingLocator> {
-    const cache = await createPythonEnvInfoCache(ext.context);
+    const storage = getGlobalStorage<PythonEnvInfo[]>(ext.context, 'PYTHON_ENV_INFO_CACHE');
+    const cache = await getPersistentCache(
+        {
+            load: async () => storage.get(),
+            store: async (e) => storage.set(e),
+        },
+        // For now we assume that if when iteration is complete, the env is as complete as it's going to get.
+        // So no further check for complete environments is needed.
+        () => true, // "isComplete"
+    );
     return new CachingLocator(cache, locators);
 }
