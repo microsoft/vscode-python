@@ -984,19 +984,6 @@ export interface IEventNamePropertyMapping {
          * @type {boolean}
          */
         failed?: boolean;
-        /**
-         * Whether the environment was activated within a terminal or not.
-         *
-         * @type {boolean}
-         */
-        activatedInTerminal?: boolean;
-        /**
-         * Whether the environment was activated by the wrapper class.
-         * If `true`, this telemetry is sent by the class that wraps the two activation providers   .
-         *
-         * @type {boolean}
-         */
-        activatedByWrapper?: boolean;
     };
     /**
      * Telemetry event sent when getting activation commands for active interpreter

@@ -1050,10 +1050,7 @@
                         "enum": [
                             "ShowExtensionSurveyPrompt - enabled",
                             "Reload - experiment",
-                            "AA_testing - experiment",
-                            "UseTerminalToGetActivatedEnvVars - experiment",
                             "DeprecatePythonPath - experiment",
-                            "RunByLine - experiment",
                             "tryPylance",
                             "debuggerDataViewer",
                             "pythonSendEntireLineToREPL",
@@ -1073,10 +1070,7 @@
                         "enum": [
                             "ShowExtensionSurveyPrompt - enabled",
                             "Reload - experiment",
-                            "AA_testing - experiment",
-                            "UseTerminalToGetActivatedEnvVars - experiment",
                             "DeprecatePythonPath - experiment",
-                            "RunByLine - experiment",
                             "tryPylance",
                             "debuggerDataViewer",
                             "pythonSendEntireLineToREPL",
