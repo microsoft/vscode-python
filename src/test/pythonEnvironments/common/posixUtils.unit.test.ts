@@ -101,6 +101,7 @@ suite('Posix Utils tests', () => {
     });
 
     teardown(() => {
+        readDirStub.restore();
         resolveSymlinkStub.restore();
     });
     test('getPythonBinFromPosixPaths', async () => {
