@@ -2,6 +2,7 @@ import { assert } from 'chai';
 import Sinon, * as sinon from 'sinon';
 import { SemVer } from 'semver';
 import { anything } from 'ts-mockito';
+import { workspace } from 'vscode';
 import {
     IExperimentService,
     IInstaller,
@@ -22,7 +23,6 @@ import { PythonEnvironment, EnvironmentType } from '../../client/pythonEnvironme
 import { PYTHON_PATH } from '../common';
 import { TorchProfiler } from '../../client/common/experiments/groups';
 import { ImportTracker } from '../../client/telemetry/importTracker';
-import { workspace } from 'vscode';
 
 const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
