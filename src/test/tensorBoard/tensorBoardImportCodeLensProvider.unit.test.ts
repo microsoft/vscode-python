@@ -22,19 +22,34 @@ suite('TensorBoard import code lens provider', () => {
     teardown(() => {
         cancelTokenSource.dispose();
     });
-    ['tensorboard', 'tensorboardX'].forEach((name) => {
-        test(`Provides code lens for Python files importing ${name}`, () => {
-            const document = new MockDocument(`import ${name}`, 'foo.py', async () => true);
+    [
+        'import tensorboard',
+        'import foo, tensorboard',
+        'import foo, tensorboard, bar',
+        'import tensorboardX',
+        'import tensorboardX, bar',
+        'import torch.profiler',
+        'import foo, torch.profiler',
+        'from torch.utils import tensorboard',
+        'from torch.utils import foo, tensorboard',
+        'import torch.utils.tensorboard, foo',
+        'from torch import profiler',
+    ].forEach((importStatement) => {
+        test(`Provides code lens for Python files containing ${importStatement}`, () => {
+            const document = new MockDocument(importStatement, 'foo.py', async () => true);
             const codeLens = codeLensProvider.provideCodeLenses(document, cancelTokenSource.token);
-            assert.ok(codeLens.length > 0, `Failed to provide code lens for file containing ${name} import`);
+            assert.ok(codeLens.length > 0, `Failed to provide code lens for file containing ${importStatement} import`);
         });
-        test(`Provides code lens for Python ipynbs importing ${name}`, () => {
-            const document = new MockDocument(`import ${name}`, 'foo.ipynb', async () => true);
+        test(`Provides code lens for Python ipynbs containing ${importStatement}`, () => {
+            const document = new MockDocument(importStatement, 'foo.ipynb', async () => true);
             const codeLens = codeLensProvider.provideCodeLenses(document, cancelTokenSource.token);
-            assert.ok(codeLens.length > 0, `Failed to provide code lens for ipynb containing ${name} import`);
+            assert.ok(
+                codeLens.length > 0,
+                `Failed to provide code lens for ipynb containing ${importStatement} import`,
+            );
         });
         test('Fails when cancellation is signaled', () => {
-            const document = new MockDocument(`import ${name}`, 'foo.py', async () => true);
+            const document = new MockDocument(importStatement, 'foo.py', async () => true);
             cancelTokenSource.cancel();
             const codeLens = codeLensProvider.provideCodeLenses(document, cancelTokenSource.token);
             assert.ok(codeLens.length === 0, 'Provided codelens even after cancellation was requested');

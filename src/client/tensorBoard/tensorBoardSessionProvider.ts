@@ -5,9 +5,10 @@ import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { Commands } from '../common/constants';
+import { TorchProfiler } from '../common/experiments/groups';
 import { traceError, traceInfo } from '../common/logger';
 import { IProcessServiceFactory } from '../common/process/types';
-import { IDisposableRegistry, IInstaller } from '../common/types';
+import { IDisposableRegistry, IExperimentService, IInstaller } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { sendTelemetryEvent } from '../telemetry';
@@ -25,6 +26,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {}
 
     public async activate(): Promise<void> {
@@ -56,6 +58,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                 this.commandManager,
                 this.disposables,
                 this.applicationShell,
+                await this.experimentService.inExperiment(TorchProfiler.experiment),
             );
             await newSession.initialize();
             return newSession;

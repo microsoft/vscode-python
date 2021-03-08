@@ -52,7 +52,6 @@ import {
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
-    TensorBoardProductPathService,
     TestFrameworkProductPathService,
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
@@ -208,12 +207,6 @@ suite('Installer', () => {
             RefactoringLibraryProductPathService,
             ProductType.RefactoringLibrary,
         );
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
-            TensorBoardProductPathService,
-            ProductType.TensorBoard,
-        );
-
         ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
         ioc.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
         ioc.serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
@@ -367,7 +360,7 @@ suite('Installer', () => {
     getNamesAndValues<Product>(Product).forEach((prod) => {
         test(`Ensure install for Product: '${prod.name}' executes the right command in IModuleInstaller`, async function () {
             const productType = new ProductService().getProductType(prod.value);
-            if (productType === ProductType.DataScience || productType === ProductType.TensorBoard) {
+            if (productType === ProductType.DataScience) {
                 return this.skip();
             }
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(

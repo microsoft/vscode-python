@@ -47,7 +47,7 @@ suite('Linting - MyPy', () => {
                 {
                     code: undefined,
                     message: 'Expression has type "Any"',
-                    column: 21,
+                    column: 20,
                     line: 12,
                     type: 'error',
                     provider: 'mypy',
@@ -55,7 +55,7 @@ suite('Linting - MyPy', () => {
             ],
         ];
         for (const [line, expected] of tests) {
-            const msg = parseLine(line, REGEX, LinterId.MyPy);
+            const msg = parseLine(line, REGEX, LinterId.MyPy, 1);
 
             expect(msg).to.deep.equal(expected);
         }
