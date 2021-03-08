@@ -259,7 +259,7 @@ export function parsePyenvVersion(str: string): Promise<IPyenvVersionStrings | u
 async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
     const pyenvVersionDir = getPyenvVersionsDir();
 
-    const subDirs = getSubDirs(pyenvVersionDir, true);
+    const subDirs = getSubDirs(pyenvVersionDir, { resolveSymlinks: true });
     for await (const subDirPath of subDirs) {
         const envDirName = path.basename(subDirPath);
         const interpreterPath = await getInterpreterPathFromDir(subDirPath);

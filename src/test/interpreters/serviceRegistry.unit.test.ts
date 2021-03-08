@@ -6,7 +6,6 @@
 import { instance, mock, verify } from 'ts-mockito';
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../../client/activation/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
-import { TerminalEnvironmentActivationService } from '../../client/interpreter/activation/terminalEnvironmentActivationService';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSelection';
 import { InterpreterEvaluation } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
@@ -110,7 +109,6 @@ suite('Interpreters - Service Registry', () => {
             [IInterpreterAutoSelectionService, InterpreterAutoSelectionService],
 
             [EnvironmentActivationService, EnvironmentActivationService],
-            [TerminalEnvironmentActivationService, TerminalEnvironmentActivationService],
             [IEnvironmentActivationService, EnvironmentActivationService],
             [IExtensionActivationService, CondaInheritEnvPrompt],
         ].forEach((mapping) => {

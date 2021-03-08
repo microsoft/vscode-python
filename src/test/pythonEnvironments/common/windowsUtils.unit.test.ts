@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-import { isWindowsPythonExe } from '../../../client/pythonEnvironments/common/windowsUtils';
+import { matchPythonBinFilename } from '../../../client/pythonEnvironments/common/windowsUtils';
 
 suite('Windows Utils tests', () => {
     const testParams = [
@@ -25,7 +25,7 @@ suite('Windows Utils tests', () => {
         test(`Python executable check ${testParam.expected ? 'should match' : 'should not match'} this path: ${
             testParam.path
         }`, () => {
-            assert.deepEqual(isWindowsPythonExe(testParam.path), testParam.expected);
+            assert.deepEqual(matchPythonBinFilename(testParam.path), testParam.expected);
         });
     });
 });

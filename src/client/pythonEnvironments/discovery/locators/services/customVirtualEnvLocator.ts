@@ -14,7 +14,7 @@ import {
     findInterpretersInDir,
     getEnvironmentDirFromPath,
     getPythonVersionFromPath,
-    isStandardPythonBinary,
+    looksLikeBasicVirtualPython,
 } from '../../../common/commonUtils';
 import {
     getFileInfo,
@@ -125,22 +125,23 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
                 async function* generator() {
                     traceVerbose(`Searching for custom virtual envs in: ${envRootDir}`);
 
-                    const envGenerator = findInterpretersInDir(envRootDir, DEFAULT_SEARCH_DEPTH);
+                    const executables = findInterpretersInDir(envRootDir, DEFAULT_SEARCH_DEPTH);
 
-                    for await (const env of envGenerator) {
+                    for await (const entry of executables) {
+                        const { filename } = entry;
                         // We only care about python.exe (on windows) and python (on linux/mac)
                         // Other version like python3.exe or python3.8 are often symlinks to
                         // python.exe or python in the same directory in the case of virtual
                         // environments.
-                        if (isStandardPythonBinary(env)) {
+                        if (await looksLikeBasicVirtualPython(entry)) {
                             // We should extract the kind here to avoid doing is*Environment()
                             // check multiple times. Those checks are file system heavy and
                             // we can use the kind to determine this anyway.
-                            const kind = await getVirtualEnvKind(env);
-                            yield buildSimpleVirtualEnvInfo(env, kind);
-                            traceVerbose(`Custom Virtual Environment: [added] ${env}`);
+                            const kind = await getVirtualEnvKind(filename);
+                            yield buildSimpleVirtualEnvInfo(filename, kind);
+                            traceVerbose(`Custom Virtual Environment: [added] ${filename}`);
                         } else {
-                            traceVerbose(`Custom Virtual Environment: [skipped] ${env}`);
+                            traceVerbose(`Custom Virtual Environment: [skipped] ${filename}`);
                         }
                     }
                 }

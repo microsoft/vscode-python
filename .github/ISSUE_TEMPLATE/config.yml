@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Feature Request
+    url: https://github.com/microsoft/vscode-python/discussions/categories/ideas
+    about: For ideas to improve the extension
   - name: Pylance
     url: https://github.com/microsoft/pylance-release/issues
     about: For issues relating to the Pylance language server extension
@@ -12,6 +15,3 @@ contact_links:
   - name: Help/Support
     url: https://github.com/microsoft/vscode-python/discussions/categories/q-a
     about: Having trouble with the extension? Need help getting something to work?
-  - name: Feature Request
-    url: https://github.com/microsoft/vscode-python/discussions/categories/ideas
-    about: For ideas to improve the extension

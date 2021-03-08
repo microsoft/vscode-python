@@ -9,30 +9,16 @@ import { noop } from '../common/utils/misc';
 // in order to match on imported submodules as well, since the original regex only
 // matches the 'main' module.
 
-// eslint-disable-next-line max-len
-export const ImportRegEx = /^\s*from (?<fromImport>\w+(?:\.\w+)*) import (?<fromImportTarget>\w+(?:, \w+)*)(?: as \w+)?|import (?<importImport>\w+(?:, \w+)*)(?: as \w+)?$/;
+// RegEx to match `import torch.profiler` or `from torch import profiler`
+const TorchProfilerImportRegEx = /^\s*(?:import (?:(\w+, )*torch\.profiler(, \w+)*))|(?:from torch import (?:(\w+, )*profiler(, \w+)*))/;
+// RegEx to match `from torch.utils import tensorboard`, `import torch.utils.tensorboard`, `import tensorboardX`, `import tensorboard`
+const TensorBoardImportRegEx = /^\s*(?:from torch\.utils\.tensorboard import \w+)|(?:from torch\.utils import (?:(\w+, )*tensorboard(, \w+)*))|(?:from tensorboardX import \w+)|(?:import (\w+, )*((torch\.utils\.tensorboard)|(tensorboardX)|(tensorboard))(, \w+)*)/;
 
 export function containsTensorBoardImport(lines: (string | undefined)[]): boolean {
     try {
         for (const s of lines) {
-            const matches = s ? ImportRegEx.exec(s) : null;
-            if (matches !== null && matches.groups !== undefined) {
-                let componentsToCheck: string[] = [];
-                if (matches.groups.fromImport && matches.groups.fromImportTarget) {
-                    // from x.y.z import u, v, w
-                    componentsToCheck = matches.groups.fromImport
-                        .split('.')
-                        .concat(matches.groups.fromImportTarget.split(','));
-                } else if (matches.groups.importImport) {
-                    // import package1, package2, ...
-                    componentsToCheck = matches.groups.importImport.split(',');
-                }
-                for (let component of componentsToCheck) {
-                    component = component?.trim();
-                    if (component === 'tensorboard' || component === 'tensorboardX') {
-                        return true;
-                    }
-                }
+            if (s && (TensorBoardImportRegEx.test(s) || TorchProfilerImportRegEx.test(s))) {
+                return true;
             }
         }
     } catch {

@@ -1,23 +1,5 @@
 [
     {
-        "name": "AlwaysDisplayTestExplorer - experiment",
-        "salt": "AlwaysDisplayTestExplorer",
-        "min": 80,
-        "max": 100
-    },
-    {
-        "name": "AlwaysDisplayTestExplorer - control",
-        "salt": "AlwaysDisplayTestExplorer",
-        "min": 0,
-        "max": 20
-    },
-    {
-        "name": "ShowPlayIcon - start",
-        "salt": "ShowPlayIcon",
-        "max": 100,
-        "min": 0
-    },
-    {
         "name": "ShowExtensionSurveyPrompt - enabled",
         "salt": "ShowExtensionSurveyPrompt",
         "max": 100,
@@ -28,78 +10,6 @@
         "salt": "ShowExtensionSurveyPrompt",
         "min": 0,
         "max": 40
-    },
-    {
-        "name": "DebugAdapterFactory - control",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "DebugAdapterFactory - experiment",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "PtvsdWheels37 - control",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "PtvsdWheels37 - experiment",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "Reload - control",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "Reload - experiment",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "UseTerminalToGetActivatedEnvVars - experiment",
-        "salt": "UseTerminalToGetActivatedEnvVars",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "UseTerminalToGetActivatedEnvVars - control",
-        "salt": "UseTerminalToGetActivatedEnvVars",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "AA_testing - control",
-        "salt": "AA_testing",
-        "min": 0,
-        "max": 10
-    },
-    {
-        "name": "AA_testing - experiment",
-        "salt": "AA_testing",
-        "min": 90,
-        "max": 100
-    },
-    {
-        "name": "LocalZMQKernel - experiment",
-        "salt": "LocalZMQKernel",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "LocalZMQKernel - control",
-        "salt": "LocalZMQKernel",
-        "min": 0,
-        "max": 0
     },
     {
         "name": "CollectLSRequestTiming - experiment",
@@ -114,30 +24,6 @@
         "max": 100
     },
     {
-        "name": "CollectNodeLSRequestTiming - experiment",
-        "salt": "CollectNodeLSRequestTiming",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "CollectNodeLSRequestTiming - control",
-        "salt": "CollectNodeLSRequestTiming",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "EnableIPyWidgets - experiment",
-        "salt": "EnableIPyWidgets",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "EnableIPyWidgets - control",
-        "salt": "EnableIPyWidgets",
-        "min": 0,
-        "max": 0
-    },
-    {
         "name": "DeprecatePythonPath - experiment",
         "salt": "DeprecatePythonPath",
         "min": 0,
@@ -148,35 +34,5 @@
         "salt": "DeprecatePythonPath",
         "min": 80,
         "max": 100
-    },
-    {
-        "name": "RunByLine - experiment",
-        "salt": "RunByLine",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "RunByLine - control",
-        "salt": "RunByLine",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "CustomEditorSupport - control",
-        "salt": "CustomEditorSupport",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "CustomEditorSupport - experiment",
-        "salt": "CustomEditorSupport",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "NativeNotebook - experiment",
-        "salt": "CustomEditorSupport",
-        "max": 0,
-        "min": 0
     }
 ]

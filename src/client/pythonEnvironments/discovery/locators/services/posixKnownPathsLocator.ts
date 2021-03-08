@@ -10,7 +10,7 @@ import { buildEnvInfo } from '../../../base/info/env';
 import { parseVersion } from '../../../base/info/pythonVersion';
 import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getFileInfo, resolveSymbolicLink } from '../../../common/externalDependencies';
-import { commonPosixBinPaths, isPosixPythonBinPattern } from '../../../common/posixUtils';
+import { commonPosixBinPaths, matchPythonBinFilename } from '../../../common/posixUtils';
 import { isPyenvShimDir } from './pyenvLocator';
 
 async function getPythonBinFromKnownPaths(): Promise<string[]> {
@@ -23,7 +23,7 @@ async function getPythonBinFromKnownPaths(): Promise<string[]> {
         const paths = (await fs.promises.readdir(dirname, { withFileTypes: true }))
             .filter((dirent: fs.Dirent) => !dirent.isDirectory())
             .map((dirent: fs.Dirent) => path.join(dirname, dirent.name))
-            .filter(isPosixPythonBinPattern);
+            .filter(matchPythonBinFilename);
 
         for (const filepath of paths) {
             // Ensure that we have a collection of unique global binaries by

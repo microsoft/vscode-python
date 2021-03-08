@@ -17,11 +17,18 @@ import {
 /* eslint-disable global-require */
 
 /**
+ * Determine if the given filename looks like the simplest Python executable.
+ */
+export function matchBasicPythonBinFilename(filename: string): boolean {
+    return path.basename(filename).toLowerCase() === 'python.exe';
+}
+
+/**
  * Checks if a given path ends with python*.exe
  * @param {string} interpreterPath : Path to python interpreter.
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
-export function isWindowsPythonExe(interpreterPath: string): boolean {
+export function matchPythonBinFilename(filename: string): boolean {
     /**
      * This Reg-ex matches following file names:
      * python.exe
@@ -31,7 +38,7 @@ export function isWindowsPythonExe(interpreterPath: string): boolean {
      */
     const windowsPythonExes = /^python(\d+(.\d+)?)?\.exe$/;
 
-    return windowsPythonExes.test(path.basename(interpreterPath));
+    return windowsPythonExes.test(path.basename(filename));
 }
 
 export interface IRegistryInterpreterData {

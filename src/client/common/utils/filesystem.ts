@@ -3,6 +3,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { EOL } from 'os';
 import * as vscode from 'vscode';
 import { logError } from '../../logging';
 import { getOSType, OSType } from './platform';
@@ -166,4 +167,65 @@ export function getFileFilter(
         return true;
     }
     return filterFile;
+}
+
+/**
+ * Generates a string representation of the content of a directory tree.
+ *
+ * This is only meant as a helper, to be used temporarily while
+ * trouble-shooting filesystem-related code.  It should not be
+ * used in any released code.
+ */
+export async function renderFSTree(
+    root: string,
+    opts: {
+        indent?: string;
+        maxDepth?: number;
+    },
+): Promise<string> {
+    const subOpts = {
+        indent: opts.indent || '  ',
+        maxDepth: opts.maxDepth,
+    };
+    if (opts.maxDepth !== undefined && opts.maxDepth < 0) {
+        subOpts.maxDepth = 0;
+    }
+    const lines = await renderFSTreeLines(root, root, 0, subOpts);
+    return lines.join(EOL);
+}
+
+async function renderFSTreeLines(
+    root: string,
+    rootname: string,
+    depth: number,
+    opts: {
+        indent: string;
+        maxDepth?: number;
+    },
+): Promise<string[]> {
+    const lines = [
+        // Add the root without indenting.
+        `${rootname}${path.sep}`,
+    ];
+    if (opts.maxDepth !== undefined && depth > opts.maxDepth) {
+        lines.push(`${opts.indent}...`);
+        return lines;
+    }
+    const entries = await fs.promises.readdir(root);
+    for (const name of entries) {
+        const filename = path.join(root, name);
+        const stat = await fs.promises.lstat(filename);
+        let sublines: string[];
+        if (stat.isDirectory()) {
+            sublines = await renderFSTreeLines(filename, name, depth + 1, opts);
+        } else if (stat.isSymbolicLink()) {
+            const linked = await fs.promises.readlink(filename);
+            sublines = [`${name} -> ${linked}`];
+        } else {
+            sublines = [name];
+        }
+        // Add the directory contents, with indentation.
+        lines.push(...sublines.map((line) => `${opts.indent}${line}`));
+    }
+    return lines;
 }

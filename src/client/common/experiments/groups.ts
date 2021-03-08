@@ -1,9 +1,3 @@
-// Experiment to check whether to always display the test explorer.
-export enum AlwaysDisplayTestExplorerGroups {
-    control = 'AlwaysDisplayTestExplorer - control',
-    experiment = 'AlwaysDisplayTestExplorer - experiment',
-}
-
 // Experiment to check whether to show "Extension Survey prompt" or not.
 export enum ShowExtensionSurveyPrompt {
     control = 'ShowExtensionSurveyPrompt - control',
@@ -14,35 +8,6 @@ export enum ShowExtensionSurveyPrompt {
 export enum WebAppReload {
     control = 'Reload - control',
     experiment = 'Reload - experiment',
-}
-
-/**
- * Experiment to check whether to to use a terminal to generate the environment variables of activated environments.
- *
- * @export
- * @enum {number}
- */
-export enum UseTerminalToGetActivatedEnvVars {
-    control = 'UseTerminalToGetActivatedEnvVars - control',
-    experiment = 'UseTerminalToGetActivatedEnvVars - experiment',
-}
-
-// Dummy experiment added to validate metrics of A/B testing
-export enum ValidateABTesting {
-    control = 'AA_testing - control',
-    experiment = 'AA_testing - experiment',
-}
-
-// Collect language server request timings.
-export enum CollectLSRequestTiming {
-    control = 'CollectLSRequestTiming - control',
-    experiment = 'CollectLSRequestTiming - experiment',
-}
-
-// Collect Node language server request timings.
-export enum CollectNodeLSRequestTiming {
-    control = 'CollectNodeLSRequestTiming - control',
-    experiment = 'CollectNodeLSRequestTiming - experiment',
 }
 
 /*
@@ -104,4 +69,11 @@ export enum DiscoveryVariants {
 // Find Interpreter suggestion experiment variants
 export enum FindInterpreterVariants {
     findLast = 'pythonFindInterpreter',
+}
+
+// Feature gate to control whether we install the PyTorch profiler package
+// torch.profiler release is being delayed till end of March. This allows us
+// to turn on the profiler plugin install functionality between releases
+export enum TorchProfiler {
+    experiment = 'PythonPyTorchProfiler',
 }

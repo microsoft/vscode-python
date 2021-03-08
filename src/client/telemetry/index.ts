@@ -993,19 +993,6 @@ export interface IEventNamePropertyMapping {
          * @type {boolean}
          */
         failed?: boolean;
-        /**
-         * Whether the environment was activated within a terminal or not.
-         *
-         * @type {boolean}
-         */
-        activatedInTerminal?: boolean;
-        /**
-         * Whether the environment was activated by the wrapper class.
-         * If `true`, this telemetry is sent by the class that wraps the two activation providers   .
-         *
-         * @type {boolean}
-         */
-        activatedByWrapper?: boolean;
     };
     /**
      * Telemetry event sent when getting activation commands for active interpreter
@@ -1308,6 +1295,8 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the language server
+     *
+     * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
@@ -1376,6 +1365,8 @@ export interface IEventNamePropertyMapping {
     [EventName.LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the Node.js server
+     *
+     * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.LANGUAGE_SERVER_REQUEST]: unknown;
     /**
@@ -1412,6 +1403,8 @@ export interface IEventNamePropertyMapping {
     [EventName.JEDI_LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the Node.js server
+     *
+     * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.JEDI_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
@@ -1868,4 +1861,15 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when we find an active integrated terminal running tensorboard.
      */
     [EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL]: never | undefined;
+    /**
+     * Telemetry event sent after attempting to install TensorBoard session dependencies.
+     * Note, this is only sent if install was attempted. It is not sent if the user opted
+     * not to install, or if all dependencies were already installed.
+     */
+    [EventName.TENSORBOARD_INSTALL_SESSION_DEPENDENCIES_RESULT]: {
+        wasProfilerPluginAttempted: boolean;
+        wasTensorBoardAttempted: boolean;
+        wasProfilerPluginInstalled: boolean;
+        wasTensorBoardInstalled: boolean;
+    };
 }

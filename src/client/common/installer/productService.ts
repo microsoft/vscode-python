@@ -34,7 +34,9 @@ export class ProductService implements IProductService {
         this.ProductTypes.set(Product.nbconvert, ProductType.DataScience);
         this.ProductTypes.set(Product.kernelspec, ProductType.DataScience);
         this.ProductTypes.set(Product.pandas, ProductType.DataScience);
-        this.ProductTypes.set(Product.tensorboard, ProductType.TensorBoard);
+        this.ProductTypes.set(Product.tensorboard, ProductType.DataScience);
+        this.ProductTypes.set(Product.torchProfilerInstallName, ProductType.DataScience);
+        this.ProductTypes.set(Product.torchProfilerImportName, ProductType.DataScience);
     }
     public getProductType(product: Product): ProductType {
         return this.ProductTypes.get(product)!;

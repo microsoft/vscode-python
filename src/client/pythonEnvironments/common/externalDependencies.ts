@@ -105,24 +105,34 @@ export async function resolveSymbolicLink(absPath: string): Promise<string> {
     const stats = await fsapi.lstat(absPath);
     if (stats.isSymbolicLink()) {
         const link = await fsapi.readlink(absPath);
-        return resolveSymbolicLink(link);
+        // Result from readlink is not guaranteed to be an absolute path. For eg. on Mac it resolves
+        // /usr/local/bin/python3.9 -> ../../../Library/Frameworks/Python.framework/Versions/3.9/bin/python3.9
+        //
+        // The resultant path is reported relative to the symlink directory we resolve. Convert that to absolute path.
+        const absLinkPath = path.isAbsolute(link) ? link : path.resolve(path.dirname(absPath), link);
+        return resolveSymbolicLink(absLinkPath);
     }
     return absPath;
 }
 
 /**
  * Returns full path to sub directories of a given directory.
- * @param root
- * @param resolveSymlinks
+ * @param {string} root : path to get sub-directories from.
+ * @param options : If called with `resolveSymlinks: true`, then symlinks found in
+ *                  the directory are resolved and if they resolve to directories
+ *                  then resolved values are returned.
  */
-export async function* getSubDirs(root: string, resolveSymlinks: boolean): AsyncIterableIterator<string> {
+export async function* getSubDirs(
+    root: string,
+    options?: { resolveSymlinks?: boolean },
+): AsyncIterableIterator<string> {
     const dirContents = await fsapi.promises.readdir(root, { withFileTypes: true });
     const generators = dirContents.map((item) => {
         async function* generator() {
             const fullPath = path.join(root, item.name);
             if (item.isDirectory()) {
                 yield fullPath;
-            } else if (resolveSymlinks && item.isSymbolicLink()) {
+            } else if (options?.resolveSymlinks && item.isSymbolicLink()) {
                 // The current FS item is a symlink. It can potentially be a file
                 // or a directory. Resolve it first and then check if it is a directory.
                 const resolvedPath = await resolveSymbolicLink(fullPath);

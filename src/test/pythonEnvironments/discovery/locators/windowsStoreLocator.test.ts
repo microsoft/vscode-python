@@ -21,25 +21,36 @@ import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 class WindowsStoreEnvs {
     private executables: string[] = [];
 
+    private dirs: string[] = [];
+
     constructor(private readonly storeAppRoot: string) {}
 
-    public async create(basename: string): Promise<string> {
-        const filename = path.join(this.storeAppRoot, basename);
+    public async create(version: string): Promise<string> {
+        const dirName = path.join(this.storeAppRoot, `PythonSoftwareFoundation.Python.${version}_qbz5n2kfra8p0`);
+        const filename = path.join(this.storeAppRoot, `python${version}.exe`);
         try {
             await fs.createFile(filename);
         } catch (err) {
             throw new Error(`Failed to create Windows Apps executable ${filename}, Error: ${err}`);
         }
+        try {
+            await fs.mkdir(dirName);
+        } catch (err) {
+            throw new Error(`Failed to create Windows Apps directory ${dirName}, Error: ${err}`);
+        }
         this.executables.push(filename);
+        this.dirs.push(dirName);
         return filename;
     }
 
-    public async update(basename: string): Promise<void> {
-        const filename = path.join(this.storeAppRoot, basename);
+    public async update(version: string): Promise<void> {
+        // On update windows store removes the directory and re-adds it.
+        const dirName = path.join(this.storeAppRoot, `PythonSoftwareFoundation.Python.${version}_qbz5n2kfra8p0`);
         try {
-            await fs.writeFile(filename, 'Environment has been updated');
+            await fs.rmdir(dirName);
+            await fs.mkdir(dirName);
         } catch (err) {
-            throw new Error(`Failed to update Windows Apps executable ${filename}, Error: ${err}`);
+            throw new Error(`Failed to update Windows Apps directory ${dirName}, Error: ${err}`);
         }
     }
 
@@ -50,6 +61,15 @@ class WindowsStoreEnvs {
                     await fs.remove(filename);
                 } catch (err) {
                     traceWarning(`Failed to clean up ${filename}`);
+                }
+            }),
+        );
+        await Promise.all(
+            this.dirs.map(async (dir: string) => {
+                try {
+                    await fs.rmdir(dir);
+                } catch (err) {
+                    traceWarning(`Failed to clean up ${dir}`);
                 }
             }),
         );
@@ -118,7 +138,7 @@ suite('Windows Store Locator', async () => {
             deferred.resolve();
         });
 
-        const executable = await windowsStoreEnvs.create('python3.4.exe');
+        const executable = await windowsStoreEnvs.create('3.4');
         await waitForChangeToBeDetected(deferred);
         const isFound = await isLocated(executable);
 
@@ -134,7 +154,7 @@ suite('Windows Store Locator', async () => {
             type: FileChangeType.Deleted,
             searchLocation: Uri.file(testStoreAppRoot),
         };
-        const executable = await windowsStoreEnvs.create('python3.4.exe');
+        const executable = await windowsStoreEnvs.create('3.4');
         // Wait before the change event has been sent. If both operations occur almost simultaneously no event is sent.
         await sleep(100);
         await setupLocator(async (e) => {
@@ -158,7 +178,7 @@ suite('Windows Store Locator', async () => {
             type: FileChangeType.Changed,
             searchLocation: Uri.file(testStoreAppRoot),
         };
-        const executable = await windowsStoreEnvs.create('python3.4.exe');
+        const executable = await windowsStoreEnvs.create('3.4');
         // Wait before the change event has been sent. If both operations occur almost simultaneously no event is sent.
         await sleep(100);
         await setupLocator(async (e) => {
@@ -166,7 +186,7 @@ suite('Windows Store Locator', async () => {
             deferred.resolve();
         });
 
-        await windowsStoreEnvs.update('python3.4.exe');
+        await windowsStoreEnvs.update('3.4');
         await waitForChangeToBeDetected(deferred);
         const isFound = await isLocated(executable);
 

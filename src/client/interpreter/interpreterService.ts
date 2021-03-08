@@ -22,7 +22,7 @@ import {
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
-import { captureTelemetry } from '../telemetry';
+import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import {
     GetInterpreterOptions,
@@ -36,6 +36,7 @@ import {
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 import { getInterpreterHash } from '../pythonEnvironments/discovery/locators/services/hashProvider';
 import { inDiscoveryExperiment } from '../common/experiments/helpers';
+import { StopWatch } from '../common/utils/stopWatch';
 
 const EXPIRY_DURATION = 24 * 60 * 60 * 1000;
 
@@ -137,9 +138,9 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
     }
 
-    @captureTelemetry(EventName.PYTHON_INTERPRETER_DISCOVERY, { locator: 'all' }, true)
     public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
         let environments: PythonEnvironment[] = [];
+        const stopWatch = new StopWatch();
         if (await inDiscoveryExperiment(this.experimentService)) {
             environments = await this.pyenvs.getInterpreters(resource, options);
         } else {
@@ -149,6 +150,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
             );
             environments = await locator.getInterpreters(resource, options);
         }
+
+        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
+            locator: 'all',
+            interpreters: environments?.length ?? 0,
+        });
 
         await Promise.all(
             environments
