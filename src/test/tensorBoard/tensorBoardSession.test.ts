@@ -2,7 +2,6 @@ import { assert } from 'chai';
 import Sinon, * as sinon from 'sinon';
 import { SemVer } from 'semver';
 import { anything } from 'ts-mockito';
-import { IApplicationShell, ICommandManager } from '../../client/common/application/types';
 import {
     IExperimentService,
     IInstaller,
@@ -11,6 +10,7 @@ import {
     ProductInstallStatus,
 } from '../../client/common/types';
 import { Common, TensorBoard } from '../../client/common/utils/localize';
+import { IApplicationShell, ICommandManager } from '../../client/common/application/types';
 import { IServiceManager } from '../../client/ioc/types';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../client/tensorBoard/constants';
 import { TensorBoardSession } from '../../client/tensorBoard/tensorBoardSession';
@@ -22,6 +22,7 @@ import { PythonEnvironment, EnvironmentType } from '../../client/pythonEnvironme
 import { PYTHON_PATH } from '../common';
 import { TorchProfiler } from '../../client/common/experiments/groups';
 import { ImportTracker } from '../../client/telemetry/importTracker';
+import { workspace } from 'vscode';
 
 const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
@@ -407,5 +408,28 @@ suite('TensorBoard session creation', async () => {
             )) as TensorBoardSession;
             assert.ok(session.panel?.visible, 'Webview panel not shown, expected successful session creation');
         });
+    });
+    test('If python.tensorBoard.logDirectory is provided, do not prompt user to pick a log directory', async () => {
+        const selectDirectoryStub = sandbox
+            .stub(applicationShell, 'showQuickPick')
+            .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+        const workspaceConfiguration = workspace.getConfiguration('python.tensorBoard');
+        const initialValue = workspaceConfiguration.get('logDirectory');
+        await workspaceConfiguration.update('logDirectory', 'logs/fit', false);
+
+        const session = (await commandManager.executeCommand(
+            'python.launchTensorBoard',
+            TensorBoardEntrypoint.palette,
+            TensorBoardEntrypointTrigger.palette,
+        )) as TensorBoardSession;
+
+        assert.ok(session.panel?.visible, 'Expected successful session creation but webpanel not shown');
+        assert.ok(errorMessageStub.notCalled, 'Expected successful session creation but error message was shown');
+        assert.ok(
+            selectDirectoryStub.notCalled,
+            'Prompted user to select log directory although setting was specified',
+        );
+
+        await workspaceConfiguration.update('logDirectory', initialValue, false);
     });
 });

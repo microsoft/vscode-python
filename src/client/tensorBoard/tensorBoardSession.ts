@@ -74,7 +74,7 @@ export class TensorBoardSession {
         if (!tensorBoardWasInstalled) {
             return;
         }
-        const logDir = await this.askUserForLogDir();
+        const logDir = await this.getLogDirectory();
         if (!logDir) {
             return;
         }
@@ -251,7 +251,16 @@ export class TensorBoardSession {
     // Display a quickpick asking the user to acknowledge our autopopulated log directory or
     // select a new one using the file picker. Default this to the folder that is open in
     // the editor, if any, then the directory that the active text editor is in, if any.
-    private async askUserForLogDir(): Promise<string | undefined> {
+    private async getLogDirectory(): Promise<string | undefined> {
+        // If there's a workspace open, see if the user told us to always use a specific log directory
+        if (this.workspaceService.workspaceFolders && this.workspaceService.workspaceFolders.length > 0) {
+            const workspace = this.workspaceService.workspaceFolders[0];
+            const setting = this.workspaceService.getConfiguration('python.tensorBoard', workspace.uri);
+            if (setting && setting.has('logDirectory')) {
+                return setting.get('logDirectory');
+            }
+        }
+        // No log directory in settings. Ask the user which directory to use
         const logDir = this.autopopulateLogDirectoryPath();
         const useCurrentWorkingDirectory = TensorBoard.useCurrentWorkingDirectory();
         const selectAFolder = TensorBoard.selectAFolder();
