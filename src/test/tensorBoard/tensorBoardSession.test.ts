@@ -413,6 +413,7 @@ suite('TensorBoard session creation', async () => {
         const selectDirectoryStub = sandbox
             .stub(applicationShell, 'showQuickPick')
             .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+        errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
         const workspaceConfiguration = workspace.getConfiguration('python.tensorBoard');
         const initialValue = workspaceConfiguration.get('logDirectory');
         await workspaceConfiguration.update('logDirectory', 'logs/fit', false);
