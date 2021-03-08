@@ -1,8 +1,8 @@
 import { SemVer } from 'semver';
 import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IExtensionContext, IPersistentState, Resource } from '../common/types';
-import { PythonEnvInfo, PythonEnvSource } from '../pythonEnvironments/base/info';
+import { Resource } from '../common/types';
+import { PythonEnvSource } from '../pythonEnvironments/base/info';
 import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/discovery/locators/services/conda';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 
@@ -55,7 +55,6 @@ export interface IComponentAdapter {
     getWinRegInterpreters(resource: Resource): Promise<PythonEnvironment[]>;
     // IInterpreterService
     getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<PythonEnvironment>;
-    getInterpreterCache(pythonPath: string, context: IExtensionContext): Promise<PythonEnvInfo | undefined>;
     // IInterpreterHelper
     // Undefined is expected on this API, if the environment info retrieval fails.
     getInterpreterInformation(pythonPath: string): Promise<Partial<PythonEnvironment> | undefined>;
@@ -116,7 +115,6 @@ export interface IInterpreterService {
     refresh(resource: Resource): Promise<void>;
     initialize(): void;
     getDisplayName(interpreter: Partial<PythonEnvironment>): Promise<string>;
-    getInterpreterCache(pythonPath: string): Promise<IPersistentState<{ fileHash: string; info?: PythonEnvironment }>>;
 }
 
 export const IInterpreterDisplay = Symbol('IInterpreterDisplay');
