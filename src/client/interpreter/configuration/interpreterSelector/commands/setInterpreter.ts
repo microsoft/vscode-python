@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { QuickPickItem } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands } from '../../../../common/constants';
@@ -26,6 +27,8 @@ import {
     IPythonPathUpdaterServiceManager,
 } from '../../types';
 import { BaseInterpreterSelectorCommand } from './base';
+
+const untildify = require('untildify');
 
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
 
@@ -98,7 +101,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'escape' });
         } else if (selection.label === manualEntrySuggestion.label) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_OR_FIND);
-            return this._enterOrBrowseInterpreterPath(input, state);
+            return this._enterOrBrowseInterpreterPath(input, state, interpreterSuggestions);
         } else {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'selected' });
             state.path = (selection as IInterpreterQuickPickItem).path;
@@ -111,6 +114,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     public async _enterOrBrowseInterpreterPath(
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs,
+        suggestions: IInterpreterQuickPickItem[],
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         const items: QuickPickItem[] = [
             {
@@ -129,6 +133,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             // User entered text in the filter box to enter path to python, store it
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'enter' });
             state.path = selection;
+            await this.sendInterpreterEntryTelemetry(selection, state.workspace, suggestions);
         } else if (selection && selection.label === InterpreterQuickPickList.browsePath.label()) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'browse' });
             const filtersKey = 'Executables';
@@ -142,6 +147,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             });
             if (uris && uris.length > 0) {
                 state.path = uris[0].fsPath;
+                await this.sendInterpreterEntryTelemetry(state.path!, state.workspace, suggestions);
             }
         }
     }
@@ -165,5 +171,42 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             // Having the value `undefined` means user cancelled the quickpick, so we update nothing in that case.
             await this.pythonPathUpdaterService.updatePythonPath(interpreterState.path, configTarget, 'ui', wkspace);
         }
+    }
+
+    /**
+     * Check if the interpreter that was entered exists in the list of suggestions.
+     * If it does, it means that it had already been discovered,
+     * and we didn't do a good job of surfacing it.
+     *
+     * @param selection Intepreter path that was either entered manually or picked by browsing through the filesystem.
+     */
+    // eslint-disable-next-line class-methods-use-this
+    private async sendInterpreterEntryTelemetry(
+        selection: string,
+        workspace: Resource,
+        suggestions: IInterpreterQuickPickItem[],
+    ): Promise<void> {
+        let interpreterPath = path.normalize(untildify(selection));
+
+        if (!path.isAbsolute(interpreterPath)) {
+            interpreterPath = path.resolve(workspace?.fsPath || '', selection);
+        }
+
+        const expandedPaths = suggestions.map((s) => {
+            const suggestionPath = s.interpreter.path;
+            let expandedPath = path.normalize(untildify(suggestionPath));
+
+            if (!path.isAbsolute(suggestionPath)) {
+                expandedPath = path.resolve(workspace?.fsPath || '', suggestionPath);
+            }
+
+            return expandedPath;
+        });
+
+        const discovered = expandedPaths.includes(interpreterPath);
+
+        sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTERED_EXISTS, undefined, { discovered });
+
+        return undefined;
     }
 }

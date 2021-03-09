@@ -1,11 +1,5 @@
 [
     {
-        "name": "ShowPlayIcon - start",
-        "salt": "ShowPlayIcon",
-        "max": 100,
-        "min": 0
-    },
-    {
         "name": "ShowExtensionSurveyPrompt - enabled",
         "salt": "ShowExtensionSurveyPrompt",
         "max": 100,
@@ -16,66 +10,6 @@
         "salt": "ShowExtensionSurveyPrompt",
         "min": 0,
         "max": 40
-    },
-    {
-        "name": "DebugAdapterFactory - control",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "DebugAdapterFactory - experiment",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "PtvsdWheels37 - control",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "PtvsdWheels37 - experiment",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "Reload - control",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "Reload - experiment",
-        "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "UseTerminalToGetActivatedEnvVars - experiment",
-        "salt": "UseTerminalToGetActivatedEnvVars",
-        "min": 0,
-        "max": 0
-    },
-    {
-        "name": "UseTerminalToGetActivatedEnvVars - control",
-        "salt": "UseTerminalToGetActivatedEnvVars",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "AA_testing - control",
-        "salt": "AA_testing",
-        "min": 0,
-        "max": 10
-    },
-    {
-        "name": "AA_testing - experiment",
-        "salt": "AA_testing",
-        "min": 90,
-        "max": 100
     },
     {
         "name": "CollectLSRequestTiming - experiment",
@@ -90,18 +24,6 @@
         "max": 100
     },
     {
-        "name": "CollectNodeLSRequestTiming - experiment",
-        "salt": "CollectNodeLSRequestTiming",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "CollectNodeLSRequestTiming - control",
-        "salt": "CollectNodeLSRequestTiming",
-        "min": 0,
-        "max": 0
-    },
-    {
         "name": "DeprecatePythonPath - experiment",
         "salt": "DeprecatePythonPath",
         "min": 0,
@@ -112,17 +34,5 @@
         "salt": "DeprecatePythonPath",
         "min": 80,
         "max": 100
-    },
-    {
-        "name": "RunByLine - experiment",
-        "salt": "RunByLine",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "RunByLine - control",
-        "salt": "RunByLine",
-        "min": 0,
-        "max": 0
     }
 ]

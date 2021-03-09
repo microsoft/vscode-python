@@ -53,6 +53,26 @@ suite('Jedi LSP - analysis Options', () => {
             instance(workspaceService),
         );
     });
+
+    test('Validate defaults', async () => {
+        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when(configurationService.getSettings(anything())).thenReturn({} as any);
+        analysisOptions.initialize(undefined, undefined);
+
+        const result = await analysisOptions.getAnalysisOptions();
+
+        expect(result.initializationOptions.markupKindPreferred).to.deep.equal('markdown');
+        expect(result.initializationOptions.completion.resolveEagerly).to.deep.equal(false);
+        expect(result.initializationOptions.completion.disableSnippets).to.deep.equal(false);
+        expect(result.initializationOptions.diagnostics.enable).to.deep.equal(true);
+        expect(result.initializationOptions.diagnostics.didOpen).to.deep.equal(true);
+        expect(result.initializationOptions.diagnostics.didSave).to.deep.equal(true);
+        expect(result.initializationOptions.diagnostics.didChange).to.deep.equal(true);
+        expect(result.initializationOptions.workspace.extraPaths).to.deep.equal([]);
+        expect(result.initializationOptions.workspace.symbols.maxSymbols).to.deep.equal(0);
+    });
+
     test('Without extraPaths provided and no workspace', async () => {
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

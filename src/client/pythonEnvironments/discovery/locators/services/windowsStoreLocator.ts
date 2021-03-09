@@ -147,6 +147,16 @@ export async function isWindowsStoreEnvironment(interpreterPath: string): Promis
 const pythonExeGlob = 'python3.{[0-9],[0-9][0-9]}.exe';
 
 /**
+ * This is a glob pattern which matches following dir names:
+ * PythonSoftwareFoundation.Python.3.9_qbz5n2kfra8p0
+ * PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0
+ *
+ * Note chokidar fails to match multiple digits using +([0-9]), even though the underlying glob pattern matcher
+ * they use (picomatch), or any other glob matcher does. Hence why we had to use {[0-9],[0-9][0-9]} instead.
+ */
+const storePythonDirGlob = 'PythonSoftwareFoundation.Python.3.{[0-9],[0-9][0-9]}_*';
+
+/**
  * Checks if a given path ends with python3.*.exe. Not all python executables are matched as
  * we do not want to return duplicate executables.
  * @param {string} interpreterPath : Path to python interpreter.
@@ -189,8 +199,14 @@ export class WindowsStoreLocator extends FSWatchingLocator {
     private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
 
     constructor() {
+        // We have to watch the directory instead of the executable here because
+        // FS events are not triggered for `*.exe` in the WindowsApps folder. The
+        // .exe files here are reparse points and not real files. Watching the
+        // PythonSoftwareFoundation directory will trigger both for new install
+        // and update case. Update is handled by deleting and recreating the
+        // PythonSoftwareFoundation directory.
         super(getWindowsStoreAppsRoot, async () => this.kind, {
-            executableBaseGlob: pythonExeGlob,
+            baseGlob: storePythonDirGlob,
             searchLocation: getWindowsStoreAppsRoot(),
             envStructure: PythonEnvStructure.Flat,
         });

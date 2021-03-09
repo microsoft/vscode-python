@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2021.3.0-dev",
+    "version": "2021.4.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -28,7 +28,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.53.0"
+        "vscode": "^1.54.0"
     },
     "keywords": [
         "python",
@@ -177,11 +177,7 @@
             {
                 "command": "python.execInTerminal-icon",
                 "title": "%python.command.python.execInTerminal.title%",
-                "category": "Python",
-                "icon": {
-                    "light": "resources/light/run-file.svg",
-                    "dark": "resources/dark/run-file.svg"
-                }
+                "category": "Python"
             },
             {
                 "command": "python.setInterpreter",
@@ -400,12 +396,12 @@
                     "group": "Python"
                 }
             ],
-            "editor/title": [
+            "editor/title/run": [
                 {
                     "command": "python.execInTerminal-icon",
                     "title": "%python.command.python.execInTerminal.title%",
                     "group": "navigation",
-                    "when": "resourceLangId == python && python.showPlayIcon && !isInDiffEditor"
+                    "when": "resourceLangId == python && !isInDiffEditor"
                 }
             ],
             "explorer/context": [
@@ -1050,14 +1046,8 @@
                         "enum": [
                             "ShowExtensionSurveyPrompt - enabled",
                             "Reload - experiment",
-                            "AA_testing - experiment",
-                            "UseTerminalToGetActivatedEnvVars - experiment",
-                            "CollectLSRequestTiming - experiment",
-                            "CollectNodeLSRequestTiming - experiment",
                             "DeprecatePythonPath - experiment",
-                            "RunByLine - experiment",
                             "tryPylance",
-                            "debuggerDataViewer",
                             "pythonSendEntireLineToREPL",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
@@ -1075,14 +1065,8 @@
                         "enum": [
                             "ShowExtensionSurveyPrompt - enabled",
                             "Reload - experiment",
-                            "AA_testing - experiment",
-                            "UseTerminalToGetActivatedEnvVars - experiment",
-                            "CollectLSRequestTiming - experiment",
-                            "CollectNodeLSRequestTiming - experiment",
                             "DeprecatePythonPath - experiment",
-                            "RunByLine - experiment",
                             "tryPylance",
-                            "debuggerDataViewer",
                             "pythonSendEntireLineToREPL",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",

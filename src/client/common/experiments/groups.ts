@@ -10,35 +10,6 @@ export enum WebAppReload {
     experiment = 'Reload - experiment',
 }
 
-/**
- * Experiment to check whether to to use a terminal to generate the environment variables of activated environments.
- *
- * @export
- * @enum {number}
- */
-export enum UseTerminalToGetActivatedEnvVars {
-    control = 'UseTerminalToGetActivatedEnvVars - control',
-    experiment = 'UseTerminalToGetActivatedEnvVars - experiment',
-}
-
-// Dummy experiment added to validate metrics of A/B testing
-export enum ValidateABTesting {
-    control = 'AA_testing - control',
-    experiment = 'AA_testing - experiment',
-}
-
-// Collect language server request timings.
-export enum CollectLSRequestTiming {
-    control = 'CollectLSRequestTiming - control',
-    experiment = 'CollectLSRequestTiming - experiment',
-}
-
-// Collect Node language server request timings.
-export enum CollectNodeLSRequestTiming {
-    control = 'CollectNodeLSRequestTiming - control',
-    experiment = 'CollectNodeLSRequestTiming - experiment',
-}
-
 /*
  * Experiment to check whether the extension should deprecate `python.pythonPath` setting
  */
