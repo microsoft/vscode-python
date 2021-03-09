@@ -199,7 +199,7 @@ export class TensorBoardSession {
             this.installer.isInstalled(Product.torchProfilerImportName, interpreter),
         ]);
         // Send telemetry regarding results of install
-        sendTelemetryEvent(EventName.TENSORBOARD_INSTALL_SESSION_DEPENDENCIES_RESULT, undefined, {
+        sendTelemetryEvent(EventName.TENSORBOARD_PACKAGE_INSTALL_RESULT, undefined, {
             wasTensorBoardAttempted: needsTensorBoardInstall,
             wasProfilerPluginAttempted: needsProfilerPluginInstall,
             wasTensorBoardInstalled: tensorboardInstallStatus === ProductInstallStatus.Installed,
