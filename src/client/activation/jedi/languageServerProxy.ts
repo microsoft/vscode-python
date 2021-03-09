@@ -20,7 +20,7 @@ import {
     IPythonSettings,
     Resource,
 } from '../../common/types';
-import { createDeferred, Deferred, sleep } from '../../common/utils/async';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
@@ -168,9 +168,6 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         JediLanguageServerProxy.versionTelemetryProps,
     )
     protected async serverReady(): Promise<void> {
-        while (this.languageClient && !this.languageClient.initializeResult) {
-            await sleep(100);
-        }
         if (this.languageClient) {
             await this.languageClient.onReady();
         }
