@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.2.3 (8 March 2021)
+## 2021.2.4 (9 March 2021)
 
 ### Fixes
 
