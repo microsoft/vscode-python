@@ -77,7 +77,7 @@ Found 2 errors in 2 files (checked 1 source file)
                     code: undefined,
                     message:
                         'Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]',
-                    column: 14,
+                    column: 13,
                     line: 2,
                     type: 'error',
                     provider: 'mypy',
