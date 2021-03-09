@@ -1,5 +1,69 @@
 # Changelog
 
+## 2021.3.0-rc (9 March 2021)
+
+### Enhancements
+
+1. Activate the extension when the following files are found: `Pipfile`, `setup.py`, `requirements.txt`, `manage.py`, `app.py`
+   (thanks [Dhaval Soneji](https://github.com/soneji))
+   ([#4765](https://github.com/Microsoft/vscode-python/issues/4765))
+
+### Fixes
+
+1. Fix nosetests to run tests only once. (thanks [djplt](https://github.com/djplt))
+   ([#6043](https://github.com/Microsoft/vscode-python/issues/6043))
+1. Make on-enter behaviour after `raise` much more like that of `return`, fixing
+   handling in the case of pressing enter to wrap the parentheses of an exception
+   call.
+   (thanks [PeterJCLaw](https://github.com/PeterJCLaw))
+   ([#10583](https://github.com/Microsoft/vscode-python/issues/10583))
+1. Add configuration debugpyPath. (thanks [djplt](https://github.com/djplt))
+   ([#14631](https://github.com/Microsoft/vscode-python/issues/14631))
+1. Fix Mypy linter pointing to wrong column number (off by one).
+   (thanks [anttipessa](https://github.com/anttipessa/), [haalto](https://github.com/haalto/), [JeonCD](https://github.com/JeonCD/) and [junskU](https://github.com/junskU))
+   ([#14978](https://github.com/Microsoft/vscode-python/issues/14978))
+1. Show each python.org install only once on Mac when in discovery experiment.
+   ([#15302](https://github.com/Microsoft/vscode-python/issues/15302))
+1. All relative interpreter path reported start with `~` when in discovery experiment.
+   ([#15312](https://github.com/Microsoft/vscode-python/issues/15312))
+1. Remove FLASK_DEBUG from flask debug configuration to allow reload.
+   ([#15373](https://github.com/Microsoft/vscode-python/issues/15373))
+1. Install using pipenv only if the selected environment is pipenv which is related to workspace folder, when in discovery experiment.
+   ([#15489](https://github.com/Microsoft/vscode-python/issues/15489))
+1. Fixes issue with detecting new installations of Windows Store python.
+   ([#15541](https://github.com/Microsoft/vscode-python/issues/15541))
+1. Add `cached-property` package to bundled python packages. This is needed by `jedi-language-server` running on `python 3.6` and `python 3.7`.
+   ([#15566](https://github.com/Microsoft/vscode-python/issues/15566))
+1. Remove limit on workspace symbols when using Jedi language server.
+   ([#15576](https://github.com/Microsoft/vscode-python/issues/15576))
+1. Use shorter paths for python interpreter when possible.
+   ([#15580](https://github.com/Microsoft/vscode-python/issues/15580))
+1. Ensure that jedi language server uses jedi shipped with the extension.
+   ([#15586](https://github.com/Microsoft/vscode-python/issues/15586))
+
+### Code Health
+
+1. Add support for "Trusted Workspaces".
+
+    "Trusted Workspaces" is an upcoming feature in VS Code. (See:
+    https://github.com/microsoft/vscode/issues/106488.) For now you need
+    the following for the experience:
+
+    - the latest VS Code Insiders
+    - add `"workspace.trustEnabled": true` to your user settings.json
+
+    At that point, when the Python extension would normally activate, VS Code
+    will prompt you about whether or not the current workspace is trusted.
+    If not then the extension will be disabled (but only for that workspace).
+    As soon as the workspace is marked as trusted, the extension will
+    activate.
+    ([#15525](https://github.com/Microsoft/vscode-python/issues/15525))
+
+1. Updates to the VSCode Notebook API.
+   ([#15567](https://github.com/Microsoft/vscode-python/issues/15567))
+1. Fix failing smoke tests on CI.
+   ([#15573](https://github.com/Microsoft/vscode-python/issues/15573))
+
 ## 2021.2.4 (9 March 2021)
 
 ### Fixes
