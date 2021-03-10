@@ -177,7 +177,11 @@
             {
                 "command": "python.execInTerminal-icon",
                 "title": "%python.command.python.execInTerminal.title%",
-                "category": "Python"
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/run-file.svg",
+                    "dark": "resources/dark/run-file.svg"
+                }
             },
             {
                 "command": "python.setInterpreter",
@@ -396,7 +400,7 @@
                     "group": "Python"
                 }
             ],
-            "editor/title/run": [
+            "editor/title": [
                 {
                     "command": "python.execInTerminal-icon",
                     "title": "%python.command.python.execInTerminal.title%",
