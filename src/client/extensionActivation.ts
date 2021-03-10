@@ -128,6 +128,9 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     tensorBoardRegisterTypes(serviceManager);
 
     const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
+    // This guarantees that all experiment information has loaded & all telemetry will contain experiment info.
+    await experimentService.activate();
+
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     await setDefaultLanguageServerByExperiment(experimentService, workspaceService, serviceManager);
 
