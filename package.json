@@ -400,7 +400,7 @@
                     "group": "Python"
                 }
             ],
-            "editor/title": [
+            "editor/title/run": [
                 {
                     "command": "python.execInTerminal-icon",
                     "title": "%python.command.python.execInTerminal.title%",
