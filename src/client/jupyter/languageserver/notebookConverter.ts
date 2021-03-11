@@ -575,33 +575,6 @@ export class NotebookConverter implements Disposable {
         }
         return this.toIncomingLocationFromLocation(_cell, location);
     }
-    // private toIncomingLocationFromLink(_cell: TextDocument | Uri, location: Location | LocationLink) {
-    // const locationLink = <LocationLink>location;
-    // const locationNorm = <Location>location;
-    // const locationUri = locationLink.targetUri || locationNorm.uri;
-
-    // if (this.locationNeedsConversion(locationUri)) {
-    // const uri = this.toIncomingUri(
-    // locationUri,
-    // locationLink.targetRange ? locationLink.targetRange : locationNorm.range,
-    // );
-
-    // return {
-    // originSelectionRange: locationLink.originSelectionRange
-    // ? this.toIncomingRange(uri, locationLink.originSelectionRange)
-    // : undefined,
-    // uri,
-    // range: locationLink.targetRange
-    // ? this.toIncomingRange(uri, locationLink.targetRange)
-    // : this.toIncomingRange(uri, locationNorm.range),
-    // targetSelectionRange: locationLink.targetSelectionRange
-    // ? this.toIncomingRange(uri, locationLink.targetSelectionRange)
-    // : undefined,
-    // };
-    // }
-
-    // return location;
-    // }
 
     // Returns true if the given location needs conversion
     // Should be if it's in a notebook cell or if it's in a notebook concat document
