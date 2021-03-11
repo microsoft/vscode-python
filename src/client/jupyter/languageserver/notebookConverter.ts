@@ -266,13 +266,10 @@ export class NotebookConverter implements Disposable {
     }
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    public toIncomingLocations(
-        cell: TextDocument,
-        location: Location | Location[] | LocationLink[] | null | undefined,
-    ) {
+    public toIncomingLocations(location: Location | Location[] | LocationLink[] | null | undefined) {
         if (Array.isArray(location)) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return (<any>location).map(this.toIncomingLocationOrLink.bind(this, cell));
+            return (<any>location).map(this.toIncomingLocationOrLink.bind(this));
         }
         if (location?.range) {
             return this.toIncomingLocationFromRange(location.uri, location.range);
@@ -517,7 +514,7 @@ export class NotebookConverter implements Disposable {
             ...relatedInformation,
             location:
                 relatedInformation.location.uri === outgoingUri
-                    ? this.toIncomingLocationFromLocation(cell, relatedInformation.location)
+                    ? this.toIncomingLocationFromLocation(relatedInformation.location)
                     : relatedInformation.location,
         };
     }
@@ -531,7 +528,7 @@ export class NotebookConverter implements Disposable {
         };
     }
 
-    private toIncomingLocationFromLocation(_cell: TextDocument | Uri, location: Location): Location {
+    private toIncomingLocationFromLocation(location: Location): Location {
         if (this.locationNeedsConversion(location.uri)) {
             const uri = this.toIncomingUri(location.uri, location.range);
 
@@ -544,10 +541,7 @@ export class NotebookConverter implements Disposable {
         return location;
     }
 
-    private toIncomingLocationLinkFromLocationLink(
-        _cell: TextDocument | Uri,
-        locationLink: LocationLink,
-    ): LocationLink {
+    private toIncomingLocationLinkFromLocationLink(locationLink: LocationLink): LocationLink {
         if (this.locationNeedsConversion(locationLink.targetUri)) {
             const uri = this.toIncomingUri(locationLink.targetUri, locationLink.targetRange);
 
@@ -566,12 +560,13 @@ export class NotebookConverter implements Disposable {
         return locationLink;
     }
 
-    // IANHU: Rename?
-    private toIncomingLocationOrLink(_cell: TextDocument | Uri, location: Location | LocationLink) {
+    private toIncomingLocationOrLink(location: Location | LocationLink) {
+        // Split on if we are dealing with a Location or a LocationLink
         if ('targetUri' in location) {
-            return this.toIncomingLocationLinkFromLocationLink(_cell, location);
+            // targetUri only for LocationLinks
+            return this.toIncomingLocationLinkFromLocationLink(location);
         }
-        return this.toIncomingLocationFromLocation(_cell, location);
+        return this.toIncomingLocationFromLocation(location);
     }
 
     // Returns true if the given location needs conversion
