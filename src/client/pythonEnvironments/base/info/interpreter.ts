@@ -27,7 +27,7 @@ export type InterpreterInformation = {
  */
 function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): InterpreterInformation {
     let rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}`;
-    if (raw.versionInfo[3] !== undefined && raw.versionInfo[3] !== 'final') {
+    if (raw.versionInfo[3] !== undefined) {
         if (raw.versionInfo[4] !== undefined) {
             rawVersion = `${rawVersion}-${raw.versionInfo[3]}${raw.versionInfo[4]}`;
         } else {
