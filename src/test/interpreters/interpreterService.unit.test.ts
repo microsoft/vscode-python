@@ -528,7 +528,7 @@ suite('Interpreters service', () => {
     suite('Display Format (with all permutations)', () => {
         setup(setupSuite);
         [undefined, Uri.file('xyz')].forEach((resource) => {
-            [undefined, new SemVer('1.2.3-alpha')].forEach((version) => {
+            [undefined, new SemVer('3.10.0-alpha6'), new SemVer('3.10.0')].forEach((version) => {
                 // Forced cast to ignore TS warnings.
                 (EnumEx.getNamesAndValues<Architecture>(Architecture) as (
                     | { name: string; value: Architecture }
@@ -548,7 +548,9 @@ suite('Interpreters service', () => {
                                         ['', 'my pipenv name'].forEach((pipEnvName) => {
                                             const testName = [
                                                 `${resource ? 'With' : 'Without'} a workspace`,
-                                                `${version ? 'with' : 'without'} version information`,
+                                                `${version ? 'with' : 'without'} ${
+                                                    version && version.prerelease.length > 0 ? 'pre-release' : 'final'
+                                                } version information`,
                                                 `${arch ? arch.name : 'without'} architecture`,
                                                 `${pythonPath ? 'with' : 'without'} python Path`,
                                                 `${
@@ -613,7 +615,11 @@ suite('Interpreters service', () => {
 
                                                 if (interpreterInfo.version) {
                                                     displayNameParts.push(
-                                                        `${interpreterInfo.version.major}.${interpreterInfo.version.minor}.${interpreterInfo.version.patch}`,
+                                                        `${interpreterInfo.version.major}.${
+                                                            interpreterInfo.version.minor
+                                                        }.${
+                                                            interpreterInfo.version.patch
+                                                        }${interpreterInfo.version.prerelease.join('')}`,
                                                     );
                                                 }
                                                 if (interpreterInfo.architecture) {
