@@ -1884,7 +1884,10 @@
             {
                 "id": "ini",
                 "filenames": [
-                    ".flake8"
+                    ".flake8",
+                    ".pep8",
+                    ".pylintrc",
+                    ".pypirc"
                 ]
             },
             {
