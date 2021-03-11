@@ -348,18 +348,11 @@ export function toSemverLikeVersion(
 } {
     const versionPrefix = basic.getVersionString(version);
     let preRelease: string[] = [];
-    if (version.release && version.release.level !== PythonReleaseLevel.Final) {
-        let level = '';
-        if (version.release.level === PythonReleaseLevel.Alpha) {
-            level = 'a';
-        } else if (version.release.level === PythonReleaseLevel.Beta) {
-            level = 'b';
-        } else if (version.release.level === PythonReleaseLevel.Candidate) {
-            level = 'rc';
-        }
-        if (level !== '') {
-            preRelease = [level, `${version.release.serial}`];
-        }
+    if (version.release) {
+        preRelease =
+            version.release.serial < 0
+                ? [`${version.release.level}`]
+                : [`${version.release.level}`, `${version.release.serial}`];
     }
     return {
         raw: versionPrefix,

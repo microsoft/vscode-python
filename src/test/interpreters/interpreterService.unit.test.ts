@@ -51,6 +51,7 @@ import * as hashApi from '../../client/pythonEnvironments/discovery/locators/ser
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { PYTHON_PATH } from '../common';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
+import { PythonVersion } from '../../client/pythonEnvironments/info/pythonVersion';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -609,17 +610,34 @@ suite('Interpreters service', () => {
                                                 expect(displayName).to.equal(expectedDisplayName);
                                             });
 
+                                            function buildVersionForDisplay(semVersion: PythonVersion): string {
+                                                let preRelease = '';
+                                                if (semVersion.prerelease.length > 0) {
+                                                    switch (semVersion.prerelease[0]) {
+                                                        case 'alpha':
+                                                            preRelease = `a`;
+                                                            break;
+                                                        case 'beta':
+                                                            preRelease = `b`;
+                                                            break;
+                                                        case 'candidate':
+                                                            preRelease = `rc`;
+                                                            break;
+                                                        case 'final':
+                                                        default:
+                                                            break;
+                                                    }
+                                                }
+                                                return `${semVersion.major}.${semVersion.minor}.${semVersion.patch}${preRelease}`;
+                                            }
+
                                             function buildDisplayName(interpreterInfo: Partial<PythonEnvironment>) {
                                                 const displayNameParts: string[] = ['Python'];
                                                 const envSuffixParts: string[] = [];
 
                                                 if (interpreterInfo.version) {
                                                     displayNameParts.push(
-                                                        `${interpreterInfo.version.major}.${
-                                                            interpreterInfo.version.minor
-                                                        }.${
-                                                            interpreterInfo.version.patch
-                                                        }${interpreterInfo.version.prerelease.join('')}`,
+                                                        buildVersionForDisplay(interpreterInfo.version),
                                                     );
                                                 }
                                                 if (interpreterInfo.architecture) {

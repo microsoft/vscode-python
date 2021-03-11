@@ -37,6 +37,7 @@ import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 import { getInterpreterHash } from '../pythonEnvironments/discovery/locators/services/hashProvider';
 import { inDiscoveryExperiment } from '../common/experiments/helpers';
 import { StopWatch } from '../common/utils/stopWatch';
+import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
 
 const EXPIRY_DURATION = 24 * 60 * 60 * 1000;
 
@@ -354,12 +355,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const envSuffixParts: string[] = [];
 
         if (info.version) {
-            // Exclude invalid -1 filler values.
-            const versionParts = [info.version.major, info.version.minor, info.version.patch].filter(
-                (value) => value > -1,
-            );
-
-            displayNameParts.push(`${versionParts.join('.')}${info.version.prerelease.join('')}`);
+            displayNameParts.push(this.getVersionForDisplay(info.version));
         }
         if (info.architecture) {
             displayNameParts.push(getArchitectureDisplayName(info.architecture));
@@ -391,6 +387,34 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
         const envSuffix = envSuffixParts.length === 0 ? '' : `(${envSuffixParts.join(': ')})`;
         return `${displayNameParts.join(' ')} ${envSuffix}`.trim();
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    private getVersionForDisplay(version: PythonVersion): string {
+        // Exclude invalid -1 filler values.
+        const versionParts = [version.major, version.minor, version.patch].filter((value) => value > -1);
+
+        let preRelease = '';
+        if (version.prerelease.length > 0) {
+            switch (version.prerelease[0]) {
+                case 'alpha':
+                case 'a':
+                    preRelease = `a`;
+                    break;
+                case 'beta':
+                case 'b':
+                    preRelease = `b`;
+                    break;
+                case 'candidate':
+                case 'rc':
+                    preRelease = `rc`;
+                    break;
+                case 'final':
+                default:
+                    break;
+            }
+        }
+        return `${versionParts.join('.')}${preRelease}`;
     }
 
     private async collectInterpreterDetails(pythonPath: string, resource: Uri | undefined) {
