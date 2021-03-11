@@ -28,15 +28,7 @@ export class ExperimentService implements IExperimentService {
      */
     public _optOutFrom: string[] = [];
 
-    private _enabled = false;
-
-    private get enabled() {
-        return this._enabled;
-    }
-
-    private set enabled(value: boolean) {
-        this._enabled = value;
-    }
+    private readonly enabled: boolean;
 
     private readonly experimentationService?: IExperimentationService;
 
