@@ -239,7 +239,6 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         next: ProvideDefinitionSignature,
     ): ProviderResult<Definition | DefinitionLink[]> {
         if (isNotebookCell(document.uri)) {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const newDoc = this.converter.toOutgoingDocument(document);
             const newPos = this.converter.toOutgoingPosition(document, position);
             const result = next(newDoc, newPos, token);

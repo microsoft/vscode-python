@@ -162,7 +162,7 @@ export class NotebookConverter implements Disposable {
             workspaceEdit.entries().forEach(([key, values]) => {
                 values.forEach((e) => {
                     // Location may move this edit to a different cell.
-                    const location = this.toIncomingLocation(key, e.range);
+                    const location = this.toIncomingLocationFromRange(key, e.range);
 
                     // Save this in the entry
                     let list = translated.get(location.uri);
@@ -272,12 +272,10 @@ export class NotebookConverter implements Disposable {
     ) {
         if (Array.isArray(location)) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return (<any>location).map(this.toIncomingLocationFromLink.bind(this, cell));
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            // return (<any>location).map(this.toIncomingLocation.bind(this, cell));
+            return (<any>location).map(this.toIncomingLocationOrLink.bind(this, cell));
         }
         if (location?.range) {
-            return this.toIncomingLocation(location.uri, location.range);
+            return this.toIncomingLocationFromRange(location.uri, location.range);
         }
         return location;
     }
@@ -309,7 +307,7 @@ export class NotebookConverter implements Disposable {
     public toIncomingSymbolFromSymbolInformation(cell: TextDocument, symbol: SymbolInformation): SymbolInformation {
         return {
             ...symbol,
-            location: this.toIncomingLocation(cell, symbol.location.range),
+            location: this.toIncomingLocationFromRange(cell, symbol.location.range),
         };
     }
 
@@ -374,11 +372,11 @@ export class NotebookConverter implements Disposable {
         | undefined {
         if (rangeOrRename) {
             if (rangeOrRename instanceof Range) {
-                return this.toIncomingLocation(cell, rangeOrRename).range;
+                return this.toIncomingLocationFromRange(cell, rangeOrRename).range;
             }
             return {
                 ...rangeOrRename,
-                range: this.toIncomingLocation(cell, rangeOrRename.range).range,
+                range: this.toIncomingLocationFromRange(cell, rangeOrRename.range).range,
             };
         }
         return rangeOrRename ?? undefined;
@@ -391,7 +389,7 @@ export class NotebookConverter implements Disposable {
         if (links && Array.isArray(links)) {
             return links.map((l) => {
                 const uri = l.target ? l.target : cell.uri;
-                const location = this.toIncomingLocation(uri, l.range);
+                const location = this.toIncomingLocationFromRange(uri, l.range);
                 return {
                     ...l,
                     range: location.range,
@@ -404,12 +402,12 @@ export class NotebookConverter implements Disposable {
 
     public toIncomingRange(cell: TextDocument | Uri, range: Range): Range {
         // This is dangerous as the URI is not remapped (location uri may be different)
-        return this.toIncomingLocation(cell, range).range;
+        return this.toIncomingLocationFromRange(cell, range).range;
     }
 
     public toIncomingPosition(cell: TextDocument | Uri, position: Position): Position {
         // This is dangerous as the URI is not remapped (location uri may be different)
-        return this.toIncomingLocation(cell, new Range(position, position)).range.start;
+        return this.toIncomingLocationFromRange(cell, new Range(position, position)).range.start;
     }
 
     private getCellAtLocation(location: Location): NotebookCell | undefined {
@@ -569,7 +567,7 @@ export class NotebookConverter implements Disposable {
     }
 
     // IANHU: Rename?
-    private toIncomingLocationFromLink(_cell: TextDocument | Uri, location: Location | LocationLink) {
+    private toIncomingLocationOrLink(_cell: TextDocument | Uri, location: Location | LocationLink) {
         if ('targetUri' in location) {
             return this.toIncomingLocationLinkFromLocationLink(_cell, location);
         }
@@ -612,7 +610,7 @@ export class NotebookConverter implements Disposable {
         return item;
     }
 
-    private toIncomingLocation(cell: TextDocument | Uri, range: Range): Location {
+    private toIncomingLocationFromRange(cell: TextDocument | Uri, range: Range): Location {
         const uri = cell instanceof Uri ? <Uri>cell : cell.uri;
         const concatDocument = this.getConcatDocument(cell);
         if (concatDocument) {
