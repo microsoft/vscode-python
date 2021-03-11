@@ -359,7 +359,12 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 (value) => value > -1,
             );
 
-            displayNameParts.push(versionParts.join('.'));
+            let preRelease = '';
+            if (info.version.prerelease.length > 0) {
+                preRelease = info.version.prerelease.join('');
+            }
+
+            displayNameParts.push(`${versionParts.join('.')}${preRelease}`);
         }
         if (info.architecture) {
             displayNameParts.push(getArchitectureDisplayName(info.architecture));
