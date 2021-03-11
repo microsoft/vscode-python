@@ -69,7 +69,9 @@ export class XUnitParser implements IXUnitParser {
             if (data) {
                 try {
                     parserResult = await parseXML(data);
-                } catch (error) {}
+                } catch (error) {
+                    // The results are still being written to the file.
+                }
                 if (parserResult) {
                     break;
                 }
