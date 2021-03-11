@@ -26,7 +26,14 @@ export type InterpreterInformation = {
  * @param raw - the information returned by the `interpreterInfo.py` script
  */
 function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): InterpreterInformation {
-    const rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}${raw.versionInfo[4]}`;
+    let rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}`;
+    if (raw.versionInfo[3] !== undefined && raw.versionInfo[3] !== 'final') {
+        if (raw.versionInfo[4] !== undefined) {
+            rawVersion = `${rawVersion}-${raw.versionInfo[3]}${raw.versionInfo[4]}`;
+        } else {
+            rawVersion = `${rawVersion}-${raw.versionInfo[3]}`;
+        }
+    }
     return {
         arch: raw.is64Bit ? Architecture.x64 : Architecture.x86,
         executable: {

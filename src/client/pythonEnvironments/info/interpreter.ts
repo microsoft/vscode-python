@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { SemVer } from 'semver';
 import { InterpreterInformation } from '.';
 import {
     interpreterInfo as getInterpreterInfoCommand,
@@ -8,7 +9,6 @@ import {
 } from '../../common/process/internal/scripts';
 import { Architecture } from '../../common/utils/platform';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
-import { parsePythonVersion } from './pythonVersion';
 
 /**
  * Compose full interpreter information based on the given data.
@@ -19,11 +19,18 @@ import { parsePythonVersion } from './pythonVersion';
  * @param raw - the information returned by the `interpreterInfo.py` script
  */
 export function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): InterpreterInformation {
-    const rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}${raw.versionInfo[4]}`;
+    let rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}`;
+    if (raw.versionInfo[3] !== undefined && raw.versionInfo[3] !== 'final') {
+        if (raw.versionInfo[4] !== undefined) {
+            rawVersion = `${rawVersion}-${raw.versionInfo[3]}${raw.versionInfo[4]}`;
+        } else {
+            rawVersion = `${rawVersion}-${raw.versionInfo[3]}`;
+        }
+    }
     return {
         architecture: raw.is64Bit ? Architecture.x64 : Architecture.x86,
         path: python,
-        version: parsePythonVersion(rawVersion),
+        version: new SemVer(rawVersion),
         sysVersion: raw.sysVersion,
         sysPrefix: raw.sysPrefix,
     };

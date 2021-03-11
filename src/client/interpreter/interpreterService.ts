@@ -291,12 +291,13 @@ export class InterpreterService implements Disposable, IInterpreterService {
             undefined,
             EXPIRY_DURATION,
         );
+
+        const displayName = await this.buildInterpreterDisplayName(info, resource);
+
         if (store.value && store.value.hash === interpreterHash && store.value.displayName) {
             this.inMemoryCacheOfDisplayNames.set(info.path!, store.value.displayName);
             return store.value.displayName;
         }
-
-        const displayName = await this.buildInterpreterDisplayName(info, resource);
 
         // If dealing with cached entry, then do not store the display name in cache.
         if (!info.cachedEntry) {
@@ -412,6 +413,9 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 case 'final':
                 default:
                     break;
+            }
+            if (preRelease !== '' && version.prerelease.length > 1) {
+                preRelease = `${preRelease}${version.prerelease.slice(1).join('')}`;
             }
         }
         return `${versionParts.join('.')}${preRelease}`;

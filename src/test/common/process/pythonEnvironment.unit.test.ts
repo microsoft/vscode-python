@@ -32,7 +32,7 @@ suite('PythonEnvironment', () => {
 
     test('getInterpreterInformation should return an object if the python path is valid', async () => {
         const json = {
-            versionInfo: [3, 7, 5, 'candidate'],
+            versionInfo: [3, 7, 5, 'candidate', 1],
             sysPrefix: '/path/of/sysprefix/versions/3.7.5rc1',
             version: '3.7.5rc1 (default, Oct 18 2019, 14:48:48) \n[Clang 11.0.0 (clang-1100.0.33.8)]',
             is64Bit: true,
@@ -47,12 +47,40 @@ suite('PythonEnvironment', () => {
         const expectedResult = {
             architecture: Architecture.x64,
             path: pythonPath,
-            version: new SemVer('3.7.5-candidate'),
+            version: new SemVer('3.7.5-candidate1'),
             sysPrefix: json.sysPrefix,
             sysVersion: undefined,
         };
 
         expect(result).to.deep.equal(expectedResult, 'Incorrect value returned by getInterpreterInformation().');
+    });
+
+    test('getInterpreterInformation should return an object if the version info contains less than 5 items', async () => {
+        const json = {
+            versionInfo: [3, 7, 5, 'alpha'],
+            sysPrefix: '/path/of/sysprefix/versions/3.7.5a1',
+            version: '3.7.5a1 (default, Oct 18 2019, 14:48:48) \n[Clang 11.0.0 (clang-1100.0.33.8)]',
+            is64Bit: true,
+        };
+
+        processService
+            .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
+        const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
+
+        const result = await env.getInterpreterInformation();
+        const expectedResult = {
+            architecture: Architecture.x64,
+            path: pythonPath,
+            version: new SemVer('3.7.5-alpha'),
+            sysPrefix: json.sysPrefix,
+            sysVersion: undefined,
+        };
+
+        expect(result).to.deep.equal(
+            expectedResult,
+            'Incorrect value returned by getInterpreterInformation() with truncated versionInfo.',
+        );
     });
 
     test('getInterpreterInformation should return an object if the version info contains less than 4 items', async () => {
