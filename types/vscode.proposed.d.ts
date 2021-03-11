@@ -296,15 +296,6 @@ declare module 'vscode' {
         readonly cells: NotebookCell[];
     }
 
-    export interface NotebookCellLanguageChangeEvent {
-        /**
-         * The affected document.
-         */
-        readonly document: NotebookDocument;
-        readonly cell: NotebookCell;
-        readonly language: string;
-    }
-
     export interface NotebookCellMetadataChangeEvent {
         readonly document: NotebookDocument;
         readonly cell: NotebookCell;
@@ -404,10 +395,6 @@ declare module 'vscode' {
         export const onDidChangeNotebookDocumentMetadata: Event<NotebookDocumentMetadataChangeEvent>;
         export const onDidChangeNotebookCells: Event<NotebookCellsChangeEvent>;
         export const onDidChangeCellOutputs: Event<NotebookCellOutputsChangeEvent>;
-
-        // todo@API we send document close and open events when the language of a document changes and
-        // I believe we should stick that for cells as well
-        export const onDidChangeCellLanguage: Event<NotebookCellLanguageChangeEvent>;
         export const onDidChangeCellMetadata: Event<NotebookCellMetadataChangeEvent>;
     }
 
@@ -823,6 +810,8 @@ declare module 'vscode' {
     }
 
     //#endregion
+    // #region debug
+
     /**
      * A DebugProtocolVariableContainer is an opaque stand-in type for the intersection of the Scope and Variable types defined in the Debug Adapter Protocol.
      * See https://microsoft.github.io/debug-adapter-protocol/specification#Types_Scope and https://microsoft.github.io/debug-adapter-protocol/specification#Types_Variable.
