@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-const pidusageTree = require('pidusage-tree');
+const pidUsageTree = require('pidusage-tree');
 
 /**
  * Calculates number of bytes of memory consumed by the entire process tree with
@@ -10,7 +10,7 @@ const pidusageTree = require('pidusage-tree');
  * @returns : Memory consumed in bytes.
  */
 export async function getMemoryUsage(pid: number): Promise<number> {
-    const result = await pidusageTree(pid);
+    const result = await pidUsageTree(pid);
     let memory = 0;
     if (result) {
         for (const key of Object.keys(result)) {
