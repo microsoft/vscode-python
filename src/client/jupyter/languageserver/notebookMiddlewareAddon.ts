@@ -239,13 +239,29 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         next: ProvideDefinitionSignature,
     ): ProviderResult<Definition | DefinitionLink[]> {
         if (isNotebookCell(document.uri)) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const newDoc = this.converter.toOutgoingDocument(document);
             const newPos = this.converter.toOutgoingPosition(document, position);
             const result = next(newDoc, newPos, token);
             if (isThenable(result)) {
-                return result.then(this.converter.toIncomingLocations.bind(this.converter, document));
+                // return result.then(this.converter.toIncomingLocations.bind(this.converter, document));
+                return result.then((value) => {
+                    // Bind our converter function
+                    const newConvert = this.converter.toIncomingLocations.bind(this.converter, document);
+                    const convertedValue = newConvert(value);
+                    return convertedValue;
+                });
             }
             return this.converter.toIncomingLocations(document, result);
+
+            // IANHU: This hardcoding works!
+            // // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            // const newDoc = this.converter.toOutgoingDocument(document);
+            // // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // const newUri = (newDoc as any).cellTracking[0];
+            // const returnValue = { uri: newUri.uri, range: new Range(new Position(0, 4), new Position(0, 5)) };
+            // const returnArr = [returnValue];
+            // return returnArr;
         }
         return next(document, position, token);
     }

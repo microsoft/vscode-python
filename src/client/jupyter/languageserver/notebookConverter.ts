@@ -273,6 +273,8 @@ export class NotebookConverter implements Disposable {
         if (Array.isArray(location)) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (<any>location).map(this.toIncomingLocationFromLink.bind(this, cell));
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // return (<any>location).map(this.toIncomingLocation.bind(this, cell));
         }
         if (location?.range) {
             return this.toIncomingLocation(location.uri, location.range);
@@ -517,7 +519,7 @@ export class NotebookConverter implements Disposable {
             ...relatedInformation,
             location:
                 relatedInformation.location.uri === outgoingUri
-                    ? this.toIncomingLocationFromLink(cell, relatedInformation.location)
+                    ? this.toIncomingLocationFromLocation(cell, relatedInformation.location)
                     : relatedInformation.location,
         };
     }
@@ -531,25 +533,82 @@ export class NotebookConverter implements Disposable {
         };
     }
 
+    private toIncomingLocationFromLocation(_cell: TextDocument | Uri, location: Location): Location {
+        if (this.locationNeedsConversion(location.uri)) {
+            const uri = this.toIncomingUri(location.uri, location.range);
+
+            return {
+                uri,
+                range: this.toIncomingRange(uri, location.range),
+            };
+        }
+
+        return location;
+    }
+
+    private toIncomingLocationLinkFromLocationLink(
+        _cell: TextDocument | Uri,
+        locationLink: LocationLink,
+    ): LocationLink {
+        if (this.locationNeedsConversion(locationLink.targetUri)) {
+            const uri = this.toIncomingUri(locationLink.targetUri, locationLink.targetRange);
+
+            return {
+                originSelectionRange: locationLink.originSelectionRange
+                    ? this.toIncomingRange(uri, locationLink.originSelectionRange)
+                    : undefined,
+                targetUri: uri,
+                targetRange: this.toIncomingRange(uri, locationLink.targetRange),
+                targetSelectionRange: locationLink.targetSelectionRange
+                    ? this.toIncomingRange(uri, locationLink.targetSelectionRange)
+                    : undefined,
+            };
+        }
+
+        return locationLink;
+    }
+
+    // IANHU: Rename?
     private toIncomingLocationFromLink(_cell: TextDocument | Uri, location: Location | LocationLink) {
-        const locationLink = <LocationLink>location;
-        const locationNorm = <Location>location;
-        const uri = this.toIncomingUri(
-            locationLink.targetUri || locationNorm.uri,
-            locationLink.targetRange ? locationLink.targetRange : locationNorm.range,
+        if ('targetUri' in location) {
+            return this.toIncomingLocationLinkFromLocationLink(_cell, location);
+        }
+        return this.toIncomingLocationFromLocation(_cell, location);
+    }
+    // private toIncomingLocationFromLink(_cell: TextDocument | Uri, location: Location | LocationLink) {
+    // const locationLink = <LocationLink>location;
+    // const locationNorm = <Location>location;
+    // const locationUri = locationLink.targetUri || locationNorm.uri;
+
+    // if (this.locationNeedsConversion(locationUri)) {
+    // const uri = this.toIncomingUri(
+    // locationUri,
+    // locationLink.targetRange ? locationLink.targetRange : locationNorm.range,
+    // );
+
+    // return {
+    // originSelectionRange: locationLink.originSelectionRange
+    // ? this.toIncomingRange(uri, locationLink.originSelectionRange)
+    // : undefined,
+    // uri,
+    // range: locationLink.targetRange
+    // ? this.toIncomingRange(uri, locationLink.targetRange)
+    // : this.toIncomingRange(uri, locationNorm.range),
+    // targetSelectionRange: locationLink.targetSelectionRange
+    // ? this.toIncomingRange(uri, locationLink.targetSelectionRange)
+    // : undefined,
+    // };
+    // }
+
+    // return location;
+    // }
+
+    // Returns true if the given location needs conversion
+    // Should be if it's in a notebook cell or if it's in a notebook concat document
+    private locationNeedsConversion(locationUri: Uri): boolean {
+        return (
+            locationUri.scheme === 'vscode-notebook-cell' || this.getWrapperFromOutgoingUri(locationUri) !== undefined
         );
-        return {
-            originSelectionRange: locationLink.originSelectionRange
-                ? this.toIncomingRange(uri, locationLink.originSelectionRange)
-                : undefined,
-            uri,
-            range: locationLink.targetRange
-                ? this.toIncomingRange(uri, locationLink.targetRange)
-                : this.toIncomingRange(uri, locationNorm.range),
-            targetSelectionRange: locationLink.targetSelectionRange
-                ? this.toIncomingRange(uri, locationLink.targetSelectionRange)
-                : undefined,
-        };
     }
 
     private toIncomingUri(outgoingUri: Uri, range: Range) {
