@@ -292,12 +292,12 @@ export class InterpreterService implements Disposable, IInterpreterService {
             EXPIRY_DURATION,
         );
 
-        const displayName = await this.buildInterpreterDisplayName(info, resource);
-
         if (store.value && store.value.hash === interpreterHash && store.value.displayName) {
             this.inMemoryCacheOfDisplayNames.set(info.path!, store.value.displayName);
             return store.value.displayName;
         }
+
+        const displayName = await this.buildInterpreterDisplayName(info, resource);
 
         // If dealing with cached entry, then do not store the display name in cache.
         if (!info.cachedEntry) {
