@@ -15,7 +15,6 @@ team:
 # Comment yourself out when you will be unavailable for reviews for more than a
 # couple of days.
 reviewers:
-  - ericsnowcurrently
   - karthiknadig
   - karrtikr
   - kimadeline

@@ -70,6 +70,10 @@ export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
             },
             workspace: {
                 extraPaths: distinctExtraPaths,
+                symbols: {
+                    // 0 means remove limit on number of workspace symbols returned
+                    maxSymbols: 0,
+                },
             },
         };
     }

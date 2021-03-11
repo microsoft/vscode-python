@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2021.3.0-dev",
+    "version": "2021.4.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -28,7 +28,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.53.0"
+        "vscode": "^1.54.0"
     },
     "keywords": [
         "python",
@@ -1884,7 +1884,10 @@
             {
                 "id": "ini",
                 "filenames": [
-                    ".flake8"
+                    ".flake8",
+                    ".pep8",
+                    ".pylintrc",
+                    ".pypirc"
                 ]
             },
             {

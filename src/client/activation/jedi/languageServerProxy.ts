@@ -20,7 +20,6 @@ import {
     IPythonSettings,
     Resource,
 } from '../../common/types';
-import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
@@ -38,8 +37,6 @@ import { getMemoryUsage } from '../../common/process/memory';
 @injectable()
 export class JediLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
-
-    private startupCompleted: Deferred<void>;
 
     private cancellationStrategy: FileBasedCancellationStrategy | undefined;
 
@@ -61,9 +58,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-    ) {
-        this.startupCompleted = createDeferred<void>();
-    }
+    ) {}
 
     private static versionTelemetryProps(instance: JediLanguageServerProxy) {
         return {
@@ -94,10 +89,6 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
             d.dispose();
         }
 
-        if (this.startupCompleted.completed) {
-            this.startupCompleted.reject(new Error('Disposed language server'));
-            this.startupCompleted = createDeferred<void>();
-        }
         this.disposed = true;
     }
 
@@ -114,45 +105,46 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         interpreter: PythonEnvironment | undefined,
         options: LanguageClientOptions,
     ): Promise<void> {
-        if (!this.languageClient) {
-            this.pythonSettings = this.configurationService.getSettings(resource);
-
-            this.lsVersion =
-                (options.middleware ? (<LanguageClientMiddleware>options.middleware).serverVersion : undefined) ??
-                '0.19.3';
-
-            this.cancellationStrategy = new FileBasedCancellationStrategy();
-            options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
-
-            this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
-
-            this.languageClient.onDidChangeState((e) => {
-                // The client's on* methods must be called after the client has started, but if called too
-                // late the server may have already sent a message (which leads to failures). Register
-                // these on the state change to running to ensure they are ready soon enough.
-                if (e.newState === State.Running) {
-                    this.registerHandlers();
-                }
-            });
-
-            this.disposables.push(this.languageClient.start());
-            await this.serverReady();
-
-            if (this.disposed) {
-                // Check if it got disposed in the interim.
-                return;
-            }
-
-            await this.registerTestServices();
-
-            try {
-                await this.checkJediLSPMemoryFootprint();
-            } catch (ex) {
-                // Ignore errors
-            }
-        } else {
-            await this.startupCompleted.promise;
+        if (this.languageClient) {
+            return this.serverReady();
         }
+
+        this.pythonSettings = this.configurationService.getSettings(resource);
+
+        this.lsVersion =
+            (options.middleware ? (<LanguageClientMiddleware>options.middleware).serverVersion : undefined) ?? '0.19.3';
+
+        this.cancellationStrategy = new FileBasedCancellationStrategy();
+        options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
+
+        this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
+
+        this.languageClient.onDidChangeState((e) => {
+            // The client's on* methods must be called after the client has started, but if called too
+            // late the server may have already sent a message (which leads to failures). Register
+            // these on the state change to running to ensure they are ready soon enough.
+            if (e.newState === State.Running) {
+                this.registerHandlers();
+            }
+        });
+
+        this.disposables.push(this.languageClient.start());
+        await this.serverReady();
+
+        if (this.disposed) {
+            // Check if it got disposed in the interim.
+            return Promise.resolve();
+        }
+
+        await this.registerTestServices();
+
+        try {
+            await this.checkJediLSPMemoryFootprint();
+        } catch (ex) {
+            // Ignore errors
+        }
+
+        return Promise.resolve();
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -168,13 +160,9 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         JediLanguageServerProxy.versionTelemetryProps,
     )
     protected async serverReady(): Promise<void> {
-        while (this.languageClient && !this.languageClient.initializeResult) {
-            await sleep(100);
-        }
         if (this.languageClient) {
             await this.languageClient.onReady();
         }
-        this.startupCompleted.resolve();
     }
 
     @swallowExceptions('Activating Unit Tests Manager for Jedi language server')

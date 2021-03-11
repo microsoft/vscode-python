@@ -1857,7 +1857,7 @@ export interface IEventNamePropertyMapping {
      * Note, this is only sent if install was attempted. It is not sent if the user opted
      * not to install, or if all dependencies were already installed.
      */
-    [EventName.TENSORBOARD_INSTALL_SESSION_DEPENDENCIES_RESULT]: {
+    [EventName.TENSORBOARD_PACKAGE_INSTALL_RESULT]: {
         wasProfilerPluginAttempted: boolean;
         wasTensorBoardAttempted: boolean;
         wasProfilerPluginInstalled: boolean;
