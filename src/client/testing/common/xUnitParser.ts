@@ -57,7 +57,15 @@ export class XUnitParser implements IXUnitParser {
         const timer = new StopWatch();
         // Poll for valid xml
         do {
-            data = await this.fs.readFile(outputXmlFile);
+            try {
+                data = await this.fs.readFile(outputXmlFile);
+            } catch (err) {
+                if (error.code === 'ENOENT') {
+                    // The file hasn't been created yet.
+                } else {
+                    throw // re-throw
+                }
+            }
             if (data) {
                 try {
                     parserResult = await parseXML(data);
