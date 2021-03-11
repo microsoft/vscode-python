@@ -264,7 +264,9 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
         const changes = oldIndexes.map((index) => {
             // Figure out the position of the item in the new list
             const position =
-                index < newUris.length ? this.getPositionOfCell(this.notebook.cells[index].document.uri) : this.getEndPosition();
+                index < newUris.length
+                    ? this.getPositionOfCell(this.notebook.cells[index].document.uri)
+                    : this.getEndPosition();
 
             // Length should be old length
             const { length } = this.cellTracking[index];
