@@ -907,15 +907,6 @@ export interface IEventNamePropertyMapping {
         osVersion?: string;
     };
     /**
-     * Telemetry is sent with details about the play run file icon
-     */
-    [EventName.PLAY_BUTTON_ICON_DISABLED]: {
-        /**
-         * Carries `true` if play button icon is not shown (because code runner is installed), `false` otherwise
-         */
-        disabled: boolean;
-    };
-    /**
      * Telemetry event sent when 'Select Interpreter' command is invoked.
      */
     [EventName.SELECT_INTERPRETER]: never | undefined;
@@ -948,6 +939,15 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the user select to either enter or find the interpreter from the quickpick.
      */
     [EventName.SELECT_INTERPRETER_ENTER_OR_FIND]: never | undefined;
+    /**
+     * Telemetry event sent after the user entered an interpreter path, or found it by browsing the filesystem.
+     */
+    [EventName.SELECT_INTERPRETER_ENTERED_EXISTS]: {
+        /**
+         * Carries `true` if the interpreter that was selected had already been discovered earlier (exists in the cache).
+         */
+        discovered: boolean;
+    };
     /**
      * Telemetry event sent with details after updating the python interpreter
      */
@@ -984,19 +984,6 @@ export interface IEventNamePropertyMapping {
          * @type {boolean}
          */
         failed?: boolean;
-        /**
-         * Whether the environment was activated within a terminal or not.
-         *
-         * @type {boolean}
-         */
-        activatedInTerminal?: boolean;
-        /**
-         * Whether the environment was activated by the wrapper class.
-         * If `true`, this telemetry is sent by the class that wraps the two activation providers   .
-         *
-         * @type {boolean}
-         */
-        activatedByWrapper?: boolean;
     };
     /**
      * Telemetry event sent when getting activation commands for active interpreter
@@ -1870,7 +1857,7 @@ export interface IEventNamePropertyMapping {
      * Note, this is only sent if install was attempted. It is not sent if the user opted
      * not to install, or if all dependencies were already installed.
      */
-    [EventName.TENSORBOARD_INSTALL_SESSION_DEPENDENCIES_RESULT]: {
+    [EventName.TENSORBOARD_PACKAGE_INSTALL_RESULT]: {
         wasProfilerPluginAttempted: boolean;
         wasTensorBoardAttempted: boolean;
         wasProfilerPluginInstalled: boolean;

@@ -89,7 +89,7 @@ def select_reviewers(
         selected_reviewers.append(selected)
         count -= 1
     selected_reviewers = frozenset(selected_reviewers)
-    print("Reviewers to add:", select_reviewers)
+    print("Reviewers to add:", selected_reviewers)
     return already_reviewing | selected_reviewers, selected_reviewers
 
 

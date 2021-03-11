@@ -57,10 +57,6 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         ioc.serviceManager.rebindInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
-        when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
-        when(
-            mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything()),
-        ).thenResolve();
         ioc.serviceManager.rebindInstance<IEnvironmentActivationService>(
             IEnvironmentActivationService,
             instance(mockEnvironmentActivationService),

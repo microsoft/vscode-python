@@ -80,7 +80,7 @@ suite('Insiders Test: Language Server', () => {
             }
         }
         if (!tested) {
-            assert.fail('Failled to test definitions');
+            assert.fail('Failed to test definitions');
         }
     });
     test('Notebooks', async () => {
@@ -90,7 +90,7 @@ suite('Insiders Test: Language Server', () => {
         for (let i = 0; i < 5; i += 1) {
             const locations = await vscode.commands.executeCommand<vscode.Location[]>(
                 'vscode.executeDefinitionProvider',
-                notebookDocument.cells[2].uri, // Second cell should have a function with the decorator on it
+                notebookDocument.cells[2].document.uri, // Second cell should have a function with the decorator on it
                 startPosition,
             );
             if (locations && locations.length > 0) {
@@ -101,15 +101,15 @@ suite('Insiders Test: Language Server', () => {
                 expect(activeEditor).not.to.be.equal(undefined, 'Active editor not found in notebook');
                 await activeEditor!.edit((edit) => {
                     edit.replaceCells(0, 0, [
-                        {
-                            cellKind: vscode.NotebookCellKind.Code,
-                            language: PYTHON_LANGUAGE,
-                            source: 'x = 4',
-                            metadata: {
+                        new vscode.NotebookCellData(
+                            vscode.NotebookCellKind.Code,
+                            PYTHON_LANGUAGE,
+                            'x = 4',
+                            [],
+                            new vscode.NotebookCellMetadata().with({
                                 hasExecutionOrder: false,
-                            },
-                            outputs: [],
-                        },
+                            }),
+                        ),
                     ]);
                 });
 
@@ -124,15 +124,15 @@ suite('Insiders Test: Language Server', () => {
                 await activeEditor!.edit((edit) => {
                     edit.replaceCells(0, 1, []);
                     edit.replaceCells(1, 0, [
-                        {
-                            cellKind: vscode.NotebookCellKind.Code,
-                            language: PYTHON_LANGUAGE,
-                            source: 'x = 4',
-                            metadata: {
+                        new vscode.NotebookCellData(
+                            vscode.NotebookCellKind.Code,
+                            PYTHON_LANGUAGE,
+                            'x = 4',
+                            [],
+                            new vscode.NotebookCellMetadata().with({
                                 hasExecutionOrder: false,
-                            },
-                            outputs: [],
-                        },
+                            }),
+                        ),
                     ]);
                 });
 

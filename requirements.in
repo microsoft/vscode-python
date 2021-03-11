@@ -9,3 +9,4 @@ pygls; python_version >= '3.6'  # To make requirements.txt keep the marker to av
 jedi-language-server<0.22; python_version >= '3.6'  # To work with Jedi 0.17.
 # Sort Imports
 isort==5.7.0; python_version >= '3.6'
+cached-property>=1.5.1

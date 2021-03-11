@@ -238,8 +238,7 @@ suite('A/B experiments', () => {
             when(appEnvironment.machineId).thenReturn('101');
             when(crypto.createHash(anything(), 'number', 'SHA512')).thenReturn(644);
             when(crypto.createHash(anything(), anything(), 'FNV')).thenReturn(1293);
-            // 'ShowPlayIcon' is one of the old experiments
-            expManager.isUserInRange(79, 94, 'ShowPlayIcon');
+            expManager.isUserInRange(79, 94, 'LS');
             verify(crypto.createHash(anything(), 'number', 'SHA512')).once();
             verify(crypto.createHash(anything(), anything(), 'FNV')).never();
         });
@@ -252,7 +251,7 @@ suite('A/B experiments', () => {
             verify(crypto.createHash(anything(), 'number', 'FNV')).once();
         });
         test('Use the expected list of old experiments', async () => {
-            const expectedOldExperimentSalts = ['ShowExtensionSurveyPrompt', 'ShowPlayIcon', 'LS'];
+            const expectedOldExperimentSalts = ['ShowExtensionSurveyPrompt', 'LS'];
             assert.deepEqual(expectedOldExperimentSalts, oldExperimentSalts);
         });
     });
