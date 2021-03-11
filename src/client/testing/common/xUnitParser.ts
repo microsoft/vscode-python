@@ -52,32 +52,29 @@ export class XUnitParser implements IXUnitParser {
 
     // Update "tests" with the results parsed from the given file.
     public async updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string, timeout = 0) {
-        var data = '';
-        var parserResult = undefined;
+        const readResult = async () => {
+            try {
+                var data = await this.fs.readFile(outputXmlFile);
+            } catch (err) {
+                if (err.code === 'ENOENT') {
+                    return undefined; // The file hasn't been created yet.
+                } else {
+                    throw err; // re-throw
+                }
+            }
+            try {
+                return parseXML(data);
+            } catch {
+                return undefined; // The file may update in chunks
+            }
+        };
         const timer = new StopWatch();
         // Poll for valid xml
-        do {
-            try {
-                data = await this.fs.readFile(outputXmlFile);
-            } catch (err) {
-                if (error.code === 'ENOENT') {
-                    // The file hasn't been created yet.
-                } else {
-                    throw // re-throw
-                }
-            }
-            if (data) {
-                try {
-                    parserResult = await parseXML(data);
-                } catch (error) {
-                    // The results are still being written to the file.
-                }
-                if (parserResult) {
-                    break;
-                }
-            }
+        let parserResult = await readResult();
+        while (!parserResult && timer.elapsedTime < timeout) {
             await sleep(100);
-        } while (timer.elapsedTime < timeout);
+            parserResult = await readResult();
+        }
         if (!parserResult) {
             throw new Error('Could not read valid xml from test file');
         }
