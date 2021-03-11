@@ -4,7 +4,6 @@ numberOfReviewers: 2
 # determine if a PR author is an external contributor.
 team:
   - brettcannon
-  - ericsnowcurrently
   - int19h
   - karthiknadig
   - karrtikr
