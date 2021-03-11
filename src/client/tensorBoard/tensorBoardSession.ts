@@ -1,18 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
+import * as fs from 'fs-extra';
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import {
     CancellationToken,
     CancellationTokenSource,
+    Position,
     Progress,
     ProgressLocation,
     ProgressOptions,
     QuickPickItem,
+    Selection,
+    Uri,
     ViewColumn,
     WebviewPanel,
     window,
+    workspace,
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';
@@ -274,6 +278,7 @@ export class TensorBoardSession {
                         this.url = match[1];
                         urlThatTensorBoardIsRunningAt.resolve('success');
                     }
+                    traceInfo(output.out);
                 } else if (output.source === 'stderr') {
                     traceError(output.out);
                 }
@@ -307,15 +312,26 @@ export class TensorBoardSession {
             </head>
             <body>
                 <script type="text/javascript">
+                    const vscode = acquireVsCodeApi();
                     function resizeFrame() {
                         var f = window.document.getElementById('vscode-tensorboard-iframe');
                         if (f) {
-                            f.style.height = window.innerHeight / 0.7 + "px";
-                            f.style.width = window.innerWidth / 0.7 + "px";
+                            f.style.height = window.innerHeight / 0.8 + "px";
+                            f.style.width = window.innerWidth / 0.8 + "px";
                         }
                     }
                     resizeFrame();
+                    window.onload = function() {
+                        resizeFrame();
+                    }
                     window.addEventListener('resize', resizeFrame);
+                    window.addEventListener('message', (event) => {
+                        if (!"${this.url}".startsWith(event.origin) || !event.data || !event.data.filename || !event.data.line) {
+                            return;
+                        }
+                        const args = { filename: event.data.filename, line: event.data.line };
+                        vscode.postMessage({ command: 'jump_to_source', args: args });
+                    });
                 </script>
                 <iframe
                     id="vscode-tensorboard-iframe"
@@ -328,7 +344,7 @@ export class TensorBoardSession {
                 ></iframe>
                 <style>
                     .responsive-iframe {
-                        transform: scale(0.7);
+                        transform: scale(0.8);
                         transform-origin: 0 0;
                         position: absolute;
                         top: 0;
@@ -349,7 +365,38 @@ export class TensorBoardSession {
                 this.process = undefined;
             }),
         );
+        this.disposables.push(
+            webviewPanel.webview.onDidReceiveMessage((message) => {
+                // Handle messages posted from the webview
+                switch (message.command) {
+                    case 'jump_to_source':
+                        const { filename, line } = message.args;
+                        void this.jumpToSource(filename, line);
+                        break;
+                    default:
+                        break;
+                }
+            }),
+        );
         return webviewPanel;
+    }
+
+    private async jumpToSource(fsPath: string, line: number) {
+        const position = new Position(line, 0);
+        if (fs.existsSync(fsPath)) {
+            const uri = Uri.file(fsPath);
+            workspace
+                .openTextDocument(uri)
+                .then((doc) => window.showTextDocument(doc, ViewColumn.Beside))
+                .then((editor) => {
+                    // Select the line if it exists in the document
+                    if (line < editor.document.lineCount) {
+                        editor.selection = new Selection(position, editor.document.lineAt(line).range.end);
+                    }
+                });
+        } else {
+            traceError(`Requested jump to source filepath ${fsPath} does not exist`);
+        }
     }
 
     private autopopulateLogDirectoryPath(): string | undefined {
