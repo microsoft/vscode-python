@@ -90,7 +90,7 @@ suite('Insiders Test: Language Server', () => {
         for (let i = 0; i < 5; i += 1) {
             const locations = await vscode.commands.executeCommand<vscode.Location[]>(
                 'vscode.executeDefinitionProvider',
-                notebookDocument.cells[2].uri, // Second cell should have a function with the decorator on it
+                notebookDocument.cells[2].document.uri, // Second cell should have a function with the decorator on it
                 startPosition,
             );
             if (locations && locations.length > 0) {

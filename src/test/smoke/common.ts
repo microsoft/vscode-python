@@ -61,7 +61,7 @@ export async function openNotebookAndWaitForLS(file: string): Promise<vscode.Not
     // to fetch data for completion, hover.etc.
     await vscode.commands.executeCommand(
         'vscode.executeCompletionItemProvider',
-        notebook.document.cells[0].uri,
+        notebook.document.cells[0].document.uri,
         new vscode.Position(0, 0),
     );
     // For for LS to get extracted.

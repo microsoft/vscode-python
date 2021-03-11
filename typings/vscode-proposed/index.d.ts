@@ -27,19 +27,19 @@ import {
 
 export enum NotebookCellKind {
     Markdown = 1,
-    Code = 2,
+    Code = 2
 }
 
 export enum NotebookCellRunState {
     Running = 1,
     Idle = 2,
     Success = 3,
-    Error = 4,
+    Error = 4
 }
 
 export enum NotebookRunState {
     Running = 1,
-    Idle = 2,
+    Idle = 2
 }
 
 export class NotebookCellMetadata {
@@ -69,7 +69,6 @@ export class NotebookCellMetadata {
     readonly statusMessage?: string;
 
     // run related API, will be removed
-    readonly runnable?: boolean;
     readonly hasExecutionOrder?: boolean;
     readonly executionOrder?: number;
     readonly runState?: NotebookCellRunState;
@@ -79,7 +78,6 @@ export class NotebookCellMetadata {
     constructor(
         editable?: boolean,
         breakpointMargin?: boolean,
-        runnable?: boolean,
         hasExecutionOrder?: boolean,
         executionOrder?: number,
         runState?: NotebookCellRunState,
@@ -88,13 +86,12 @@ export class NotebookCellMetadata {
         lastRunDuration?: number,
         inputCollapsed?: boolean,
         outputCollapsed?: boolean,
-        custom?: Record<string, any>,
+        custom?: Record<string, any>
     );
 
     with(change: {
         editable?: boolean | null;
         breakpointMargin?: boolean | null;
-        runnable?: boolean | null;
         hasExecutionOrder?: boolean | null;
         executionOrder?: number | null;
         runState?: NotebookCellRunState | null;
@@ -111,14 +108,10 @@ export class NotebookCellMetadata {
 export interface NotebookCell {
     readonly index: number;
     readonly notebook: NotebookDocument;
-    readonly cellKind: NotebookCellKind;
-    // todo@API duplicates #document.uri
-    readonly uri: Uri;
-    // todo@API duplicates #document.languageId
-    readonly language: string;
+    readonly kind: NotebookCellKind;
     readonly document: TextDocument;
-    readonly outputs: readonly NotebookCellOutput[];
     readonly metadata: NotebookCellMetadata;
+    readonly outputs: ReadonlyArray<NotebookCellOutput>;
 }
 
 export class NotebookDocumentMetadata {
@@ -145,29 +138,21 @@ export class NotebookDocumentMetadata {
     // todo@API is this a kernel property?
     readonly cellHasExecutionOrder: boolean;
 
-    // run related, remove infer from kernel, exec
-    // todo@API infer from kernel
     // todo@API remove
-    readonly runnable: boolean;
-    readonly cellRunnable: boolean;
     readonly runState: NotebookRunState;
 
     constructor(
         editable?: boolean,
-        runnable?: boolean,
         cellEditable?: boolean,
-        cellRunnable?: boolean,
         cellHasExecutionOrder?: boolean,
         custom?: { [key: string]: any },
         runState?: NotebookRunState,
-        trusted?: boolean,
+        trusted?: boolean
     );
 
     with(change: {
         editable?: boolean | null;
-        runnable?: boolean | null;
         cellEditable?: boolean | null;
-        cellRunnable?: boolean | null;
         cellHasExecutionOrder?: boolean | null;
         custom?: { [key: string]: any } | null;
         runState?: NotebookRunState | null;
@@ -192,15 +177,18 @@ export interface NotebookDocumentContentOptions {
 export interface NotebookDocument {
     readonly uri: Uri;
     readonly version: number;
+
     // todo@API don't have this...
     readonly fileName: string;
-    // todo@API should we really expose this?
-    readonly viewType: string;
+
     readonly isDirty: boolean;
     readonly isUntitled: boolean;
     readonly cells: ReadonlyArray<NotebookCell>;
-    readonly contentOptions: NotebookDocumentContentOptions;
+
     readonly metadata: NotebookDocumentMetadata;
+
+    // todo@API should we really expose this?
+    readonly viewType: string;
 
     /**
      * Save the document. The saving will be handled by the corresponding content provider
@@ -219,6 +207,8 @@ export class NotebookCellRange {
      * exclusive
      */
     readonly end: number;
+
+    isEmpty: boolean;
 
     constructor(start: number, end: number);
 }
@@ -242,7 +232,7 @@ export enum NotebookEditorRevealType {
     /**
      * The range will always be revealed at the top of the viewport.
      */
-    AtTop = 3,
+    AtTop = 3
 }
 
 export interface NotebookEditor {
@@ -276,8 +266,7 @@ export interface NotebookEditor {
      * The column in which this editor shows.
      */
     // @jrieken
-    // todo@API maybe never undefined because notebooks always show in the editor area (unlike text editors)
-    // maybe for notebook diff editor
+    // this is not implemented...
     readonly viewColumn?: ViewColumn;
 
     /**
@@ -353,7 +342,7 @@ export class NotebookCellData {
         source: string,
         language: string,
         outputs?: NotebookCellOutput[],
-        metadata?: NotebookCellMetadata,
+        metadata?: NotebookCellMetadata
     );
 }
 
@@ -408,9 +397,8 @@ export interface NotebookDocumentShowOptions {
 }
 
 export namespace notebook {
-    // todo@API should we really support to pass the viewType? We do NOT support
-    // to open the same file with different viewTypes at the same time
-    export function openNotebookDocument(uri: Uri, viewType?: string): Thenable<NotebookDocument>;
+    export function openNotebookDocument(uri: Uri): Thenable<NotebookDocument>;
+
     export const onDidOpenNotebookDocument: Event<NotebookDocument>;
     export const onDidCloseNotebookDocument: Event<NotebookDocument>;
 
@@ -424,9 +412,6 @@ export namespace notebook {
     export const onDidChangeNotebookCells: Event<NotebookCellsChangeEvent>;
     export const onDidChangeCellOutputs: Event<NotebookCellOutputsChangeEvent>;
 
-    // todo@API we send document close and open events when the language of a document changes and
-    // I believe we should stick that for cells as well
-    export const onDidChangeCellLanguage: Event<NotebookCellLanguageChangeEvent>;
     export const onDidChangeCellMetadata: Event<NotebookCellMetadataChangeEvent>;
 }
 
@@ -441,7 +426,7 @@ export namespace window {
     export function showNotebookDocument(uri: Uri, options?: NotebookDocumentShowOptions): Thenable<NotebookEditor>;
     export function showNotebookDocument(
         document: NotebookDocument,
-        options?: NotebookDocumentShowOptions,
+        options?: NotebookDocumentShowOptions
     ): Thenable<NotebookEditor>;
 }
 
@@ -491,26 +476,26 @@ export interface WorkspaceEdit {
         start: number,
         end: number,
         cells: NotebookCellData[],
-        metadata?: WorkspaceEditEntryMetadata,
+        metadata?: WorkspaceEditEntryMetadata
     ): void;
     replaceNotebookCellMetadata(
         uri: Uri,
         index: number,
         cellMetadata: NotebookCellMetadata,
-        metadata?: WorkspaceEditEntryMetadata,
+        metadata?: WorkspaceEditEntryMetadata
     ): void;
 
     replaceNotebookCellOutput(
         uri: Uri,
         index: number,
         outputs: NotebookCellOutput[],
-        metadata?: WorkspaceEditEntryMetadata,
+        metadata?: WorkspaceEditEntryMetadata
     ): void;
     appendNotebookCellOutput(
         uri: Uri,
         index: number,
         outputs: NotebookCellOutput[],
-        metadata?: WorkspaceEditEntryMetadata,
+        metadata?: WorkspaceEditEntryMetadata
     ): void;
 
     // TODO@api
@@ -520,14 +505,14 @@ export interface WorkspaceEdit {
         index: number,
         outputId: string,
         items: NotebookCellOutputItem[],
-        metadata?: WorkspaceEditEntryMetadata,
+        metadata?: WorkspaceEditEntryMetadata
     ): void;
     appendNotebookCellOutputItems(
         uri: Uri,
         index: number,
         outputId: string,
         items: NotebookCellOutputItem[],
-        metadata?: WorkspaceEditEntryMetadata,
+        metadata?: WorkspaceEditEntryMetadata
     ): void;
 }
 
@@ -580,27 +565,38 @@ interface NotebookDocumentBackupContext {
 
 interface NotebookDocumentOpenContext {
     readonly backupId?: string;
+    readonly untitledDocumentData?: Uint8Array;
 }
 
+// todo@API use openNotebookDOCUMENT to align with openCustomDocument etc?
+// todo@API rename to NotebookDocumentContentProvider
 export interface NotebookContentProvider {
     readonly options?: NotebookDocumentContentOptions;
     readonly onDidChangeNotebookContentOptions?: Event<NotebookDocumentContentOptions>;
+
+    // todo@API remove! against separation of data provider and renderer
+    // eslint-disable-next-line vscode-dts-cancellation
+    resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Thenable<void>;
+
     /**
      * Content providers should always use [file system providers](#FileSystemProvider) to
      * resolve the raw content for `uri` as the resouce is not necessarily a file on disk.
      */
-    openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): NotebookData | Thenable<NotebookData>;
-    resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Thenable<void>;
-    saveNotebook(document: NotebookDocument, cancellation: CancellationToken): Thenable<void>;
-    saveNotebookAs(targetResource: Uri, document: NotebookDocument, cancellation: CancellationToken): Thenable<void>;
+    openNotebook(
+        uri: Uri,
+        openContext: NotebookDocumentOpenContext,
+        token: CancellationToken
+    ): NotebookData | Thenable<NotebookData>;
+
+    saveNotebook(document: NotebookDocument, token: CancellationToken): Thenable<void>;
+
+    saveNotebookAs(targetResource: Uri, document: NotebookDocument, token: CancellationToken): Thenable<void>;
+
     backupNotebook(
         document: NotebookDocument,
         context: NotebookDocumentBackupContext,
-        cancellation: CancellationToken,
+        token: CancellationToken
     ): Thenable<NotebookDocumentBackup>;
-
-    // ???
-    // provideKernels(document: NotebookDocument, token: CancellationToken): ProviderResult<T[]>;
 }
 
 export namespace notebook {
@@ -618,7 +614,7 @@ export namespace notebook {
                 filenamePattern: NotebookFilenamePattern[];
                 exclusive?: boolean;
             };
-        },
+        }
     ): Disposable;
 }
 
@@ -697,7 +693,7 @@ export interface NotebookKernelProvider<T extends NotebookKernel = NotebookKerne
         kernel: T,
         document: NotebookDocument,
         webview: NotebookCommunication,
-        token: CancellationToken,
+        token: CancellationToken
     ): ProviderResult<void>;
 }
 
@@ -718,7 +714,7 @@ export namespace notebook {
 
     export function registerNotebookKernelProvider(
         selector: NotebookDocumentFilter,
-        provider: NotebookKernelProvider,
+        provider: NotebookKernelProvider
     ): Disposable;
 }
 
@@ -743,7 +739,7 @@ export interface NotebookEditorDecorationType {
 
 export namespace notebook {
     export function createNotebookEditorDecorationType(
-        options: NotebookDecorationRenderOptions,
+        options: NotebookDecorationRenderOptions
     ): NotebookEditorDecorationType;
 }
 
@@ -763,7 +759,7 @@ export enum NotebookCellStatusBarAlignment {
     /**
      * Aligned to the right side.
      */
-    Right = 2,
+    Right = 2
 }
 
 export interface NotebookCellStatusBarItem {
@@ -794,7 +790,7 @@ export namespace notebook {
     export function createCellStatusBarItem(
         cell: NotebookCell,
         alignment?: NotebookCellStatusBarAlignment,
-        priority?: number,
+        priority?: number
     ): NotebookCellStatusBarItem;
 }
 
@@ -814,7 +810,7 @@ export namespace notebook {
     // todo@API really needed? we didn't find a user here
     export function createConcatTextDocument(
         notebook: NotebookDocument,
-        selector?: DocumentSelector,
+        selector?: DocumentSelector
     ): NotebookConcatTextDocument;
 }
 
