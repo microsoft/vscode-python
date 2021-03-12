@@ -243,9 +243,9 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
             const newPos = this.converter.toOutgoingPosition(document, position);
             const result = next(newDoc, newPos, token);
             if (isThenable(result)) {
-                return result.then(this.converter.toIncomingLocations.bind(this.converter, document));
+                return result.then(this.converter.toIncomingLocations.bind(this.converter));
             }
-            return this.converter.toIncomingLocations(document, result);
+            return this.converter.toIncomingLocations(result);
         }
         return next(document, position, token);
     }
@@ -264,9 +264,9 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
             const newPos = this.converter.toOutgoingPosition(document, position);
             const result = next(newDoc, newPos, options, token);
             if (isThenable(result)) {
-                return result.then(this.converter.toIncomingLocations.bind(this.converter, document));
+                return result.then(this.converter.toIncomingLocations.bind(this.converter));
             }
-            return this.converter.toIncomingLocations(document, result);
+            return this.converter.toIncomingLocations(result);
         }
         return next(document, position, options, token);
     }
