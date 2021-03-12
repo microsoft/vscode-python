@@ -1651,7 +1651,7 @@
                 "python.tensorBoard.logDirectory": {
                     "type": "string",
                     "description": "Set this setting to your preferred TensorBoard log directory to skip log directory prompt when starting TensorBoard.",
-                    "scope": "resource"
+                    "scope": "application"
                 },
                 "python.terminal.activateEnvironment": {
                     "type": "boolean",
