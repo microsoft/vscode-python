@@ -74,11 +74,11 @@ suite('TensorBoard session creation', async () => {
         installer = serviceManager.get<IInstaller>(IInstaller);
         workspaceConfiguration = workspace.getConfiguration('python.tensorBoard');
         initialValue = workspaceConfiguration.get('logDirectory');
-        await workspaceConfiguration.update('logDirectory', undefined, false);
+        await workspaceConfiguration.update('logDirectory', undefined, true);
     });
 
     teardown(async () => {
-        await workspaceConfiguration.update('logDirectory', initialValue, false);
+        await workspaceConfiguration.update('logDirectory', initialValue, true);
         await closeActiveWindows();
         sandbox.restore();
     });
@@ -420,7 +420,7 @@ suite('TensorBoard session creation', async () => {
             .stub(applicationShell, 'showQuickPick')
             .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
         errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-        await workspaceConfiguration.update('logDirectory', 'logs/fit', false);
+        await workspaceConfiguration.update('logDirectory', 'logs/fit', true);
 
         const session = (await commandManager.executeCommand(
             'python.launchTensorBoard',
