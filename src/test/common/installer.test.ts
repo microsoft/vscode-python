@@ -360,7 +360,7 @@ suite('Installer', () => {
     getNamesAndValues<Product>(Product).forEach((prod) => {
         test(`Ensure install for Product: '${prod.name}' executes the right command in IModuleInstaller`, async function () {
             const productType = new ProductService().getProductType(prod.value);
-            if (productType === ProductType.DataScience) {
+            if (productType === ProductType.DataScience || productType === ProductType.Linter) {
                 return this.skip();
             }
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
