@@ -1045,7 +1045,6 @@
                     "items": {
                         "enum": [
                             "ShowExtensionSurveyPrompt - enabled",
-                            "Reload - experiment",
                             "DeprecatePythonPath - experiment",
                             "tryPylance",
                             "pythonSendEntireLineToREPL",
@@ -1064,7 +1063,6 @@
                     "items": {
                         "enum": [
                             "ShowExtensionSurveyPrompt - enabled",
-                            "Reload - experiment",
                             "DeprecatePythonPath - experiment",
                             "tryPylance",
                             "pythonSendEntireLineToREPL",
