@@ -4,12 +4,6 @@ export enum ShowExtensionSurveyPrompt {
     enabled = 'ShowExtensionSurveyPrompt - enabled',
 }
 
-// Experiment to check whether to enable re-load for web apps while debugging.
-export enum WebAppReload {
-    control = 'Reload - control',
-    experiment = 'Reload - experiment',
-}
-
 /*
  * Experiment to check whether the extension should deprecate `python.pythonPath` setting
  */
