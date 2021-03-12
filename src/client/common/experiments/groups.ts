@@ -43,11 +43,6 @@ export enum JoinMailingListPromptVariants {
     variant3 = 'pythonJoinMailingListVar3',
 }
 
-// Experiment to use a different method for normalizing code to be sent to the REPL.
-export enum SendSelectionToREPL {
-    experiment = 'pythonSendEntireLineToREPL',
-}
-
 // Feature flag for 'Python: Launch TensorBoard' feature
 export enum NativeTensorBoard {
     experiment = 'pythonTensorboardExperiment',
