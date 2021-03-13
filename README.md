@@ -22,11 +22,11 @@ Additionally, the Python extension gives you an optimal and feature-rich experie
 
 -   Configure the debugger through the Debug Activity Bar
 
-      <img src=https://raw.githubusercontent.com/microsoft/vscode-python/main/images/ConfigureDebugger.gif width=734 height=413>
+     <img src=https://raw.githubusercontent.com/microsoft/vscode-python/main/images/ConfigureDebugger.gif width=734 height=413>
 
 -   Configure tests by running the `Configure Tests` command
 
-      <img src=https://raw.githubusercontent.com/microsoft/vscode-python/main/images/ConfigureTests.gif width=734 height=413>
+     <img src=https://raw.githubusercontent.com/microsoft/vscode-python/main/images/ConfigureTests.gif width=734 height=413>
 
 ## Jupyter Notebook quick start
 
@@ -34,7 +34,7 @@ The Python extension and the [Jupyter extension](https://marketplace.visualstudi
 
 -   Open or create a Jupyter Notebook file (.ipynb) and start coding in our Notebook Editor!
 
-      <img src=https://raw.githubusercontent.com/microsoft/vscode-python/main/images/OpenOrCreateNotebook.gif width=1029 height=602>
+     <img src=https://raw.githubusercontent.com/microsoft/vscode-python/main/images/OpenOrCreateNotebook.gif width=1029 height=602>
 
 For more information you can:
 
