@@ -213,7 +213,7 @@
     "StartPage.getStarted": "Python - Get Started",
     "StartPage.pythonExtensionTitle": "Python Extension",
     "StartPage.createJupyterNotebook": "Create a Jupyter Notebook",
-    "StartPage.notebookDescription": "- Run \"<div class=\"link italics\" role=\"button\" onclick={0}>Create New Blank Jupyter Notebook</div>\" in the Command Palette (<div class=\"italics\">Shift + Command + P</div>)<br />- Explore our <div class=\"link\" role=\"button\" onclick={1}>sample notebook</div> to learn about notebook features",
+    "StartPage.notebookDescription": "- Run \"<div class=\"link italics\" role=\"button\" onclick={0}>Create New Blank Notebook</div>\" in the Command Palette (<div class=\"italics\">Shift + Command + P</div>)<br />- Explore our <div class=\"link\" role=\"button\" onclick={1}>sample notebook</div> to learn about notebook features",
     "StartPage.createAPythonFile": "Create a Python File",
     "StartPage.pythonFileDescription": "- Create a <div class=\"link\" role=\"button\" onclick={0}>new file</div> with a .py extension",
     "StartPage.openInteractiveWindow": "Use the Interactive Window to develop Python Scripts",

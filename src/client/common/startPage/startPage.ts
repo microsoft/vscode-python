@@ -172,10 +172,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                 sendTelemetryEvent(Telemetry.StartPageOpenCommandPaletteWithOpenNBSelected);
                 this.setTelemetryFlags();
 
-                await this.commandManager.executeCommand(
-                    'workbench.action.quickOpen',
-                    '>Create New Blank Jupyter Notebook',
-                );
+                await this.commandManager.executeCommand('workbench.action.quickOpen', '>Create New Blank Notebook');
                 break;
             case StartPageMessages.OpenSampleNotebook:
                 sendTelemetryEvent(Telemetry.StartPageOpenSampleNotebook);
