@@ -53,7 +53,6 @@ export class ExperimentService implements IExperimentService {
             this.enabled = true;
         }
 
-        // Don't initialize the experiment service if the extension's experiments setting is disabled.
         if (!this.enabled) {
             return;
         }
