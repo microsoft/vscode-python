@@ -24,6 +24,18 @@
         "max": 100
     },
     {
+        "name": "CollectNodeLSRequestTiming - experiment",
+        "salt": "CollectNodeLSRequestTiming",
+        "min": 0,
+        "max": 100
+    },
+    {
+        "name": "CollectNodeLSRequestTiming - control",
+        "salt": "CollectNodeLSRequestTiming",
+        "min": 0,
+        "max": 0
+    },
+    {
         "name": "DeprecatePythonPath - experiment",
         "salt": "DeprecatePythonPath",
         "min": 0,
