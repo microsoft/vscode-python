@@ -1,31 +1,19 @@
----
-name: General bug report
-about: Create a report to help us improve
-labels: classify, type-bug
----
+<!-- Please search existing issues to avoid creating duplicates;
+     https://github.com/microsoft/vscode-python/issues?q=is%3Aopen+is%3Aissue+label%3Atype-bug
+-->
 
-<!-- Please search existing issues to avoid creating duplicates. -->
-
-## Environment data
-
--   VS Code version:
--   Extension version (available under the Extensions sidebar):
--   OS and version:
--   Python version (& distribution if applicable, e.g. Anaconda):
--   Type of virtual environment used (N/A | venv | virtualenv | conda | ...):
--   Relevant/affected Python packages and their versions:
--   Relevant/affected Python-related VS Code extensions and their versions:
--   Value of the `python.languageServer` setting:
+# Behaviour
 
 [**NOTE**: If you suspect that your issue is related to the Microsoft Python Language Server (`python.languageServer: 'Microsoft'`), please download our new language server [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) from the VS Code marketplace to see if that fixes your issue]
 
-## Expected behaviour
 
+## Expected
 
+XXX
 
-## Actual behaviour
+## Actual
 
-
+XXX
 
 ## Steps to reproduce:
 
@@ -35,17 +23,22 @@ labels: classify, type-bug
 
 <!--
 Note: If you think a GIF of what is happening would be helpful, consider tools like https://www.cockos.com/licecap/, https://github.com/phw/peek or https://www.screentogif.com/ .
+You can attach such things **after** you create your issue on GitHub.
 -->
 
-## Logs
+# Diagnostic data
+
+-   Python version (& distribution if applicable, e.g. Anaconda): XXX
+-   Type of virtual environment used (e.g. conda, venv, virtualenv, etc.): XXX
+-   Value of the `python.languageServer` setting: XXX
 
 <details>
 
-<summary>Output for <code>Python</code> in the <code>Output</code> panel (<code>View</code>→<code>Output</code>, change the drop-down the upper-right of the <code>Output</code> panel to <code>Python</code>)
-</summary>
+<summary>"Python" channel in the OUTPUT panel</summary>
 
 <p>
 
+<!-- Run the "Python: Show Output" command to see the requested output. --->
 ```
 XXX
 ```
