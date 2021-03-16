@@ -1,12 +1,14 @@
 # Changelog
 
-## 2021.3.0-rc (9 March 2021)
+## 2021.3.0 (16 March 2021)
 
 ### Enhancements
 
 1. Activate the extension when the following files are found: `Pipfile`, `setup.py`, `requirements.txt`, `manage.py`, `app.py`
    (thanks [Dhaval Soneji](https://github.com/soneji))
    ([#4765](https://github.com/Microsoft/vscode-python/issues/4765))
+1. Add optional user-level `python.tensorBoard.logDirectory` setting. When starting a TensorBoard session, use this setting if it is present instead of prompting the user to select a log directory.
+   ([#15476](https://github.com/Microsoft/vscode-python/issues/15476))
 
 ### Fixes
 
@@ -40,6 +42,8 @@
    ([#15580](https://github.com/Microsoft/vscode-python/issues/15580))
 1. Ensure that jedi language server uses jedi shipped with the extension.
    ([#15586](https://github.com/Microsoft/vscode-python/issues/15586))
+1. Updates to Proposed API, and fix the failure in VS Code Insider tests.
+   ([#15638](https://github.com/Microsoft/vscode-python/issues/15638))
 
 ### Code Health
 
@@ -63,6 +67,10 @@
    ([#15567](https://github.com/Microsoft/vscode-python/issues/15567))
 1. Fix failing smoke tests on CI.
    ([#15573](https://github.com/Microsoft/vscode-python/issues/15573))
+1. Update VS Code engine to 1.54.0
+   ([#15604](https://github.com/Microsoft/vscode-python/issues/15604))
+1. Use `onReady` method available on language client to ensure language server is ready.
+   ([#15612](https://github.com/Microsoft/vscode-python/issues/15612))
 
 ## 2021.2.4 (9 March 2021)
 
