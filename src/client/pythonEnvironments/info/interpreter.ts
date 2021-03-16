@@ -20,11 +20,20 @@ import { copyPythonExecInfo, PythonExecInfo } from '../exec';
  */
 export function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): InterpreterInformation {
     let rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}`;
-    if (raw.versionInfo[3] !== undefined && raw.versionInfo[3] !== 'final') {
+    // We only need additional version details if the version is 'alpha', 'beta' or 'candidate'.
+    // This restriction is needed to avoid sending any PII if this data is used with telemetry.
+    // With custom builds of python it is possible that release level and values after that can
+    // contain PII.
+    if (raw.versionInfo[3] !== undefined && ['alpha', 'beta', 'candidate'].includes(raw.versionInfo[3])) {
+        rawVersion = `${rawVersion}-${raw.versionInfo[3]}`;
         if (raw.versionInfo[4] !== undefined) {
-            rawVersion = `${rawVersion}-${raw.versionInfo[3]}${raw.versionInfo[4]}`;
-        } else {
-            rawVersion = `${rawVersion}-${raw.versionInfo[3]}`;
+            let serial = -1;
+            try {
+                serial = parseInt(`${raw.versionInfo[4]}`, 10);
+            } catch (ex) {
+                serial = -1;
+            }
+            rawVersion = serial >= 0 ? `${rawVersion}${serial}` : rawVersion;
         }
     }
     return {
