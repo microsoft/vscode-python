@@ -113,6 +113,9 @@ export class TestsParser implements ITestsParser {
 
             if (line.startsWith("nose.selector: DEBUG: wantClass <class '")) {
                 const name = extractBetweenDelimiters(line, "nose.selector: DEBUG: wantClass <class '", "'>? True");
+                if (name === 'unittest.case.TestCase') {
+                    return;
+                }
                 const clsName = path.extname(name).substring(1);
                 const testSuite: TestSuite = {
                     resource,
