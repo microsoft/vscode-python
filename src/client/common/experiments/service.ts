@@ -53,7 +53,6 @@ export class ExperimentService implements IExperimentService {
             this.enabled = true;
         }
 
-        // Don't initialize the experiment service if the extension's experiments setting is disabled.
         if (!this.enabled) {
             return;
         }
@@ -101,7 +100,9 @@ export class ExperimentService implements IExperimentService {
         }
 
         if (this._optInto.includes('All') || this._optInto.includes(experiment)) {
-            // Check if the user was already in the experiment server-side.
+            // Check if the user was already in the experiment server-side. We need to do
+            // this to ensure the experiment service is ready and internal states are fully 
+            // synced with the experiment server.
             await this.experimentationService.isCachedFlightEnabled(experiment);
 
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, {
