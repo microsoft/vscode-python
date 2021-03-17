@@ -370,8 +370,7 @@ export class TensorBoardSession {
                 // Handle messages posted from the webview
                 switch (message.command) {
                     case 'jump_to_source':
-                        const { filename, line } = message.args;
-                        void this.jumpToSource(filename, line);
+                        void jumpToSource(message.args.filename, message.args.line);
                         break;
                     default:
                         break;
@@ -379,24 +378,6 @@ export class TensorBoardSession {
             }),
         );
         return webviewPanel;
-    }
-
-    private async jumpToSource(fsPath: string, line: number) {
-        const position = new Position(line, 0);
-        if (fs.existsSync(fsPath)) {
-            const uri = Uri.file(fsPath);
-            workspace
-                .openTextDocument(uri)
-                .then((doc) => window.showTextDocument(doc, ViewColumn.Beside))
-                .then((editor) => {
-                    // Select the line if it exists in the document
-                    if (line < editor.document.lineCount) {
-                        editor.selection = new Selection(position, editor.document.lineAt(line).range.end);
-                    }
-                });
-        } else {
-            traceError(`Requested jump to source filepath ${fsPath} does not exist`);
-        }
     }
 
     private autopopulateLogDirectoryPath(): string | undefined {
@@ -408,5 +389,23 @@ export class TensorBoardSession {
             return path.dirname(activeTextEditor.document.uri.fsPath);
         }
         return undefined;
+    }
+}
+
+async function jumpToSource(fsPath: string, line: number) {
+    if (fs.existsSync(fsPath)) {
+        const uri = Uri.file(fsPath);
+        workspace
+            .openTextDocument(uri)
+            .then((doc) => window.showTextDocument(doc, ViewColumn.Beside))
+            .then((editor) => {
+                // Select the line if it exists in the document
+                if (line < editor.document.lineCount) {
+                    const position = new Position(line, 0);
+                    editor.selection = new Selection(position, editor.document.lineAt(line).range.end);
+                }
+            });
+    } else {
+        traceError(`Requested jump to source filepath ${fsPath} does not exist`);
     }
 }
