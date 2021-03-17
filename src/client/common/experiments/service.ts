@@ -101,7 +101,7 @@ export class ExperimentService implements IExperimentService {
 
         if (this._optInto.includes('All') || this._optInto.includes(experiment)) {
             // Check if the user was already in the experiment server-side. We need to do
-            // this to ensure the experiment service is ready and internal states are fully 
+            // this to ensure the experiment service is ready and internal states are fully
             // synced with the experiment server.
             await this.experimentationService.isCachedFlightEnabled(experiment);
 
