@@ -436,7 +436,7 @@ suite('Extension survey prompt - activate()', () => {
         sinon.restore();
     });
 
-    test("If user is not in 'ShowExtensionPrompt' experiment, return immediately", async () => {
+    test("If user is not in 'ShowExtensionSurveyPrompt' experiment, return immediately", async () => {
         shouldShowBanner = sinon.stub(ExtensionSurveyPrompt.prototype, 'shouldShowBanner');
         shouldShowBanner.callsFake(() => false);
         extensionSurveyPrompt = new ExtensionSurveyPrompt(
@@ -458,7 +458,7 @@ suite('Extension survey prompt - activate()', () => {
         experiments.verifyAll();
     });
 
-    test("No survey is shown if shouldShowBanner() returns false and user is in 'ShowExtensionPrompt' experiment", async () => {
+    test("No survey is shown if shouldShowBanner() returns false and user is in 'ShowExtensionSurveyPrompt' experiment", async () => {
         const deferred = createDeferred<true>();
         shouldShowBanner = sinon.stub(ExtensionSurveyPrompt.prototype, 'shouldShowBanner');
         shouldShowBanner.callsFake(() => false);
@@ -492,7 +492,7 @@ suite('Extension survey prompt - activate()', () => {
         experiments.verifyAll();
     });
 
-    test("Survey is shown after waitTimeToShowSurvey if shouldShowBanner() returns true and user is in 'ShowExtensionPrompt' experiment", async () => {
+    test("Survey is shown after waitTimeToShowSurvey if shouldShowBanner() returns true and user is in 'ShowExtensionSurveyPrompt' experiment", async () => {
         const deferred = createDeferred<true>();
         shouldShowBanner = sinon.stub(ExtensionSurveyPrompt.prototype, 'shouldShowBanner');
         shouldShowBanner.callsFake(() => true);
