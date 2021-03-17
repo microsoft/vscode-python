@@ -21,7 +21,6 @@ import {
     Resource,
 } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
-import { noop } from '../../common/utils/misc';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -33,6 +32,7 @@ import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { getMemoryUsage } from '../../common/process/memory';
+import { killPidTree } from '../../common/process/rawProcessApis';
 
 @injectable()
 export class JediLanguageServerProxy implements ILanguageServerProxy {
@@ -69,8 +69,21 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
     @traceDecorators.verbose('Stopping language server')
     public dispose(): void {
         if (this.languageClient) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const pid: number | undefined = ((this.languageClient as any)._serverProcess as ChildProcess)?.pid;
+            const killServer = () => {
+                if (pid) {
+                    killPidTree(pid);
+                }
+            };
             // Do not await on this.
-            this.languageClient.stop().then(noop, (ex) => traceError('Stopping language client failed', ex));
+            this.languageClient.stop().then(
+                () => killServer(),
+                (ex) => {
+                    traceError('Stopping language client failed', ex);
+                    killServer();
+                },
+            );
             this.languageClient = undefined;
         }
 

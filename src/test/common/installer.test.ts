@@ -7,6 +7,7 @@ import { ActiveResourceService } from '../../client/common/application/activeRes
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ClipboardService } from '../../client/common/application/clipboard';
 import { ReloadVSCodeCommandHandler } from '../../client/common/application/commands/reloadCommand';
+import { ReportIssueCommandHandler } from '../../client/common/application/commands/reportIssueCommand';
 import { CustomEditorService } from '../../client/common/application/customEditorService';
 import { DebugService } from '../../client/common/application/debugService';
 import { DebugSessionTelemetry } from '../../client/common/application/debugSessionTelemetry';
@@ -277,6 +278,10 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
             IExtensionSingleActivationService,
             ReloadVSCodeCommandHandler,
+        );
+        ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService,
+            ReportIssueCommandHandler,
         );
         ioc.serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
         ioc.serviceManager.addSingleton<IExtensionChannelRule>(

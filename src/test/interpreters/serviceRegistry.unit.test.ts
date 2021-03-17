@@ -48,7 +48,6 @@ import {
     IShebangCodeLensProvider,
 } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
-import { InterpreterSelectionTip } from '../../client/interpreter/display/interpreterSelectionTip';
 import { InterpreterLocatorProgressStatubarHandler } from '../../client/interpreter/display/progressDisplay';
 import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
@@ -74,7 +73,6 @@ suite('Interpreters - Service Registry', () => {
             [IInterpreterSecurityService, InterpreterSecurityService],
 
             [IExtensionActivationService, VirtualEnvironmentPrompt],
-            [IExtensionSingleActivationService, InterpreterSelectionTip],
 
             [IInterpreterVersionService, InterpreterVersionService],
 

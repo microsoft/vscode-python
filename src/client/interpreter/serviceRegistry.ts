@@ -48,7 +48,6 @@ import {
     IShebangCodeLensProvider,
 } from './contracts';
 import { InterpreterDisplay } from './display';
-import { InterpreterSelectionTip } from './display/interpreterSelectionTip';
 import { InterpreterLocatorProgressStatubarHandler } from './display/progressDisplay';
 import { ShebangCodeLensProvider } from './display/shebangCodeLensProvider';
 import { InterpreterHelper } from './helpers';
@@ -86,10 +85,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
     serviceManager.addSingleton<IInterpreterSecurityService>(IInterpreterSecurityService, InterpreterSecurityService);
 
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, VirtualEnvironmentPrompt);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        InterpreterSelectionTip,
-    );
 
     serviceManager.addSingleton<IInterpreterVersionService>(IInterpreterVersionService, InterpreterVersionService);
 

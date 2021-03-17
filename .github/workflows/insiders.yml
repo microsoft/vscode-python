@@ -434,17 +434,17 @@ jobs:
           echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV
         shell: bash
 
-      - name: Run insider tests
-        env:
-          DISPLAY: 10
-          INSTALL_JUPYTER_EXTENSION: true
-          INSTALL_PYLANCE_EXTENSION: true
-          VSC_PYTHON_CI_TEST_VSC_CHANNEL: insiders
-          TEST_FILES_SUFFIX: insiders.test
-          CODE_TESTS_WORKSPACE: ./src/testMultiRootWkspc/smokeTests
-        uses: GabrielBB/xvfb-action@v1.4
-        with:
-          run: node --no-force-async-hooks-checks ./out/test/standardTest.js
+  #      - name: Run insider tests
+  #        env:
+  #          DISPLAY: 10
+  #          INSTALL_JUPYTER_EXTENSION: true
+  #          INSTALL_PYLANCE_EXTENSION: true
+  #          VSC_PYTHON_CI_TEST_VSC_CHANNEL: insiders
+  #          TEST_FILES_SUFFIX: insiders.test
+  #          CODE_TESTS_WORKSPACE: ./src/testMultiRootWkspc/smokeTests
+  #        uses: GabrielBB/xvfb-action@v1.4
+  #        with:
+  #          run: node --no-force-async-hooks-checks ./out/test/standardTest.js
 
   coverage:
     name: Coverage reports upload
