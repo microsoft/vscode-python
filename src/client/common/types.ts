@@ -212,6 +212,11 @@ export interface IPythonSettings {
     readonly defaultInterpreterPath: string;
     readonly logging: ILoggingSettings;
     readonly useIsolation: boolean;
+    readonly tensorBoard: ITensorBoardSettings | undefined;
+}
+
+export interface ITensorBoardSettings {
+    readonly logDirectory: string | undefined;
 }
 export interface ISortImportSettings {
     readonly path: string;

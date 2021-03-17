@@ -71,6 +71,7 @@
         "onCommand:python.buildWorkspaceSymbols",
         "onCommand:python.startREPL",
         "onCommand:python.goToPythonObject",
+        "onCommand:python.reportIssue",
         "onCommand:python.setLinter",
         "onCommand:python.enableLinting",
         "onCommand:python.createTerminal",
@@ -177,7 +178,11 @@
             {
                 "command": "python.execInTerminal-icon",
                 "title": "%python.command.python.execInTerminal.title%",
-                "category": "Python"
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/run-file.svg",
+                    "dark": "resources/dark/run-file.svg"
+                }
             },
             {
                 "command": "python.setInterpreter",
@@ -317,6 +322,11 @@
             {
                 "command": "python.goToPythonObject",
                 "title": "%python.command.python.goToPythonObject.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.reportIssue",
+                "title": "%python.command.python.reportIssue.title%",
                 "category": "Python"
             },
             {
@@ -1047,7 +1057,6 @@
                             "ShowExtensionSurveyPrompt - enabled",
                             "DeprecatePythonPath - experiment",
                             "tryPylance",
-                            "pythonSendEntireLineToREPL",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
                             "pythonJediLSP",
@@ -1065,7 +1074,6 @@
                             "ShowExtensionSurveyPrompt - enabled",
                             "DeprecatePythonPath - experiment",
                             "tryPylance",
-                            "pythonSendEntireLineToREPL",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
                             "pythonJediLSP",
@@ -1646,6 +1654,11 @@
                     "default": "",
                     "scope": "resource"
                 },
+                "python.tensorBoard.logDirectory": {
+                    "type": "string",
+                    "description": "Set this setting to your preferred TensorBoard log directory to skip log directory prompt when starting TensorBoard.",
+                    "scope": "application"
+                },
                 "python.terminal.activateEnvironment": {
                     "type": "boolean",
                     "default": true,
@@ -2023,10 +2036,10 @@
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.1.4",
-        "vscode-jsonrpc": "6.0.0-next.7",
-        "vscode-languageclient": "7.0.0-next.14",
-        "vscode-languageserver": "7.0.0-next.11",
-        "vscode-languageserver-protocol": "3.16.0-next.11",
+        "vscode-jsonrpc": "6.0.0",
+        "vscode-languageclient": "7.0.0",
+        "vscode-languageserver": "7.0.0",
+        "vscode-languageserver-protocol": "3.16.0",
         "vscode-tas-client": "^0.1.17",
         "winreg": "^1.2.4",
         "winston": "^3.2.1",
@@ -2163,7 +2176,7 @@
         "range-inclusive": "^1.0.2",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
-        "react-dev-utils": "^5.0.2",
+        "react-dev-utils": "^11.0.4",
         "react-dom": "^16.5.2",
         "react-svgmt": "^1.1.8",
         "remove-files-webpack-plugin": "^1.4.0",

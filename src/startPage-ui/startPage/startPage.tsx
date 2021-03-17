@@ -185,7 +185,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.notebookDescription',
-                        '- Run "<div class="link italics" role="button" onclick={0}>Create New Blank Jupyter Notebook</div>" in the Command Palette (<div class="italics">Shift + Command + P</div>)<br />- Explore our <div class="link" role="button" onclick={1}>sample notebook</div> to learn about notebook features',
+                        '- Run "<div class="link italics" role="button" onclick={0}>Create New Blank Notebook</div>" in the Command Palette (<div class="italics">Shift + Command + P</div>)<br />- Explore our <div class="link" role="button" onclick={1}>sample notebook</div> to learn about notebook features',
                     ).format('openCommandPaletteWithSelection()', 'openSampleNotebook()'),
                 }}
             />
