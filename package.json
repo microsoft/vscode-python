@@ -1059,6 +1059,7 @@
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
                             "pythonJediLSP",
+                            "pythonSurveyNotification",
                             "All"
                         ]
                     },
@@ -1075,6 +1076,7 @@
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
                             "pythonJediLSP",
+                            "pythonSurveyNotification",
                             "All"
                         ]
                     },
