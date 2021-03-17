@@ -251,7 +251,7 @@ suite('A/B experiments', () => {
             verify(crypto.createHash(anything(), 'number', 'FNV')).once();
         });
         test('Use the expected list of old experiments', async () => {
-            const expectedOldExperimentSalts = ['ShowExtensionSurveyPrompt', 'LS'];
+            const expectedOldExperimentSalts = ['LS'];
             assert.deepEqual(expectedOldExperimentSalts, oldExperimentSalts);
         });
     });

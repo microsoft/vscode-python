@@ -1,7 +1,6 @@
 // Experiment to check whether to show "Extension Survey prompt" or not.
 export enum ShowExtensionSurveyPrompt {
-    control = 'ShowExtensionSurveyPrompt - control',
-    enabled = 'ShowExtensionSurveyPrompt - enabled',
+    experiment = 'pythonSurveyNotification',
 }
 
 /*

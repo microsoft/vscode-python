@@ -11,7 +11,7 @@ import { ShowExtensionSurveyPrompt } from '../common/experiments/groups';
 import '../common/extensions';
 import { traceDecorators } from '../common/logger';
 import { IPlatformService } from '../common/platform/types';
-import { IBrowserService, IExperimentsManager, IPersistentStateFactory, IRandom } from '../common/types';
+import { IBrowserService, IExperimentService, IPersistentStateFactory, IRandom } from '../common/types';
 import { Common, ExtensionSurveyBanner } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -33,7 +33,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IRandom) private random: IRandom,
-        @inject(IExperimentsManager) private experiments: IExperimentsManager,
+        @inject(IExperimentService) private experiments: IExperimentService,
         @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment,
         @inject(IPlatformService) private platformService: IPlatformService,
         @optional() private sampleSizePerOneHundredUsers: number = 10,
@@ -41,8 +41,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
     ) {}
 
     public async activate(): Promise<void> {
-        if (!this.experiments.inExperiment(ShowExtensionSurveyPrompt.enabled)) {
-            this.experiments.sendTelemetryIfInExperiment(ShowExtensionSurveyPrompt.control);
+        if (!(await this.experiments.inExperiment(ShowExtensionSurveyPrompt.experiment))) {
             return;
         }
         const show = this.shouldShowBanner();

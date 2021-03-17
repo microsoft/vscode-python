@@ -1054,7 +1054,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "ShowExtensionSurveyPrompt - enabled",
                             "DeprecatePythonPath - experiment",
                             "tryPylance",
                             "pythonTensorboardExperiment",
@@ -1071,7 +1070,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "ShowExtensionSurveyPrompt - enabled",
                             "DeprecatePythonPath - experiment",
                             "tryPylance",
                             "pythonTensorboardExperiment",

@@ -1,17 +1,5 @@
 [
     {
-        "name": "ShowExtensionSurveyPrompt - enabled",
-        "salt": "ShowExtensionSurveyPrompt",
-        "max": 100,
-        "min": 60
-    },
-    {
-        "name": "ShowExtensionSurveyPrompt - control",
-        "salt": "ShowExtensionSurveyPrompt",
-        "min": 0,
-        "max": 40
-    },
-    {
         "name": "CollectLSRequestTiming - experiment",
         "salt": "CollectLSRequestTiming",
         "min": 0,
