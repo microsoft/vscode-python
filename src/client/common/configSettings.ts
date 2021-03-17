@@ -40,6 +40,7 @@ import {
     ILoggingSettings,
     IPythonSettings,
     ISortImportSettings,
+    ITensorBoardSettings,
     ITerminalSettings,
     IWorkspaceSymbolSettings,
     LoggingLevelSettingType,
@@ -118,6 +119,8 @@ export class PythonSettings implements IPythonSettings {
     public formatting!: IFormattingSettings;
 
     public autoComplete!: IAutoCompleteSettings;
+
+    public tensorBoard: ITensorBoardSettings | undefined;
 
     public testing!: ITestingSettings;
 
@@ -582,6 +585,7 @@ export class PythonSettings implements IPythonSettings {
         }
 
         this.insidersChannel = pythonSettings.get<ExtensionChannels>('insidersChannel')!;
+        this.tensorBoard = pythonSettings.get<ITensorBoardSettings>('tensorBoard');
     }
 
     // eslint-disable-next-line class-methods-use-this

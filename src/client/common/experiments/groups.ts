@@ -25,13 +25,6 @@ export enum TryPylance {
     jediPrompt2 = 'tryPylancePromptText2',
 }
 
-// Experiment for the content of the tip being displayed on first extension launch:
-// interpreter selection tip, feedback survey or nothing.
-export enum SurveyAndInterpreterTipNotification {
-    tipExperiment = 'pythonTipPromptWording',
-    surveyExperiment = 'pythonMailingListPromptWording',
-}
-
 // Experiment to switch Jedi to use an LSP instead of direct providers
 export enum JediLSP {
     experiment = 'pythonJediLSP',
@@ -41,11 +34,6 @@ export enum JoinMailingListPromptVariants {
     variant1 = 'pythonJoinMailingListVar1',
     variant2 = 'pythonJoinMailingListVar2',
     variant3 = 'pythonJoinMailingListVar3',
-}
-
-// Experiment to use a different method for normalizing code to be sent to the REPL.
-export enum SendSelectionToREPL {
-    experiment = 'pythonSendEntireLineToREPL',
 }
 
 // Feature flag for 'Python: Launch TensorBoard' feature
