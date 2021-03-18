@@ -32,6 +32,10 @@ import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { TensorBoardSessionStartResult } from './constants';
 
+enum Messages {
+    JumpToSource = 'jump_to_source',
+}
+
 /**
  * Manages the lifecycle of a TensorBoard session.
  * Specifically, it:
@@ -330,7 +334,7 @@ export class TensorBoardSession {
                             return;
                         }
                         const args = { filename: event.data.filename, line: event.data.line };
-                        vscode.postMessage({ command: 'jump_to_source', args: args });
+                        vscode.postMessage({ command: '${Messages.JumpToSource}', args: args });
                     });
                 </script>
                 <iframe
@@ -369,7 +373,7 @@ export class TensorBoardSession {
             webviewPanel.webview.onDidReceiveMessage((message) => {
                 // Handle messages posted from the webview
                 switch (message.command) {
-                    case 'jump_to_source':
+                    case Messages.JumpToSource:
                         jumpToSource(message.args.filename, message.args.line);
                         break;
                     default:
