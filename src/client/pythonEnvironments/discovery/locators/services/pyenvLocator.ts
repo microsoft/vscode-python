@@ -216,6 +216,7 @@ function getKnownPyenvVersionParsers(): Map<string, (path: string) => Promise<IP
     parsers.set('jython', distroOnly);
     parsers.set('micropython', distroOnly);
     parsers.set('miniconda', distroOnly);
+    parsers.set('miniforge', distroOnly);
     parsers.set('pypy', pypyParser);
     parsers.set('pyston', distroOnly);
     parsers.set('stackless', distroOnly);
@@ -259,7 +260,7 @@ export function parsePyenvVersion(str: string): Promise<IPyenvVersionStrings | u
 async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
     const pyenvVersionDir = getPyenvVersionsDir();
 
-    const subDirs = getSubDirs(pyenvVersionDir, true);
+    const subDirs = getSubDirs(pyenvVersionDir, { resolveSymlinks: true });
     for await (const subDirPath of subDirs) {
         const envDirName = path.basename(subDirPath);
         const interpreterPath = await getInterpreterPathFromDir(subDirPath);

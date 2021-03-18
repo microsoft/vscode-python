@@ -88,7 +88,6 @@ export enum ProductType {
     RefactoringLibrary = 'RefactoringLibrary',
     WorkspaceSymbols = 'WorkspaceSymbols',
     DataScience = 'DataScience',
-    TensorBoard = 'TensorBoard',
 }
 
 export enum Product {
@@ -116,6 +115,8 @@ export enum Product {
     nbconvert = 22,
     pandas = 23,
     tensorboard = 24,
+    torchProfilerInstallName = 25,
+    torchProfilerImportName = 26,
 }
 
 export enum ModuleNamePurpose {
@@ -132,13 +133,18 @@ export interface IInstaller {
         cancel?: CancellationToken,
         isUpgrade?: boolean,
     ): Promise<InstallerResponse>;
-    install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
-    isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined>;
+    install(
+        product: Product,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken,
+        isUpgrade?: boolean,
+    ): Promise<InstallerResponse>;
+    isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean>;
     isProductVersionCompatible(
         product: Product,
         semVerRequirement: string,
         resource?: InterpreterUri,
-    ): Promise<ProductInstallStatus | undefined>;
+    ): Promise<ProductInstallStatus>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 
@@ -206,6 +212,11 @@ export interface IPythonSettings {
     readonly defaultInterpreterPath: string;
     readonly logging: ILoggingSettings;
     readonly useIsolation: boolean;
+    readonly tensorBoard: ITensorBoardSettings | undefined;
+}
+
+export interface ITensorBoardSettings {
+    readonly logDirectory: string | undefined;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -588,6 +599,7 @@ export interface IExperimentsManager {
  */
 export const IExperimentService = Symbol('IExperimentService');
 export interface IExperimentService {
+    activate(): Promise<void>;
     inExperiment(experimentName: string): Promise<boolean>;
     getExperimentValue<T extends boolean | number | string>(experimentName: string): Promise<T | undefined>;
 }

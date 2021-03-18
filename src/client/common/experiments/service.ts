@@ -28,6 +28,8 @@ export class ExperimentService implements IExperimentService {
      */
     public _optOutFrom: string[] = [];
 
+    private readonly enabled: boolean;
+
     private readonly experimentationService?: IExperimentationService;
 
     constructor(
@@ -43,12 +45,15 @@ export class ExperimentService implements IExperimentService {
         this._optInto = optInto.filter((exp) => !exp.endsWith('control'));
         this._optOutFrom = optOutFrom.filter((exp) => !exp.endsWith('control'));
 
-        // Don't initialize the experiment service if the extension's experiments setting is disabled.
-        let enabled = settings.get<boolean>('experiments.enabled');
-        if (enabled === undefined) {
-            enabled = true;
+        // If users opt out of all experiments we treat it as disabling them.
+        // The `experiments.enabled` setting also needs to be explicitly disabled, default to true otherwise.
+        if (this._optOutFrom.includes('All') || settings.get<boolean>('experiments.enabled') === false) {
+            this.enabled = false;
+        } else {
+            this.enabled = true;
         }
-        if (!enabled) {
+
+        if (!this.enabled) {
             return;
         }
 
@@ -73,6 +78,12 @@ export class ExperimentService implements IExperimentService {
         this.logExperiments();
     }
 
+    public async activate(): Promise<void> {
+        if (this.experimentationService) {
+            await this.experimentationService.initializePromise;
+        }
+    }
+
     public async inExperiment(experiment: string): Promise<boolean> {
         if (!this.experimentationService) {
             return false;
@@ -89,6 +100,11 @@ export class ExperimentService implements IExperimentService {
         }
 
         if (this._optInto.includes('All') || this._optInto.includes(experiment)) {
+            // Check if the user was already in the experiment server-side. We need to do
+            // this to ensure the experiment service is ready and internal states are fully
+            // synced with the experiment server.
+            await this.experimentationService.isCachedFlightEnabled(experiment);
+
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, {
                 expNameOptedInto: experiment,
             });

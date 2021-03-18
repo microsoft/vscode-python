@@ -196,6 +196,10 @@ suite('Pyenv Versions Parser Test', () => {
             expectedOutput: { pythonVer: undefined, distro: 'miniconda3', distroVer: '4.7.12' },
         },
         {
+            input: 'miniforge3-4.9.2',
+            expectedOutput: { pythonVer: undefined, distro: 'miniforge3', distroVer: '4.9.2' },
+        },
+        {
             input: 'pypy-c-jit-latest',
             expectedOutput: { pythonVer: undefined, distro: 'pypy-c-jit', distroVer: 'latest' },
         },

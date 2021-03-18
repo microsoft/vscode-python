@@ -59,21 +59,7 @@ import {
     WorkspaceFolderPickOptions,
     WorkspaceFoldersChangeEvent,
 } from 'vscode';
-import type {
-    NotebookCellLanguageChangeEvent as VSCNotebookCellLanguageChangeEvent,
-    NotebookCellMetadata,
-    NotebookCellMetadataChangeEvent as VSCNotebookCellMetadataChangeEvent,
-    NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
-    NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
-    NotebookConcatTextDocument,
-    NotebookContentProvider,
-    NotebookDocument,
-    NotebookDocumentFilter,
-    NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
-    NotebookEditor,
-    NotebookKernel,
-    NotebookKernelProvider,
-} from 'vscode-proposed';
+import type { NotebookConcatTextDocument, NotebookDocument } from 'vscode-proposed';
 
 import { IAsyncDisposable, Resource } from '../types';
 
@@ -1520,52 +1506,10 @@ export interface IClipboard {
      */
     writeText(value: string): Promise<void>;
 }
-
-export type NotebookCellsChangeEvent = { type: 'changeCells' } & VSCNotebookCellsChangeEvent;
-export type NotebookCellOutputsChangeEvent = { type: 'changeCellOutputs' } & VSCNotebookCellOutputsChangeEvent;
-export type NotebookCellMetadataChangeEvent = { type: 'changeCellMetadata' } & VSCNotebookCellMetadataChangeEvent;
-export type NotebookCellLanguageChangeEvent = { type: 'changeCellLanguage' } & VSCNotebookCellLanguageChangeEvent;
-export type NotebookDocumentMetadataChangeEvent = {
-    type: 'changeNotebookMetadata';
-} & VSCNotebookDocumentMetadataChangeEvent;
-export type NotebookCellChangedEvent =
-    | NotebookCellsChangeEvent
-    | NotebookCellOutputsChangeEvent
-    | NotebookCellMetadataChangeEvent
-    | NotebookDocumentMetadataChangeEvent
-    | NotebookCellLanguageChangeEvent;
 export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
-    readonly onDidChangeActiveNotebookKernel: Event<{
-        document: NotebookDocument;
-        kernel: NotebookKernel | undefined;
-    }>;
     readonly notebookDocuments: ReadonlyArray<NotebookDocument>;
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
-    readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
-    readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
-    readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
-    readonly notebookEditors: Readonly<NotebookEditor[]>;
-    readonly activeNotebookEditor: NotebookEditor | undefined;
-    registerNotebookContentProvider(
-        notebookType: string,
-        provider: NotebookContentProvider,
-        options?: {
-            /**
-             * Controls if outputs change will trigger notebook document content change and if it will be used in the diff editor
-             * Default to false. If the content provider doesn't persisit the outputs in the file document, this should be set to true.
-             */
-            transientOutputs: boolean;
-            /**
-             * Controls if a meetadata property change will trigger notebook document content change and if it will be used in the diff editor
-             * Default to false. If the content provider doesn't persisit a metadata property in the file document, it should be set to true.
-             */
-            transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
-        },
-    ): Disposable;
-
-    registerNotebookKernelProvider(selector: NotebookDocumentFilter, provider: NotebookKernelProvider): Disposable;
-
     createConcatTextDocument(notebook: NotebookDocument, selector?: DocumentSelector): NotebookConcatTextDocument;
 }

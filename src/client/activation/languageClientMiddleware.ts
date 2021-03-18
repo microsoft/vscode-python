@@ -7,6 +7,7 @@ import {
     CodeLens,
     Command,
     CompletionItem,
+    CompletionList,
     Declaration as VDeclaration,
     Definition,
     DefinitionLink,
@@ -33,9 +34,8 @@ import {
 import { IJupyterExtensionDependencyManager, IVSCodeNotebook } from '../common/application/types';
 
 import { HiddenFilePrefix, PYTHON_LANGUAGE } from '../common/constants';
-import { CollectLSRequestTiming, CollectNodeLSRequestTiming } from '../common/experiments/groups';
 import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IExperimentsManager, IExtensions } from '../common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensions } from '../common/types';
 import { isThenable } from '../common/utils/async';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
@@ -115,19 +115,16 @@ export class LanguageClientMiddleware implements Middleware {
         this.willSave = this.willSave.bind(this);
         this.willSaveWaitUntil = this.willSaveWaitUntil.bind(this);
 
-        let group: { experiment: string; control: string } | undefined;
-
         if (serverType === LanguageServerType.Microsoft) {
             this.eventName = EventName.PYTHON_LANGUAGE_SERVER_REQUEST;
-            group = CollectLSRequestTiming;
         } else if (serverType === LanguageServerType.Node) {
             this.eventName = EventName.LANGUAGE_SERVER_REQUEST;
-            group = CollectNodeLSRequestTiming;
+        } else if (serverType === LanguageServerType.JediLSP) {
+            this.eventName = EventName.JEDI_LANGUAGE_SERVER_REQUEST;
         } else {
             return;
         }
 
-        const experimentsManager = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
         const jupyterDependencyManager = this.serviceContainer.get<IJupyterExtensionDependencyManager>(
             IJupyterExtensionDependencyManager,
         );
@@ -136,10 +133,6 @@ export class LanguageClientMiddleware implements Middleware {
         const extensions = this.serviceContainer.get<IExtensions>(IExtensions);
         const fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
 
-        if (experimentsManager && !experimentsManager.inExperiment(group.experiment)) {
-            this.eventName = undefined;
-            experimentsManager.sendTelemetryIfInExperiment(group.control);
-        }
         // Enable notebook support if jupyter support is installed
         if (jupyterDependencyManager && jupyterDependencyManager.isJupyterExtensionInstalled) {
             this.notebookAddon = new NotebookMiddlewareAddon(
@@ -211,11 +204,23 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/completion', debounceFrequentCall)
+    @captureTelemetryForLSPMethod(
+        'textDocument/completion',
+        debounceFrequentCall,
+        LanguageClientMiddleware.completionLengthMeasure,
+    )
     public provideCompletionItem() {
         if (this.connected) {
             return this.callNext('provideCompletionItem', arguments);
         }
+    }
+
+    private static completionLengthMeasure(
+        _obj: LanguageClientMiddleware,
+        result: CompletionItem[] | CompletionList,
+    ): Record<string, number> {
+        const resultLength = Array.isArray(result) ? result.length : result.items.length;
+        return { resultLength };
     }
 
     @captureTelemetryForLSPMethod('textDocument/hover', debounceFrequentCall)
@@ -375,7 +380,11 @@ export class LanguageClientMiddleware implements Middleware {
     }
 }
 
-function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: number) {
+function captureTelemetryForLSPMethod(
+    method: string,
+    debounceMilliseconds: number,
+    lazyMeasures?: (this_: any, result: any) => Record<string, number>,
+) {
     return function (_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
 
@@ -413,16 +422,24 @@ function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: numb
             };
 
             const stopWatch = new StopWatch();
+            const sendTelemetry = (result: any) => {
+                let measures: number | Record<string, number> = stopWatch.elapsedTime;
+                if (lazyMeasures) {
+                    measures = {
+                        duration: measures,
+                        ...lazyMeasures(this, result),
+                    };
+                }
+                sendTelemetryEvent(eventName, measures, properties);
+            };
 
-            const result = originalMethod.apply(this, args);
+            let result = originalMethod.apply(this, args);
 
-            if (result && isThenable<void>(result)) {
-                result.then(() => {
-                    sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
-                });
-            } else {
-                sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
+            if (isThenable<any>(result)) {
+                return result.then(sendTelemetry);
             }
+
+            sendTelemetry(result);
 
             return result;
         };

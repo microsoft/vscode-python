@@ -147,3 +147,12 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
 export function normCasePath(filePath: string): string {
     return getOSType() === OSType.Windows ? nodepath.normalize(filePath).toUpperCase() : nodepath.normalize(filePath);
 }
+
+/**
+ * Returns true if given file path exists within the given parent directory, false otherwise.
+ * @param filePath File path to check for
+ * @param parentPath The potential parent path to check for
+ */
+export function isParentPath(filePath: string, parentPath: string): boolean {
+    return normCasePath(filePath).startsWith(normCasePath(parentPath));
+}

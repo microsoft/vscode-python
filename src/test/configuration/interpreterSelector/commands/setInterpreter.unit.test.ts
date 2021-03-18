@@ -27,6 +27,10 @@ import { EventName } from '../../../../client/telemetry/constants';
 import * as Telemetry from '../../../../client/telemetry';
 import { FindInterpreterVariants } from '../../../../client/common/experiments/groups';
 
+const untildify = require('untildify');
+
+type TelemetryEventType = { eventName: EventName; properties: Record<string, unknown> };
+
 suite('Set Interpreter Command', () => {
     let workspace: TypeMoq.IMock<IWorkspaceService>;
     let interpreterSelector: TypeMoq.IMock<IInterpreterSelector>;
@@ -54,6 +58,7 @@ suite('Set Interpreter Command', () => {
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
 
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
+        workspace.setup((w) => w.rootPath).returns(() => 'rootPath');
 
         experimentService = TypeMoq.Mock.ofType<IExperimentService>();
         experimentService
@@ -83,7 +88,7 @@ suite('Set Interpreter Command', () => {
     suite('Test method _pickInterpreter()', async () => {
         let _enterOrBrowseInterpreterPath: sinon.SinonStub;
         let sendTelemetryStub: sinon.SinonStub;
-        let telemetryEvent: { eventName: EventName; properties: { userAction: string } } | undefined;
+        let telemetryEvent: TelemetryEventType | undefined;
 
         const item: IInterpreterQuickPickItem = {
             description: '',
@@ -112,7 +117,7 @@ suite('Set Interpreter Command', () => {
             _enterOrBrowseInterpreterPath.resolves();
             sendTelemetryStub = sinon
                 .stub(Telemetry, 'sendTelemetryEvent')
-                .callsFake((eventName: EventName, _, properties: { userAction: string }) => {
+                .callsFake((eventName: EventName, _, properties: Record<string, unknown>) => {
                     telemetryEvent = {
                         eventName,
                         properties,
@@ -290,7 +295,7 @@ suite('Set Interpreter Command', () => {
                 .returns(() => Promise.resolve((undefined as unknown) as QuickPickItem))
                 .verifiable(TypeMoq.Times.once());
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
 
             multiStepInput.verifyAll();
         });
@@ -302,7 +307,7 @@ suite('Set Interpreter Command', () => {
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve('enteredPath'));
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
 
             expect(state.path).to.equal('enteredPath', '');
         });
@@ -316,7 +321,7 @@ suite('Set Interpreter Command', () => {
                 .setup((a) => a.showOpenDialog(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([expectedPathUri]));
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
 
             expect(state.path).to.equal(expectedPathUri.fsPath, '');
         });
@@ -339,7 +344,7 @@ suite('Set Interpreter Command', () => {
                 .verifiable(TypeMoq.Times.once());
             platformService.setup((p) => p.isWindows).returns(() => true);
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
 
             appShell.verifyAll();
         });
@@ -357,9 +362,139 @@ suite('Set Interpreter Command', () => {
             appShell.setup((a) => a.showOpenDialog(expectedParams)).verifiable(TypeMoq.Times.once());
             platformService.setup((p) => p.isWindows).returns(() => false);
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
 
             appShell.verifyAll();
+        });
+
+        suite('SELECT_INTERPRETER_ENTERED_EXISTS telemetry', async () => {
+            let sendTelemetryStub: sinon.SinonStub;
+            let telemetryEvents: TelemetryEventType[] = [];
+
+            setup(() => {
+                sendTelemetryStub = sinon
+                    .stub(Telemetry, 'sendTelemetryEvent')
+                    .callsFake((eventName: EventName, _, properties: Record<string, unknown>) => {
+                        telemetryEvents.push({
+                            eventName,
+                            properties,
+                        });
+                    });
+            });
+
+            teardown(() => {
+                telemetryEvents = [];
+                sinon.restore();
+                Telemetry._resetSharedProperties();
+            });
+
+            test('A telemetry event should be sent after manual entry of an intepreter path', async () => {
+                const state: InterpreterStateArgs = { path: undefined, workspace: undefined };
+                const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+                multiStepInput
+                    .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve('enteredPath'));
+
+                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
+                const existsTelemetry = telemetryEvents[1];
+
+                sinon.assert.callCount(sendTelemetryStub, 2);
+                expect(existsTelemetry.eventName).to.equal(EventName.SELECT_INTERPRETER_ENTERED_EXISTS);
+            });
+
+            test('A telemetry event should be sent after browsing for an interpreter', async () => {
+                const state: InterpreterStateArgs = { path: undefined, workspace: undefined };
+                const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+                const expectedParams = {
+                    filters: undefined,
+                    openLabel: InterpreterQuickPickList.browsePath.openButtonLabel(),
+                    canSelectMany: false,
+                    title: InterpreterQuickPickList.browsePath.title(),
+                };
+                multiStepInput
+                    .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(items[0]));
+                appShell
+                    .setup((a) => a.showOpenDialog(expectedParams))
+                    .returns(() => Promise.resolve([{ fsPath: 'browsedPath' } as Uri]));
+                platformService.setup((p) => p.isWindows).returns(() => false);
+
+                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
+                const existsTelemetry = telemetryEvents[1];
+
+                sinon.assert.callCount(sendTelemetryStub, 2);
+                expect(existsTelemetry.eventName).to.equal(EventName.SELECT_INTERPRETER_ENTERED_EXISTS);
+            });
+
+            enum SelectionPathType {
+                Absolute = 'absolute',
+                HomeRelative = 'home relative',
+                WorkspaceRelative = 'workspace relative',
+            }
+            type DiscoveredPropertyTestValues = { discovered: boolean; pathType: SelectionPathType };
+            const discoveredPropertyTestMatrix: DiscoveredPropertyTestValues[] = [
+                { discovered: true, pathType: SelectionPathType.Absolute },
+                { discovered: true, pathType: SelectionPathType.HomeRelative },
+                { discovered: true, pathType: SelectionPathType.WorkspaceRelative },
+                { discovered: false, pathType: SelectionPathType.Absolute },
+                { discovered: false, pathType: SelectionPathType.HomeRelative },
+                { discovered: false, pathType: SelectionPathType.WorkspaceRelative },
+            ];
+
+            const testDiscovered = async (
+                discovered: boolean,
+                pathType: SelectionPathType,
+            ): Promise<TelemetryEventType> => {
+                let interpreterPath = '';
+                let expandedPath = '';
+                switch (pathType) {
+                    case SelectionPathType.Absolute: {
+                        interpreterPath = path.resolve(path.join('is', 'absolute', 'path'));
+                        expandedPath = interpreterPath;
+                        break;
+                    }
+                    case SelectionPathType.HomeRelative: {
+                        interpreterPath = path.join('~', 'relative', 'path');
+                        expandedPath = untildify(interpreterPath);
+                        break;
+                    }
+                    case SelectionPathType.WorkspaceRelative:
+                    default: {
+                        interpreterPath = path.join('..', 'workspace', 'path');
+                        expandedPath = path.normalize(path.resolve(interpreterPath));
+                    }
+                }
+                const state: InterpreterStateArgs = { path: undefined, workspace: undefined };
+                const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+                multiStepInput
+                    .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(interpreterPath));
+
+                const suggestions = [
+                    { interpreter: { path: 'path/to/an/interpreter/' } },
+                    { interpreter: { path: '~/path/to/another/interpreter' } },
+                    { interpreter: { path: './.myvenv/bin/python' } },
+                ] as IInterpreterQuickPickItem[];
+
+                if (discovered) {
+                    suggestions.push({ interpreter: { path: expandedPath } } as IInterpreterQuickPickItem);
+                }
+
+                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, suggestions);
+                return telemetryEvents[1];
+            };
+
+            for (const testValue of discoveredPropertyTestMatrix) {
+                test(`A telemetry event should be sent with the discovered prop set to ${
+                    testValue.discovered
+                } if the interpreter had ${
+                    testValue.discovered ? 'already' : 'not'
+                } been discovered, with an interpreter path path that is ${testValue.pathType})`, async function () {
+                    const telemetryResult = await testDiscovered(testValue.discovered, testValue.pathType);
+
+                    expect(telemetryResult.properties).to.deep.equal({ discovered: testValue.discovered });
+                });
+            }
         });
     });
 

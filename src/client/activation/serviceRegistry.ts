@@ -6,7 +6,6 @@ import { INugetRepository } from '../common/nuget/types';
 import { BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../common/types';
 import { IServiceManager } from '../ioc/types';
 import { ProposePylanceBanner } from '../languageServices/proposeLanguageServerBanner';
-import { AATesting } from './aaTesting';
 import { ExtensionActivationManager } from './activationManager';
 import { LanguageServerExtensionActivationService } from './activationService';
 import { DownloadBetaChannelRule, DownloadDailyChannelRule } from './common/downloadChannelRules';
@@ -190,5 +189,4 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         IExtensionSingleActivationService,
         ExtensionSurveyPrompt,
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, AATesting);
 }

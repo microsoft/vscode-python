@@ -4,10 +4,9 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
-import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceManager } from '../../../client/ioc/types';
-import { ExtensionActivationForTerminalActivation, TerminalAutoActivation } from '../../../client/terminals/activation';
+import { TerminalAutoActivation } from '../../../client/terminals/activation';
 import { CodeExecutionManager } from '../../../client/terminals/codeExecution/codeExecutionManager';
 import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/codeExecution/djangoShellCodeExecution';
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
@@ -52,13 +51,6 @@ suite('Common Terminal Service Registry', () => {
 
         verify(
             serviceManager.addSingleton<ITerminalAutoActivation>(ITerminalAutoActivation, TerminalAutoActivation),
-        ).once();
-
-        verify(
-            serviceManager.addSingleton<IExtensionSingleActivationService>(
-                IExtensionSingleActivationService,
-                ExtensionActivationForTerminalActivation,
-            ),
         ).once();
     });
 });

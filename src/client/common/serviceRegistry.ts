@@ -20,6 +20,7 @@ import { ClipboardService } from './application/clipboard';
 import { CommandManager } from './application/commandManager';
 import { IPythonCommandManager } from './application/commands';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand';
+import { ReportIssueCommandHandler } from './application/commands/reportIssueCommand';
 import { CustomEditorService } from './application/customEditorService';
 import { DebugService } from './application/debugService';
 import { DebugSessionTelemetry } from './application/debugSessionTelemetry';
@@ -49,7 +50,6 @@ import { ConfigurationService } from './configuration/service';
 import { PipEnvExecutionPath } from './configuration/executionSettings/pipEnvExecution';
 import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
-import { DebuggerDataViewerExperimentEnabler } from './experiments/debuggerDataViewerExperimentEnabler';
 import { ExperimentsManager } from './experiments/manager';
 import { ExperimentService } from './experiments/service';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
@@ -215,7 +215,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        DebuggerDataViewerExperimentEnabler,
+        ReportIssueCommandHandler,
     );
     serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
     serviceManager.addSingleton<IExtensionChannelRule>(

@@ -5,9 +5,7 @@
 
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
-import { PreWarmActivatedEnvironmentVariables } from './activation/preWarmVariables';
 import { EnvironmentActivationService } from './activation/service';
-import { TerminalEnvironmentActivationService } from './activation/terminalEnvironmentActivationService';
 import { IEnvironmentActivationService } from './activation/types';
 import { InterpreterAutoSelectionService } from './autoSelection/index';
 import { InterpreterEvaluation } from './autoSelection/interpreterSecurity/interpreterEvaluation';
@@ -50,7 +48,6 @@ import {
     IShebangCodeLensProvider,
 } from './contracts';
 import { InterpreterDisplay } from './display';
-import { InterpreterSelectionTip } from './display/interpreterSelectionTip';
 import { InterpreterLocatorProgressStatubarHandler } from './display/progressDisplay';
 import { ShebangCodeLensProvider } from './display/shebangCodeLensProvider';
 import { InterpreterHelper } from './helpers';
@@ -88,10 +85,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
     serviceManager.addSingleton<IInterpreterSecurityService>(IInterpreterSecurityService, InterpreterSecurityService);
 
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, VirtualEnvironmentPrompt);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        InterpreterSelectionTip,
-    );
 
     serviceManager.addSingleton<IInterpreterVersionService>(IInterpreterVersionService, InterpreterVersionService);
 
@@ -154,11 +147,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
     );
 
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, CondaInheritEnvPrompt);
-
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        PreWarmActivatedEnvironmentVariables,
-    );
 }
 
 export function registerTypes(serviceManager: IServiceManager): void {
@@ -170,10 +158,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IEnvironmentActivationService>(
         EnvironmentActivationService,
         EnvironmentActivationService,
-    );
-    serviceManager.addSingleton<IEnvironmentActivationService>(
-        TerminalEnvironmentActivationService,
-        TerminalEnvironmentActivationService,
     );
     serviceManager.addSingleton<IEnvironmentActivationService>(
         IEnvironmentActivationService,

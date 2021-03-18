@@ -206,7 +206,7 @@
     "StartPage.getStarted": "Python - 开始",
     "StartPage.pythonExtensionTitle": "Python 扩展",
     "StartPage.createJupyterNotebook": "创建 Jupyter 笔记本",
-    "StartPage.notebookDescription": "- 在命令面板 (<div class=\"italics\">Shift + Command + P</div>) 中运行 \"<div class=\"link italics\" role=\"button\" onclick={0}>创建新的 Jupyter 笔记本</div>\" <br />- 探索 <div class=\"link\" role=\"button\" onclick={1}>示例笔记本</div> 来了解笔记本的功能",
+    "StartPage.notebookDescription": "- 在命令面板 (<div class=\"italics\">Shift + Command + P</div>) 中运行 \"<div class=\"link italics\" role=\"button\" onclick={0}>创建新的 笔记本</div>\" <br />- 探索 <div class=\"link\" role=\"button\" onclick={1}>示例笔记本</div> 来了解笔记本的功能",
     "StartPage.createAPythonFile": "创建 Python 文件",
     "StartPage.pythonFileDescription": "- 创建以 .py 为扩展名的<div class=\"link\" role=\"button\" onclick={0}>新文件</div>",
     "StartPage.openInteractiveWindow": "使用交互式窗口开发 Python 脚本",

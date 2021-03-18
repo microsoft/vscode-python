@@ -796,59 +796,7 @@ export interface IEventNamePropertyMapping {
         hashedName: string;
     };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
-    /**
-     * Telemetry event sent with details of selection in prompt
-     * `Prompt message` :- 'Linter ${productName} is not installed'
-     */
-    [EventName.LINTER_NOT_INSTALLED_PROMPT]: {
-        /**
-         * Name of the linter
-         *
-         * @type {LinterId}
-         */
-        tool?: LinterId;
-        /**
-         * `select` When 'Select linter' option is selected
-         * `disablePrompt` When 'Do not show again' option is selected
-         * `install` When 'Install' option is selected
-         *
-         * @type {('select' | 'disablePrompt' | 'install')}
-         */
-        action: 'select' | 'disablePrompt' | 'install';
-    };
 
-    /**
-     * Telemetry event sent before showing the linter prompt to install
-     * pylint or flake8.
-     */
-    [EventName.LINTER_INSTALL_PROMPT]: {
-        /**
-         * Identify which prompt was shown.
-         *
-         * @type {('old' | 'noPrompt' | 'pylintFirst' | 'flake8first')}
-         */
-        prompt: 'old' | 'noPrompt' | 'pylintFirst' | 'flake8first';
-    };
-
-    /**
-     * Telemetry event sent after user had selected one of the options
-     * provided by the linter prompt.
-     */
-    [EventName.LINTER_INSTALL_PROMPT_ACTION]: {
-        /**
-         * Identify which prompt was shown.
-         *
-         * @type {('pylintFirst' | 'flake8first')}
-         */
-        prompt: 'pylintFirst' | 'flake8first';
-
-        /**
-         * Which of the following actions did user select
-         *
-         * @type {('pylint' | 'flake8' | 'disablePrompt' | 'close')}
-         */
-        action: 'installPylint' | 'installFlake8' | 'disablePrompt' | 'close';
-    };
     /**
      * Telemetry event sent when installing modules
      */
@@ -907,15 +855,6 @@ export interface IEventNamePropertyMapping {
         osVersion?: string;
     };
     /**
-     * Telemetry is sent with details about the play run file icon
-     */
-    [EventName.PLAY_BUTTON_ICON_DISABLED]: {
-        /**
-         * Carries `true` if play button icon is not shown (because code runner is installed), `false` otherwise
-         */
-        disabled: boolean;
-    };
-    /**
      * Telemetry event sent when 'Select Interpreter' command is invoked.
      */
     [EventName.SELECT_INTERPRETER]: never | undefined;
@@ -948,6 +887,15 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the user select to either enter or find the interpreter from the quickpick.
      */
     [EventName.SELECT_INTERPRETER_ENTER_OR_FIND]: never | undefined;
+    /**
+     * Telemetry event sent after the user entered an interpreter path, or found it by browsing the filesystem.
+     */
+    [EventName.SELECT_INTERPRETER_ENTERED_EXISTS]: {
+        /**
+         * Carries `true` if the interpreter that was selected had already been discovered earlier (exists in the cache).
+         */
+        discovered: boolean;
+    };
     /**
      * Telemetry event sent with details after updating the python interpreter
      */
@@ -984,19 +932,6 @@ export interface IEventNamePropertyMapping {
          * @type {boolean}
          */
         failed?: boolean;
-        /**
-         * Whether the environment was activated within a terminal or not.
-         *
-         * @type {boolean}
-         */
-        activatedInTerminal?: boolean;
-        /**
-         * Whether the environment was activated by the wrapper class.
-         * If `true`, this telemetry is sent by the class that wraps the two activation providers   .
-         *
-         * @type {boolean}
-         */
-        activatedByWrapper?: boolean;
     };
     /**
      * Telemetry event sent when getting activation commands for active interpreter
@@ -1299,6 +1234,8 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the language server
+     *
+     * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
@@ -1367,6 +1304,8 @@ export interface IEventNamePropertyMapping {
     [EventName.LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the Node.js server
+     *
+     * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.LANGUAGE_SERVER_REQUEST]: unknown;
     /**
@@ -1403,6 +1342,8 @@ export interface IEventNamePropertyMapping {
     [EventName.JEDI_LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the Node.js server
+     *
+     * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.JEDI_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
@@ -1859,4 +1800,15 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when we find an active integrated terminal running tensorboard.
      */
     [EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL]: never | undefined;
+    /**
+     * Telemetry event sent after attempting to install TensorBoard session dependencies.
+     * Note, this is only sent if install was attempted. It is not sent if the user opted
+     * not to install, or if all dependencies were already installed.
+     */
+    [EventName.TENSORBOARD_PACKAGE_INSTALL_RESULT]: {
+        wasProfilerPluginAttempted: boolean;
+        wasTensorBoardAttempted: boolean;
+        wasProfilerPluginInstalled: boolean;
+        wasTensorBoardInstalled: boolean;
+    };
 }

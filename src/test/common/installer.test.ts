@@ -7,6 +7,7 @@ import { ActiveResourceService } from '../../client/common/application/activeRes
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ClipboardService } from '../../client/common/application/clipboard';
 import { ReloadVSCodeCommandHandler } from '../../client/common/application/commands/reloadCommand';
+import { ReportIssueCommandHandler } from '../../client/common/application/commands/reportIssueCommand';
 import { CustomEditorService } from '../../client/common/application/customEditorService';
 import { DebugService } from '../../client/common/application/debugService';
 import { DebugSessionTelemetry } from '../../client/common/application/debugSessionTelemetry';
@@ -52,7 +53,6 @@ import {
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
-    TensorBoardProductPathService,
     TestFrameworkProductPathService,
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
@@ -208,12 +208,6 @@ suite('Installer', () => {
             RefactoringLibraryProductPathService,
             ProductType.RefactoringLibrary,
         );
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
-            TensorBoardProductPathService,
-            ProductType.TensorBoard,
-        );
-
         ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
         ioc.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
         ioc.serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
@@ -285,6 +279,10 @@ suite('Installer', () => {
             IExtensionSingleActivationService,
             ReloadVSCodeCommandHandler,
         );
+        ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService,
+            ReportIssueCommandHandler,
+        );
         ioc.serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
         ioc.serviceManager.addSingleton<IExtensionChannelRule>(
             IExtensionChannelRule,
@@ -330,9 +328,11 @@ suite('Installer', () => {
     }
     getNamesAndValues<Product>(Product).forEach((prod) => {
         test(`Ensure isInstalled for Product: '${prod.name}' executes the right command`, async function () {
-            if (new ProductService().getProductType(prod.value) === ProductType.DataScience) {
+            const productType = new ProductService().getProductType(prod.value);
+            if (productType === ProductType.DataScience || productType === ProductType.Linter) {
                 return this.skip();
             }
+
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
                 IModuleInstaller,
                 new MockModuleInstaller('one', false),
@@ -367,7 +367,7 @@ suite('Installer', () => {
     getNamesAndValues<Product>(Product).forEach((prod) => {
         test(`Ensure install for Product: '${prod.name}' executes the right command in IModuleInstaller`, async function () {
             const productType = new ProductService().getProductType(prod.value);
-            if (productType === ProductType.DataScience || productType === ProductType.TensorBoard) {
+            if (productType === ProductType.DataScience || productType === ProductType.Linter) {
                 return this.skip();
             }
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(

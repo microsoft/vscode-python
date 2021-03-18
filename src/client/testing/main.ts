@@ -19,17 +19,9 @@ import {
     IWorkspaceService,
 } from '../common/application/types';
 import * as constants from '../common/constants';
-import { AlwaysDisplayTestExplorerGroups } from '../common/experiments/groups';
 import '../common/extensions';
 import { traceError } from '../common/logger';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentsManager,
-    IOutputChannel,
-    Product,
-    Resource,
-} from '../common/types';
+import { IConfigurationService, IDisposableRegistry, IOutputChannel, Product, Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
@@ -128,20 +120,10 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
 
         this.registerHandlers();
         this.registerCommands();
-        this.checkExperiments();
         this.autoDiscoverTests(undefined).catch((ex) =>
             traceError('Failed to auto discover tests upon activation', ex),
         );
         await this.registerSymbolProvider(symbolProvider);
-    }
-    public checkExperiments() {
-        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        if (experiments.inExperiment(AlwaysDisplayTestExplorerGroups.experiment)) {
-            const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
-            commandManager.executeCommand('setContext', 'testsDiscovered', true).then(noop, noop);
-        } else {
-            experiments.sendTelemetryIfInExperiment(AlwaysDisplayTestExplorerGroups.control);
-        }
     }
     public async getTestManager(
         displayTestNotConfiguredMessage: boolean,

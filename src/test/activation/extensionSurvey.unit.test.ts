@@ -14,7 +14,7 @@ import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IPlatformService } from '../../client/common/platform/types';
 import {
     IBrowserService,
-    IExperimentsManager,
+    IExperimentService,
     IPersistentState,
     IPersistentStateFactory,
     IRandom,
@@ -29,14 +29,14 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
     let browserService: TypeMoq.IMock<IBrowserService>;
     let random: TypeMoq.IMock<IRandom>;
     let persistentStateFactory: IPersistentStateFactory;
-    let experiments: TypeMoq.IMock<IExperimentsManager>;
+    let experiments: TypeMoq.IMock<IExperimentService>;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let appEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
     let disableSurveyForTime: TypeMoq.IMock<IPersistentState<any>>;
     let doNotShowAgain: TypeMoq.IMock<IPersistentState<any>>;
     let extensionSurveyPrompt: ExtensionSurveyPrompt;
     setup(() => {
-        experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
+        experiments = TypeMoq.Mock.ofType<IExperimentService>();
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         browserService = TypeMoq.Mock.ofType<IBrowserService>();
         random = TypeMoq.Mock.ofType<IRandom>();
@@ -176,7 +176,7 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
 });
 
 suite('Extension survey prompt - showSurvey()', () => {
-    let experiments: TypeMoq.IMock<IExperimentsManager>;
+    let experiments: TypeMoq.IMock<IExperimentService>;
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let browserService: TypeMoq.IMock<IBrowserService>;
     let random: TypeMoq.IMock<IRandom>;
@@ -205,7 +205,7 @@ suite('Extension survey prompt - showSurvey()', () => {
         when(
             persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false),
         ).thenReturn(doNotShowAgain.object);
-        experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
+        experiments = TypeMoq.Mock.ofType<IExperimentService>();
         extensionSurveyPrompt = new ExtensionSurveyPrompt(
             appShell.object,
             browserService.object,
@@ -418,7 +418,7 @@ suite('Extension survey prompt - activate()', () => {
     let persistentStateFactory: IPersistentStateFactory;
     let shouldShowBanner: sinon.SinonStub<any>;
     let showSurvey: sinon.SinonStub<any>;
-    let experiments: TypeMoq.IMock<IExperimentsManager>;
+    let experiments: TypeMoq.IMock<IExperimentService>;
     let extensionSurveyPrompt: ExtensionSurveyPrompt;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let appEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
@@ -427,7 +427,7 @@ suite('Extension survey prompt - activate()', () => {
         browserService = TypeMoq.Mock.ofType<IBrowserService>();
         random = TypeMoq.Mock.ofType<IRandom>();
         persistentStateFactory = mock(PersistentStateFactory);
-        experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
+        experiments = TypeMoq.Mock.ofType<IExperimentService>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         appEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>();
     });
@@ -436,10 +436,9 @@ suite('Extension survey prompt - activate()', () => {
         sinon.restore();
     });
 
-    test("If user is not in 'ShowExtensionPrompt' experiment, send telemetry if in control group & return", async () => {
+    test("If user is not in 'ShowExtensionSurveyPrompt' experiment, return immediately", async () => {
         shouldShowBanner = sinon.stub(ExtensionSurveyPrompt.prototype, 'shouldShowBanner');
         shouldShowBanner.callsFake(() => false);
-        showSurvey = sinon.stub(ExtensionSurveyPrompt.prototype, 'showSurvey');
         extensionSurveyPrompt = new ExtensionSurveyPrompt(
             appShell.object,
             browserService.object,
@@ -451,19 +450,15 @@ suite('Extension survey prompt - activate()', () => {
             10,
         );
         experiments
-            .setup((exp) => exp.inExperiment(ShowExtensionSurveyPrompt.enabled))
-            .returns(() => false)
-            .verifiable(TypeMoq.Times.once());
-        experiments
-            .setup((exp) => exp.sendTelemetryIfInExperiment(ShowExtensionSurveyPrompt.control))
-            .returns(() => undefined)
+            .setup((exp) => exp.inExperiment(ShowExtensionSurveyPrompt.experiment))
+            .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
         await extensionSurveyPrompt.activate();
         assert.ok(shouldShowBanner.notCalled);
         experiments.verifyAll();
     });
 
-    test("No survey is shown if shouldShowBanner() returns false and user is in 'ShowExtensionPrompt' experiment", async () => {
+    test("No survey is shown if shouldShowBanner() returns false and user is in 'ShowExtensionSurveyPrompt' experiment", async () => {
         const deferred = createDeferred<true>();
         shouldShowBanner = sinon.stub(ExtensionSurveyPrompt.prototype, 'shouldShowBanner');
         shouldShowBanner.callsFake(() => false);
@@ -485,13 +480,9 @@ suite('Extension survey prompt - activate()', () => {
             50,
         );
         experiments
-            .setup((exp) => exp.inExperiment(ShowExtensionSurveyPrompt.enabled))
-            .returns(() => true)
+            .setup((exp) => exp.inExperiment(ShowExtensionSurveyPrompt.experiment))
+            .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
-        experiments
-            .setup((exp) => exp.sendTelemetryIfInExperiment(TypeMoq.It.isAny()))
-            .returns(() => undefined)
-            .verifiable(TypeMoq.Times.never());
         await extensionSurveyPrompt.activate();
         assert.ok(shouldShowBanner.calledOnce);
 
@@ -501,7 +492,7 @@ suite('Extension survey prompt - activate()', () => {
         experiments.verifyAll();
     });
 
-    test("Survey is shown after waitTimeToShowSurvey if shouldShowBanner() returns true and user is in 'ShowExtensionPrompt' experiment", async () => {
+    test("Survey is shown after waitTimeToShowSurvey if shouldShowBanner() returns true and user is in 'ShowExtensionSurveyPrompt' experiment", async () => {
         const deferred = createDeferred<true>();
         shouldShowBanner = sinon.stub(ExtensionSurveyPrompt.prototype, 'shouldShowBanner');
         shouldShowBanner.callsFake(() => true);
@@ -523,13 +514,9 @@ suite('Extension survey prompt - activate()', () => {
             50,
         );
         experiments
-            .setup((exp) => exp.inExperiment(ShowExtensionSurveyPrompt.enabled))
-            .returns(() => true)
+            .setup((exp) => exp.inExperiment(ShowExtensionSurveyPrompt.experiment))
+            .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
-        experiments
-            .setup((exp) => exp.sendTelemetryIfInExperiment(TypeMoq.It.isAny()))
-            .returns(() => undefined)
-            .verifiable(TypeMoq.Times.never());
         await extensionSurveyPrompt.activate();
         assert.ok(shouldShowBanner.calledOnce);
 

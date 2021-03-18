@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2021.3.0-dev",
+    "version": "2021.4.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -28,7 +28,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.53.0"
+        "vscode": "^1.54.0"
     },
     "keywords": [
         "python",
@@ -47,6 +47,7 @@
         "Machine Learning",
         "Notebooks"
     ],
+    "requiresWorkspaceTrust": "onStart",
     "activationEvents": [
         "onLanguage:python",
         "onDebugResolve:python",
@@ -70,6 +71,7 @@
         "onCommand:python.buildWorkspaceSymbols",
         "onCommand:python.startREPL",
         "onCommand:python.goToPythonObject",
+        "onCommand:python.reportIssue",
         "onCommand:python.setLinter",
         "onCommand:python.enableLinting",
         "onCommand:python.createTerminal",
@@ -323,6 +325,11 @@
                 "category": "Python"
             },
             {
+                "command": "python.reportIssue",
+                "title": "%python.command.python.reportIssue.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.setLinter",
                 "title": "%python.command.python.setLinter.title%",
                 "category": "Python"
@@ -399,12 +406,12 @@
                     "group": "Python"
                 }
             ],
-            "editor/title": [
+            "editor/title/run": [
                 {
                     "command": "python.execInTerminal-icon",
                     "title": "%python.command.python.execInTerminal.title%",
                     "group": "navigation",
-                    "when": "resourceLangId == python && python.showPlayIcon && !isInDiffEditor"
+                    "when": "resourceLangId == python && !isInDiffEditor"
                 }
             ],
             "explorer/context": [
@@ -739,6 +746,10 @@
                                 "description": "Debug only user-written code.",
                                 "default": true
                             },
+                            "debugAdapterPath": {
+                                "type": "string",
+                                "description": "Path (fully qualified) to the python debug adapter executable."
+                            },
                             "gevent": {
                                 "type": "boolean",
                                 "description": "Enable debugging of gevent monkey-patched code.",
@@ -828,6 +839,10 @@
                                 "type": "boolean",
                                 "description": "Debug only user-written code.",
                                 "default": true
+                            },
+                            "debugAdapterPath": {
+                                "type": "string",
+                                "description": "Path (fully qualified) to the python debug adapter executable."
                             }
                         }
                     },
@@ -917,6 +932,10 @@
                                 "type": "boolean",
                                 "description": "Debug only user-written code.",
                                 "default": true
+                            },
+                            "debugAdapterPath": {
+                                "type": "string",
+                                "description": "Path (fully qualified) to the python debug adapter executable."
                             },
                             "django": {
                                 "type": "boolean",
@@ -1035,24 +1054,12 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "AlwaysDisplayTestExplorer - experiment",
-                            "ShowExtensionSurveyPrompt - enabled",
-                            "Reload - experiment",
-                            "AA_testing - experiment",
-                            "LocalZMQKernel - experiment",
-                            "NativeNotebook - experiment",
-                            "CustomEditorSupport - experiment",
-                            "UseTerminalToGetActivatedEnvVars - experiment",
-                            "CollectLSRequestTiming - experiment",
-                            "CollectNodeLSRequestTiming - experiment",
                             "DeprecatePythonPath - experiment",
-                            "RunByLine - experiment",
                             "tryPylance",
-                            "debuggerDataViewer",
-                            "pythonSendEntireLineToREPL",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
                             "pythonJediLSP",
+                            "pythonSurveyNotification",
                             "All"
                         ]
                     },
@@ -1064,24 +1071,12 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "AlwaysDisplayTestExplorer - experiment",
-                            "ShowExtensionSurveyPrompt - enabled",
-                            "Reload - experiment",
-                            "AA_testing - experiment",
-                            "LocalZMQKernel - experiment",
-                            "NativeNotebook - experiment",
-                            "CustomEditorSupport - experiment",
-                            "UseTerminalToGetActivatedEnvVars - experiment",
-                            "CollectLSRequestTiming - experiment",
-                            "CollectNodeLSRequestTiming - experiment",
                             "DeprecatePythonPath - experiment",
-                            "RunByLine - experiment",
                             "tryPylance",
-                            "debuggerDataViewer",
-                            "pythonSendEntireLineToREPL",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
                             "pythonJediLSP",
+                            "pythonSurveyNotification",
                             "All"
                         ]
                     },
@@ -1166,7 +1161,7 @@
                 "python.jediMemoryLimit": {
                     "type": "number",
                     "default": 0,
-                    "description": "Memory limit for the Jedi completion engine in megabytes. Zero (default) means 1024 MB. -1 means unlimited (disable memory limit check)",
+                    "description": "Memory limit for the Jedi completion engine in megabytes. Zero (default) means 3072 MB. -1 means unlimited (disable memory limit check)",
                     "scope": "resource"
                 },
                 "python.jediPath": {
@@ -1659,6 +1654,11 @@
                     "default": "",
                     "scope": "resource"
                 },
+                "python.tensorBoard.logDirectory": {
+                    "type": "string",
+                    "description": "Set this setting to your preferred TensorBoard log directory to skip log directory prompt when starting TensorBoard.",
+                    "scope": "application"
+                },
                 "python.terminal.activateEnvironment": {
                     "type": "boolean",
                     "default": true,
@@ -1895,7 +1895,10 @@
             {
                 "id": "ini",
                 "filenames": [
-                    ".flake8"
+                    ".flake8",
+                    ".pep8",
+                    ".pylintrc",
+                    ".pypirc"
                 ]
             },
             {
@@ -2012,7 +2015,7 @@
         "named-js-regexp": "^1.3.3",
         "node-fetch": "^2.6.1",
         "node-stream-zip": "^1.6.0",
-        "pidusage": "^1.2.0",
+        "pidusage-tree": "^2.0.5",
         "portfinder": "^1.0.25",
         "reflect-metadata": "^0.1.12",
         "request": "^2.87.0",
@@ -2033,10 +2036,10 @@
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.1.4",
-        "vscode-jsonrpc": "6.0.0-next.7",
-        "vscode-languageclient": "7.0.0-next.14",
-        "vscode-languageserver": "7.0.0-next.11",
-        "vscode-languageserver-protocol": "3.16.0-next.11",
+        "vscode-jsonrpc": "6.0.0",
+        "vscode-languageclient": "7.0.0",
+        "vscode-languageserver": "7.0.0",
+        "vscode-languageserver-protocol": "3.16.0",
         "vscode-tas-client": "^0.1.17",
         "winreg": "^1.2.4",
         "winston": "^3.2.1",
@@ -2173,7 +2176,7 @@
         "range-inclusive": "^1.0.2",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
-        "react-dev-utils": "^5.0.2",
+        "react-dev-utils": "^11.0.4",
         "react-dom": "^16.5.2",
         "react-svgmt": "^1.1.8",
         "remove-files-webpack-plugin": "^1.4.0",
