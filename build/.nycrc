@@ -2,8 +2,13 @@
     "extends": "@istanbuljs/nyc-config-typescript",
     "all": true,
     "include": [
-        "src/client/**/*.ts", "src/test/**/*.js",
-        "src/startPage-ui/**/*.ts", "src/startPage-ui/**/*.js"
+        "src/client/**/*.ts",
+        "src/test/**/*.js"
     ],
-    "exclude": ["src/test/**/*.ts", "src/test/**/*.js"]
+    "exclude": [
+        "src/test/**/*.ts",
+        "src/test/**/*.js",
+        "src/startPage-ui/**/*.ts",
+        "src/startPage-ui/**/*.js"
+    ]
 }
