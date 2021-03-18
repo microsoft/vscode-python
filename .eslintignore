@@ -561,7 +561,6 @@ src/client/common/installer/productInstaller.ts
 src/client/common/installer/channelManager.ts
 src/client/common/installer/moduleInstaller.ts
 src/client/common/installer/types.ts
-src/client/common/installer/poetryInstaller.ts
 src/client/common/installer/pipEnvInstaller.ts
 src/client/common/installer/productService.ts
 src/client/common/installer/pipInstaller.ts

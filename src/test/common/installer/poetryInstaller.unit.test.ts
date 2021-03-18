@@ -121,7 +121,7 @@ suite('Module Installer - Poetry', () => {
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
         when(fileSystem.fileExists(anything())).thenResolve(true);
         when(processServiceFactory.create(uri)).thenResolve(instance(processService));
-        when(processService.shellExec('poetry path', anything())).thenResolve({ stderr: '', stdout: '' });
+        when(processService.shellExec('poetry path env list', anything())).thenResolve({ stderr: '', stdout: '' });
 
         const supported = await poetryInstaller.isSupported(Uri.file(__filename));
 

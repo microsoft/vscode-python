@@ -15,18 +15,23 @@ import { ExecutionInfo, IConfigurationService } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
 import { InterpreterUri } from './types';
+
 export const poetryName = 'poetry';
 const poetryFile = 'poetry.lock';
 
 @injectable()
 export class PoetryInstaller extends ModuleInstaller {
+    // eslint-disable-next-line class-methods-use-this
     public get name(): string {
         return 'poetry';
     }
 
-    public get displayName() {
+    // eslint-disable-next-line class-methods-use-this
+    public get displayName(): string {
         return poetryName;
     }
+
+    // eslint-disable-next-line class-methods-use-this
     public get priority(): number {
         return 10;
     }
@@ -40,6 +45,7 @@ export class PoetryInstaller extends ModuleInstaller {
     ) {
         super(serviceContainer);
     }
+
     public async isSupported(resource?: InterpreterUri): Promise<boolean> {
         if (!resource) {
             return false;
@@ -53,7 +59,8 @@ export class PoetryInstaller extends ModuleInstaller {
         }
         return this.isPoetryAvailable(workspaceFolder.uri);
     }
-    protected async isPoetryAvailable(workfolder: Uri) {
+
+    protected async isPoetryAvailable(workfolder: Uri): Promise<boolean> {
         try {
             const processService = await this.processFactory.create(workfolder);
             const execPath = this.configurationService.getSettings(workfolder).poetryPath;
@@ -64,6 +71,7 @@ export class PoetryInstaller extends ModuleInstaller {
             return false;
         }
     }
+
     protected async getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo> {
         const execPath = this.configurationService.getSettings(isResource(resource) ? resource : undefined).poetryPath;
         const args = ['add', '--dev', moduleName];
