@@ -117,7 +117,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
         python: ['2.7', '3.9']
-        test-suite: [ts-unit, python-unit, venv, single-workspace, debugger, functional, func-cov]
+        test-suite: [ts-unit, python-unit, venv, single-workspace, debugger, functional]
         exclude:
           # For fast PR turn-around, skip 2.7 under Windows.
           - os: windows-latest
@@ -318,7 +318,7 @@ jobs:
       # Run TypeScript unit tests only for Python 3.X.
       - name: Run functional tests with coverage
         run: npm run test:functional:cover
-        if: matrix.test-suite == 'func-cov' && startsWith(matrix.python, 3.)
+        if: matrix.test-suite == 'functional' && startsWith(matrix.python, 3.)
 
       # Upload functional test coverage reports for later use in the "reports" job.
       - name: Upload functional test coverage reports
@@ -327,7 +327,7 @@ jobs:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: ${{ env.special-working-directory }}/.nyc_output
           retention-days: 1
-        if: matrix.test-suite == 'func-cov' && startsWith(matrix.python, 3.)
+        if: matrix.test-suite == 'functional' && startsWith(matrix.python, 3.)
 
   smoke-tests:
     name: Smoke tests
