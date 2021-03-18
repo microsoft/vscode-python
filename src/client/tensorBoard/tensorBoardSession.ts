@@ -370,7 +370,7 @@ export class TensorBoardSession {
                 // Handle messages posted from the webview
                 switch (message.command) {
                     case 'jump_to_source':
-                        void jumpToSource(message.args.filename, message.args.line);
+                        jumpToSource(message.args.filename, message.args.line);
                         break;
                     default:
                         break;
@@ -392,7 +392,7 @@ export class TensorBoardSession {
     }
 }
 
-async function jumpToSource(fsPath: string, line: number) {
+function jumpToSource(fsPath: string, line: number) {
     if (fs.existsSync(fsPath)) {
         const uri = Uri.file(fsPath);
         workspace
