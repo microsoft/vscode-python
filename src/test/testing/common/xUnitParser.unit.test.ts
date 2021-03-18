@@ -4,7 +4,6 @@
 'use strict';
 
 import { expect } from 'chai';
-import * as assert from 'assert';
 import * as typeMoq from 'typemoq';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IXUnitParser, Tests, TestStatus } from '../../../client/testing/common/types';
@@ -136,59 +135,6 @@ suite('Testing - parse JUnit XML file', () => {
 
         expect(tests).to.deep.equal(expected);
         fs.verifyAll();
-    });
-
-    test('timeout exceeded - empty file', async () => {
-        const tests: Tests = createEmptyResults();
-        const filename = 'x/y/z/results.xml';
-        fs.setup((f) => f.readFile(filename)).returns(() => Promise.resolve(``));
-
-        assert.rejects(
-            () => parser.updateResultsFromXmlLogFile(tests, filename),
-            new RegExp('Could not read valid xml from test file'),
-        );
-
-        assert.rejects(
-            () => parser.updateResultsFromXmlLogFile(tests, filename, 200),
-            new RegExp('Could not read valid xml from test file'),
-        );
-    });
-
-    test('slow file update', async () => {
-        const tests: Tests = createEmptyResults();
-        const expected: Tests = createEmptyResults();
-        const filename = 'x/y/z/results.xml';
-        const fullXML = `
-                <?xml version="1.0" encoding="utf-8"?>
-                <testsuite errors="0" failures="0" hostname="linux-desktop" name="pytest" skipped="0" tests="0" time="0.011" timestamp="2019-08-29T15:59:08.757654">
-                </testsuite>`;
-        fs.setup((f) => f.readFile(filename)).returns(() => Promise.resolve(fullXML.slice(0, fullXML.length * 0.2)));
-        fs.setup((f) => f.readFile(filename)).returns(() => Promise.resolve(fullXML.slice(0, fullXML.length * 0.5)));
-        fs.setup((f) => f.readFile(filename)).returns(() => Promise.resolve(fullXML.slice(0, fullXML.length * 0.9)));
-        fs.setup((f) => f.readFile(filename)).returns(() => Promise.resolve(fullXML));
-
-        await parser.updateResultsFromXmlLogFile(tests, filename, 500);
-
-        expect(tests).to.deep.equal(expected);
-        fs.verify((f) => f.readFile(filename), typeMoq.Times.exactly(4));
-    });
-
-    test('slow file update exceed timeout', async () => {
-        const tests: Tests = createEmptyResults();
-        const filename = 'x/y/z/results.xml';
-        const fullXML = `
-                <?xml version="1.0" encoding="utf-8"?>
-                <testsuite errors="0" failures="0" hostname="linux-desktop" name="pytest" skipped="0" tests="0" time="0.011" timestamp="2019-08-29T15:59:08.757654">
-                </testsuite>`;
-        fs.setup((f) => f.readFile(filename)).returns(() => Promise.resolve(fullXML.slice(0, fullXML.length * 0.2)));
-        fs.setup((f) => f.readFile(filename)).returns(() => Promise.resolve(fullXML));
-
-        assert.rejects(
-            () => parser.updateResultsFromXmlLogFile(tests, filename, 50),
-            new RegExp('Could not read valid xml from test file'),
-        );
-
-        fs.verify((f) => f.readFile(filename), typeMoq.Times.exactly(1));
     });
 
     // Missing tests (see https://github.com/microsoft/vscode-python/issues/7447):

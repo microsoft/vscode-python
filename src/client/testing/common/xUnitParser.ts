@@ -1,7 +1,5 @@
 import { inject, injectable } from 'inversify';
 import { IFileSystem } from '../../common/platform/types';
-import { sleep } from '../../common/utils/async';
-import { StopWatch } from '../../common/utils/stopWatch';
 import { FlattenedTestFunction, IXUnitParser, TestFunction, TestResult, Tests, TestStatus, TestSummary } from './types';
 
 type TestSuiteResult = {
@@ -51,34 +49,10 @@ export class XUnitParser implements IXUnitParser {
     constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
 
     // Update "tests" with the results parsed from the given file.
-    public async updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string, timeout = 0) {
-        const readResult = async () => {
-            try {
-                var data = await this.fs.readFile(outputXmlFile);
-            } catch (err) {
-                if (err.code === 'ENOENT') {
-                    return undefined; // The file hasn't been created yet.
-                } else {
-                    throw err; // re-throw
-                }
-            }
-            try {
-                return parseXML(data);
-            } catch {
-                return undefined; // The file may update in chunks
-            }
-        };
-        const timer = new StopWatch();
-        // Poll for valid xml
-        let parserResult = await readResult();
-        while (!parserResult && timer.elapsedTime < timeout) {
-            await sleep(100);
-            parserResult = await readResult();
-        }
-        if (!parserResult) {
-            throw new Error('Could not read valid xml from test file');
-        }
+    public async updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string) {
+        const data = await this.fs.readFile(outputXmlFile);
 
+        const parserResult = await parseXML(data);
         const junitResults = getJunitResults(parserResult);
         if (junitResults) {
             updateTests(tests, junitResults);

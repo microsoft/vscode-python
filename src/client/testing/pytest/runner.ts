@@ -111,7 +111,7 @@ export class TestManagerRunner implements ITestManagerRunner {
         outputXmlFile: string,
         testResultsService: ITestResultsService,
     ): Promise<Tests> {
-        await this.xUnitParser.updateResultsFromXmlLogFile(tests, outputXmlFile, 5000);
+        await this.xUnitParser.updateResultsFromXmlLogFile(tests, outputXmlFile);
         testResultsService.updateResults(tests);
         return tests;
     }

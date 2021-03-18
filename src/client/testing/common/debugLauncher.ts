@@ -8,7 +8,6 @@ import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { IConfigurationService, IPythonSettings } from '../../common/types';
-import { noop } from '../../common/utils/misc';
 import { DebuggerTypeName } from '../../debugger/constants';
 import { IDebugConfigurationResolver } from '../../debugger/extension/configuration/types';
 import { LaunchRequestArguments } from '../../debugger/types';
@@ -44,9 +43,17 @@ export class DebugLauncher implements ITestDebugLauncher {
             this.configService.getSettings(workspaceFolder.uri),
         );
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
-        return debugManager
-            .startDebugging(workspaceFolder, launchArgs)
-            .then(noop, (ex) => traceError('Failed to start debugging tests', ex));
+        return debugManager.startDebugging(workspaceFolder, launchArgs).then(
+            // Wait for debug session to be complete.
+            () => {
+                return new Promise<void>((resolve) => {
+                    debugManager.onDidTerminateDebugSession(() => {
+                        resolve();
+                    });
+                });
+            },
+            (ex) => traceError('Failed to start debugging tests', ex),
+        );
     }
     public async readAllDebugConfigs(workspaceFolder: WorkspaceFolder): Promise<DebugConfiguration[]> {
         const filename = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');

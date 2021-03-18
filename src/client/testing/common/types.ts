@@ -477,7 +477,7 @@ export interface ITestRunner {
 export const IXUnitParser = Symbol('IXUnitParser');
 export interface IXUnitParser {
     // Update "tests" with the results parsed from the given file.
-    updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string, timeout?: number): Promise<void>;
+    updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string): Promise<void>;
 }
 
 export const ITestMessageService = Symbol('ITestMessageService');
