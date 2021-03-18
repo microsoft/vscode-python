@@ -187,7 +187,7 @@ suite('Linting - Arguments', () => {
                         document.setup((d) => d.uri).returns(() => fileUri);
 
                         let invoked = false;
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (linter as any).run = (args: any[]) => {
                             expect(args[args.length - 1]).to.equal(fileUri.fsPath);
                             invoked = true;

@@ -31,7 +31,6 @@ export class CachingLocatorWrapper extends LazyResourceBasedLocator {
         this.onChanged = this.watcher.onChanged;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     protected async *doIterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator {
         yield* this.cache.getEnvs();
     }

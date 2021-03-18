@@ -112,7 +112,6 @@ suite('Installation - installation channels', () => {
                 items = i;
             })
             .returns(
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 () => new Promise<string | undefined>((resolve, _reject) => resolve(undefined)),
             );
 

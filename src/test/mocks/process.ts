@@ -12,7 +12,7 @@ import { EnvironmentVariables } from '../../client/common/variables/types';
 export class MockProcess implements ICurrentProcess {
     constructor(public env: EnvironmentVariables = { ...process.env }) {}
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/ban-types
     public on(_event: string | symbol, _listener: Function): this {
         return this;
     }

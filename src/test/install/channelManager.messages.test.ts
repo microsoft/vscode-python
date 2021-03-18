@@ -161,7 +161,6 @@ suite('Installation - channel messages', () => {
         interpreters
             .setup((x) => x.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 () => new Promise<PythonEnvironment>((resolve, _reject) => resolve(activeInterpreter)),
             );
         const channels = new InstallationChannelManager(serviceContainer);
@@ -176,7 +175,6 @@ suite('Installation - channel messages', () => {
                 search = s;
             })
             .returns(
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 () => new Promise<string>((resolve, _reject) => resolve(search)),
             );
         appShell

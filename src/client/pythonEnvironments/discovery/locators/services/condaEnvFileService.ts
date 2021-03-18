@@ -48,7 +48,6 @@ export class CondaEnvFileService extends CacheableLocatorService {
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     protected getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
         return this.getSuggestionsFromConda();
     }

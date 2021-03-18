@@ -34,7 +34,6 @@ export class FoundFilesLocator implements ILocator {
         this.onChanged = this.watcher.onChanged;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public iterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator {
         const executablesPromise = this.getExecutables();
         const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();

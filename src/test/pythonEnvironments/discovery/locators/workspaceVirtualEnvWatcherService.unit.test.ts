@@ -53,7 +53,7 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         when(platformService.isMac).thenReturn(os === OSType.OSX);
 
         class FSWatcher {
-            // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-explicit-any
             public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
@@ -112,7 +112,7 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             private listener?: (e: Uri) => any;
 
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             public onDidCreate(listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 this.listener = listener;
                 return { dispose: noop };
