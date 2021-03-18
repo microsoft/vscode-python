@@ -57,7 +57,7 @@ export class PoetryInstaller extends ModuleInstaller {
         try {
             const processService = await this.processFactory.create(workfolder);
             const execPath = this.configurationService.getSettings(workfolder).poetryPath;
-            const result = await processService.exec(execPath, ['list'], { cwd: workfolder.fsPath });
+            const result = await processService.shellExec(`${execPath} env list`, { cwd: workfolder.fsPath });
             return result && (result.stderr || '').trim().length === 0;
         } catch (error) {
             traceError(`${poetryFile} exists but Poetry not found`, error);
