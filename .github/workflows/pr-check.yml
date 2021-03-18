@@ -116,8 +116,8 @@ jobs:
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the Unix case.
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
-        python: ['2.7', '3.9']
-        test-suite: [ts-unit, python-unit, venv, single-workspace, debugger, functional]
+        python: ['3.9']
+        test-suite: [functional-cov]
         exclude:
           # For fast PR turn-around, skip 2.7 under Windows.
           - os: windows-latest
@@ -314,6 +314,20 @@ jobs:
       - name: Run functional tests
         run: npm run test:functional
         if: matrix.test-suite == 'functional'
+
+      # Run TypeScript functional tests only for Python 3.X.
+      - name: Run TypeScript functional tests with coverage
+        run: npm run test:functional:cover
+        if: matrix.test-suite == 'functional-cov' && startsWith(matrix.python, 3.)
+
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload functional test coverage reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: ${{ env.special-working-directory }}/.nyc_output
+          retention-days: 1
+        if: matrix.test-suite == 'functional-cov' && startsWith(matrix.python, 3.)
 
   smoke-tests:
     name: Smoke tests
