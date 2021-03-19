@@ -64,7 +64,7 @@ export class TensorBoardSession {
         return this.process;
     }
 
-    private active: boolean = false;
+    private active = false;
 
     private webviewPanel: WebviewPanel | undefined;
 
