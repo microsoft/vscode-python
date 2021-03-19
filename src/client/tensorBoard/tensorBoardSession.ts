@@ -15,6 +15,7 @@ import {
     Uri,
     ViewColumn,
     WebviewPanel,
+    WebviewPanelOnDidChangeViewStateEvent,
     window,
     workspace,
 } from 'vscode';
@@ -23,7 +24,14 @@ import { createPromiseFromCancellation } from '../common/cancellation';
 import { traceError, traceInfo } from '../common/logger';
 import { tensorboardLauncher } from '../common/process/internal/scripts';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../common/process/types';
-import { IDisposableRegistry, IInstaller, InstallerResponse, ProductInstallStatus, Product } from '../common/types';
+import {
+    IDisposableRegistry,
+    IInstaller,
+    InstallerResponse,
+    ProductInstallStatus,
+    Product,
+    IPersistentState,
+} from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { Common, TensorBoard } from '../common/utils/localize';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -56,6 +64,8 @@ export class TensorBoardSession {
         return this.process;
     }
 
+    private active: boolean = false;
+
     private webviewPanel: WebviewPanel | undefined;
 
     private url: string | undefined;
@@ -74,6 +84,7 @@ export class TensorBoardSession {
         private readonly disposables: IDisposableRegistry,
         private readonly applicationShell: IApplicationShell,
         private readonly isInTorchProfilerExperiment: boolean,
+        private readonly globalMemento: IPersistentState<ViewColumn>,
     ) {}
 
     public async initialize(): Promise<void> {
@@ -397,10 +408,11 @@ export class TensorBoardSession {
         traceInfo('Showing TensorBoard panel');
         const panel = this.webviewPanel || this.createPanel();
         panel.reveal();
+        this.active = true;
     }
 
     private createPanel() {
-        const webviewPanel = window.createWebviewPanel('tensorBoardSession', 'TensorBoard', ViewColumn.Two, {
+        const webviewPanel = window.createWebviewPanel('tensorBoardSession', 'TensorBoard', this.globalMemento.value, {
             enableScripts: true,
             retainContextWhenHidden: true,
         });
@@ -465,6 +477,15 @@ export class TensorBoardSession {
                 this.process?.kill();
                 sendTelemetryEvent(EventName.TENSORBOARD_SESSION_DURATION, this.sessionDurationStopwatch?.elapsedTime);
                 this.process = undefined;
+            }),
+        );
+        this.disposables.push(
+            webviewPanel.onDidChangeViewState(async (args: WebviewPanelOnDidChangeViewStateEvent) => {
+                // The webview has been moved to a different viewgroup if it was active before and remains active now
+                if (this.active && args.webviewPanel.active) {
+                    await this.globalMemento.updateValue(webviewPanel.viewColumn ?? ViewColumn.Active);
+                }
+                this.active = args.webviewPanel.active;
             }),
         );
         this.disposables.push(
