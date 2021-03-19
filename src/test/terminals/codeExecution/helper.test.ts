@@ -56,6 +56,7 @@ suite('Terminal - Code Execution Helper', () => {
         processService = TypeMoq.Mock.ofType<IProcessService>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((x: any) => x.then).returns(() => undefined);
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))

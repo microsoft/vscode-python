@@ -1,8 +1,10 @@
+/* eslint-disable max-classes-per-file */
+
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as semver from 'semver';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
-import '../../common/extensions';
+import '../extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
@@ -47,9 +49,13 @@ const UnsupportedChannelsForProduct = new Map<Product, Set<EnvironmentType>>([
 
 export abstract class BaseInstaller {
     private static readonly PromptPromises = new Map<string, Promise<InstallerResponse>>();
+
     protected readonly appShell: IApplicationShell;
+
     protected readonly configService: IConfigurationService;
+
     protected readonly workspaceService: IWorkspaceService;
+
     private readonly productService: IProductService;
 
     constructor(protected serviceContainer: IServiceContainer, protected outputChannel: OutputChannel) {
@@ -124,9 +130,8 @@ export abstract class BaseInstaller {
         }
         if (semver.satisfies(version, semVerRequirement)) {
             return ProductInstallStatus.Installed;
-        } else {
-            return ProductInstallStatus.NeedsUpgrade;
         }
+        return ProductInstallStatus.NeedsUpgrade;
     }
 
     /**
@@ -162,6 +167,7 @@ export abstract class BaseInstaller {
             return null;
         }
     }
+
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean> {
         if (product === Product.unittest) {
             return true;
@@ -177,13 +183,12 @@ export abstract class BaseInstaller {
                 .get<IPythonExecutionFactory>(IPythonExecutionFactory)
                 .createActivatedEnvironment({ resource: uri, interpreter, allowEnvironmentFetchExceptions: true });
             return pythonProcess.isModuleInstalled(executableName);
-        } else {
-            const process = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(uri);
-            return process
-                .exec(executableName, ['--version'], { mergeStdOutErr: true })
-                .then(() => true)
-                .catch(() => false);
         }
+        const process = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(uri);
+        return process
+            .exec(executableName, ['--version'], { mergeStdOutErr: true })
+            .then(() => true)
+            .catch(() => false);
     }
 
     protected abstract promptToInstallImplementation(
@@ -192,11 +197,13 @@ export abstract class BaseInstaller {
         cancel?: CancellationToken,
         isUpgrade?: boolean,
     ): Promise<InstallerResponse>;
+
     protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
         const productType = this.productService.getProductType(product);
         const productPathService = this.serviceContainer.get<IProductPathService>(IProductPathService, productType);
         return productPathService.getExecutableNameFromSettings(product, resource);
     }
+
     protected isExecutableAModule(product: Product, resource?: Uri): boolean {
         const productType = this.productService.getProductType(product);
         const productPathService = this.serviceContainer.get<IProductPathService>(IProductPathService, productType);
@@ -205,10 +212,6 @@ export abstract class BaseInstaller {
 }
 
 export class CTagsInstaller extends BaseInstaller {
-    constructor(serviceContainer: IServiceContainer, outputChannel: OutputChannel) {
-        super(serviceContainer, outputChannel);
-    }
-
     public async install(_product: Product, resource?: Uri): Promise<InstallerResponse> {
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
             this.outputChannel.appendLine('Install Universal Ctags Win32 to enable support for Workspace Symbols');
@@ -233,6 +236,7 @@ export class CTagsInstaller extends BaseInstaller {
         }
         return InstallerResponse.Ignore;
     }
+
     protected async promptToInstallImplementation(
         product: Product,
         resource?: Uri,
@@ -274,7 +278,8 @@ export class FormatterInstaller extends BaseInstaller {
         const item = await this.appShell.showErrorMessage(message, ...options);
         if (item === yesChoice) {
             return this.install(product, resource, cancel);
-        } else if (typeof item === 'string') {
+        }
+        if (typeof item === 'string') {
             for (const formatter of formatters) {
                 const formatterName = ProductNames.get(formatter)!;
 
@@ -376,6 +381,7 @@ export class DataScienceInstaller extends BaseInstaller {
             isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore,
         );
     }
+
     /**
      * This method will not get invoked for Jupyter extension.
      * Implemented as a backup.
@@ -401,6 +407,7 @@ export class DataScienceInstaller extends BaseInstaller {
 @injectable()
 export class ProductInstaller implements IInstaller {
     private readonly productService: IProductService;
+
     private interpreterService: IInterpreterService;
 
     constructor(
@@ -411,7 +418,10 @@ export class ProductInstaller implements IInstaller {
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
     }
 
-    public dispose() {}
+    public dispose(): void {
+        /** Do nothing. */
+    }
+
     public async promptToInstall(
         product: Product,
         resource?: InterpreterUri,
@@ -426,6 +436,7 @@ export class ProductInstaller implements IInstaller {
         }
         return this.createInstaller(product).promptToInstall(product, resource, cancel, isUpgrade);
     }
+
     public async isProductVersionCompatible(
         product: Product,
         semVerRequirement: string,
@@ -433,6 +444,7 @@ export class ProductInstaller implements IInstaller {
     ): Promise<ProductInstallStatus> {
         return this.createInstaller(product).isProductVersionCompatible(product, semVerRequirement, resource);
     }
+
     public async install(
         product: Product,
         resource?: InterpreterUri,
@@ -440,12 +452,16 @@ export class ProductInstaller implements IInstaller {
     ): Promise<InstallerResponse> {
         return this.createInstaller(product).install(product, resource, cancel);
     }
+
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean> {
         return this.createInstaller(product).isInstalled(product, resource);
     }
+
+    // eslint-disable-next-line class-methods-use-this
     public translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string {
         return translateProductToModule(product, purpose);
     }
+
     private createInstaller(product: Product): BaseInstaller {
         const productType = this.productService.getProductType(product);
         switch (productType) {

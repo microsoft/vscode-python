@@ -128,7 +128,7 @@ import { rootWorkspaceUri, updateSetting } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
-import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
+import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 
 suite('Installer', () => {
     let ioc: UnitTestIocContainer;
@@ -343,9 +343,11 @@ suite('Installer', () => {
             );
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
             if (prod.value === Product.ctags || prod.value === Product.unittest || prod.value === Product.isort) {
-                return;
+                return undefined;
             }
             await testCheckingIfProductIsInstalled(prod.value);
+
+            return undefined;
         });
     });
 
@@ -380,9 +382,11 @@ suite('Installer', () => {
             );
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
             if (prod.value === Product.unittest || prod.value === Product.ctags || prod.value === Product.isort) {
-                return;
+                return undefined;
             }
             await testInstallingProduct(prod.value);
+
+            return undefined;
         });
     });
 });

@@ -18,8 +18,11 @@ import { ICodeExecutionHelper } from '../types';
 @injectable()
 export class CodeExecutionHelper implements ICodeExecutionHelper {
     private readonly documentManager: IDocumentManager;
+
     private readonly applicationShell: IApplicationShell;
+
     private readonly processServiceFactory: IProcessServiceFactory;
+
     private readonly interpreterService: IInterpreterService;
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
@@ -81,35 +84,37 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor) {
             this.applicationShell.showErrorMessage('No open file to run in terminal');
-            return;
+            return undefined;
         }
         if (activeEditor.document.isUntitled) {
             this.applicationShell.showErrorMessage('The active file needs to be saved before it can be run');
-            return;
+            return undefined;
         }
         if (activeEditor.document.languageId !== PYTHON_LANGUAGE) {
             this.applicationShell.showErrorMessage('The active file is not a Python source file');
-            return;
+            return undefined;
         }
         if (activeEditor.document.isDirty) {
             await activeEditor.document.save();
         }
+
         return activeEditor.document.uri;
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public async getSelectedTextToExecute(textEditor: TextEditor): Promise<string | undefined> {
         if (!textEditor) {
-            return;
+            return undefined;
         }
 
-        const selection = textEditor.selection;
+        const { selection } = textEditor;
         let code: string;
         if (selection.isEmpty) {
             code = textEditor.document.lineAt(selection.start.line).text;
         } else if (selection.isSingleLine) {
-            code = this.getSingleLineSelectionText(textEditor);
+            code = getSingleLineSelectionText(textEditor);
         } else {
-            code = this.getMultiLineSelectionText(textEditor);
+            code = getMultiLineSelectionText(textEditor);
         }
         return code;
     }
@@ -120,110 +125,110 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             await docs[0].save();
         }
     }
+}
 
-    private getSingleLineSelectionText(textEditor: TextEditor): string {
-        const selection = textEditor.selection;
-        const selectionRange = new Range(selection.start, selection.end);
-        const selectionText = textEditor.document.getText(selectionRange);
-        const fullLineText = textEditor.document.lineAt(selection.start.line).text;
+function getSingleLineSelectionText(textEditor: TextEditor): string {
+    const { selection } = textEditor;
+    const selectionRange = new Range(selection.start, selection.end);
+    const selectionText = textEditor.document.getText(selectionRange);
+    const fullLineText = textEditor.document.lineAt(selection.start.line).text;
 
-        if (selectionText.trim() === fullLineText.trim()) {
-            // This handles the following case:
-            // if (x):
-            //     print(x)
-            //     ↑------↑   <--- selection range
-            //
-            // We should return:
-            //     print(x)
-            // ↑----------↑    <--- text including the initial white space
-            return fullLineText;
-        }
-
-        // This is where part of the line is selected:
-        // if(isPrime(x) || isFibonacci(x)):
-        //    ↑--------↑    <--- selection range
+    if (selectionText.trim() === fullLineText.trim()) {
+        // This handles the following case:
+        // if (x):
+        //     print(x)
+        //     ↑------↑   <--- selection range
         //
-        // We should return just the selection:
-        // isPrime(x)
-        return selectionText;
+        // We should return:
+        //     print(x)
+        // ↑----------↑    <--- text including the initial white space
+        return fullLineText;
     }
 
-    private getMultiLineSelectionText(textEditor: TextEditor): string {
-        const selection = textEditor.selection;
-        const selectionRange = new Range(selection.start, selection.end);
-        const selectionText = textEditor.document.getText(selectionRange);
+    // This is where part of the line is selected:
+    // if(isPrime(x) || isFibonacci(x)):
+    //    ↑--------↑    <--- selection range
+    //
+    // We should return just the selection:
+    // isPrime(x)
+    return selectionText;
+}
 
-        const fullTextRange = new Range(
-            new Position(selection.start.line, 0),
-            new Position(selection.end.line, textEditor.document.lineAt(selection.end.line).text.length),
-        );
-        const fullText = textEditor.document.getText(fullTextRange);
+function getMultiLineSelectionText(textEditor: TextEditor): string {
+    const { selection } = textEditor;
+    const selectionRange = new Range(selection.start, selection.end);
+    const selectionText = textEditor.document.getText(selectionRange);
 
-        // This handles case where:
-        // def calc(m, n):
-        //     ↓<------------------------------- selection start
-        //     print(m)
-        //     print(n)
-        //            ↑<------------------------ selection end
-        //     if (m == 0):
-        //         return n + 1
-        //     if (m > 0 and n == 0):
-        //         return calc(m - 1 , 1)
-        //     return calc(m - 1, calc(m, n - 1))
-        //
-        // We should return:
-        // ↓<---------------------------------- From here
-        //     print(m)
-        //     print(n)
-        //            ↑<----------------------- To here
-        if (selectionText.trim() === fullText.trim()) {
-            return fullText;
-        }
+    const fullTextRange = new Range(
+        new Position(selection.start.line, 0),
+        new Position(selection.end.line, textEditor.document.lineAt(selection.end.line).text.length),
+    );
+    const fullText = textEditor.document.getText(fullTextRange);
 
-        const fullStartLineText = textEditor.document.lineAt(selection.start.line).text;
-        const selectionFirstLineRange = new Range(
-            selection.start,
-            new Position(selection.start.line, fullStartLineText.length),
-        );
-        const selectionFirstLineText = textEditor.document.getText(selectionFirstLineRange);
-
-        // This handles case where:
-        // def calc(m, n):
-        //     ↓<------------------------------ selection start
-        //     if (m == 0):
-        //         return n + 1
-        //                ↑<------------------- selection end (notice " + 1" is not selected)
-        //     if (m > 0 and n == 0):
-        //         return calc(m - 1 , 1)
-        //     return calc(m - 1, calc(m, n - 1))
-        //
-        // We should return:
-        // ↓<---------------------------------- From here
-        //     if (m == 0):
-        //         return n + 1
-        //                ↑<------------------- To here (notice " + 1" is not selected)
-        if (selectionFirstLineText.trimLeft() === fullStartLineText.trimLeft()) {
-            return fullStartLineText + selectionText.substr(selectionFirstLineText.length);
-        }
-
-        // If you are here then user has selected partial start and partial end lines:
-        // def calc(m, n):
-
-        //     if (m == 0):
-        //         return n + 1
-
-        //        ↓<------------------------------- selection start
-        //     if (m > 0
-        //         and n == 0):
-        //                   ↑<-------------------- selection end
-        //         return calc(m - 1 , 1)
-        //     return calc(m - 1, calc(m, n - 1))
-        //
-        // We should return:
-        // ↓<---------------------------------- From here
-        // (m > 0
-        //         and n == 0)
-        //                   ↑<---------------- To here
-        return selectionText;
+    // This handles case where:
+    // def calc(m, n):
+    //     ↓<------------------------------- selection start
+    //     print(m)
+    //     print(n)
+    //            ↑<------------------------ selection end
+    //     if (m == 0):
+    //         return n + 1
+    //     if (m > 0 and n == 0):
+    //         return calc(m - 1 , 1)
+    //     return calc(m - 1, calc(m, n - 1))
+    //
+    // We should return:
+    // ↓<---------------------------------- From here
+    //     print(m)
+    //     print(n)
+    //            ↑<----------------------- To here
+    if (selectionText.trim() === fullText.trim()) {
+        return fullText;
     }
+
+    const fullStartLineText = textEditor.document.lineAt(selection.start.line).text;
+    const selectionFirstLineRange = new Range(
+        selection.start,
+        new Position(selection.start.line, fullStartLineText.length),
+    );
+    const selectionFirstLineText = textEditor.document.getText(selectionFirstLineRange);
+
+    // This handles case where:
+    // def calc(m, n):
+    //     ↓<------------------------------ selection start
+    //     if (m == 0):
+    //         return n + 1
+    //                ↑<------------------- selection end (notice " + 1" is not selected)
+    //     if (m > 0 and n == 0):
+    //         return calc(m - 1 , 1)
+    //     return calc(m - 1, calc(m, n - 1))
+    //
+    // We should return:
+    // ↓<---------------------------------- From here
+    //     if (m == 0):
+    //         return n + 1
+    //                ↑<------------------- To here (notice " + 1" is not selected)
+    if (selectionFirstLineText.trimLeft() === fullStartLineText.trimLeft()) {
+        return fullStartLineText + selectionText.substr(selectionFirstLineText.length);
+    }
+
+    // If you are here then user has selected partial start and partial end lines:
+    // def calc(m, n):
+
+    //     if (m == 0):
+    //         return n + 1
+
+    //        ↓<------------------------------- selection start
+    //     if (m > 0
+    //         and n == 0):
+    //                   ↑<-------------------- selection end
+    //         return calc(m - 1 , 1)
+    //     return calc(m - 1, calc(m, n - 1))
+    //
+    // We should return:
+    // ↓<---------------------------------- From here
+    // (m > 0
+    //         and n == 0)
+    //                   ↑<---------------- To here
+    return selectionText;
 }

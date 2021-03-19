@@ -59,10 +59,8 @@ src/test/interpreters/display.unit.test.ts
 src/test/configuration/interpreterSelector/interpreterSelector.unit.test.ts
 
 src/test/terminals/codeExecution/terminalCodeExec.unit.test.ts
-src/test/terminals/codeExecution/helper.test.ts
 src/test/terminals/codeExecution/codeExecutionManager.unit.test.ts
 src/test/terminals/codeExecution/djangoShellCodeExect.unit.test.ts
-
 
 src/test/languageServers/jedi/autocomplete/base.test.ts
 src/test/languageServers/jedi/autocomplete/pep526.test.ts
@@ -192,14 +190,12 @@ src/test/common/nuget/azureBobStoreRepository.unit.test.ts
 src/test/common/helpers.test.ts
 src/test/common/application/commands/reloadCommand.unit.test.ts
 src/test/common/installer/channelManager.unit.test.ts
-src/test/common/installer/installer.unit.test.ts
 src/test/common/installer/pipInstaller.unit.test.ts
 src/test/common/installer/installer.invalidPath.unit.test.ts
 src/test/common/installer/pipEnvInstaller.unit.test.ts
 src/test/common/installer/productPath.unit.test.ts
 src/test/common/installer/extensionBuildInstaller.unit.test.ts
 src/test/common/socketCallbackHandler.test.ts
-src/test/common/installer.test.ts
 src/test/common/process/decoder.test.ts
 src/test/common/process/pythonDaemonPool.unit.test.ts
 src/test/common/process/processFactory.unit.test.ts
@@ -324,7 +320,6 @@ src/client/typeFormatters/codeBlockFormatProvider.ts
 src/client/typeFormatters/onEnterFormatter.ts
 src/client/typeFormatters/dispatcher.ts
 
-src/client/terminals/codeExecution/helper.ts
 src/client/terminals/codeExecution/terminalCodeExecution.ts
 src/client/terminals/codeExecution/codeExecutionManager.ts
 src/client/terminals/codeExecution/djangoContext.ts
@@ -557,7 +552,6 @@ src/client/common/application/applicationEnvironment.ts
 src/client/common/errors/errorUtils.ts
 src/client/common/installer/serviceRegistry.ts
 src/client/common/installer/extensionBuildInstaller.ts
-src/client/common/installer/productInstaller.ts
 src/client/common/installer/channelManager.ts
 src/client/common/installer/moduleInstaller.ts
 src/client/common/installer/types.ts
