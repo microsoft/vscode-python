@@ -9,12 +9,12 @@ import { Tests } from '../types';
 
 // We expose these here as a convenience and to cut down on churn
 // elsewhere in the code.
-export type DiscoveredTests = internalScripts.testing_tools.DiscoveredTests;
-export type Test = internalScripts.testing_tools.Test;
-export type TestFolder = internalScripts.testing_tools.TestFolder;
-export type TestFile = internalScripts.testing_tools.TestFile;
-export type TestSuite = internalScripts.testing_tools.TestSuite;
-export type TestFunction = internalScripts.testing_tools.TestFunction;
+export type DiscoveredTests = internalScripts.testingTools.DiscoveredTests;
+export type Test = internalScripts.testingTools.Test;
+export type TestFolder = internalScripts.testingTools.TestFolder;
+export type TestFile = internalScripts.testingTools.TestFile;
+export type TestSuite = internalScripts.testingTools.TestSuite;
+export type TestFunction = internalScripts.testingTools.TestFunction;
 
 export const ITestDiscoveredTestParser = Symbol('ITestDiscoveredTestParser');
 export interface ITestDiscoveredTestParser {

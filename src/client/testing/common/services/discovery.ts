@@ -40,7 +40,7 @@ export class TestsDiscoveryService implements ITestDiscoveryService {
         }
     }
     public async exec(options: TestDiscoveryOptions): Promise<DiscoveredTests[]> {
-        const [args, parse] = internalScripts.testing_tools.run_adapter(options.args);
+        const [args, parse] = internalScripts.testingTools.run_adapter(options.args);
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
             resource: options.workspaceFolder,

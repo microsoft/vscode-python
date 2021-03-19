@@ -572,7 +572,6 @@ src/client/common/process/pythonDaemon.ts
 src/client/common/process/pythonToolService.ts
 src/client/common/process/internal/python.ts
 src/client/common/process/internal/scripts/testing_tools.ts
-src/client/common/process/internal/scripts/index.ts
 src/client/common/process/pythonDaemonPool.ts
 src/client/common/process/pythonDaemonFactory.ts
 src/client/common/process/types.ts
