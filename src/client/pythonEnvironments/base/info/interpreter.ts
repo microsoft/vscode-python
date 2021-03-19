@@ -32,7 +32,7 @@ function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): Inter
     // This restriction is needed to avoid sending any PII if this data is used with telemetry.
     // With custom builds of python it is possible that release level and values after that can
     // contain PII.
-    if (raw.versionInfo[3] !== undefined && ['alpha', 'beta', 'candidate'].includes(raw.versionInfo[3])) {
+    if (raw.versionInfo[3] !== undefined && ['final', 'alpha', 'beta', 'candidate'].includes(raw.versionInfo[3])) {
         rawVersion = `${rawVersion}-${raw.versionInfo[3]}`;
         if (raw.versionInfo[4] !== undefined) {
             let serial = -1;
