@@ -1,7 +1,6 @@
 'use strict';
 
 // eslint-disable-next-line camelcase
-import * as child_process from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 import {
@@ -28,7 +27,6 @@ import { DEFAULT_INTERPRETER_SETTING, isTestExecution } from './constants';
 import { DeprecatePythonPath } from './experiments/groups';
 import { ExtensionChannels } from './insidersBuild/types';
 import { IS_WINDOWS } from './platform/constants';
-import * as internalPython from './process/internal/python';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
