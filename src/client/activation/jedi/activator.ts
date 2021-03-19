@@ -29,7 +29,7 @@ export class JediLanguageServerActivator extends LanguageServerActivatorBase {
         super(manager, workspace, fs, configurationService);
     }
 
-    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line class-methods-use-this
     public async ensureLanguageServerIsAvailable(_resource: Resource): Promise<void> {
         // Nothing to do here. Jedi language server is shipped with the extension
     }

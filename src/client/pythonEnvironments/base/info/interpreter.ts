@@ -26,7 +26,24 @@ export type InterpreterInformation = {
  * @param raw - the information returned by the `interpreterInfo.py` script
  */
 function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): InterpreterInformation {
-    const rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}`;
+    let rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}`;
+
+    // We only need additional version details if the version is 'alpha', 'beta' or 'candidate'.
+    // This restriction is needed to avoid sending any PII if this data is used with telemetry.
+    // With custom builds of python it is possible that release level and values after that can
+    // contain PII.
+    if (raw.versionInfo[3] !== undefined && ['final', 'alpha', 'beta', 'candidate'].includes(raw.versionInfo[3])) {
+        rawVersion = `${rawVersion}-${raw.versionInfo[3]}`;
+        if (raw.versionInfo[4] !== undefined) {
+            let serial = -1;
+            try {
+                serial = parseInt(`${raw.versionInfo[4]}`, 10);
+            } catch (ex) {
+                serial = -1;
+            }
+            rawVersion = serial >= 0 ? `${rawVersion}${serial}` : rawVersion;
+        }
+    }
     return {
         arch: raw.is64Bit ? Architecture.x64 : Architecture.x86,
         executable: {

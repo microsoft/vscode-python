@@ -194,7 +194,7 @@ abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsCha
     // eslint-disable-next-line class-methods-use-this
     public abstract iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator;
 
-    // eslint-disable-next-line class-methods-use-this,@typescript-eslint/no-unused-vars
+    // eslint-disable-next-line class-methods-use-this
     public async resolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         return undefined;
     }

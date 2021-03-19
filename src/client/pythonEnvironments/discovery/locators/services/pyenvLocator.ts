@@ -216,6 +216,7 @@ function getKnownPyenvVersionParsers(): Map<string, (path: string) => Promise<IP
     parsers.set('jython', distroOnly);
     parsers.set('micropython', distroOnly);
     parsers.set('miniconda', distroOnly);
+    parsers.set('miniforge', distroOnly);
     parsers.set('pypy', pypyParser);
     parsers.set('pyston', distroOnly);
     parsers.set('stackless', distroOnly);

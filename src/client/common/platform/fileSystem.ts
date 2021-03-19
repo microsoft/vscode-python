@@ -53,12 +53,10 @@ function filterByFileType(
     if (fileType === FileType.Unknown) {
         // FileType.Unknown == 0 so we can't just use bitwise
         // operations blindly here.
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         return files.filter(([_file, ft]) => {
             return ft === FileType.Unknown || ft === (FileType.SymbolicLink & FileType.Unknown);
         });
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return files.filter(([_file, ft]) => (ft & fileType) > 0);
 }
 
@@ -403,7 +401,6 @@ export class FileSystemUtils implements IFileSystemUtils {
     public async getSubDirectories(dirname: string): Promise<string[]> {
         const files = await this.listdir(dirname);
         const filtered = filterByFileType(files, FileType.Directory);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         return filtered.map(([filename, _fileType]) => filename);
     }
 
@@ -411,7 +408,6 @@ export class FileSystemUtils implements IFileSystemUtils {
         // Note that only "regular" files are returned.
         const files = await this.listdir(dirname);
         const filtered = filterByFileType(files, FileType.File);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         return filtered.map(([filename, _fileType]) => filename);
     }
 

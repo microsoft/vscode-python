@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import Sinon, * as sinon from 'sinon';
 import { SemVer } from 'semver';
 import { anything } from 'ts-mockito';
-import { workspace, WorkspaceConfiguration } from 'vscode';
+import { ViewColumn, workspace, WorkspaceConfiguration } from 'vscode';
 import {
     IExperimentService,
     IInstaller,
@@ -115,6 +115,7 @@ suite('TensorBoard session creation', async () => {
                 TensorBoardEntrypointTrigger.palette,
             )) as TensorBoardSession;
 
+            assert.ok(session.panel?.viewColumn === ViewColumn.One, 'Panel opened in wrong group');
             assert.ok(session.panel?.visible, 'Webview panel not shown on session creation golden path');
             assert.ok(errorMessageStub.notCalled, 'Error message shown on session creation golden path');
         });

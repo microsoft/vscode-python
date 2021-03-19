@@ -51,6 +51,7 @@ import * as hashApi from '../../client/pythonEnvironments/discovery/locators/ser
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { PYTHON_PATH } from '../common';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
+import { PythonVersion } from '../../client/pythonEnvironments/info/pythonVersion';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -528,7 +529,7 @@ suite('Interpreters service', () => {
     suite('Display Format (with all permutations)', () => {
         setup(setupSuite);
         [undefined, Uri.file('xyz')].forEach((resource) => {
-            [undefined, new SemVer('1.2.3-alpha')].forEach((version) => {
+            [undefined, new SemVer('3.10.0-alpha6'), new SemVer('3.10.0')].forEach((version) => {
                 // Forced cast to ignore TS warnings.
                 (EnumEx.getNamesAndValues<Architecture>(Architecture) as (
                     | { name: string; value: Architecture }
@@ -548,7 +549,9 @@ suite('Interpreters service', () => {
                                         ['', 'my pipenv name'].forEach((pipEnvName) => {
                                             const testName = [
                                                 `${resource ? 'With' : 'Without'} a workspace`,
-                                                `${version ? 'with' : 'without'} version information`,
+                                                `${version ? 'with' : 'without'} ${
+                                                    version && version.prerelease.length > 0 ? 'pre-release' : 'final'
+                                                } version information`,
                                                 `${arch ? arch.name : 'without'} architecture`,
                                                 `${pythonPath ? 'with' : 'without'} python Path`,
                                                 `${
@@ -607,13 +610,34 @@ suite('Interpreters service', () => {
                                                 expect(displayName).to.equal(expectedDisplayName);
                                             });
 
+                                            function buildVersionForDisplay(semVersion: PythonVersion): string {
+                                                let preRelease = '';
+                                                if (semVersion.prerelease.length > 0) {
+                                                    switch (semVersion.prerelease[0]) {
+                                                        case 'alpha':
+                                                            preRelease = `a`;
+                                                            break;
+                                                        case 'beta':
+                                                            preRelease = `b`;
+                                                            break;
+                                                        case 'candidate':
+                                                            preRelease = `rc`;
+                                                            break;
+                                                        case 'final':
+                                                        default:
+                                                            break;
+                                                    }
+                                                }
+                                                return `${semVersion.major}.${semVersion.minor}.${semVersion.patch}${preRelease}`;
+                                            }
+
                                             function buildDisplayName(interpreterInfo: Partial<PythonEnvironment>) {
                                                 const displayNameParts: string[] = ['Python'];
                                                 const envSuffixParts: string[] = [];
 
                                                 if (interpreterInfo.version) {
                                                     displayNameParts.push(
-                                                        `${interpreterInfo.version.major}.${interpreterInfo.version.minor}.${interpreterInfo.version.patch}`,
+                                                        buildVersionForDisplay(interpreterInfo.version),
                                                     );
                                                 }
                                                 if (interpreterInfo.architecture) {

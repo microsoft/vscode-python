@@ -89,7 +89,7 @@ suite('Module Installer - Poetry', () => {
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
         when(fileSystem.fileExists(anything())).thenResolve(true);
         when(processServiceFactory.create(anything())).thenResolve(instance(processService));
-        when(processService.exec(anything(), anything(), anything())).thenResolve({ stderr: 'Kaboom', stdout: '' });
+        when(processService.shellExec(anything(), anything())).thenResolve({ stderr: 'Kaboom', stdout: '' });
 
         const supported = await poetryInstaller.isSupported(Uri.file(__filename));
 
@@ -105,7 +105,7 @@ suite('Module Installer - Poetry', () => {
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
         when(fileSystem.fileExists(anything())).thenResolve(true);
         when(processServiceFactory.create(anything())).thenResolve(instance(processService));
-        when(processService.exec(anything(), anything(), anything())).thenReject(new Error('Kaboom'));
+        when(processService.shellExec(anything(), anything())).thenReject(new Error('Kaboom'));
 
         const supported = await poetryInstaller.isSupported(Uri.file(__filename));
 
@@ -121,7 +121,7 @@ suite('Module Installer - Poetry', () => {
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
         when(fileSystem.fileExists(anything())).thenResolve(true);
         when(processServiceFactory.create(uri)).thenResolve(instance(processService));
-        when(processService.exec('poetry path', anything(), anything())).thenResolve({ stderr: '', stdout: '' });
+        when(processService.shellExec('poetry path env list', anything())).thenResolve({ stderr: '', stdout: '' });
 
         const supported = await poetryInstaller.isSupported(Uri.file(__filename));
 
@@ -147,6 +147,9 @@ suite('Module Installer - Poetry', () => {
 
         const info = await poetryInstaller.getExecutionInfo('black', uri);
 
-        assert.deepEqual(info, { args: ['add', '--dev', 'black', '--allow-prereleases'], execPath: 'poetry path' });
+        assert.deepEqual(info, {
+            args: ['add', '--dev', 'black', '--allow-prereleases'],
+            execPath: 'poetry path',
+        });
     });
 });

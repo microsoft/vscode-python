@@ -329,3 +329,37 @@ export function copyBestVersion(version: PythonVersion, other: PythonVersion): P
     const winner = result > 0 ? other : version;
     return cloneDeep(winner);
 }
+
+/**
+ * Convert Python version to semver like version object.
+ *
+ * Remarks: primarily used to convert to old type of environment info.
+ * @deprecated
+ */
+export function toSemverLikeVersion(
+    version: PythonVersion,
+): {
+    raw: string;
+    major: number;
+    minor: number;
+    patch: number;
+    build: string[];
+    prerelease: string[];
+} {
+    const versionPrefix = basic.getVersionString(version);
+    let preRelease: string[] = [];
+    if (version.release) {
+        preRelease =
+            version.release.serial < 0
+                ? [`${version.release.level}`]
+                : [`${version.release.level}`, `${version.release.serial}`];
+    }
+    return {
+        raw: versionPrefix,
+        major: version.major,
+        minor: version.minor,
+        patch: version.micro,
+        build: [],
+        prerelease: preRelease,
+    };
+}

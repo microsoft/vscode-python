@@ -17,12 +17,10 @@ export class MockModuleInstaller extends EventEmitter implements IModuleInstalle
         return 0;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async installModule(name: string, _resource?: Uri): Promise<void> {
         this.emit('installModule', name);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async isSupported(_resource?: Uri): Promise<boolean> {
         return this.supported;
     }
