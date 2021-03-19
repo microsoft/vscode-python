@@ -52,7 +52,6 @@ import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
 import { ExperimentsManager } from './experiments/manager';
 import { ExperimentService } from './experiments/service';
-import { FeatureDeprecationManager } from './featureDeprecationManager';
 import {
     ExtensionInsidersDailyChannelRule,
     ExtensionInsidersOffChannelRule,
@@ -115,7 +114,6 @@ import {
     IEditorUtils,
     IExperimentsManager,
     IExtensions,
-    IFeatureDeprecationManager,
     IInstaller,
     IPathUtils,
     IPersistentStateFactory,
@@ -194,7 +192,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         TerminalActivationProviders.pipenv,
     );
     serviceManager.addSingleton<IToolExecutionPath>(IToolExecutionPath, PipEnvExecutionPath, ToolExecutionPath.pipenv);
-    serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);
 
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);

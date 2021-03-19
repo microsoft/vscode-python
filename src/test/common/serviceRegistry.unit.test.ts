@@ -33,7 +33,6 @@ import { PipEnvExecutionPath } from '../../client/common/configuration/execution
 import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
 import { ExperimentsManager } from '../../client/common/experiments/manager';
-import { FeatureDeprecationManager } from '../../client/common/featureDeprecationManager';
 import {
     ExtensionInsidersDailyChannelRule,
     ExtensionInsidersOffChannelRule,
@@ -89,7 +88,6 @@ import {
     IEditorUtils,
     IExperimentsManager,
     IExtensions,
-    IFeatureDeprecationManager,
     IHttpClient,
     IInstaller,
     IInterpreterPathService,
@@ -147,7 +145,6 @@ suite('Common - Service Registry', () => {
             [IToolExecutionPath, PipEnvExecutionPath, ToolExecutionPath.pipenv],
             [ITerminalActivationCommandProvider, CondaActivationCommandProvider, TerminalActivationProviders.conda],
             [ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv],
-            [IFeatureDeprecationManager, FeatureDeprecationManager],
             [IAsyncDisposableRegistry, AsyncDisposableRegistry],
             [IMultiStepInputFactory, MultiStepInputFactory],
             [IImportTracker, ImportTracker],
