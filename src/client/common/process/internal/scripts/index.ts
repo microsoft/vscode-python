@@ -9,6 +9,9 @@ import { CompletionResponse, SymbolProviderSymbols } from './types';
 const SCRIPTS_DIR = _SCRIPTS_DIR;
 const ISOLATED = _ISOLATED;
 
+// Re-export it so external modules can use it too.
+export { _ISOLATED } from './constants';
+
 export function getUseIsolationSetting(): boolean {
     try {
         return workspace.getConfiguration('python').get<boolean>('useIsolation', true);
@@ -113,13 +116,13 @@ export function sortImports(filename: string, sortArgs?: string[]): [string[], (
 
 // refactor.py
 
-export function refactor(root: string): [string[], (out: string) => unknown[]] {
+export function refactor(root: string): [string[], (out: string) => Record<string, unknown>[]] {
     const script = path.join(SCRIPTS_DIR, 'refactor.py');
     const args = maybeIsolated([script, root]);
 
     // TODO: Make the return type more specific, like we did
     // with completion().
-    function parse(out: string): unknown[] {
+    function parse(out: string): Record<string, unknown>[] {
         // TODO: Also handle "STARTED"?
         return out
             .split(/\r?\n/g)
