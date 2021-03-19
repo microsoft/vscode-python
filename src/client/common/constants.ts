@@ -1,7 +1,4 @@
 export const PYTHON_LANGUAGE = 'python';
-export const MARKDOWN_LANGUAGE = 'markdown';
-export const JUPYTER_LANGUAGE = 'jupyter';
-
 export const PYTHON_WARNINGS = 'PYTHONWARNINGS';
 
 export const NotebookCellScheme = 'vscode-notebook-cell';
@@ -11,7 +8,6 @@ export const PYTHON = [
     { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
     { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE },
 ];
-export const PYTHON_ALLFILES = [{ language: PYTHON_LANGUAGE }];
 
 export const PVSC_EXTENSION_ID = 'ms-python.python';
 export const CODE_RUNNER_EXTENSION_ID = 'formulahendry.code-runner';
@@ -115,7 +111,6 @@ export function isUnitTestExecution(): boolean {
 
 // Temporary constant, used to indicate whether we're using custom editor api or not.
 export const UseCustomEditorApi = Symbol('USE_CUSTOM_EDITOR');
-export const UseVSCodeNotebookEditorApi = Symbol('USE_NATIVEEDITOR');
 export const UseProposedApi = Symbol('USE_VSC_PROPOSED_API');
 
 export * from '../constants';

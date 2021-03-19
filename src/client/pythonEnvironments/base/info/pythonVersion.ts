@@ -133,94 +133,6 @@ export function isVersionEmpty(version: PythonVersion): boolean {
     // generic util is better in the long run.
     return basic.isVersionInfoEmpty(version);
 }
-
-/**
- * Make an as-is (deep) copy of the given info.
- */
-export function copyVersion(info: PythonVersion): PythonVersion {
-    return cloneDeep(info);
-}
-
-/**
- * Make a copy with all appropriate properties set (and normalized).
- */
-export function normalizeVersion(info: PythonVersion): PythonVersion {
-    const norm = basic.normalizeVersionInfo(info);
-    if (info.release !== undefined) {
-        norm.release = normalizeRelease(info.release);
-    }
-    if (!info.sysVersion || info.sysVersion === '') {
-        norm.sysVersion = undefined;
-    }
-    return norm;
-}
-
-/**
- * Make a copy and set all the properties properly.
- */
-function normalizeRelease(info: PythonVersionRelease): PythonVersionRelease {
-    const norm = {
-        level: info.level,
-        serial: info.serial,
-    };
-
-    if (!norm.serial || norm.serial < 0) {
-        norm.serial = 0;
-    }
-
-    if (!norm.level || (norm.level as string) === '') {
-        norm.level = PythonReleaseLevel.Final;
-    } else if ((norm.level as string) === 'c' || (norm.level as string) === 'rc') {
-        norm.level = PythonReleaseLevel.Candidate;
-    } else if ((norm.level as string) === 'b') {
-        norm.level = PythonReleaseLevel.Beta;
-    } else if ((norm.level as string) === 'a') {
-        norm.level = PythonReleaseLevel.Alpha;
-    }
-    // Otherwise we leave it as-is and let validateRelease() pick it up.
-
-    return norm;
-}
-
-/**
- * Fail if any properties are not set properly.
- *
- * Optional properties that are not set are ignored.
- *
- * This assumes that the info has already been normalized.
- */
-export function validateVersion(info: PythonVersion): void {
-    basic.validateVersionInfo(info);
-    if (info.release !== undefined) {
-        validateRelease(info.release);
-    }
-}
-
-/**
- * Fail if any properties are not set properly.
- *
- * Optional properties that are not set are ignored.
- *
- * This assumes that the info has already been normalized.
- */
-function validateRelease(info: PythonVersionRelease): void {
-    const supportedLevels = [
-        PythonReleaseLevel.Alpha,
-        PythonReleaseLevel.Beta,
-        PythonReleaseLevel.Candidate,
-        PythonReleaseLevel.Final,
-    ];
-    if (!supportedLevels.includes(info.level)) {
-        throw Error(`unsupported Python release level "${info.level}"`);
-    }
-
-    if (info.level === PythonReleaseLevel.Final) {
-        if (info.serial !== 0) {
-            throw Error(`invalid serial ${info.serial} for final release`);
-        }
-    }
-}
-
 /**
  * Convert the info to a user-facing representation.
  */
@@ -315,19 +227,6 @@ function compareVersionRelease(left: PythonVersion, right: PythonVersion): [numb
     }
 
     return [0, ''];
-}
-
-/**
- * Build a new version based on the given objects.
- *
- * "version" is copied if it is later than "other" or if the two are
- * similar and "other" does not have more info.  Otherwise "other"
- * is used.
- */
-export function copyBestVersion(version: PythonVersion, other: PythonVersion): PythonVersion {
-    const [result] = basic.compareVersions(version, other, compareVersionRelease);
-    const winner = result > 0 ? other : version;
-    return cloneDeep(winner);
 }
 
 /**

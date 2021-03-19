@@ -298,20 +298,6 @@ export function printEnvVariables(): [string[], (out: string) => NodeJS.ProcessE
 }
 
 //============================
-// printEnvVariablesToFile.py
-
-export function printEnvVariablesToFile(filename: string): [string[], (out: string) => NodeJS.ProcessEnv] {
-    const script = path.join(SCRIPTS_DIR, 'printEnvVariablesToFile.py');
-    const args = maybeIsolated([script, filename.fileToCommandArgument()]);
-
-    function parse(out: string): NodeJS.ProcessEnv {
-        return JSON.parse(out);
-    }
-
-    return [args, parse];
-}
-
-//============================
 // shell_exec.py
 
 export function shell_exec(command: string, lockfile: string, shellArgs: string[]): string[] {

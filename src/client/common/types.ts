@@ -42,14 +42,6 @@ export interface IPersistentState<T> {
     readonly value: T;
     updateValue(value: T): Promise<void>;
 }
-export type Version = {
-    raw: string;
-    major: number;
-    minor: number;
-    patch: number;
-    build: string[];
-    prerelease: string[];
-};
 
 export type ReadWrite<T> = {
     -readonly [P in keyof T]: T[P];
@@ -347,12 +339,6 @@ export interface IAnalysisSettings {
     readonly disabled: string[];
     readonly traceLogging: boolean;
     readonly logLevel: AnalysisSettingsLogLevel;
-}
-
-export interface IVariableQuery {
-    language: string;
-    query: string;
-    parseExpr: string;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

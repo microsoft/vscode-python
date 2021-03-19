@@ -135,7 +135,6 @@ export interface ILanguageServerPackageService {
     getLanguageServerDownloadChannel(): LanguageServerDownloadChannels;
 }
 
-export const MajorLanguageServerVersion = Symbol('MajorLanguageServerVersion');
 export const IDownloadChannelRule = Symbol('IDownloadChannelRule');
 export interface IDownloadChannelRule {
     shouldLookForNewLanguageServer(currentFolder?: FolderVersionPair): Promise<boolean>;
@@ -144,11 +143,7 @@ export const ILanguageServerCompatibilityService = Symbol('ILanguageServerCompat
 export interface ILanguageServerCompatibilityService {
     isSupported(): Promise<boolean>;
 }
-export enum LanguageClientFactory {
-    base = 'base',
-    simple = 'simple',
-    downloaded = 'downloaded',
-}
+
 export const ILanguageClientFactory = Symbol('ILanguageClientFactory');
 export interface ILanguageClientFactory {
     createLanguageClient(

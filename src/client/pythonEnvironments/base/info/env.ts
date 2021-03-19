@@ -7,7 +7,7 @@ import { getArchitectureDisplayName } from '../../../common/platform/registry';
 import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
-import { getKindDisplayName, getPrioritizedEnvKinds } from './envKind';
+import { getKindDisplayName } from './envKind';
 import { parseVersionFromExecutable } from './executable';
 import { areIdenticalVersion, areSimilarVersions, getVersionDisplayString, isVersionEmpty } from './pythonVersion';
 
@@ -339,20 +339,6 @@ export function areSameEnv(
         }
     }
     return false;
-}
-
-/**
- * Selects an environment based on the environment selection priority. This should
- * match the priority in the environment identifier.
- */
-export function sortByPriority(...envs: PythonEnvInfo[]): PythonEnvInfo[] {
-    // tslint:disable-next-line: no-suspicious-comment
-    // TODO: When we consolidate the PythonEnvKind and EnvironmentType we should have
-    // one location where we define priority and
-    const envKindByPriority: PythonEnvKind[] = getPrioritizedEnvKinds();
-    return envs.sort(
-        (a: PythonEnvInfo, b: PythonEnvInfo) => envKindByPriority.indexOf(a.kind) - envKindByPriority.indexOf(b.kind),
-    );
 }
 
 /**

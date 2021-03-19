@@ -158,12 +158,7 @@ export function getWorkspaceEditsFromPatch(
 
     return workspaceEdit;
 }
-export function getTextEdits(before: string, after: string): TextEdit[] {
-    const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
-    const d = new dmp.diff_match_patch();
-    const diffs = d.diff_main(before, after);
-    return getTextEditsInternal(before, diffs).map((edit) => edit.apply());
-}
+
 function getTextEditsInternal(before: string, diffs: [number, string][], startLine: number = 0): Edit[] {
     let line = startLine;
     let character = 0;

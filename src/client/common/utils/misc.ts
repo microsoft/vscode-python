@@ -4,41 +4,11 @@
 import type { TextDocument, Uri } from 'vscode';
 import { NotebookCellScheme } from '../constants';
 import { InterpreterUri } from '../installer/types';
-import { IAsyncDisposable, IDisposable, Resource } from '../types';
+import { Resource } from '../types';
 import { isPromise } from './async';
 import { StopWatch } from './stopWatch';
 
 export function noop() {}
-
-/**
- * Execute a block of code ignoring any exceptions.
- */
-export function swallowExceptions(cb: Function) {
-    try {
-        cb();
-    } catch {
-        // Ignore errors.
-    }
-}
-
-export function using<T extends IDisposable>(disposable: T, func: (obj: T) => void) {
-    try {
-        func(disposable);
-    } finally {
-        disposable.dispose();
-    }
-}
-
-export async function usingAsync<T extends IAsyncDisposable, R>(
-    disposable: T,
-    func: (obj: T) => Promise<R>,
-): Promise<R> {
-    try {
-        return await func(disposable);
-    } finally {
-        await disposable.dispose();
-    }
-}
 
 /**
  * Like `Readonly<>`, but recursive.
@@ -176,8 +146,4 @@ export function getURIFilter(
 export function isNotebookCell(documentOrUri: TextDocument | Uri): boolean {
     const uri = isUri(documentOrUri) ? documentOrUri : documentOrUri.uri;
     return uri.scheme.includes(NotebookCellScheme);
-}
-
-export function isUntitledFile(file?: Uri) {
-    return file?.scheme === 'untitled';
 }

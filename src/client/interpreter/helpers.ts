@@ -21,17 +21,6 @@ import { IComponentAdapter, IInterpreterHelper, WorkspacePythonPath } from './co
 const EXPIRY_DURATION = 24 * 60 * 60 * 1000;
 type CachedPythonInterpreter = Partial<PythonEnvironment> & { fileHash: string };
 
-export function getFirstNonEmptyLineFromMultilineString(stdout: string): string {
-    if (!stdout) {
-        return '';
-    }
-    const lines = stdout
-        .split(/\r?\n/g)
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0);
-    return lines.length > 0 ? lines[0] : '';
-}
-
 export function isInterpreterLocatedInWorkspace(interpreter: PythonEnvironment, activeWorkspaceUri: Uri): boolean {
     const fileSystemPaths = FileSystemPaths.withDefaults();
     const interpreterPath = fileSystemPaths.normCase(interpreter.path);

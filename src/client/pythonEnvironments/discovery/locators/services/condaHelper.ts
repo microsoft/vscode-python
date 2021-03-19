@@ -4,9 +4,6 @@
 import '../../../../common/extensions';
 import { AnacondaDisplayName, AnacondaIdentifiers, CondaInfo } from './conda';
 
-export type EnvironmentPath = string;
-export type EnvironmentName = string;
-
 /**
  * Helpers for conda.
  */

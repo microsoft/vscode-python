@@ -140,8 +140,3 @@ export function isNoPermissionsError(err: Error): boolean | undefined {
     }
     return isSystemError(err, 'EACCES');
 }
-
-// Return true if the given error is ENOTEMPTY.
-export function isDirNotEmptyError(err: Error): boolean | undefined {
-    return isSystemError(err, 'ENOTEMPTY');
-}

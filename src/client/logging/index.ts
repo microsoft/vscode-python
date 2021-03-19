@@ -12,5 +12,4 @@ export {
     logVerbose,
     logWarning,
     traceDecorators,
-    tracing,
 } from './_global';

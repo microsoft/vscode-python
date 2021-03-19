@@ -13,11 +13,6 @@ export enum DiagnosticScope {
     WorkspaceFolder = 'WorkspaceFolder',
 }
 
-export enum DiagnosticIgnoreScope {
-    always = 'always',
-    session = 'session',
-}
-
 export interface IDiagnostic {
     readonly code: DiagnosticCodes;
     readonly message: string;
