@@ -1,10 +1,12 @@
 import time
 import sys
+import os
 from tensorboard import default
 from tensorboard import program
 
 
 def main(logdir):
+    os.environ["VSCODE_TENSORBOARD_LAUNCH"] = "1"
     tb = program.TensorBoard(
         default.get_plugins(),
         program.get_default_assets_zip_provider(),
