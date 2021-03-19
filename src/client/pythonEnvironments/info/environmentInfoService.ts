@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 
 import { traceVerbose } from '../../common/logger';
-import { IDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../common/utils/workerPool';
 import { getInterpreterInfo, InterpreterInformation } from '../base/info/interpreter';
-import { shellExecute } from '../common/externalDependencies';
 import { buildPythonExecInfo } from '../exec';
 
 export enum EnvironmentInfoServiceQueuePriority {
@@ -23,24 +21,9 @@ export interface IEnvironmentInfoService {
 }
 
 async function buildEnvironmentInfo(interpreterPath: string): Promise<InterpreterInformation | undefined> {
-    const disposables = new Set<IDisposable>();
-    const interpreterInfo = await getInterpreterInfo(
-        buildPythonExecInfo(interpreterPath),
-        shellExecute,
-        undefined,
-        disposables,
-    ).catch((reason) => {
+    const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(interpreterPath)).catch((reason) => {
         traceVerbose(reason);
         return undefined;
-    });
-
-    // Ensure the process we started is cleaned up.
-    disposables.forEach((p) => {
-        try {
-            p.dispose();
-        } catch {
-            // ignore.
-        }
     });
 
     if (interpreterInfo === undefined || interpreterInfo.version === undefined) {
