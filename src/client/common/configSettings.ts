@@ -3,6 +3,7 @@
 // eslint-disable-next-line camelcase
 import * as child_process from 'child_process';
 import * as path from 'path';
+import * as fs from 'fs';
 import {
     ConfigurationChangeEvent,
     ConfigurationTarget,
@@ -766,13 +767,7 @@ function getPythonExecutable(pythonPath: string): string {
 }
 
 function isValidPythonPath(pythonPath: string): boolean {
-    const [args, parse] = internalPython.isValid();
-    try {
-        const output = child_process.execFileSync(pythonPath, args, { encoding: 'utf8' });
-        return parse(output);
-    } catch (ex) {
-        return false;
-    }
+    return fs.existsSync(pythonPath);
 }
 
 function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType | undefined): LogLevel | 'off' {
