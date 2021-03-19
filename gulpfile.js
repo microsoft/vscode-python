@@ -250,7 +250,7 @@ gulp.task('installPythonRequirements', async () => {
         '--disable-pip-version-check',
         'install',
         '-t',
-        './pythonFiles/lib/python/jedilsp',
+        './pythonFiles/lib/jedilsp',
         '--no-cache-dir',
         '--implementation',
         'py',
