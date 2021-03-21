@@ -190,6 +190,10 @@ suite('Unit Tests - nose - Discovery', () => {
                 'unittest.case.TestCase',
                 'unittest.case.TestCase found in discovered tests',
             );
+            expect(suite.testSuite.functions.length).to.be.greaterThan(
+                0,
+                `${suite.testSuite.name} has no runnable tests`,
+            );
         });
     });
 });
