@@ -21,10 +21,7 @@ import { noop } from '../utils/misc';
 
 const pidUsageTree = require('pidusage-tree');
 
-export function getDefaultOptions<T extends ShellOptions | SpawnOptions>(
-    options: T,
-    defaultEnv?: EnvironmentVariables,
-): T {
+function getDefaultOptions<T extends ShellOptions | SpawnOptions>(options: T, defaultEnv?: EnvironmentVariables): T {
     const defaultOptions = { ...options };
     const execOptions = defaultOptions as SpawnOptions;
     if (execOptions) {

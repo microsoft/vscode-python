@@ -34,7 +34,7 @@ import { EnvironmentType } from '../info';
  *
  * Last category is globally installed python, or system python.
  */
-export function getPrioritizedEnvironmentType(): EnvironmentType[] {
+function getPrioritizedEnvironmentType(): EnvironmentType[] {
     return [
         EnvironmentType.Pyenv,
         EnvironmentType.Conda,

@@ -22,7 +22,7 @@ import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 
-export const NotebookConcatPrefix = '_NotebookConcat_';
+const NotebookConcatPrefix = '_NotebookConcat_';
 
 /**
  * This helper class is used to present a converted document to an LS

@@ -15,7 +15,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { ILanguageServerPackageService } from '../types';
 import { azureCDNBlobStorageAccount, LanguageServerDownloadChannel } from './packageRepository';
 
-export const maxMajorVersion = 0;
+const maxMajorVersion = 0;
 
 @injectable()
 export abstract class LanguageServerPackageService implements ILanguageServerPackageService {

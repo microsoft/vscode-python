@@ -11,7 +11,7 @@ import { IConfigurationService } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
 
 @injectable()
-export abstract class BaseActivationCommandProvider implements ITerminalActivationCommandProvider {
+abstract class BaseActivationCommandProvider implements ITerminalActivationCommandProvider {
     constructor(@inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer) {}
 
     public abstract isShellSupported(targetShell: TerminalShellType): boolean;

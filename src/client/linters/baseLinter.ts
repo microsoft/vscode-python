@@ -19,7 +19,7 @@ const namedRegexp = require('named-js-regexp');
 // Allow codes with more than one letter (i.e. ABC123)
 const REGEX = '(?<line>\\d+),(?<column>-?\\d+),(?<type>\\w+),(?<code>\\w+\\d+):(?<message>.*)\\r?(\\n|$)';
 
-export interface IRegexGroup {
+interface IRegexGroup {
     line: number;
     column: number;
     code: string;
@@ -27,7 +27,7 @@ export interface IRegexGroup {
     type: string;
 }
 
-export function matchNamedRegEx(data: string, regex: string): IRegexGroup | undefined {
+function matchNamedRegEx(data: string, regex: string): IRegexGroup | undefined {
     const compiledRegexp = namedRegexp(regex, 'g');
     const rawMatch = compiledRegexp.exec(data);
     if (rawMatch !== null) {

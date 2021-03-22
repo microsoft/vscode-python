@@ -12,7 +12,7 @@ import { LanguageServerPackageService } from '../common/languageServerPackageSer
 import { PlatformName } from '../types';
 
 const downloadBaseFileName = 'Python-Language-Server';
-export const PackageNames = {
+const PackageNames = {
     [PlatformName.Windows32Bit]: `${downloadBaseFileName}-${PlatformName.Windows32Bit}`,
     [PlatformName.Windows64Bit]: `${downloadBaseFileName}-${PlatformName.Windows64Bit}`,
     [PlatformName.Linux64Bit]: `${downloadBaseFileName}-${PlatformName.Linux64Bit}`,

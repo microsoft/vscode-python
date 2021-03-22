@@ -13,7 +13,7 @@ import { LogLevel, resolveLevelName } from './levels';
 import { getConsoleTransport, getFileTransport, isConsoleTransport } from './transports';
 import { Arguments } from './util';
 
-export type LoggerConfig = {
+type LoggerConfig = {
     level?: LogLevel;
     file?: {
         logfile: string;

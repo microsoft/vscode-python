@@ -7,7 +7,7 @@ import { injectable } from 'inversify';
 import { AzureBlobStoreNugetRepository } from '../../common/nuget/azureBlobStoreNugetRepository';
 import { IServiceContainer } from '../../ioc/types';
 
-export const azureBlobStorageAccount = 'https://pvsc.blob.core.windows.net';
+const azureBlobStorageAccount = 'https://pvsc.blob.core.windows.net';
 export const azureCDNBlobStorageAccount = 'https://pvsc.azureedge.net';
 
 export enum LanguageServerDownloadChannel {

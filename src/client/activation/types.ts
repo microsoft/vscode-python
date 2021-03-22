@@ -72,7 +72,7 @@ export enum LanguageServerType {
 
 export const DotNetLanguageServerFolder = 'languageServer';
 
-export interface LanguageServerCommandHandler {
+interface LanguageServerCommandHandler {
     clearAnalysisCache(): void;
 }
 
@@ -85,7 +85,7 @@ export type ILanguageServerConnection = Pick<
     'sendRequest' | 'sendNotification' | 'onProgress' | 'sendProgress' | 'onNotification' | 'onRequest'
 >;
 
-export interface ILanguageServer
+interface ILanguageServer
     extends RenameProvider,
         DefinitionProvider,
         HoverProvider,

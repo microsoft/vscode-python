@@ -26,7 +26,7 @@ export type PathMapping = {
     localRoot: string;
     remoteRoot: string;
 };
-export type Connection = {
+type Connection = {
     host?: string;
     port?: number;
 };
@@ -48,7 +48,7 @@ interface ICommonDebugArguments {
     // An absolute path to local directory with source.
     pathMappings?: PathMapping[];
 }
-export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
+interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     workspaceFolder?: string;
     customDebugger?: boolean;
     // localRoot and remoteRoot are deprecated (replaced by pathMappings).
@@ -63,7 +63,7 @@ export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     listen?: Connection;
 }
 
-export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
+interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
     sudo?: boolean;
     pyramid?: boolean;
     workspaceFolder?: string;

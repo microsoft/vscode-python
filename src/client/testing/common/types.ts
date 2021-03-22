@@ -126,7 +126,7 @@ export type TestResult = {
     functionsDidNotRun?: number;
 };
 
-export type TestingNode = TestResult & {
+type TestingNode = TestResult & {
     name: string;
     nameToRun: string;
     resource: Uri;
@@ -137,7 +137,7 @@ export type TestFolder = TestingNode & {
     testFiles: TestFile[];
 };
 
-export type TestingXMLNode = TestingNode & {
+type TestingXMLNode = TestingNode & {
     xmlName: string;
 };
 

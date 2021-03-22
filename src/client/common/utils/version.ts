@@ -103,7 +103,7 @@ function copyStrict<T extends BasicVersionInfo>(info: T): RawBasicVersionInfo {
  * Only the "basic" version info will be set (and normalized).
  * The caller is responsible for any other properties beyond that.
  */
-export function normalizeBasicVersionInfo<T extends BasicVersionInfo>(info: T | undefined): T {
+function normalizeBasicVersionInfo<T extends BasicVersionInfo>(info: T | undefined): T {
     if (!info) {
         return EMPTY_VERSION as T;
     }
@@ -138,7 +138,7 @@ function validateVersionPart(prop: string, part: number, unnormalized?: ErrorMsg
  * Only the "basic" version info will be validated.  The caller
  * is responsible for any other properties beyond that.
  */
-export function validateBasicVersionInfo<T extends BasicVersionInfo>(info: T): void {
+function validateBasicVersionInfo<T extends BasicVersionInfo>(info: T): void {
     const raw = (info as unknown) as RawBasicVersionInfo;
     validateVersionPart('major', info.major, raw.unnormalized?.major);
     validateVersionPart('minor', info.minor, raw.unnormalized?.minor);

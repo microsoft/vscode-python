@@ -46,7 +46,7 @@ export async function usingAsync<T extends IAsyncDisposable, R>(
  * See https://github.com/Microsoft/TypeScript/pull/21316.
  */
 
-export type DeepReadonly<T> = T extends any[] ? IDeepReadonlyArray<T[number]> : DeepReadonlyNonArray<T>;
+type DeepReadonly<T> = T extends any[] ? IDeepReadonlyArray<T[number]> : DeepReadonlyNonArray<T>;
 type DeepReadonlyNonArray<T> = T extends object ? DeepReadonlyObject<T> : T;
 interface IDeepReadonlyArray<T> extends ReadonlyArray<DeepReadonly<T>> {}
 type DeepReadonlyObject<T> = {
@@ -114,12 +114,11 @@ export function isResource(resource?: InterpreterUri): resource is Resource {
  * Using `instanceof Uri` doesn't always work as the object is not an instance of Uri (at least not in tests).
  * That's why VSC too has a helper method `URI.isUri` (though not public).
  *
- * @export
  * @param {InterpreterUri} [resource]
  * @returns {resource is Uri}
  */
 
-export function isUri(resource?: Uri | any): resource is Uri {
+function isUri(resource?: Uri | any): resource is Uri {
     if (!resource) {
         return false;
     }

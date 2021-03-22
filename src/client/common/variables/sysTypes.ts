@@ -6,7 +6,7 @@
 
 import { isFunction, isString } from '../utils/sysTypes';
 
-export type TypeConstraint = string | Function;
+type TypeConstraint = string | Function;
 
 export function validateConstraints(args: any[], constraints: TypeConstraint[]): void {
     const len = Math.min(args.length, constraints.length);
@@ -15,7 +15,7 @@ export function validateConstraints(args: any[], constraints: TypeConstraint[]):
     }
 }
 
-export function validateConstraint(arg: any, constraint: TypeConstraint): void {
+function validateConstraint(arg: any, constraint: TypeConstraint): void {
     if (isString(constraint)) {
         if (typeof arg !== constraint) {
             throw new Error(`argument does not match constraint: typeof ${constraint}`);

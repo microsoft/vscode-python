@@ -132,7 +132,7 @@ export async function isComponentEnabled(): Promise<boolean> {
     return results.includes(true);
 }
 
-export interface IPythonEnvironments extends ILocator {}
+interface IPythonEnvironments extends ILocator {}
 
 @injectable()
 class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationService {

@@ -117,7 +117,7 @@ export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
 
 // iterators
 
-export interface IAsyncIterator<T> extends AsyncIterator<T, void>, Partial<AsyncIterable<T>> {}
+interface IAsyncIterator<T> extends AsyncIterator<T, void>, Partial<AsyncIterable<T>> {}
 
 export interface IAsyncIterableIterator<T> extends IAsyncIterator<T>, AsyncIterable<T> {}
 
@@ -144,7 +144,7 @@ async function getNext<T>(it: AsyncIterator<T, T | void>, indexMaybe?: number): 
     }
 }
 
-export const NEVER: Promise<unknown> = new Promise(() => {
+const NEVER: Promise<unknown> = new Promise(() => {
     /** No body. */
 });
 

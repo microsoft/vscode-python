@@ -828,21 +828,21 @@ export interface IArgumentsResult extends ICommandResult {
     definitions: ISignature[];
 }
 
-export interface ISignature {
+interface ISignature {
     name: string;
     docstring: string;
     description: string;
     paramindex: number;
     params: IArgument[];
 }
-export interface IArgument {
+interface IArgument {
     name: string;
     value: string;
     docstring: string;
     description: string;
 }
 
-export interface IReference {
+interface IReference {
     name: string;
     fileName: string;
     columnIndex: number;
@@ -860,7 +860,7 @@ export interface IAutoCompleteItem {
     raw_docstring: string;
     rightLabel: string;
 }
-export interface IDefinitionRange {
+interface IDefinitionRange {
     startLine: number;
     startColumn: number;
     endLine: number;

@@ -72,7 +72,7 @@ export const NOOP_ITERATOR: IPythonEnvsIterator = iterEmpty<PythonEnvInfo>();
  * This is directly correlated with the `BasicPythonEnvsChangedEvent`
  * emitted by watchers.
  */
-export type BasicPythonLocatorQuery = {
+type BasicPythonLocatorQuery = {
     /**
      * If set as true, ignore the cache and query for fresh environments.
      */
@@ -88,7 +88,7 @@ export type BasicPythonLocatorQuery = {
 /**
  * The portion of a query related to env search locations.
  */
-export type SearchLocations = {
+type SearchLocations = {
     /**
      * The locations under which to look for environments.
      */

@@ -36,7 +36,7 @@ import { IDataViewerDataProvider, IJupyterUriProvider } from './types';
 import { inDiscoveryExperiment } from '../common/experiments/helpers';
 import { isWindowsStoreInterpreter } from '../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 
-export interface ILanguageServer extends Disposable {
+interface ILanguageServer extends Disposable {
     readonly connection: ILanguageServerConnection;
     readonly capabilities: lsp.ServerCapabilities;
 }
@@ -118,7 +118,7 @@ type PythonApiForJupyterExtension = {
     registerInterpreterStatusFilter(filter: IInterpreterStatusbarVisibilityFilter): void;
 };
 
-export type JupyterExtensionApi = {
+type JupyterExtensionApi = {
     /**
      * Registers python extension specific parts with the jupyter extension
      * @param interpreterService

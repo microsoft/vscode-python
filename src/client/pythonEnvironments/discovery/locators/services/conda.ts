@@ -37,7 +37,7 @@ export type CondaInfo = {
     conda_version?: string; // eslint-disable-line camelcase
 };
 
-export type CondaEnvInfo = {
+type CondaEnvInfo = {
     prefix: string;
     name?: string;
 };
