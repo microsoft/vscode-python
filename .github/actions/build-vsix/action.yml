@@ -16,6 +16,9 @@ runs:
     - run: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
       shell: bash
 
+    - run: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py --no-deps --upgrade -r jedils_requirements.txt
+      shell: bash
+
     - run: |
         python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
         python ./pythonFiles/install_debugpy.py
