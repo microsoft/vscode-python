@@ -7,7 +7,7 @@ import '../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 
 import { ICommandManager } from '../../common/application/types';
-import { traceDecorators } from '../../common/logger';
+import { traceDecorators, traceVerbose } from '../../common/logger';
 import { IDisposable, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { EXTENSION_ROOT_DIR } from '../../constants';
@@ -95,6 +95,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         } catch (ex) {
             // Getting version here is best effort and does not affect how LS works and
             // failing to get version should not stop LS from working.
+            traceVerbose('Failed to get jedi-language-server version: ', ex);
         }
 
         await this.analysisOptions.initialize(resource, interpreter);
