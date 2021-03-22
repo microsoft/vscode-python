@@ -94,7 +94,7 @@ export enum PythonEnvSource {
  * @prop location - the env's location (on disk), if relevant
  * @prop source - the locator[s] which found the environment.
  */
-export type PythonEnvBaseInfo = {
+type PythonEnvBaseInfo = {
     kind: PythonEnvKind;
     executable: PythonExecutableInfo;
     // One of (name, location) must be non-empty.
@@ -139,7 +139,7 @@ export type PythonVersion = BasicVersionInfo & {
 /**
  * Information for a Python build/installation.
  */
-export type PythonBuildInfo = {
+type PythonBuildInfo = {
     version: PythonVersion; // incl. raw, AKA sys.version
     arch: Architecture;
 };
@@ -150,7 +150,7 @@ export type PythonBuildInfo = {
  * @prop org - the name of the distro's creator/publisher
  * @prop defaultDisplayName - the text to use when showing the distro to users
  */
-export type PythonDistroMetaInfo = {
+type PythonDistroMetaInfo = {
     org: string;
     defaultDisplayName?: string;
 };

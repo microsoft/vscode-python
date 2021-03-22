@@ -23,9 +23,9 @@ import { EventName } from '../../telemetry/constants';
 import { IInterpreterService } from '../contracts';
 import { IEnvironmentActivationService } from './types';
 
-const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
-const cacheDuration = 10 * 60 * 1000;
-export const getEnvironmentTimeout = 30000;
+const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
+const CACHE_DURATION = 10 * 60 * 1000;
+const ENVIRONMENT_TIMEOUT = 30000;
 
 // The shell under which we'll execute activation scripts.
 const defaultShells = {
@@ -134,7 +134,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
 
         // Cache only if successful, else keep trying & failing if necessary.
-        const cache = new InMemoryCache<NodeJS.ProcessEnv | undefined>(cacheDuration);
+        const cache = new InMemoryCache<NodeJS.ProcessEnv | undefined>(CACHE_DURATION);
         return this.getActivatedEnvironmentVariablesImpl(resource, interpreter, allowExceptions).then((vars) => {
             cache.data = vars;
             this.activatedEnvVariablesCache.set(cacheKey, cache);
@@ -183,7 +183,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             args.forEach((arg, i) => {
                 args[i] = arg.toCommandArgument();
             });
-            const command = `${activationCommand} && echo '${getEnvironmentPrefix}' && python ${args.join(' ')}`;
+            const command = `${activationCommand} && echo '${ENVIRONMENT_PREFIX}' && python ${args.join(' ')}`;
             traceVerbose(`Activating Environment to capture Environment variables, ${command}`);
 
             // Do some wrapping of the call. For two reasons:
@@ -201,7 +201,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     result = await processService.shellExec(command, {
                         env,
                         shell: shellInfo.shell,
-                        timeout: getEnvironmentTimeout,
+                        timeout: ENVIRONMENT_TIMEOUT,
                         maxBuffer: 1000 * 1000,
                         throwOnStdErr: false,
                     });
@@ -265,7 +265,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     @traceDecorators.error('Failed to parse Environment variables')
     @traceDecorators.verbose('parseEnvironmentOutput', LogOptions.None)
     protected parseEnvironmentOutput(output: string, parse: (out: string) => NodeJS.ProcessEnv | undefined) {
-        output = output.substring(output.indexOf(getEnvironmentPrefix) + getEnvironmentPrefix.length);
+        output = output.substring(output.indexOf(ENVIRONMENT_PREFIX) + ENVIRONMENT_PREFIX.length);
         const js = output.substring(output.indexOf('{')).trim();
         return parse(js);
     }

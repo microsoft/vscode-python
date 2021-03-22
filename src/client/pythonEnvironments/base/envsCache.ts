@@ -116,7 +116,7 @@ export interface IEnvsCache {
     flush(): Promise<void>;
 }
 
-export interface IPersistentStorage {
+interface IPersistentStorage {
     load(): Promise<PythonEnvInfo[] | undefined>;
     store(envs: PythonEnvInfo[]): Promise<void>;
 }

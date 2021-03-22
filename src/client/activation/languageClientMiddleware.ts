@@ -431,6 +431,7 @@ function captureTelemetryForLSPMethod(
                     };
                 }
                 sendTelemetryEvent(eventName, measures, properties);
+                return result;
             };
 
             let result = originalMethod.apply(this, args);

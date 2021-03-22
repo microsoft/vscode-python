@@ -43,7 +43,7 @@ const condaGlobPathsForLinuxMac = [
     untildify('~/*conda*/bin/conda'),
 ];
 
-export const CondaLocationsGlob = `{${condaGlobPathsForLinuxMac.join(',')}}`;
+const CondaLocationsGlob = `{${condaGlobPathsForLinuxMac.join(',')}}`;
 
 // ...and for windows, the known default install locations:
 const condaGlobPathsForWindows = [
@@ -56,7 +56,7 @@ const condaGlobPathsForWindows = [
 ];
 
 // format for glob processing:
-export const CondaLocationsGlobWin = `{${condaGlobPathsForWindows.join(',')}}`;
+const CondaLocationsGlobWin = `{${condaGlobPathsForWindows.join(',')}}`;
 
 export const CondaGetEnvironmentPrefix = 'Outputting Environment Now...';
 

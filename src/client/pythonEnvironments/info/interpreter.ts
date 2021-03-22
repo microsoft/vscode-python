@@ -18,7 +18,7 @@ import { copyPythonExecInfo, PythonExecInfo } from '../exec';
  * @param python - the path to the Python executable
  * @param raw - the information returned by the `interpreterInfo.py` script
  */
-export function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): InterpreterInformation {
+function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): InterpreterInformation {
     let rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}`;
     // We only need additional version details if the version is 'alpha', 'beta' or 'candidate'.
     // This restriction is needed to avoid sending any PII if this data is used with telemetry.

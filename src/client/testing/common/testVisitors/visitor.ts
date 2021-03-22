@@ -3,13 +3,13 @@
 
 'use strict';
 
-import { getChildren, getParent } from '../testUtils';
+import { getChildren } from '../testUtils';
 import { TestDataItem, Tests } from '../types';
 
-export type Visitor = (item: TestDataItem) => void;
+type Visitor = (item: TestDataItem) => void;
 
 /**
- * Vists tests recursively.
+ * Visits tests recursively.
  *
  * @export
  * @param {Tests} tests
@@ -37,23 +37,4 @@ export function visitRecursive(tests: Tests, arg1: TestDataItem | Visitor, arg2?
         children = tests.rootTestFolders;
     }
     children.forEach((folder) => visitRecursive(tests, folder, visitor));
-}
-
-/**
- * Visits parents recursively.
- *
- * @export
- * @param {Tests} tests
- * @param {TestDataItem} startItem
- * @param {Visitor} visitor
- * @returns {void}
- */
-export function visitParentsRecursive(tests: Tests, startItem: TestDataItem, visitor: Visitor): void {
-    visitor(startItem);
-    const parent = getParent(tests, startItem);
-    if (!parent) {
-        return;
-    }
-    visitor(parent);
-    visitParentsRecursive(tests, parent, visitor);
 }

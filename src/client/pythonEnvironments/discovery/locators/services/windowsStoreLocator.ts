@@ -19,7 +19,7 @@ import { PythonEnvStructure } from '../../../common/pythonBinariesWatcher';
  * @returns {string} : Returns path to the Windows Apps directory under
  * `%LOCALAPPDATA%/Microsoft/WindowsApps`.
  */
-export function getWindowsStoreAppsRoot(): string {
+function getWindowsStoreAppsRoot(): string {
     const localAppData = getEnvironmentVariable('LOCALAPPDATA') || '';
     return path.join(localAppData, 'Microsoft', 'WindowsApps');
 }
@@ -30,7 +30,7 @@ export function getWindowsStoreAppsRoot(): string {
  * @returns {boolean} : Returns true if `interpreterPath` is under
  * `%ProgramFiles%/WindowsApps`.
  */
-export function isForbiddenStorePath(absPath: string): boolean {
+function isForbiddenStorePath(absPath: string): boolean {
     const programFilesStorePath = path
         .join(getEnvironmentVariable('ProgramFiles') || 'Program Files', 'WindowsApps')
         .normalize()
@@ -162,7 +162,7 @@ const storePythonDirGlob = 'PythonSoftwareFoundation.Python.3.{[0-9],[0-9][0-9]}
  * @param {string} interpreterPath : Path to python interpreter.
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
-export function isWindowsStorePythonExePattern(interpreterPath: string): boolean {
+function isWindowsStorePythonExePattern(interpreterPath: string): boolean {
     return minimatch(path.basename(interpreterPath), pythonExeGlob, { nocase: true });
 }
 

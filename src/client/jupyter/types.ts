@@ -5,7 +5,7 @@
 
 import { QuickPickItem } from 'vscode';
 
-export interface IJupyterServerUri {
+interface IJupyterServerUri {
     baseUrl: string;
     token: string;
 
@@ -15,7 +15,7 @@ export interface IJupyterServerUri {
     displayName: string;
 }
 
-export type JupyterServerUriHandle = string;
+type JupyterServerUriHandle = string;
 
 export interface IJupyterUriProvider {
     readonly id: string; // Should be a unique string (like a guid)
@@ -24,7 +24,7 @@ export interface IJupyterUriProvider {
     getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
 
-export interface IDataFrameInfo {
+interface IDataFrameInfo {
     columns?: { key: string; type: ColumnType }[];
     indexColumn?: string;
     rowCount?: number;
@@ -37,11 +37,11 @@ export interface IDataViewerDataProvider {
     getRows(start: number, end: number): Promise<IRowsResponse>;
 }
 
-export enum ColumnType {
+enum ColumnType {
     String = 'string',
     Number = 'number',
     Bool = 'bool',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type IRowsResponse = any[];
+type IRowsResponse = any[];

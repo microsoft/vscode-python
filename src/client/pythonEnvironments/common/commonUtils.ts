@@ -14,11 +14,8 @@ import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/vi
 import * as posix from './posixUtils';
 import * as windows from './windowsUtils';
 
-export const matchPythonBinFilename =
+const matchPythonBinFilename =
     getOSType() === OSType.Windows ? windows.matchPythonBinFilename : posix.matchPythonBinFilename;
-export const matchBasicPythonBinFilename =
-    getOSType() === OSType.Windows ? windows.matchBasicPythonBinFilename : posix.matchBasicPythonBinFilename;
-
 type FileFilterFunc = (filename: string) => boolean;
 
 /**
@@ -200,7 +197,7 @@ function matchFile(
  * Looks for files in the same directory which might have version in their name.
  * @param interpreterPath
  */
-export async function getPythonVersionFromNearByFiles(interpreterPath: string): Promise<PythonVersion> {
+async function getPythonVersionFromNearByFiles(interpreterPath: string): Promise<PythonVersion> {
     const root = path.dirname(interpreterPath);
     let version = UNKNOWN_PYTHON_VERSION;
     for await (const entry of findInterpretersInDir(root)) {
@@ -247,7 +244,7 @@ export async function getPythonVersionFromPath(
 /**
  * Decide if the file is meets the given criteria for a Python executable.
  */
-export async function checkPythonExecutable(
+async function checkPythonExecutable(
     executable: string | DirEntry,
     opts: {
         matchFilename?: (f: string) => boolean;

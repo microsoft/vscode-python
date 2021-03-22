@@ -10,7 +10,7 @@ import '../../../common/extensions';
 const pathToPythonLibDir = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
 const pathToDebugger = path.join(pathToPythonLibDir, 'debugpy');
 
-export type RemoteDebugOptions = {
+type RemoteDebugOptions = {
     host: string;
     port: number;
     waitUntilDebuggerAttaches: boolean;

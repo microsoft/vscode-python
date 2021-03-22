@@ -19,7 +19,7 @@ const InvalidEnvPathVariableMessage =
     "The environment variable '{0}' seems to have some paths containing the '\"' character." +
     " The existence of such a character is known to have caused the {1} extension to not load. If the extension fails to load please modify your paths to remove this '\"' character.";
 
-export class InvalidEnvironmentPathVariableDiagnostic extends BaseDiagnostic {
+class InvalidEnvironmentPathVariableDiagnostic extends BaseDiagnostic {
     constructor(message: string, resource: Resource) {
         super(
             DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic,

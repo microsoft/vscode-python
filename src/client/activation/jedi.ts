@@ -41,9 +41,6 @@ import { PythonSignatureProvider } from '../providers/signatureProvider';
 import { JediSymbolProvider } from '../providers/symbolProvider';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { ITestingService } from '../testing/types';
-import { BlockFormatProviders } from '../typeFormatters/blockFormatProvider';
-import { OnTypeFormattingDispatcher } from '../typeFormatters/dispatcher';
-import { OnEnterFormatter } from '../typeFormatters/onEnterFormatter';
 import { WorkspaceSymbols } from '../workspaceSymbols/main';
 import { ILanguageServerActivator } from './types';
 
@@ -134,21 +131,6 @@ export class JediExtensionActivator implements ILanguageServerActivator {
                 languages.registerCompletionItemProvider(this.documentSelector, this.completionProvider, '.'),
             );
             this.registrations.push(languages.registerCodeLensProvider(this.documentSelector, this.codeLensProvider));
-            const onTypeDispatcher = new OnTypeFormattingDispatcher({
-                '\n': new OnEnterFormatter(),
-                ':': new BlockFormatProviders(),
-            });
-            const onTypeTriggers = onTypeDispatcher.getTriggerCharacters();
-            if (onTypeTriggers) {
-                this.registrations.push(
-                    languages.registerOnTypeFormattingEditProvider(
-                        PYTHON,
-                        onTypeDispatcher,
-                        onTypeTriggers.first,
-                        ...onTypeTriggers.more,
-                    ),
-                );
-            }
             this.registrations.push(
                 languages.registerDocumentSymbolProvider(this.documentSelector, this.symbolProvider),
             );

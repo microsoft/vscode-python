@@ -24,11 +24,7 @@ export class TestRunner implements ITestRunner {
     }
 }
 
-export async function run(
-    serviceContainer: IServiceContainer,
-    testProvider: TestProvider,
-    options: Options,
-): Promise<string> {
+async function run(serviceContainer: IServiceContainer, testProvider: TestProvider, options: Options): Promise<string> {
     const testExecutablePath = getExecutablePath(
         testProvider,
         serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(options.workspaceFolder),

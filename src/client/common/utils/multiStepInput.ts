@@ -12,7 +12,7 @@ import { IApplicationShell } from '../application/types';
 // Borrowed from https://github.com/Microsoft/vscode-extension-samples/blob/master/quickinput-sample/src/multiStepInput.ts
 // Why re-invent the wheel :)
 
-export class InputFlowAction {
+class InputFlowAction {
     public static back = new InputFlowAction();
 
     public static cancel = new InputFlowAction();
@@ -41,7 +41,7 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     acceptFilterBoxTextAsSelection?: boolean;
 }
 
-export interface InputBoxParameters {
+interface InputBoxParameters {
     title: string;
     password?: boolean;
     step?: number;

@@ -4,35 +4,15 @@
 #
 #    pip-compile --generate-hashes requirements.in
 #
-cached-property==1.5.2 \
-    --hash=sha256:9fa5755838eecbb2d234c3aa390bd80fbd3ac6b6869109bfc1b499f7bd89a130 \
-    --hash=sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0
-    # via -r requirements.in
-click==7.1.2 \
-    --hash=sha256:d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a \
-    --hash=sha256:dacca89f4bfadd5de3d7489b7c8a566eee0d3676333fbb50030263894c38c0dc
-    # via jedi-language-server
 isort==5.7.0 ; python_version >= "3.6" \
     --hash=sha256:c729845434366216d320e936b8ad6f9d681aab72dc7cbc2d51bedc3582f3ad1e \
     --hash=sha256:fff4f0c04e1825522ce6949973e83110a6e907750cd92d128b0d14aaaadbffdc
     # via -r requirements.in
-jedi-language-server==0.21.0 ; python_version >= "3.6" \
-    --hash=sha256:7d7ffcb884ac469be1d1d7d286c1c9484c25f08b049c951bec8bf4c88e0cc6b0 \
-    --hash=sha256:bb9d5e5c0aadf69cc441263685c83c12e67b6ed6f546dbd92dbed417123d8a47
-    # via -r requirements.in
 jedi==0.17.2 \
     --hash=sha256:86ed7d9b750603e4ba582ea8edc678657fb4007894a12bcf6f4bb97892f31d20 \
     --hash=sha256:98cc583fa0f2f8304968199b01b6b4b94f469a1f4a74c1560506ca2a211378b5
-    # via
-    #   -r requirements.in
-    #   jedi-language-server
+    # via -r requirements.in
 parso==0.7.1 \
     --hash=sha256:97218d9159b2520ff45eb78028ba8b50d2bc61dcc062a9682666f2dc4bd331ea \
     --hash=sha256:caba44724b994a8a5e086460bb212abc5a8bc46951bf4a9a1210745953622eb9
     # via jedi
-pygls==0.9.1 ; python_version >= "3.6" \
-    --hash=sha256:89b4361e0ba38effdfc735e25ae207c8af2f4d4ce26961e8628b600f19b16ed4 \
-    --hash=sha256:c21c942415457315f316c0b6c19d4c743fd2974d457e02a85472154c8f1b6399
-    # via
-    #   -r requirements.in
-    #   jedi-language-server

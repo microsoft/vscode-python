@@ -11,7 +11,7 @@ const fuzzy = require('fuzzy');
 const IsFileRegEx = /\tkind:file\tline:\d+$/g;
 const LINE_REGEX = '(?<name>\\w+)\\t(?<file>.*)\\t\\/\\^(?<code>.*)\\$\\/;"\\tkind:(?<type>\\w+)\\tline:(?<line>\\d+)$';
 
-export interface IRegexGroup {
+interface IRegexGroup {
     name: string;
     file: string;
     code: string;
@@ -19,7 +19,7 @@ export interface IRegexGroup {
     line: number;
 }
 
-export function matchNamedRegEx(data: String, regex: String): IRegexGroup | null {
+function matchNamedRegEx(data: String, regex: String): IRegexGroup | null {
     const compiledRegexp = NamedRegexp(regex, 'g');
     const rawMatch = compiledRegexp.exec(data);
     if (rawMatch !== null) {

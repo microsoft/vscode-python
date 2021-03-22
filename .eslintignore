@@ -314,12 +314,6 @@ src/client/extension.ts
 src/client/sourceMapSupport.ts
 src/client/startupTelemetry.ts
 
-src/client/typeFormatters/blockFormatProvider.ts
-src/client/typeFormatters/contracts.ts
-src/client/typeFormatters/codeBlockFormatProvider.ts
-src/client/typeFormatters/onEnterFormatter.ts
-src/client/typeFormatters/dispatcher.ts
-
 src/client/terminals/codeExecution/terminalCodeExecution.ts
 src/client/terminals/codeExecution/codeExecutionManager.ts
 src/client/terminals/codeExecution/djangoContext.ts
@@ -386,7 +380,6 @@ src/client/activation/none/activator.ts
 src/client/formatters/serviceRegistry.ts
 src/client/formatters/helper.ts
 src/client/formatters/dummyFormatter.ts
-src/client/formatters/lineFormatter.ts
 src/client/formatters/baseFormatter.ts
 
 src/client/language/languageConfiguration.ts

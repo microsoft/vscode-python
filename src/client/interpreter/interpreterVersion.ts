@@ -5,7 +5,7 @@ import { IProcessServiceFactory } from '../common/process/types';
 import { getPythonVersion } from '../pythonEnvironments/info/pythonVersion';
 import { IInterpreterVersionService } from './contracts';
 
-export const PIP_VERSION_REGEX = '\\d+\\.\\d+(\\.\\d+)?';
+const PIP_VERSION_REGEX = '\\d+\\.\\d+(\\.\\d+)?';
 
 @injectable()
 export class InterpreterVersionService implements IInterpreterVersionService {

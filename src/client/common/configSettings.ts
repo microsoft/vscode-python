@@ -1,8 +1,8 @@
 'use strict';
 
 // eslint-disable-next-line camelcase
-import * as child_process from 'child_process';
 import * as path from 'path';
+import * as fs from 'fs';
 import {
     ConfigurationChangeEvent,
     ConfigurationTarget,
@@ -27,7 +27,6 @@ import { DEFAULT_INTERPRETER_SETTING, isTestExecution } from './constants';
 import { DeprecatePythonPath } from './experiments/groups';
 import { ExtensionChannels } from './insidersBuild/types';
 import { IS_WINDOWS } from './platform/constants';
-import * as internalPython from './process/internal/python';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
@@ -766,13 +765,7 @@ function getPythonExecutable(pythonPath: string): string {
 }
 
 function isValidPythonPath(pythonPath: string): boolean {
-    const [args, parse] = internalPython.isValid();
-    try {
-        const output = child_process.execFileSync(pythonPath, args, { encoding: 'utf8' });
-        return parse(output);
-    } catch (ex) {
-        return false;
-    }
+    return fs.existsSync(pythonPath);
 }
 
 function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType | undefined): LogLevel | 'off' {

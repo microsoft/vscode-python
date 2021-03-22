@@ -27,7 +27,7 @@ const logLevelMap: { [K in LogLevel]: LogLevelName } = {
     [LogLevel.Trace]: 'DEBUG-TRACE',
 };
 // This can be used for winston.LoggerOptions.levels.
-export const configLevels: winston.config.AbstractConfigSetLevels = {
+const configLevels: winston.config.AbstractConfigSetLevels = {
     ERROR: 0,
     WARNING: 1,
     INFORMATION: 2,
@@ -68,7 +68,7 @@ export function resolveLevelName(
         return undefined;
     }
 }
-export function getLevelName(level: LogLevel): LogLevelName | undefined {
+function getLevelName(level: LogLevel): LogLevelName | undefined {
     return logLevelMap[level];
 }
 

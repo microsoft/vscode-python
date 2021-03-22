@@ -330,7 +330,7 @@ export interface IExperiments {
     readonly optOutFrom: string[];
 }
 
-export enum AnalysisSettingsLogLevel {
+enum AnalysisSettingsLogLevel {
     Information = 'Information',
     Error = 'Error',
     Warning = 'Warning',

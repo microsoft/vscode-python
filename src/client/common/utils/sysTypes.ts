@@ -83,7 +83,7 @@ export function isBoolean(obj: any): obj is boolean {
 /**
  * @returns whether the provided parameter is undefined.
  */
-export function isUndefined(obj: any): boolean {
+function isUndefined(obj: any): boolean {
     return typeof obj === _typeof.undefined;
 }
 

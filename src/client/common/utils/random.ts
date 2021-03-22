@@ -17,7 +17,7 @@ function getRandom(): number {
     return num / maxValue;
 }
 
-export function getRandomBetween(min: number = 0, max: number = 10): number {
+function getRandomBetween(min: number = 0, max: number = 10): number {
     const randomVal: number = getRandom();
     return min + randomVal * (max - min);
 }

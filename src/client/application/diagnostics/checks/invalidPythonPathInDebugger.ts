@@ -31,7 +31,7 @@ const messages = {
     [DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic]: Diagnostics.invalidPythonPathInDebuggerLaunch(),
 };
 
-export class InvalidPythonPathInDebuggerDiagnostic extends BaseDiagnostic {
+class InvalidPythonPathInDebuggerDiagnostic extends BaseDiagnostic {
     constructor(
         code:
             | DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic

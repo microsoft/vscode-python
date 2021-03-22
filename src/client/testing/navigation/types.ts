@@ -11,7 +11,7 @@ export const ITestCodeNavigatorCommandHandler = Symbol('ITestCodeNavigatorComman
 export interface ITestCodeNavigatorCommandHandler extends IDisposable {
     register(): void;
 }
-export type NavigableItem = TestFile | TestFunction | TestSuite;
+type NavigableItem = TestFile | TestFunction | TestSuite;
 export enum NavigableItemType {
     testFile = 'testFile',
     testFunction = 'testFunction',

@@ -28,7 +28,7 @@ type DirUnwatchableReason = 'too many files' | undefined;
 /**
  * Determine if the directory is watchable.
  */
-export function checkDirWatchable(dirname: string): DirUnwatchableReason {
+function checkDirWatchable(dirname: string): DirUnwatchableReason {
     let names: string[];
     try {
         names = fs.readdirSync(dirname);

@@ -4,7 +4,7 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ExecutionResult, SpawnOptions } from '../../common/process/types';
+import { ExecutionResult, ShellOptions, SpawnOptions } from '../../common/process/types';
 import { IExperimentService, IDisposable } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { normalizeFilename } from '../../common/utils/filesystem';
@@ -24,13 +24,21 @@ export function initializeExternalDependencies(serviceContainer: IServiceContain
  * Specialized version of the more generic shellExecute function to use only in
  * cases where we don't need to pass custom environment variables read from env
  * files or execution options.
+ *
+ * Also ensures to kill the processes created after execution.
  */
-export async function shellExecute(
-    command: string,
-    timeout: number,
-    disposables?: Set<IDisposable>,
-): Promise<ExecutionResult<string>> {
-    return shellExec(command, { timeout }, undefined, disposables);
+export async function shellExecute(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
+    const disposables = new Set<IDisposable>();
+    return shellExec(command, options, undefined, disposables).finally(() => {
+        // Ensure the process we started is cleaned up.
+        disposables.forEach((p) => {
+            try {
+                p.dispose();
+            } catch {
+                // ignore.
+            }
+        });
+    });
 }
 
 /**

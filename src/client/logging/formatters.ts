@@ -9,7 +9,7 @@ import { getLevel, LogLevel, LogLevelName } from './levels';
 const TIMESTAMP = 'YYYY-MM-DD HH:mm:ss';
 
 // Knobs used when creating a formatter.
-export type FormatterOptions = {
+type FormatterOptions = {
     label?: string;
 };
 

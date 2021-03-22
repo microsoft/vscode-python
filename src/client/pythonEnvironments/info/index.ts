@@ -78,14 +78,14 @@ export type PythonEnvironment = InterpreterInformation & {
 /**
  * Python environment containing only partial info. But it will contain the environment path.
  */
-export type PartialPythonEnvironment = Partial<Omit<PythonEnvironment, 'path'>> & { path: string };
+type PartialPythonEnvironment = Partial<Omit<PythonEnvironment, 'path'>> & { path: string };
 
 /**
  * Standardize the given env info.
  *
  * @param environment = the env info to normalize
  */
-export function normalizeEnvironment(environment: PartialPythonEnvironment): void {
+function normalizeEnvironment(environment: PartialPythonEnvironment): void {
     environment.path = path.normalize(environment.path);
 }
 
@@ -130,7 +130,7 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType): string
  * @param environment1 - one of the two envs to compare
  * @param environment2 - one of the two envs to compare
  */
-export function areSamePartialEnvironment(
+function areSamePartialEnvironment(
     environment1: PartialPythonEnvironment | undefined,
     environment2: PartialPythonEnvironment | undefined,
     fs: IFileSystem,
@@ -158,7 +158,7 @@ export function areSamePartialEnvironment(
  * @param environment - the info to update
  * @param other - the info to copy in
  */
-export function updateEnvironment(environment: PartialPythonEnvironment, other: PartialPythonEnvironment): void {
+function updateEnvironment(environment: PartialPythonEnvironment, other: PartialPythonEnvironment): void {
     // Preserve type information.
     // Possible we identified environment as unknown, but a later provider has identified env type.
     if (environment.envType === EnvironmentType.Unknown && other.envType && other.envType !== EnvironmentType.Unknown) {
@@ -212,7 +212,7 @@ export function mergeEnvironments(
  * @param path1 - one of the two paths to compare
  * @param path2 - one of the two paths to compare
  */
-export function inSameDirectory(path1: string | undefined, path2: string | undefined, fs: IFileSystem): boolean {
+function inSameDirectory(path1: string | undefined, path2: string | undefined, fs: IFileSystem): boolean {
     if (!path1 || !path2) {
         return false;
     }

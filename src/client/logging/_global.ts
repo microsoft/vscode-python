@@ -65,7 +65,7 @@ export function addOutputChannelLogging(channel: IOutputChannel) {
 }
 
 // Emit a log message derived from the args to all enabled transports.
-export function log(logLevel: LogLevel, ...args: Arguments) {
+function log(logLevel: LogLevel, ...args: Arguments) {
     logToAll([globalLogger], logLevel, args);
 }
 

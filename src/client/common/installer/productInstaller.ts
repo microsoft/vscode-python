@@ -47,7 +47,7 @@ const UnsupportedChannelsForProduct = new Map<Product, Set<EnvironmentType>>([
     [Product.torchProfilerInstallName, new Set([EnvironmentType.Conda])],
 ]);
 
-export abstract class BaseInstaller {
+abstract class BaseInstaller {
     private static readonly PromptPromises = new Map<string, Promise<InstallerResponse>>();
 
     protected readonly appShell: IApplicationShell;
@@ -293,7 +293,7 @@ export class FormatterInstaller extends BaseInstaller {
         return InstallerResponse.Ignore;
     }
 }
-export class TestFrameworkInstaller extends BaseInstaller {
+class TestFrameworkInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(
         product: Product,
         resource?: Uri,
@@ -315,7 +315,7 @@ export class TestFrameworkInstaller extends BaseInstaller {
     }
 }
 
-export class RefactoringLibraryInstaller extends BaseInstaller {
+class RefactoringLibraryInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(
         product: Product,
         resource?: Uri,
@@ -331,7 +331,7 @@ export class RefactoringLibraryInstaller extends BaseInstaller {
     }
 }
 
-export class DataScienceInstaller extends BaseInstaller {
+class DataScienceInstaller extends BaseInstaller {
     // Override base installer to support a more DS-friendly streamlined installation.
     public async install(
         product: Product,

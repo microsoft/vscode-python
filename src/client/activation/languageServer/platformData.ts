@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { IPlatformService } from '../../common/platform/types';
 import { IPlatformData } from '../types';
 
-export enum PlatformName {
+enum PlatformName {
     Windows32Bit = 'win-x86',
     Windows64Bit = 'win-x64',
     Mac64Bit = 'osx-x64',

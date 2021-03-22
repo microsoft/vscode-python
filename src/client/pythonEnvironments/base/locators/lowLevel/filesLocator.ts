@@ -21,7 +21,7 @@ type GetExecutablesFunc = () => Promise<Executable[]> | AsyncIterableIterator<Ex
 /**
  * A naive locator the wraps a function that finds Python executables.
  */
-export class FoundFilesLocator implements ILocator {
+class FoundFilesLocator implements ILocator {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     protected readonly watcher = new PythonEnvsWatcher();

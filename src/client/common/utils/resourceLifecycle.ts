@@ -13,14 +13,14 @@ export interface IDisposable {
 /**
  * A registry of disposables.
  */
-export interface IDisposables extends IDisposable {
+interface IDisposables extends IDisposable {
     push(...disposable: IDisposable[]): void;
 }
 
 /**
  * Safely dispose each of the disposables.
  */
-export async function disposeAll(disposables: IDisposable[]): Promise<void> {
+async function disposeAll(disposables: IDisposable[]): Promise<void> {
     await Promise.all(
         disposables.map(async (d, index) => {
             try {

@@ -14,7 +14,7 @@ import { DiagnosticCodes } from '../constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../promptHandler';
 import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../types';
 
-export class LSNotSupportedDiagnostic extends BaseDiagnostic {
+class LSNotSupportedDiagnostic extends BaseDiagnostic {
     constructor(message: string, resource: Resource) {
         super(
             DiagnosticCodes.LSNotSupportedDiagnostic,
