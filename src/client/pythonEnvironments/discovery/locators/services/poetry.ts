@@ -93,14 +93,7 @@ export class Poetry {
      * Corresponds to "poetry env list --full-path". Swallows errors if any.
      */
     public async getEnvList(cwd: string): Promise<string[]> {
-        const result = await shellExecute(`${this.command} env list --full-path`, {
-            cwd,
-            timeout: this.timeout,
-            throwOnStdErr: true,
-        }).catch((ex) => {
-            traceVerbose(ex);
-            return undefined;
-        });
+        const result = await this.safeShellExecute(`${this.command} env list --full-path`, cwd);
         if (!result) {
             return [];
         }
@@ -115,7 +108,30 @@ export class Poetry {
      * Corresponds to "poetry env info -p". Swallows errors if any.
      */
     public async getActiveEnvPath(cwd: string): Promise<string | undefined> {
-        const result = await shellExecute(`${this.command} env info -p`, {
+        const result = await this.safeShellExecute(`${this.command} env info -p`, cwd);
+        if (!result) {
+            return undefined;
+        }
+        return result.stdout.trim();
+    }
+
+    /**
+     * Retrieves `virtualenvs.path` setting for this working directory. `virtualenvs.path` setting defines where virtual
+     * environments are created for the directory. Corresponds to "poetry config virtualenvs.path". Swallows errors if any.
+     */
+    public async getVirtualenvsPathSetting(cwd?: string): Promise<string | undefined> {
+        const result = await this.safeShellExecute(`${this.command} config virtualenvs.path`, cwd);
+        if (!result) {
+            return undefined;
+        }
+        return result.stdout.trim();
+    }
+
+    /**
+     * Executes the command within the cwd specified. Swallows errors if any.
+     */
+    private async safeShellExecute(command: string, cwd?: string) {
+        const result = await shellExecute(command, {
             cwd,
             timeout: this.timeout,
             throwOnStdErr: true,
@@ -123,10 +139,7 @@ export class Poetry {
             traceVerbose(ex);
             return undefined;
         });
-        if (!result) {
-            return undefined;
-        }
-        return result.stdout.trim();
+        return result;
     }
 }
 
