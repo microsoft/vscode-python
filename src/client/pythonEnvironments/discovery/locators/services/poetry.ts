@@ -7,6 +7,77 @@ import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
 import { getUserHomeDir } from '../../../../common/utils/platform';
 import { getPythonSetting, isParentPath, pathExists, shellExecute } from '../../../common/externalDependencies';
+import { getEnvironmentDirFromPath } from '../../../common/commonUtils';
+import { isVirtualenvEnvironment } from './virtualEnvironmentIdentifier';
+
+/**
+ * Global virtual env dir for a project is named as:
+ *
+ * <sanitized_project_name>-<project_cwd_hash>-py<major>.<micro>
+ *
+ * Implementation details behind <sanitized_project_name> and <project_cwd_hash> are too
+ * much to rely upon, so for our purposes the best we can do is the following regex.
+ */
+const globalPoetryEnvDirRegex = /^(.+)-(.+)-py(\d).(\d){1,2}$/;
+
+/**
+ * Checks if the given interpreter belongs to a global poetry environment.
+ * @param {string} interpreterPath: Absolute path to the python interpreter.
+ * @returns {boolean} : Returns true if the interpreter belongs to a venv environment.
+ */
+export async function isGlobalPoetryEnvironment(interpreterPath: string): Promise<boolean> {
+    const envDir = getEnvironmentDirFromPath(interpreterPath);
+    return globalPoetryEnvDirRegex.test(path.basename(envDir)) ? isVirtualenvEnvironment(interpreterPath) : false;
+}
+
+/**
+ * Checks if the given interpreter belongs to a local poetry environment, i.e environment is located inside the project.
+ * @param {string} interpreterPath: Absolute path to the python interpreter.
+ * @returns {boolean} : Returns true if the interpreter belongs to a venv environment.
+ */
+export async function isLocalPoetryEnvironment(interpreterPath: string): Promise<boolean> {
+    // Local poetry environments are created by the `virtualenvs.in-project` setting , which always names the environment
+    // folder '.venv': https://python-poetry.org/docs/configuration/#virtualenvsin-project-boolean
+    // This is the layout we wish to verify.
+    // project
+    // |__ pyproject.toml  <--- check if this exists
+    // |__ .venv    <--- check if name of the folder is '.venv'
+    //     |__ Scripts/bin
+    //         |__ python  <--- interpreterPath
+    const envDir = path.basename(getEnvironmentDirFromPath(interpreterPath));
+    if (path.basename(envDir) !== '.venv') {
+        return false;
+    }
+    const project = path.dirname(envDir);
+    const pyprojectToml = path.join(project, 'pyproject.toml');
+    if (!(await pathExists(pyprojectToml))) {
+        return false;
+    }
+    // The assumption is that we need to be able to run poetry CLI for an environment in order to mark it as poetry.
+    // For that we can either further verify,
+    // - 'pyproject.toml' is valid toml
+    // - 'pyproject.toml' has a poetry section which contains the necessary fields
+    // - Poetry configuration allows local virtual environments
+    // ... possibly more
+    // Or we can simply try running poetry to find the related environment instead. We do the latter for simplicity and reliability.
+    // It should not be much expensive as we have already narrowed down this possibility through various file checks.
+    return isPoetryEnvironmentRelatedToFolder(interpreterPath, project);
+}
+
+/**
+ * Checks if the given interpreter belongs to a poetry environment.
+ * @param {string} interpreterPath: Absolute path to the python interpreter.
+ * @returns {boolean} : Returns true if the interpreter belongs to a venv environment.
+ */
+export async function isPoetryEnvironment(interpreterPath: string): Promise<boolean> {
+    if (await isGlobalPoetryEnvironment(interpreterPath)) {
+        return true;
+    }
+    if (await isLocalPoetryEnvironment(interpreterPath)) {
+        return true;
+    }
+    return false;
+}
 
 /** Wraps the "poetry" utility, and exposes its functionality.
  */
