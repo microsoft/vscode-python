@@ -1319,7 +1319,8 @@ export interface IEventNamePropertyMapping {
         userAction: string;
     };
     /**
-     * Telemetry event sent when we fallback from JediLSP to Jedi
+     * Telemetry event sent when we fallback from JediLSP to Jedi in cases where JediLSP is
+     * not supported. The value of this constant is "JEDI_FALLBACK".
      */
     [EventName.JEDI_LANGUAGE_SERVER_FALLBACK]: unknown;
     /**
