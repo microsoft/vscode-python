@@ -235,7 +235,7 @@ export class LanguageServerExtensionActivationService
 
         if (serverType === LanguageServerType.JediLSP && interpreter && interpreter.version) {
             if (interpreter.version.major < 3 || (interpreter.version.major === 3 && interpreter.version.minor < 6)) {
-                sendTelemetryEvent(EventName.JEDI_LANGUAGE_SERVER_FALLBACK);
+                sendTelemetryEvent(EventName.JEDI_FALLBACK);
                 serverType = LanguageServerType.Jedi;
             }
         }
