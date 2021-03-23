@@ -25,7 +25,7 @@ const globalPoetryEnvDirRegex = /^(.+)-(.+)-py(\d).(\d){1,2}$/;
  * @param {string} interpreterPath: Absolute path to the python interpreter.
  * @returns {boolean} : Returns true if the interpreter belongs to a venv environment.
  */
-export async function isGlobalPoetryEnvironment(interpreterPath: string): Promise<boolean> {
+async function isGlobalPoetryEnvironment(interpreterPath: string): Promise<boolean> {
     const envDir = getEnvironmentDirFromPath(interpreterPath);
     return globalPoetryEnvDirRegex.test(path.basename(envDir)) ? isVirtualenvEnvironment(interpreterPath) : false;
 }
@@ -35,7 +35,7 @@ export async function isGlobalPoetryEnvironment(interpreterPath: string): Promis
  * @param {string} interpreterPath: Absolute path to the python interpreter.
  * @returns {boolean} : Returns true if the interpreter belongs to a venv environment.
  */
-export async function isLocalPoetryEnvironment(interpreterPath: string): Promise<boolean> {
+async function isLocalPoetryEnvironment(interpreterPath: string): Promise<boolean> {
     // Local poetry environments are created by the `virtualenvs.in-project` setting , which always names the environment
     // folder '.venv': https://python-poetry.org/docs/configuration/#virtualenvsin-project-boolean
     // This is the layout we wish to verify.

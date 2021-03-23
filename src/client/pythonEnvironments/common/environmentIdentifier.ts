@@ -3,6 +3,7 @@
 
 import { isCondaEnvironment } from '../discovery/locators/services/conda';
 import { isPipenvEnvironment } from '../discovery/locators/services/pipEnvHelper';
+import { isPoetryEnvironment } from '../discovery/locators/services/poetry';
 import { isPyenvEnvironment } from '../discovery/locators/services/pyenvLocator';
 import {
     isVenvEnvironment,
@@ -65,6 +66,7 @@ function getIdentifiers(): Map<EnvironmentType, (path: string) => Promise<boolea
     identifier.set(EnvironmentType.Venv, isVenvEnvironment);
     identifier.set(EnvironmentType.VirtualEnvWrapper, isVirtualenvwrapperEnvironment);
     identifier.set(EnvironmentType.VirtualEnv, isVirtualenvEnvironment);
+    identifier.set(EnvironmentType.Poetry, isPoetryEnvironment);
     identifier.set(EnvironmentType.Unknown, defaultTrue);
     return identifier;
 }
