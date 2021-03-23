@@ -58,8 +58,6 @@ const condaGlobPathsForWindows = [
 // format for glob processing:
 const CondaLocationsGlobWin = `{${condaGlobPathsForWindows.join(',')}}`;
 
-export const CondaGetEnvironmentPrefix = 'Outputting Environment Now...';
-
 /**
  * A wrapper around a conda installation.
  */

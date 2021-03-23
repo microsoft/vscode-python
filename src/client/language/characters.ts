@@ -82,10 +82,6 @@ export function isLineBreak(ch: number): boolean {
     return ch === Char.CarriageReturn || ch === Char.LineFeed;
 }
 
-export function isNumber(ch: number): boolean {
-    return (ch >= Char._0 && ch <= Char._9) || ch === Char.Underscore;
-}
-
 export function isDecimal(ch: number): boolean {
     return (ch >= Char._0 && ch <= Char._9) || ch === Char.Underscore;
 }

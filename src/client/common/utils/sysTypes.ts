@@ -40,13 +40,6 @@ export function isString(str: any): str is string {
 }
 
 /**
- * @returns whether the provided parameter is a JavaScript Array and each element in the array is a string.
- */
-export function isStringArray(value: any): value is string[] {
-    return isArray(value) && value.every((elem) => isString(elem));
-}
-
-/**
  *
  * @returns whether the provided parameter is of type `object` but **not**
  *	`null`, an `array`, a `regexp`, nor a `date`.
@@ -71,58 +64,4 @@ export function isNumber(obj: any): obj is number {
     }
 
     return false;
-}
-
-/**
- * @returns whether the provided parameter is a JavaScript Boolean or not.
- */
-export function isBoolean(obj: any): obj is boolean {
-    return obj === true || obj === false;
-}
-
-/**
- * @returns whether the provided parameter is undefined.
- */
-function isUndefined(obj: any): boolean {
-    return typeof obj === _typeof.undefined;
-}
-
-/**
- * @returns whether the provided parameter is undefined or null.
- */
-export function isUndefinedOrNull(obj: any): boolean {
-    return isUndefined(obj) || obj === null;
-}
-
-const hasOwnProperty = Object.prototype.hasOwnProperty;
-
-/**
- * @returns whether the provided parameter is an empty JavaScript Object or not.
- */
-export function isEmptyObject(obj: any): obj is any {
-    if (!isObject(obj)) {
-        return false;
-    }
-
-    for (let key in obj) {
-        if (hasOwnProperty.call(obj, key)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-/**
- * @returns whether the provided parameter is a JavaScript Function or not.
- */
-export function isFunction(obj: any): obj is Function {
-    return typeof obj === _typeof.function;
-}
-
-/**
- * @returns whether the provided parameters is are JavaScript Function or not.
- */
-export function areFunctions(...objects: any[]): boolean {
-    return objects && objects.length > 0 && objects.every(isFunction);
 }

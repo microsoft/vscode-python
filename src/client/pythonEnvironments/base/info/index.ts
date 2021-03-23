@@ -29,11 +29,6 @@ export enum PythonEnvKind {
 }
 
 /**
- * A (system-global) unique ID for a single Python environment.
- */
-export type PythonEnvID = string;
-
-/**
  * Information about a file.
  */
 export type FileInfo = {

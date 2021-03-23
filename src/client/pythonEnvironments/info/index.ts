@@ -3,11 +3,9 @@
 
 'use strict';
 
-import * as path from 'path';
 import * as semver from 'semver';
-import { IFileSystem } from '../../common/platform/types';
 import { Architecture } from '../../common/utils/platform';
-import { areSameVersion, PythonVersion } from './pythonVersion';
+import { PythonVersion } from './pythonVersion';
 
 /**
  * The supported Python environment types.
@@ -25,15 +23,6 @@ export enum EnvironmentType {
     Global = 'Global',
     System = 'System',
 }
-
-type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
-
-/**
- * The components of a Python version.
- *
- * These match the elements of `sys.version_info`.
- */
-export type PythonVersionInfo = [number, number, number, ReleaseLevel];
 
 /**
  * Details about a Python runtime.
@@ -76,20 +65,6 @@ export type PythonEnvironment = InterpreterInformation & {
 };
 
 /**
- * Python environment containing only partial info. But it will contain the environment path.
- */
-type PartialPythonEnvironment = Partial<Omit<PythonEnvironment, 'path'>> & { path: string };
-
-/**
- * Standardize the given env info.
- *
- * @param environment = the env info to normalize
- */
-function normalizeEnvironment(environment: PartialPythonEnvironment): void {
-    environment.path = path.normalize(environment.path);
-}
-
-/**
  * Convert the Python environment type to a user-facing name.
  */
 export function getEnvironmentTypeName(environmentType: EnvironmentType): string {
@@ -122,103 +97,6 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType): string
             return '';
         }
     }
-}
-
-/**
- * Determine if the given infos correspond to the same env.
- *
- * @param environment1 - one of the two envs to compare
- * @param environment2 - one of the two envs to compare
- */
-function areSamePartialEnvironment(
-    environment1: PartialPythonEnvironment | undefined,
-    environment2: PartialPythonEnvironment | undefined,
-    fs: IFileSystem,
-): boolean {
-    if (!environment1 || !environment2) {
-        return false;
-    }
-    if (fs.arePathsSame(environment1.path, environment2.path)) {
-        return true;
-    }
-    if (!areSameVersion(environment1.version, environment2.version)) {
-        return false;
-    }
-    // Could be Python 3.6 with path = python.exe, and Python 3.6
-    // and path = python3.exe, so we check the parent directory.
-    if (!inSameDirectory(environment1.path, environment2.path, fs)) {
-        return false;
-    }
-    return true;
-}
-
-/**
- * Update one env info with another.
- *
- * @param environment - the info to update
- * @param other - the info to copy in
- */
-function updateEnvironment(environment: PartialPythonEnvironment, other: PartialPythonEnvironment): void {
-    // Preserve type information.
-    // Possible we identified environment as unknown, but a later provider has identified env type.
-    if (environment.envType === EnvironmentType.Unknown && other.envType && other.envType !== EnvironmentType.Unknown) {
-        environment.envType = other.envType;
-    }
-    const props: (keyof PythonEnvironment)[] = [
-        'envName',
-        'envPath',
-        'path',
-        'sysPrefix',
-        'architecture',
-        'sysVersion',
-        'version',
-        'pipEnvWorkspaceFolder',
-    ];
-    props.forEach((prop) => {
-        if (!environment[prop] && other[prop]) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (environment as any)[prop] = other[prop];
-        }
-    });
-}
-
-/**
- * Combine env info for matching environments.
- *
- * Environments are matched by path and version.
- *
- * @param environments - the env infos to merge
- */
-export function mergeEnvironments(
-    environments: PartialPythonEnvironment[],
-    fs: IFileSystem,
-): PartialPythonEnvironment[] {
-    return environments.reduce<PartialPythonEnvironment[]>((accumulator, current) => {
-        const existingItem = accumulator.find((item) => areSamePartialEnvironment(current, item, fs));
-        if (!existingItem) {
-            const copied: PartialPythonEnvironment = { ...current };
-            normalizeEnvironment(copied);
-            accumulator.push(copied);
-        } else {
-            updateEnvironment(existingItem, current);
-        }
-        return accumulator;
-    }, []);
-}
-
-/**
- * Determine if the given paths are in the same directory.
- *
- * @param path1 - one of the two paths to compare
- * @param path2 - one of the two paths to compare
- */
-function inSameDirectory(path1: string | undefined, path2: string | undefined, fs: IFileSystem): boolean {
-    if (!path1 || !path2) {
-        return false;
-    }
-    const dir1 = path.dirname(path1);
-    const dir2 = path.dirname(path2);
-    return fs.arePathsSame(dir1, dir2);
 }
 
 /**

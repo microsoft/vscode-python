@@ -10,8 +10,6 @@ import { ITestingSettings, TestSettingsPropertyNames } from '../configuration/ty
 import { TestProvider } from '../types';
 import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
 import {
-    FlattenedTestFunction,
-    FlattenedTestSuite,
     ITestsHelper,
     ITestVisitor,
     TestDataItem,
@@ -447,30 +445,6 @@ function getParentTestFolderForFolder(tests: Tests, folder: TestFolder): TestFol
         return;
     }
     return tests.testFolders.find((item) => item.folders.some((child) => child === folder));
-}
-
-/**
- * Given a test function will return the corresponding flattened test function.
- *
- * @export
- * @param {Tests} tests
- * @param {TestFunction} func
- * @returns {(FlattenedTestFunction | undefined)}
- */
-export function findFlattendTestFunction(tests: Tests, func: TestFunction): FlattenedTestFunction | undefined {
-    return tests.testFunctions.find((f) => f.testFunction === func);
-}
-
-/**
- * Given a test suite, will return the corresponding flattened test suite.
- *
- * @export
- * @param {Tests} tests
- * @param {TestSuite} suite
- * @returns {(FlattenedTestSuite | undefined)}
- */
-export function findFlattendTestSuite(tests: Tests, suite: TestSuite): FlattenedTestSuite | undefined {
-    return tests.testSuites.find((f) => f.testSuite === suite);
 }
 
 /**

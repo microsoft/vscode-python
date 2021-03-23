@@ -20,7 +20,6 @@ import {
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
 import { LogLevel } from '../logging/levels';
-import type { CommandsWithoutArgs } from './application/commands';
 import type { ExtensionChannels } from './insidersBuild/types';
 import type { InterpreterUri } from './installer/types';
 import { EnvironmentVariables } from './variables/types';
@@ -42,14 +41,6 @@ export interface IPersistentState<T> {
     readonly value: T;
     updateValue(value: T): Promise<void>;
 }
-export type Version = {
-    raw: string;
-    major: number;
-    minor: number;
-    patch: number;
-    build: string[];
-    prerelease: string[];
-};
 
 export type ReadWrite<T> = {
     -readonly [P in keyof T]: T[P];
@@ -349,12 +340,6 @@ export interface IAnalysisSettings {
     readonly logLevel: AnalysisSettingsLogLevel;
 }
 
-export interface IVariableQuery {
-    language: string;
-    query: string;
-    parseExpr: string;
-}
-
 export const IConfigurationService = Symbol('IConfigurationService');
 export interface IConfigurationService {
     getSettings(resource?: Uri): IPythonSettings;
@@ -491,26 +476,6 @@ export interface IPythonExtensionBanner {
     showBanner(): Promise<void>;
 }
 export const BANNER_NAME_PROPOSE_LS = 'ProposePylance';
-
-export type DeprecatedSettingAndValue = {
-    setting: string;
-    values?: unknown[];
-};
-
-export type DeprecatedFeatureInfo = {
-    doNotDisplayPromptStateKey: string;
-    message: string;
-    moreInfoUrl: string;
-    commands?: CommandsWithoutArgs[];
-    setting?: DeprecatedSettingAndValue;
-};
-
-export const IFeatureDeprecationManager = Symbol('IFeatureDeprecationManager');
-
-export interface IFeatureDeprecationManager extends Disposable {
-    initialize(): void;
-    registerDeprecation(deprecatedInfo: DeprecatedFeatureInfo): void;
-}
 
 export const IEditorUtils = Symbol('IEditorUtils');
 export interface IEditorUtils {

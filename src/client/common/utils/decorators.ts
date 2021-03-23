@@ -1,4 +1,3 @@
-import { ProgressLocation, ProgressOptions, window } from 'vscode';
 import '../../common/extensions';
 import { isTestExecution } from '../constants';
 import { traceError, traceVerbose } from '../logger';
@@ -183,24 +182,6 @@ export function swallowExceptions(scopeName?: string) {
                 }
                 traceError(errorMessage, error);
             }
-        };
-    };
-}
-
-type PromiseFunction = (...any: any[]) => Promise<any>;
-
-export function displayProgress(title: string, location = ProgressLocation.Window) {
-    return function (_target: Object, _propertyName: string, descriptor: TypedPropertyDescriptor<PromiseFunction>) {
-        const originalMethod = descriptor.value!;
-
-        descriptor.value = async function (...args: any[]) {
-            const progressOptions: ProgressOptions = { location, title };
-
-            const promise = originalMethod.apply(this, args);
-            if (!isTestExecution()) {
-                window.withProgress(progressOptions, () => promise);
-            }
-            return promise;
         };
     };
 }

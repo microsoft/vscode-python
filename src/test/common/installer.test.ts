@@ -31,7 +31,6 @@ import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
 import { ExperimentsManager } from '../../client/common/experiments/manager';
 import { ExperimentService } from '../../client/common/experiments/service';
-import { FeatureDeprecationManager } from '../../client/common/featureDeprecationManager';
 import {
     ExtensionInsidersDailyChannelRule,
     ExtensionInsidersOffChannelRule,
@@ -105,7 +104,6 @@ import {
     IExperimentService,
     IExperimentsManager,
     IExtensions,
-    IFeatureDeprecationManager,
     IFileDownloader,
     IHttpClient,
     IInstaller,
@@ -257,11 +255,6 @@ suite('Installer', () => {
             PipEnvActivationCommandProvider,
             TerminalActivationProviders.pipenv,
         );
-        ioc.serviceManager.addSingleton<IFeatureDeprecationManager>(
-            IFeatureDeprecationManager,
-            FeatureDeprecationManager,
-        );
-
         ioc.serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
         ioc.serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
         ioc.serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);

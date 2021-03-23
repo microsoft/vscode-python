@@ -26,7 +26,6 @@ import {
     IDisposableRegistry,
     IExperimentService,
     IExperimentsManager,
-    IFeatureDeprecationManager,
     IOutputChannel,
 } from './common/types';
 import { noop } from './common/utils/misc';
@@ -207,10 +206,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
         context.subscriptions.push(languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
         context.subscriptions.push(languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
     }
-
-    const deprecationMgr = serviceContainer.get<IFeatureDeprecationManager>(IFeatureDeprecationManager);
-    deprecationMgr.initialize();
-    context.subscriptions.push(deprecationMgr);
 
     context.subscriptions.push(new ReplProvider(serviceContainer));
 

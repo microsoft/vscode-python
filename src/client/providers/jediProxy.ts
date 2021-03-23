@@ -802,10 +802,6 @@ interface IExecutionCommand<T extends ICommandResult> extends ICommand {
     delay?: number;
 }
 
-export interface ICommandError {
-    message: string;
-}
-
 export interface ICommandResult {
     requestId: number;
 }

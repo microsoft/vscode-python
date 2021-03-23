@@ -24,8 +24,6 @@ export interface IRegistry {
 //= ==========================
 // platform
 
-export const IsWindows = Symbol('IS_WINDOWS');
-
 export const IPlatformService = Symbol('IPlatformService');
 export interface IPlatformService {
     readonly osType: OSType;
@@ -45,7 +43,6 @@ export interface IPlatformService {
 // temp FS
 
 export type TemporaryFile = { filePath: string } & vscode.Disposable;
-export type TemporaryDirectory = { path: string } & vscode.Disposable;
 
 export interface ITempFileSystem {
     createFile(suffix: string, mode?: number): Promise<TemporaryFile>;
