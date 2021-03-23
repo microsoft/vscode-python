@@ -292,8 +292,18 @@ jobs:
           working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'debugger'
 
-      - name: Run functional tests
-        run: npm run test:functional
+      # Run TypeScript functional tests
+      - name: Run TypeScript functional tests
+        run: npm run test:functional:cover
+        if: matrix.test-suite == 'functional'
+
+      # Upload functional test coverage reports for later use in the "reports" job.
+      - name: Upload functional test coverage reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: ${{ env.special-working-directory }}/.nyc_output
+          retention-days: 1
         if: matrix.test-suite == 'functional'
 
   smoke-tests:
