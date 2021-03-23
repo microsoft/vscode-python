@@ -180,6 +180,8 @@ export function printEnvVariables(): [string[], (out: string) => NodeJS.ProcessE
     return [args, parse];
 }
 
+// shell_exec.py
+
 // eslint-disable-next-line camelcase
 export function shell_exec(command: string, lockfile: string, shellArgs: string[]): string[] {
     const script = path.join(SCRIPTS_DIR, 'shell_exec.py');
