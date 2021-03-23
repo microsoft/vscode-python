@@ -81,6 +81,7 @@ export class ExperimentService implements IExperimentService {
     public async activate(): Promise<void> {
         if (this.experimentationService) {
             await this.experimentationService.initializePromise;
+            await this.experimentationService.initialFetch;
         }
     }
 
@@ -120,7 +121,7 @@ export class ExperimentService implements IExperimentService {
             return undefined;
         }
 
-        return this.experimentationService.getTreatmentVariableAsync('vscode', experiment);
+        return this.experimentationService.getTreatmentVariableAsync('vscode', experiment, true);
     }
 
     private logExperiments() {
