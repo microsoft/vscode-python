@@ -44,7 +44,7 @@ export async function isLocalPoetryEnvironment(interpreterPath: string): Promise
     // |__ .venv    <--- check if name of the folder is '.venv'
     //     |__ Scripts/bin
     //         |__ python  <--- interpreterPath
-    const envDir = path.basename(getEnvironmentDirFromPath(interpreterPath));
+    const envDir = getEnvironmentDirFromPath(interpreterPath);
     if (path.basename(envDir) !== '.venv') {
         return false;
     }
