@@ -2040,7 +2040,7 @@
         "vscode-languageclient": "7.0.0",
         "vscode-languageserver": "7.0.0",
         "vscode-languageserver-protocol": "3.16.0",
-        "vscode-tas-client": "^0.1.17",
+        "vscode-tas-client": "^0.1.22",
         "winreg": "^1.2.4",
         "winston": "^3.2.1",
         "xml2js": "^0.4.19"
