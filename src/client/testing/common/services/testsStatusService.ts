@@ -70,6 +70,7 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
             return;
         }
         const itemsRunning = [
+            ...(testsToRun.testFolder || []),
             ...(testsToRun.testFile || []),
             ...(testsToRun.testSuite || []),
             ...(testsToRun.testFunction || []),
