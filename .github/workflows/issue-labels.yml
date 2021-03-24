@@ -1,0 +1,22 @@
+name: Issue labels
+
+on:
+  issues:
+    types: [opened, reopened]
+
+jobs:
+  # From https://github.com/marketplace/actions/github-script#apply-a-label-to-an-issue.
+  add-classify-label:
+    name: "Add 'classify'"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['classify']
+            })
