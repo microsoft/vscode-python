@@ -80,6 +80,7 @@ const convertedKinds = new Map(
         [PythonEnvKind.CondaBase]: EnvironmentType.Conda,
         [PythonEnvKind.VirtualEnv]: EnvironmentType.VirtualEnv,
         [PythonEnvKind.Pipenv]: EnvironmentType.Pipenv,
+        [PythonEnvKind.Poetry]: EnvironmentType.Poetry,
         [PythonEnvKind.Venv]: EnvironmentType.Venv,
         [PythonEnvKind.VirtualEnvWrapper]: EnvironmentType.VirtualEnvWrapper,
     }),
