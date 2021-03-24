@@ -37,7 +37,7 @@ function getIdentifiers(): Map<PythonEnvKind, (path: string) => Promise<boolean>
 /**
  * Returns environment type.
  * @param {string} interpreterPath : Absolute path to the python interpreter binary.
- * @returns {EnvironmentType}
+ * @returns {PythonEnvKind}
  */
 export async function identifyEnvironment(interpreterPath: string): Promise<PythonEnvKind> {
     const identifiers = getIdentifiers();
