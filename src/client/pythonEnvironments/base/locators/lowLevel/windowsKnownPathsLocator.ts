@@ -45,7 +45,7 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
                 return !isWindowsStoreDir(dirname) && !isPyenvShimDir(dirname);
             })
             // Build a locator for each directory.
-            .map((dirname) => getDirFilesLocator(dirname, PythonEnvKind.Unknown));
+            .map((dirname) => getDirFilesLocator(dirname, PythonEnvKind.System));
         this.disposables.push(...dirLocators);
         this.locators = new Locators(dirLocators);
         this.onChanged = this.locators.onChanged;

@@ -31,7 +31,7 @@ function getEnv(
     version: string,
     executable: string,
 ): PythonEnvInfo {
-    const env = createNamedEnv(name, version, PythonEnvKind.Unknown, executable);
+    const env = createNamedEnv(name, version, PythonEnvKind.System, executable);
     env.arch = Architecture.Unknown;
     env.source = [PythonEnvSource.PathEnvVar];
     return env;

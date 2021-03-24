@@ -102,11 +102,11 @@ export function getKindDisplayName(kind: PythonEnvKind): string {
  */
 export function getPrioritizedEnvKinds(): PythonEnvKind[] {
     return [
+        PythonEnvKind.Pyenv,
         PythonEnvKind.CondaBase,
         PythonEnvKind.Conda,
         PythonEnvKind.WindowsStore,
         PythonEnvKind.Pipenv,
-        PythonEnvKind.Pyenv,
         PythonEnvKind.Poetry,
         PythonEnvKind.Venv,
         PythonEnvKind.VirtualEnvWrapper,
