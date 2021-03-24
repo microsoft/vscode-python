@@ -37,7 +37,7 @@ async function getVirtualEnvDirs(root: string): Promise<string[]> {
 async function getRootVirtualEnvDir(root: string): Promise<string[]> {
     const poetry = await Poetry.getPoetry();
     const setting = await poetry?.getVirtualenvsPathSetting(root);
-    return setting ? [setting] : []; // Do not watch local directories, as they're already watched.
+    return setting ? [setting] : [];
 }
 
 async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind> {
@@ -79,10 +79,6 @@ async function buildVirtualEnvInfo(
     return envInfo;
 }
 
-function isEnvDirLocal(envDir: string, root: string) {
-    return isParentPath(envDir, path.join(root, localPoetryEnvDirName));
-}
-
 /**
  * Finds and resolves virtual environments created in workspace roots.
  */
@@ -101,7 +97,7 @@ export class PoetryLocator extends FSWatchingLocator {
                 async function* generator() {
                     traceVerbose(`Searching for poetry virtual envs in: ${envDir}`);
 
-                    const isLocal = isEnvDirLocal(envDir, root);
+                    const isLocal = isParentPath(envDir, root);
                     const executables = findInterpretersInDir(envDir, 1);
 
                     for await (const entry of executables) {
@@ -116,6 +112,8 @@ export class PoetryLocator extends FSWatchingLocator {
                             // we can use the kind to determine this anyway.
                             yield buildVirtualEnvInfo(
                                 filename,
+                                // Global environments are fetched using 'poetry env list' so we already
+                                // know they're poetry environments, no need to get kind for them.
                                 isLocal ? await getVirtualEnvKind(filename) : PythonEnvKind.Poetry,
                                 undefined,
                                 isLocal,

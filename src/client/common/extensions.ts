@@ -39,10 +39,10 @@ declare interface String {
     trimQuotes(): string;
     /**
      * Replaces nth character in a string with another string.
-     * @param {number} index The character number to replace
+     * @param {number} n The character index to replace
      * @param {string} replace The string to replace it with
      */
-    replaceAt(index: number, replace: string): string;
+    replaceAt(n: number, replace: string): string;
 }
 
 /**
@@ -66,12 +66,12 @@ String.prototype.splitLines = function (
 
 /**
  * Replaces nth character in a string with another string.
- * @param {number} index The character number to replace
+ * @param {number} n The character index to replace
  * @param {string} replace The string to replace it with
  */
-String.prototype.replaceAt = function (index: number, replace: string): string {
+String.prototype.replaceAt = function (n: number, replace: string): string {
     const a = this.split('');
-    a[index] = replace;
+    a[n] = replace;
     return a.join('');
 };
 

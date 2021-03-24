@@ -185,10 +185,7 @@ export class Poetry {
         if (!result) {
             return [];
         }
-        return result.stdout
-            .split(/\r?\n/g)
-            .map((line) => line.trim())
-            .filter((line) => line !== '');
+        return result.stdout.splitLines();
     }
 
     /**
