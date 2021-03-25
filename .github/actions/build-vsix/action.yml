@@ -16,7 +16,8 @@ runs:
     - run: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
       shell: bash
 
-    - run: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py --no-deps --upgrade -r jedils_requirements.txt
+    - run: |
+        python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py --platform any --abi py3 --no-deps --only-binary :all: --upgrade -r jedils_requirements.txt
       shell: bash
 
     - run: |
