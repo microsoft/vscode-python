@@ -198,19 +198,22 @@ export class TensorBoardSession {
             defaultValue: InstallerResponse.Ignore,
             token: installerToken,
         });
-        let installPromise;
+        const installPromises = [];
         // If need to install torch.profiler and it's not already installed, add it to our list of promises
-        if (needsProfilerPluginInstall) {
-            installPromise = this.installer.install(Product.torchProfilerInstallName, interpreter, installerToken);
-        } else if (needsTensorBoardInstall) {
-            installPromise = this.installer.install(
-                Product.tensorboard,
-                interpreter,
-                installerToken,
-                tensorboardInstallStatus === ProductInstallStatus.NeedsUpgrade,
+        if (needsTensorBoardInstall) {
+            installPromises.push(
+                this.installer.install(
+                    Product.tensorboard,
+                    interpreter,
+                    installerToken,
+                    tensorboardInstallStatus === ProductInstallStatus.NeedsUpgrade,
+                ),
             );
         }
-        await Promise.race([installPromise, cancellationPromise]);
+        if (needsProfilerPluginInstall) {
+            installPromises.push(this.installer.install(Product.torchProfilerInstallName, interpreter, installerToken));
+        }
+        await Promise.race([...installPromises, cancellationPromise]);
 
         // Check install status again after installing
         [tensorboardInstallStatus, profilerPluginInstallStatus] = await Promise.all([

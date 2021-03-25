@@ -172,22 +172,27 @@ suite('TensorBoard session creation', async () => {
             );
         }
         suite('Install profiler package + upgrade tensorboard', async () => {
-            async function runTest() {
+            async function runTest(expectTensorBoardUpgrade: boolean) {
                 const installStub = sandbox.stub(installer, 'install').resolves(InstallerResponse.Installed);
                 await createSessionAndVerifyMessage(TensorBoard.installTensorBoardAndProfilerPluginPrompt());
-                assert.ok(installStub.calledOnce, 'Did not install anything');
+                assert.ok(installStub.calledTwice, 'Did not install anything');
+                assert.ok(installStub.calledWith(Product.torchProfilerInstallName));
                 assert.ok(
-                    installStub.args[0][0] === Product.torchProfilerInstallName,
-                    'Did not install torch profiler',
+                    installStub.calledWith(
+                        Product.tensorboard,
+                        sinon.match.any,
+                        sinon.match.any,
+                        expectTensorBoardUpgrade,
+                    ),
                 );
             }
             test('In experiment: true, has torch imports: true, is profiler package installed: false, TensorBoard needs upgrade', async () => {
                 configureStubs(true, true, ProductInstallStatus.NeedsUpgrade, false, 'Yes');
-                await runTest();
+                await runTest(true);
             });
             test('In experiment: true, has torch imports: true, is profiler package installed: false, TensorBoard not installed', async () => {
                 configureStubs(true, true, ProductInstallStatus.NotInstalled, false, 'Yes');
-                await runTest();
+                await runTest(false);
             });
         });
         suite('Install profiler only', async () => {
@@ -199,7 +204,7 @@ suite('TensorBoard session creation', async () => {
                 // Ensure we ask to install the profiler package and that it resolves to a cancellation
                 sandbox
                     .stub(installer, 'install')
-                    .withArgs(Product.torchProfilerInstallName, anything(), anything())
+                    .withArgs(Product.torchProfilerInstallName, sinon.match.any, sinon.match.any)
                     .resolves(InstallerResponse.Ignore);
 
                 const session = (await commandManager.executeCommand(
@@ -392,7 +397,7 @@ suite('TensorBoard session creation', async () => {
             // Ensure we ask to install the profiler package and that it resolves to a cancellation
             sandbox
                 .stub(installer, 'install')
-                .withArgs(Product.torchProfilerInstallName, anything(), anything())
+                .withArgs(Product.torchProfilerInstallName, sinon.match.any, sinon.match.any)
                 .resolves(InstallerResponse.Ignore);
 
             const session = (await commandManager.executeCommand(

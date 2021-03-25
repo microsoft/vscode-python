@@ -92,6 +92,7 @@ abstract class BaseInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
+        isUpgrade?: boolean,
     ): Promise<InstallerResponse> {
         if (product === Product.unittest) {
             return InstallerResponse.Installed;
@@ -105,7 +106,7 @@ abstract class BaseInstaller {
 
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
         await installer
-            .installModule(moduleName, resource, cancel)
+            .installModule(moduleName, resource, cancel, isUpgrade)
             .catch((ex) => traceError(`Error in installing the module '${moduleName}', ${ex}`));
 
         return this.isInstalled(product, resource).then((isInstalled) =>
@@ -449,8 +450,9 @@ export class ProductInstaller implements IInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
+        isUpgrade?: boolean,
     ): Promise<InstallerResponse> {
-        return this.createInstaller(product).install(product, resource, cancel);
+        return this.createInstaller(product).install(product, resource, cancel, isUpgrade);
     }
 
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean> {
