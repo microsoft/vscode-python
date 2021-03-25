@@ -139,7 +139,8 @@ export class PoetryLocator extends FSWatchingLocator {
         const source = typeof env === 'string' ? [PythonEnvSource.Other] : uniq([PythonEnvSource.Other, ...env.source]);
         const kind = await getVirtualEnvKind(executablePath);
         if (kind === PythonEnvKind.Poetry) {
-            return buildVirtualEnvInfo(executablePath, PythonEnvKind.Poetry, source);
+            const isLocal = isParentPath(executablePath, this.root);
+            return buildVirtualEnvInfo(executablePath, PythonEnvKind.Poetry, source, isLocal);
         }
         return undefined;
     }
