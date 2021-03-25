@@ -75,7 +75,7 @@ suite('isPoetryEnvironment Tests', () => {
         });
 
         test(`Return false if running poetry for project dir as cwd fails`, async () => {
-            const result = await isPoetryEnvironment(path.join(project2, '.venv', 'Scripts', 'python.exe'));
+            const result = await isPoetryEnvironment(path.join(project2, '.venv', 'bin', 'python'));
             expect(result).to.equal(false);
         });
     });

@@ -24,7 +24,6 @@ suite('Poetry locator', () => {
     let shellExecute: sinon.SinonStub;
     let getPythonSetting: sinon.SinonStub;
     const testPoetryDir = path.join(TEST_LAYOUT_ROOT, 'poetry');
-    const project1 = path.join(testPoetryDir, 'project1');
 
     function createExpectedEnvInfo(
         interpreterPath: string,
@@ -61,7 +60,11 @@ suite('Poetry locator', () => {
 
     teardown(() => sinon.restore());
 
-    test('iterEnvs(): Windows', async () => {
+    test('iterEnvs(): Windows', async function () {
+        if (platformUtils.getOSType() !== platformUtils.OSType.Windows) {
+            this.skip();
+        }
+        const project1 = path.join(testPoetryDir, 'project1');
         // Arrange
         shellExecute.callsFake((command: string, options: ShellOptions) => {
             // eslint-disable-next-line default-case
@@ -125,6 +128,67 @@ suite('Poetry locator', () => {
                 '.venv',
                 path.join(project1, '.venv'),
                 Uri.file(project1),
+            ),
+        ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        assertEnvsEqual(actualEnvs, expectedEnvs);
+    });
+
+    test('iterEnvs(): non-Windows', async function () {
+        if (platformUtils.getOSType() === platformUtils.OSType.Windows) {
+            this.skip();
+        }
+        const project2 = path.join(testPoetryDir, 'project2');
+        // Arrange
+        shellExecute.callsFake((command: string, options: ShellOptions) => {
+            // eslint-disable-next-line default-case
+            if (command === 'poetry --version') {
+                return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
+            }
+            if (command === 'poetry env info -p') {
+                if (options.cwd && externalDependencies.arePathsSame(options.cwd, project2)) {
+                    return Promise.resolve<ExecutionResult<string>>({
+                        stdout: `${path.join(project2, '.venv')} \n`,
+                    });
+                }
+            } else if (command === 'poetry env list --full-path') {
+                if (options.cwd && externalDependencies.arePathsSame(options.cwd, project2)) {
+                    return Promise.resolve<ExecutionResult<string>>({
+                        stdout: `${path.join(testPoetryDir, 'posix1project-9hvDnqYw-py3.4')} \n
+                        ${path.join(testPoetryDir, 'posix2project-6hnqYwvD-py3.7')}`,
+                    });
+                }
+            }
+            return Promise.reject(new Error('Command failed'));
+        });
+
+        // Act
+        const locator = new PoetryLocator(project2);
+        const iterator = locator.iterEnvs();
+        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
+            a.executable.filename.localeCompare(b.executable.filename),
+        );
+
+        // Assert
+        const expectedEnvs = [
+            createExpectedEnvInfo(
+                path.join(testPoetryDir, 'posix1project-9hvDnqYw-py3.4', 'python'),
+                PythonEnvKind.Poetry,
+                undefined,
+                'posix1project-9hvDnqYw-py3.4',
+            ),
+            createExpectedEnvInfo(
+                path.join(testPoetryDir, 'posix2project-6hnqYwvD-py3.7', 'bin', 'python'),
+                PythonEnvKind.Poetry,
+                undefined,
+                'posix2project-6hnqYwvD-py3.7',
+            ),
+            createExpectedEnvInfo(
+                path.join(project2, '.venv', 'bin', 'python'),
+                PythonEnvKind.Poetry,
+                { major: 3, minor: 6, micro: 1 },
+                '.venv',
+                path.join(project2, '.venv'),
+                Uri.file(project2),
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
         assertEnvsEqual(actualEnvs, expectedEnvs);
