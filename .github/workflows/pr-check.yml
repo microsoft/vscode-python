@@ -540,14 +540,14 @@ jobs:
       - name: Download test coverage artifacts
         uses: actions/download-artifact@v2
         with:
-          name: ${{ matrix.os }}-${{ env.COVERAGE_REPORTS }}
-          path: ${{env.special-working-directory}}/${{ matrix.os }}-${{ env.COVERAGE_REPORTS }}
+          name: ${{ runner.os }}-${{ env.COVERAGE_REPORTS }}
+          path: ${{env.special-working-directory}}/${{ runner.os }}-${{ env.COVERAGE_REPORTS }}
 
       - name: Extract coverage artifacts to ./nyc_output
         run: |
           mkdir .nyc_output
-          mv ${{ matrix.os }}-${{ env.COVERAGE_REPORTS }}/* .nyc_output
-          rm -r ${{ matrix.os }}-${{ env.COVERAGE_REPORTS }}
+          mv ${{ runner.os }}-${{ env.COVERAGE_REPORTS }}/* .nyc_output
+          rm -r ${{ runner.os }}-${{ env.COVERAGE_REPORTS }}
         shell: bash
 
       - name: Generate coverage reports
@@ -557,6 +557,6 @@ jobs:
       - name: Upload html test coverage reports
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.os }}-coverage-report-html
+          name: ${{ runner.os }}-coverage-report-html
           path: ${{ env.special-working-directory }}/coverage
           retention-days: 1
