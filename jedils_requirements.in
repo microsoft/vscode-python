@@ -4,3 +4,4 @@
 # 2) pip-compile --generate-hashes jedils_requirements.in
 
 jedi-language-server
+pygls>=0.10.2
