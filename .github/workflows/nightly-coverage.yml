@@ -1,14 +1,9 @@
 name: Coverage
 
 on:
-  pull_request:
-  push:
-    branches-ignore:
-      - main
-      - release*
   schedule:
-    # Run daily at midnight
-    - cron: '0 0 * * *'
+    # Run daily at 2:00 AM
+    - cron: '0 2 * * *'
 
 env:
   NODE_VERSION: 12.15.0
