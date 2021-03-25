@@ -21,7 +21,7 @@ import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 import { ExecutionResult, ShellOptions } from '../../../../client/common/process/types';
 
-suite('Poetry locator', () => {
+suite('Poetry Locator', () => {
     let shellExecute: sinon.SinonStub;
     let getPythonSetting: sinon.SinonStub;
     let getOSTypeStub: sinon.SinonStub;
