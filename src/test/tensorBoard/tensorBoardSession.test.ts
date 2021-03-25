@@ -1,7 +1,6 @@
 import { assert } from 'chai';
 import Sinon, * as sinon from 'sinon';
 import { SemVer } from 'semver';
-import { anything } from 'ts-mockito';
 import { ViewColumn, workspace, WorkspaceConfiguration } from 'vscode';
 import {
     IExperimentService,
