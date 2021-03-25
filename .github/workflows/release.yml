@@ -15,7 +15,6 @@ env:
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
   ARTIFACT_NAME_VSIX: ms-python-release-vsix
   VSIX_NAME: ms-python-release.vsix
-  COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
 
 jobs:
@@ -95,13 +94,6 @@ jobs:
       # See https://github.com/microsoft/ptvsd/issues/2068
       # At this point pinning is only needed for consistency. We no longer have TS debug adapter.
       NODE_VERSION: 12.15.0
-      # Force a path with spaces and to test extension works in these scenarios
-      # Unicode characters are causing 2.7 failures so skip that for now.
-      special-working-directory: './path with spaces'
-      special-working-directory-relative: 'path with spaces'
-    defaults:
-      run:
-        working-directory: ${{env.special-working-directory}}
     if: github.repository == 'microsoft/vscode-python'
     strategy:
       fail-fast: false
@@ -115,8 +107,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          path: ${{env.special-working-directory-relative}}
 
       - name: Install Node
         uses: actions/setup-node@v2.1.5
@@ -240,7 +230,7 @@ jobs:
 
       # Run TypeScript unit tests only for Python 3.X.
       - name: Run TypeScript unit tests
-        run: npm run test:unittests:cover
+        run: npm run test:unittests
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
       # Run the Python tests in our codebase.
@@ -262,7 +252,6 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSingleWorkspace
-          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'venv'
 
       - name: Run single-workspace tests
@@ -271,7 +260,6 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSingleWorkspace
-          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'single-workspace'
 
       - name: Run multi-workspace tests
@@ -280,7 +268,6 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testMultiWorkspace
-          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'multi-workspace'
 
       - name: Run debugger tests
@@ -289,21 +276,11 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testDebugger
-          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'debugger'
 
       # Run TypeScript functional tests
       - name: Run TypeScript functional tests
-        run: npm run test:functional:cover
-        if: matrix.test-suite == 'functional'
-
-      # Upload functional test coverage reports for later use in the "reports" job.
-      - name: Upload functional test coverage reports
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
-          path: ${{ env.special-working-directory }}/.nyc_output
-          retention-days: 1
+        run: npm run test:functional
         if: matrix.test-suite == 'functional'
 
   smoke-tests:
