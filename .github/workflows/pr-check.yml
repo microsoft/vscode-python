@@ -308,8 +308,17 @@ jobs:
           CI_PYTHON_VERSION: ${{matrix.python}}
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run testSingleWorkspace
+          run: npm run testSingleWorkspace:cover
           working-directory: ${{env.special-working-directory}}
+        if: matrix.test-suite == 'single-workspace'
+
+      # Upload single workspace tests coverage reports for later use in the "reports" job.
+      - name: Upload single workspace tests coverage reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: ${{ env.special-working-directory }}/.nyc_output
+          retention-days: 1
         if: matrix.test-suite == 'single-workspace'
 
       - name: Run multi-workspace tests
