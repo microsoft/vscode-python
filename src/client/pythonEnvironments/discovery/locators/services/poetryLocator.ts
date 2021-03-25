@@ -80,7 +80,7 @@ async function buildVirtualEnvInfo(
 }
 
 /**
- * Finds and resolves virtual environments created in workspace roots.
+ * Finds and resolves virtual environments created using poetry.
  */
 export class PoetryLocator extends FSWatchingLocator {
     public constructor(private readonly root: string) {
