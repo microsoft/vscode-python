@@ -8,6 +8,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { ITerminalAutoActivation } from '../../terminals/types';
 import { ITerminalManager } from '../application/types';
 import { IConfigurationService, IDisposableRegistry } from '../types';
 import {
@@ -26,6 +27,7 @@ export class TerminalService implements ITerminalService, Disposable {
     private terminalManager: ITerminalManager;
     private terminalHelper: ITerminalHelper;
     private terminalActivator: ITerminalActivator;
+    private terminalAutoActivator: ITerminalAutoActivation;
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event.bind(this.terminalClosed);
     }
@@ -37,6 +39,7 @@ export class TerminalService implements ITerminalService, Disposable {
         disposableRegistry.push(this);
         this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
         this.terminalManager = this.serviceContainer.get<ITerminalManager>(ITerminalManager);
+        this.terminalAutoActivator = this.serviceContainer.get<ITerminalAutoActivation>(ITerminalAutoActivation);
         this.terminalManager.onDidCloseTerminal(this.terminalCloseHandler, this, disposableRegistry);
         this.terminalActivator = this.serviceContainer.get<ITerminalActivator>(ITerminalActivator);
     }
@@ -76,6 +79,7 @@ export class TerminalService implements ITerminalService, Disposable {
             env: this.options?.env,
             hideFromUser: this.options?.hideFromUser,
         });
+        this.terminalAutoActivator.disableAutoActivation(this.terminal);
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.
         await new Promise((resolve) => setTimeout(resolve, 100));

@@ -14,6 +14,8 @@ import { ITerminalAutoActivation } from './types';
 export class TerminalAutoActivation implements ITerminalAutoActivation {
     private handler?: IDisposable;
 
+    private readonly terminalsNotToAutoActivate = new WeakSet<Terminal>();
+
     constructor(
         @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
@@ -37,7 +39,14 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
         this.handler = this.terminalManager.onDidOpenTerminal(this.activateTerminal, this);
     }
 
+    public disableAutoActivation(terminal: Terminal): void {
+        this.terminalsNotToAutoActivate.add(terminal);
+    }
+
     private async activateTerminal(terminal: Terminal): Promise<void> {
+        if (this.terminalsNotToAutoActivate.has(terminal)) {
+            return;
+        }
         if ('hideFromUser' in terminal.creationOptions && terminal.creationOptions.hideFromUser) {
             return;
         }
