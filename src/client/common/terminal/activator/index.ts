@@ -25,7 +25,7 @@ export class TerminalActivator implements ITerminalActivator {
         options?: TerminalActivationOptions,
     ): Promise<boolean> {
         let promise = this.pendingActivations.get(terminal);
-        if (promise){
+        if (promise) {
             return promise;
         }
         promise = this.activateEnvironmentInTerminalImpl(terminal, options);
@@ -36,7 +36,7 @@ export class TerminalActivator implements ITerminalActivator {
         terminal: Terminal,
         options?: TerminalActivationOptions,
     ): Promise<boolean> {
-            const settings = this.configurationService.getSettings(options?.resource);
+        const settings = this.configurationService.getSettings(options?.resource);
         const activateEnvironment = settings.terminal.activateEnvironment;
         if (!activateEnvironment || options?.hideFromUser) {
             return false;
