@@ -7,7 +7,6 @@
 import { Event, EventEmitter } from 'vscode';
 import { DirEntry } from '../../../../common/utils/filesystem';
 import { iterPythonExecutablesInDir } from '../../../common/commonUtils';
-import { identifyEnvironment } from '../../../common/environmentIdentifier';
 import { resolvePath } from '../../../common/externalDependencies';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { getFastEnvInfo } from '../../info/env';
@@ -66,8 +65,7 @@ async function* iterMinimalEnvsFromExecutables(
     for await (const executable of executables) {
         const filename = typeof executable === 'string' ? executable : executable.filename;
         const normFile = resolvePath(filename);
-        const kind = await identifyEnvironment(normFile);
-        yield getFastEnvInfo(kind === PythonEnvKind.Unknown ? defaultKind : kind, normFile);
+        yield getFastEnvInfo(defaultKind, normFile);
     }
 }
 
