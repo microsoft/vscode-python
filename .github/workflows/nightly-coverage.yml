@@ -18,12 +18,6 @@ jobs:
     name: Tests with Coverage
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
-    env:
-      # Something in Node 12.16.0 breaks the TS debug adapter, and ubuntu-latest bundles Node 12.16.1.
-      # We can remove this when we switch over to the python-based DA in https://github.com/microsoft/vscode-python/issues/7136.
-      # See https://github.com/microsoft/ptvsd/issues/2068
-      # At this point pinning is only needed for consistency. We no longer have TS debug adapter.
-      NODE_VERSION: 12.15.0
 
     strategy:
       fail-fast: false
@@ -51,11 +45,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{env.PYTHON_VERSION}}
-
-      - name: Install Node
-        uses: actions/setup-node@v2.1.5
-        with:
-          node-version: ${{env.NODE_VERSION}}
 
       - name: Install Python requirements
         run: |
