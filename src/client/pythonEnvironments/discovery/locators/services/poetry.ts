@@ -89,7 +89,7 @@ export class Poetry {
      * Locating poetry binary can be expensive, since it potentially involves spawning or
      * trying to spawn processes; so we only do it once per session.
      */
-    private static poetryPromise: Promise<Poetry | undefined> | undefined;
+    public static _poetryPromise: Promise<Poetry | undefined> | undefined;
 
     /**
      * Timeout for the shell exec commands. Sometimes timeout can happen if poetry path is not valid.
@@ -99,17 +99,17 @@ export class Poetry {
     /**
      * Creates a Poetry service corresponding to the corresponding "poetry" command.
      *
-     * @param command - Command used to run poetry. This has the same meaning as the
+     * @param _command - Command used to run poetry. This has the same meaning as the
      * first argument of spawn() - i.e. it can be a full path, or just a binary name.
      */
-    constructor(readonly command: string) {}
+    constructor(public readonly _command: string) {}
 
     public static async getPoetry(): Promise<Poetry | undefined> {
         traceVerbose(`Searching for poetry.`);
-        if (Poetry.poetryPromise === undefined) {
-            Poetry.poetryPromise = Poetry.locate();
+        if (Poetry._poetryPromise === undefined) {
+            Poetry._poetryPromise = Poetry.locate();
         }
-        return Poetry.poetryPromise;
+        return Poetry._poetryPromise;
     }
 
     /**
@@ -155,7 +155,7 @@ export class Poetry {
     }
 
     private async getVersion(): Promise<string | undefined> {
-        const result = await shellExecute(`${this.command} --version`, {
+        const result = await shellExecute(`${this._command} --version`, {
             timeout: this.timeout,
             throwOnStdErr: true,
         });
@@ -168,7 +168,7 @@ export class Poetry {
      */
     public async getEnvList(cwd: string): Promise<string[]> {
         cwd = fixCwd(cwd);
-        const result = await this.safeShellExecute(`${this.command} env list --full-path`, cwd);
+        const result = await this.safeShellExecute(`${this._command} env list --full-path`, cwd);
         if (!result) {
             return [];
         }
@@ -196,7 +196,7 @@ export class Poetry {
      */
     public async getActiveEnvPath(cwd: string): Promise<string | undefined> {
         cwd = fixCwd(cwd);
-        const result = await this.safeShellExecute(`${this.command} env info -p`, cwd);
+        const result = await this.safeShellExecute(`${this._command} env info -p`, cwd);
         if (!result) {
             return undefined;
         }
@@ -209,7 +209,7 @@ export class Poetry {
      */
     public async getVirtualenvsPathSetting(cwd?: string): Promise<string | undefined> {
         cwd = cwd ? fixCwd(cwd) : cwd;
-        const result = await this.safeShellExecute(`${this.command} config virtualenvs.path`, cwd);
+        const result = await this.safeShellExecute(`${this._command} config virtualenvs.path`, cwd);
         if (!result) {
             return undefined;
         }
