@@ -21,6 +21,10 @@ suite('isPoetryEnvironment Tests', () => {
     const project1 = path.join(testPoetryDir, 'project1');
     const project2 = path.join(testPoetryDir, 'project2');
 
+    suiteTeardown(() => {
+        Poetry._poetryPromise = undefined;
+    });
+
     suite('Global poetry environment', async () => {
         test('Return true if environment folder name matches global env pattern and environment is of virtual env type', async () => {
             const result = await isPoetryEnvironment(
@@ -90,6 +94,10 @@ suite('Poetry binary is located correctly', async () => {
     let shellExecute: sinon.SinonStub;
     let getPythonSetting: sinon.SinonStub;
     let pathExists: sinon.SinonStub;
+
+    suiteSetup(() => {
+        Poetry._poetryPromise = undefined;
+    });
 
     setup(() => {
         getPythonSetting = sinon.stub(externalDependencies, 'getPythonSetting');
