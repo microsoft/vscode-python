@@ -94,6 +94,13 @@ jobs:
       # See https://github.com/microsoft/ptvsd/issues/2068
       # At this point pinning is only needed for consistency. We no longer have TS debug adapter.
       NODE_VERSION: 12.15.0
+      # Force a path with spaces and to test extension works in these scenarios
+      # Unicode characters are causing 2.7 failures so skip that for now.
+      special-working-directory: './path with spaces'
+      special-working-directory-relative: 'path with spaces'
+    defaults:
+      run:
+        working-directory: ${{env.special-working-directory}}
     if: github.repository == 'microsoft/vscode-python'
     strategy:
       fail-fast: false
@@ -107,6 +114,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          path: ${{env.special-working-directory-relative}}
 
       - name: Install Node
         uses: actions/setup-node@v2.1.5
@@ -153,9 +162,7 @@ jobs:
         if: matrix.test-suite == 'debugger' && matrix.python == 2.7
 
       - name: Install functional test requirements
-        run: |
-          python -m pip install numpy
-          python -m pip install --upgrade -r ./build/functional-test-requirements.txt
+        run: python -m pip install --upgrade -r ./build/functional-test-requirements.txt
         if: matrix.test-suite == 'functional'
 
       - name: Prepare pipenv for venv tests
@@ -252,6 +259,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSingleWorkspace
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'venv'
 
       - name: Run single-workspace tests
@@ -260,6 +268,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSingleWorkspace
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'single-workspace'
 
       - name: Run multi-workspace tests
@@ -268,6 +277,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testMultiWorkspace
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'multi-workspace'
 
       - name: Run debugger tests
@@ -276,6 +286,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testDebugger
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'debugger'
 
       # Run TypeScript functional tests

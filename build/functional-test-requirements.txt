@@ -1,2 +1,3 @@
 # List of requirements for functional tests
 versioneer
+numpy
