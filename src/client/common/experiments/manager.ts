@@ -100,11 +100,6 @@ export class ExperimentsManager implements IExperimentsManager {
         }
         await this.updateExperimentStorage();
         this.populateUserExperiments();
-        for (const exp of this.userExperiments || []) {
-            // We need to know whether an experiment influences the logs we observe in github issues, so log the experiment group
-
-            this.output.appendLine(Experiments.inGroup().format(exp.name));
-        }
     }
 
     @traceDecorators.error('Failed to identify if user is in experiment')
@@ -123,7 +118,7 @@ export class ExperimentsManager implements IExperimentsManager {
     public populateUserExperiments(): void {
         this.cleanUpExperimentsOptList();
         if (Array.isArray(this.experimentStorage.value)) {
-            const remainingExpriments: ABExperiments = [];
+            const remainingExperiments: ABExperiments = [];
             // First process experiments in order of user preference (if they have opted out or opted in).
             for (const experiment of this.experimentStorage.value) {
                 try {
@@ -145,7 +140,7 @@ export class ExperimentsManager implements IExperimentsManager {
                         });
                         this.userExperiments.push(experiment);
                     } else {
-                        remainingExpriments.push(experiment);
+                        remainingExperiments.push(experiment);
                     }
                 } catch (ex) {
                     traceError(`Failed to populate experiment list for experiment '${experiment.name}'`, ex);
@@ -153,10 +148,15 @@ export class ExperimentsManager implements IExperimentsManager {
             }
 
             // Add users (based on algorithm) to experiments they haven't already opted out of or opted into.
-            remainingExpriments
+            remainingExperiments
                 .filter((experiment) => this.isUserInRange(experiment.min, experiment.max, experiment.salt))
                 .filter((experiment) => !this.userExperiments.some((existing) => existing.salt === experiment.salt))
-                .forEach((experiment) => this.userExperiments.push(experiment));
+                .forEach((experiment) => {
+                    this.userExperiments.push(experiment);
+                    // Only log experiments that are assigned by this framework.
+                    // The opted-in/out ones are logged by the ExperimentService instance.
+                    this.output.appendLine(Experiments.inGroup().format(experiment.name));
+                });
         }
     }
 
