@@ -97,6 +97,37 @@ suite('Terminal Auto Activation', () => {
 
         verify(activator.activateEnvironmentInTerminal(terminal, anything())).never();
     });
+    test('New Terminals should not be activated if auto activation is to be disabled', async () => {
+        terminal = {
+            dispose: noop,
+            hide: noop,
+            name: 'Python',
+            creationOptions: { hideFromUser: false },
+            processId: Promise.resolve(0),
+            sendText: noop,
+            show: noop,
+            exitStatus: { code: 0 },
+        };
+        type EventHandler = (e: Terminal) => void;
+        let handler: undefined | EventHandler;
+        const handlerDisposable = TypeMoq.Mock.ofType<IDisposable>();
+        const onDidOpenTerminal = (cb: EventHandler) => {
+            handler = cb;
+            return handlerDisposable.object;
+        };
+        when(activeResourceService.getActiveResource()).thenReturn(resource);
+        when(terminalManager.onDidOpenTerminal).thenReturn(onDidOpenTerminal);
+        when(activator.activateEnvironmentInTerminal(anything(), anything())).thenResolve();
+
+        terminalAutoActivation.register();
+        terminalAutoActivation.disableAutoActivation(terminal);
+
+        expect(handler).not.to.be.an('undefined', 'event handler not initialized');
+
+        handler!.bind(terminalAutoActivation)(terminal);
+
+        verify(activator.activateEnvironmentInTerminal(terminal, anything())).never();
+    });
     test('New Terminals should be activated with resource of single workspace', async () => {
         type EventHandler = (e: Terminal) => void;
         let handler: undefined | EventHandler;

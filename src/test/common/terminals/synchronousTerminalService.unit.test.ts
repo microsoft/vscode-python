@@ -27,7 +27,7 @@ suite('Terminal Service (synchronous)', () => {
         terminalService = mock(TerminalService);
         service = new SynchronousTerminalService(instance(fs), instance(interpreterService), instance(terminalService));
     });
-    suite('Show, sendText and dispose should invoke corressponding methods in wrapped TerminalService', () => {
+    suite('Show, sendText and dispose should invoke corresponding methods in wrapped TerminalService', () => {
         test('Show should invoke show in terminal', async () => {
             when(terminalService.show(anything())).thenResolve();
             await service.show();

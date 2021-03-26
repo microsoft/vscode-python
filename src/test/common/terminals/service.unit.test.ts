@@ -10,6 +10,8 @@ import { TerminalService } from '../../../client/common/terminal/service';
 import { ITerminalActivator, ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { ITerminalAutoActivation } from '../../../client/terminals/types';
+import { createPythonInterpreter } from '../../utils/interpreters';
 
 suite('Terminal Service', () => {
     let service: TerminalService;
@@ -21,6 +23,7 @@ suite('Terminal Service', () => {
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let disposables: Disposable[] = [];
     let mockServiceContainer: TypeMoq.IMock<IServiceContainer>;
+    let terminalAutoActivator: TypeMoq.IMock<ITerminalAutoActivation>;
     setup(() => {
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
@@ -28,6 +31,7 @@ suite('Terminal Service', () => {
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         terminalHelper = TypeMoq.Mock.ofType<ITerminalHelper>();
         terminalActivator = TypeMoq.Mock.ofType<ITerminalActivator>();
+        terminalAutoActivator = TypeMoq.Mock.ofType<ITerminalAutoActivation>();
         disposables = [];
 
         mockServiceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -37,6 +41,7 @@ suite('Terminal Service', () => {
         mockServiceContainer.setup((c) => c.get(IDisposableRegistry)).returns(() => disposables);
         mockServiceContainer.setup((c) => c.get(IWorkspaceService)).returns(() => workspaceService.object);
         mockServiceContainer.setup((c) => c.get(ITerminalActivator)).returns(() => terminalActivator.object);
+        mockServiceContainer.setup((c) => c.get(ITerminalAutoActivation)).returns(() => terminalAutoActivator.object);
     });
     teardown(() => {
         if (service) {
@@ -247,5 +252,23 @@ suite('Terminal Service', () => {
         expect(eventHandler).not.to.be.an('undefined', 'event handler not initialized');
         eventHandler!.bind(service)(terminal.object);
         expect(eventFired).to.be.equal(true, 'Event not fired');
+    });
+    test('Ensure to disable auto activation and right interpreter is activated', async () => {
+        const interpreter = createPythonInterpreter({ path: 'abc' });
+        service = new TerminalService(mockServiceContainer.object, { interpreter });
+
+        terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+        terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
+        // This will create the terminal.
+        await service.sendText('blah');
+
+        // Ensure we disable auto activation of the terminal.
+        terminalAutoActivator.verify((t) => t.disableAutoActivation(terminal.object), TypeMoq.Times.once());
+        // Ensure the terminal is activated with the interpreter info.
+        terminalActivator.verify(
+            (t) => t.activateEnvironmentInTerminal(terminal.object, TypeMoq.It.isObjectWith({ interpreter })),
+            TypeMoq.Times.once(),
+        );
     });
 });
