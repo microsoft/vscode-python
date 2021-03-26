@@ -37,12 +37,6 @@ declare interface String {
      * Removes leading and trailing quotes from a string
      */
     trimQuotes(): string;
-    /**
-     * Replaces nth character in a string with another string.
-     * @param {number} n The character index to replace
-     * @param {string} replace The string to replace it with
-     */
-    replaceAt(n: number, replace: string): string;
 }
 
 /**
@@ -62,17 +56,6 @@ String.prototype.splitLines = function (
         lines = lines.filter((line) => line.length > 0);
     }
     return lines;
-};
-
-/**
- * Replaces nth character in a string with another string.
- * @param {number} n The character index to replace
- * @param {string} replace The string to replace it with
- */
-String.prototype.replaceAt = function (n: number, replace: string): string {
-    const a = this.split('');
-    a[n] = replace;
-    return a.join('');
 };
 
 /**

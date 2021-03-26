@@ -70,7 +70,6 @@ suite('Poetry Locator', () => {
             locator = new PoetryLocator(project1);
             getOSTypeStub.returns(platformUtils.OSType.Windows);
             shellExecute.callsFake((command: string, options: ShellOptions) => {
-                // eslint-disable-next-line default-case
                 if (command === 'poetry --version') {
                     return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
                 }

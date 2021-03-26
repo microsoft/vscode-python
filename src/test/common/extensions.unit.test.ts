@@ -83,7 +83,4 @@ suite('String Extensions', () => {
         expect(quotedString3.trimQuotes()).to.be.equal(expectedString);
         expect(quotedString4.trimQuotes()).to.be.equal(expectedString);
     });
-    test('Should replace string at index', () => {
-        expect('something'.replaceAt(2, 'replace')).to.be.equal('soreplaceething');
-    });
 });

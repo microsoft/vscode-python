@@ -244,7 +244,10 @@ function fixCwd(cwd: string): string {
          * So we do it manually.
          */
         if (/^[a-z]:/.test(cwd)) {
-            cwd = cwd.replaceAt(0, cwd.charAt(0).toUpperCase());
+            // Replace first character by the upper case version of the character.
+            const a = cwd.split('');
+            a[0] = cwd.charAt(0).toUpperCase();
+            cwd = a.join('');
         }
     }
     return cwd;
