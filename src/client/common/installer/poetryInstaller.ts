@@ -51,7 +51,6 @@ export class PoetryInstaller extends ModuleInstaller {
     }
 
     public async isSupported(resource?: InterpreterUri): Promise<boolean> {
-        // const execPath = this.configurationService.getSettings(isResource(resource) ? resource : undefined).poetryPath;
         if (!resource) {
             return false;
         }

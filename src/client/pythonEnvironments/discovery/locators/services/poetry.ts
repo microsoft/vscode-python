@@ -219,6 +219,7 @@ export class Poetry {
  * false otherwise.
  * @param interpreterPath Absolute path to any python interpreter.
  * @param folder Absolute path to the folder.
+ * @param poetryPath Poetry command to use to calculate the result.
  */
 export async function isPoetryEnvironmentRelatedToFolder(
     interpreterPath: string,
