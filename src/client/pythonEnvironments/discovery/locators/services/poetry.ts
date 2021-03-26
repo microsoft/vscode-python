@@ -220,8 +220,12 @@ export class Poetry {
  * @param interpreterPath Absolute path to any python interpreter.
  * @param folder Absolute path to the folder.
  */
-export async function isPoetryEnvironmentRelatedToFolder(interpreterPath: string, folder: string): Promise<boolean> {
-    const poetry = await Poetry.getPoetry();
+export async function isPoetryEnvironmentRelatedToFolder(
+    interpreterPath: string,
+    folder: string,
+    poetryPath?: string,
+): Promise<boolean> {
+    const poetry = poetryPath ? new Poetry(poetryPath) : await Poetry.getPoetry();
     const pathToEnv = await poetry?.getActiveEnvPath(folder);
     if (!pathToEnv) {
         return false;

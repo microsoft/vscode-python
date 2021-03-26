@@ -6,12 +6,16 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { isPoetryEnvironmentRelatedToFolder } from '../../pythonEnvironments/discovery/locators/services/poetry';
+import { EnvironmentType } from '../../pythonEnvironments/info';
 import { IWorkspaceService } from '../application/types';
+import { inDiscoveryExperiment } from '../experiments/helpers';
 import { traceError } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { IProcessServiceFactory } from '../process/types';
-import { ExecutionInfo, IConfigurationService } from '../types';
+import { ExecutionInfo, IConfigurationService, IExperimentService } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
 import { InterpreterUri } from './types';
@@ -47,8 +51,28 @@ export class PoetryInstaller extends ModuleInstaller {
     }
 
     public async isSupported(resource?: InterpreterUri): Promise<boolean> {
+        // const execPath = this.configurationService.getSettings(isResource(resource) ? resource : undefined).poetryPath;
         if (!resource) {
             return false;
+        }
+        const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
+        if (await inDiscoveryExperiment(experimentService)) {
+            if (!isResource(resource)) {
+                return false;
+            }
+            const interpreter = await this.serviceContainer
+                .get<IInterpreterService>(IInterpreterService)
+                .getActiveInterpreter(resource);
+            const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
+            if (!interpreter || !workspaceFolder || interpreter.envType !== EnvironmentType.Poetry) {
+                return false;
+            }
+            // Install using poetry CLI only if the active poetry environment is related to the current folder.
+            return isPoetryEnvironmentRelatedToFolder(
+                interpreter.path,
+                workspaceFolder.uri.fsPath,
+                this.configurationService.getSettings(resource).poetryPath,
+            );
         }
         const workspaceFolder = this.workspaceService.getWorkspaceFolder(isResource(resource) ? resource : undefined);
         if (!workspaceFolder) {
