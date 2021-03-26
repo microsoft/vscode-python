@@ -31,7 +31,7 @@ async function getVirtualEnvDirs(root: string): Promise<string[]> {
     if (virtualenvs) {
         envDirs.push(...virtualenvs);
     }
-    return envDirs.filter(pathExists);
+    return envDirs.asyncFilter(pathExists);
 }
 
 async function getRootVirtualEnvDir(root: string): Promise<string[]> {

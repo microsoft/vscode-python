@@ -1,4 +1,4 @@
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import '../../client/common/extensions';
 
 // Defines a Mocha test suite to group tests of similar kind together
@@ -82,5 +82,15 @@ suite('String Extensions', () => {
         expect(quotedString2.trimQuotes()).to.be.equal(expectedString);
         expect(quotedString3.trimQuotes()).to.be.equal(expectedString);
         expect(quotedString4.trimQuotes()).to.be.equal(expectedString);
+    });
+});
+
+suite('Array extensions', () => {
+    test('Async filter should filter items', async () => {
+        const stringArray = ['Hello', 'I', 'am', 'the', 'Python', 'extension'];
+        const result = await stringArray.asyncFilter(async (s: string) => {
+            return s.length > 4;
+        });
+        assert.deepEqual(result, ['Hello', 'Python', 'extension']);
     });
 });

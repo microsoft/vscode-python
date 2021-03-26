@@ -88,7 +88,8 @@ suite('Poetry Locator', () => {
                     if (options.cwd && externalDependencies.arePathsSame(options.cwd, project1)) {
                         return Promise.resolve<ExecutionResult<string>>({
                             stdout: `${path.join(testPoetryDir, 'poetry-tutorial-project-6hnqYwvD-py3.8')} \n
-                            ${path.join(testPoetryDir, 'globalwinproject-9hvDnqYw-py3.11')} (Activated)\r\n `,
+                            ${path.join(testPoetryDir, 'globalwinproject-9hvDnqYw-py3.11')} (Activated)\r\n
+                            ${path.join(testPoetryDir, 'someRandomPathWhichDoesNotExist')} `,
                         });
                     }
                 }
