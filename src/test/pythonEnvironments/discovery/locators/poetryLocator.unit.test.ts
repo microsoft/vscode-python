@@ -84,7 +84,7 @@ suite('Poetry Locator', () => {
                     if (options.cwd && externalDependencies.arePathsSame(options.cwd, project1)) {
                         return Promise.resolve<ExecutionResult<string>>({
                             stdout: `${path.join(testPoetryDir, 'poetry-tutorial-project-6hnqYwvD-py3.8')} \n
-                            ${path.join(testPoetryDir, 'globalwinproject-9hvDnqYw-py3.11')}`,
+                            ${path.join(testPoetryDir, 'globalwinproject-9hvDnqYw-py3.11')} (Activated)\r\n `,
                         });
                     }
                 }
@@ -225,7 +225,7 @@ suite('Poetry Locator', () => {
                 } else if (command === 'poetry env list --full-path') {
                     if (options.cwd && externalDependencies.arePathsSame(options.cwd, project2)) {
                         return Promise.resolve<ExecutionResult<string>>({
-                            stdout: `${path.join(testPoetryDir, 'posix1project-9hvDnqYw-py3.4')} \n
+                            stdout: `${path.join(testPoetryDir, 'posix1project-9hvDnqYw-py3.4')} (Activated)\n
                         ${path.join(testPoetryDir, 'posix2project-6hnqYwvD-py3.7')}`,
                         });
                     }

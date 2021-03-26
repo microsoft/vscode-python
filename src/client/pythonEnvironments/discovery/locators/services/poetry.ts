@@ -167,25 +167,27 @@ export class Poetry {
      * Corresponds to "poetry env list --full-path". Swallows errors if any.
      */
     public async getEnvList(cwd: string): Promise<string[]> {
-        if (getOSType() === OSType.Windows) {
-            /**
-             * Due to an upstream poetry issue on Windows https://github.com/python-poetry/poetry/issues/3829,
-             * 'poetry env list' does not handle case-insensitive paths as cwd, which are valid on Windows.
-             * So we need to pass the case-exact path as cwd.
-             * It has been observed that only the drive letter in `cwd` is lowercased here. Unfortunately,
-             * there's no good way to get case of the drive letter correctly without using Win32 APIs:
-             * https://stackoverflow.com/questions/33086985/how-to-obtain-case-exact-path-of-a-file-in-node-js-on-windows
-             * So we do it manually.
-             */
-            if (/^[a-z]:/.test(cwd)) {
-                cwd = cwd.replaceAt(0, cwd.charAt(0).toUpperCase());
-            }
-        }
+        cwd = fixCwd(cwd);
         const result = await this.safeShellExecute(`${this.command} env list --full-path`, cwd);
         if (!result) {
             return [];
         }
-        return result.stdout.splitLines();
+        /**
+         * We expect stdout to contain something like:
+         *
+         * <full-path>\poetry_2-tutorial-project-6hnqYwvD-py3.7
+         * <full-path>\poetry_2-tutorial-project-6hnqYwvD-py3.8
+         * <full-path>\poetry_2-tutorial-project-6hnqYwvD-py3.9 (Activated)
+         *
+         * So we'll need to remove the string "(Activated)" after splitting lines to get the full path.
+         */
+        const activated = '(Activated)';
+        return result.stdout.splitLines().map((line) => {
+            if (line.endsWith(activated)) {
+                line = line.slice(0, -activated.length);
+            }
+            return line.trim();
+        });
     }
 
     /**
@@ -193,6 +195,7 @@ export class Poetry {
      * Corresponds to "poetry env info -p". Swallows errors if any.
      */
     public async getActiveEnvPath(cwd: string): Promise<string | undefined> {
+        cwd = fixCwd(cwd);
         const result = await this.safeShellExecute(`${this.command} env info -p`, cwd);
         if (!result) {
             return undefined;
@@ -205,6 +208,7 @@ export class Poetry {
      * environments are created for the directory. Corresponds to "poetry config virtualenvs.path". Swallows errors if any.
      */
     public async getVirtualenvsPathSetting(cwd?: string): Promise<string | undefined> {
+        cwd = cwd ? fixCwd(cwd) : cwd;
         const result = await this.safeShellExecute(`${this.command} config virtualenvs.path`, cwd);
         if (!result) {
             return undefined;
@@ -226,6 +230,24 @@ export class Poetry {
         });
         return result;
     }
+}
+
+function fixCwd(cwd: string): string {
+    if (cwd && getOSType() === OSType.Windows) {
+        /**
+         * Due to an upstream poetry issue on Windows https://github.com/python-poetry/poetry/issues/3829,
+         * 'poetry env list' does not handle case-insensitive paths as cwd, which are valid on Windows.
+         * So we need to pass the case-exact path as cwd.
+         * It has been observed that only the drive letter in `cwd` is lowercased here. Unfortunately,
+         * there's no good way to get case of the drive letter correctly without using Win32 APIs:
+         * https://stackoverflow.com/questions/33086985/how-to-obtain-case-exact-path-of-a-file-in-node-js-on-windows
+         * So we do it manually.
+         */
+        if (/^[a-z]:/.test(cwd)) {
+            cwd = cwd.replaceAt(0, cwd.charAt(0).toUpperCase());
+        }
+    }
+    return cwd;
 }
 
 /**
