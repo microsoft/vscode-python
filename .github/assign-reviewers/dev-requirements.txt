@@ -75,7 +75,7 @@ pyjwt[crypto]==1.7.1
     # via
     #   -r requirements.txt
     #   gidgethub
-pyyaml==5.3.1
+pyyaml==5.4
     # via -r requirements.txt
 regex==2020.11.13
     # via black
