@@ -8,9 +8,9 @@ docstring-to-markdown==0.7 \
     --hash=sha256:374bad3595b970bc558e1422225f313229988424d5b242d85cbda7da30370375 \
     --hash=sha256:d1811fb2ad38bf8ac24e8bac6c74503cdb120a6a3b2c62bf9a0ab44a59656901
     # via jedi-language-server
-jedi-language-server==0.28.8 \
-    --hash=sha256:95376b31182ef4e297802d38f657d5f970bd6ca6f5ae4332167db50324217b9d \
-    --hash=sha256:dabaeb5166924f87eba890dfd4f061f6a11f8d8c866f12f53c542f612f47a77b
+jedi-language-server==0.30.1 \
+    --hash=sha256:21de6bc8c39f1efd15e8af47c4c3cda65e2f7dda3a32c8d5374f19af517d0439 \
+    --hash=sha256:bbdc35123bfb0043259262a99a1f678ba3cac3385c3e9bec3887bd2c3cf36e49
     # via -r jedils_requirements.in
 jedi==0.18.0 \
     --hash=sha256:18456d83f65f400ab0c2d3319e48520420ef43b23a086fdc05dff34132f0fb93 \
