@@ -47,7 +47,6 @@ import {
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
-import { getOSType, OSType } from './utils/platform';
 
 const untildify = require('untildify');
 
@@ -766,10 +765,7 @@ function getPythonExecutable(pythonPath: string): string {
 }
 
 function isValidPythonPath(pythonPath: string): boolean {
-    return (
-        fs.existsSync(pythonPath) &&
-        path.basename(getOSType() === OSType.Windows ? pythonPath.toLowerCase() : pythonPath).startsWith('python')
-    );
+    return fs.existsSync(pythonPath) && path.basename(pythonPath).startsWith('python');
 }
 
 function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType | undefined): LogLevel | 'off' {
