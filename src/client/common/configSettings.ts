@@ -748,8 +748,8 @@ function getPythonExecutable(pythonPath: string): string {
             if (isValidPythonPath(path.join(pythonPath, executableName))) {
                 return path.join(pythonPath, executableName);
             }
-            if (isValidPythonPath(path.join(pythonPath, 'scripts', executableName))) {
-                return path.join(pythonPath, 'scripts', executableName);
+            if (isValidPythonPath(path.join(pythonPath, 'Scripts', executableName))) {
+                return path.join(pythonPath, 'Scripts', executableName);
             }
         } else {
             if (isValidPythonPath(path.join(pythonPath, executableName))) {
@@ -765,7 +765,7 @@ function getPythonExecutable(pythonPath: string): string {
 }
 
 function isValidPythonPath(pythonPath: string): boolean {
-    return fs.existsSync(pythonPath);
+    return fs.existsSync(pythonPath) && path.basename(pythonPath).startsWith('python');
 }
 
 function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType | undefined): LogLevel | 'off' {
