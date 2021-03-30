@@ -151,6 +151,7 @@ export class Poetry {
         }
 
         // Didn't find anything.
+        traceVerbose('No poetry binary found');
         return undefined;
     }
 
