@@ -127,7 +127,7 @@ export class Poetry {
             yield 'poetry';
             const home = getUserHomeDir();
             if (home) {
-                const defaultPoetryPath = path.join(home, '.poetry', 'bin');
+                const defaultPoetryPath = path.join(home, '.poetry', 'bin', 'poetry');
                 if (await pathExists(defaultPoetryPath)) {
                     yield defaultPoetryPath;
                 }

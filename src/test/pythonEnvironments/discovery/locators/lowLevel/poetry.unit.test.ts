@@ -143,7 +143,7 @@ suite('Poetry binary is located correctly', async () => {
             assert(true);
             return;
         }
-        const defaultPoetry = path.join(home, '.poetry', 'bin');
+        const defaultPoetry = path.join(home, '.poetry', 'bin', 'poetry');
         pathExists = sinon.stub(externalDependencies, 'pathExists');
         pathExists.withArgs(defaultPoetry).resolves(true);
         getPythonSetting.returns('poetry');
