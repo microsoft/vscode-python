@@ -273,7 +273,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                         '<a class="link" href={0}>Sign up</a> for tips and tutorials through our mailing list.',
                     ).format('https://aka.ms/AAbopxr'),
                 }}
-                />
+            />
         );
     }
 
