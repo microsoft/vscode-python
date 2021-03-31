@@ -130,6 +130,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 <div className="releaseNotesRow">
                     {this.renderReleaseNotesLink()}
                     {this.renderTutorialAndDoc()}
+                    {this.renderMailingList()}
                 </div>
                 <div className="block">
                     <input
@@ -259,6 +260,20 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                     ).format('https://aka.ms/AA8dqti', 'https://aka.ms/AA8dxwy'),
                 }}
             />
+        );
+    }
+
+    private renderMailingList(): JSX.Element {
+        return (
+            <div
+                className="paragraph"
+                dangerouslySetInnerHTML={{
+                    __html: getLocString(
+                        'StartPage.mailingList',
+                        '<a class="link" href={0}>Sign up</a> for tips and tutorials through our mailing list.',
+                    ).format('https://aka.ms/AAbopxr'),
+                }}
+                />
         );
     }
 
