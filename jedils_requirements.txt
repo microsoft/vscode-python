@@ -8,9 +8,13 @@ docstring-to-markdown==0.7 \
     --hash=sha256:374bad3595b970bc558e1422225f313229988424d5b242d85cbda7da30370375 \
     --hash=sha256:d1811fb2ad38bf8ac24e8bac6c74503cdb120a6a3b2c62bf9a0ab44a59656901
     # via jedi-language-server
-jedi-language-server==0.28.8 \
-    --hash=sha256:95376b31182ef4e297802d38f657d5f970bd6ca6f5ae4332167db50324217b9d \
-    --hash=sha256:dabaeb5166924f87eba890dfd4f061f6a11f8d8c866f12f53c542f612f47a77b
+importlib-metadata==3.10.0 \
+    --hash=sha256:c9db46394197244adf2f0b08ec5bc3cf16757e9590b02af1fca085c16c0d600a \
+    --hash=sha256:d2d46ef77ffc85cbf7dac7e81dd663fde71c45326131bea8033b9bad42268ebe
+    # via -r jedils_requirements.in
+jedi-language-server==0.30.2 \
+    --hash=sha256:68f40862b86342525628ebb39f6056a2526d56afab445e7a2c63e714694c2dd5 \
+    --hash=sha256:97704bd426a61d41c34cb9aa356919f38e05fe13c60efbb19b0ccde7be28df6f
     # via -r jedils_requirements.in
 jedi==0.18.0 \
     --hash=sha256:18456d83f65f400ab0c2d3319e48520420ef43b23a086fdc05dff34132f0fb93 \
@@ -61,3 +65,7 @@ typing-extensions==3.7.4.3 \
     --hash=sha256:99d4073b617d30288f569d3f13d2bd7548c3a7e4c8de87db09a9d29bb3a4a60c \
     --hash=sha256:dafc7639cde7f1b6e1acc0f457842a83e722ccca8eef5270af2d74792619a89f
     # via pydantic
+zipp==3.4.1 \
+    --hash=sha256:3607921face881ba3e026887d8150cca609d517579abe052ac81fc5aeffdbd76 \
+    --hash=sha256:51cb66cc54621609dd593d1787f286ee42a5c0adbb4b29abea5a63edc3e03098
+    # via importlib-metadata
