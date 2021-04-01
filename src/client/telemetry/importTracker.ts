@@ -14,6 +14,7 @@ import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { IDisposableRegistry } from '../common/types';
 import { noop } from '../common/utils/misc';
+import { TorchProfilerImportRegEx } from '../tensorBoard/helpers';
 import { EventName } from './constants';
 
 /*
@@ -138,6 +139,9 @@ export class ImportTracker implements IExtensionSingleActivationService {
                         // Can't pass in `this.sendTelemetry` directly as that rebinds `this`.
                         packageNames.forEach((p) => this.sendTelemetry(p));
                     }
+                }
+                if (s && TorchProfilerImportRegEx.test(s)) {
+                    sendTelemetryEvent(EventName.TENSORBOARD_TORCH_PROFILER_IMPORT);
                 }
             }
         } catch {

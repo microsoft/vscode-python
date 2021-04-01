@@ -1816,4 +1816,11 @@ export interface IEventNamePropertyMapping {
         wasProfilerPluginInstalled: boolean;
         wasTensorBoardInstalled: boolean;
     };
+    /**
+     * Telemetry event sent when the user's files contain a PyTorch profiler module
+     * import. Files are checked for matching imports when they are opened or saved.
+     * Matches cover import statements of the form `import torch.profiler` and
+     * `from torch import profiler`.
+     */
+    [EventName.TENSORBOARD_TORCH_PROFILER_IMPORT]: never | undefined;
 }
