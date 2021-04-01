@@ -9,6 +9,7 @@ import { getOSType, getUserHomeDir, OSType } from '../../../../common/utils/plat
 import { getPythonSetting, isParentPath, pathExists, shellExecute } from '../../../common/externalDependencies';
 import { getEnvironmentDirFromPath } from '../../../common/commonUtils';
 import { isVirtualenvEnvironment } from './virtualEnvironmentIdentifier';
+import { StopWatch } from '../../../../common/utils/stopWatch';
 
 /**
  * Global virtual env dir for a project is named as:
@@ -133,6 +134,7 @@ export class Poetry {
         for await (const poetryPath of getCandidates()) {
             traceVerbose(`Probing poetry binary: ${poetryPath}`);
             const poetry = new Poetry(poetryPath);
+            const stopWatch = new StopWatch();
             try {
                 await poetry.getVersion();
                 traceVerbose(`Found poetry via filesystem probing: ${poetryPath}`);
@@ -143,6 +145,7 @@ export class Poetry {
                 // line arguments that we passed (indicating an old version that we do not support).
                 traceVerbose(ex);
             }
+            traceVerbose(`Time taken to run ${poetryPath} --version in ms`, stopWatch.elapsedTime);
         }
 
         // Didn't find anything.
@@ -218,6 +221,7 @@ export class Poetry {
 async function safeShellExecute(command: string, cwd?: string, logVerbose = false) {
     // It has been observed that commands related to conda or poetry binary take upto 10-15 seconds unlike
     // python binaries. So for now no timeouts on them.
+    const stopWatch = new StopWatch();
     const result = await shellExecute(command, {
         cwd,
         throwOnStdErr: true,
@@ -229,6 +233,7 @@ async function safeShellExecute(command: string, cwd?: string, logVerbose = fals
         }
         return undefined;
     });
+    traceVerbose(`Time taken to run ${command} in ms`, stopWatch.elapsedTime);
     return result;
 }
 
