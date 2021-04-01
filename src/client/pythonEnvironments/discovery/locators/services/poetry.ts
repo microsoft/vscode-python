@@ -4,7 +4,7 @@
 'use strict';
 
 import * as path from 'path';
-import { traceVerbose } from '../../../../common/logger';
+import { traceError, traceVerbose } from '../../../../common/logger';
 import { getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
 import { getPythonSetting, isParentPath, pathExists, shellExecute } from '../../../common/externalDependencies';
 import { getEnvironmentDirFromPath } from '../../../common/commonUtils';
@@ -191,7 +191,7 @@ export class Poetry {
      */
     public async getActiveEnvPath(cwd: string): Promise<string | undefined> {
         cwd = fixCwd(cwd);
-        const result = await safeShellExecute(`${this._command} env info -p`, cwd);
+        const result = await safeShellExecute(`${this._command} env info -p`, cwd, true);
         if (!result) {
             return undefined;
         }
@@ -215,14 +215,18 @@ export class Poetry {
 /**
  * Executes the command within the cwd specified. Swallows errors if any.
  */
-async function safeShellExecute(command: string, cwd?: string) {
+async function safeShellExecute(command: string, cwd?: string, logVerbose = false) {
     // It has been observed that commands related to conda or poetry binary take upto 10-15 seconds unlike
     // python binaries. So for now no timeouts on them.
     const result = await shellExecute(command, {
         cwd,
         throwOnStdErr: true,
     }).catch((ex) => {
-        traceVerbose(ex);
+        if (logVerbose) {
+            traceVerbose(ex);
+        } else {
+            traceError(ex);
+        }
         return undefined;
     });
     return result;
