@@ -92,11 +92,6 @@ export class Poetry {
     public static _poetryPromise: Promise<Poetry | undefined> | undefined;
 
     /**
-     * Timeout for the shell exec commands. Sometimes timeout can happen if poetry path is not valid.
-     */
-    private readonly timeout = 15000;
-
-    /**
      * Creates a Poetry service corresponding to the corresponding "poetry" command.
      *
      * @param _command - Command used to run poetry. This has the same meaning as the
@@ -157,7 +152,6 @@ export class Poetry {
 
     private async getVersion(): Promise<string | undefined> {
         const result = await shellExecute(`${this._command} --version`, {
-            timeout: this.timeout,
             throwOnStdErr: true,
         });
         return result.stdout.trim();
@@ -169,7 +163,7 @@ export class Poetry {
      */
     public async getEnvList(cwd: string): Promise<string[]> {
         cwd = fixCwd(cwd);
-        const result = await this.safeShellExecute(`${this._command} env list --full-path`, cwd);
+        const result = await safeShellExecute(`${this._command} env list --full-path`, cwd);
         if (!result) {
             return [];
         }
@@ -197,7 +191,7 @@ export class Poetry {
      */
     public async getActiveEnvPath(cwd: string): Promise<string | undefined> {
         cwd = fixCwd(cwd);
-        const result = await this.safeShellExecute(`${this._command} env info -p`, cwd);
+        const result = await safeShellExecute(`${this._command} env info -p`, cwd);
         if (!result) {
             return undefined;
         }
@@ -210,27 +204,28 @@ export class Poetry {
      */
     public async getVirtualenvsPathSetting(cwd?: string): Promise<string | undefined> {
         cwd = cwd ? fixCwd(cwd) : cwd;
-        const result = await this.safeShellExecute(`${this._command} config virtualenvs.path`, cwd);
+        const result = await safeShellExecute(`${this._command} config virtualenvs.path`, cwd);
         if (!result) {
             return undefined;
         }
         return result.stdout.trim();
     }
+}
 
-    /**
-     * Executes the command within the cwd specified. Swallows errors if any.
-     */
-    private async safeShellExecute(command: string, cwd?: string) {
-        const result = await shellExecute(command, {
-            cwd,
-            timeout: this.timeout,
-            throwOnStdErr: true,
-        }).catch((ex) => {
-            traceVerbose(ex);
-            return undefined;
-        });
-        return result;
-    }
+/**
+ * Executes the command within the cwd specified. Swallows errors if any.
+ */
+async function safeShellExecute(command: string, cwd?: string) {
+    // It has been observed that commands related to conda or poetry binary take upto 10-15 seconds unlike
+    // python binaries. So for now no timeouts on them.
+    const result = await shellExecute(command, {
+        cwd,
+        throwOnStdErr: true,
+    }).catch((ex) => {
+        traceVerbose(ex);
+        return undefined;
+    });
+    return result;
 }
 
 function fixCwd(cwd: string): string {
