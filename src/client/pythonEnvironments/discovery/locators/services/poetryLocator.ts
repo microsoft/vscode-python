@@ -26,8 +26,8 @@ import { isPoetryEnvironment, localPoetryEnvDirName, Poetry } from './poetry';
  */
 async function getVirtualEnvDirs(root: string): Promise<string[]> {
     const envDirs = [path.join(root, localPoetryEnvDirName)];
-    const poetry = await Poetry.getPoetry();
-    const virtualenvs = await poetry?.getEnvList(root);
+    const poetry = await Poetry.getPoetry(root);
+    const virtualenvs = await poetry?.getEnvList();
     if (virtualenvs) {
         envDirs.push(...virtualenvs);
     }
@@ -35,8 +35,8 @@ async function getVirtualEnvDirs(root: string): Promise<string[]> {
 }
 
 async function getRootVirtualEnvDir(root: string): Promise<string[]> {
-    const poetry = await Poetry.getPoetry();
-    const setting = await poetry?.getVirtualenvsPathSetting(root);
+    const poetry = await Poetry.getPoetry(root);
+    const setting = await poetry?.getVirtualenvsPathSetting();
     return setting ? [setting] : [];
 }
 

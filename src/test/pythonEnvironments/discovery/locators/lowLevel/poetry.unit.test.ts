@@ -14,15 +14,16 @@ import {
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 
 const testPoetryDir = path.join(TEST_LAYOUT_ROOT, 'poetry');
+const project1 = path.join(testPoetryDir, 'project1');
+const project2 = path.join(testPoetryDir, 'project2');
+const project3 = path.join(testPoetryDir, 'project3');
 
 suite('isPoetryEnvironment Tests', () => {
     let shellExecute: sinon.SinonStub;
     let getPythonSetting: sinon.SinonStub;
-    const project1 = path.join(testPoetryDir, 'project1');
-    const project2 = path.join(testPoetryDir, 'project2');
 
     suiteTeardown(() => {
-        Poetry._poetryPromise = undefined;
+        Poetry._poetryPromise = new Map();
     });
 
     suite('Global poetry environment', async () => {
@@ -56,7 +57,7 @@ suite('isPoetryEnvironment Tests', () => {
             shellExecute.callsFake((command: string, options: ShellOptions) => {
                 // eslint-disable-next-line default-case
                 switch (command) {
-                    case 'poetry --version':
+                    case 'poetry env list --full-path':
                         return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
                     case 'poetry env info -p':
                         if (options.cwd === project1) {
@@ -96,7 +97,7 @@ suite('Poetry binary is located correctly', async () => {
     let pathExists: sinon.SinonStub;
 
     suiteSetup(() => {
-        Poetry._poetryPromise = undefined;
+        Poetry._poetryPromise = new Map();
     });
 
     setup(() => {
@@ -105,34 +106,56 @@ suite('Poetry binary is located correctly', async () => {
     });
 
     teardown(() => {
-        Poetry._poetryPromise = undefined;
+        Poetry._poetryPromise = new Map();
         sinon.restore();
+    });
+
+    test("Return undefined if pyproject.toml doesn't exist in cwd", async () => {
+        getPythonSetting.returns('poetryPath');
+        shellExecute.callsFake((_command: string, _options: ShellOptions) => {
+            return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
+        });
+
+        const poetry = await Poetry.getPoetry(testPoetryDir);
+
+        expect(poetry?._command).to.equal(undefined);
+    });
+
+    test('Return undefined if cwd contains pyproject.toml which does not contain a poetry section', async () => {
+        getPythonSetting.returns('poetryPath');
+        shellExecute.callsFake((_command: string, _options: ShellOptions) => {
+            return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
+        });
+
+        const poetry = await Poetry.getPoetry(project3);
+
+        expect(poetry?._command).to.equal(undefined);
     });
 
     test('When user has specified a valid poetry path, use it', async () => {
         getPythonSetting.returns('poetryPath');
-        shellExecute.callsFake((command: string, _options: ShellOptions) => {
-            if (command === 'poetryPath --version') {
+        shellExecute.callsFake((command: string, options: ShellOptions) => {
+            if (command === `poetry env list --full-path` && options.cwd === project1) {
                 return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
             }
             return Promise.reject(new Error('Command failed'));
         });
 
-        const poetry = await Poetry.getPoetry();
+        const poetry = await Poetry.getPoetry(project1);
 
         expect(poetry?._command).to.equal('poetryPath');
     });
 
     test("When user hasn't specified a path, use poetry on PATH if available", async () => {
         getPythonSetting.returns('poetry'); // Setting returns the default value
-        shellExecute.callsFake((command: string, _options: ShellOptions) => {
-            if (command === 'poetry --version') {
+        shellExecute.callsFake((command: string, options: ShellOptions) => {
+            if (command === `poetry env list --full-path` && options.cwd === project1) {
                 return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
             }
             return Promise.reject(new Error('Command failed'));
         });
 
-        const poetry = await Poetry.getPoetry();
+        const poetry = await Poetry.getPoetry(project1);
 
         expect(poetry?._command).to.equal('poetry');
     });
@@ -147,14 +170,14 @@ suite('Poetry binary is located correctly', async () => {
         pathExists = sinon.stub(externalDependencies, 'pathExists');
         pathExists.withArgs(defaultPoetry).resolves(true);
         getPythonSetting.returns('poetry');
-        shellExecute.callsFake((command: string, _options: ShellOptions) => {
-            if (command === `${defaultPoetry} --version`) {
+        shellExecute.callsFake((command: string, options: ShellOptions) => {
+            if (command === `${defaultPoetry} env list --full-path` && options.cwd === project1) {
                 return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
             }
             return Promise.reject(new Error('Command failed'));
         });
 
-        const poetry = await Poetry.getPoetry();
+        const poetry = await Poetry.getPoetry(project1);
 
         expect(poetry?._command).to.equal(defaultPoetry);
     });
@@ -165,7 +188,7 @@ suite('Poetry binary is located correctly', async () => {
             return Promise.reject(new Error('Command failed'));
         });
 
-        const poetry = await Poetry.getPoetry();
+        const poetry = await Poetry.getPoetry(project1);
 
         expect(poetry?._command).to.equal(undefined);
     });

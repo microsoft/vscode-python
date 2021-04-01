@@ -6,7 +6,13 @@
 import * as path from 'path';
 import { traceError, traceVerbose } from '../../../../common/logger';
 import { getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
-import { getPythonSetting, isParentPath, pathExists, shellExecute } from '../../../common/externalDependencies';
+import {
+    getPythonSetting,
+    isParentPath,
+    pathExists,
+    readFile,
+    shellExecute,
+} from '../../../common/externalDependencies';
 import { getEnvironmentDirFromPath } from '../../../common/commonUtils';
 import { isVirtualenvEnvironment } from './virtualEnvironmentIdentifier';
 import { StopWatch } from '../../../../common/utils/stopWatch';
@@ -53,8 +59,7 @@ async function isLocalPoetryEnvironment(interpreterPath: string): Promise<boolea
         return false;
     }
     const project = path.dirname(envDir);
-    const pyprojectToml = path.join(project, 'pyproject.toml');
-    if (!(await pathExists(pyprojectToml))) {
+    if (!(await hasValidPyprojectToml(project))) {
         return false;
     }
     // The assumption is that we need to be able to run poetry CLI for an environment in order to mark it as poetry.
@@ -90,28 +95,38 @@ export class Poetry {
      * Locating poetry binary can be expensive, since it potentially involves spawning or
      * trying to spawn processes; so we only do it once per session.
      */
-    public static _poetryPromise: Promise<Poetry | undefined> | undefined;
+    public static _poetryPromise: Map<string, Promise<Poetry | undefined>> = new Map<
+        string,
+        Promise<Poetry | undefined>
+    >();
 
     /**
      * Creates a Poetry service corresponding to the corresponding "poetry" command.
      *
      * @param _command - Command used to run poetry. This has the same meaning as the
      * first argument of spawn() - i.e. it can be a full path, or just a binary name.
+     * @param cwd - The working directory to use as cwd when running poetry.
      */
-    constructor(public readonly _command: string) {}
+    constructor(public readonly _command: string, private cwd: string) {
+        this.fixCwd();
+    }
 
-    public static async getPoetry(): Promise<Poetry | undefined> {
-        traceVerbose(`Searching for poetry.`);
-        if (Poetry._poetryPromise === undefined) {
-            Poetry._poetryPromise = Poetry.locate();
+    public static async getPoetry(cwd: string): Promise<Poetry | undefined> {
+        if (!(await hasValidPyprojectToml(cwd))) {
+            // This check is not expensive and may change during a session, so we need not cache it.
+            return undefined;
         }
-        return Poetry._poetryPromise;
+        traceVerbose(`Getting poetry for cwd ${cwd}`);
+        if (Poetry._poetryPromise.get(cwd) === undefined) {
+            Poetry._poetryPromise.set(cwd, Poetry.locate(cwd));
+        }
+        return Poetry._poetryPromise.get(cwd);
     }
 
     /**
      * Returns a Poetry instance corresponding to the binary.
      */
-    private static async locate(): Promise<Poetry | undefined> {
+    private static async locate(cwd: string): Promise<Poetry | undefined> {
         // Produce a list of candidate binaries to be probed by exec'ing them.
         async function* getCandidates() {
             const customPoetryPath = getPythonSetting<string>('poetryPath');
@@ -132,12 +147,12 @@ export class Poetry {
 
         // Probe the candidates, and pick the first one that exists and does what we need.
         for await (const poetryPath of getCandidates()) {
-            traceVerbose(`Probing poetry binary: ${poetryPath}`);
-            const poetry = new Poetry(poetryPath);
+            traceVerbose(`Probing poetry binary for ${cwd}: ${poetryPath}`);
+            const poetry = new Poetry(poetryPath, cwd);
             const stopWatch = new StopWatch();
             try {
-                await poetry.getVersion();
-                traceVerbose(`Found poetry via filesystem probing: ${poetryPath}`);
+                await poetry.getEnvList();
+                traceVerbose(`Found poetry via filesystem probing for ${cwd}: ${poetryPath}`);
                 return poetry;
             } catch (ex) {
                 // Failed to spawn because the binary doesn't exist or isn't on PATH, or the current
@@ -145,28 +160,20 @@ export class Poetry {
                 // line arguments that we passed (indicating an old version that we do not support).
                 traceVerbose(ex);
             }
-            traceVerbose(`Time taken to run ${poetryPath} --version in ms`, stopWatch.elapsedTime);
+            traceVerbose(`Time taken to run ${poetryPath} --version in ms for ${cwd}`, stopWatch.elapsedTime);
         }
 
         // Didn't find anything.
-        traceVerbose('No poetry binary found');
+        traceVerbose(`No poetry binary found for ${cwd}`);
         return undefined;
-    }
-
-    private async getVersion(): Promise<string | undefined> {
-        const result = await shellExecute(`${this._command} --version`, {
-            throwOnStdErr: true,
-        });
-        return result.stdout.trim();
     }
 
     /**
      * Retrieves list of Python environments known to this poetry for this working directory.
      * Corresponds to "poetry env list --full-path". Swallows errors if any.
      */
-    public async getEnvList(cwd: string): Promise<string[]> {
-        cwd = fixCwd(cwd);
-        const result = await safeShellExecute(`${this._command} env list --full-path`, cwd);
+    public async getEnvList(): Promise<string[]> {
+        const result = await this.safeShellExecute(`${this._command} env list --full-path`);
         if (!result) {
             return [];
         }
@@ -192,9 +199,8 @@ export class Poetry {
      * Retrieves interpreter path of the currently activated virtual environment for this working directory.
      * Corresponds to "poetry env info -p". Swallows errors if any.
      */
-    public async getActiveEnvPath(cwd: string): Promise<string | undefined> {
-        cwd = fixCwd(cwd);
-        const result = await safeShellExecute(`${this._command} env info -p`, cwd, true);
+    public async getActiveEnvPath(): Promise<string | undefined> {
+        const result = await this.safeShellExecute(`${this._command} env info -p`, true);
         if (!result) {
             return undefined;
         }
@@ -205,57 +211,52 @@ export class Poetry {
      * Retrieves `virtualenvs.path` setting for this working directory. `virtualenvs.path` setting defines where virtual
      * environments are created for the directory. Corresponds to "poetry config virtualenvs.path". Swallows errors if any.
      */
-    public async getVirtualenvsPathSetting(cwd?: string): Promise<string | undefined> {
-        cwd = cwd ? fixCwd(cwd) : cwd;
-        const result = await safeShellExecute(`${this._command} config virtualenvs.path`, cwd);
+    public async getVirtualenvsPathSetting(): Promise<string | undefined> {
+        const result = await this.safeShellExecute(`${this._command} config virtualenvs.path`);
         if (!result) {
             return undefined;
         }
         return result.stdout.trim();
     }
-}
 
-/**
- * Executes the command within the cwd specified. Swallows errors if any.
- */
-async function safeShellExecute(command: string, cwd?: string, logVerbose = false) {
-    // It has been observed that commands related to conda or poetry binary take upto 10-15 seconds unlike
-    // python binaries. So for now no timeouts on them.
-    const stopWatch = new StopWatch();
-    const result = await shellExecute(command, {
-        cwd,
-        throwOnStdErr: true,
-    }).catch((ex) => {
-        if (logVerbose) {
-            traceVerbose(ex);
-        } else {
-            traceError(ex);
-        }
-        return undefined;
-    });
-    traceVerbose(`Time taken to run ${command} in ms`, stopWatch.elapsedTime);
-    return result;
-}
-
-function fixCwd(cwd: string): string {
-    if (cwd && getOSType() === OSType.Windows) {
-        /**
-         * Due to an upstream poetry issue on Windows https://github.com/python-poetry/poetry/issues/3829,
-         * 'poetry env list' does not handle case-insensitive paths as cwd, which are valid on Windows.
-         * So we need to pass the case-exact path as cwd.
-         * It has been observed that only the drive letter in `cwd` is lowercased here. Unfortunately,
-         * there's no good way to get case of the drive letter correctly without using Win32 APIs:
-         * https://stackoverflow.com/questions/33086985/how-to-obtain-case-exact-path-of-a-file-in-node-js-on-windows
-         * So we do it manually.
-         */
-        if (/^[a-z]:/.test(cwd)) {
-            // Replace first character by the upper case version of the character.
-            const a = cwd.split(':');
-            a[0] = a[0].toUpperCase();
-            cwd = a.join(':');
+    /**
+     * Due to an upstream poetry issue on Windows https://github.com/python-poetry/poetry/issues/3829,
+     * 'poetry env list' does not handle case-insensitive paths as cwd, which are valid on Windows.
+     * So we need to pass the case-exact path as cwd.
+     * It has been observed that only the drive letter in `cwd` is lowercased here. Unfortunately,
+     * there's no good way to get case of the drive letter correctly without using Win32 APIs:
+     * https://stackoverflow.com/questions/33086985/how-to-obtain-case-exact-path-of-a-file-in-node-js-on-windows
+     * So we do it manually.
+     */
+    private fixCwd(): void {
+        if (getOSType() === OSType.Windows) {
+            if (/^[a-z]:/.test(this.cwd)) {
+                // Replace first character by the upper case version of the character.
+                const a = this.cwd.split(':');
+                a[0] = a[0].toUpperCase();
+                this.cwd = a.join(':');
+            }
         }
     }
-    return cwd;
+
+    private async safeShellExecute(command: string, logVerbose = false) {
+        // It has been observed that commands related to conda or poetry binary take upto 10-15 seconds unlike
+        // python binaries. So for now no timeouts on them.
+        const stopWatch = new StopWatch();
+        const result = await shellExecute(command, {
+            cwd: this.cwd,
+            throwOnStdErr: true,
+        }).catch((ex) => {
+            if (logVerbose) {
+                traceVerbose(ex);
+            } else {
+                traceError(ex);
+            }
+            return undefined;
+        });
+        traceVerbose(`Time taken to run ${command} in ms`, stopWatch.elapsedTime);
+        return result;
+    }
 }
 
 /**
@@ -270,10 +271,33 @@ export async function isPoetryEnvironmentRelatedToFolder(
     folder: string,
     poetryPath?: string,
 ): Promise<boolean> {
-    const poetry = poetryPath ? new Poetry(poetryPath) : await Poetry.getPoetry();
-    const pathToEnv = await poetry?.getActiveEnvPath(folder);
+    const poetry = poetryPath ? new Poetry(poetryPath, folder) : await Poetry.getPoetry(folder);
+    const pathToEnv = await poetry?.getActiveEnvPath();
     if (!pathToEnv) {
         return false;
     }
     return isParentPath(interpreterPath, pathToEnv);
+}
+
+/**
+ * Does best effort to verify whether a folder has been setup for poetry, by looking for "valid" pyproject.toml file.
+ * Note "valid" is best effort here, i.e we only verify the minimal features.
+ *
+ * @param folder Folder to look for pyproject.toml file in.
+ */
+async function hasValidPyprojectToml(folder: string): Promise<boolean> {
+    const pyprojectToml = path.join(folder, 'pyproject.toml');
+    if (!(await pathExists(pyprojectToml))) {
+        return false;
+    }
+    const content = await readFile(pyprojectToml);
+    if (!content.includes('[tool.poetry]')) {
+        return false;
+    }
+    // It may still be the case that.
+    // - pyproject.toml is not a valid toml file
+    // - Some fields are not setup properly for poetry or are missing
+    // ... possibly more
+    // But we only wish to verify the minimal features.
+    return true;
 }

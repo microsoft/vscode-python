@@ -60,7 +60,7 @@ suite('Module Installer - Poetry', () => {
         shellExecute.callsFake((command: string, options: ShellOptions) => {
             // eslint-disable-next-line default-case
             switch (command) {
-                case 'poetry --version':
+                case 'poetry env list --full-path':
                     return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
                 case 'poetry env info -p':
                     if (options.cwd && externalDependencies.arePathsSame(options.cwd, project1)) {

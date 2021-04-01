@@ -18,7 +18,7 @@ suite('Poetry Locator', async () => {
         shellExecute = sinon.stub(externalDependencies, 'shellExecute');
         shellExecute.callsFake((command: string, options: ShellOptions) => {
             // eslint-disable-next-line default-case
-            if (command === 'poetry --version') {
+            if (command === 'poetry env list --full-path') {
                 return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
             }
             if (command === 'poetry config virtualenvs.path') {
