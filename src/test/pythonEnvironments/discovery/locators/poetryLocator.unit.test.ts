@@ -75,9 +75,6 @@ suite('Poetry Locator', () => {
             locator = new PoetryLocator(project1);
             getOSTypeStub.returns(platformUtils.OSType.Windows);
             shellExecute.callsFake((command: string, options: ShellOptions) => {
-                if (command === 'poetry env list --full-path') {
-                    return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
-                }
                 if (command === 'poetry env info -p') {
                     if (options.cwd && externalDependencies.arePathsSame(options.cwd, project1)) {
                         return Promise.resolve<ExecutionResult<string>>({
@@ -218,9 +215,6 @@ suite('Poetry Locator', () => {
             getOSTypeStub.returns(platformUtils.OSType.Linux);
             shellExecute.callsFake((command: string, options: ShellOptions) => {
                 // eslint-disable-next-line default-case
-                if (command === 'poetry env list --full-path') {
-                    return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
-                }
                 if (command === 'poetry env info -p') {
                     if (options.cwd && externalDependencies.arePathsSame(options.cwd, project2)) {
                         return Promise.resolve<ExecutionResult<string>>({

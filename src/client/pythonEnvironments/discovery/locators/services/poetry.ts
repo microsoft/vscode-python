@@ -150,17 +150,15 @@ export class Poetry {
             traceVerbose(`Probing poetry binary for ${cwd}: ${poetryPath}`);
             const poetry = new Poetry(poetryPath, cwd);
             const stopWatch = new StopWatch();
-            try {
-                await poetry.getEnvList();
+            const virtualenvs = await poetry.getEnvList();
+            if (virtualenvs !== undefined) {
                 traceVerbose(`Found poetry via filesystem probing for ${cwd}: ${poetryPath}`);
                 return poetry;
-            } catch (ex) {
-                // Failed to spawn because the binary doesn't exist or isn't on PATH, or the current
-                // user doesn't have execute permissions for it, or this poetry couldn't handle command
-                // line arguments that we passed (indicating an old version that we do not support).
-                traceVerbose(ex);
             }
-            traceVerbose(`Time taken to run ${poetryPath} --version in ms for ${cwd}`, stopWatch.elapsedTime);
+            traceVerbose(
+                `Time taken to run ${poetryPath} env list --full-path in ms for ${cwd}`,
+                stopWatch.elapsedTime,
+            );
         }
 
         // Didn't find anything.
@@ -170,12 +168,17 @@ export class Poetry {
 
     /**
      * Retrieves list of Python environments known to this poetry for this working directory.
+     * Returns `undefined` if we failed to spawn because the binary doesn't exist or isn't on PATH,
+     * or the current user doesn't have execute permissions for it, or this poetry couldn't handle
+     * command line arguments that we passed (indicating an old version that we do not support, or
+     * poetry has not been setup properly for the cwd).
+     *
      * Corresponds to "poetry env list --full-path". Swallows errors if any.
      */
-    public async getEnvList(): Promise<string[]> {
+    public async getEnvList(): Promise<string[] | undefined> {
         const result = await this.safeShellExecute(`${this._command} env list --full-path`);
         if (!result) {
-            return [];
+            return undefined;
         }
         /**
          * We expect stdout to contain something like:

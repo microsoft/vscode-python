@@ -60,7 +60,7 @@ suite('isPoetryEnvironment Tests', () => {
                     case 'poetry env list --full-path':
                         return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
                     case 'poetry env info -p':
-                        if (options.cwd === project1) {
+                        if (options.cwd && externalDependencies.arePathsSame(options.cwd, project1)) {
                             return Promise.resolve<ExecutionResult<string>>({
                                 stdout: `${path.join(project1, '.venv')} \n`,
                             });
@@ -135,7 +135,11 @@ suite('Poetry binary is located correctly', async () => {
     test('When user has specified a valid poetry path, use it', async () => {
         getPythonSetting.returns('poetryPath');
         shellExecute.callsFake((command: string, options: ShellOptions) => {
-            if (command === `poetry env list --full-path` && options.cwd === project1) {
+            if (
+                command === `poetryPath env list --full-path` &&
+                options.cwd &&
+                externalDependencies.arePathsSame(options.cwd, project1)
+            ) {
                 return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
             }
             return Promise.reject(new Error('Command failed'));
@@ -149,7 +153,11 @@ suite('Poetry binary is located correctly', async () => {
     test("When user hasn't specified a path, use poetry on PATH if available", async () => {
         getPythonSetting.returns('poetry'); // Setting returns the default value
         shellExecute.callsFake((command: string, options: ShellOptions) => {
-            if (command === `poetry env list --full-path` && options.cwd === project1) {
+            if (
+                command === `poetry env list --full-path` &&
+                options.cwd &&
+                externalDependencies.arePathsSame(options.cwd, project1)
+            ) {
                 return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
             }
             return Promise.reject(new Error('Command failed'));
@@ -169,9 +177,14 @@ suite('Poetry binary is located correctly', async () => {
         const defaultPoetry = path.join(home, '.poetry', 'bin', 'poetry');
         pathExists = sinon.stub(externalDependencies, 'pathExists');
         pathExists.withArgs(defaultPoetry).resolves(true);
+        pathExists.callThrough();
         getPythonSetting.returns('poetry');
         shellExecute.callsFake((command: string, options: ShellOptions) => {
-            if (command === `${defaultPoetry} env list --full-path` && options.cwd === project1) {
+            if (
+                command === `${defaultPoetry} env list --full-path` &&
+                options.cwd &&
+                externalDependencies.arePathsSame(options.cwd, project1)
+            ) {
                 return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
             }
             return Promise.reject(new Error('Command failed'));
