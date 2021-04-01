@@ -13,26 +13,18 @@ import {
 import { ChildProcess } from 'child_process';
 import { DeprecatePythonPath } from '../../common/experiments/groups';
 import { traceDecorators, traceError } from '../../common/logger';
-import {
-    IConfigurationService,
-    IExperimentsManager,
-    IInterpreterPathService,
-    IPythonSettings,
-    Resource,
-} from '../../common/types';
+import { IExperimentsManager, IInterpreterPathService, Resource } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestingService } from '../../testing/types';
 import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { getMemoryUsage } from '../../common/process/memory';
-import { killPidTree } from '../../common/process/rawProcessApis';
+import { killPid } from '../../common/process/rawProcessApis';
 
 @injectable()
 export class JediLanguageServerProxy implements ILanguageServerProxy {
@@ -46,18 +38,11 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
 
     private lsVersion: string | undefined;
 
-    private pidUsageFailures = { timer: new StopWatch(), counter: 0 };
-
-    private pythonSettings: IPythonSettings | undefined;
-
-    private timer?: NodeJS.Timer | number;
-
     constructor(
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
         @inject(ITestingService) private readonly testManager: ITestingService,
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
     ) {}
 
     private static versionTelemetryProps(instance: JediLanguageServerProxy) {
@@ -73,7 +58,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
             const pid: number | undefined = ((this.languageClient as any)._serverProcess as ChildProcess)?.pid;
             const killServer = () => {
                 if (pid) {
-                    killPidTree(pid);
+                    killPid(pid);
                 }
             };
             // Do not await on this.
@@ -90,11 +75,6 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         if (this.cancellationStrategy) {
             this.cancellationStrategy.dispose();
             this.cancellationStrategy = undefined;
-        }
-
-        if (this.timer) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            clearTimeout(this.timer as any);
         }
 
         while (this.disposables.length > 0) {
@@ -122,8 +102,6 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
             return this.serverReady();
         }
 
-        this.pythonSettings = this.configurationService.getSettings(resource);
-
         this.lsVersion =
             (options.middleware ? (<LanguageClientMiddleware>options.middleware).serverVersion : undefined) ?? '0.19.3';
 
@@ -150,13 +128,6 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         }
 
         await this.registerTestServices();
-
-        try {
-            await this.checkJediLSPMemoryFootprint();
-        } catch (ex) {
-            // Ignore errors
-        }
-
         return Promise.resolve();
     }
 
@@ -207,58 +178,6 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
                     });
                 }),
             );
-        }
-    }
-
-    private async checkJediLSPMemoryFootprint() {
-        // Check memory footprint periodically. Do not check on every request due to
-        // the performance impact. See https://github.com/soyuka/pidusage - on Windows
-        // it is using wmic which means spawning cmd.exe process on every request.
-        if (this.pythonSettings && this.pythonSettings.jediMemoryLimit === -1) {
-            return;
-        }
-
-        await this.sendJediMemoryTelemetry();
-        if (this.timer) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            clearTimeout(this.timer as any);
-        }
-        this.timer = setTimeout(() => this.checkJediLSPMemoryFootprint(), 15 * 1000);
-    }
-
-    private async sendJediMemoryTelemetry(): Promise<void> {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const proc: ChildProcess | undefined = (this.languageClient as any)._serverProcess as ChildProcess;
-        if (
-            !proc ||
-            proc.killed ||
-            this.pidUsageFailures.counter > 2 ||
-            !this.pythonSettings ||
-            this.pythonSettings.jediMemoryLimit === -1
-        ) {
-            return;
-        }
-
-        try {
-            const memory = await getMemoryUsage(proc.pid);
-            const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 3072), 8192) * 1024 * 1024;
-            if (memory > 0) {
-                const props = {
-                    memUse: memory,
-                    limit,
-                    isUserDefinedLimit: limit !== 1024,
-                    restart: false,
-                };
-                sendTelemetryEvent(EventName.JEDI_MEMORY, undefined, props);
-            }
-        } catch (err) {
-            this.pidUsageFailures.counter += 1;
-            // If this function fails 2 times in the last 60 seconds, lets not try ever again.
-            if (this.pidUsageFailures.timer.elapsedTime > 60 * 1000) {
-                this.pidUsageFailures.counter = 0;
-                this.pidUsageFailures.timer.reset();
-            }
-            traceError('Python Extension: (pidusage-tree)', err);
         }
     }
 }

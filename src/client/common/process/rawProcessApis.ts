@@ -19,8 +19,6 @@ import {
 } from './types';
 import { noop } from '../utils/misc';
 
-const pidUsageTree = require('pidusage-tree');
-
 function getDefaultOptions<T extends ShellOptions | SpawnOptions>(options: T, defaultEnv?: EnvironmentVariables): T {
     const defaultOptions = { ...options };
     const execOptions = defaultOptions as SpawnOptions;
@@ -250,22 +248,6 @@ export function killPid(pid: number): void {
             process.kill(pid);
         }
     } catch {
-        // Ignore.
-    }
-}
-
-/**
- * Kills all processes spawned by `pid` (`pid` inclusive)
- * @param pid
- */
-export async function killPidTree(pid: number): Promise<void> {
-    try {
-        // This can fail if the process is already killed
-        const result = await pidUsageTree(pid);
-        for (const key of Object.keys(result)) {
-            killPid(parseInt(key, 10));
-        }
-    } catch (ex) {
         // Ignore.
     }
 }

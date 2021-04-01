@@ -15,14 +15,10 @@ import { IPythonExecutionFactory } from '../common/process/types';
 import { IConfigurationService, IPythonSettings } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { swallowExceptions } from '../common/utils/decorators';
-import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../telemetry';
-import { EventName } from '../telemetry/constants';
-import { traceError, traceWarning } from '../common/logger';
-import { getMemoryUsage } from '../common/process/memory';
+import { traceError } from '../common/logger';
 
 const pythonVSCodeTypeMappings = new Map<string, CompletionItemKind>();
 pythonVSCodeTypeMappings.set('none', CompletionItemKind.Value);
@@ -179,17 +175,7 @@ export class JediProxy implements Disposable {
 
     private environmentVariablesProvider!: IEnvironmentVariablesProvider;
 
-    private ignoreJediMemoryFootprint = false;
-
-    private pidUsageFailures = { timer: new StopWatch(), counter: 0 };
-
-    private lastCmdIdProcessed?: number;
-
-    private lastCmdIdProcessedForPidUsage?: number;
-
     private readonly disposables: Disposable[] = [];
-
-    private timer?: NodeJS.Timer | number;
 
     public constructor(
         workspacePath: string,
@@ -204,7 +190,6 @@ export class JediProxy implements Disposable {
         this.startLanguageServer()
             .then(() => this.initialized.resolve())
             .ignoreErrors();
-        this.checkJediMemoryFootprint().ignoreErrors();
     }
 
     private static getProperty<T>(o: Record<string, unknown>, name: string): T {
@@ -218,10 +203,7 @@ export class JediProxy implements Disposable {
                 disposable.dispose();
             }
         }
-        if (this.timer) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            clearTimeout(this.timer as any);
-        }
+
         this.killProcess();
     }
 
@@ -266,78 +248,6 @@ export class JediProxy implements Disposable {
             }
             this.handleError('spawnProcess', ex);
         });
-    }
-
-    private shouldCheckJediMemoryFootprint() {
-        if (this.ignoreJediMemoryFootprint || this.pythonSettings.jediMemoryLimit === -1) {
-            return false;
-        }
-        if (
-            this.lastCmdIdProcessedForPidUsage &&
-            this.lastCmdIdProcessed &&
-            this.lastCmdIdProcessedForPidUsage === this.lastCmdIdProcessed
-        ) {
-            // If no more commands were processed since the last time,
-            //  then there's no need to check again.
-            return false;
-        }
-        return true;
-    }
-
-    private async checkJediMemoryFootprint() {
-        // Check memory footprint periodically. Do not check on every request due to
-        // the performance impact. See https://github.com/soyuka/pidusage - on Windows
-        // it is using wmic which means spawning cmd.exe process on every request.
-        if (this.pythonSettings.jediMemoryLimit === -1) {
-            return;
-        }
-
-        await this.checkJediMemoryFootprintImpl();
-        if (this.timer) {
-            clearTimeout(this.timer as any);
-        }
-        this.timer = setTimeout(() => this.checkJediMemoryFootprint(), 15 * 1000);
-    }
-
-    private async checkJediMemoryFootprintImpl(): Promise<void> {
-        if (!this.proc || this.proc.killed) {
-            return;
-        }
-        if (!this.shouldCheckJediMemoryFootprint()) {
-            return;
-        }
-        this.lastCmdIdProcessedForPidUsage = this.lastCmdIdProcessed;
-
-        try {
-            const memory = await getMemoryUsage(this.proc.pid);
-            const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 3072), 8192) * 1024 * 1024;
-            let restartJedi = false;
-            if (memory > 0) {
-                restartJedi = memory > limit;
-                const props = {
-                    memUse: memory,
-                    limit,
-                    isUserDefinedLimit: limit !== 1024,
-                    restart: restartJedi,
-                };
-                sendTelemetryEvent(EventName.JEDI_MEMORY, undefined, props);
-            }
-            if (restartJedi) {
-                traceWarning(
-                    `IntelliSense process memory consumption exceeded limit of ${limit} MB and process will be restarted.\nThe limit is controlled by the 'python.jediMemoryLimit' setting.`,
-                );
-                await this.restartLanguageServer();
-            }
-        } catch (err) {
-            this.pidUsageFailures.counter += 1;
-            // If this function fails 2 times in the last 60 seconds, lets not try ever again.
-            if (this.pidUsageFailures.timer.elapsedTime > 60 * 1000) {
-                this.ignoreJediMemoryFootprint = this.pidUsageFailures.counter > 2;
-                this.pidUsageFailures.counter = 0;
-                this.pidUsageFailures.timer.reset();
-            }
-            traceError('Python Extension: (pidusage-tree)', err);
-        }
     }
 
     // @debounce(1500)
@@ -465,7 +375,7 @@ export class JediProxy implements Disposable {
                         if (!cmd) {
                             return;
                         }
-                        this.lastCmdIdProcessed = cmd.id;
+
                         if (JediProxy.getProperty<unknown>(response, 'arguments')) {
                             this.commandQueue.splice(this.commandQueue.indexOf(cmd.id), 1);
                             return;

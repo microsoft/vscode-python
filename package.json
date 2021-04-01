@@ -2017,7 +2017,6 @@
         "named-js-regexp": "^1.3.3",
         "node-fetch": "^2.6.1",
         "node-stream-zip": "^1.6.0",
-        "pidusage-tree": "^2.0.5",
         "portfinder": "^1.0.25",
         "reflect-metadata": "^0.1.12",
         "request": "^2.87.0",
