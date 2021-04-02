@@ -846,4 +846,17 @@ suite('Linting Functional Tests', () => {
             maxErrors,
         );
     });
+
+    test('Linters use config in cwd directory', async () => {
+        const maxErrors = 0;
+        const fixture = new TestFixture();
+        fixture.lintingSettings.cwd = path.join(pythonFilesDir, 'pylintcwd');
+
+        await testLinterMessageCount(
+            fixture,
+            Product.pylint,
+            path.join(pythonFilesDir, 'threeLineLints.py'),
+            maxErrors,
+        );
+    });
 });
