@@ -354,7 +354,7 @@ suite('Pylint - Function runLinter()', () => {
         ): Promise<ILintMessage[]> {
             return super.runLinter(document, cancellation);
         }
-        public getWorkspaceRootPath(_document: vscode.TextDocument): string {
+        public getWorkingDirectoryPath(_document: vscode.TextDocument): string {
             return 'path/to/workspaceRoot';
         }
     }
