@@ -102,6 +102,7 @@ suite('Linting - Arguments', () => {
                         const lintSettings = TypeMoq.Mock.ofType<ILintingSettings>();
                         lintSettings.setup((x) => x.enabled).returns(() => true);
                         lintSettings.setup((x) => x.lintOnSave).returns(() => true);
+                        lintSettings.setup((x) => x.cwd).returns(() => undefined);
 
                         settings = TypeMoq.Mock.ofType<IPythonSettings>();
                         settings.setup((x) => x.linting).returns(() => lintSettings.object);
