@@ -59,7 +59,8 @@ class PythonEnvironment {
         let data: ExecutionResult<string>;
         try {
             data = await this.deps.exec(info.command, info.args);
-        } catch {
+        } catch (ex) {
+            traceInfo(`Error when getting version of module ${moduleName}`, ex);
             return undefined;
         }
         return parse(data.stdout);
@@ -71,7 +72,8 @@ class PythonEnvironment {
         const info = this.getExecutionInfo(args);
         try {
             await this.deps.exec(info.command, info.args);
-        } catch {
+        } catch (ex) {
+            traceInfo(`Error when checking if module is installed ${moduleName}`, ex);
             return false;
         }
         return true;
