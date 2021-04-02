@@ -101,6 +101,10 @@ export abstract class BaseLinter implements ILinter {
             workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string' ? workspaceFolder.uri.fsPath : undefined;
         return typeof workspaceRootPath === 'string' ? workspaceRootPath : path.dirname(document.uri.fsPath);
     }
+
+    protected getWorkingDirectoryPath(document: vscode.TextDocument): string {
+        return this._pythonSettings.linting.cwd || this.getWorkspaceRootPath(document);
+    }
     protected abstract runLinter(
         document: vscode.TextDocument,
         cancellation: vscode.CancellationToken,
@@ -138,10 +142,7 @@ export abstract class BaseLinter implements ILinter {
             return [];
         }
         const executionInfo = this.info.getExecutionInfo(args, document.uri);
-        const cwd =
-            this._pythonSettings.linting.cwd && this._pythonSettings.linting.cwd.length > 0
-                ? this._pythonSettings.linting.cwd
-                : this.getWorkspaceRootPath(document);
+        const cwd = this.getWorkingDirectoryPath(document);
         const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(
             IPythonToolExecutionService,
         );

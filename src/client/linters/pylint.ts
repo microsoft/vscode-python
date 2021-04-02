@@ -39,10 +39,10 @@ export class Pylint extends BaseLinter {
             this.info.linterArgs(uri).length === 0 &&
             // Check pylintrc next to the file or above up to and including the workspace root
             !(await Pylint.hasConfigurationFileInWorkspace(this.fileSystem, path.dirname(uri.fsPath), workspaceRoot)) &&
-            // Check for pylintrc at the root and above
+            // Check for pylintrc at the cwd and above
             !(await Pylint.hasConfigurationFile(
                 this.fileSystem,
-                this.getWorkspaceRootPath(document),
+                this.getWorkingDirectoryPath(document),
                 this.platformService,
             ))
         ) {
