@@ -22,6 +22,7 @@ import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../info';
 import { buildEnvInfo } from '../../info/env';
 import { IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
+import '../../../../common/extensions';
 
 /**
  * Default number of levels of sub-directories to recurse when looking for interpreters.
@@ -31,8 +32,8 @@ const DEFAULT_SEARCH_DEPTH = 2;
 /**
  * Gets all default virtual environment locations to look for in a workspace.
  */
-function getWorkspaceVirtualEnvDirs(root: string): string[] {
-    return [root, path.join(root, '.direnv')].filter(pathExists);
+function getWorkspaceVirtualEnvDirs(root: string): Promise<string[]> {
+    return [root, path.join(root, '.direnv')].asyncFilter(pathExists);
 }
 
 /**
@@ -102,7 +103,7 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
 
     protected doIterEnvs(): IPythonEnvsIterator {
         async function* iterator(root: string) {
-            const envRootDirs = getWorkspaceVirtualEnvDirs(root);
+            const envRootDirs = await getWorkspaceVirtualEnvDirs(root);
             const envGenerators = envRootDirs.map((envRootDir) => {
                 async function* generator() {
                     traceVerbose(`Searching for workspace virtual envs in: ${envRootDir}`);

@@ -20,6 +20,7 @@ import {
 } from '../../../common/commonUtils';
 import { getFileInfo, isParentPath, pathExists } from '../../../common/externalDependencies';
 import { isPoetryEnvironment, localPoetryEnvDirName, Poetry } from './poetry';
+import '../../../../common/extensions';
 
 /**
  * Gets all default virtual environment locations to look for in a workspace.

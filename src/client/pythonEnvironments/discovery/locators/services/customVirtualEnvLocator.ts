@@ -28,7 +28,7 @@ import {
     isVirtualenvEnvironment,
     isVirtualenvwrapperEnvironment,
 } from './virtualEnvironmentIdentifier';
-
+import '../../../../common/extensions';
 /**
  * Default number of levels of sub-directories to recurse when looking for interpreters.
  */
@@ -51,7 +51,7 @@ async function getCustomVirtualEnvDirs(): Promise<string[]> {
     if (homeDir && (await pathExists(homeDir))) {
         venvFolders.map((item) => path.join(homeDir, item)).forEach((d) => venvDirs.push(d));
     }
-    return uniq(venvDirs).filter(pathExists);
+    return uniq(venvDirs).asyncFilter(pathExists);
 }
 
 /**
