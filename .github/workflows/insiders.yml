@@ -426,3 +426,25 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: node --no-force-async-hooks-checks ./out/test/standardTest.js
+
+  upload:
+    name: Upload VSIX to Azure Blob Storage
+    if: github.repository == 'microsoft/vscode-python'
+    runs-on: ubuntu-latest
+    needs: [tests, smoke-tests, build-vsix]
+    env:
+      BLOB_CONTAINER_NAME: extension-builds
+      BLOB_NAME: ms-python-insiders.vsix
+    steps:
+      - name: Download VSIX
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.ARTIFACT_NAME_VSIX }}
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Upload to Blob Storage
+        run: az storage blob upload --file ${{ env.VSIX_NAME }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
+      - name: Get URL to uploaded VSIX
+        run: az storage blob url --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
