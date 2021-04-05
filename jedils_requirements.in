@@ -6,3 +6,4 @@
 jedi-language-server>=0.30.2
 pygls>=0.10.2
 importlib-metadata>=3.10.0
+dataclasses==0.8;python_version<="3.6"
