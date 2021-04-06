@@ -128,7 +128,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 } else {
                     input.activeItems = [];
                 }
-                input.buttons = [...(this.steps.length > 1 ? [QuickInputButtons.Back] : [])];
+                input.buttons = this.steps.length > 1 ? [QuickInputButtons.Back] : [];
                 if (customButtonSetup) {
                     input.buttons = [...input.buttons, customButtonSetup.button];
                 }
