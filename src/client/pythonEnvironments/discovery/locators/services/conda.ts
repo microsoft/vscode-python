@@ -348,7 +348,7 @@ export class Conda {
      * Retrieves list of Python environments known to this conda.
      * Corresponds to "conda env list --json", but also computes environment names.
      */
-    @cache(20_000)
+    @cache(30_000, true, 10_000)
     public async getEnvList(): Promise<CondaEnvInfo[]> {
         const info = await this.getInfo();
         const { envs } = info;

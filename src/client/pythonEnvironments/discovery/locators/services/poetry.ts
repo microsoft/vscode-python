@@ -187,7 +187,7 @@ export class Poetry {
      * Method created to faciliate caching. The caching decorator uses function arguments as cache key,
      * so pass in cwd on which we need to cache.
      */
-    @cache(30_000, true)
+    @cache(30_000, true, 10_000)
     private async getEnvListCached(_cwd: string): Promise<string[] | undefined> {
         const result = await this.safeShellExecute(`${this._command} env list --full-path`);
         if (!result) {
