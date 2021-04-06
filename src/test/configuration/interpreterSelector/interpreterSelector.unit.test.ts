@@ -48,7 +48,7 @@ suite('Interpreters - selector', () => {
     let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
     let interpreterSecurityService: TypeMoq.IMock<IInterpreterSecurityService>;
     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
-
+    const ignoreCache = false;
     class TestInterpreterSelector extends InterpreterSelector {
         public async suggestionToQuickPickItem(
             suggestion: PythonEnvironment,
@@ -105,10 +105,10 @@ suite('Interpreters - selector', () => {
                 return { ...info, ...item };
             });
             interpreterService
-                .setup((x) => x.getInterpreters(TypeMoq.It.isAny(), { onSuggestion: true }))
+                .setup((x) => x.getInterpreters(TypeMoq.It.isAny(), { onSuggestion: true, ignoreCache }))
                 .returns(() => new Promise((resolve) => resolve(initial)));
 
-            const actual = await selector.getSuggestions(undefined);
+            const actual = await selector.getSuggestions(undefined, ignoreCache);
 
             const expected: InterpreterQuickPickItem[] = [
                 new InterpreterQuickPickItem('1', 'c:/path1/path1'),
@@ -138,7 +138,7 @@ suite('Interpreters - selector', () => {
     test('When in Deprecate PythonPath experiment, remove unsafe interpreters from the suggested interpreters list', async () => {
         const interpreterList = ['interpreter1', 'interpreter2', 'interpreter3'] as any;
         interpreterService
-            .setup((i) => i.getInterpreters(folder1.uri, { onSuggestion: true }))
+            .setup((i) => i.getInterpreters(folder1.uri, { onSuggestion: true, ignoreCache }))
             .returns(() => interpreterList);
 
         interpreterSecurityService.setup((i) => i.isSafe('interpreter1' as any)).returns(() => true);
@@ -153,7 +153,7 @@ suite('Interpreters - selector', () => {
             .returns(() => undefined);
 
         selector.suggestionToQuickPickItem = (item, _) => Promise.resolve(item as any);
-        const suggestion = await selector.getSuggestions(folder1.uri);
+        const suggestion = await selector.getSuggestions(folder1.uri, ignoreCache);
         assert.deepEqual(suggestion, ['interpreter1', 'interpreter3']);
     });
 });

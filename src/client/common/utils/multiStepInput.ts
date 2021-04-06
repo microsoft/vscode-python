@@ -66,7 +66,7 @@ export interface IMultiStepInput<S> {
         items,
         activeItem,
         placeholder,
-        customButtonSetup: buttonSetup,
+        customButtonSetup,
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>>;
     showInputBox<P extends InputBoxParameters>({
         title,
