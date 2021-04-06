@@ -13,7 +13,7 @@ import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
-    GetInterpreterLocatorOptions,
+    GetInterpreterOptions,
     GLOBAL_VIRTUAL_ENV_SERVICE,
     IComponentAdapter,
     ICondaService,
@@ -263,7 +263,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
 
     public async getInterpreters(
         resource?: vscode.Uri,
-        options?: GetInterpreterLocatorOptions,
+        options?: GetInterpreterOptions,
         source?: PythonEnvSource[],
     ): Promise<PythonEnvironment[]> {
         // Notify locators are locating.
@@ -282,7 +282,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
 
     private async getInterpretersViaAPI(
         resource?: vscode.Uri,
-        options?: GetInterpreterLocatorOptions,
+        options?: GetInterpreterOptions,
         source?: PythonEnvSource[],
     ): Promise<PythonEnvironment[]> {
         if (options?.onSuggestion && this.allowOnSuggestionRefresh) {

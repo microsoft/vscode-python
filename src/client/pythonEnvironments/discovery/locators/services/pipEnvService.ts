@@ -10,7 +10,7 @@ import { IFileSystem, IPlatformService } from '../../../../common/platform/types
 import { IProcessServiceFactory } from '../../../../common/process/types';
 import { IConfigurationService, ICurrentProcess } from '../../../../common/types';
 import { StopWatch } from '../../../../common/utils/stopWatch';
-import { GetInterpreterLocatorOptions, IInterpreterHelper, IPipEnvService } from '../../../../interpreter/contracts';
+import { GetInterpreterOptions, IInterpreterHelper, IPipEnvService } from '../../../../interpreter/contracts';
 import { IPipEnvServiceHelper } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
@@ -65,7 +65,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         return this.didTriggerInterpreterSuggestions ? this.configService.getSettings().pipenvPath : '';
     }
 
-    public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]> {
+    public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
         if (!this.didTriggerInterpreterSuggestions) {
             return [];
         }

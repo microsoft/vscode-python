@@ -25,7 +25,7 @@ import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import {
-    GetInterpreterLocatorOptions,
+    GetInterpreterOptions,
     IComponentAdapter,
     IInterpreterDisplay,
     IInterpreterHelper,
@@ -139,7 +139,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
     }
 
-    public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]> {
+    public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
         let environments: PythonEnvironment[] = [];
         const stopWatch = new StopWatch();
         if (await inDiscoveryExperiment(this.experimentService)) {

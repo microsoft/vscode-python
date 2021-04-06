@@ -14,7 +14,7 @@ import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
-    GetInterpreterLocatorOptions,
+    GetInterpreterOptions,
     GLOBAL_VIRTUAL_ENV_SERVICE,
     IInterpreterLocatorHelper,
     IInterpreterLocatorService,
@@ -240,7 +240,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      * interpreters.
      */
     @traceDecorators.verbose('Get Interpreters')
-    public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]> {
+    public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
         const locators = this.getLocators(options);
         const promises = locators.map(async (provider) => provider.getInterpreters(resource));
         locators.forEach((locator) => {
@@ -266,7 +266,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      *
      * The locators are pulled from the registry.
      */
-    private getLocators(options?: GetInterpreterLocatorOptions): IInterpreterLocatorService[] {
+    private getLocators(options?: GetInterpreterOptions): IInterpreterLocatorService[] {
         // The order of the services is important.
         // The order is important because the data sources at the bottom of the list do not contain all,
         //  the information about the interpreters (e.g. type, environment name, etc).
