@@ -48,15 +48,29 @@ class Venvs {
      * Creates a dummy environment by creating a fake executable.
      * @param name environment suffix name to create
      */
-    public async createDummyEnv(name: string): Promise<{ executable: string; envDir: string }> {
+    public async createDummyEnv(
+        name: string,
+        kind: PythonEnvKind | undefined,
+    ): Promise<{ executable: string; envDir: string }> {
         const envName = this.resolve(name);
-        const filepath = path.join(this.root, envName, getOSType() === OSType.Windows ? 'python.exe' : 'python');
-        try {
-            await fs.createFile(filepath);
-        } catch (err) {
-            throw new Error(`Failed to create python executable ${filepath}, Error: ${err}`);
+        let interpreterPath = '';
+        const configPath = path.join(this.root, envName, 'pyvenv.cfg');
+        if (getOSType() === OSType.Windows) {
+            interpreterPath = path.join(this.root, envName, 'Scripts', 'python.exe');
+        } else {
+            interpreterPath = path.join(this.root, envName, 'bin', 'python');
         }
-        return { executable: filepath, envDir: path.dirname(filepath) };
+
+        try {
+            await fs.createFile(interpreterPath);
+            if (kind === PythonEnvKind.Venv) {
+                await fs.createFile(configPath);
+                await fs.writeFile(configPath, 'version = 3.9.2');
+            }
+        } catch (err) {
+            throw new Error(`Failed to create python executable ${interpreterPath}, Error: ${err}`);
+        }
+        return { executable: interpreterPath, envDir: path.dirname(interpreterPath) };
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -233,7 +247,7 @@ export function testLocatorWatcher(
         // Create a dummy environment so we can update its executable later. We can't choose a real environment here.
         // Executables inside real environments can be symlinks, so writing on them can result in the real executable
         // being updated instead of the symlink.
-        const { executable, envDir } = await venvs.createDummyEnv('one');
+        const { executable, envDir } = await venvs.createDummyEnv('one', options?.kind);
         await setupLocator(async (e) => {
             if (e.type === FileChangeType.Changed) {
                 actualEvent = e;
