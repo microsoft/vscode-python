@@ -13,10 +13,9 @@ import { buildEnvInfo } from '../../../base/info/env';
 import { IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import {
-    findInterpretersInDir,
     getEnvironmentDirFromPath,
+    getInterpreterPathFromDir,
     getPythonVersionFromPath,
-    looksLikeBasicVirtualPython,
 } from '../../../common/commonUtils';
 import { getFileInfo, isParentPath, pathExists } from '../../../common/externalDependencies';
 import { isPoetryEnvironment, localPoetryEnvDirName, Poetry } from './poetry';
@@ -114,29 +113,20 @@ export class PoetryLocator extends FSWatchingLocator {
                     traceVerbose(`Searching for poetry virtual envs in: ${envDir}`);
 
                     const isLocal = isParentPath(envDir, root);
-                    const executables = findInterpretersInDir(envDir, 1);
-
-                    for await (const entry of executables) {
-                        const { filename } = entry;
-                        // We only care about python.exe (on windows) and python (on linux/mac)
-                        // Other version like python3.exe or python3.8 are often symlinks to
-                        // python.exe or python in the same directory in the case of virtual
-                        // environments.
-                        if (await looksLikeBasicVirtualPython(entry)) {
+                    const filename = await getInterpreterPathFromDir(envDir);
+                    if (filename !== undefined) {
+                        const kind = PythonEnvKind.Poetry;
+                        if (isLocal && !(await isPoetryEnvironment(filename))) {
+                            // This is not a poetry env.
+                            traceVerbose(
+                                `Poetry Virtual Environment: [skipped] ${filename} (reason: Not poetry environment)`,
+                            );
+                        } else {
                             // We should extract the kind here to avoid doing is*Environment()
                             // check multiple times. Those checks are file system heavy and
                             // we can use the kind to determine this anyway.
-                            yield buildVirtualEnvInfo(
-                                filename,
-                                // Global environments are fetched using 'poetry env list' so we already
-                                // know they're poetry environments, no need to get kind for them.
-                                isLocal ? await getVirtualEnvKind(filename) : PythonEnvKind.Poetry,
-                                undefined,
-                                isLocal,
-                            );
+                            yield buildVirtualEnvInfo(filename, kind, undefined, isLocal);
                             traceVerbose(`Poetry Virtual Environment: [added] ${filename}`);
-                        } else {
-                            traceVerbose(`Poetry Virtual Environment: [skipped] ${filename}`);
                         }
                     }
                 }

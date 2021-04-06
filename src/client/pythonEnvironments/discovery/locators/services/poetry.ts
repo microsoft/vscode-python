@@ -226,7 +226,7 @@ export class Poetry {
      * Note this cache has no expiry, this is because we often need this method to decide whether to use
      * poetry to install a product, after user asks to install something. We need this to be fast.
      */
-    @cache(-1, true)
+    @cache(20_000, true, 10_000)
     private async getActiveEnvPathCached(_cwd: string): Promise<string | undefined> {
         const result = await this.safeShellExecute(`${this._command} env info -p`, true);
         if (!result) {
