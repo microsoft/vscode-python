@@ -180,7 +180,7 @@ export class Poetry {
      * Corresponds to "poetry env list --full-path". Swallows errors if any.
      */
     public async getEnvList(): Promise<string[] | undefined> {
-        return this._getEnvList(this.cwd);
+        return this.getEnvListCached(this.cwd);
     }
 
     /**
@@ -188,7 +188,7 @@ export class Poetry {
      * so pass in cwd on which we need to cache.
      */
     @cache(30_000, true)
-    private async _getEnvList(_cwd: string): Promise<string[] | undefined> {
+    private async getEnvListCached(_cwd: string): Promise<string[] | undefined> {
         const result = await this.safeShellExecute(`${this._command} env list --full-path`);
         if (!result) {
             return undefined;
@@ -216,7 +216,7 @@ export class Poetry {
      * Corresponds to "poetry env info -p". Swallows errors if any.
      */
     public async getActiveEnvPath(): Promise<string | undefined> {
-        return this._getActiveEnvPath(this.cwd);
+        return this.getActiveEnvPathCached(this.cwd);
     }
 
     /**
@@ -224,10 +224,10 @@ export class Poetry {
      * so pass in cwd on which we need to cache.
      *
      * Note this cache has no expiry, this is because we often need this method to decide whether to use
-     * poetry to install a product, after user asks to install something. We need this to be fast always.
+     * poetry to install a product, after user asks to install something. We need this to be fast.
      */
     @cache(-1, true)
-    private async _getActiveEnvPath(_cwd: string): Promise<string | undefined> {
+    private async getActiveEnvPathCached(_cwd: string): Promise<string | undefined> {
         const result = await this.safeShellExecute(`${this._command} env info -p`, true);
         if (!result) {
             return undefined;

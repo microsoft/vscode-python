@@ -94,7 +94,6 @@ suite('isPoetryEnvironment Tests', () => {
 suite('Poetry binary is located correctly', async () => {
     let shellExecute: sinon.SinonStub;
     let getPythonSetting: sinon.SinonStub;
-    let pathExists: sinon.SinonStub;
 
     suiteSetup(() => {
         Poetry._poetryPromise = new Map();
@@ -175,9 +174,9 @@ suite('Poetry binary is located correctly', async () => {
             return;
         }
         const defaultPoetry = path.join(home, '.poetry', 'bin', 'poetry');
-        pathExists = sinon.stub(externalDependencies, 'pathExists');
-        pathExists.withArgs(defaultPoetry).resolves(true);
-        pathExists.callThrough();
+        const pathExistsSync = sinon.stub(externalDependencies, 'pathExistsSync');
+        pathExistsSync.withArgs(defaultPoetry).returns(true);
+        pathExistsSync.callThrough();
         getPythonSetting.returns('poetry');
         shellExecute.callsFake((command: string, options: ShellOptions) => {
             if (
