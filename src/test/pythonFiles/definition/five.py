@@ -1,0 +1,2 @@
+import four
+four.showMessage()
