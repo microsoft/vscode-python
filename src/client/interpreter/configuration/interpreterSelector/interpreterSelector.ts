@@ -27,8 +27,8 @@ export class InterpreterSelector implements IInterpreterSelector {
         this.disposables.forEach((disposable) => disposable.dispose());
     }
 
-    public async getSuggestions(resource: Resource) {
-        let interpreters = await this.interpreterManager.getInterpreters(resource, { onSuggestion: true });
+    public async getSuggestions(resource: Resource, ignoreCache?: boolean) {
+        let interpreters = await this.interpreterManager.getInterpreters(resource, { onSuggestion: true, ignoreCache });
         if (this.experimentsManager.inExperiment(DeprecatePythonPath.experiment)) {
             interpreters = interpreters
                 ? interpreters.filter((item) => this.interpreterSecurityService.isSafe(item) !== false)

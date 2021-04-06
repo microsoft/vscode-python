@@ -11,13 +11,15 @@ import { Commands } from '../../../../common/constants';
 import { FindInterpreterVariants } from '../../../../common/experiments/groups';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IExperimentService, IPathUtils, Resource } from '../../../../common/types';
-import { InterpreterQuickPickList } from '../../../../common/utils/localize';
+import { getIcon } from '../../../../common/utils/icons';
+import { AttachProcess, InterpreterQuickPickList } from '../../../../common/utils/localize';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
     InputStep,
     IQuickPickParameters,
 } from '../../../../common/utils/multiStepInput';
+import { REFRESH_BUTTON_ICON } from '../../../../debugger/extension/attachQuickPick/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import {
@@ -60,7 +62,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs,
     ): Promise<void | InputStep<InterpreterStateArgs>> {
-        const interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
+        let interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
 
         const inFindExperiment = await this.experiments.inExperiment(FindInterpreterVariants.findLast);
         const manualEntrySuggestion: IFindInterpreterQuickPickItem = {
@@ -86,6 +88,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         );
 
         state.path = undefined;
+        const refreshButton = {
+            iconPath: getIcon(REFRESH_BUTTON_ICON),
+            tooltip: InterpreterQuickPickList.refreshInterpreterList(),
+        };
         const selection = await input.showQuickPick<
             IInterpreterQuickPickItem | IFindInterpreterQuickPickItem,
             IQuickPickParameters<IInterpreterQuickPickItem | IFindInterpreterQuickPickItem>
@@ -95,6 +101,20 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             activeItem: inFindExperiment ? suggestions[0] : suggestions[1],
             matchOnDetail: true,
             matchOnDescription: true,
+            customButtonSetup: {
+                button: refreshButton,
+                callback: async (quickPick) => {
+                    quickPick.busy = true;
+                    interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace, true);
+                    if (inFindExperiment) {
+                        quickPick.items = [...interpreterSuggestions, manualEntrySuggestion];
+                    } else {
+                        quickPick.items = [manualEntrySuggestion, ...interpreterSuggestions];
+                    }
+                    quickPick.busy = false;
+                },
+            },
+            title: InterpreterQuickPickList.browsePath.openButtonLabel(),
         });
 
         if (selection === undefined) {

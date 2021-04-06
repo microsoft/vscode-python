@@ -310,6 +310,10 @@ export namespace InterpreterQuickPickList {
         openButtonLabel: localize('python.command.python.setInterpreter.title', 'Select Interpreter'),
         title: localize('InterpreterQuickPickList.browsePath.title', 'Select Python interpreter'),
     };
+    export const refreshInterpreterList = localize(
+        'InterpreterQuickPickList.refreshInterpreterList',
+        'Refresh Interpreter list',
+    );
 }
 export namespace ExtensionChannels {
     export const yesWeekly = localize('ExtensionChannels.yesWeekly', 'Yes, weekly');

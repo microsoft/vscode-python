@@ -264,11 +264,6 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     public async getInterpreters(
         resource?: vscode.Uri,
         options?: GetInterpreterLocatorOptions,
-        // Currently we have no plans to support GetInterpreterLocatorOptions:
-        // {
-        //     ignoreCache?: boolean
-        //     onSuggestion?: boolean;
-        // }
         source?: PythonEnvSource[],
     ): Promise<PythonEnvironment[]> {
         // Notify locators are locating.
@@ -288,11 +283,6 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
     private async getInterpretersViaAPI(
         resource?: vscode.Uri,
         options?: GetInterpreterLocatorOptions,
-        // Currently we have no plans to support GetInterpreterLocatorOptions:
-        // {
-        //     ignoreCache?: boolean
-        //     onSuggestion?: boolean;
-        // }
         source?: PythonEnvSource[],
     ): Promise<PythonEnvironment[]> {
         if (options?.onSuggestion && this.allowOnSuggestionRefresh) {

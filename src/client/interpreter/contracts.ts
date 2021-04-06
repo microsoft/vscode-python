@@ -41,7 +41,7 @@ export interface IComponentAdapter {
     hasInterpreters: Promise<boolean>;
     getInterpreters(
         resource?: Uri,
-        options?: GetInterpreterOptions,
+        options?: GetInterpreterLocatorOptions,
         source?: PythonEnvSource[],
     ): Promise<PythonEnvironment[]>;
 
@@ -110,7 +110,7 @@ export interface IInterpreterService {
     onDidChangeInterpreter: Event<void>;
     onDidChangeInterpreterInformation: Event<PythonEnvironment>;
     hasInterpreters: Promise<boolean>;
-    getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
+    getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]>;
     getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
     getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<undefined | PythonEnvironment>;
     refresh(resource: Resource): Promise<void>;
