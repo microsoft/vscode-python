@@ -10,6 +10,7 @@ import { parseVersion } from '../../../base/info/pythonVersion';
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { IDisposable } from '../../../../common/types';
+import { cache } from '../../../../common/utils/decorators';
 
 export const AnacondaCompanyNames = ['Anaconda, Inc.', 'Continuum Analytics, Inc.'];
 
@@ -347,6 +348,7 @@ export class Conda {
      * Retrieves list of Python environments known to this conda.
      * Corresponds to "conda env list --json", but also computes environment names.
      */
+    @cache(20_000)
     public async getEnvList(): Promise<CondaEnvInfo[]> {
         const info = await this.getInfo();
         const { envs } = info;

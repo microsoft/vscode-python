@@ -121,7 +121,13 @@ export function makeDebounceAsyncDecorator(wait?: number) {
 
 type PromiseFunctionWithAnyArgs = (...any: any) => Promise<any>;
 const cacheStoreForMethods = getGlobalCacheStore();
-export function cache(expiryDurationMs: number) {
+/**
+ * Caches function value until a specific duration.
+ * @param expiryDurationMs Duration to cache the result for. If set as '-1', the cache will never expire for the session.
+ * @param cachePromise If true, cache the promise instead of the promise result.
+ * @returns
+ */
+export function cache(expiryDurationMs: number, cachePromise = false) {
     return function (
         target: Object,
         propertyName: string,
@@ -136,16 +142,20 @@ export function cache(expiryDurationMs: number) {
             }
             const key = getCacheKeyFromFunctionArgs(keyPrefix, args);
             const cachedItem = cacheStoreForMethods.get(key);
-            if (cachedItem && cachedItem.expiry > Date.now()) {
+            if (cachedItem && (cachedItem.expiry > Date.now() || cachedItem.expiry === -1)) {
                 traceVerbose(`Cached data exists ${key}`);
                 return Promise.resolve(cachedItem.data);
             }
             const promise = originalMethod.apply(this, args) as Promise<any>;
-            promise
-                .then((result) =>
-                    cacheStoreForMethods.set(key, { data: result, expiry: Date.now() + expiryDurationMs }),
-                )
-                .ignoreErrors();
+            if (cachePromise) {
+                cacheStoreForMethods.set(key, { data: promise, expiry: Date.now() + expiryDurationMs });
+            } else {
+                promise
+                    .then((result) =>
+                        cacheStoreForMethods.set(key, { data: result, expiry: Date.now() + expiryDurationMs }),
+                    )
+                    .ignoreErrors();
+            }
             return promise;
         };
     };

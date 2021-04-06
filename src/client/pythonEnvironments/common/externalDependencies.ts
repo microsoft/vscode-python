@@ -61,8 +61,16 @@ export function pathExists(absPath: string): Promise<boolean> {
     return fsapi.pathExists(absPath);
 }
 
+export function pathExistsSync(absPath: string): boolean {
+    return fsapi.pathExistsSync(absPath);
+}
+
 export function readFile(filePath: string): Promise<string> {
     return fsapi.readFile(filePath, 'utf-8');
+}
+
+export function readFileSync(filePath: string): string {
+    return fsapi.readFileSync(filePath, 'utf-8');
 }
 
 /**

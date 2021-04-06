@@ -9,13 +9,14 @@ import { getOSType, getUserHomeDir, OSType } from '../../../../common/utils/plat
 import {
     getPythonSetting,
     isParentPath,
-    pathExists,
-    readFile,
+    pathExistsSync,
+    readFileSync,
     shellExecute,
 } from '../../../common/externalDependencies';
 import { getEnvironmentDirFromPath } from '../../../common/commonUtils';
 import { isVirtualenvEnvironment } from './virtualEnvironmentIdentifier';
 import { StopWatch } from '../../../../common/utils/stopWatch';
+import { cache } from '../../../../common/utils/decorators';
 
 /**
  * Global virtual env dir for a project is named as:
@@ -59,7 +60,7 @@ async function isLocalPoetryEnvironment(interpreterPath: string): Promise<boolea
         return false;
     }
     const project = path.dirname(envDir);
-    if (!(await hasValidPyprojectToml(project))) {
+    if (!hasValidPyprojectToml(project)) {
         return false;
     }
     // The assumption is that we need to be able to run poetry CLI for an environment in order to mark it as poetry.
@@ -112,7 +113,7 @@ export class Poetry {
     }
 
     public static async getPoetry(cwd: string): Promise<Poetry | undefined> {
-        if (!(await hasValidPyprojectToml(cwd))) {
+        if (!hasValidPyprojectToml(cwd)) {
             // This check is not expensive and may change during a session, so we need not cache it.
             return undefined;
         }
@@ -128,7 +129,7 @@ export class Poetry {
      */
     private static async locate(cwd: string): Promise<Poetry | undefined> {
         // Produce a list of candidate binaries to be probed by exec'ing them.
-        async function* getCandidates() {
+        function* getCandidates() {
             const customPoetryPath = getPythonSetting<string>('poetryPath');
             if (customPoetryPath && customPoetryPath !== 'poetry') {
                 // If user has specified a custom poetry path, use it first.
@@ -139,26 +140,21 @@ export class Poetry {
             const home = getUserHomeDir();
             if (home) {
                 const defaultPoetryPath = path.join(home, '.poetry', 'bin', 'poetry');
-                if (await pathExists(defaultPoetryPath)) {
+                if (pathExistsSync(defaultPoetryPath)) {
                     yield defaultPoetryPath;
                 }
             }
         }
 
         // Probe the candidates, and pick the first one that exists and does what we need.
-        for await (const poetryPath of getCandidates()) {
+        for (const poetryPath of getCandidates()) {
             traceVerbose(`Probing poetry binary for ${cwd}: ${poetryPath}`);
             const poetry = new Poetry(poetryPath, cwd);
-            const stopWatch = new StopWatch();
             const virtualenvs = await poetry.getEnvList();
             if (virtualenvs !== undefined) {
                 traceVerbose(`Found poetry via filesystem probing for ${cwd}: ${poetryPath}`);
                 return poetry;
             }
-            traceVerbose(
-                `Time taken to run ${poetryPath} env list --full-path in ms for ${cwd}`,
-                stopWatch.elapsedTime,
-            );
         }
 
         // Didn't find anything.
@@ -176,6 +172,15 @@ export class Poetry {
      * Corresponds to "poetry env list --full-path". Swallows errors if any.
      */
     public async getEnvList(): Promise<string[] | undefined> {
+        return this._getEnvList(this.cwd);
+    }
+
+    /**
+     * Method created to faciliate caching. The caching decorator uses function arguments as cache key,
+     * so pass in cwd on which we need to cache.
+     */
+    @cache(30_000, true)
+    private async _getEnvList(_cwd: string): Promise<string[] | undefined> {
         const result = await this.safeShellExecute(`${this._command} env list --full-path`);
         if (!result) {
             return undefined;
@@ -203,6 +208,18 @@ export class Poetry {
      * Corresponds to "poetry env info -p". Swallows errors if any.
      */
     public async getActiveEnvPath(): Promise<string | undefined> {
+        return this._getActiveEnvPath(this.cwd);
+    }
+
+    /**
+     * Method created to faciliate caching. The caching decorator uses function arguments as cache key,
+     * so pass in cwd on which we need to cache.
+     *
+     * Note this cache has no expiry, this is because we often need this method to decide whether to use
+     * poetry to install a product, after user asks to install something. We need this to be fast always.
+     */
+    @cache(-1, true)
+    private async _getActiveEnvPath(_cwd: string): Promise<string | undefined> {
         const result = await this.safeShellExecute(`${this._command} env info -p`, true);
         if (!result) {
             return undefined;
@@ -288,12 +305,12 @@ export async function isPoetryEnvironmentRelatedToFolder(
  *
  * @param folder Folder to look for pyproject.toml file in.
  */
-async function hasValidPyprojectToml(folder: string): Promise<boolean> {
+function hasValidPyprojectToml(folder: string): boolean {
     const pyprojectToml = path.join(folder, 'pyproject.toml');
-    if (!(await pathExists(pyprojectToml))) {
+    if (!pathExistsSync(pyprojectToml)) {
         return false;
     }
-    const content = await readFile(pyprojectToml);
+    const content = readFileSync(pyprojectToml);
     if (!content.includes('[tool.poetry]')) {
         return false;
     }
