@@ -638,7 +638,13 @@ suite('Conda and its environments are located correctly', () => {
                     display: undefined,
                     searchLocation: undefined,
                     distro: { org: AnacondaCompanyName },
-                    version: { major: -1, minor: -1, micro: -1, release: { level: 'final', serial: 0 } },
+                    version: {
+                        major: -1,
+                        minor: -1,
+                        micro: -1,
+                        release: { level: 'final', serial: -1 },
+                        sysVersion: undefined,
+                    },
                     location: prefix,
                     executable: {
                         filename: path.join(prefix, 'bin', 'python'),

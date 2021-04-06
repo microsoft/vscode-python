@@ -119,7 +119,7 @@ async function createLocators(
 }
 
 function createNonWorkspaceLocators(ext: ExtensionState): ILocator[] {
-    let locators: (ILocator & Partial<IDisposable>)[] = [];
+    const locators: (ILocator & Partial<IDisposable>)[] = [];
     locators.push(
         // OS-independent locators go here.
         new PyenvLocator(),

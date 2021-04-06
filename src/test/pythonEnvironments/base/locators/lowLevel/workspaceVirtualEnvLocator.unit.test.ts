@@ -123,23 +123,11 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
     test('iterEnvs(): Non-Windows', async () => {
         const expectedEnvs = [
             createExpectedEnvInfo(
-                path.join(testWorkspaceFolder, 'posix2conda', 'python'),
-                PythonEnvKind.Unknown,
-                { major: 3, minor: 8, micro: 5 },
-                'posix2conda',
-            ),
-            createExpectedEnvInfo(
                 path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv', 'bin', 'python'),
                 PythonEnvKind.VirtualEnv,
                 { major: 3, minor: 8, micro: -1 },
                 'posix1virtualenv',
                 path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv'),
-            ),
-            createExpectedEnvInfo(
-                path.join(testWorkspaceFolder, 'posix3custom', 'bin', 'python'),
-                PythonEnvKind.Unknown,
-                undefined,
-                'posix3custom',
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
@@ -153,12 +141,13 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
     });
 
     test('resolveEnv(string)', async () => {
-        const interpreterPath = path.join(testWorkspaceFolder, 'posix2conda', 'python');
+        const interpreterPath = path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv', 'bin', 'python');
         const expected = createExpectedEnvInfo(
-            path.join(testWorkspaceFolder, 'posix2conda', 'python'),
-            PythonEnvKind.Unknown,
-            { major: 3, minor: 8, micro: 5 },
-            'posix2conda',
+            path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv', 'bin', 'python'),
+            PythonEnvKind.VirtualEnv,
+            { major: 3, minor: 8, micro: -1 },
+            'posix1virtualenv',
+            path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv'),
         );
 
         const actual = await locator.resolveEnv(interpreterPath);
@@ -167,12 +156,13 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
     });
 
     test('resolveEnv(PythonEnvInfo)', async () => {
-        const interpreterPath = path.join(testWorkspaceFolder, 'posix2conda', 'python');
+        const interpreterPath = path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv', 'bin', 'python');
         const expected = createExpectedEnvInfo(
-            path.join(testWorkspaceFolder, 'posix2conda', 'python'),
-            PythonEnvKind.Unknown,
-            { major: 3, minor: 8, micro: 5 },
-            'posix2conda',
+            path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv', 'bin', 'python'),
+            PythonEnvKind.VirtualEnv,
+            { major: 3, minor: 8, micro: -1 },
+            'posix1virtualenv',
+            path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv'),
         );
 
         // Partially filled in env info object
