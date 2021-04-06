@@ -112,7 +112,15 @@ export class Poetry {
         this.fixCwd();
     }
 
+    /**
+     * Returns a Poetry instance corresponding to the binary which can be used to run commands for the cwd.
+     *
+     * Poetry commands can be slow and so can be bottleneck to overall discovery time. So trigger command
+     * execution as soon as possible. To do that we need to ensure the operations before the command are
+     * performed synchronously.
+     */
     public static async getPoetry(cwd: string): Promise<Poetry | undefined> {
+        // Following check should be performed synchronously so we trigger poetry execution as soon as possible.
         if (!hasValidPyprojectToml(cwd)) {
             // This check is not expensive and may change during a session, so we need not cache it.
             return undefined;
@@ -124,10 +132,10 @@ export class Poetry {
         return Poetry._poetryPromise.get(cwd);
     }
 
-    /**
-     * Returns a Poetry instance corresponding to the binary.
-     */
     private static async locate(cwd: string): Promise<Poetry | undefined> {
+        // First thing this method awaits on should be poetry command execution, hence perform all operations
+        // before that synchronously.
+
         // Produce a list of candidate binaries to be probed by exec'ing them.
         function* getCandidates() {
             const customPoetryPath = getPythonSetting<string>('poetryPath');
