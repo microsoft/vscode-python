@@ -53,14 +53,8 @@ class Venvs {
         kind: PythonEnvKind | undefined,
     ): Promise<{ executable: string; envDir: string }> {
         const envName = this.resolve(name);
-        let interpreterPath = '';
+        const interpreterPath = path.join(this.root, envName, getOSType() === OSType.Windows ? 'python.exe' : 'python');
         const configPath = path.join(this.root, envName, 'pyvenv.cfg');
-        if (getOSType() === OSType.Windows) {
-            interpreterPath = path.join(this.root, envName, 'Scripts', 'python.exe');
-        } else {
-            interpreterPath = path.join(this.root, envName, 'bin', 'python');
-        }
-
         try {
             await fs.createFile(interpreterPath);
             if (kind === PythonEnvKind.Venv) {
@@ -262,14 +256,14 @@ export function testLocatorWatcher(
             assert.ok(isFound, 'Did not find environment via iterEnvs');
         }
 
-        assert.notEqual(actualEvent!, undefined, 'Wrong event emitted');
+        assert.notEqual(actualEvent!, undefined, 'Event was not emitted');
         if (options?.kind) {
-            assert.equal(actualEvent!.kind, options.kind, 'Wrong event emitted');
+            assert.equal(actualEvent!.kind, options.kind, 'Kind is not as expected');
         }
-        assert.notEqual(actualEvent!.searchLocation, undefined, 'Wrong event emitted');
+        assert.notEqual(actualEvent!.searchLocation, undefined, 'Search location is not set');
         assert.ok(
             externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
-            'Wrong event emitted',
+            `Paths don't match ${actualEvent!.searchLocation!.fsPath} != ${path.dirname(envDir)}`,
         );
     });
 }
