@@ -87,6 +87,15 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
     }
 
     protected async initWatchers(): Promise<void> {
+        // Enable all workspace watchers.
+        if (this.watcherKind === FSWatcherKind.Global) {
+            // Enable global watchers only if the experiment allows it.
+            const enableGlobalWatchers = await inExperiment(DiscoveryVariants.discoverWithFileWatching);
+            if (!enableGlobalWatchers) {
+                return;
+            }
+        }
+
         // Start the FS watchers.
         let roots = await this.getRoots();
         if (typeof roots === 'string') {
@@ -103,15 +112,6 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
             return root;
         });
         const watchableRoots = (await Promise.all(promises)).filter((root) => !!root) as string[];
-
-        // Enable all workspace watchers.
-        if (this.watcherKind === FSWatcherKind.Global) {
-            // Enable global watchers only if the experiment allows it.
-            const enableGlobalWatchers = await inExperiment(DiscoveryVariants.discoverWithFileWatching);
-            if (!enableGlobalWatchers) {
-                return;
-            }
-        }
 
         watchableRoots.forEach((root) => this.startWatchers(root));
     }
