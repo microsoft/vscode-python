@@ -222,9 +222,6 @@ export class Poetry {
     /**
      * Method created to faciliate caching. The caching decorator uses function arguments as cache key,
      * so pass in cwd on which we need to cache.
-     *
-     * Note this cache has no expiry, this is because we often need this method to decide whether to use
-     * poetry to install a product, after user asks to install something. We need this to be fast.
      */
     @cache(20_000, true, 10_000)
     private async getActiveEnvPathCached(_cwd: string): Promise<string | undefined> {
