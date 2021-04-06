@@ -29,7 +29,16 @@ export type InputStep<T extends any> = (input: MultiStepInput<T>, state: T) => P
 
 type buttonCallbackType<T extends QuickPickItem> = (quickPick: QuickPick<T>) => Promise<void>;
 
-type QuickInputButtonSetup = { button: QuickInputButton; callback: buttonCallbackType<QuickPickItem> };
+type QuickInputButtonSetup = {
+    /**
+     * Button for an action in a QuickPick.
+     */
+    button: QuickInputButton;
+    /**
+     * Callback to be invoked when button is clicked.
+     */
+    callback: buttonCallbackType<QuickPickItem>;
+};
 export interface IQuickPickParameters<T extends QuickPickItem> {
     title?: string;
     step?: number;

@@ -198,19 +198,19 @@ suite('Set Interpreter Command', () => {
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
 
             expect(actualParameters).to.not.equal(undefined, 'Parameters not set');
-            const callback = actualParameters!.customButtonSetup?.callback;
-            expect(callback).to.not.equal(undefined, 'Callback not set');
+            const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
+            expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
             delete actualParameters!.customButtonSetup;
             assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
             multiStepInput.verifyAll();
 
             const quickPick = { items: [] };
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await callback!(quickPick as any);
+            await refreshButtonCallback!(quickPick as any); // Invoke callback, meaning that the refresh button is clicked.
             assert.deepStrictEqual(
                 quickPick.items,
                 [expectedEnterInterpreterPathSuggestion, refreshedItem],
-                'Items not equal',
+                'Quickpick not updated correctly',
             );
         });
 
@@ -255,19 +255,19 @@ suite('Set Interpreter Command', () => {
             await inExpSetInterpreterCommand._pickInterpreter(multiStepInput.object, state);
 
             expect(actualParameters).to.not.equal(undefined, 'Parameters not set');
-            const callback = actualParameters!.customButtonSetup?.callback;
-            expect(callback).to.not.equal(undefined, 'Callback not set');
+            const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
+            expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
             delete actualParameters!.customButtonSetup;
             assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
             multiStepInput.verifyAll();
 
             const quickPick = { items: [] };
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await callback!(quickPick as any);
+            await refreshButtonCallback!(quickPick as any); // Invoke callback, meaning that the refresh button is clicked.
             assert.deepStrictEqual(
                 quickPick.items,
                 [refreshedItem, expectedFindInterpreterPathSuggestion],
-                'Items not equal',
+                'Quickpick not updated correctly',
             );
         });
 
