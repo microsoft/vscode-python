@@ -245,7 +245,7 @@ export function testLocatorWatcher(
         await waitForChangeToBeDetected(deferred);
         if (!options?.doNotVerifyIfLocated) {
             const isFound = await isLocated(executable);
-            assert.ok(isFound);
+            assert.ok(isFound, 'Did not find environment via iterEnvs');
         }
 
         assert.notEqual(actualEvent!, undefined, 'Wrong event emitted');
