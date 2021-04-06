@@ -1,3 +1,0 @@
-REPO=/home/user/git/foobar
-PYTHONPATH=${REPO}/foo:${REPO}/bar
-PYTHON=${BINDIR}/python3
