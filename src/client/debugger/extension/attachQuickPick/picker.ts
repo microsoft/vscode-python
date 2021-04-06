@@ -39,8 +39,10 @@ export class AttachPicker implements IAttachPicker {
 
             quickPick.onDidTriggerButton(
                 async () => {
+                    quickPick.busy = true;
                     const attachItems = await this.attachItemsProvider.getAttachItems();
                     quickPick.items = attachItems;
+                    quickPick.busy = false;
                 },
                 this,
                 disposables,

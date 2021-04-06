@@ -12,7 +12,7 @@ import { FindInterpreterVariants } from '../../../../common/experiments/groups';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IExperimentService, IPathUtils, Resource } from '../../../../common/types';
 import { getIcon } from '../../../../common/utils/icons';
-import { AttachProcess, InterpreterQuickPickList } from '../../../../common/utils/localize';
+import { InterpreterQuickPickList } from '../../../../common/utils/localize';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
