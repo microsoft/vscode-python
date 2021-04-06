@@ -55,10 +55,6 @@ async function getRootVirtualEnvDir(root: string): Promise<string[]> {
     return rootDirs;
 }
 
-async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind> {
-    return (await isPoetryEnvironment(interpreterPath)) ? PythonEnvKind.Poetry : PythonEnvKind.Unknown;
-}
-
 async function buildVirtualEnvInfo(
     executablePath: string,
     kind: PythonEnvKind,
@@ -143,8 +139,7 @@ export class PoetryLocator extends FSWatchingLocator {
     protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
         const source = typeof env === 'string' ? [PythonEnvSource.Other] : uniq([PythonEnvSource.Other, ...env.source]);
-        const kind = await getVirtualEnvKind(executablePath);
-        if (kind === PythonEnvKind.Poetry) {
+        if (await isPoetryEnvironment(executablePath)) {
             const isLocal = isParentPath(executablePath, this.root);
             return buildVirtualEnvInfo(executablePath, PythonEnvKind.Poetry, source, isLocal);
         }

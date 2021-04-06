@@ -51,7 +51,7 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
     /**
      * The subclass implementation of resolveEnv().
      */
-    protected abstract async doResolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
+    protected abstract doResolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
 
     /**
      * This is where subclasses get their resources ready.

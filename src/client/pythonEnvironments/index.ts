@@ -119,27 +119,29 @@ async function createLocators(
 }
 
 function createNonWorkspaceLocators(ext: ExtensionState): ILocator[] {
-    let locators: (ILocator & Partial<IDisposable>)[];
+    let locators: (ILocator & Partial<IDisposable>)[] = [];
+    locators.push(
+        // OS-independent locators go here.
+        new PyenvLocator(),
+        new CondaEnvironmentLocator(),
+        new GlobalVirtualEnvironmentLocator(),
+        new CustomVirtualEnvironmentLocator(),
+    );
+
     if (getOSType() === OSType.Windows) {
-        locators = [
+        locators.push(
             // Windows specific locators go here.
             new WindowsRegistryLocator(),
             new WindowsStoreLocator(),
             new WindowsPathEnvVarLocator(),
-        ];
+        );
     } else {
-        locators = [
+        locators.push(
             // Linux/Mac locators go here.
             new PosixKnownPathsLocator(),
-        ];
+        );
     }
-    locators.push(
-        // OS-independent locators go here.
-        new GlobalVirtualEnvironmentLocator(),
-        new PyenvLocator(),
-        new CustomVirtualEnvironmentLocator(),
-        new CondaEnvironmentLocator(),
-    );
+
     const disposables = locators.filter((d) => d.dispose !== undefined) as IDisposable[];
     ext.disposables.push(...disposables);
     return locators;
