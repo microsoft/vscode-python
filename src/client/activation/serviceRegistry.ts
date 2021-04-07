@@ -69,15 +69,15 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
     serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
 
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        RequirementsTxtLinkActivator,
-    );
-
     serviceManager.addSingleton<IPythonExtensionBanner>(
         IPythonExtensionBanner,
         ProposePylanceBanner,
         BANNER_NAME_PROPOSE_LS,
+    );
+
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        RequirementsTxtLinkActivator,
     );
 
     if (languageServerType === LanguageServerType.Microsoft) {
