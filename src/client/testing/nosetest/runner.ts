@@ -96,6 +96,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                 await this.testRunner.run(NOSETEST_PROVIDER, runOptions);
             }
 
+            // Promise must resolve before return as result file will be deleted in finally block.
             return await this.updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
         } catch (ex) {
             return Promise.reject<Tests>(ex);
