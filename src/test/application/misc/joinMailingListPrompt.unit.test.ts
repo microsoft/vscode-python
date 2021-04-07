@@ -49,22 +49,22 @@ suite('Join Mailing list Prompt Tests', () => {
     teardown(() => {
         sendTelemetryStub.restore();
     });
-    // test('Do not show notification if already shown', async () => {
-    //     when(storage.value).thenReturn(true);
+    test('Do not show notification if already shown', async () => {
+        when(storage.value).thenReturn(true);
 
-    //     await joinMailingList.activate();
+        await joinMailingList.activate();
 
-    //     verify(appShell.showInformationMessage(anything(), anything())).never();
-    // });
-    // test('Do not show notification if in neither experiments', async () => {
-    //     when(storage.value).thenReturn(false);
-    //     when(experimentService.inExperiment(anything())).thenResolve(false);
+        verify(appShell.showInformationMessage(anything(), anything())).never();
+    });
+    test('Do not show notification if in neither experiments', async () => {
+        when(storage.value).thenReturn(false);
+        when(experimentService.inExperiment(anything())).thenResolve(false);
 
-    //     await joinMailingList.activate();
+        await joinMailingList.activate();
 
-    //     verify(appShell.showInformationMessage(anything(), anything())).never();
-    //     verify(storage.updateValue(true)).once();
-    // });
+        verify(appShell.showInformationMessage(anything(), anything())).never();
+        verify(storage.updateValue(true)).once();
+    });
     test('Show prompt if in variant 1 experiment', async () => {
         when(storage.value).thenReturn(false);
         when(experimentService.inExperiment(JoinMailingListPromptVariants.variant1)).thenResolve(true);

@@ -35,17 +35,17 @@ export class JoinMailingListPrompt implements IExtensionSingleActivationService 
         }
 
         let promptContent: string | undefined;
-        // if (await this.experiments.inExperiment(JoinMailingListPromptVariants.variant1)) {
-        //     promptContent = await this.experiments.getExperimentValue<string>(JoinMailingListPromptVariants.variant1);
-        // } else if (await this.experiments.inExperiment(JoinMailingListPromptVariants.variant2)) {
-        //     promptContent = await this.experiments.getExperimentValue<string>(JoinMailingListPromptVariants.variant2);
-        // } else if (await this.experiments.inExperiment(JoinMailingListPromptVariants.variant3)) {
-        //     promptContent = await this.experiments.getExperimentValue<string>(JoinMailingListPromptVariants.variant3);
-        // } else {
-        //     // Not in any experiment, so no content to show.
-        //     promptContent = undefined;
-        // }
-        promptContent="Interested in tips and tutorials through our mailing list?"
+        if (await this.experiments.inExperiment(JoinMailingListPromptVariants.variant1)) {
+            promptContent = await this.experiments.getExperimentValue<string>(JoinMailingListPromptVariants.variant1);
+        } else if (await this.experiments.inExperiment(JoinMailingListPromptVariants.variant2)) {
+            promptContent = await this.experiments.getExperimentValue<string>(JoinMailingListPromptVariants.variant2);
+        } else if (await this.experiments.inExperiment(JoinMailingListPromptVariants.variant3)) {
+            promptContent = await this.experiments.getExperimentValue<string>(JoinMailingListPromptVariants.variant3);
+        } else {
+            // Not in any experiment, so no content to show.
+            promptContent = undefined;
+        }
+        promptContent = 'Interested in tips and tutorials through our mailing list?';
 
         // Show the prompt only if there is any content to show.
         if (promptContent) {
