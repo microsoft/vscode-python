@@ -57,7 +57,7 @@ class Venvs {
         const configPath = path.join(this.root, envName, 'pyvenv.cfg');
         try {
             await fs.createFile(interpreterPath);
-            if (kind === PythonEnvKind.Venv) {
+            if (kind === PythonEnvKind.Venv || kind === PythonEnvKind.VirtualEnvWrapper) {
                 await fs.createFile(configPath);
                 await fs.writeFile(configPath, 'version = 3.9.2');
             }
