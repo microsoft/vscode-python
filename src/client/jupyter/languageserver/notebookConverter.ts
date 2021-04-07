@@ -126,7 +126,7 @@ export class NotebookConverter implements Disposable {
         if (wrapper) {
             // Diagnostics are supposed to be per file and are updated each time
             // Make sure to clear out old ones first
-            wrapper.notebook.cells.forEach((c: NotebookCell) => {
+            wrapper.notebook.getCells().forEach((c: NotebookCell) => {
                 result.set(c.document.uri, []);
             });
 

@@ -77,7 +77,7 @@ suite('TensorBoard code lens provider', () => {
             assert(window.activeTextEditor, 'No active editor');
             const codeLenses = await commands.executeCommand<CodeLens[]>(
                 'vscode.executeCodeLensProvider',
-                notebook.document.cells[0].document.uri,
+                notebook.document.cellAt(0).document.uri,
             );
             assert.ok(codeLenses?.length && codeLenses.length > 0, 'Code lens provider did not provide codelenses');
         });
@@ -134,7 +134,7 @@ suite('TensorBoard code lens provider', () => {
             assert(window.activeTextEditor, 'No active editor');
             const codeLenses = await commands.executeCommand<CodeLens[]>(
                 'vscode.executeCodeLensProvider',
-                notebook.document.cells[0].document.uri,
+                notebook.document.cellAt(0).document.uri,
             );
             assert.ok(codeLenses?.length && codeLenses.length > 0, 'Code lens provider did not provide codelenses');
         });
