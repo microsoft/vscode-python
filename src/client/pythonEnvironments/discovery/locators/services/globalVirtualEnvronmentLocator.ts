@@ -163,6 +163,10 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
             // check multiple times. Those checks are file system heavy and
             // we can use the kind to determine this anyway.
             const kind = await getVirtualEnvKind(executablePath);
+            if (kind === PythonEnvKind.Unknown) {
+                // We don't know the environment type so skip this one.
+                return undefined;
+            }
             return buildSimpleVirtualEnvInfo(executablePath, kind);
         }
         return undefined;
