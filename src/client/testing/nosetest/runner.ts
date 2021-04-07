@@ -96,7 +96,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                 await this.testRunner.run(NOSETEST_PROVIDER, runOptions);
             }
 
-            return await this.updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
+            return this.updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
         } catch (ex) {
             return Promise.reject<Tests>(ex);
         } finally {
