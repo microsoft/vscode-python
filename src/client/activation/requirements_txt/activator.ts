@@ -4,6 +4,7 @@ import { IExtensionSingleActivationService } from '../types';
 
 @injectable()
 export class RequirementsTxtLinkActivator implements IExtensionSingleActivationService {
+    // eslint-disable-next-line class-methods-use-this
     public async activate(): Promise<void> {
         languages.registerHoverProvider(
             { pattern: '**/requirements.txt' },
