@@ -30,7 +30,7 @@ export class JoinMailingListPrompt implements IExtensionSingleActivationService 
     public async activate(): Promise<void> {
         // Only show the prompt if we have never shown it before. True here, means we have
         // shown the prompt before. Also do not show the prompt if running in Codespaces.
-        if (this.storage.value || env.uiKind === UIKind?.Web) {
+        if (env.uiKind === UIKind?.Web) {
             return;
         }
 
