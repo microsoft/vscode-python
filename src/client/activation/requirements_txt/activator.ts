@@ -15,7 +15,7 @@ export class RequirementsTxtLinkActivator implements IExtensionSingleActivationS
                     const projectName = row.match(regex);
 
                     if (projectName) {
-                        return new Hover(`https://pypi.org/project/${projectName[0].replace('==', '')}/`);
+                        return new Hover(`https://pypi.org/project/${projectName[1]}/`);
                     }
                     return null;
                 },
