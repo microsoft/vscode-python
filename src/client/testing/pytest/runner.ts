@@ -98,7 +98,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                 await this.testRunner.run(PYTEST_PROVIDER, runOptions);
             }
 
-            return this.updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
+            return await this.updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
         } catch (ex) {
             return Promise.reject<Tests>(ex);
         } finally {
