@@ -32,6 +32,7 @@ export namespace StartPageMessages {
     export const OpenFileBrowser = 'OpenFileBrowser';
     export const OpenFolder = 'OpenFolder';
     export const OpenWorkspace = 'OpenWorkspace';
+    export const MailingList = 'MailingList';
 }
 
 export class IStartPageMapping {
@@ -48,6 +49,7 @@ export class IStartPageMapping {
     public [StartPageMessages.OpenFileBrowser]: never | undefined;
     public [StartPageMessages.OpenFolder]: never | undefined;
     public [StartPageMessages.OpenWorkspace]: never | undefined;
+    public [StartPageMessages.MailingList]: never | undefined;
 }
 
 type WebViewViewState = {

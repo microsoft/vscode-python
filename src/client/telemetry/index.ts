@@ -1722,6 +1722,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartPageOpenFileBrowser]: never | undefined;
     [Telemetry.StartPageOpenFolder]: never | undefined;
     [Telemetry.StartPageOpenWorkspace]: never | undefined;
+    [Telemetry.StartPageJoinMailingList]: never | undefined;
 
     // TensorBoard integration events
     /**

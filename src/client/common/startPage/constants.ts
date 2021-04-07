@@ -32,4 +32,5 @@ export enum Telemetry {
     StartPageOpenFileBrowser = 'DATASCIENCE.STARTPAGE_OPEN_FILE_BROWSER',
     StartPageOpenFolder = 'DATASCIENCE.STARTPAGE_OPEN_FOLDER',
     StartPageOpenWorkspace = 'DATASCIENCE.STARTPAGE_OPEN_WORKSPACE',
+    StartPageJoinMailingList = 'JOIN_MAILING_LIST_FROM_START_PAGE',
 }

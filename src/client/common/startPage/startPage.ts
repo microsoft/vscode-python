@@ -205,6 +205,10 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                 this.setTelemetryFlags();
                 this.commandManager.executeCommand('workbench.action.openWorkspace');
                 break;
+            case StartPageMessages.MailingList:
+                sendTelemetryEvent(Telemetry.StartPageJoinMailingList);
+                this.setTelemetryFlags();
+                break;
             case StartPageMessages.UpdateSettings:
                 if (payload === false) {
                     sendTelemetryEvent(Telemetry.StartPageClickedDontShowAgain);
