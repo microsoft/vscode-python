@@ -16,7 +16,7 @@ suite('GlobalVirtualEnvironment Locator', async () => {
         process.env.WORKON_HOME = testWorkOnHomePath;
     });
     testLocatorWatcher(testWorkOnHomePath, async () => new GlobalVirtualEnvironmentLocator(), {
-        kind: PythonEnvKind.VirtualEnvWrapper,
+        kind: PythonEnvKind.Venv,
     });
     suiteTeardown(() => {
         process.env.WORKON_HOME = workonHomeOldValue;

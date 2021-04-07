@@ -57,7 +57,7 @@ class Venvs {
         const configPath = path.join(this.root, envName, 'pyvenv.cfg');
         try {
             await fs.createFile(interpreterPath);
-            if (kind === PythonEnvKind.Venv || kind === PythonEnvKind.VirtualEnvWrapper) {
+            if (kind === PythonEnvKind.Venv) {
                 await fs.createFile(configPath);
                 await fs.writeFile(configPath, 'version = 3.9.2');
             }
@@ -251,11 +251,6 @@ export function testLocatorWatcher(
 
         await venvs.update(executable);
         await waitForChangeToBeDetected(deferred);
-        if (!options?.doNotVerifyIfLocated) {
-            const isFound = await isLocated(executable);
-            assert.ok(isFound, 'Did not find environment via iterEnvs');
-        }
-
         assert.notEqual(actualEvent!, undefined, 'Event was not emitted');
         if (options?.kind) {
             assert.equal(actualEvent!.kind, options.kind, 'Kind is not as expected');
