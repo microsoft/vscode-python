@@ -104,6 +104,11 @@
         ],
         "commands": [
             {
+                "command": "python.clearPersistentStorage",
+                "title": "%python.command.python.clearPersistentStorage.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.enableSourceMapSupport",
                 "title": "%python.command.python.enableSourceMapSupport.title%",
                 "category": "Python"

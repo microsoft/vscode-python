@@ -5,6 +5,9 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
+import { IExtensionSingleActivationService } from '../activation/types';
+import { ICommandManager } from './application/types';
+import { Commands } from './constants';
 import {
     GLOBAL_MEMENTO,
     IExtensionContext,
@@ -44,25 +47,71 @@ export class PersistentState<T> implements IPersistentState<T> {
     }
 }
 
+const GLOBAL_PERSISTENT_KEYS = 'zzzzPYTHON_EXTENSION_GLOBAL_STORAGE_KEYS';
+const WORKSPACE_PERSISTENT_KEYS = 'zzzzPYTHON_EXTENSION_WORKSPACE_STORAGE_KEYS';
+type keysStorage = { key: string; defaultValue: unknown };
+
 @injectable()
-export class PersistentStateFactory implements IPersistentStateFactory {
+export class PersistentStateFactory implements IPersistentStateFactory, IExtensionSingleActivationService {
+    private readonly globalKeysStorage = new PersistentState<keysStorage[]>(
+        this.globalState,
+        GLOBAL_PERSISTENT_KEYS,
+        [],
+    );
+    private readonly workspaceKeysStorage = new PersistentState<keysStorage[]>(
+        this.workspaceState,
+        WORKSPACE_PERSISTENT_KEYS,
+        [],
+    );
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceState: Memento,
+        @inject(ICommandManager) private cmdManager: ICommandManager,
     ) {}
+
+    public async activate(): Promise<void> {
+        this.cmdManager.registerCommand(Commands.ClearStorage, this.cleanAllPersistentStates.bind(this));
+    }
+
     public createGlobalPersistentState<T>(
         key: string,
         defaultValue?: T,
         expiryDurationMs?: number,
     ): IPersistentState<T> {
+        if (!this.globalKeysStorage.value.includes({ key, defaultValue })) {
+            this.globalKeysStorage.updateValue([{ key, defaultValue }, ...this.globalKeysStorage.value]).ignoreErrors();
+        }
         return new PersistentState<T>(this.globalState, key, defaultValue, expiryDurationMs);
     }
+
     public createWorkspacePersistentState<T>(
         key: string,
         defaultValue?: T,
         expiryDurationMs?: number,
     ): IPersistentState<T> {
+        if (!this.workspaceKeysStorage.value.includes({ key, defaultValue })) {
+            this.workspaceKeysStorage
+                .updateValue([{ key, defaultValue }, ...this.workspaceKeysStorage.value])
+                .ignoreErrors();
+        }
         return new PersistentState<T>(this.workspaceState, key, defaultValue, expiryDurationMs);
+    }
+
+    public async cleanAllPersistentStates(): Promise<void> {
+        await Promise.all(
+            this.globalKeysStorage.value.map(async (keyContent) => {
+                const storage = this.createGlobalPersistentState(keyContent.key);
+                await storage.updateValue(keyContent.defaultValue);
+            }),
+        );
+        await Promise.all(
+            this.workspaceKeysStorage.value.map(async (keyContent) => {
+                const storage = this.createWorkspacePersistentState(keyContent.key);
+                await storage.updateValue(keyContent.defaultValue);
+            }),
+        );
+        await this.globalKeysStorage.updateValue([]);
+        await this.workspaceKeysStorage.updateValue([]);
     }
 }
 
@@ -79,6 +128,8 @@ interface IPersistentStorage<T> {
  * Build a global storage object for the given key.
  */
 export function getGlobalStorage<T>(context: IExtensionContext, key: string): IPersistentStorage<T> {
+    const globalKeysStorage = new PersistentState<keysStorage[]>(context.globalState, GLOBAL_PERSISTENT_KEYS, []);
+    globalKeysStorage.updateValue([{ key, defaultValue: undefined }, ...globalKeysStorage.value]).ignoreErrors();
     const raw = new PersistentState<T>(context.globalState, key);
     return {
         // We adapt between PersistentState and IPersistentStorage.

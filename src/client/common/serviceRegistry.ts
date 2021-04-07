@@ -131,6 +131,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<IRandom>(IRandom, Random);
     serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
+    serviceManager.addBinding(IPersistentStateFactory, IExtensionSingleActivationService);
     serviceManager.addSingleton<ITerminalServiceFactory>(ITerminalServiceFactory, TerminalServiceFactory);
     serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);

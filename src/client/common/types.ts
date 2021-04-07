@@ -51,6 +51,7 @@ export const IPersistentStateFactory = Symbol('IPersistentStateFactory');
 export interface IPersistentStateFactory {
     createGlobalPersistentState<T>(key: string, defaultValue?: T, expiryDurationMs?: number): IPersistentState<T>;
     createWorkspacePersistentState<T>(key: string, defaultValue?: T, expiryDurationMs?: number): IPersistentState<T>;
+    cleanAllPersistentStates(): Promise<void>;
 }
 
 export type ExecutionInfo = {
