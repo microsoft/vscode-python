@@ -114,7 +114,10 @@ suite('Linting - Provider', () => {
         serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
         serviceManager.addSingleton<vscode.Memento>(IMemento, MockMemento, GLOBAL_MEMENTO);
         serviceManager.addSingleton<vscode.Memento>(IMemento, MockMemento, WORKSPACE_MEMENTO);
-        serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, TypeMoq.Mock.ofType<ICommandManager>().object);
+        serviceManager.addSingletonInstance<ICommandManager>(
+            ICommandManager,
+            TypeMoq.Mock.ofType<ICommandManager>().object,
+        );
         lm = new LinterManager(serviceContainer, workspaceService.object);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);
         emitter = new vscode.EventEmitter<vscode.TextDocument>();
