@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { GlobalVirtualEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvronmentLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { testLocatorWatcher } from './watcherTestUtils';
