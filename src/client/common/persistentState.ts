@@ -47,8 +47,8 @@ export class PersistentState<T> implements IPersistentState<T> {
     }
 }
 
-const GLOBAL_PERSISTENT_KEYS = 'zzzzPYTHON_EXTENSION_GLOBAL_STORAGE_KEYS';
-const WORKSPACE_PERSISTENT_KEYS = 'zzzzPYTHON_EXTENSION_WORKSPACE_STORAGE_KEYS';
+const GLOBAL_PERSISTENT_KEYS = 'PYTHON_EXTENSION_GLOBAL_STORAGE_KEYS';
+const WORKSPACE_PERSISTENT_KEYS = 'PYTHON_EXTENSION_WORKSPACE_STORAGE_KEYS';
 type keysStorage = { key: string; defaultValue: unknown };
 
 @injectable()
@@ -97,7 +97,7 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
         return new PersistentState<T>(this.workspaceState, key, defaultValue, expiryDurationMs);
     }
 
-    public async cleanAllPersistentStates(): Promise<void> {
+    private async cleanAllPersistentStates(): Promise<void> {
         await Promise.all(
             this.globalKeysStorage.value.map(async (keyContent) => {
                 const storage = this.createGlobalPersistentState(keyContent.key);
@@ -129,7 +129,9 @@ interface IPersistentStorage<T> {
  */
 export function getGlobalStorage<T>(context: IExtensionContext, key: string): IPersistentStorage<T> {
     const globalKeysStorage = new PersistentState<keysStorage[]>(context.globalState, GLOBAL_PERSISTENT_KEYS, []);
-    globalKeysStorage.updateValue([{ key, defaultValue: undefined }, ...globalKeysStorage.value]).ignoreErrors();
+    if (!globalKeysStorage.value.includes({ key, defaultValue: undefined })) {
+        globalKeysStorage.updateValue([{ key, defaultValue: undefined }, ...globalKeysStorage.value]).ignoreErrors();
+    }
     const raw = new PersistentState<T>(context.globalState, key);
     return {
         // We adapt between PersistentState and IPersistentStorage.
