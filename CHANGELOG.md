@@ -1,5 +1,77 @@
 # Changelog
 
+## 2021.4.0-rc (8 April 2021)
+
+### Enhancements
+
+1. Add new command to report an Issue using the vscode-python template.
+   ([#67](https://github.com/Microsoft/vscode-python/issues/67))
+1. Highlight `.pypirc`, `.pep8`, and `.pylintrc` as ini-files. (thanks [Jan Pilzer](https://github.com/Hirse))
+   ([#11250](https://github.com/Microsoft/vscode-python/issues/11250))
+1. Added `python.linting.cwd` to change the working directory of the linters. (thanks [Matthew Shirley](https://github.com/matthewshirley))
+   ([#15170](https://github.com/Microsoft/vscode-python/issues/15170))
+1. Remove prompt to install a linter when none are available.
+   ([#15465](https://github.com/Microsoft/vscode-python/issues/15465))
+1. Add jump to source integration with the PyTorch profiler TensorBoard plugin during TensorBoard sessions.
+   ([#15641](https://github.com/Microsoft/vscode-python/issues/15641))
+1. Drop prompt being displayed on first extension launch with a tip or a survey.
+   ([#15647](https://github.com/Microsoft/vscode-python/issues/15647))
+1. Use the updated logic for normalizing code sent to REPL as the default behavior.
+   ([#15649](https://github.com/Microsoft/vscode-python/issues/15649))
+1. Open TensorBoard webview panel in the active viewgroup on the first launch or the last viewgroup that it was moved to.
+   ([#15708](https://github.com/Microsoft/vscode-python/issues/15708))
+1. Support discovering Poetry virtual environments when in discovery experiment.
+   ([#15765](https://github.com/Microsoft/vscode-python/issues/15765))
+1. Install dev tools using Poetry when the poetry environment related to current folder is selected when in discovery experiment.
+   ([#15786](https://github.com/Microsoft/vscode-python/issues/15786))
+1. Add a refresh icon next to interpreter list.
+   ([#15868](https://github.com/Microsoft/vscode-python/issues/15868))
+1. Added command `Python: Clear internal extension cache` to clear extension related cache.
+   ([#15883](https://github.com/Microsoft/vscode-python/issues/15883))
+
+### Fixes
+
+1. Fix `python.poetryPath` setting for installer on Windows.
+   ([#9672](https://github.com/Microsoft/vscode-python/issues/9672))
+1. Prevent mypy errors for other files showing in current file.
+   (thanks [Steve Dignam](https://github.com/sbdchd))
+   ([#10190](https://github.com/Microsoft/vscode-python/issues/10190))
+1. Update pytest results when debugging. (thanks [djplt](https://github.com/djplt))
+   ([#15353](https://github.com/Microsoft/vscode-python/issues/15353))
+1. Ensure release level is set when using new environment discovery component.
+   ([#15462](https://github.com/Microsoft/vscode-python/issues/15462))
+1. Ensure right environment is activated in the terminal when installing Python packages.
+   ([#15503](https://github.com/Microsoft/vscode-python/issues/15503))
+1. Update nosetest results when debugging. (thanks [djplt](https://github.com/djplt))
+   ([#15642](https://github.com/Microsoft/vscode-python/issues/15642))
+1. Ensure any stray jedi process is terminated on language server dispose.
+   ([#15644](https://github.com/Microsoft/vscode-python/issues/15644))
+1. Fix README image indent for VSCode extension page. (thanks [Johnson](https://github.com/j3soon/))
+   ([#15662](https://github.com/Microsoft/vscode-python/issues/15662))
+1. Run `conda update` and not `conda install` when installing a compatible version of the `tensorboard` package.
+   ([#15778](https://github.com/Microsoft/vscode-python/issues/15778))
+1. Temporarily fix support for folders in interpreter path setting.
+   ([#15782](https://github.com/Microsoft/vscode-python/issues/15782))
+1. In completions.py: jedi.api.names has been deprecated, switch to new syntax.
+   (thanks [moselhy](https://github.com/moselhy)).
+   ([#15791](https://github.com/Microsoft/vscode-python/issues/15791))
+1. Fixes activation of prefixed conda environments.
+   ([#15823](https://github.com/Microsoft/vscode-python/issues/15823))
+
+### Code Health
+
+1. Deprecating on-type line formatter since it isn't used in newer Language servers.
+   ([#15709](https://github.com/Microsoft/vscode-python/issues/15709))
+1. Removing old way of feature deprecation where we showed notification for each feature we deprecated.
+   ([#15714](https://github.com/Microsoft/vscode-python/issues/15714))
+1. Remove unused code from extension.
+   ([#15717](https://github.com/Microsoft/vscode-python/issues/15717))
+1. Add telemetry for identifying torch.profiler users.
+   ([#15825](https://github.com/Microsoft/vscode-python/issues/15825))
+1. Update notebook code to not use deprecated .cells function on NotebookDocument.
+   ([#15885](https://github.com/Microsoft/vscode-python/issues/15885))
+
+
 ## 2021.3.1 (23 March 2021)
 
 ### Fixes
