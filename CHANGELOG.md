@@ -1,12 +1,83 @@
 # Changelog
 
-## 2021.3.0-rc (9 March 2021)
+## 2021.3.1 (23 March 2021)
+
+### Fixes
+
+1. Fix link to create a new Jupyter notebook in Python start page.
+   ([#15621](https://github.com/Microsoft/vscode-python/issues/15621))
+1. Upgrade to latest `jedi-language-server` and use it for python >= 3.6. Use `jedi<0.18` for python 2.7 and <=3.5.
+   ([#15724](https://github.com/Microsoft/vscode-python/issues/15724))
+1. Check if Python executable file exists instead of launching the Python process.
+   ([#15725](https://github.com/Microsoft/vscode-python/issues/15725))
+1. Fix for Go to definition needs to be pressed twice.
+   (thanks [djplt](https://github.com/djplt))
+   ([#15727](https://github.com/Microsoft/vscode-python/issues/15727))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2021.3.0 (16 March 2021)
 
 ### Enhancements
 
 1. Activate the extension when the following files are found: `Pipfile`, `setup.py`, `requirements.txt`, `manage.py`, `app.py`
    (thanks [Dhaval Soneji](https://github.com/soneji))
    ([#4765](https://github.com/Microsoft/vscode-python/issues/4765))
+1. Add optional user-level `python.tensorBoard.logDirectory` setting. When starting a TensorBoard session, use this setting if it is present instead of prompting the user to select a log directory.
+   ([#15476](https://github.com/Microsoft/vscode-python/issues/15476))
 
 ### Fixes
 
@@ -40,6 +111,8 @@
    ([#15580](https://github.com/Microsoft/vscode-python/issues/15580))
 1. Ensure that jedi language server uses jedi shipped with the extension.
    ([#15586](https://github.com/Microsoft/vscode-python/issues/15586))
+1. Updates to Proposed API, and fix the failure in VS Code Insider tests.
+   ([#15638](https://github.com/Microsoft/vscode-python/issues/15638))
 
 ### Code Health
 
@@ -63,6 +136,65 @@
    ([#15567](https://github.com/Microsoft/vscode-python/issues/15567))
 1. Fix failing smoke tests on CI.
    ([#15573](https://github.com/Microsoft/vscode-python/issues/15573))
+1. Update VS Code engine to 1.54.0
+   ([#15604](https://github.com/Microsoft/vscode-python/issues/15604))
+1. Use `onReady` method available on language client to ensure language server is ready.
+   ([#15612](https://github.com/Microsoft/vscode-python/issues/15612))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
 
 ## 2021.2.4 (9 March 2021)
 
