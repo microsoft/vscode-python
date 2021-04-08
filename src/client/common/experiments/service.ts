@@ -6,8 +6,6 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
 import { PVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { GLOBAL_MEMENTO, IExperimentService, IMemento, IOutputChannel } from '../types';
@@ -90,13 +88,9 @@ export class ExperimentService implements IExperimentService {
             return false;
         }
 
-        // Currently the service doesn't support opting in and out of experiments,
-        // so we need to perform these checks and send the corresponding telemetry manually.
+        // Currently the service doesn't support opting in and out of experiments.
+        // so we need to perform these checks manually.
         if (this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
-            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, {
-                expNameOptedOutOf: experiment,
-            });
-
             return false;
         }
 
@@ -105,11 +99,6 @@ export class ExperimentService implements IExperimentService {
             // this to ensure the experiment service is ready and internal states are fully
             // synced with the experiment server.
             await this.experimentationService.isCachedFlightEnabled(experiment);
-
-            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, {
-                expNameOptedInto: experiment,
-            });
-
             return true;
         }
 
