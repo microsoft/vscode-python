@@ -128,7 +128,7 @@ export class ExperimentService implements IExperimentService {
             return undefined;
         }
 
-        return this.experimentationService.getTreatmentVariableAsync('vscode', experiment, true);
+        return this.experimentationService.getTreatmentVariableAsync(EXP_CONFIGID, experiment, true);
     }
 
     private logExperiments() {
