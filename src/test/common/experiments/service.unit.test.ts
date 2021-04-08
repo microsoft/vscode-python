@@ -238,7 +238,7 @@ suite('Experimentation service', () => {
             const result = await experimentService.inExperiment(experiment);
 
             assert.isTrue(result);
-            sinon.assert.calledOnce(sendTelemetryEventStub);
+            sinon.assert.notCalled(sendTelemetryEventStub);
             sinon.assert.calledOnce(isCachedFlightEnabledStub);
         });
 
