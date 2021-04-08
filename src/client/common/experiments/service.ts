@@ -15,6 +15,7 @@ import { Experiments } from '../utils/localize';
 import { ExperimentationTelemetry } from './telemetry';
 
 const EXP_MEMENTO_KEY = 'VSCode.ABExp.FeatureData';
+const EXP_CONFIGID = 'vscode';
 
 @injectable()
 export class ExperimentService implements IExperimentService {
@@ -104,7 +105,7 @@ export class ExperimentService implements IExperimentService {
             // Check if the user was already in the experiment server-side. We need to do
             // this to ensure the experiment service is ready and internal states are fully
             // synced with the experiment server.
-            await this.experimentationService.isCachedFlightEnabled(experiment);
+            await this.experimentationService.getTreatmentVariableAsync(EXP_CONFIGID, experiment, true);
 
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, {
                 expNameOptedInto: experiment,
@@ -113,7 +114,13 @@ export class ExperimentService implements IExperimentService {
             return true;
         }
 
-        return this.experimentationService.isCachedFlightEnabled(experiment);
+        const treatmentVariable = await this.experimentationService.getTreatmentVariableAsync(
+            EXP_CONFIGID,
+            experiment,
+            true,
+        );
+
+        return treatmentVariable !== undefined;
     }
 
     public async getExperimentValue<T extends boolean | number | string>(experiment: string): Promise<T | undefined> {
