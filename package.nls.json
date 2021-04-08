@@ -34,7 +34,7 @@
     "python.command.python.enableLinting.title": "Enable/Disable Linting",
     "python.command.python.runLinting.title": "Run Linting",
     "python.command.python.enableSourceMapSupport.title": "Enable Source Map Support For Extension Debugging",
-    "python.command.python.clearPersistentStorage.title": "Clear internal extension cache",
+    "python.command.python.clearPersistentStorage.title": "Clear Internal Extension Cache",
     "python.command.python.startPage.open.title": "Open Start Page",
     "python.command.python.analysis.clearCache.title": "Clear Module Analysis Cache",
     "python.command.python.analysis.restartLanguageServer.title": "Restart Language Server",
