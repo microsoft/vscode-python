@@ -114,6 +114,8 @@ export class ExperimentService implements IExperimentService {
             return true;
         }
 
+        // If getTreatmentVariableAsync returns undefined,
+        // it means that the value for this experiment was not found on the server.
         const treatmentVariable = await this.experimentationService.getTreatmentVariableAsync(
             EXP_CONFIGID,
             experiment,
