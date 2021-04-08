@@ -123,6 +123,13 @@ export class ExperimentsManager implements IExperimentsManager {
             for (const experiment of this.experimentStorage.value) {
                 try {
                     if (
+                        this._experimentsOptedOutFrom.includes('All') ||
+                        this._experimentsOptedOutFrom.includes(experiment.name)
+                    ) {
+                        continue;
+                    }
+
+                    if (
                         this._experimentsOptedInto.includes('All') ||
                         this._experimentsOptedInto.includes(experiment.name)
                     ) {
