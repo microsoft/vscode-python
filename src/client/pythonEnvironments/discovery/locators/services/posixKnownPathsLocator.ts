@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { traceError } from '../../../../common/logger';
+import { traceVerbose } from '../../../../common/logger';
 import { Architecture } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, PythonReleaseLevel, PythonVersion } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
@@ -38,7 +38,7 @@ export class PosixKnownPathsLocator extends Locator {
         try {
             version = parseVersion(path.basename(bin));
         } catch (ex) {
-            traceError(`Failed to parse version from path: ${bin}`, ex);
+            traceVerbose(`Failed to parse version from path: ${bin}`, ex);
             version = {
                 major: -1,
                 minor: -1,
