@@ -5,7 +5,7 @@
 ### Enhancements
 
 1. Add new command to report an Issue using the vscode-python template.
-   ([#67](https://github.com/Microsoft/vscode-python/issues/67))
+   ([#1119](https://github.com/microsoft/vscode-python/issues/1119))
 1. Highlight `.pypirc`, `.pep8`, and `.pylintrc` as ini-files. (thanks [Jan Pilzer](https://github.com/Hirse))
    ([#11250](https://github.com/Microsoft/vscode-python/issues/11250))
 1. Added `python.linting.cwd` to change the working directory of the linters. (thanks [Matthew Shirley](https://github.com/matthewshirley))
