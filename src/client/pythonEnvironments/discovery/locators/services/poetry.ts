@@ -69,9 +69,9 @@ async function isLocalPoetryEnvironment(interpreterPath: string): Promise<boolea
     // - 'pyproject.toml' has a poetry section which contains the necessary fields
     // - Poetry configuration allows local virtual environments
     // ... possibly more
-    // Or we can simply try running poetry to find the related environment instead. We do the latter for simplicity and reliability.
-    // It should not be much expensive as we have already narrowed down this possibility through various file checks.
-    return isPoetryEnvironmentRelatedToFolder(interpreterPath, project);
+    // Or we can try running poetry to find the related environment instead. Launching poetry binaries although
+    // reliable, can be expensive. So report the best effort type instead, i.e this is likely a poetry env.
+    return true;
 }
 
 /**

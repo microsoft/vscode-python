@@ -15,7 +15,7 @@ import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 
 const testPoetryDir = path.join(TEST_LAYOUT_ROOT, 'poetry');
 const project1 = path.join(testPoetryDir, 'project1');
-const project2 = path.join(testPoetryDir, 'project2');
+const project4 = path.join(testPoetryDir, 'project4');
 const project3 = path.join(testPoetryDir, 'project3');
 
 suite('isPoetryEnvironment Tests', () => {
@@ -54,17 +54,9 @@ suite('isPoetryEnvironment Tests', () => {
             shellExecute = sinon.stub(externalDependencies, 'shellExecute');
             getPythonSetting = sinon.stub(externalDependencies, 'getPythonSetting');
             getPythonSetting.returns('poetry');
-            shellExecute.callsFake((command: string, options: ShellOptions) => {
-                // eslint-disable-next-line default-case
-                switch (command) {
-                    case 'poetry env list --full-path':
-                        return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
-                    case 'poetry env info -p':
-                        if (options.cwd && externalDependencies.arePathsSame(options.cwd, project1)) {
-                            return Promise.resolve<ExecutionResult<string>>({
-                                stdout: `${path.join(project1, '.venv')} \n`,
-                            });
-                        }
+            shellExecute.callsFake((command: string, _options: ShellOptions) => {
+                if (command === 'poetry env list --full-path') {
+                    return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
                 }
                 return Promise.reject(new Error('Command failed'));
             });
@@ -84,8 +76,8 @@ suite('isPoetryEnvironment Tests', () => {
             expect(result).to.equal(false);
         });
 
-        test(`Return false if running poetry for project dir as cwd fails`, async () => {
-            const result = await isPoetryEnvironment(path.join(project2, '.venv', 'bin', 'python'));
+        test(`Return false if running poetry for project dir as cwd fails (pyproject.toml file is invalid)`, async () => {
+            const result = await isPoetryEnvironment(path.join(project4, '.venv', 'bin', 'python'));
             expect(result).to.equal(false);
         });
     });
