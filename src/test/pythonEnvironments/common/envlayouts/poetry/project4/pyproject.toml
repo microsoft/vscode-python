@@ -2,7 +2,6 @@
 name = "poetry-tutorial-project"
 version = "0.1.0"
 description = ""
-authors = ["PVSC <pvscc@microsoft.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.5"
