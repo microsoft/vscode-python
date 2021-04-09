@@ -75,13 +75,7 @@ suite('Poetry Locator', () => {
             locator = new PoetryLocator(project1);
             getOSTypeStub.returns(platformUtils.OSType.Windows);
             shellExecute.callsFake((command: string, options: ShellOptions) => {
-                if (command === 'poetry env info -p') {
-                    if (options.cwd && externalDependencies.arePathsSame(options.cwd, project1)) {
-                        return Promise.resolve<ExecutionResult<string>>({
-                            stdout: `${path.join(project1, '.venv')} \n`,
-                        });
-                    }
-                } else if (command === 'poetry env list --full-path') {
+                if (command === 'poetry env list --full-path') {
                     if (options.cwd && externalDependencies.arePathsSame(options.cwd, project1)) {
                         return Promise.resolve<ExecutionResult<string>>({
                             stdout: `${path.join(testPoetryDir, 'poetry-tutorial-project-6hnqYwvD-py3.8')} \n
@@ -214,14 +208,7 @@ suite('Poetry Locator', () => {
             locator = new PoetryLocator(project2);
             getOSTypeStub.returns(platformUtils.OSType.Linux);
             shellExecute.callsFake((command: string, options: ShellOptions) => {
-                // eslint-disable-next-line default-case
-                if (command === 'poetry env info -p') {
-                    if (options.cwd && externalDependencies.arePathsSame(options.cwd, project2)) {
-                        return Promise.resolve<ExecutionResult<string>>({
-                            stdout: `${path.join(project2, '.venv')} \n`,
-                        });
-                    }
-                } else if (command === 'poetry env list --full-path') {
+                if (command === 'poetry env list --full-path') {
                     if (options.cwd && externalDependencies.arePathsSame(options.cwd, project2)) {
                         return Promise.resolve<ExecutionResult<string>>({
                             stdout: `${path.join(testPoetryDir, 'posix1project-9hvDnqYw-py3.4')} (Activated)\n

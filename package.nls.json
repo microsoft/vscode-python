@@ -222,6 +222,7 @@
     "StartPage.openInteractiveWindow": "Use the Interactive Window to develop Python Scripts",
     "StartPage.interactiveWindowDesc": "- You can create cells on a Python file by typing \"#%%\" <br /> - Use \"<div class=\"italics\">Shift + Enter</div> \" to run a cell, the output will be shown in the interactive window",
     "StartPage.releaseNotes": "Take a look at our <a class=\"link\" href={0}>Release Notes</a> to learn more about the latest features.",
+    "StartPage.mailingList": "<a class=\"link\" href={0}>Sign up</a> for tips and tutorials through our mailing list.",
     "StartPage.tutorialAndDoc": "Explore more features in our <a class=\"link\" href={0}>Tutorials</a> or check <a class=\"link\" href={1}>Documentation</a> for tips and troubleshooting.",
     "StartPage.dontShowAgain": "Don't show this page again",
     "StartPage.helloWorld": "Hello world",

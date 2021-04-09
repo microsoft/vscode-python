@@ -439,6 +439,10 @@ export namespace StartPage {
         'StartPage.tutorialAndDoc',
         'Explore more features in our <a class="link" href={0}>Tutorials</a> or check <a class="link" href={1}>Documentation</a> for tips and troubleshooting.',
     );
+    export const mailingList = localize(
+        'StartPage.mailingList',
+        '<a class="link" href={0}>Sign up</a> for tips and tutorials through our mailing list.',
+    );
     export const dontShowAgain = localize('StartPage.dontShowAgain', "Don't show this page again");
     export const helloWorld = localize('StartPage.helloWorld', 'Hello world');
     // When localizing sampleNotebook, the translated notebook must also be included in
