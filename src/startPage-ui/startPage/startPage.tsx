@@ -49,7 +49,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         (window as any).openCommandPalette = this.openCommandPalette.bind(this);
         (window as any).openCommandPaletteWithSelection = this.openCommandPaletteWithSelection.bind(this);
         (window as any).openSampleNotebook = this.openSampleNotebook.bind(this);
-        (window as any).openMailingListForm  = this.renderMailingList.bind(this);
+        (window as any).openMailingListForm  = this.openMailingListForm.bind(this);
     }
 
     public render() {
@@ -180,6 +180,10 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenWorkspace);
     }
 
+    public openMailingListForm() {
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.MailingList);
+
+    }
     private renderNotebookDescription(): JSX.Element {
         return (
             <div
@@ -265,7 +269,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     }
 
     private renderMailingList(): JSX.Element {
-        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.MailingList);
         return (
             <div
                 className="paragraph"
