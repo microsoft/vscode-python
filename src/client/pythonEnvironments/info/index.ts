@@ -3,8 +3,8 @@
 
 'use strict';
 
-import * as semver from 'semver';
 import { Architecture } from '../../common/utils/platform';
+import { compareSemVerLikeVersions } from '../base/info/pythonVersion';
 import { PythonVersion } from './pythonVersion';
 
 /**
@@ -110,6 +110,6 @@ export function sortInterpreters(interpreters: PythonEnvironment[]): PythonEnvir
         return [interpreters[0]];
     }
     const sorted = interpreters.slice();
-    sorted.sort((a, b) => (a.version && b.version ? semver.compare(a.version.raw, b.version.raw) : 0));
+    sorted.sort((a, b) => (a.version && b.version ? compareSemVerLikeVersions(a.version, b.version) : 0));
     return sorted;
 }
