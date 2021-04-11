@@ -25,6 +25,7 @@ import { DotNetLanguageServerProxy } from '../../client/activation/languageServe
 import { DotNetLanguageServerManager } from '../../client/activation/languageServer/manager';
 import { LanguageServerOutputChannel } from '../../client/activation/languageServer/outputChannel';
 import { PlatformData } from '../../client/activation/languageServer/platformData';
+import { RequirementsTxtLinkActivator } from '../../client/activation/requirements_txt/activator';
 import { registerTypes } from '../../client/activation/serviceRegistry';
 import {
     IDownloadChannelRule,
@@ -180,6 +181,12 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
             serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
                 ExtensionSurveyPrompt,
+            ),
+        ).once();
+        verify(
+            serviceManager.addSingleton<IExtensionSingleActivationService>(
+                IExtensionSingleActivationService,
+                RequirementsTxtLinkActivator,
             ),
         ).once();
     });
