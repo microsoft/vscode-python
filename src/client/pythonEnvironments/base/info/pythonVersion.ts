@@ -270,6 +270,8 @@ export function toSemverLikeVersion(
  * @returns {1 | 0 | -1} :  0 if v1 === v2,
  *                      1 if v1 > v2,
  *                     -1 if v1 < v2
+ * Remarks: primarily used compare to old type of version info.
+ * @deprecated
  */
 export function compareSemVerLikeVersions(
     v1: { major: number; minor: number; patch: number },
