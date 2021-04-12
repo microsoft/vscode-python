@@ -156,7 +156,7 @@ suite('Experimentation service', () => {
     suite('In-experiment check', () => {
         const experiment = 'Test Experiment - experiment';
         let telemetryEvents: { eventName: string; properties: Record<string, unknown> }[] = [];
-        let isCachedFlightEnabledStub: sinon.SinonStub;
+        let getTreatmentVariableAsyncStub: sinon.SinonStub;
         let sendTelemetryEventStub: sinon.SinonStub;
 
         setup(() => {
@@ -167,9 +167,9 @@ suite('Experimentation service', () => {
                     telemetryEvents.push(telemetry);
                 });
 
-            isCachedFlightEnabledStub = sinon.stub().returns(Promise.resolve(true));
+            getTreatmentVariableAsyncStub = sinon.stub().returns(Promise.resolve(true));
             sinon.stub(tasClient, 'getExperimentationService').returns({
-                isCachedFlightEnabled: isCachedFlightEnabledStub,
+                getTreatmentVariableAsync: getTreatmentVariableAsyncStub,
             } as never);
 
             configureApplicationEnvironment('stable', extensionVersion);
@@ -192,7 +192,7 @@ suite('Experimentation service', () => {
 
             assert.isTrue(result);
             sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.calledOnce(isCachedFlightEnabledStub);
+            sinon.assert.calledOnce(getTreatmentVariableAsyncStub);
         });
 
         test('If the experiment setting is disabled, inExperiment should return false', async () => {
@@ -208,7 +208,7 @@ suite('Experimentation service', () => {
 
             assert.isFalse(result);
             sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.notCalled(isCachedFlightEnabledStub);
+            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
         });
 
         test('If the opt-in setting contains "All", inExperiment should return true', async () => {
@@ -239,7 +239,7 @@ suite('Experimentation service', () => {
 
             assert.isTrue(result);
             sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.calledOnce(isCachedFlightEnabledStub);
+            sinon.assert.calledOnce(getTreatmentVariableAsyncStub);
         });
 
         test('If the opt-in setting contains `All` and the experiment setting is disabled, inExperiment should return false', async () => {
@@ -255,7 +255,7 @@ suite('Experimentation service', () => {
 
             assert.isFalse(result);
             sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.notCalled(isCachedFlightEnabledStub);
+            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
         });
 
         test('If the opt-in setting contains the experiment name, inExperiment should return true', async () => {
@@ -271,7 +271,7 @@ suite('Experimentation service', () => {
 
             assert.isTrue(result);
             assert.equal(telemetryEvents.length, 0);
-            sinon.assert.calledOnce(isCachedFlightEnabledStub);
+            sinon.assert.calledOnce(getTreatmentVariableAsyncStub);
         });
 
         test('If the opt-out setting contains "All", inExperiment should return false', async () => {
@@ -287,7 +287,7 @@ suite('Experimentation service', () => {
 
             assert.isFalse(result);
             sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.notCalled(isCachedFlightEnabledStub);
+            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
         });
 
         test('If the opt-out setting contains "All" and the experiment setting is enabled, inExperiment should return false', async () => {
@@ -303,7 +303,7 @@ suite('Experimentation service', () => {
 
             assert.isFalse(result);
             sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.notCalled(isCachedFlightEnabledStub);
+            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
         });
 
         test('If the opt-out setting contains the experiment name, inExperiment should return false', async () => {
@@ -319,7 +319,7 @@ suite('Experimentation service', () => {
 
             assert.isFalse(result);
             assert.equal(telemetryEvents.length, 0);
-            sinon.assert.notCalled(isCachedFlightEnabledStub);
+            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
         });
     });
 
