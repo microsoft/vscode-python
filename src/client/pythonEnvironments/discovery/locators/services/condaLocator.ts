@@ -54,7 +54,7 @@ export class CondaEnvironmentLocator extends Locator {
                 if (name) {
                     info.name = name;
                 }
-                traceVerbose(`Found conda environment: ${info}`);
+                traceVerbose(`Found conda environment: ${executable}`);
                 yield info;
             }
         }
