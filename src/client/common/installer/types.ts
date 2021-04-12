@@ -24,7 +24,24 @@ export interface IModuleInstaller {
      * @memberof IModuleInstaller
      */
     installModule(
-        name: string,
+        product: string,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken,
+        isUpgrade?: boolean,
+    ): Promise<void>;
+    /**
+     * Installs a Product
+     * If a cancellation token is provided, then a cancellable progress message is dispalyed.
+     *  At this point, this method would resolve only after the module has been successfully installed.
+     * If cancellation token is not provided, its not guaranteed that module installation has completed.
+     * @param {string} name
+     * @param {InterpreterUri} [resource]
+     * @param {CancellationToken} [cancel]
+     * @returns {Promise<void>}
+     * @memberof IModuleInstaller
+     */
+    installModule(
+        product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
         isUpgrade?: boolean,

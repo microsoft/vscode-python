@@ -8,6 +8,8 @@ import '../extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, IWorkspaceService } from '../application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceError, traceInfo } from '../logger';
@@ -26,6 +28,7 @@ import {
 } from '../types';
 import { Installer } from '../utils/localize';
 import { isResource, noop } from '../utils/misc';
+import { translateProductToModule } from './moduleInstaller';
 import { ProductNames } from './productNames';
 import {
     IInstallationChannelManager,
@@ -101,17 +104,25 @@ abstract class BaseInstaller {
         const channels = this.serviceContainer.get<IInstallationChannelManager>(IInstallationChannelManager);
         const installer = await channels.getInstallationChannel(product, resource);
         if (!installer) {
+            sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
+                installer: 'unavailable',
+                productName: ProductNames.get(product),
+            });
             return InstallerResponse.Ignore;
         }
 
-        const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
         await installer
-            .installModule(moduleName, resource, cancel, isUpgrade)
-            .catch((ex) => traceError(`Error in installing the module '${moduleName}', ${ex}`));
+            .installModule(product, resource, cancel, isUpgrade)
+            .catch((ex) => traceError(`Error in installing the product '${ProductNames.get(product)}', ${ex}`));
 
-        return this.isInstalled(product, resource).then((isInstalled) =>
-            isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore,
-        );
+        return this.isInstalled(product, resource).then((isInstalled) => {
+            sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
+                installer: installer.displayName,
+                productName: ProductNames.get(product),
+                isInstalled,
+            });
+            return isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore;
+        });
     }
 
     /**
@@ -355,7 +366,7 @@ class DataScienceInstaller extends BaseInstaller {
 
         // Pick an installerModule based on whether the interpreter is conda or not. Default is pip.
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
-        let installerModule;
+        let installerModule: IModuleInstaller | undefined;
         const isAvailableThroughConda = !UnsupportedChannelsForProduct.get(product)?.has(EnvironmentType.Conda);
         if (interpreter.envType === EnvironmentType.Conda && isAvailableThroughConda) {
             installerModule = channels.find((v) => v.name === EnvironmentType.Conda);
@@ -371,16 +382,25 @@ class DataScienceInstaller extends BaseInstaller {
 
         if (!installerModule) {
             this.appShell.showErrorMessage(Installer.couldNotInstallLibrary().format(moduleName)).then(noop, noop);
+            sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
+                installer: 'unavailable',
+                productName: ProductNames.get(product),
+            });
             return InstallerResponse.Ignore;
         }
 
         await installerModule
-            .installModule(moduleName, interpreter, cancel, isUpgrade)
+            .installModule(product, interpreter, cancel, isUpgrade)
             .catch((ex) => traceError(`Error in installing the module '${moduleName}', ${ex}`));
 
-        return this.isInstalled(product, interpreter).then((isInstalled) =>
-            isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore,
-        );
+        return this.isInstalled(product, interpreter).then((isInstalled) => {
+            sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
+                installer: installerModule?.displayName || '',
+                isInstalled,
+                productName: ProductNames.get(product),
+            });
+            return isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore;
+        });
     }
 
     /**
@@ -481,62 +501,5 @@ export class ProductInstaller implements IInstaller {
                 break;
         }
         throw new Error(`Unknown product ${product}`);
-    }
-}
-
-function translateProductToModule(product: Product, purpose: ModuleNamePurpose): string {
-    switch (product) {
-        case Product.mypy:
-            return 'mypy';
-        case Product.nosetest: {
-            return purpose === ModuleNamePurpose.install ? 'nose' : 'nosetests';
-        }
-        case Product.pylama:
-            return 'pylama';
-        case Product.prospector:
-            return 'prospector';
-        case Product.pylint:
-            return 'pylint';
-        case Product.pytest:
-            return 'pytest';
-        case Product.autopep8:
-            return 'autopep8';
-        case Product.black:
-            return 'black';
-        case Product.pycodestyle:
-            return 'pycodestyle';
-        case Product.pydocstyle:
-            return 'pydocstyle';
-        case Product.yapf:
-            return 'yapf';
-        case Product.flake8:
-            return 'flake8';
-        case Product.unittest:
-            return 'unittest';
-        case Product.rope:
-            return 'rope';
-        case Product.bandit:
-            return 'bandit';
-        case Product.jupyter:
-            return 'jupyter';
-        case Product.notebook:
-            return 'notebook';
-        case Product.pandas:
-            return 'pandas';
-        case Product.ipykernel:
-            return 'ipykernel';
-        case Product.nbconvert:
-            return 'nbconvert';
-        case Product.kernelspec:
-            return 'kernelspec';
-        case Product.tensorboard:
-            return 'tensorboard';
-        case Product.torchProfilerInstallName:
-            return 'torch-tb-profiler';
-        case Product.torchProfilerImportName:
-            return 'torch_tb_profiler';
-        default: {
-            throw new Error(`Product ${product} cannot be installed as a Python Module.`);
-        }
     }
 }

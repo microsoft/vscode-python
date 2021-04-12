@@ -803,10 +803,17 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_INSTALL_PACKAGE]: {
         /**
          * The name of the module. (pipenv, Conda etc.)
-         *
-         * @type {string}
+         * One of the possible values includes `unavailable`, meaning user doesn't have pip, conda, or other tools available that can be used to install a python package.
          */
         installer: string;
+        /**
+         * Name of the corresponding product (package) to be installed.
+         */
+        productName?: string;
+        /**
+         * Whether the product (package) has been installed or not.
+         */
+        isInstalled?: boolean;
     };
     /**
      * Telemetry sent with details immediately after linting a document completes
