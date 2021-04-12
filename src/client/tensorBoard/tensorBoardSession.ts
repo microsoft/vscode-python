@@ -528,7 +528,9 @@ function jumpToSource(fsPath: string, line: number) {
                 // Select the line if it exists in the document
                 if (line < editor.document.lineCount) {
                     const position = new Position(line, 0);
-                    editor.selection = new Selection(position, editor.document.lineAt(line).range.end);
+                    const selection = new Selection(position, editor.document.lineAt(line).range.end);
+                    editor.selection = selection;
+                    editor.revealRange(selection);
                 }
             });
     } else {
