@@ -12,6 +12,7 @@ import {
     ProgressOptions,
     QuickPickItem,
     Selection,
+    TextEditorRevealType,
     Uri,
     ViewColumn,
     WebviewPanel,
@@ -530,7 +531,7 @@ function jumpToSource(fsPath: string, line: number) {
                     const position = new Position(line, 0);
                     const selection = new Selection(position, editor.document.lineAt(line).range.end);
                     editor.selection = selection;
-                    editor.revealRange(selection);
+                    editor.revealRange(selection, TextEditorRevealType.InCenterIfOutsideViewport);
                 }
             });
     } else {
