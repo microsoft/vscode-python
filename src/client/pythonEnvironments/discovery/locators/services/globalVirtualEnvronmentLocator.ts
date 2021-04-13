@@ -3,7 +3,7 @@
 
 import { uniq } from 'lodash';
 import * as path from 'path';
-import { traceVerbose } from '../../../../common/logger';
+import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../../base/info';
@@ -138,8 +138,12 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
                                 // We don't know the environment type so skip this one.
                                 traceVerbose(`Global Virtual Environment: [skipped] ${filename}`);
                             } else {
-                                yield buildSimpleVirtualEnvInfo(filename, kind);
-                                traceVerbose(`Global Virtual Environment: [added] ${filename}`);
+                                try {
+                                    yield buildSimpleVirtualEnvInfo(filename, kind);
+                                    traceVerbose(`Global Virtual Environment: [added] ${filename}`);
+                                } catch (ex) {
+                                    traceError(`Failed to process environment: ${filename}`, ex);
+                                }
                             }
                         } else {
                             traceVerbose(`Global Virtual Environment: [skipped] ${filename}`);

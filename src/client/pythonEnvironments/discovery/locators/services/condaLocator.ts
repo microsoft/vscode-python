@@ -7,7 +7,7 @@ import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getInterpreterPathFromDir, getPythonVersionFromPath } from '../../../common/commonUtils';
 import { AnacondaCompanyName, Conda } from './conda';
 import { resolveEnvFromIterator } from '../../../base/locatorUtils';
-import { traceVerbose } from '../../../../common/logger';
+import { traceError, traceVerbose } from '../../../../common/logger';
 
 export class CondaEnvironmentLocator extends Locator {
     // Locating conda binary is expensive, since it potentially involves spawning or
@@ -54,8 +54,12 @@ export class CondaEnvironmentLocator extends Locator {
                 if (name) {
                     info.name = name;
                 }
-                traceVerbose(`Found conda environment: ${info}`);
-                yield info;
+                traceVerbose(`Found conda environment: ${executable}`);
+                try {
+                    yield info;
+                } catch (ex) {
+                    traceError(`Failed to process environment: ${executable}`, ex);
+                }
             }
         }
     }

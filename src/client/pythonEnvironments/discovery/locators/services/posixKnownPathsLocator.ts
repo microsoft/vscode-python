@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { traceError } from '../../../../common/logger';
+import { traceError, traceVerbose } from '../../../../common/logger';
 import { Architecture } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, PythonReleaseLevel, PythonVersion } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
@@ -22,8 +22,14 @@ export class PosixKnownPathsLocator extends Locator {
             // the binaries specified in .python-version file in the cwd. We should not be reporting
             // those binaries as environments.
             const knownDirs = (await commonPosixBinPaths()).filter((dirname) => !isPyenvShimDir(dirname));
-            const exes = await getPythonBinFromPosixPaths(knownDirs);
-            yield* exes.map(buildPathEnvInfo);
+            const pythonBinaries = await getPythonBinFromPosixPaths(knownDirs);
+            for (const bin of pythonBinaries) {
+                try {
+                    yield buildPathEnvInfo(bin);
+                } catch (ex) {
+                    traceError(`Failed to process environment: ${bin}`, ex);
+                }
+            }
         };
         return iterator();
     }
@@ -38,7 +44,7 @@ export class PosixKnownPathsLocator extends Locator {
         try {
             version = parseVersion(path.basename(bin));
         } catch (ex) {
-            traceError(`Failed to parse version from path: ${bin}`, ex);
+            traceVerbose(`Failed to parse version from path: ${bin}`, ex);
             version = {
                 major: -1,
                 minor: -1,

@@ -6,7 +6,7 @@
 import { uniq } from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { traceVerbose } from '../../../../common/logger';
+import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
@@ -118,11 +118,15 @@ export class PoetryLocator extends FSWatchingLocator {
                                 `Poetry Virtual Environment: [skipped] ${filename} (reason: Not poetry environment)`,
                             );
                         } else {
-                            // We should extract the kind here to avoid doing is*Environment()
-                            // check multiple times. Those checks are file system heavy and
-                            // we can use the kind to determine this anyway.
-                            yield buildVirtualEnvInfo(filename, kind, undefined, isLocal);
-                            traceVerbose(`Poetry Virtual Environment: [added] ${filename}`);
+                            try {
+                                // We should extract the kind here to avoid doing is*Environment()
+                                // check multiple times. Those checks are file system heavy and
+                                // we can use the kind to determine this anyway.
+                                yield buildVirtualEnvInfo(filename, kind, undefined, isLocal);
+                                traceVerbose(`Poetry Virtual Environment: [added] ${filename}`);
+                            } catch (ex) {
+                                traceError(`Failed to process environment: ${filename}`, ex);
+                            }
                         }
                     }
                 }

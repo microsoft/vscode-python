@@ -4,7 +4,7 @@
 import { uniq } from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { traceVerbose } from '../../../../common/logger';
+import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import {
     findInterpretersInDir,
@@ -126,8 +126,12 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
                                 // We don't know the environment type so skip this one.
                                 traceVerbose(`Workspace Virtual Environment: [skipped] ${filename}`);
                             } else {
-                                yield buildSimpleVirtualEnvInfo(filename, kind);
-                                traceVerbose(`Workspace Virtual Environment: [added] ${filename}`);
+                                try {
+                                    yield buildSimpleVirtualEnvInfo(filename, kind);
+                                    traceVerbose(`Workspace Virtual Environment: [added] ${filename}`);
+                                } catch (ex) {
+                                    traceError(`Failed to process environment: ${filename}`, ex);
+                                }
                             }
                         } else {
                             traceVerbose(`Workspace Virtual Environment: [skipped] ${filename}`);

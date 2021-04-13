@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { uniq } from 'lodash';
-import { traceVerbose } from '../../../../common/logger';
+import { traceError, traceVerbose } from '../../../../common/logger';
 import { Architecture } from '../../../../common/utils/platform';
 import {
     PythonEnvInfo,
@@ -32,7 +32,13 @@ export class WindowsRegistryLocator extends Locator {
         const buildRegistryEnvInfo = (data: IRegistryInterpreterData) => this.buildRegistryEnvInfo(data);
         const iterator = async function* () {
             const interpreters = await getRegistryInterpreters();
-            yield* interpreters.map(buildRegistryEnvInfo);
+            for (const interpreter of interpreters) {
+                try {
+                    yield buildRegistryEnvInfo(interpreter);
+                } catch (ex) {
+                    traceError(`Failed to process environment: ${interpreter}`, ex);
+                }
+            }
         };
         return iterator();
     }
