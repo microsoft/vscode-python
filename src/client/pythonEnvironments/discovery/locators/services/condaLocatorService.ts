@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { compare } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../../../common/application/types';
@@ -25,6 +24,7 @@ import {
     WINDOWS_REGISTRY_SERVICE,
 } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
+import { compareSemVerLikeVersions } from '../../../base/info/pythonVersion';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { CondaEnvironmentInfo, CondaInfo } from './conda';
 import { parseCondaEnvFileContents } from './condaHelper';
@@ -91,7 +91,9 @@ export class CondaLocatorService implements ICondaLocatorService {
     private static getLatestVersion(interpreters: PythonEnvironment[]): PythonEnvironment | undefined {
         const sortedInterpreters = interpreters.slice();
 
-        sortedInterpreters.sort((a, b) => (a.version && b.version ? compare(a.version.raw, b.version.raw) : 0));
+        sortedInterpreters.sort((a, b) =>
+            a.version && b.version ? compareSemVerLikeVersions(a.version, b.version) : 0,
+        );
         if (sortedInterpreters.length > 0) {
             return sortedInterpreters[sortedInterpreters.length - 1];
         }

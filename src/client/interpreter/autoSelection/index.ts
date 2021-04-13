@@ -4,13 +4,13 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { compare } from 'semver';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 import { IPersistentState, IPersistentStateFactory, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
+import { compareSemVerLikeVersions } from '../../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -172,7 +172,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
                 this.globallyPreferredInterpreter.value.version &&
                 interpreter &&
                 interpreter.version &&
-                compare(this.globallyPreferredInterpreter.value.version.raw, interpreter.version.raw) > 0
+                compareSemVerLikeVersions(this.globallyPreferredInterpreter.value.version, interpreter.version) > 0
             ) {
                 return;
             }

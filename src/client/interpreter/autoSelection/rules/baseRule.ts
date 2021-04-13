@@ -4,12 +4,12 @@
 'use strict';
 
 import { inject, injectable, unmanaged } from 'inversify';
-import { compare } from 'semver';
 import '../../../common/extensions';
 import { traceDecorators, traceVerbose } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPersistentState, IPersistentStateFactory, Resource } from '../../../common/types';
 import { StopWatch } from '../../../common/utils/stopWatch';
+import { compareSemVerLikeVersions } from '../../../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
@@ -74,7 +74,7 @@ export abstract class BaseRuleService implements IInterpreterAutoSelectionRule {
         const preferredInterpreter = manager.getAutoSelectedInterpreter(undefined);
         const comparison =
             preferredInterpreter && preferredInterpreter.version
-                ? compare(interpreter.version.raw, preferredInterpreter.version.raw)
+                ? compareSemVerLikeVersions(interpreter.version, preferredInterpreter.version)
                 : 1;
         if (comparison > 0) {
             await manager.setGlobalInterpreter(interpreter);

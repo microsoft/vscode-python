@@ -7,6 +7,7 @@ import { FileSystemPaths } from '../common/platform/fs-paths';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IExperimentService, IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import { compareSemVerLikeVersions } from '../pythonEnvironments/base/info/pythonVersion';
 import { isMacDefaultPythonPath } from '../pythonEnvironments/discovery';
 import { getInterpreterHash } from '../pythonEnvironments/discovery/locators/services/hashProvider';
 import {
@@ -14,7 +15,6 @@ import {
     getEnvironmentTypeName,
     InterpreterInformation,
     PythonEnvironment,
-    sortInterpreters,
 } from '../pythonEnvironments/info';
 import { IComponentAdapter, IInterpreterHelper, WorkspacePythonPath } from './contracts';
 
@@ -26,6 +26,21 @@ export function isInterpreterLocatedInWorkspace(interpreter: PythonEnvironment, 
     const interpreterPath = fileSystemPaths.normCase(interpreter.path);
     const resourcePath = fileSystemPaths.normCase(activeWorkspaceUri.fsPath);
     return interpreterPath.startsWith(resourcePath);
+}
+
+/**
+ * Build a version-sorted list from the given one, with lowest first.
+ */
+function sortInterpreters(interpreters: PythonEnvironment[]): PythonEnvironment[] {
+    if (interpreters.length === 0) {
+        return [];
+    }
+    if (interpreters.length === 1) {
+        return [interpreters[0]];
+    }
+    const sorted = interpreters.slice();
+    sorted.sort((a, b) => (a.version && b.version ? compareSemVerLikeVersions(a.version, b.version) : 0));
+    return sorted;
 }
 
 @injectable()
