@@ -21,6 +21,7 @@ import { NotebookConcatTextDocument, NotebookCell, NotebookDocument } from 'vsco
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { SafeNotebookDocument } from './safeNotebookDocument';
 
 const NotebookConcatPrefix = '_NotebookConcat_';
 
@@ -28,6 +29,10 @@ const NotebookConcatPrefix = '_NotebookConcat_';
  * This helper class is used to present a converted document to an LS
  */
 export class NotebookConcatDocument implements TextDocument, IDisposable {
+    public get notebook(): SafeNotebookDocument {
+        return this._notebook;
+    }
+
     public get notebookUri(): Uri {
         return this.notebook.uri;
     }
@@ -113,8 +118,14 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
 
     private onCellsChangedEmitter = new EventEmitter<TextDocumentChangeEvent>();
 
-    constructor(public notebook: NotebookDocument, notebookApi: IVSCodeNotebook, selector: DocumentSelector) {
+    private _notebook: SafeNotebookDocument;
+
+    constructor(notebook: NotebookDocument, notebookApi: IVSCodeNotebook, selector: DocumentSelector) {
         const dir = path.dirname(notebook.uri.fsPath);
+        // Create a safe notebook document so that we can handle both >= 1.56 vscode API and < 1.56
+        // when vscode stable is 1.56 and both Python release and insiders can update to that engine version we
+        // can remove this and just use NotebookDocument directly
+        this._notebook = new SafeNotebookDocument(notebook);
         // Note: Has to be different than the prefix for old notebook editor (HiddenFileFormat) so
         // that the caller doesn't remove diagnostics for this document.
         this.dummyFilePath = path.join(dir, `${NotebookConcatPrefix}${uuid().replace(/-/g, '')}.py`);
