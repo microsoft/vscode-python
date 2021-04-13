@@ -27,7 +27,7 @@ import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
 suite('CustomVirtualEnvironment Locator', () => {
     const testVirtualHomeDir = path.join(TEST_LAYOUT_ROOT, 'virtualhome');
-    const testVenvPath = path.join(testVirtualHomeDir, 'customfolder');
+    const testVenvPathWithTilda = path.join('~', 'customfolder');
     let getUserHomeDirStub: sinon.SinonStub;
     let getOSTypeStub: sinon.SinonStub;
     let readFileStub: sinon.SinonStub;
@@ -35,6 +35,7 @@ suite('CustomVirtualEnvironment Locator', () => {
     let watchLocationForPatternStub: sinon.SinonStub;
     let getPythonSettingStub: sinon.SinonStub;
     let onDidChangePythonSettingStub: sinon.SinonStub;
+    let untildify: sinon.SinonStub;
 
     function createExpectedEnvInfo(
         interpreterPath: string,
@@ -69,6 +70,8 @@ suite('CustomVirtualEnvironment Locator', () => {
     }
 
     setup(async () => {
+        untildify = sinon.stub(externalDependencies, 'untildify');
+        untildify.callsFake((value: string) => value.replace('~', testVirtualHomeDir));
         getUserHomeDirStub = sinon.stub(platformUtils, 'getUserHomeDir');
         getUserHomeDirStub.returns(testVirtualHomeDir);
         getPythonSettingStub = sinon.stub(externalDependencies, 'getPythonSetting');
@@ -106,16 +109,11 @@ suite('CustomVirtualEnvironment Locator', () => {
     });
     teardown(async () => {
         await locator.dispose();
-        readFileStub.restore();
-        getPythonSettingStub.restore();
-        onDidChangePythonSettingStub.restore();
-        getUserHomeDirStub.restore();
-        getOSTypeStub.restore();
-        watchLocationForPatternStub.restore();
+        sinon.restore();
     });
 
     test('iterEnvs(): Windows with both settings set', async () => {
-        getPythonSettingStub.withArgs('venvPath').returns(testVenvPath);
+        getPythonSettingStub.withArgs('venvPath').returns(testVenvPathWithTilda);
         getPythonSettingStub.withArgs('venvFolders').returns(['.venvs', '.virtualenvs', 'Envs']);
         getOSTypeStub.returns(platformUtils.OSType.Windows);
         const expectedEnvs = [
@@ -262,7 +260,7 @@ suite('CustomVirtualEnvironment Locator', () => {
     test('iterEnvs(): No User home dir set', async () => {
         getUserHomeDirStub.returns(undefined);
 
-        getPythonSettingStub.withArgs('venvPath').returns(testVenvPath);
+        getPythonSettingStub.withArgs('venvPath').returns(testVenvPathWithTilda);
         getPythonSettingStub.withArgs('venvFolders').returns(['.venvs', '.virtualenvs', 'Envs']);
         getOSTypeStub.returns(platformUtils.OSType.Windows);
         const expectedEnvs = [
