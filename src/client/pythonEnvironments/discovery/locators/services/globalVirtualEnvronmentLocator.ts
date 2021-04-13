@@ -16,7 +16,7 @@ import {
     getPythonVersionFromPath,
     looksLikeBasicVirtualPython,
 } from '../../../common/commonUtils';
-import { getFileInfo, pathExists } from '../../../common/externalDependencies';
+import { getFileInfo, pathExists, untildify } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from './pipEnvHelper';
 import {
     isVenvEnvironment,
@@ -34,9 +34,12 @@ const DEFAULT_SEARCH_DEPTH = 2;
 async function getGlobalVirtualEnvDirs(): Promise<string[]> {
     const venvDirs: string[] = [];
 
-    const workOnHome = getEnvironmentVariable('WORKON_HOME');
-    if (workOnHome && (await pathExists(workOnHome))) {
-        venvDirs.push(workOnHome);
+    let workOnHome = getEnvironmentVariable('WORKON_HOME');
+    if (workOnHome) {
+        workOnHome = untildify(workOnHome);
+        if (await pathExists(workOnHome)) {
+            venvDirs.push(workOnHome);
+        }
     }
 
     const homeDir = getUserHomeDir();

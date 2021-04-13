@@ -21,6 +21,7 @@ import {
     getPythonSetting,
     onDidChangePythonSetting,
     pathExists,
+    untildify,
 } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from './pipEnvHelper';
 import {
@@ -44,7 +45,7 @@ async function getCustomVirtualEnvDirs(): Promise<string[]> {
     const venvDirs: string[] = [];
     const venvPath = getPythonSetting<string>(VENVPATH_SETTING_KEY);
     if (venvPath) {
-        venvDirs.push(venvPath);
+        venvDirs.push(untildify(venvPath));
     }
     const venvFolders = getPythonSetting<string[]>(VENVFOLDERS_SETTING_KEY) ?? [];
     const homeDir = getUserHomeDir();

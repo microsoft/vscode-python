@@ -73,6 +73,9 @@ export function readFileSync(filePath: string): string {
     return fsapi.readFileSync(filePath, 'utf-8');
 }
 
+// eslint-disable-next-line global-require
+export const untildify: (value: string) => string = require('untildify');
+
 /**
  * Returns true if given file path exists within the given parent directory, false otherwise.
  * @param filePath File path to check for
