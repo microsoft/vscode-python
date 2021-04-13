@@ -6,6 +6,8 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
 import { PVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { GLOBAL_MEMENTO, IExperimentService, IMemento, IOutputChannel } from '../types';
@@ -81,6 +83,7 @@ export class ExperimentService implements IExperimentService {
             await this.experimentationService.initializePromise;
             await this.experimentationService.initialFetch;
         }
+        sendOptInOptOutTelemetry(this._optInto, this._optOutFrom, this.appEnvironment.packageJson);
     }
 
     public async inExperiment(experiment: string): Promise<boolean> {
@@ -161,4 +164,48 @@ export class ExperimentService implements IExperimentService {
             }
         });
     }
+}
+
+/**
+ * Read accepted experiment settings values from the extension's package.json.
+ * This function assumes that the `setting` argument is a string array that has a specific set of accepted values.
+ *
+ * Accessing the values is done via these keys:
+ * <root> -> "contributes" -> "configuration" -> "properties" -> <setting name> -> "items" -> "enum"
+ *
+ * @param setting The setting we want to read the values of.
+ * @param packageJson The content of `package.json`, as a JSON object.
+ *
+ * @returns An array containing all accepted values for the setting, or [] if there were none.
+ */
+function readEnumValues(setting: string, packageJson: Record<string, unknown>): string[] {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const settingProperties = (packageJson.contributes as any).configuration.properties[setting];
+
+    if (settingProperties) {
+        return settingProperties.items.enum ?? [];
+    }
+
+    return [];
+}
+
+/**
+ * Send telemetry on experiments that have been manually opted into or opted-out from.
+ * The telemetry will only contain values that are present in the list of accepted values for these settings.
+ *
+ * @param optedIn The list of experiments opted into.
+ * @param optedOut The list of experiments opted out from.
+ * @param packageJson The content of `package.json`, as a JSON object.
+ */
+function sendOptInOptOutTelemetry(optedIn: string[], optedOut: string[], packageJson: Record<string, unknown>): void {
+    const optedInEnumValues = readEnumValues('python.experiments.optInto', packageJson);
+    const optedOutEnumValues = readEnumValues('python.experiments.optOutFrom', packageJson);
+
+    const sanitizedOptedIn = optedIn.filter((exp) => optedInEnumValues.includes(exp));
+    const sanitizedOptedOut = optedOut.filter((exp) => optedOutEnumValues.includes(exp));
+
+    sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS, undefined, {
+        optedInto: sanitizedOptedIn,
+        optedOutFrom: sanitizedOptedOut,
+    });
 }
