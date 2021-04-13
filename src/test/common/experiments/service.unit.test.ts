@@ -14,6 +14,7 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ExperimentService } from '../../../client/common/experiments/service';
 import { Experiments } from '../../../client/common/utils/localize';
 import * as Telemetry from '../../../client/telemetry';
+import { EventName } from '../../../client/telemetry/constants';
 import { PVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { MockOutputChannel } from '../../mockClasses';
 import { MockMemento } from '../../mocks/mementos';
@@ -56,10 +57,10 @@ suite('Experimentation service', () => {
         } as any);
     }
 
-    function configureApplicationEnvironment(channel: Channel, version: string) {
+    function configureApplicationEnvironment(channel: Channel, version: string, contributes?: Record<string, unknown>) {
         when(appEnvironment.extensionChannel).thenReturn(channel);
         when(appEnvironment.extensionName).thenReturn(PVSC_EXTENSION_ID_FOR_TESTS);
-        when(appEnvironment.packageJson).thenReturn({ version });
+        when(appEnvironment.packageJson).thenReturn({ version, contributes });
     }
 
     suite('Initialization', () => {
@@ -149,7 +150,7 @@ suite('Experimentation service', () => {
             );
             const output = `${Experiments.inGroup().format('pythonExperiment')}\n`;
 
-            assert.equal(outputChannel.output, output);
+            assert.strictEqual(outputChannel.output, output);
         });
     });
 
@@ -223,7 +224,7 @@ suite('Experimentation service', () => {
             const result = await experimentService.inExperiment(experiment);
 
             assert.isTrue(result);
-            assert.equal(telemetryEvents.length, 0);
+            assert.strictEqual(telemetryEvents.length, 0);
         });
 
         test('If the opt-in setting contains `All`, inExperiment should check the value cached by the experiment service', async () => {
@@ -270,7 +271,7 @@ suite('Experimentation service', () => {
             const result = await experimentService.inExperiment(experiment);
 
             assert.isTrue(result);
-            assert.equal(telemetryEvents.length, 0);
+            assert.strictEqual(telemetryEvents.length, 0);
             sinon.assert.calledOnce(isCachedFlightEnabledStub);
         });
 
@@ -318,7 +319,7 @@ suite('Experimentation service', () => {
             const result = await experimentService.inExperiment(experiment);
 
             assert.isFalse(result);
-            assert.equal(telemetryEvents.length, 0);
+            assert.strictEqual(telemetryEvents.length, 0);
             sinon.assert.notCalled(isCachedFlightEnabledStub);
         });
     });
@@ -347,7 +348,7 @@ suite('Experimentation service', () => {
             );
             const result = await experimentService.getExperimentValue(experiment);
 
-            assert.equal(result, 'value');
+            assert.strictEqual(result, 'value');
             sinon.assert.calledOnce(getTreatmentVariableAsyncStub);
         });
 
@@ -394,6 +395,198 @@ suite('Experimentation service', () => {
 
             assert.isUndefined(result);
             sinon.assert.notCalled(getTreatmentVariableAsyncStub);
+        });
+    });
+
+    suite('Opt-in/out telemetry', () => {
+        let telemetryEvents: { eventName: string; properties: Record<string, unknown> }[] = [];
+        let sendTelemetryEventStub: sinon.SinonStub;
+
+        setup(() => {
+            sendTelemetryEventStub = sinon
+                .stub(Telemetry, 'sendTelemetryEvent')
+                .callsFake((eventName: string, _, properties: Record<string, unknown>) => {
+                    const telemetry = { eventName, properties };
+                    telemetryEvents.push(telemetry);
+                });
+
+            configureApplicationEnvironment('stable', extensionVersion);
+        });
+
+        teardown(() => {
+            telemetryEvents = [];
+        });
+
+        test('Telemetry should be sent when activating the ExperimentService instance', async () => {
+            configureSettings(true, [], []);
+            configureApplicationEnvironment('stable', extensionVersion, { configuration: { properties: {} } });
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+
+            await experimentService.activate();
+
+            assert.strictEqual(telemetryEvents.length, 1);
+            assert.strictEqual(telemetryEvents[0].eventName, EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS);
+            sinon.assert.calledOnce(sendTelemetryEventStub);
+        });
+
+        test('The telemetry event properties should only be populated with valid experiment values', async () => {
+            const contributes = {
+                configuration: {
+                    properties: {
+                        'python.experiments.optInto': {
+                            items: {
+                                enum: ['foo', 'bar'],
+                            },
+                        },
+                        'python.experiments.optOutFrom': {
+                            items: {
+                                enum: ['foo', 'bar'],
+                            },
+                        },
+                    },
+                },
+            };
+            configureSettings(true, ['foo', 'baz'], ['bar', 'invalid']);
+            configureApplicationEnvironment('stable', extensionVersion, contributes);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+
+            await experimentService.activate();
+
+            const { properties } = telemetryEvents[0];
+            assert.deepStrictEqual(properties, { optedInto: ['foo'], optedOutFrom: ['bar'] });
+        });
+
+        test('Set telemetry properties to empty arrays if no experiments have been opted into or out from', async () => {
+            const contributes = {
+                configuration: {
+                    properties: {
+                        'python.experiments.optInto': {
+                            items: {
+                                enum: ['foo', 'bar'],
+                            },
+                        },
+                        'python.experiments.optOutFrom': {
+                            items: {
+                                enum: ['foo', 'bar'],
+                            },
+                        },
+                    },
+                },
+            };
+            configureSettings(true, [], []);
+            configureApplicationEnvironment('stable', extensionVersion, contributes);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+
+            await experimentService.activate();
+
+            const { properties } = telemetryEvents[0];
+            assert.deepStrictEqual(properties, { optedInto: [], optedOutFrom: [] });
+        });
+
+        test('If the entered value for a setting contains "All", do not expand it to be a list of all experiments, and pass it as-is', async () => {
+            const contributes = {
+                configuration: {
+                    properties: {
+                        'python.experiments.optInto': {
+                            items: {
+                                enum: ['foo', 'bar', 'All'],
+                            },
+                        },
+                        'python.experiments.optOutFrom': {
+                            items: {
+                                enum: ['foo', 'bar', 'All'],
+                            },
+                        },
+                    },
+                },
+            };
+            configureSettings(true, ['All'], ['All']);
+            configureApplicationEnvironment('stable', extensionVersion, contributes);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+
+            await experimentService.activate();
+
+            const { properties } = telemetryEvents[0];
+            assert.deepStrictEqual(properties, { optedInto: ['All'], optedOutFrom: ['All'] });
+        });
+
+        // This is an unlikely scenario.
+        test('If a setting is not in package.json, set the corresponding telemetry property to an empty array', async () => {
+            const contributes = {
+                configuration: {
+                    properties: {},
+                },
+            };
+            configureSettings(true, ['something'], ['another']);
+            configureApplicationEnvironment('stable', extensionVersion, contributes);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+
+            await experimentService.activate();
+
+            const { properties } = telemetryEvents[0];
+            assert.deepStrictEqual(properties, { optedInto: [], optedOutFrom: [] });
+        });
+
+        // This is also an unlikely scenario.
+        test('If a setting does not have an enum of valid values, set the corresponding telemetry property to an empty array', async () => {
+            const contributes = {
+                configuration: {
+                    properties: {
+                        'python.experiments.optInto': {
+                            items: {},
+                        },
+                        'python.experiments.optOutFrom': {
+                            items: {
+                                enum: ['foo', 'bar', 'All'],
+                            },
+                        },
+                    },
+                },
+            };
+            configureSettings(true, ['something'], []);
+            configureApplicationEnvironment('stable', extensionVersion, contributes);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+
+            await experimentService.activate();
+
+            const { properties } = telemetryEvents[0];
+            assert.deepStrictEqual(properties, { optedInto: [], optedOutFrom: [] });
         });
     });
 });
