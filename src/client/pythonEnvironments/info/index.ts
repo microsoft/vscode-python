@@ -4,7 +4,6 @@
 'use strict';
 
 import { Architecture } from '../../common/utils/platform';
-import { compareSemVerLikeVersions } from '../base/info/pythonVersion';
 import { PythonVersion } from './pythonVersion';
 
 /**
@@ -97,19 +96,4 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType): string
             return '';
         }
     }
-}
-
-/**
- * Build a version-sorted list from the given one, with lowest first.
- */
-export function sortInterpreters(interpreters: PythonEnvironment[]): PythonEnvironment[] {
-    if (interpreters.length === 0) {
-        return [];
-    }
-    if (interpreters.length === 1) {
-        return [interpreters[0]];
-    }
-    const sorted = interpreters.slice();
-    sorted.sort((a, b) => (a.version && b.version ? compareSemVerLikeVersions(a.version, b.version) : 0));
-    return sorted;
 }
