@@ -1,16 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { ExecutionResult, ShellOptions } from '../../../../client/common/process/types';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
+import { ILocator } from '../../../../client/pythonEnvironments/base/locator';
+import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { PoetryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/poetryLocator';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { testLocatorWatcher } from './watcherTestUtils';
 
-suite('Poetry Locator', async () => {
+suite('Poetry Watcher', async () => {
     let shellExecute: sinon.SinonStub;
     const testPoetryDir = path.join(TEST_LAYOUT_ROOT, 'poetry');
     const project1 = path.join(testPoetryDir, 'project1');
@@ -37,4 +41,24 @@ suite('Poetry Locator', async () => {
     });
 
     suiteTeardown(() => sinon.restore());
+});
+
+suite('Poetry Locator', async function () {
+    let locator: ILocator;
+    suiteSetup(async function () {
+        if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
+            // Poetry is soon to be deprecated for Python2.7, and tests do not pass
+            // as it is with pip installation of poetry, hence skip.
+            this.skip();
+        }
+        locator = new PoetryLocator(EXTENSION_ROOT_DIR_FOR_TESTS);
+    });
+
+    test('Discovers existing poetry environments', async () => {
+        const items = await getEnvs(locator.iterEnvs());
+        const isLocated = items.some(
+            (item) => item.kind === PythonEnvKind.Poetry && item.name.startsWith('poetry-tutorial-project'),
+        );
+        expect(isLocated).to.equal(true);
+    });
 });

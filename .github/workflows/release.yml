@@ -170,6 +170,16 @@ jobs:
           python -m pip install pipenv
           python -m pipenv run python ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} pipenvPath
 
+      - name: Prepare poetry for venv tests
+        env:
+          TEST_FILES_SUFFIX: testvirtualenvs
+        shell: pwsh
+        if: matrix.test-suite == 'venv'
+        run: |
+          python -m pip install poetry
+          Move-Item -Path ".\build\ci\pyproject.toml" -Destination .
+          poetry env use python
+
       - name: Prepare virtualenv for venv tests
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
