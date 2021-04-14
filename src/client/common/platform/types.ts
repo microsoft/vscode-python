@@ -95,6 +95,7 @@ export type WriteStream = fs.WriteStream;
 
 // The low-level filesystem operations on which the extension depends.
 export interface IRawFileSystem {
+    pathExists(filename: string): Promise<boolean>;
     // Get information about a file (resolve symlinks).
     stat(filename: string): Promise<FileStat>;
     // Get information about a file (do not resolve synlinks).

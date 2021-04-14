@@ -56,6 +56,7 @@ interface IRawFS extends IPaths {
     writeFile(uri: vscode.Uri, content: Uint8Array): Thenable<void>;
 
     // "fs-extra"
+    pathExists(filename: string): Promise<boolean>;
     lstat(filename: string): Promise<fs.Stats>;
     chmod(filePath: string, mode: string | number): Promise<void>;
     appendFile(filename: string, data: {}): Promise<void>;
