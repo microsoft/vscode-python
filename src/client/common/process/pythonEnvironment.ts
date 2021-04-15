@@ -8,9 +8,11 @@ import { getExecutablePath } from '../../pythonEnvironments/info/executable';
 import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
 import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
+import { createDeferred, Deferred } from '../utils/async';
 import * as internalPython from './internal/python';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types';
 
+const cachedExecutablePath: Map<string, Deferred<string>> = new Map<string, Deferred<string>>();
 class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
 
@@ -49,8 +51,18 @@ class PythonEnvironment {
         if (await this.deps.isValidExecutable(this.pythonPath)) {
             return this.pythonPath;
         }
+        const result = cachedExecutablePath.get(this.pythonPath);
+        if (result !== undefined) {
+            // Another call for this environment has already been made, return its result
+            return result.promise;
+        }
+        const deferred = createDeferred<string>();
+        cachedExecutablePath.set(this.pythonPath, deferred);
         const python = this.getExecutionInfo();
-        return getExecutablePath(python, this.deps.exec);
+        return getExecutablePath(python, this.deps.exec).then((r) => {
+            deferred.resolve(r);
+            return r;
+        });
     }
 
     public async getModuleVersion(moduleName: string): Promise<string | undefined> {
@@ -113,7 +125,7 @@ export function createPythonEnv(
     fs: IFileSystem,
 ): PythonEnvironment {
     const deps = createDeps(
-        async (filename) => fs.fileExists(filename),
+        async (filename) => fs.pathExists(filename),
         // We use the default: [pythonPath].
         undefined,
         undefined,
@@ -139,7 +151,7 @@ export function createCondaEnv(
     }
     const pythonArgv = [condaFile, ...runArgs, 'python'];
     const deps = createDeps(
-        async (filename) => fs.fileExists(filename),
+        async (filename) => fs.pathExists(filename),
         pythonArgv,
 
         // TODO: Use pythonArgv here once 'conda run' can be
