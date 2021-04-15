@@ -38,7 +38,7 @@ suite('Environment Variables Service', () => {
         fs.verifyAll();
     }
     function setFile(fileName: string, text: string) {
-        fs.setup((f) => f.fileExists(fileName)) // Handle the specific file.
+        fs.setup((f) => f.pathExists(fileName)) // Handle the specific file.
             .returns(() => Promise.resolve(true)); // The file exists.
         fs.setup((f) => f.readFile(fileName)) // Handle the specific file.
             .returns(() => Promise.resolve(text)); // Pretend to read from the file.
@@ -53,7 +53,7 @@ suite('Environment Variables Service', () => {
         });
 
         test('Custom variables should be undefined with non-existent files', async () => {
-            fs.setup((f) => f.fileExists(filename)) // Handle the specific file.
+            fs.setup((f) => f.pathExists(filename)) // Handle the specific file.
                 .returns(() => Promise.resolve(false)); // The file is missing.
 
             const vars = await variablesService.parseFile(filename);
@@ -64,7 +64,7 @@ suite('Environment Variables Service', () => {
 
         test('Custom variables should be undefined when folder name is passed instead of a file name', async () => {
             const dirname = 'x/y/z';
-            fs.setup((f) => f.fileExists(dirname)) // Handle the specific "file".
+            fs.setup((f) => f.pathExists(dirname)) // Handle the specific "file".
                 .returns(() => Promise.resolve(false)); // It isn't a "regular" file.
 
             const vars = await variablesService.parseFile(dirname);

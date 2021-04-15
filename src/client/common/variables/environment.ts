@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { traceError } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { IPathUtils } from '../types';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
@@ -22,7 +23,14 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         filePath?: string,
         baseVars?: EnvironmentVariables,
     ): Promise<EnvironmentVariables | undefined> {
-        if (!filePath || !(await this.fs.fileExists(filePath))) {
+        if (!filePath || !(await this.fs.pathExists(filePath))) {
+            return;
+        }
+        const contents = await this.fs.readFile(filePath).catch((ex) => {
+            traceError('Custom .env is likely not pointing to a valid file', ex);
+            return undefined;
+        });
+        if (!contents) {
             return;
         }
         return parseEnvFile(await this.fs.readFile(filePath), baseVars);

@@ -88,6 +88,7 @@ interface IRawFSExtra {
     readFileSync(path: string, encoding: string): string;
     createReadStream(filename: string): ReadStream;
     createWriteStream(filename: string): WriteStream;
+    pathExists(filename: string): Promise<boolean>;
 }
 
 interface IRawPath {
@@ -123,6 +124,10 @@ export class RawFileSystem implements IRawFileSystem {
             // instead of "fs".
             fsExtra || fs,
         );
+    }
+
+    public async pathExists(filename: string): Promise<boolean> {
+        return this.fsExtra.pathExists(filename);
     }
 
     public async stat(filename: string): Promise<FileStat> {
@@ -355,6 +360,10 @@ export class FileSystemUtils implements IFileSystemUtils {
         // matches; otherwise a mismatch results in a "false" value
         fileType?: FileType,
     ): Promise<boolean> {
+        if (fileType === undefined) {
+            // Do not need to run stat if not asking for file type.
+            return this.raw.pathExists(filename);
+        }
         let stat: FileStat;
         try {
             // Note that we are using stat() rather than lstat().  This
@@ -368,9 +377,6 @@ export class FileSystemUtils implements IFileSystemUtils {
             return false;
         }
 
-        if (fileType === undefined) {
-            return true;
-        }
         if (fileType === FileType.Unknown) {
             // FileType.Unknown == 0, hence do not use bitwise operations.
             return stat.type === FileType.Unknown;
@@ -561,6 +567,10 @@ export class FileSystem implements IFileSystem {
 
     public async fileExists(filename: string): Promise<boolean> {
         return this.utils.fileExists(filename);
+    }
+
+    public pathExists(filename: string): Promise<boolean> {
+        return this.utils.pathExists(filename);
     }
 
     public fileExistsSync(filename: string): boolean {
