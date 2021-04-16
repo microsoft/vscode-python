@@ -22,86 +22,50 @@ import {
     ThemableDecorationAttachmentRenderOptions,
     ThemeColor,
 } from 'vscode';
-
 //#region https://github.com/microsoft/vscode/issues/106744, Notebooks (misc)
 
 export enum NotebookCellKind {
     Markdown = 1,
-    Code = 2
-}
-
-export enum NotebookCellRunState {
-    Running = 1,
-    Idle = 2,
-    Success = 3,
-    Error = 4
-}
-
-export enum NotebookRunState {
-    Running = 1,
-    Idle = 2
+    Code = 2,
 }
 
 export class NotebookCellMetadata {
     /**
-     * Controls whether a cell's editor is editable/readonly.
-     */
-    readonly editable?: boolean;
-    /**
-     * Controls if the cell has a margin to support the breakpoint UI.
-     * This metadata is ignored for markdown cell.
-     */
-    readonly breakpointMargin?: boolean;
-    /**
      * Whether a code cell's editor is collapsed
      */
-    readonly outputCollapsed?: boolean;
+    readonly inputCollapsed?: boolean;
+
     /**
      * Whether a code cell's outputs are collapsed
      */
-    readonly inputCollapsed?: boolean;
+    readonly outputCollapsed?: boolean;
+
     /**
+     * @deprecated
      * Additional attributes of a cell metadata.
      */
     readonly custom?: Record<string, any>;
 
-    // todo@API duplicates status bar API
-    readonly statusMessage?: string;
+    /**
+     * Additional attributes of a cell metadata.
+     */
+    readonly [key: string]: any;
 
-    // run related API, will be removed
-    readonly hasExecutionOrder?: boolean;
-    readonly executionOrder?: number;
-    readonly runState?: NotebookCellRunState;
-    readonly runStartTime?: number;
-    readonly lastRunDuration?: number;
-
-    constructor(
-        editable?: boolean,
-        breakpointMargin?: boolean,
-        hasExecutionOrder?: boolean,
-        executionOrder?: number,
-        runState?: NotebookCellRunState,
-        runStartTime?: number,
-        statusMessage?: string,
-        lastRunDuration?: number,
-        inputCollapsed?: boolean,
-        outputCollapsed?: boolean,
-        custom?: Record<string, any>
-    );
+    constructor(inputCollapsed?: boolean, outputCollapsed?: boolean, custom?: Record<string, any>);
 
     with(change: {
-        editable?: boolean | null;
-        breakpointMargin?: boolean | null;
-        hasExecutionOrder?: boolean | null;
-        executionOrder?: number | null;
-        runState?: NotebookCellRunState | null;
-        runStartTime?: number | null;
-        statusMessage?: string | null;
-        lastRunDuration?: number | null;
         inputCollapsed?: boolean | null;
         outputCollapsed?: boolean | null;
         custom?: Record<string, any> | null;
+        [key: string]: any;
     }): NotebookCellMetadata;
+}
+
+export interface NotebookCellExecutionSummary {
+    executionOrder?: number;
+    success?: boolean;
+    startTime?: number;
+    endTime?: number;
 }
 
 // todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
@@ -112,20 +76,12 @@ export interface NotebookCell {
     readonly document: TextDocument;
     readonly metadata: NotebookCellMetadata;
     readonly outputs: ReadonlyArray<NotebookCellOutput>;
+    readonly latestExecutionSummary: NotebookCellExecutionSummary | undefined;
 }
 
 export class NotebookDocumentMetadata {
     /**
-     * Controls if users can add or delete cells
-     * Defaults to true
-     */
-    readonly editable: boolean;
-    /**
-     * Default value for [cell editable metadata](#NotebookCellMetadata.editable).
-     * Defaults to true.
-     */
-    readonly cellEditable: boolean;
-    /**
+     * @deprecated
      * Additional attributes of the document metadata.
      */
     readonly custom: { [key: string]: any };
@@ -135,28 +91,17 @@ export class NotebookDocumentMetadata {
      */
     readonly trusted: boolean;
 
-    // todo@API is this a kernel property?
-    readonly cellHasExecutionOrder: boolean;
+    /**
+     * Additional attributes of the document metadata.
+     */
+    readonly [key: string]: any;
 
-    // todo@API remove
-    readonly runState: NotebookRunState;
-
-    constructor(
-        editable?: boolean,
-        cellEditable?: boolean,
-        cellHasExecutionOrder?: boolean,
-        custom?: { [key: string]: any },
-        runState?: NotebookRunState,
-        trusted?: boolean
-    );
+    constructor(trusted?: boolean, custom?: { [key: string]: any });
 
     with(change: {
-        editable?: boolean | null;
-        cellEditable?: boolean | null;
-        cellHasExecutionOrder?: boolean | null;
-        custom?: { [key: string]: any } | null;
-        runState?: NotebookRunState | null;
         trusted?: boolean | null;
+        custom?: { [key: string]: any } | null;
+        [key: string]: any;
     }): NotebookDocumentMetadata;
 }
 
@@ -165,30 +110,54 @@ export interface NotebookDocumentContentOptions {
      * Controls if outputs change will trigger notebook document content change and if it will be used in the diff editor
      * Default to false. If the content provider doesn't persisit the outputs in the file document, this should be set to true.
      */
-    transientOutputs: boolean;
+    transientOutputs?: boolean;
 
     /**
      * Controls if a meetadata property change will trigger notebook document content change and if it will be used in the diff editor
      * Default to false. If the content provider doesn't persisit a metadata property in the file document, it should be set to true.
      */
-    transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
+    transientMetadata?: { [K in keyof NotebookCellMetadata]?: boolean };
 }
 
 export interface NotebookDocument {
     readonly uri: Uri;
     readonly version: number;
 
-    // todo@API don't have this...
-    readonly fileName: string;
-
     readonly isDirty: boolean;
     readonly isUntitled: boolean;
-    readonly cells: ReadonlyArray<NotebookCell>;
+
+    /**
+     * `true` if the notebook has been closed. A closed notebook isn't synchronized anymore
+     * and won't be re-used when the same resource is opened again.
+     */
+    readonly isClosed: boolean;
 
     readonly metadata: NotebookDocumentMetadata;
 
     // todo@API should we really expose this?
     readonly viewType: string;
+
+    /**
+     * The number of cells in the notebook document.
+     */
+    readonly cellCount: number;
+
+    /**
+     * Return the cell at the specified index. The index will be adjusted to the notebook.
+     *
+     * @param index - The index of the cell to retrieve.
+     * @return A [cell](#NotebookCell).
+     */
+    cellAt(index: number): NotebookCell;
+
+    /**
+     * Get the cells of this notebook. A subset can be retrieved by providing
+     * a range. The range will be adjuset to the notebook.
+     *
+     * @param range A notebook range.
+     * @returns The cells contained by the range or all cells.
+     */
+    getCells(range?: NotebookRange): NotebookCell[];
 
     /**
      * Save the document. The saving will be handled by the corresponding content provider
@@ -200,17 +169,18 @@ export interface NotebookDocument {
     save(): Thenable<boolean>;
 }
 
-// todo@API maybe have a NotebookCellPosition sibling
-export class NotebookCellRange {
+export class NotebookRange {
     readonly start: number;
     /**
      * exclusive
      */
     readonly end: number;
 
-    isEmpty: boolean;
+    readonly isEmpty: boolean;
 
     constructor(start: number, end: number);
+
+    with(change: { start?: number; end?: number }): NotebookRange;
 }
 
 export enum NotebookEditorRevealType {
@@ -232,7 +202,7 @@ export enum NotebookEditorRevealType {
     /**
      * The range will always be revealed at the top of the viewport.
      */
-    AtTop = 3
+    AtTop = 3,
 }
 
 export interface NotebookEditor {
@@ -242,39 +212,23 @@ export interface NotebookEditor {
     readonly document: NotebookDocument;
 
     /**
-     * The primary selected cell on this notebook editor.
-     */
-    // todo@API should not be undefined, rather a default
-    readonly selection?: NotebookCell;
-
-    /**
-     * todo@API should replace selection
      * The selections on this notebook editor.
      *
      * The primary selection (or focused range) is `selections[0]`. When the document has no cells, the primary selection is empty `{ start: 0, end: 0 }`;
      */
-    readonly selections: NotebookCellRange[];
+    readonly selections: NotebookRange[];
 
     /**
      * The current visible ranges in the editor (vertically).
      */
-    readonly visibleRanges: NotebookCellRange[];
+    readonly visibleRanges: NotebookRange[];
 
-    revealRange(range: NotebookCellRange, revealType?: NotebookEditorRevealType): void;
+    revealRange(range: NotebookRange, revealType?: NotebookEditorRevealType): void;
 
     /**
      * The column in which this editor shows.
      */
-    // @jrieken
-    // this is not implemented...
     readonly viewColumn?: ViewColumn;
-
-    /**
-     * Fired when the panel is disposed.
-     */
-    // @rebornix REMOVE/REplace NotebookCommunication
-    // todo@API fishy? notebooks are public objects, there should be a "global" events for this
-    readonly onDidDispose: Event<void>;
 }
 
 export interface NotebookDocumentMetadataChangeEvent {
@@ -283,8 +237,11 @@ export interface NotebookDocumentMetadataChangeEvent {
 
 export interface NotebookCellsChangeData {
     readonly start: number;
+    // todo@API end? Use NotebookCellRange instead?
     readonly deletedCount: number;
+    // todo@API removedCells, deletedCells?
     readonly deletedItems: NotebookCell[];
+    // todo@API addedCells, insertedCells, newCells?
     readonly items: NotebookCell[];
 }
 
@@ -304,15 +261,6 @@ export interface NotebookCellOutputsChangeEvent {
     readonly cells: NotebookCell[];
 }
 
-export interface NotebookCellLanguageChangeEvent {
-    /**
-     * The affected document.
-     */
-    readonly document: NotebookDocument;
-    readonly cell: NotebookCell;
-    readonly language: string;
-}
-
 export interface NotebookCellMetadataChangeEvent {
     readonly document: NotebookDocument;
     readonly cell: NotebookCell;
@@ -320,35 +268,46 @@ export interface NotebookCellMetadataChangeEvent {
 
 export interface NotebookEditorSelectionChangeEvent {
     readonly notebookEditor: NotebookEditor;
-    readonly selections: ReadonlyArray<NotebookCellRange>;
+    readonly selections: ReadonlyArray<NotebookRange>;
 }
 
 export interface NotebookEditorVisibleRangesChangeEvent {
     readonly notebookEditor: NotebookEditor;
-    readonly visibleRanges: ReadonlyArray<NotebookCellRange>;
+    readonly visibleRanges: ReadonlyArray<NotebookRange>;
+}
+
+export interface NotebookCellExecutionStateChangeEvent {
+    readonly document: NotebookDocument;
+    readonly cell: NotebookCell;
+    readonly executionState: NotebookCellExecutionState;
 }
 
 // todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
 export class NotebookCellData {
+    // todo@API should they all be readonly?
     kind: NotebookCellKind;
     // todo@API better names: value? text?
     source: string;
     // todo@API how does language and MD relate?
     language: string;
+    // todo@API ReadonlyArray?
     outputs?: NotebookCellOutput[];
     metadata?: NotebookCellMetadata;
+    latestExecutionSummary?: NotebookCellExecutionSummary;
     constructor(
         kind: NotebookCellKind,
         source: string,
         language: string,
         outputs?: NotebookCellOutput[],
-        metadata?: NotebookCellMetadata
+        metadata?: NotebookCellMetadata,
+        latestExecutionSummary?: NotebookCellExecutionSummary,
     );
 }
 
 export class NotebookData {
+    // todo@API should they all be readonly?
     cells: NotebookCellData[];
-    metadata?: NotebookDocumentMetadata;
+    metadata: NotebookDocumentMetadata;
     constructor(cells: NotebookCellData[], metadata?: NotebookDocumentMetadata);
 }
 
@@ -393,7 +352,7 @@ export interface NotebookDocumentShowOptions {
     viewColumn?: ViewColumn;
     preserveFocus?: boolean;
     preview?: boolean;
-    selection?: NotebookCellRange;
+    selections?: NotebookRange[];
 }
 
 export namespace notebook {
@@ -426,7 +385,7 @@ export namespace window {
     export function showNotebookDocument(uri: Uri, options?: NotebookDocumentShowOptions): Thenable<NotebookEditor>;
     export function showNotebookDocument(
         document: NotebookDocument,
-        options?: NotebookDocumentShowOptions
+        options?: NotebookDocumentShowOptions,
     ): Thenable<NotebookEditor>;
 }
 
@@ -436,6 +395,8 @@ export namespace window {
 
 // code specific mime types
 // application/x.notebook.error-traceback
+// application/x.notebook.stdout
+// application/x.notebook.stderr
 // application/x.notebook.stream
 export class NotebookCellOutputItem {
     // todo@API
@@ -476,26 +437,26 @@ export interface WorkspaceEdit {
         start: number,
         end: number,
         cells: NotebookCellData[],
-        metadata?: WorkspaceEditEntryMetadata
+        metadata?: WorkspaceEditEntryMetadata,
     ): void;
     replaceNotebookCellMetadata(
         uri: Uri,
         index: number,
         cellMetadata: NotebookCellMetadata,
-        metadata?: WorkspaceEditEntryMetadata
+        metadata?: WorkspaceEditEntryMetadata,
     ): void;
 
     replaceNotebookCellOutput(
         uri: Uri,
         index: number,
         outputs: NotebookCellOutput[],
-        metadata?: WorkspaceEditEntryMetadata
+        metadata?: WorkspaceEditEntryMetadata,
     ): void;
     appendNotebookCellOutput(
         uri: Uri,
         index: number,
         outputs: NotebookCellOutput[],
-        metadata?: WorkspaceEditEntryMetadata
+        metadata?: WorkspaceEditEntryMetadata,
     ): void;
 
     // TODO@api
@@ -505,14 +466,14 @@ export interface WorkspaceEdit {
         index: number,
         outputId: string,
         items: NotebookCellOutputItem[],
-        metadata?: WorkspaceEditEntryMetadata
+        metadata?: WorkspaceEditEntryMetadata,
     ): void;
     appendNotebookCellOutputItems(
         uri: Uri,
         index: number,
         outputId: string,
         items: NotebookCellOutputItem[],
-        metadata?: WorkspaceEditEntryMetadata
+        metadata?: WorkspaceEditEntryMetadata,
     ): void;
 }
 
@@ -536,6 +497,101 @@ export interface NotebookEditor {
      */
     // @jrieken REMOVE maybe
     edit(callback: (editBuilder: NotebookEditorEdit) => void): Thenable<boolean>;
+}
+
+//#endregion
+
+//#region https://github.com/microsoft/vscode/issues/106744, NotebookSerializer
+
+export interface NotebookSerializer {
+    deserializeNotebook(data: Uint8Array, token: CancellationToken): NotebookData | Thenable<NotebookData>;
+    serializeNotebook(data: NotebookData, token: CancellationToken): Uint8Array | Thenable<Uint8Array>;
+}
+
+export namespace notebook {
+    // todo@API remove output when notebook marks that as transient, same for metadata
+    export function registerNotebookSerializer(
+        notebookType: string,
+        provider: NotebookSerializer,
+        options?: NotebookDocumentContentOptions,
+    ): Disposable;
+}
+
+//#endregion
+
+//#region https://github.com/microsoft/vscode/issues/119949
+
+export interface NotebookFilter {
+    readonly viewType?: string;
+    readonly scheme?: string;
+    readonly pattern?: GlobPattern;
+}
+
+export type NotebookSelector = NotebookFilter | string | ReadonlyArray<NotebookFilter | string>;
+
+export interface NotebookController {
+    readonly id: string;
+
+    // select notebook of a type and/or by file-pattern
+    readonly selector: NotebookSelector;
+
+    /**
+     * A kernel can apply to one or many notebook documents but a notebook has only one active
+     * kernel. This event fires whenever a notebook has been associated to a kernel or when
+     * that association has been removed.
+     */
+    readonly onDidChangeNotebookAssociation: Event<{ notebook: NotebookDocument; selected: boolean }>;
+
+    // UI properties (get/set)
+    label: string;
+    description?: string;
+    isPreferred?: boolean;
+
+    supportedLanguages: string[];
+    hasExecutionOrder?: boolean;
+    preloads?: NotebookKernelPreload[];
+
+    /**
+     * The execute handler is invoked when the run gestures in the UI are selected, e.g Run Cell, Run All,
+     * Run Selection etc.
+     */
+    readonly executeHandler: (cells: NotebookCell[], controller: NotebookController) => void;
+
+    // optional kernel interrupt command
+    interruptHandler?: (notebook: NotebookDocument) => void;
+
+    // remove kernel
+    dispose(): void;
+
+    /**
+     * Manually create an execution task. This should only be used when cell execution
+     * has started before creating the kernel instance or when execution can be triggered
+     * from another source.
+     *
+     * @param cell The notebook cell for which to create the execution
+     * @returns A notebook cell execution.
+     */
+    createNotebookCellExecutionTask(cell: NotebookCell): NotebookCellExecutionTask;
+
+    // ipc
+    readonly onDidReceiveMessage: Event<{ editor: NotebookEditor; message: any }>;
+    postMessage(message: any, editor?: NotebookEditor): Thenable<boolean>;
+    asWebviewUri(localResource: Uri, editor: NotebookEditor): Uri;
+}
+
+export interface NotebookControllerOptions {
+    id: string;
+    label: string;
+    description?: string;
+    selector: NotebookSelector;
+    supportedLanguages?: string[];
+    hasExecutionOrder?: boolean;
+    executeHandler: (cells: NotebookCell[], controller: NotebookController) => void;
+    interruptHandler?: (notebook: NotebookDocument) => void;
+}
+
+export namespace notebook {
+    export function createNotebookController(options: NotebookControllerOptions): NotebookController;
 }
 
 //#endregion
@@ -574,10 +630,6 @@ export interface NotebookContentProvider {
     readonly options?: NotebookDocumentContentOptions;
     readonly onDidChangeNotebookContentOptions?: Event<NotebookDocumentContentOptions>;
 
-    // todo@API remove! against separation of data provider and renderer
-    // eslint-disable-next-line vscode-dts-cancellation
-    resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Thenable<void>;
-
     /**
      * Content providers should always use [file system providers](#FileSystemProvider) to
      * resolve the raw content for `uri` as the resouce is not necessarily a file on disk.
@@ -585,17 +637,20 @@ export interface NotebookContentProvider {
     openNotebook(
         uri: Uri,
         openContext: NotebookDocumentOpenContext,
-        token: CancellationToken
+        token: CancellationToken,
     ): NotebookData | Thenable<NotebookData>;
 
+    // todo@API use NotebookData instead
     saveNotebook(document: NotebookDocument, token: CancellationToken): Thenable<void>;
 
+    // todo@API use NotebookData instead
     saveNotebookAs(targetResource: Uri, document: NotebookDocument, token: CancellationToken): Thenable<void>;
 
+    // todo@API use NotebookData instead
     backupNotebook(
         document: NotebookDocument,
         context: NotebookDocumentBackupContext,
-        token: CancellationToken
+        token: CancellationToken,
     ): Thenable<NotebookDocumentBackup>;
 }
 
@@ -614,7 +669,7 @@ export namespace notebook {
                 filenamePattern: NotebookFilenamePattern[];
                 exclusive?: boolean;
             };
-        }
+        },
     ): Disposable;
 }
 
@@ -622,26 +677,10 @@ export namespace notebook {
 
 //#region https://github.com/microsoft/vscode/issues/106744, NotebookKernel
 
-// todo@API use the NotebookCellExecution-object as a container to model and enforce
-// the flow of a cell execution
-
-// kernel -> execute_info
-// ext -> createNotebookCellExecution(cell)
-// kernel -> done
-// exec.dispose();
-
-// export interface NotebookCellExecution {
-// 	dispose(): void;
-// 	clearOutput(): void;
-// 	appendOutput(out: NotebookCellOutput): void;
-// 	replaceOutput(out: NotebookCellOutput): void;
-//  appendOutputItems(output:string, items: NotebookCellOutputItem[]):void;
-//  replaceOutputItems(output:string, items: NotebookCellOutputItem[]):void;
-// }
-
-// export function createNotebookCellExecution(cell: NotebookCell, startTime?: number): NotebookCellExecution;
-// export const onDidStartNotebookCellExecution: Event<any>;
-// export const onDidStopNotebookCellExecution: Event<any>;
+export interface NotebookKernelPreload {
+    provides?: string | string[];
+    uri: Uri;
+}
 
 export interface NotebookKernel {
     // todo@API make this mandatory?
@@ -652,8 +691,8 @@ export interface NotebookKernel {
     detail?: string;
     isPreferred?: boolean;
 
-    // todo@API is this maybe an output property?
-    preloads?: Uri[];
+    // todo@API do we need an preload change event?
+    preloads?: NotebookKernelPreload[];
 
     /**
      * languages supported by kernel
@@ -666,14 +705,89 @@ export interface NotebookKernel {
     // fired when properties like the supported languages etc change
     // onDidChangeProperties?: Event<void>
 
-    // @roblourens
-    // todo@API change to `executeCells(document: NotebookDocument, cells: NotebookCellRange[], context:{isWholeNotebooke: boolean}, token: CancelationToken): void;`
-    // todo@API interrupt vs cancellation, https://github.com/microsoft/vscode/issues/106741
-    // interrupt?():void;
-    executeCell(document: NotebookDocument, cell: NotebookCell): void;
-    cancelCellExecution(document: NotebookDocument, cell: NotebookCell): void;
-    executeAllCells(document: NotebookDocument): void;
-    cancelAllCellsExecution(document: NotebookDocument): void;
+    /**
+     * A kernel can optionally implement this which will be called when any "cancel" button is clicked in the document.
+     */
+    interrupt?(document: NotebookDocument): void;
+
+    /**
+     * Called when the user triggers execution of a cell by clicking the run button for a cell, multiple cells,
+     * or full notebook. The cell will be put into the Pending state when this method is called. If
+     * createNotebookCellExecutionTask has not been called by the time the promise returned by this method is
+     * resolved, the cell will be put back into the Idle state.
+     */
+    executeCellsRequest(document: NotebookDocument, ranges: NotebookRange[]): Thenable<void>;
+}
+
+export interface NotebookCellExecuteStartContext {
+    /**
+     * The time that execution began, in milliseconds in the Unix epoch. Used to drive the clock
+     * that shows for how long a cell has been running. If not given, the clock won't be shown.
+     */
+    startTime?: number;
+}
+
+export interface NotebookCellExecuteEndContext {
+    /**
+     * If true, a green check is shown on the cell status bar.
+     * If false, a red X is shown.
+     */
+    success?: boolean;
+
+    /**
+     * The time that execution finished, in milliseconds in the Unix epoch.
+     */
+    endTime?: number;
+}
+
+/**
+ * A NotebookCellExecutionTask is how the kernel modifies a notebook cell as it is executing. When
+ * [`createNotebookCellExecutionTask`](#notebook.createNotebookCellExecutionTask) is called, the cell
+ * enters the Pending state. When `start()` is called on the execution task, it enters the Executing state. When
+ * `end()` is called, it enters the Idle state. While in the Executing state, cell outputs can be
+ * modified with the methods on the run task.
+ *
+ * All outputs methods operate on this NotebookCellExecutionTask's cell by default. They optionally take
+ * a cellIndex parameter that allows them to modify the outputs of other cells. `appendOutputItems` and
+ * `replaceOutputItems` operate on the output with the given ID, which can be an output on any cell. They
+ * all resolve once the output edit has been applied.
+ */
+export interface NotebookCellExecutionTask {
+    readonly document: NotebookDocument;
+    readonly cell: NotebookCell;
+
+    start(context?: NotebookCellExecuteStartContext): void;
+    executionOrder: number | undefined;
+    end(result?: NotebookCellExecuteEndContext): void;
+    readonly token: CancellationToken;
+
+    clearOutput(cellIndex?: number): Thenable<void>;
+    appendOutput(out: NotebookCellOutput | NotebookCellOutput[], cellIndex?: number): Thenable<void>;
+    replaceOutput(out: NotebookCellOutput | NotebookCellOutput[], cellIndex?: number): Thenable<void>;
+    appendOutputItems(items: NotebookCellOutputItem | NotebookCellOutputItem[], outputId: string): Thenable<void>;
+    replaceOutputItems(items: NotebookCellOutputItem | NotebookCellOutputItem[], outputId: string): Thenable<void>;
+}
+
+export enum NotebookCellExecutionState {
+    Idle = 1,
+    Pending = 2,
+    Executing = 3,
+}
+
+export namespace notebook {
+    /**
+     * Creates a [`NotebookCellExecutionTask`](#NotebookCellExecutionTask). Should only be called by a kernel. Returns undefined unless requested by the active kernel.
+     * @param uri The [uri](#Uri) of the notebook document.
+     * @param index The index of the cell.
+     * @param kernelId The id of the kernel requesting this run task. If this kernel is not the current active kernel, `undefined` is returned.
+     */
+    export function createNotebookCellExecutionTask(
+        uri: Uri,
+        index: number,
+        kernelId: string,
+    ): NotebookCellExecutionTask | undefined;
+
+    export const onDidChangeCellExecutionState: Event<NotebookCellExecutionStateChangeEvent>;
 }
 
 export type NotebookFilenamePattern = GlobPattern | { include: GlobPattern; exclude: GlobPattern };
@@ -693,28 +807,27 @@ export interface NotebookKernelProvider<T extends NotebookKernel = NotebookKerne
         kernel: T,
         document: NotebookDocument,
         webview: NotebookCommunication,
-        token: CancellationToken
+        token: CancellationToken,
     ): ProviderResult<void>;
 }
 
 export interface NotebookEditor {
-    /**
-     * Active kernel used in the editor
-     */
     // todo@API unsure about that
     // kernel, kernel selection, kernel provider
+    /** @deprecated kernels are private object*/
     readonly kernel?: NotebookKernel;
 }
 
 export namespace notebook {
+    /** @deprecated */
     export const onDidChangeActiveNotebookKernel: Event<{
         document: NotebookDocument;
         kernel: NotebookKernel | undefined;
     }>;
-
+    /** @deprecated use createNotebookKernel */
     export function registerNotebookKernelProvider(
         selector: NotebookDocumentFilter,
-        provider: NotebookKernelProvider
+        provider: NotebookKernelProvider,
     ): Disposable;
 }
 
@@ -723,7 +836,7 @@ export namespace notebook {
 //#region https://github.com/microsoft/vscode/issues/106744, NotebookEditorDecorationType
 
 export interface NotebookEditor {
-    setDecorations(decorationType: NotebookEditorDecorationType, range: NotebookCellRange): void;
+    setDecorations(decorationType: NotebookEditorDecorationType, range: NotebookRange): void;
 }
 
 export interface NotebookDecorationRenderOptions {
@@ -739,7 +852,7 @@ export interface NotebookEditorDecorationType {
 
 export namespace notebook {
     export function createNotebookEditorDecorationType(
-        options: NotebookDecorationRenderOptions
+        options: NotebookDecorationRenderOptions,
     ): NotebookEditorDecorationType;
 }
 
@@ -759,39 +872,40 @@ export enum NotebookCellStatusBarAlignment {
     /**
      * Aligned to the right side.
      */
-    Right = 2
+    Right = 2,
 }
 
-export interface NotebookCellStatusBarItem {
-    readonly cell: NotebookCell;
+export class NotebookCellStatusBarItem {
+    readonly text: string;
     readonly alignment: NotebookCellStatusBarAlignment;
+    readonly command?: string | Command;
+    readonly tooltip?: string;
     readonly priority?: number;
-    text: string;
-    tooltip: string | undefined;
-    command: string | Command | undefined;
-    accessibilityInformation?: AccessibilityInformation;
-    show(): void;
-    hide(): void;
-    dispose(): void;
+    readonly accessibilityInformation?: AccessibilityInformation;
+
+    constructor(
+        text: string,
+        alignment: NotebookCellStatusBarAlignment,
+        command?: string | Command,
+        tooltip?: string,
+        priority?: number,
+        accessibilityInformation?: AccessibilityInformation,
+    );
+}
+
+interface NotebookCellStatusBarItemProvider {
+    onDidChangeCellStatusBarItems?: Event<void>;
+    provideCellStatusBarItems(
+        cell: NotebookCell,
+        token: CancellationToken,
+    ): ProviderResult<NotebookCellStatusBarItem[]>;
 }
 
 export namespace notebook {
-    /**
-     * Creates a notebook cell status bar [item](#NotebookCellStatusBarItem).
-     * It will be disposed automatically when the notebook document is closed or the cell is deleted.
-     *
-     * @param cell The cell on which this item should be shown.
-     * @param alignment The alignment of the item.
-     * @param priority The priority of the item. Higher values mean the item should be shown more to the left.
-     * @return A new status bar item.
-     */
-    // @roblourens
-    // todo@API this should be a provider, https://github.com/microsoft/vscode/issues/105809
-    export function createCellStatusBarItem(
-        cell: NotebookCell,
-        alignment?: NotebookCellStatusBarAlignment,
-        priority?: number
-    ): NotebookCellStatusBarItem;
+    export function registerNotebookCellStatusBarItemProvider(
+        selector: NotebookDocumentFilter,
+        provider: NotebookCellStatusBarItemProvider,
+    ): Disposable;
 }
 
 //#endregion
@@ -810,7 +924,7 @@ export namespace notebook {
     // todo@API really needed? we didn't find a user here
     export function createConcatTextDocument(
         notebook: NotebookDocument,
-        selector?: DocumentSelector
+        selector?: DocumentSelector,
     ): NotebookConcatTextDocument;
 }
 
