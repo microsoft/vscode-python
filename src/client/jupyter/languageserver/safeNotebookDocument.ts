@@ -65,10 +65,6 @@ export class SafeNotebookDocument implements ISafeNotebookDocument {
         return this.notebook.version;
     }
 
-    // public get fileName(): string {
-    // return this.notebook.fileName;
-    // }
-
     public get isDirty(): boolean {
         return this.notebook.isDirty;
     }
