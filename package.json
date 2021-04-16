@@ -1388,7 +1388,8 @@
                     "default": [
                         "--ignore-missing-imports",
                         "--follow-imports=silent",
-                        "--show-column-numbers"
+                        "--show-column-numbers",
+                        "--no-pretty"
                     ],
                     "items": {
                         "type": "string"
