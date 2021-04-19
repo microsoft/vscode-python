@@ -350,9 +350,8 @@ suite('Installer', () => {
         const moduleInstallers = ioc.serviceContainer.getAll<MockModuleInstaller>(IModuleInstaller);
         const moduleInstallerOne = moduleInstallers.find((item) => item.displayName === 'two')!;
 
-        moduleInstallerOne.on('installModule', (moduleName) => {
-            const installName = installer.translateProductToModuleName(product, ModuleNamePurpose.install);
-            if (installName === moduleName) {
+        moduleInstallerOne.on('installModule', (name: Product | string) => {
+            if (product === name) {
                 checkInstalledDef.resolve();
             }
         });
