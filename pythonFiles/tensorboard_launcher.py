@@ -7,10 +7,7 @@ from tensorboard import program
 
 def main(logdir):
     os.environ["VSCODE_TENSORBOARD_LAUNCH"] = "1"
-    tb = program.TensorBoard(
-        default.get_plugins(),
-        program.get_default_assets_zip_provider(),
-    )
+    tb = program.TensorBoard()
     tb.configure(bind_all=False, logdir=logdir)
     url = tb.launch()
     sys.stdout.write("TensorBoard started at %s\n" % (url))
