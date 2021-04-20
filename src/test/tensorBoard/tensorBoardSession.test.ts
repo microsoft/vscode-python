@@ -107,7 +107,6 @@ suite('TensorBoard session creation', async () => {
         errorMessageStub.resolves(installPromptSelection);
     }
     async function createSession() {
-        sandbox.stub(experimentService, 'inExperiment').resolves(true);
         errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
         // Stub user selections
         sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
@@ -128,19 +127,7 @@ suite('TensorBoard session creation', async () => {
             await createSession();
         });
         test('When webview is closed, session is killed', async () => {
-            sandbox.stub(experimentService, 'inExperiment').resolves(true);
-            errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-            // Stub user selections
-            sandbox
-                .stub(applicationShell, 'showQuickPick')
-                .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-
-            const session = (await commandManager.executeCommand(
-                'python.launchTensorBoard',
-                TensorBoardEntrypoint.palette,
-                TensorBoardEntrypointTrigger.palette,
-            )) as TensorBoardSession;
-
+            const session = await createSession();
             const { daemon, panel } = session;
             assert.ok(panel?.visible, 'Webview panel not shown');
             panel?.dispose();
@@ -148,7 +135,6 @@ suite('TensorBoard session creation', async () => {
             assert.ok(daemon?.killed, 'TensorBoard session process not killed after webview closed');
         });
         test('When user selects file picker, display file picker', async () => {
-            sandbox.stub(experimentService, 'inExperiment').resolves(true);
             errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
             // Stub user selections
             sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.selectAnotherFolder() });
@@ -488,6 +474,7 @@ suite('TensorBoard session creation', async () => {
                 stubs.reduce((prev, current) => current.notCalled && prev, true),
                 'Stubs were called when file is present',
             );
+            sandbox.restore();
         });
         test('Display quickpick to user if filepath is not on disk', async () => {
             const session = ((await createSession()) as unknown) as ITensorBoardSessionTestAPI;
@@ -499,6 +486,7 @@ suite('TensorBoard session creation', async () => {
                 stubs.reduce((prev, current) => current.calledOnce && prev, true),
                 'Stubs called an unexpected number of times',
             );
+            sandbox.restore();
         });
     });
 });
