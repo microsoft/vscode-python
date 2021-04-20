@@ -535,7 +535,7 @@ export class TensorBoardSession {
                 },
             ];
             // Using a multistep so that we can add a title to the quickpick
-            const multiStep = this.multiStepFactory.create<{}>();
+            const multiStep = this.multiStepFactory.create<unknown>();
             await multiStep.run(async (input) => {
                 const selection = await input.showQuickPick({
                     items,
@@ -543,34 +543,36 @@ export class TensorBoardSession {
                     placeholder: fsPath,
                 });
                 switch (selection?.label) {
-                    case TensorBoard.selectMissingSourceFile():
+                    case TensorBoard.selectMissingSourceFile(): {
                         const filePickerSelection = await this.applicationShell.showOpenDialog({
                             canSelectFiles: true,
                             canSelectFolders: false,
                             canSelectMany: false,
                         });
                         if (filePickerSelection !== undefined) {
-                            uri = filePickerSelection[0];
+                            [uri] = filePickerSelection;
                         }
                         break;
+                    }
                     default:
                         break;
                 }
             }, {});
         }
-        if (uri) {
-            workspace
-                .openTextDocument(uri)
-                .then((doc) => window.showTextDocument(doc, ViewColumn.Beside))
-                .then((editor) => {
-                    // Select the line if it exists in the document
-                    if (line < editor.document.lineCount) {
-                        const position = new Position(line, 0);
-                        const selection = new Selection(position, editor.document.lineAt(line).range.end);
-                        editor.selection = selection;
-                        editor.revealRange(selection, TextEditorRevealType.InCenterIfOutsideViewport);
-                    }
-                });
+        if (uri === undefined) {
+            return;
         }
+        workspace
+            .openTextDocument(uri)
+            .then((doc) => window.showTextDocument(doc, ViewColumn.Beside))
+            .then((editor) => {
+                // Select the line if it exists in the document
+                if (line < editor.document.lineCount) {
+                    const position = new Position(line, 0);
+                    const selection = new Selection(position, editor.document.lineAt(line).range.end);
+                    editor.selection = selection;
+                    editor.revealRange(selection, TextEditorRevealType.InCenterIfOutsideViewport);
+                }
+            });
     }
 }
