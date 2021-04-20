@@ -562,17 +562,14 @@ export class TensorBoardSession {
         if (uri === undefined) {
             return;
         }
-        workspace
-            .openTextDocument(uri)
-            .then((doc) => window.showTextDocument(doc, ViewColumn.Beside))
-            .then((editor) => {
-                // Select the line if it exists in the document
-                if (line < editor.document.lineCount) {
-                    const position = new Position(line, 0);
-                    const selection = new Selection(position, editor.document.lineAt(line).range.end);
-                    editor.selection = selection;
-                    editor.revealRange(selection, TextEditorRevealType.InCenterIfOutsideViewport);
-                }
-            });
+        const document = await workspace.openTextDocument(uri);
+        const editor = await window.showTextDocument(document, ViewColumn.Beside);
+        // Select the line if it exists in the document
+        if (line < editor.document.lineCount) {
+            const position = new Position(line, 0);
+            const selection = new Selection(position, editor.document.lineAt(line).range.end);
+            editor.selection = selection;
+            editor.revealRange(selection, TextEditorRevealType.InCenterIfOutsideViewport);
+        }
     }
 }
