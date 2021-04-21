@@ -234,7 +234,7 @@ suite('Set Interpreter Command', () => {
             );
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
-            const suggestions = [item, expectedFindInterpreterPathSuggestion];
+            const suggestions = [expectedFindInterpreterPathSuggestion, item];
             const expectedParameters = {
                 placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
                 items: suggestions,
