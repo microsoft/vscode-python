@@ -56,7 +56,7 @@ suite('TensorBoard session creation', async () => {
     setup(async function () {
         sandbox = sinon.createSandbox();
         ({ serviceManager } = await initialize());
-        sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(false);
+        sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(true);
         experimentService = serviceManager.get<IExperimentService>(IExperimentService);
 
         // Ensure we use CI Python
