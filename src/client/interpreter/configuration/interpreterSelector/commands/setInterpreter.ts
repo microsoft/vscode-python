@@ -64,7 +64,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         let interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
 
-        const inFindExperiment = await this.experiments.inExperiment(FindInterpreterVariants.findLast);
+        const inFindExperiment = await this.experiments.inExperiment(FindInterpreterVariants.useFind);
         const manualEntrySuggestion: IFindInterpreterQuickPickItem = {
             label: inFindExperiment
                 ? InterpreterQuickPickList.findPath.label()
