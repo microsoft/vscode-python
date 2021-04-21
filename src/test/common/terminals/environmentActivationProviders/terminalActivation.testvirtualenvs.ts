@@ -42,7 +42,7 @@ suite('Activation of Environments in Terminal', () => {
         PYTHON_VIRTUAL_ENVS_LOCATION !== undefined
             ? path.join(EXTENSION_ROOT_DIR_FOR_TESTS, PYTHON_VIRTUAL_ENVS_LOCATION)
             : path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'tmp', 'envPaths.json');
-    const waitTimeForActivation = 5000;
+    const waitTimeForActivation = 15000;
     type EnvPath = {
         condaExecPath: string;
         condaPath: string;
