@@ -4,6 +4,9 @@ on:
   issues:
     types: [opened, reopened]
 
+permissions:
+  issues: write
+
 jobs:
   # From https://github.com/marketplace/actions/github-script#apply-a-label-to-an-issue.
   add-classify-label:
