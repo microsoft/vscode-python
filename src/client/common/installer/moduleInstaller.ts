@@ -15,9 +15,10 @@ import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from '../process/internal/python';
 import { ITerminalServiceFactory, TerminalCreationOptions } from '../terminal/types';
-import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
+import { ExecutionInfo, IConfigurationService, IOutputChannel, ModuleNamePurpose, Product } from '../types';
 import { Products } from '../utils/localize';
 import { isResource } from '../utils/misc';
+import { ProductNames } from './productNames';
 import { IModuleInstaller, InterpreterUri } from './types';
 
 @injectable()
@@ -29,12 +30,17 @@ export abstract class ModuleInstaller implements IModuleInstaller {
     constructor(protected serviceContainer: IServiceContainer) {}
 
     public async installModule(
-        name: string,
+        productOrModuleName: Product | string,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
         isUpgrade?: boolean,
     ): Promise<void> {
-        sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName });
+        const name =
+            typeof productOrModuleName == 'string'
+                ? productOrModuleName
+                : translateProductToModule(productOrModuleName, ModuleNamePurpose.install);
+        const productName = typeof productOrModuleName === 'string' ? name : ProductNames.get(productOrModuleName);
+        sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName, productName });
         const uri = isResource(resource) ? resource : undefined;
         const options: TerminalCreationOptions = {};
         if (isResource(resource)) {
@@ -143,5 +149,62 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             return newArgs;
         }
         return args;
+    }
+}
+
+export function translateProductToModule(product: Product, purpose: ModuleNamePurpose): string {
+    switch (product) {
+        case Product.mypy:
+            return 'mypy';
+        case Product.nosetest: {
+            return purpose === ModuleNamePurpose.install ? 'nose' : 'nosetests';
+        }
+        case Product.pylama:
+            return 'pylama';
+        case Product.prospector:
+            return 'prospector';
+        case Product.pylint:
+            return 'pylint';
+        case Product.pytest:
+            return 'pytest';
+        case Product.autopep8:
+            return 'autopep8';
+        case Product.black:
+            return 'black';
+        case Product.pycodestyle:
+            return 'pycodestyle';
+        case Product.pydocstyle:
+            return 'pydocstyle';
+        case Product.yapf:
+            return 'yapf';
+        case Product.flake8:
+            return 'flake8';
+        case Product.unittest:
+            return 'unittest';
+        case Product.rope:
+            return 'rope';
+        case Product.bandit:
+            return 'bandit';
+        case Product.jupyter:
+            return 'jupyter';
+        case Product.notebook:
+            return 'notebook';
+        case Product.pandas:
+            return 'pandas';
+        case Product.ipykernel:
+            return 'ipykernel';
+        case Product.nbconvert:
+            return 'nbconvert';
+        case Product.kernelspec:
+            return 'kernelspec';
+        case Product.tensorboard:
+            return 'tensorboard';
+        case Product.torchProfilerInstallName:
+            return 'torch-tb-profiler';
+        case Product.torchProfilerImportName:
+            return 'torch_tb_profiler';
+        default: {
+            throw new Error(`Product ${product} cannot be installed as a Python Module.`);
+        }
     }
 }

@@ -26,7 +26,10 @@ export class TestsParser implements ITestsParser {
     public parse(content: string, options: ParserOptions): Tests {
         let testFiles = this.getTestFiles(content, options);
         // Exclude tests that don't have any functions or test suites.
-        testFiles = testFiles.filter((testFile) => testFile.suites.length > 0 || testFile.functions.length > 0);
+        testFiles = testFiles.filter((testFile) => {
+            testFile.suites = testFile.suites.filter((suite) => suite.functions.length > 0);
+            return testFile.suites.length > 0 || testFile.functions.length > 0;
+        });
         return this.testsHelper.flattenTestFiles(testFiles, options.cwd);
     }
 

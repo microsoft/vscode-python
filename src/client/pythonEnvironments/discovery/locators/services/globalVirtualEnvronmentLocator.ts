@@ -3,7 +3,7 @@
 
 import { uniq } from 'lodash';
 import * as path from 'path';
-import { traceVerbose } from '../../../../common/logger';
+import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../../base/info';
@@ -16,7 +16,7 @@ import {
     getPythonVersionFromPath,
     looksLikeBasicVirtualPython,
 } from '../../../common/commonUtils';
-import { getFileInfo, pathExists } from '../../../common/externalDependencies';
+import { getFileInfo, pathExists, untildify } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from './pipEnvHelper';
 import {
     isVenvEnvironment,
@@ -34,9 +34,12 @@ const DEFAULT_SEARCH_DEPTH = 2;
 async function getGlobalVirtualEnvDirs(): Promise<string[]> {
     const venvDirs: string[] = [];
 
-    const workOnHome = getEnvironmentVariable('WORKON_HOME');
-    if (workOnHome && (await pathExists(workOnHome))) {
-        venvDirs.push(workOnHome);
+    let workOnHome = getEnvironmentVariable('WORKON_HOME');
+    if (workOnHome) {
+        workOnHome = untildify(workOnHome);
+        if (await pathExists(workOnHome)) {
+            venvDirs.push(workOnHome);
+        }
     }
 
     const homeDir = getUserHomeDir();
@@ -138,8 +141,12 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
                                 // We don't know the environment type so skip this one.
                                 traceVerbose(`Global Virtual Environment: [skipped] ${filename}`);
                             } else {
-                                yield buildSimpleVirtualEnvInfo(filename, kind);
-                                traceVerbose(`Global Virtual Environment: [added] ${filename}`);
+                                try {
+                                    yield buildSimpleVirtualEnvInfo(filename, kind);
+                                    traceVerbose(`Global Virtual Environment: [added] ${filename}`);
+                                } catch (ex) {
+                                    traceError(`Failed to process environment: ${filename}`, ex);
+                                }
                             }
                         } else {
                             traceVerbose(`Global Virtual Environment: [skipped] ${filename}`);

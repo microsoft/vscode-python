@@ -1,7 +1,8 @@
+import * as path from 'path';
 import { assert } from 'chai';
 import Sinon, * as sinon from 'sinon';
 import { SemVer } from 'semver';
-import { ViewColumn, workspace, WorkspaceConfiguration } from 'vscode';
+import { Uri, ViewColumn, window, workspace, WorkspaceConfiguration } from 'vscode';
 import {
     IExperimentService,
     IInstaller,
@@ -14,7 +15,7 @@ import { IApplicationShell, ICommandManager } from '../../client/common/applicat
 import { IServiceManager } from '../../client/ioc/types';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../client/tensorBoard/constants';
 import { TensorBoardSession } from '../../client/tensorBoard/tensorBoardSession';
-import { closeActiveWindows, initialize } from '../initialize';
+import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../initialize';
 import * as ExperimentHelpers from '../../client/common/experiments/helpers';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { Architecture } from '../../client/common/utils/platform';
@@ -22,6 +23,12 @@ import { PythonEnvironment, EnvironmentType } from '../../client/pythonEnvironme
 import { PYTHON_PATH } from '../common';
 import { TorchProfiler } from '../../client/common/experiments/groups';
 import { ImportTracker } from '../../client/telemetry/importTracker';
+import { IMultiStepInput, IMultiStepInputFactory } from '../../client/common/utils/multiStepInput';
+
+// Class methods exposed just for testing purposes
+interface ITensorBoardSessionTestAPI {
+    jumpToSource(fsPath: string, line: number): Promise<void>;
+}
 
 const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
@@ -99,39 +106,28 @@ suite('TensorBoard session creation', async () => {
         errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
         errorMessageStub.resolves(installPromptSelection);
     }
+    async function createSession() {
+        errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
+        // Stub user selections
+        sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
+
+        const session = (await commandManager.executeCommand(
+            'python.launchTensorBoard',
+            TensorBoardEntrypoint.palette,
+            TensorBoardEntrypointTrigger.palette,
+        )) as TensorBoardSession;
+
+        assert.ok(session.panel?.viewColumn === ViewColumn.One, 'Panel opened in wrong group');
+        assert.ok(session.panel?.visible, 'Webview panel not shown on session creation golden path');
+        assert.ok(errorMessageStub.notCalled, 'Error message shown on session creation golden path');
+        return session;
+    }
     suite('Core functionality', async () => {
         test('Golden path: TensorBoard session starts successfully and webview is shown', async () => {
-            sandbox.stub(experimentService, 'inExperiment').resolves(true);
-            errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-            // Stub user selections
-            sandbox
-                .stub(applicationShell, 'showQuickPick')
-                .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-
-            const session = (await commandManager.executeCommand(
-                'python.launchTensorBoard',
-                TensorBoardEntrypoint.palette,
-                TensorBoardEntrypointTrigger.palette,
-            )) as TensorBoardSession;
-
-            assert.ok(session.panel?.viewColumn === ViewColumn.One, 'Panel opened in wrong group');
-            assert.ok(session.panel?.visible, 'Webview panel not shown on session creation golden path');
-            assert.ok(errorMessageStub.notCalled, 'Error message shown on session creation golden path');
+            await createSession();
         });
         test('When webview is closed, session is killed', async () => {
-            sandbox.stub(experimentService, 'inExperiment').resolves(true);
-            errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
-            // Stub user selections
-            sandbox
-                .stub(applicationShell, 'showQuickPick')
-                .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
-
-            const session = (await commandManager.executeCommand(
-                'python.launchTensorBoard',
-                TensorBoardEntrypoint.palette,
-                TensorBoardEntrypointTrigger.palette,
-            )) as TensorBoardSession;
-
+            const session = await createSession();
             const { daemon, panel } = session;
             assert.ok(panel?.visible, 'Webview panel not shown');
             panel?.dispose();
@@ -139,7 +135,6 @@ suite('TensorBoard session creation', async () => {
             assert.ok(daemon?.killed, 'TensorBoard session process not killed after webview closed');
         });
         test('When user selects file picker, display file picker', async () => {
-            sandbox.stub(experimentService, 'inExperiment').resolves(true);
             errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
             // Stub user selections
             sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.selectAnotherFolder() });
@@ -439,5 +434,60 @@ suite('TensorBoard session creation', async () => {
             selectDirectoryStub.notCalled,
             'Prompted user to select log directory although setting was specified',
         );
+    });
+    suite('Jump to source', async () => {
+        // We can't test a full E2E scenario with the TB profiler plugin because we can't
+        // accurately target simulated clicks at iframed content. This only tests
+        // code from the moment that the VS Code webview posts a message back
+        // to the extension.
+        const fsPath = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'pythonFiles',
+            'tensorBoard',
+            'sourcefile.py',
+        );
+        teardown(() => {
+            sandbox.restore();
+        });
+        function setupStubsForMultiStepInput() {
+            // Stub the factory to return our stubbed multistep input when it's asked to create one
+            const multiStepFactory = serviceManager.get<IMultiStepInputFactory>(IMultiStepInputFactory);
+            const inputInstance = multiStepFactory.create();
+            // Create a multistep input with stubs for methods
+            const showQuickPickStub = sandbox.stub(inputInstance, 'showQuickPick').resolves({
+                label: TensorBoard.selectMissingSourceFile(),
+                description: TensorBoard.selectMissingSourceFileDescription(),
+            });
+            const createInputStub = sandbox
+                .stub(multiStepFactory, 'create')
+                .returns(inputInstance as IMultiStepInput<unknown>);
+            // Stub the system file picker
+            const filePickerStub = sandbox.stub(applicationShell, 'showOpenDialog').resolves([Uri.file(fsPath)]);
+            return [showQuickPickStub, createInputStub, filePickerStub];
+        }
+        test('Resolves filepaths without displaying prompt', async () => {
+            const session = ((await createSession()) as unknown) as ITensorBoardSessionTestAPI;
+            const stubs = setupStubsForMultiStepInput();
+            await session.jumpToSource(fsPath, 0);
+            assert.ok(window.activeTextEditor !== undefined, 'Source file not resolved');
+            assert.ok(window.activeTextEditor?.document.uri.fsPath === fsPath, 'Wrong source file opened');
+            assert.ok(
+                stubs.reduce((prev, current) => current.notCalled && prev, true),
+                'Stubs were called when file is present',
+            );
+        });
+        test('Display quickpick to user if filepath is not on disk', async () => {
+            const session = ((await createSession()) as unknown) as ITensorBoardSessionTestAPI;
+            const stubs = setupStubsForMultiStepInput();
+            await session.jumpToSource('/nonexistent/file/path.py', 0);
+            assert.ok(window.activeTextEditor !== undefined, 'Source file not resolved');
+            assert.ok(window.activeTextEditor?.document.uri.fsPath === fsPath, 'Wrong source file opened');
+            assert.ok(
+                stubs.reduce((prev, current) => current.calledOnce && prev, true),
+                'Stubs called an unexpected number of times',
+            );
+        });
     });
 });

@@ -353,7 +353,7 @@ suite('Module Installer', () => {
                                     .returns(() => Promise.resolve())
                                     .verifiable(TypeMoq.Times.once());
 
-                                await installer.installModule(moduleName, resource, undefined, isUpgrade);
+                                await installer.installModule(product.value, resource, undefined, isUpgrade);
                                 terminalService.verifyAll();
                             }
 
@@ -470,7 +470,7 @@ suite('Module Installer', () => {
                                             Promise.resolve(true),
                                         );
                                         try {
-                                            await installer.installModule(product.name, resource);
+                                            await installer.installModule(product.value, resource);
                                         } catch (ex) {
                                             noop();
                                         }
@@ -495,7 +495,7 @@ suite('Module Installer', () => {
                                             .returns(() => Promise.resolve())
                                             .verifiable(TypeMoq.Times.once());
                                         try {
-                                            await installer.installModule(product.name, resource);
+                                            await installer.installModule(product.value, resource);
                                         } catch (ex) {
                                             noop();
                                         }
@@ -516,7 +516,7 @@ suite('Module Installer', () => {
                                             .returns(() => Promise.resolve())
                                             .verifiable(TypeMoq.Times.once());
                                         try {
-                                            await installer.installModule(product.name, resource);
+                                            await installer.installModule(product.value, resource);
                                         } catch (ex) {
                                             noop();
                                         }
@@ -542,7 +542,7 @@ suite('Module Installer', () => {
                                         );
 
                                         try {
-                                            await installer.installModule(product.name, resource);
+                                            await installer.installModule(product.value, resource);
                                         } catch (ex) {
                                             noop();
                                         }
@@ -563,7 +563,7 @@ suite('Module Installer', () => {
                                             .verifiable(TypeMoq.Times.once());
                                         try {
                                             await installer.installModule(
-                                                product.name,
+                                                product.value,
                                                 resource,
                                                 new CancellationTokenSource().token,
                                             );
@@ -580,7 +580,7 @@ suite('Module Installer', () => {
                                 test(`Ensure getActiveInterpreter is used in PipInstaller (${product.name})`, async () => {
                                     setActiveInterpreter();
                                     try {
-                                        await installer.installModule(product.name, resource);
+                                        await installer.installModule(product.value, resource);
                                     } catch {
                                         noop();
                                     }

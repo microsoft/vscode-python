@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { Uri } from 'vscode';
 import { IModuleInstaller } from '../../client/common/installer/types';
+import { Product } from '../../client/common/types';
 
 export class MockModuleInstaller extends EventEmitter implements IModuleInstaller {
     constructor(public readonly displayName: string, private supported: boolean) {
@@ -17,7 +18,7 @@ export class MockModuleInstaller extends EventEmitter implements IModuleInstalle
         return 0;
     }
 
-    public async installModule(name: string, _resource?: Uri): Promise<void> {
+    public async installModule(name: Product | string, _resource?: Uri): Promise<void> {
         this.emit('installModule', name);
     }
 

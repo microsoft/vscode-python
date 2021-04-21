@@ -262,3 +262,29 @@ export function toSemverLikeVersion(
         prerelease: preRelease,
     };
 }
+
+/**
+ * Compares major, minor, patch for two versions of python
+ * @param v1 : semVer like version object
+ * @param v2 : semVer like version object
+ * @returns {1 | 0 | -1} :  0 if v1 === v2,
+ *                      1 if v1 > v2,
+ *                     -1 if v1 < v2
+ * Remarks: primarily used compare to old type of version info.
+ * @deprecated
+ */
+export function compareSemVerLikeVersions(
+    v1: { major: number; minor: number; patch: number },
+    v2: { major: number; minor: number; patch: number },
+): 1 | 0 | -1 {
+    if (v1.major === v2.major) {
+        if (v1.minor === v2.minor) {
+            if (v1.patch === v2.patch) {
+                return 0;
+            }
+            return v1.patch > v2.patch ? 1 : -1;
+        }
+        return v1.minor > v2.minor ? 1 : -1;
+    }
+    return v1.major > v2.major ? 1 : -1;
+}

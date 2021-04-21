@@ -3,6 +3,7 @@
 
 import { uniq } from 'lodash';
 import * as path from 'path';
+import { traceError } from '../../../../common/logger';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
@@ -266,50 +267,53 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
         const interpreterPath = await getInterpreterPathFromDir(subDirPath);
 
         if (interpreterPath) {
-            // The sub-directory name sometimes can contain distro and python versions.
-            // here we attempt to extract the texts out of the name.
-            const versionStrings = await parsePyenvVersion(envDirName);
+            try {
+                // The sub-directory name sometimes can contain distro and python versions.
+                // here we attempt to extract the texts out of the name.
+                const versionStrings = await parsePyenvVersion(envDirName);
 
-            // Here we look for near by files, or config files to see if we can get python version info
-            // without running python itself.
-            const pythonVersion = await getPythonVersionFromPath(interpreterPath, versionStrings?.pythonVer);
+                // Here we look for near by files, or config files to see if we can get python version info
+                // without running python itself.
+                const pythonVersion = await getPythonVersionFromPath(interpreterPath, versionStrings?.pythonVer);
 
-            // Pyenv environments can fall in to these three categories:
-            // 1. Global Installs : These are environments that are created when you install
-            //    a supported python distribution using `pyenv install <distro>` command.
-            //    These behave similar to globally installed version of python or distribution.
-            //
-            // 2. Virtual Envs    : These are environments that are created when you use
-            //    `pyenv virtualenv <distro> <env-name>`. These are similar to environments
-            //    created using `python -m venv <env-name>`.
-            //
-            // 3. Conda Envs      : These are environments that are created when you use
-            //    `pyenv virtualenv <miniconda|anaconda> <env-name>`. These are similar to
-            //    environments created using `conda create -n <env-name>.
-            //
-            // All these environments are fully handled by `pyenv` and should be activated using
-            // `pyenv local|global <env-name>` or `pyenv shell <env-name>`
-            //
-            // For the display name we are going to treat these as `pyenv` environments.
-            const display = `${envDirName}:pyenv`;
+                // Pyenv environments can fall in to these three categories:
+                // 1. Global Installs : These are environments that are created when you install
+                //    a supported python distribution using `pyenv install <distro>` command.
+                //    These behave similar to globally installed version of python or distribution.
+                //
+                // 2. Virtual Envs    : These are environments that are created when you use
+                //    `pyenv virtualenv <distro> <env-name>`. These are similar to environments
+                //    created using `python -m venv <env-name>`.
+                //
+                // 3. Conda Envs      : These are environments that are created when you use
+                //    `pyenv virtualenv <miniconda|anaconda> <env-name>`. These are similar to
+                //    environments created using `conda create -n <env-name>.
+                //
+                // All these environments are fully handled by `pyenv` and should be activated using
+                // `pyenv local|global <env-name>` or `pyenv shell <env-name>`
+                //
+                // For the display name we are going to treat these as `pyenv` environments.
+                const display = `${envDirName}:pyenv`;
 
-            const org = versionStrings && versionStrings.distro ? versionStrings.distro : '';
+                const org = versionStrings && versionStrings.distro ? versionStrings.distro : '';
 
-            const fileInfo = await getFileInfo(interpreterPath);
+                const fileInfo = await getFileInfo(interpreterPath);
 
-            const envInfo = buildEnvInfo({
-                kind: PythonEnvKind.Pyenv,
-                executable: interpreterPath,
-                location: subDirPath,
-                version: pythonVersion,
-                source: [PythonEnvSource.Pyenv],
-                display,
-                org,
-                fileInfo,
-            });
-            envInfo.name = envDirName;
-
-            yield envInfo;
+                const envInfo = buildEnvInfo({
+                    kind: PythonEnvKind.Pyenv,
+                    executable: interpreterPath,
+                    location: subDirPath,
+                    version: pythonVersion,
+                    source: [PythonEnvSource.Pyenv],
+                    display,
+                    org,
+                    fileInfo,
+                });
+                envInfo.name = envDirName;
+                yield envInfo;
+            } catch (ex) {
+                traceError(`Failed to process environment: ${interpreterPath}`, ex);
+            }
         }
     }
 }

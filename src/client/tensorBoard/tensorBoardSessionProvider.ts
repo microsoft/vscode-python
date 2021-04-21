@@ -11,6 +11,7 @@ import { traceError, traceInfo } from '../common/logger';
 import { IProcessServiceFactory } from '../common/process/types';
 import { IDisposableRegistry, IExperimentService, IInstaller, IPersistentStateFactory } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
+import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
 import { IInterpreterService } from '../interpreter/contracts';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -31,6 +32,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
+        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
     ) {}
 
     public async activate(): Promise<void> {
@@ -68,6 +70,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                 this.applicationShell,
                 await this.experimentService.inExperiment(TorchProfiler.experiment),
                 memento,
+                this.multiStepFactory,
             );
             await newSession.initialize();
             return newSession;

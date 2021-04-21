@@ -42,7 +42,6 @@ import {
     IOutputChannel,
     IPersistentState,
     IPersistentStateFactory,
-    ModuleNamePurpose,
     Product,
     ProductType,
 } from '../../../client/common/types';
@@ -525,15 +524,10 @@ suite('Module Installer only', () => {
                         test(`Ensure resource info is passed into the module installer ${product.name} (${
                             resource ? 'With a resource' : 'without a resource'
                         })`, async () => {
-                            const moduleName = installer.translateProductToModuleName(
-                                product.value,
-                                ModuleNamePurpose.install,
-                            );
-
                             moduleInstaller
                                 .setup((m) =>
                                     m.installModule(
-                                        TypeMoq.It.isValue(moduleName),
+                                        TypeMoq.It.isValue(product.value),
                                         TypeMoq.It.isValue(resource),
                                         TypeMoq.It.isValue(undefined),
                                     ),
@@ -546,7 +540,7 @@ suite('Module Installer only', () => {
                                 moduleInstaller.verify(
                                     (m) =>
                                         m.installModule(
-                                            TypeMoq.It.isValue(moduleName),
+                                            TypeMoq.It.isValue(product.value),
                                             TypeMoq.It.isValue(resource),
                                             TypeMoq.It.isValue(undefined),
                                         ),
@@ -558,15 +552,10 @@ suite('Module Installer only', () => {
                         test(`Return InstallerResponse.Ignore for the module installer ${product.name} (${
                             resource ? 'With a resource' : 'without a resource'
                         }) if installation channel is not defined`, async () => {
-                            const moduleName = installer.translateProductToModuleName(
-                                product.value,
-                                ModuleNamePurpose.install,
-                            );
-
                             moduleInstaller
                                 .setup((m) =>
                                     m.installModule(
-                                        TypeMoq.It.isValue(moduleName),
+                                        TypeMoq.It.isValue(product.value),
                                         TypeMoq.It.isValue(resource),
                                         TypeMoq.It.isValue(undefined),
                                     ),
@@ -586,15 +575,10 @@ suite('Module Installer only', () => {
                         test(`Ensure resource info is passed into the module installer (created using ProductInstaller) ${
                             product.name
                         } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
-                            const moduleName = installer.translateProductToModuleName(
-                                product.value,
-                                ModuleNamePurpose.install,
-                            );
-
                             moduleInstaller
                                 .setup((m) =>
                                     m.installModule(
-                                        TypeMoq.It.isValue(moduleName),
+                                        TypeMoq.It.isValue(product.value),
                                         TypeMoq.It.isValue(resource),
                                         TypeMoq.It.isValue(undefined),
                                     ),
@@ -607,7 +591,7 @@ suite('Module Installer only', () => {
                                 moduleInstaller.verify(
                                     (m) =>
                                         m.installModule(
-                                            TypeMoq.It.isValue(moduleName),
+                                            TypeMoq.It.isValue(product.value),
                                             TypeMoq.It.isValue(resource),
                                             TypeMoq.It.isValue(undefined),
                                         ),

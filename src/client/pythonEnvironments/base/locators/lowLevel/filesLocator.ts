@@ -5,6 +5,7 @@
 /* eslint-disable max-classes-per-file */
 
 import { Event, EventEmitter } from 'vscode';
+import { traceError } from '../../../../common/logger';
 import { DirEntry } from '../../../../common/utils/filesystem';
 import { iterPythonExecutablesInDir } from '../../../common/commonUtils';
 import { resolvePath } from '../../../common/externalDependencies';
@@ -65,7 +66,11 @@ async function* iterMinimalEnvsFromExecutables(
     for await (const executable of executables) {
         const filename = typeof executable === 'string' ? executable : executable.filename;
         const normFile = resolvePath(filename);
-        yield getFastEnvInfo(defaultKind, normFile);
+        try {
+            yield getFastEnvInfo(defaultKind, normFile);
+        } catch (ex) {
+            traceError(`Failed to process environment: ${normFile}`, ex);
+        }
     }
 }
 

@@ -3,7 +3,7 @@
 
 import { uniq } from 'lodash';
 import * as path from 'path';
-import { traceVerbose } from '../../../../common/logger';
+import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { getUserHomeDir } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../../base/info';
@@ -21,6 +21,7 @@ import {
     getPythonSetting,
     onDidChangePythonSetting,
     pathExists,
+    untildify,
 } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from './pipEnvHelper';
 import {
@@ -44,7 +45,7 @@ async function getCustomVirtualEnvDirs(): Promise<string[]> {
     const venvDirs: string[] = [];
     const venvPath = getPythonSetting<string>(VENVPATH_SETTING_KEY);
     if (venvPath) {
-        venvDirs.push(venvPath);
+        venvDirs.push(untildify(venvPath));
     }
     const venvFolders = getPythonSetting<string[]>(VENVFOLDERS_SETTING_KEY) ?? [];
     const homeDir = getUserHomeDir();
@@ -134,12 +135,16 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
                         // python.exe or python in the same directory in the case of virtual
                         // environments.
                         if (await looksLikeBasicVirtualPython(entry)) {
-                            // We should extract the kind here to avoid doing is*Environment()
-                            // check multiple times. Those checks are file system heavy and
-                            // we can use the kind to determine this anyway.
-                            const kind = await getVirtualEnvKind(filename);
-                            yield buildSimpleVirtualEnvInfo(filename, kind);
-                            traceVerbose(`Custom Virtual Environment: [added] ${filename}`);
+                            try {
+                                // We should extract the kind here to avoid doing is*Environment()
+                                // check multiple times. Those checks are file system heavy and
+                                // we can use the kind to determine this anyway.
+                                const kind = await getVirtualEnvKind(filename);
+                                yield buildSimpleVirtualEnvInfo(filename, kind);
+                                traceVerbose(`Custom Virtual Environment: [added] ${filename}`);
+                            } catch (ex) {
+                                traceError(`Failed to process environment: ${filename}`, ex);
+                            }
                         } else {
                             traceVerbose(`Custom Virtual Environment: [skipped] ${filename}`);
                         }

@@ -605,6 +605,16 @@
                     "command": "python.runTestNode",
                     "when": "view == python_tests && viewItem == suite && !busyTests",
                     "group": "inline@0"
+                },
+                {
+                    "command": "python.debugTestNode",
+                    "when": "view == python_tests && viewItem == folder && !busyTests",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "python.runTestNode",
+                    "when": "view == python_tests && viewItem == folder && !busyTests",
+                    "group": "inline@0"
                 }
             ]
         },

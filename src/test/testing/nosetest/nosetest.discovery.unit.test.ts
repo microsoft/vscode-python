@@ -6,9 +6,13 @@
 import { expect, use } from 'chai';
 import * as chaipromise from 'chai-as-promised';
 import * as typeMoq from 'typemoq';
-import { CancellationToken } from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs-extra';
+import { CancellationToken, Uri } from 'vscode';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { NOSETEST_PROVIDER } from '../../../client/testing/common/constants';
+import { TestsHelper } from '../../../client/testing/common/testUtils';
+import { TestFlatteningVisitor } from '../../../client/testing/common/testVisitors/flatteningVisitor';
 import {
     IArgumentsService,
     ITestDiscoveryService,
@@ -18,8 +22,20 @@ import {
     TestDiscoveryOptions,
     TestFilter,
     Tests,
+    UnitTestParserOptions,
 } from '../../../client/testing/common/types';
 import { TestDiscoveryService } from '../../../client/testing/nosetest/services/discoveryService';
+import { TestsParser } from '../../../client/testing/nosetest/services/parserService';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+
+const DISCOVERY_OUTPUT = path.join(
+    EXTENSION_ROOT_DIR_FOR_TESTS,
+    'src',
+    'test',
+    'testing',
+    'nosetest',
+    'nose_discovery_output.txt',
+);
 
 use(chaipromise);
 
@@ -28,8 +44,10 @@ suite('Unit Tests - nose - Discovery', () => {
     let argsService: typeMoq.IMock<IArgumentsService>;
     let testParser: typeMoq.IMock<ITestsParser>;
     let runner: typeMoq.IMock<ITestRunner>;
+    let serviceContainer: typeMoq.IMock<IServiceContainer>;
+
     setup(() => {
-        const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
+        serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         argsService = typeMoq.Mock.ofType<IArgumentsService>();
         testParser = typeMoq.Mock.ofType<ITestsParser>();
         runner = typeMoq.Mock.ofType<ITestRunner>();
@@ -127,5 +145,55 @@ suite('Unit Tests - nose - Discovery', () => {
         argsService.verifyAll();
         runner.verifyAll();
         testParser.verifyAll();
+    });
+
+    test('Ensure discovery resolves test files in n-depth directories', async () => {
+        const discoveryOutput = await fs.readFile(DISCOVERY_OUTPUT, 'utf8');
+        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor(), serviceContainer.object);
+
+        const testsParser: TestsParser = new TestsParser(testHelper);
+
+        const opts = typeMoq.Mock.ofType<UnitTestParserOptions>();
+        const token = typeMoq.Mock.ofType<CancellationToken>();
+        const wspace = typeMoq.Mock.ofType<Uri>();
+        opts.setup((o) => o.token).returns(() => token.object);
+        opts.setup((o) => o.workspaceFolder).returns(() => wspace.object);
+        token.setup((t) => t.isCancellationRequested).returns(() => true);
+        opts.setup((o) => o.cwd).returns(() => '/home/user/dev');
+        opts.setup((o) => o.startDirectory).returns(() => '/home/user/dev/tests');
+
+        const tests: Tests = testsParser.parse(discoveryOutput, opts.object);
+
+        expect(tests.testFiles.length).to.be.equal(3);
+        expect(tests.testFunctions.length).to.be.equal(6);
+        expect(tests.testSuites.length).to.be.equal(3);
+        expect(tests.testFolders.length).to.be.equal(5);
+
+        // now ensure that the 'nameToRun' for each test function begins with its file's a single test suite...
+        tests.testFunctions.forEach((fn) => {
+            if (fn.parentTestSuite) {
+                const testPrefix: boolean = fn.testFunction.nameToRun.startsWith(fn.parentTestFile.nameToRun);
+                expect(testPrefix).to.equal(
+                    true,
+                    [
+                        `function ${fn.testFunction.name} was found in file ${fn.parentTestFile.name}, `,
+                        `but the parent file 'nameToRun' (${fn.parentTestFile.nameToRun}) isn't the `,
+                        `prefix to the functions 'nameToRun' (${fn.testFunction.nameToRun})`,
+                    ].join(''),
+                );
+            }
+        });
+
+        // Check we didn't report the unittest TestCase base class as a suite
+        tests.testSuites.forEach((suite) => {
+            expect(suite.testSuite.name).to.not.equal(
+                'unittest.case.TestCase',
+                'unittest.case.TestCase found in discovered tests',
+            );
+            expect(suite.testSuite.functions.length).to.be.greaterThan(
+                0,
+                `${suite.testSuite.name} has no runnable tests`,
+            );
+        });
     });
 });

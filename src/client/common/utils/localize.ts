@@ -196,6 +196,15 @@ export namespace TensorBoard {
         'TensorBoard.launchNativeTensorBoardSessionCodeAction',
         'Launch TensorBoard session',
     );
+    export const missingSourceFile = localize(
+        'TensorBoard.missingSourceFile',
+        'We could not locate the requested source file on disk. Please manually specify the file.',
+    );
+    export const selectMissingSourceFile = localize('TensorBoard.selectMissingSourceFile', 'Choose File');
+    export const selectMissingSourceFileDescription = localize(
+        'TensorBoard.selectMissingSourceFileDescription',
+        "The source file's contents may not match the original contents in the trace.",
+    );
 }
 
 export namespace LanguageService {

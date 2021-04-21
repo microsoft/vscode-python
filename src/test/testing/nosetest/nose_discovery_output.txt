@@ -1,0 +1,561 @@
+nose.config: INFO: Set working dir to /home/user/dev/tests
+nose.config: INFO: Ignoring files matching ['^\\.', '^_', '^setup\\.py$']
+nose.plugins.manager: DEBUG: Configuring plugins
+nose.plugins.manager: DEBUG: Plugins enabled: [<nose.plugins.capture.Capture object at 0x0000000003A51C08>, <nose.plugins.logcapture.LogCapture object at 0x0000000003A51E88>, <nose.plugins.deprecated.Deprecated object at 0x0000000003A56048>, <nose.plugins.skip.Skip object at 0x0000000003B9AF48>, <nose.plugins.collect.CollectOnly object at 0x0000000003BA2208>]
+nose.core: DEBUG: configured Config(addPaths=True, args=(), configSection='nosetests', debug=None, debugLog=None, env={}, exclude=None, files=[], firstPackageWins=False, getTestCaseNamesCompat=False, ignoreFiles=[<_sre.SRE_Pattern object at 0x0000000002FBB830>, <_sre.SRE_Pattern object at 0x0000000002FBB9B0>, <_sre.SRE_Pattern object at 0x00000000029761B0>], ignoreFilesDefaultStrings=['^\\.', '^_', '^setup\\.py$'], include=None, includeExe=True, logStream=<open file '<stderr>', mode 'w' at 0x000000000296F1E0>, loggingConfig=None, options=<Values at 0x3baac88: {'xunit_file': 'nosetests.xml', 'enable_plugin_allmodules': None, 'multiprocess_restartworker': False, 'loggingConfig': None, 'doctestExtension': None, 'doctest_tests': None, 'enable_plugin_xunit': None, 'logcapture_clear': False, 'stopOnError': False, 'enable_plugin_id': None, 'testNames': None, 'doctestOptions': None, 'exclude': [], 'byteCompile': True, 'ignoreFiles': [], 'logcapture': True, 'addPaths': True, 'capture': True, 'xunit_testsuite_name': 'nosetests', 'logcapture_level': 'NOTSET', 'cover_xml': None, 'py3where': None, 'noSkip': False, 'enable_plugin_isolation': None, 'logcapture_filters': None, 'collect_only': True, 'failed': False, 'version': False, 'eval_attr': None, 'include': [], 'enable_plugin_profile': None, 'debugErrors': False, 'files': None, 'cover_tests': None, 'multiprocess_timeout': 10, 'testMatch': '(?:^|[\\b_\\.\\-])[Tt]est', 'traverseNamespace': False, 'firstPackageWins': False, 'cover_html_dir': 'cover', 'cover_branches': None, 'debugBoth': False, 'noDeprecated': False, 'cover_xml_file': 'coverage.xml', 'showPlugins': False, 'cover_erase': None, 'multiprocess_workers': 0, 'testIdFile': '.noseids', 'enable_plugin_coverage': None, 'attr': None, 'profile_sort': 'cumulative', 'doctestFixtures': None, 'logcapture_datefmt': None, 'cover_packages': None, 'verbosity': 4, 'enable_plugin_doctest': None, 'profile_stats_file': None, 'cover_inclusive': None, 'includeExe': True, 'logcapture_format': '%(name)s: %(levelname)s: %(message)s', 'debugFailures': False, 'detailedErrors': None, 'debugLog': None, 'doctest_result_var': None, 'cover_html': None, 'debug': None, 'cover_min_percentage': None, 'where': ['tests'], 'profile_restrict': None}>, parser=<optparse.OptionParser instance at 0x0000000003A3E688>, parserClass=<class optparse.OptionParser at 0x0000000003281A08>, plugins=<nose.plugins.manager.DefaultPluginManager object at 0x0000000003A37D48>, py3where=(), runOnInit=True, srcDirs=('lib', 'src'), stopOnError=False, stream=<open file '<stderr>', mode 'w' at 0x000000000296F1E0>, testMatch=<_sre.SRE_Pattern object at 0x00000000039D0430>, testMatchPat='(?:^|[\\b_\\.\\-])[Tt]est', testNames=[], traverseNamespace=False, verbosity=4, where=(), worker=False, workingDir='/home/user/dev/tests')
+nose.importer: DEBUG: Add path /home/user/dev/tests
+nose.importer: DEBUG: insert /home/user/dev/tests into sys.path
+nose.plugins.collect: DEBUG: Preparing test loader
+nose.core: DEBUG: test loader is <nose.loader.TestLoader object at 0x0000000003BB7088>
+nose.core: DEBUG: defaultTest .
+nose.core: DEBUG: Test names are ['.']
+nose.core: DEBUG: createTests called with None
+nose.loader: DEBUG: load from . (None)
+nose.selector: DEBUG: Test name . resolved to file ., module None, call None
+nose.selector: DEBUG: Final resolution of test name .: file /home/user/dev/tests module None call None
+nose.plugins.collect: DEBUG: TestSuite([<nose.suite.LazySuite tests=generator (62617096)>])
+nose.plugins.collect: DEBUG: Add test <nose.suite.LazySuite tests=generator (62617096)>
+nose.core: DEBUG: runTests called
+nose.suite: DEBUG: precache is []
+nose.loader: DEBUG: load from dir /home/user/dev/tests
+nose.importer: DEBUG: Add path /home/user/dev/tests
+nose.selector: DEBUG: wantDirectory /home/user/dev/tests/apptests? True
+nose.loader: DEBUG: load from /home/user/dev/tests/apptests (None)
+nose.selector: DEBUG: Test name /home/user/dev/tests/apptests resolved to file /home/user/dev/tests/apptests, module None, call None
+nose.selector: DEBUG: Final resolution of test name /home/user/dev/tests/apptests: file /home/user/dev/tests/apptests module apptests call None
+nose.importer: DEBUG: Import apptests from /home/user/dev/tests
+nose.importer: DEBUG: Add path /home/user/dev/tests
+nose.importer: DEBUG: find module part apptests (apptests) in ['/home/user/dev/tests']
+nose.loader: DEBUG: Load from module <module 'apptests' from '/home/user/dev/tests/apptests/__init__.pyc'>
+nose.selector: DEBUG: wantModule <module 'apptests' from '/home/user/dev/tests/apptests/__init__.pyc'>? False
+nose.loader: DEBUG: Load tests from module path /home/user/dev/tests/apptests?
+nose.loader: DEBUG: path: /home/user/dev/tests/apptests os.path.realpath(/home/user/dev/tests/apptests): /home/user/dev/tests/apptests
+nose.loader: DEBUG: load from dir /home/user/dev/tests/apptests
+nose.importer: DEBUG: Add path /home/user/dev/tests/apptests
+nose.importer: DEBUG: Add path /home/user/dev/tests
+nose.selector: DEBUG: __init__.py matches ignoreFiles pattern; skipped
+nose.selector: DEBUG: __init__.pyc matches ignoreFiles pattern; skipped
+nose.selector: DEBUG: wantDirectory /home/user/dev/tests/apptests/debug? True
+nose.loader: DEBUG: load from /home/user/dev/tests/apptests/debug (None)
+nose.selector: DEBUG: Test name /home/user/dev/tests/apptests/debug resolved to file /home/user/dev/tests/apptests/debug, module None, call None
+nose.selector: DEBUG: Final resolution of test name /home/user/dev/tests/apptests/debug: file /home/user/dev/tests/apptests/debug module apptests.debug call None
+nose.importer: DEBUG: Import apptests.debug from /home/user/dev/tests
+nose.importer: DEBUG: Add path /home/user/dev/tests
+nose.importer: DEBUG: find module part apptests (apptests) in ['/home/user/dev/tests']
+nose.importer: DEBUG: sys.modules has apptests as <module 'apptests' from '/home/user/dev/tests/apptests/__init__.pyc'>
+nose.importer: DEBUG: module already loaded? mod: /home/user/dev/tests/apptests new: /home/user/dev/tests/apptests
+nose.importer: DEBUG: find module part debug (apptests.debug) in ['/home/user/dev/tests/apptests']
+nose.loader: DEBUG: Load from module <module 'apptests.debug' from '/home/user/dev/tests/apptests/debug/__init__.pyc'>
+nose.selector: DEBUG: wantModule <module 'apptests.debug' from '/home/user/dev/tests/apptests/debug/__init__.pyc'>? False
+nose.loader: DEBUG: Load tests from module path /home/user/dev/tests/apptests/debug?
+nose.loader: DEBUG: path: /home/user/dev/tests/apptests/debug os.path.realpath(/home/user/dev/tests/apptests/debug): /home/user/dev/tests/apptests/debug
+nose.loader: DEBUG: load from dir /home/user/dev/tests/apptests/debug
+nose.importer: DEBUG: Add path /home/user/dev/tests/apptests/debug
+nose.importer: DEBUG: Add path /home/user/dev/tests/apptests
+nose.importer: DEBUG: Add path /home/user/dev/tests
+nose.selector: DEBUG: __init__.py matches ignoreFiles pattern; skipped
+nose.selector: DEBUG: __init__.pyc matches ignoreFiles pattern; skipped
+nose.selector: DEBUG: wantDirectory /home/user/dev/tests/apptests/debug/first? True
+nose.loader: DEBUG: load from /home/user/dev/tests/apptests/debug/first (None)
+nose.selector: DEBUG: Test name /home/user/dev/tests/apptests/debug/first resolved to file /home/user/dev/tests/apptests/debug/first, module None, call None
+nose.selector: DEBUG: Final resolution of test name /home/user/dev/tests/apptests/debug/first: file /home/user/dev/tests/apptests/debug/first module apptests.debug.first call None
+nose.importer: DEBUG: Import apptests.debug.first from /home/user/dev/tests
+nose.importer: DEBUG: Add path /home/user/dev/tests
+nose.importer: DEBUG: find module part apptests (apptests) in ['/home/user/dev/tests']
+nose.importer: DEBUG: sys.modules has apptests as <module 'apptests' from '/home/user/dev/tests/apptests/__init__.pyc'>
+nose.importer: DEBUG: module already loaded? mod: /home/user/dev/tests/apptests new: /home/user/dev/tests/apptests
+nose.importer: DEBUG: find module part debug (apptests.debug) in ['/home/user/dev/tests/apptests']
+nose.importer: DEBUG: sys.modules has apptests.debug as <module 'apptests.debug' from '/home/user/dev/tests/apptests/debug/__init__.pyc'>
+nose.importer: DEBUG: module already loaded? mod: /home/user/dev/tests/apptests/debug new: /home/user/dev/tests/apptests/debug
+nose.importer: DEBUG: find module part first (apptests.debug.first) in ['/home/user/dev/tests/apptests/debug']
+nose.loader: DEBUG: Load from module <module 'apptests.debug.first' from '/home/user/dev/tests/apptests/debug/first/__init__.pyc'>
+nose.selector: DEBUG: wantModule <module 'apptests.debug.first' from '/home/user/dev/tests/apptests/debug/first/__init__.pyc'>? False
+nose.loader: DEBUG: Load tests from module path /home/user/dev/tests/apptests/debug/first?
+nose.loader: DEBUG: path: /home/user/dev/tests/apptests/debug/first os.path.realpath(/home/user/dev/tests/apptests/debug/first): /home/user/dev/tests/apptests/debug/first
+nose.loader: DEBUG: load from dir /home/user/dev/tests/apptests/debug/first
+nose.importer: DEBUG: Add path /home/user/dev/tests/apptests/debug/first
+nose.importer: DEBUG: Add path /home/user/dev/tests/apptests/debug
+nose.importer: DEBUG: Add path /home/user/dev/tests/apptests
+nose.importer: DEBUG: Add path /home/user/dev/tests
+nose.selector: DEBUG: __init__.py matches ignoreFiles pattern; skipped
+nose.selector: DEBUG: __init__.pyc matches ignoreFiles pattern; skipped
+nose.selector: DEBUG: wantFile /home/user/dev/tests/apptests/debug/first/test_module_name.py? True
+nose.loader: DEBUG: load from /home/user/dev/tests/apptests/debug/first/test_module_name.py (None)
+nose.selector: DEBUG: Test name /home/user/dev/tests/apptests/debug/first/test_module_name.py resolved to file /home/user/dev/tests/apptests/debug/first/test_module_name.py, module None, call None
+nose.selector: DEBUG: Final resolution of test name /home/user/dev/tests/apptests/debug/first/test_module_name.py: file /home/user/dev/tests/apptests/debug/first/test_module_name.py module apptests.debug.first.test_module_name call None
+nose.importer: DEBUG: Import apptests.debug.first.test_module_name from /home/user/dev/tests
+nose.importer: DEBUG: Add path /home/user/dev/tests
+nose.importer: DEBUG: find module part apptests (apptests) in ['/home/user/dev/tests']
+nose.importer: DEBUG: sys.modules has apptests as <module 'apptests' from '/home/user/dev/tests/apptests/__init__.pyc'>
+nose.importer: DEBUG: module already loaded? mod: /home/user/dev/tests/apptests new: /home/user/dev/tests/apptests
+nose.importer: DEBUG: find module part debug (apptests.debug) in ['/home/user/dev/tests/apptests']
+nose.importer: DEBUG: sys.modules has apptests.debug as <module 'apptests.debug' from '/home/user/dev/tests/apptests/debug/__init__.pyc'>
+nose.importer: DEBUG: module already loaded? mod: /home/user/dev/tests/apptests/debug new: /home/user/dev/tests/apptests/debug
+nose.importer: DEBUG: find module part first (apptests.debug.first) in ['/home/user/dev/tests/apptests/debug']
+nose.importer: DEBUG: sys.modules has apptests.debug.first as <module 'apptests.debug.first' from '/home/user/dev/tests/apptests/debug/first/__init__.pyc'>
+nose.importer: DEBUG: module already loaded? mod: /home/user/dev/tests/apptests/debug/first new: /home/user/dev/tests/apptests/debug/first
+nose.importer: DEBUG: find module part test_module_name (apptests.debug.first.test_module_name) in ['/home/user/dev/tests/apptests/debug/first']
+nose.loader: DEBUG: Load from module <module 'apptests.d ebug.first.test_module_name' from '/home/user/dev/tests/apptests/debug/first/test_module_name.pyc'>
+nose.selector: DEBUG: wantModule <module 'apptests.debug.first.test_module_name' from '/home/user/dev/tests/apptests/debug/first/test_module_name.pyc'>? True
+nose.selector: DEBUG: wantClass <class 'unittest.case.TestCase'>? True
+nose.selector: DEBUG: wantClass <class 'apptests.debug.first.test_module_name.TestFirstLevelClassName'>? True
+nose.selector: DEBUG: wantMethod <unbound method TestCase.addCleanup>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.addTypeEqualityFunc>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertDictContainsSubset>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertDictEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertFalse>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertGreater>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertGreaterEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIn>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIs>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIsInstance>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIsNone>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIsNot>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIsNotNone>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertItemsEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertLess>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertLessEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertListEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertMultiLineEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotIn>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotIsInstance>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotRegexpMatches>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertRaises>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertRaisesRegexp>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertRegexpMatches>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertSequenceEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertSetEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertTrue>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertTupleEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertTrue>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.countTestCases>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.debug>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.defaultTestResult>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.doCleanups>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.fail>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.id>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.run>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.setUp>? None
+nose.selector: DEBUG: wantMethod <bound method type.setUpClass of <class 'apptests.debug.first.test_module_name.TestCase'>>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.shortDescription>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.skipTest>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.tearDown>? None
+nose.selector: DEBUG: wantMethod <bound method type.tearDownClass of <class 'apptests.debug.first.test_module_name.TestCase'>>? None
+nose.plugins.collect: DEBUG: TestSuite([])
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.addCleanup>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.addTypeEqualityFunc>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertDictContainsSubset>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertDictEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertFalse>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertGreater>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertGreaterEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertIn>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertIs>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertIsInstance>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertIsNone>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertIsNot>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertIsNotNone>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertItemsEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertLess>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertLessEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertListEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertMultiLineEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertNotAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertNotAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertNotEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertNotEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertNotIn>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertNotIsInstance>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertNotRegexpMatches>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertRaises>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertRaisesRegexp>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertRegexpMatches>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertSequenceEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertSetEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertTrue>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertTupleEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.assertTrue>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.countTestCases>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.debug>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.defaultTestResult>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.doCleanups>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.fail>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.id>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.run>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.setUp>? None
+nose.selector: DEBUG: wantMethod <bound method type.setUpClass of <class 'apptests.debug.first.test_module_name.TestFirstLevelClassName'>>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.shortDescription>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.skipTest>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.tearDown>? None
+nose.selector: DEBUG: wantMethod <bound method type.tearDownClass of <class 'apptests.debug.first.test_module_name.TestFirstLevelClassName'>>? None
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.test_first>? True
+nose.selector: DEBUG: wantMethod <unbound method TestFirstLevelClassName.test_first_other>? True
+nose.plugins.collect: DEBUG: TestSuite([<apptests.debug.first.test_module_name.TestFirstLevelClassName testMethod=test_first>, <apptests.debug.first.test_module_name.TestFirstLevelClassName testMethod=test_first_other>])
+nose.plugins.collect: DEBUG: Add test test_first (apptests.debug.first.test_module_name.TestFirstLevelClassName)
+nose.plugins.collect: DEBUG: Add test test_first_other (apptests.debug.first.test_module_name.TestFirstLevelClassName)
+nose.plugins.collect: DEBUG: TestSuite(<nose.suite.ContextList object at 0x0000000003BC7748>)
+nose.plugins.collect: DEBUG: Add test <nose.plugins.collect.TestSuite tests=[]>
+nose.plugins.collect: DEBUG: Add test <nose.plugins.collect.TestSuite tests=[Test(<apptests.debug.first.test_module_name.TestFirstLevelClassName testMethod=test_first>), Test(<apptests.debug.first.test_module_name.TestFirstLevelClassName testMethod=test_first_other>)]>
+nose.selector: DEBUG: wantFile /home/user/dev/tests/apptests/debug/first/test_module_name.pyc? False
+nose.plugins.collect: DEBUG: TestSuite(<nose.suite.ContextList object at 0x0000000003BB9848>)
+nose.plugins.collect: DEBUG: Add test <nose.plugins.collect.TestSuite tests=[<nose.plugins.collect.TestSuite tests=[]>, <nose.plugins.collect.TestSuite tests=[Test(<apptests.debug.first.test_module_name.TestFirstLevelClassName testMethod=test_first>), Test(<apptests.debug.first.test_module_name.TestFirstLevelClassName testMethod=test_first_other>)]>]>
+nose.selector: DEBUG: wantDirectory /home/user/dev/tests/apptests/debug/second? True
+nose.loader: DEBUG: load from /home/user/dev/tests/apptests/debug/second (None)
+nose.selector: DEBUG: Test name /home/user/dev/tests/apptests/debug/second resolved to file /home/user/dev/tests/apptests/debug/second, module None, call None
+nose.selector: DEBUG: Final resolution of test name /home/user/dev/tests/apptests/debug/second: file /home/user/dev/tests/apptests/debug/second module apptests.debug.second call None
+nose.importer: DEBUG: Import apptests.debug.second from /home/user/dev/tests
+nose.importer: DEBUG: Add path /home/user/dev/tests
+nose.importer: DEBUG: find module part apptests (apptests) in ['/home/user/dev/tests']
+nose.importer: DEBUG: sys.modules has apptests as <module 'apptests' from '/home/user/dev/tests/apptests/__init__.pyc'>
+nose.importer: DEBUG: module already loaded? mod: /home/user/dev/tests/apptests new: /home/user/dev/tests/apptests
+nose.importer: DEBUG: find module part debug (apptests.debug) in ['/home/user/dev/tests/apptests']
+nose.importer: DEBUG: sys.modules has apptests.debug as <module 'apptests.debug' from '/home/user/dev/tests/apptests/debug/__init__.pyc'>
+nose.importer: DEBUG: module already loaded? mod: /home/user/dev/tests/apptests/debug new: /home/user/dev/tests/apptests/debug
+nose.importer: DEBUG: find module part second (apptests.debug.second) in ['/home/user/dev/tests/apptests/debug']
+nose.loader: DEBUG: Load from module <module 'apptests.debug.second' from '/home/user/dev/tests/apptests/debug/second/__init__.pyc'>
+nose.selector: DEBUG: wantModule <module 'apptests.debug.second' from '/home/user/dev/tests/apptests/debug/second/__init__.pyc'>? False
+nose.loader: DEBUG: Load tests from module path /home/user/dev/tests/apptests/debug/second?
+nose.loader: DEBUG: path: /home/user/dev/tests/apptests/debug/second os.path.realpath(/home/user/dev/tests/apptests/debug/second): /home/user/dev/tests/apptests/debug/second
+nose.loader: DEBUG: load from dir /home/user/dev/tests/apptests/debug/second
+nose.importer: DEBUG: Add path /home/user/dev/tests/apptests/debug/second
+nose.importer: DEBUG: Add path /home/user/dev/tests/apptests/debug
+nose.importer: DEBUG: Add path /home/user/dev/tests/apptests
+nose.importer: DEBUG: Add path /home/user/dev/tests
+nose.selector: DEBUG: __init__.py matches ignoreFiles pattern; skipped
+nose.selector: DEBUG: __init__.pyc matches ignoreFiles pattern; skipped
+nose.selector: DEBUG: wantFile /home/user/dev/tests/apptests/debug/second/test_module_name.py? True
+nose.loader: DEBUG: load from /home/user/dev/tests/apptests/debug/second/test_module_name.py (None)
+nose.selector: DEBUG: Test name /home/user/dev/tests/apptests/debug/second/test_module_name.py resolved to file /home/user/dev/tests/apptests/debug/second/test_module_name.py, module None, call None
+nose.selector: DEBUG: Final resolution of test name /home/user/dev/tests/apptests/debug/second/test_module_name.py: file /home/user/dev/tests/apptests/debug/second/test_module_name.py module apptests.debug.second.test_module_name call None
+nose.importer: DEBUG: Import apptests.debug.second.test_module_name from /home/user/dev/tests
+nose.importer: DEBUG: Add path /home/user/dev/tests
+nose.importer: DEBUG: find module part apptests (apptests) in ['/home/user/dev/tests']
+nose.importer: DEBUG: sys.modules has apptests as <module 'apptests' from '/home/user/dev/tests/apptests/__init__.pyc'>
+nose.importer: DEBUG: module already loaded? mod: /home/user/dev/tests/apptests new: /home/user/dev/tests/apptests
+nose.importer: DEBUG: find module part debug (apptests.debug) in ['/home/user/dev/tests/apptests']
+nose.importer: DEBUG: sys.modules has apptests.debug as <module 'apptests.debug' from '/home/user/dev/tests/apptests/debug/__init__.pyc'>
+nose.importer: DEBUG: module already loaded? mod: /home/user/dev/tests/apptests/debug new: /home/user/dev/tests/apptests/debug
+nose.importer: DEBUG: find module part second (apptests.debug.second) in ['/home/user/dev/tests/apptests/debug']
+nose.importer: DEBUG: sys.modules has apptests.debug.second as <module 'apptests.debug.second' from '/home/user/dev/tests/apptests/debug/second/__init__.pyc'>
+nose.importer: DEBUG: module already loaded? mod: /home/user/dev/tests/apptests/debug/second new: /home/user/dev/tests/apptests/debug/second
+nose.importer: DEBUG: find module part test_module_name (apptests.debug.second.test_module_name) in ['/home/user/dev/tests/apptests/debug/second']
+nose.loader: DEBUG: Load from module <module 'apptests.debug.second.test_module_name' from '/home/user/dev/tests/apptests/debug/second/test_module_name.pyc'>
+nose.selector: DEBUG: wantModule <module 'apptests.debug.second.test_module_name' from '/home/user/dev/tests/apptests/debug/second/test_module_name.pyc'>? True
+nose.selector: DEBUG: wantClass <class 'unittest.case.TestCase'>? True
+nose.selector: DEBUG: wantClass <class 'apptests.debug.second.test_module_name.TestSecondLevelClassName'>? True
+nose.selector: DEBUG: wantMethod <unbound method TestCase.addCleanup>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.addTypeEqualityFunc>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertDictContainsSubset>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertDictEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertFalse>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertGreater>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertGreaterEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIn>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIs>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIsInstance>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIsNone>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIsNot>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIsNotNone>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertItemsEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertLess>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertLessEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertListEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertMultiLineEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotIn>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotIsInstance>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotRegexpMatches>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertRaises>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertRaisesRegexp>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertRegexpMatches>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertSequenceEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertSetEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertTrue>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertTupleEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertTrue>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.countTestCases>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.debug>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.defaultTestResult>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.doCleanups>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.fail>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.id>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.run>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.setUp>? None
+nose.selector: DEBUG: wantMethod <bound method type.setUpClass of <class 'apptests.debug.second.test_module_name.TestCase'>>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.shortDescription>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.skipTest>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.tearDown>? None
+nose.selector: DEBUG: wantMethod <bound method type.tearDownClass of <class 'apptests.debug.second.test_module_name.TestCase'>>? None
+nose.plugins.collect: DEBUG: TestSuite([])
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.addCleanup>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.addTypeEqualityFunc>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertDictContainsSubset>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertDictEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertFalse>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertGreater>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertGreaterEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertIn>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertIs>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertIsInstance>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertIsNone>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertIsNot>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertIsNotNone>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertItemsEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertLess>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertLessEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertListEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertMultiLineEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertNotAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertNotAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertNotEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertNotEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertNotIn>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertNotIsInstance>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertNotRegexpMatches>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertRaises>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertRaisesRegexp>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertRegexpMatches>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertSequenceEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertSetEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertTrue>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertTupleEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.assertTrue>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.countTestCases>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.debug>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.defaultTestResult>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.doCleanups>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.fail>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.id>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.run>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.setUp>? None
+nose.selector: DEBUG: wantMethod <bound method type.setUpClass of <class 'apptests.debug.second.test_module_name.TestSecondLevelClassName'>>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.shortDescription>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.skipTest>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.tearDown>? None
+nose.selector: DEBUG: wantMethod <bound method type.tearDownClass of <class 'apptests.debug.second.test_module_name.TestSecondLevelClassName'>>? None
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.test_second>? True
+nose.selector: DEBUG: wantMethod <unbound method TestSecondLevelClassName.test_second_other>? True
+nose.plugins.collect: DEBUG: TestSuite([<apptests.debug.second.test_module_name.TestSecondLevelClassName testMethod=test_second>, <apptests.debug.second.test_module_name.TestSecondLevelClassName testMethod=test_second_other>])
+nose.plugins.collect: DEBUG: Add test test_second (apptests.debug.second.test_module_name.TestSecondLevelClassName)
+nose.plugins.collect: DEBUG: Add test test_second_other (apptests.debug.second.test_module_name.TestSecondLevelClassName)
+nose.plugins.collect: DEBUG: TestSuite(<nose.suite.ContextList object at 0x0000000003BCC548>)
+nose.plugins.collect: DEBUG: Add test <nose.plugins.collect.TestSuite tests=[]>
+nose.plugins.collect: DEBUG: Add test <nose.plugins.collect.TestSuite tests=[Test(<apptests.debug.second.test_module_name.TestSecondLevelClassName testMethod=test_second>), Test(<apptests.debug.second.test_module_name.TestSecondLevelClassName testMethod=test_second_other>)]>
+nose.selector: DEBUG: wantFile /home/user/dev/tests/apptests/debug/second/test_module_name.pyc? False
+nose.plugins.collect: DEBUG: TestSuite(<nose.suite.ContextList object at 0x0000000003BC7BC8>)
+nose.plugins.collect: DEBUG: Add test <nose.plugins.collect.TestSuite tests=[<nose.plugins.collect.TestSuite tests=[]>, <nose.plugins.collect.TestSuite tests=[Test(<apptests.debug.second.test_module_name.TestSecondLevelClassName testMethod=test_second>), Test(<apptests.debug.second.test_module_name.TestSecondLevelClassName testMethod=test_second_other>)]>]>
+nose.selector: DEBUG: wantFile /home/user/dev/tests/apptests/debug/test_module_name.py? True
+nose.loader: DEBUG: load from /home/user/dev/tests/apptests/debug/test_module_name.py (None)
+nose.selector: DEBUG: Test name /home/user/dev/tests/apptests/debug/test_module_name.py resolved to file /home/user/dev/tests/apptests/debug/test_module_name.py, module None, call None
+nose.selector: DEBUG: Final resolution of test name /home/user/dev/tests/apptests/debug/test_module_name.py: file /home/user/dev/tests/apptests/debug/test_module_name.py module apptests.debug.test_module_name call None
+nose.importer: DEBUG: Import apptests.debug.test_module_name from /home/user/dev/tests
+nose.importer: DEBUG: Add path /home/user/dev/tests
+nose.importer: DEBUG: find module part apptests (apptests) in ['/home/user/dev/tests']
+nose.importer: DEBUG: sys.modules has apptests as <module 'apptests' from '/home/user/dev/tests/apptests/__init__.pyc'>
+nose.importer: DEBUG: module already loaded? mod: /home/user/dev/tests/apptests new: /home/user/dev/tests/apptests
+nose.importer: DEBUG: find module part debug (apptests.debug) in ['/home/user/dev/tests/apptests']
+nose.importer: DEBUG: sys.modules has apptests.debug as <module 'apptests.debug' from '/home/user/dev/tests/apptests/debug/__init__.pyc'>
+nose.importer: DEBUG: module already loaded? mod: /home/user/dev/tests/apptests/debug new: /home/user/dev/tests/apptests/debug
+nose.importer: DEBUG: find module part test_module_name (apptests.debug.test_module_name) in ['/home/user/dev/tests/apptests/debug']
+nose.loader: DEBUG: Load from module <module 'apptests.debug.test_module_name' from '/home/user/dev/tests/apptests/debug/test_module_name.pyc'>
+nose.selector: DEBUG: wantModule <module 'apptests.debug.test_module_name' from '/home/user/dev/tests/apptests/debug/test_module_name.pyc'>? True
+nose.selector: DEBUG: wantClass <class 'unittest.case.TestCase'>? True
+nose.selector: DEBUG: wantClass <class 'apptests.debug.test_module_name.TestRootClassName'>? True
+nose.selector: DEBUG: wantMethod <unbound method TestCase.addCleanup>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.addTypeEqualityFunc>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertDictContainsSubset>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertDictEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertFalse>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertGreater>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertGreaterEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIn>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIs>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIsInstance>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIsNone>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIsNot>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertIsNotNone>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertItemsEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertLess>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertLessEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertListEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertMultiLineEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotIn>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotIsInstance>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertNotRegexpMatches>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertRaises>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertRaisesRegexp>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertRegexpMatches>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertSequenceEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertSetEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertTrue>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertTupleEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.assertTrue>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.countTestCases>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.debug>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.defaultTestResult>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.doCleanups>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.fail>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.id>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.run>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.setUp>? None
+nose.selector: DEBUG: wantMethod <bound method type.setUpClass of <class 'apptests.debug.test_module_name.TestCase'>>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.shortDescription>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.skipTest>? None
+nose.selector: DEBUG: wantMethod <unbound method TestCase.tearDown>? None
+nose.selector: DEBUG: wantMethod <bound method type.tearDownClass of <class 'apptests.debug.test_module_name.TestCase'>>? None
+nose.plugins.collect: DEBUG: TestSuite([])
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.addCleanup>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.addTypeEqualityFunc>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertDictContainsSubset>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertDictEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertFalse>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertGreater>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertGreaterEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertIn>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertIs>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertIsInstance>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertIsNone>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertIsNot>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertIsNotNone>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertItemsEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertLess>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertLessEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertListEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertMultiLineEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertNotAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertNotAlmostEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertNotEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertNotEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertNotIn>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertNotIsInstance>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertNotRegexpMatches>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertRaises>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertRaisesRegexp>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertRegexpMatches>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertSequenceEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertSetEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertTrue>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertTupleEqual>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.assertTrue>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.countTestCases>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.debug>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.defaultTestResult>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.doCleanups>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.fail>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.deprecated_func>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.id>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.run>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.setUp>? None
+nose.selector: DEBUG: wantMethod <bound method type.setUpClass of <class 'apptests.debug.test_module_name.TestRootClassName'>>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.shortDescription>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.skipTest>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.tearDown>? None
+nose.selector: DEBUG: wantMethod <bound method type.tearDownClass of <class 'apptests.debug.test_module_name.TestRootClassName'>>? None
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.test_root>? True
+nose.selector: DEBUG: wantMethod <unbound method TestRootClassName.test_root_other>? True
+nose.plugins.collect: DEBUG: TestSuite([<apptests.debug.test_module_name.TestRootClassName testMethod=test_root>, <apptests.debug.test_module_name.TestRootClassName testMethod=test_root_other>])
+nose.plugins.collect: DEBUG: Add test test_root (apptests.debug.test_module_name.TestRootClassName)
+nose.plugins.collect: DEBUG: Add test test_root_other (apptests.debug.test_module_name.TestRootClassName)
+nose.plugins.collect: DEBUG: TestSuite(<nose.suite.ContextList object at 0x0000000003BCCF48>)
+nose.plugins.collect: DEBUG: Add test <nose.plugins.collect.TestSuite tests=[]>
+nose.plugins.collect: DEBUG: Add test <nose.plugins.collect.TestSuite tests=[Test(<apptests.debug.test_module_name.TestRootClassName testMethod=test_root>), Test(<apptests.debug.test_module_name.TestRootClassName testMethod=test_root_other>)]>
+nose.selector: DEBUG: wantFile /home/user/dev/tests/apptests/debug/test_module_name.pyc? False
+nose.plugins.collect: DEBUG: TestSuite(<nose.suite.ContextList object at 0x0000000003BB9408>)
+nose.plugins.collect: DEBUG: Add test <nose.plugins.collect.TestSuite tests=[<nose.plugins.collect.TestSuite tests=[<nose.plugins.collect.TestSuite tests=[]>, <nose.plugins.collect.TestSuite tests=[Test(<apptests.debug.first.test_module_name.TestFirstLevelClassName testMethod=test_first>), Test(<apptests.debug.first.test_module_name.TestFirstLevelClassName testMethod=test_first_other>)]>]>]>
+nose.plugins.collect: DEBUG: Add test <nose.plugins.collect.TestSuite tests=[<nose.plugins.collect.TestSuite tests=[<nose.plugins.collect.TestSuite tests=[]>, <nose.plugins.collect.TestSuite tests=[Test(<apptests.debug.second.test_module_name.TestSecondLevelClassName testMethod=test_second>), Test(<apptests.debug.second.test_module_name.TestSecondLevelClassName testMethod=test_second_other>)]>]>]>
+nose.plugins.collect: DEBUG: Add test <nose.plugins.collect.TestSuite tests=[<nose.plugins.collect.TestSuite tests=[]>, <nose.plugins.collect.TestSuite tests=[Test(<apptests.debug.test_module_name.TestRootClassName testMethod=test_root>), Test(<apptests.debug.test_module_name.TestRootClassName testMethod=test_root_other>)]>]>
+nose.plugins.collect: DEBUG: TestSuite(<nose.suite.ContextList object at 0x0000000003BB9108>)
+nose.plugins.collect: DEBUG: Add test <nose.plugins.collect.TestSuite tests=[<nose.plugins.collect.TestSuite tests=[<nose.plugins.collect.TestSuite tests=[<nose.plugins.collect.TestSuite tests=[]>, <nose.plugins.collect.TestSuite tests=[Test(<apptests.debug.first.test_module_name.TestFirstLevelClassName testMethod=test_first>), Test(<apptests.debug.first.test_module_name.TestFirstLevelClassName testMethod=test_first_other>)]>]>]>, <nose.plugins.collect.TestSuite tests=[<nose.plugins.collect.TestSuite tests=[<nose.plugins.collect.TestSuite tests=[]>, <nose.plugins.collect.TestSuite tests=[Test(<apptests.debug.second.test_module_name.TestSecondLevelClassName testMethod=test_second>), Test(<apptests.debug.second.test_module_name.TestSecondLevelClassName testMethod=test_second_other>)]>]>]>, <nose.plugins.collect.TestSuite tests=[<nose.plugins.collect.TestSuite tests=[]>, <nose.plugins.collect.TestSuite tests=[Test(<apptests.debug.test_module_name.TestRootClassName testMethod=test_root>), Test(<apptests.debug.test_module_name.TestRootClassName testMethod=test_root_other>)]>]>]>
+nose.plugins.collect: DEBUG: Preparing test case test_first (apptests.debug.first.test_module_name.TestFirstLevelClassName)
+test_first (apptests.debug.first.test_module_name.TestFirstLevelClassName) ... ok
+nose.plugins.collect: DEBUG: Preparing test case test_first_other (apptests.debug.first.test_module_name.TestFirstLevelClassName)
+test_first_other (apptests.debug.first.test_module_name.TestFirstLevelClassName) ... ok
+nose.plugins.collect: DEBUG: Preparing test case test_second (apptests.debug.second.test_module_name.TestSecondLevelClassName)
+test_second (apptests.debug.second.test_module_name.TestSecondLevelClassName) ... ok
+nose.plugins.collect: DEBUG: Preparing test case test_second_other (apptests.debug.second.test_module_name.TestSecondLevelClassName)
+test_second_other (apptests.debug.second.test_module_name.TestSecondLevelClassName) ... ok
+nose.plugins.collect: DEBUG: Preparing test case test_root (apptests.debug.test_module_name.TestRootClassName)
+test_root (apptests.debug.test_module_name.TestRootClassName) ... ok
+nose.plugins.collect: DEBUG: Preparing test case test_root_other (apptests.debug.test_module_name.TestRootClassName)
+test_root_other (apptests.debug.test_module_name.TestRootClassName) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.490s
+
+OK

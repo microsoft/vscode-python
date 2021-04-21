@@ -6,12 +6,14 @@ import * as path from 'path';
 import {
     CancellationToken,
     CancellationTokenSource,
+    env,
     Position,
     Progress,
     ProgressLocation,
     ProgressOptions,
     QuickPickItem,
     Selection,
+    TextEditorRevealType,
     Uri,
     ViewColumn,
     WebviewPanel,
@@ -40,6 +42,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { ImportTracker } from '../telemetry/importTracker';
 import { TensorBoardPromptSelection, TensorBoardSessionStartResult } from './constants';
+import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
 
 enum Messages {
     JumpToSource = 'jump_to_source',
@@ -85,6 +88,7 @@ export class TensorBoardSession {
         private readonly applicationShell: IApplicationShell,
         private readonly isInTorchProfilerExperiment: boolean,
         private readonly globalMemento: IPersistentState<ViewColumn>,
+        private readonly multiStepFactory: IMultiStepInputFactory,
     ) {}
 
     public async initialize(): Promise<void> {
@@ -99,7 +103,7 @@ export class TensorBoardSession {
         }
         const startedSuccessfully = await this.startTensorboardSession(logDir);
         if (startedSuccessfully) {
-            this.showPanel();
+            await this.showPanel();
             // Not using captureTelemetry on this method as we only want to send
             // this particular telemetry event if the whole session creation succeeded
             sendTelemetryEvent(
@@ -407,23 +411,23 @@ export class TensorBoardSession {
         return urlThatTensorBoardIsRunningAt.promise;
     }
 
-    private showPanel() {
+    private async showPanel() {
         traceInfo('Showing TensorBoard panel');
-        const panel = this.webviewPanel || this.createPanel();
+        const panel = this.webviewPanel || (await this.createPanel());
         panel.reveal();
         this.active = true;
     }
 
-    private createPanel() {
+    private async createPanel() {
         const webviewPanel = window.createWebviewPanel('tensorBoardSession', 'TensorBoard', this.globalMemento.value, {
             enableScripts: true,
-            retainContextWhenHidden: true,
         });
+        const fullWebServerUri = await env.asExternalUri(Uri.parse(this.url!));
         webviewPanel.webview.html = `<!DOCTYPE html>
         <html lang="en">
             <head>
                 <meta charset="UTF-8">
-                <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'; frame-src ${this.url} http: https:;">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'; frame-src ${fullWebServerUri} http: https:;">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>TensorBoard</title>
             </head>
@@ -443,7 +447,7 @@ export class TensorBoardSession {
                     }
                     window.addEventListener('resize', resizeFrame);
                     window.addEventListener('message', (event) => {
-                        if (!"${this.url}".startsWith(event.origin) || !event.data || !event.data.filename || !event.data.line) {
+                        if (!"${fullWebServerUri}".startsWith(event.origin) || !event.data || !event.data.filename || !event.data.line) {
                             return;
                         }
                         const args = { filename: event.data.filename, line: event.data.line };
@@ -454,7 +458,7 @@ export class TensorBoardSession {
                     id="vscode-tensorboard-iframe"
                     class="responsive-iframe"
                     sandbox="allow-scripts allow-forms allow-same-origin allow-pointer-lock"
-                    src="${this.url}"
+                    src="${fullWebServerUri}"
                     frameborder="0"
                     border="0"
                     allowfullscreen
@@ -496,7 +500,7 @@ export class TensorBoardSession {
                 // Handle messages posted from the webview
                 switch (message.command) {
                     case Messages.JumpToSource:
-                        jumpToSource(message.args.filename, message.args.line);
+                        void this.jumpToSource(message.args.filename, message.args.line);
                         break;
                     default:
                         break;
@@ -516,22 +520,58 @@ export class TensorBoardSession {
         }
         return undefined;
     }
-}
 
-function jumpToSource(fsPath: string, line: number) {
-    if (fs.existsSync(fsPath)) {
-        const uri = Uri.file(fsPath);
-        workspace
-            .openTextDocument(uri)
-            .then((doc) => window.showTextDocument(doc, ViewColumn.Beside))
-            .then((editor) => {
-                // Select the line if it exists in the document
-                if (line < editor.document.lineCount) {
-                    const position = new Position(line, 0);
-                    editor.selection = new Selection(position, editor.document.lineAt(line).range.end);
+    private async jumpToSource(fsPath: string, line: number) {
+        let uri: Uri | undefined;
+        if (fs.existsSync(fsPath)) {
+            uri = Uri.file(fsPath);
+        } else {
+            traceError(
+                `Requested jump to source filepath ${fsPath} does not exist. Prompting user to select source file...`,
+            );
+            // Prompt the user to pick the file on disk
+            const items: QuickPickItem[] = [
+                {
+                    label: TensorBoard.selectMissingSourceFile(),
+                    description: TensorBoard.selectMissingSourceFileDescription(),
+                },
+            ];
+            // Using a multistep so that we can add a title to the quickpick
+            const multiStep = this.multiStepFactory.create<unknown>();
+            await multiStep.run(async (input) => {
+                const selection = await input.showQuickPick({
+                    items,
+                    title: TensorBoard.missingSourceFile(),
+                    placeholder: fsPath,
+                });
+                switch (selection?.label) {
+                    case TensorBoard.selectMissingSourceFile(): {
+                        const filePickerSelection = await this.applicationShell.showOpenDialog({
+                            canSelectFiles: true,
+                            canSelectFolders: false,
+                            canSelectMany: false,
+                        });
+                        if (filePickerSelection !== undefined) {
+                            [uri] = filePickerSelection;
+                        }
+                        break;
+                    }
+                    default:
+                        break;
                 }
-            });
-    } else {
-        traceError(`Requested jump to source filepath ${fsPath} does not exist`);
+            }, {});
+        }
+        if (uri === undefined) {
+            return;
+        }
+        const document = await workspace.openTextDocument(uri);
+        const editor = await window.showTextDocument(document, ViewColumn.Beside);
+        // Select the line if it exists in the document
+        if (line < editor.document.lineCount) {
+            const position = new Position(line, 0);
+            const selection = new Selection(position, editor.document.lineAt(line).range.end);
+            editor.selection = selection;
+            editor.revealRange(selection, TextEditorRevealType.InCenterIfOutsideViewport);
+        }
     }
 }

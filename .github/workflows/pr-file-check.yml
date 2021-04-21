@@ -44,6 +44,7 @@ jobs:
           prereq-pattern: src/**/*.ts
           file-pattern: |
             src/**/*.test.ts
+            src/**/*.testvirtualenvs.ts
             .github/test_plan.md
           skip-label: 'skip tests'
           failure-message: 'TypeScript code was edited without also editing a ${file-pattern} file; see the Testing page in our wiki on testing guidelines (the ${skip-label} label can be used to pass this check)'

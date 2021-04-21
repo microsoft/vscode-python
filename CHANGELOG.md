@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.4.0-rc (8 April 2021)
+## 2021.4.0 (19 April 2021)
 
 ### Enhancements
 

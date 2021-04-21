@@ -170,6 +170,16 @@ jobs:
           python -m pip install pipenv
           python -m pipenv run python ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} pipenvPath
 
+      - name: Prepare poetry for venv tests
+        env:
+          TEST_FILES_SUFFIX: testvirtualenvs
+        shell: pwsh
+        if: matrix.test-suite == 'venv'
+        run: |
+          python -m pip install poetry
+          Move-Item -Path ".\build\ci\pyproject.toml" -Destination .
+          poetry env use python
+
       - name: Prepare virtualenv for venv tests
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
@@ -251,7 +261,7 @@ jobs:
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
           CI_PYTHON_VERSION: ${{matrix.python}}
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.5
         with:
           run: npm run testSingleWorkspace
           working-directory: ${{env.special-working-directory}}
@@ -260,7 +270,7 @@ jobs:
       - name: Run single-workspace tests
         env:
           CI_PYTHON_VERSION: ${{matrix.python}}
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.5
         with:
           run: npm run testSingleWorkspace
           working-directory: ${{env.special-working-directory}}
@@ -269,7 +279,7 @@ jobs:
       - name: Run multi-workspace tests
         env:
           CI_PYTHON_VERSION: ${{matrix.python}}
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.5
         with:
           run: npm run testMultiWorkspace
           working-directory: ${{env.special-working-directory}}
@@ -278,7 +288,7 @@ jobs:
       - name: Run debugger tests
         env:
           CI_PYTHON_VERSION: ${{matrix.python}}
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.5
         with:
           run: npm run testDebugger
           working-directory: ${{env.special-working-directory}}
@@ -353,7 +363,7 @@ jobs:
         env:
           DISPLAY: 10
           INSTALL_JUPYTER_EXTENSION: true
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.5
         with:
           run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
 
@@ -418,6 +428,6 @@ jobs:
           VSC_PYTHON_CI_TEST_VSC_CHANNEL: insiders
           TEST_FILES_SUFFIX: insiders.test
           CODE_TESTS_WORKSPACE: ./src/testMultiRootWkspc/smokeTests
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.5
         with:
           run: node --no-force-async-hooks-checks ./out/test/standardTest.js

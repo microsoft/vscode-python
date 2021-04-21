@@ -1,1 +1,1 @@
-Please see the [Contributing page](https://github.com/microsoft/vscode-python/wiki/Contributing) in our wiki on how to contribute to this project.
+Please see [our wiki](https://github.com/microsoft/vscode-python/wiki) on how to contribute to this project.
