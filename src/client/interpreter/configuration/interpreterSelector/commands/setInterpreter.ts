@@ -96,7 +96,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         >({
             placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
             items: suggestions,
-            activeItem: inFindExperiment ? suggestions[0] : suggestions[1],
+            activeItem: suggestions[1],
             matchOnDetail: true,
             matchOnDescription: true,
             customButtonSetup: {
@@ -104,11 +104,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 callback: async (quickPick) => {
                     quickPick.busy = true;
                     interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace, true);
-                    if (inFindExperiment) {
-                        quickPick.items = [...interpreterSuggestions, manualEntrySuggestion];
-                    } else {
-                        quickPick.items = [manualEntrySuggestion, ...interpreterSuggestions];
-                    }
+                    quickPick.items = [manualEntrySuggestion, ...interpreterSuggestions];
                     quickPick.busy = false;
                 },
             },
