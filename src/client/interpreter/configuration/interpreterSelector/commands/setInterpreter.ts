@@ -75,12 +75,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             alwaysShow: true,
         };
 
-        let suggestions: (IInterpreterQuickPickItem | IFindInterpreterQuickPickItem)[] = [];
-        if (inFindExperiment) {
-            suggestions = [manualEntrySuggestion, ...interpreterSuggestions];
-        } else {
-            suggestions = [manualEntrySuggestion, ...interpreterSuggestions];
-        }
+        const suggestions: (IInterpreterQuickPickItem | IFindInterpreterQuickPickItem)[] = [
+            manualEntrySuggestion,
+            ...interpreterSuggestions,
+        ];
 
         const currentPythonPath = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
