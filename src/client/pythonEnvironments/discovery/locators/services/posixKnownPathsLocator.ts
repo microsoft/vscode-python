@@ -25,7 +25,8 @@ export class PosixKnownPathsLocator extends Locator {
             const pythonBinaries = await getPythonBinFromPosixPaths(knownDirs);
             for (const bin of pythonBinaries) {
                 try {
-                    yield buildPathEnvInfo(bin);
+                    const env = await buildPathEnvInfo(bin);
+                    yield env;
                 } catch (ex) {
                     traceError(`Failed to process environment: ${bin}`, ex);
                 }

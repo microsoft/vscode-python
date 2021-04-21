@@ -34,7 +34,8 @@ export class WindowsRegistryLocator extends Locator {
             const interpreters = await getRegistryInterpreters();
             for (const interpreter of interpreters) {
                 try {
-                    yield buildRegistryEnvInfo(interpreter);
+                    const env = await buildRegistryEnvInfo(interpreter);
+                    yield env;
                 } catch (ex) {
                     traceError(`Failed to process environment: ${interpreter}`, ex);
                 }
