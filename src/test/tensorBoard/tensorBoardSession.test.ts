@@ -448,6 +448,9 @@ suite('TensorBoard session creation', async () => {
             'tensorBoard',
             'sourcefile.py',
         );
+        teardown(() => {
+            sandbox.restore();
+        });
         function setupStubsForMultiStepInput() {
             // Stub the factory to return our stubbed multistep input when it's asked to create one
             const multiStepFactory = serviceManager.get<IMultiStepInputFactory>(IMultiStepInputFactory);
@@ -474,7 +477,6 @@ suite('TensorBoard session creation', async () => {
                 stubs.reduce((prev, current) => current.notCalled && prev, true),
                 'Stubs were called when file is present',
             );
-            sandbox.restore();
         });
         test('Display quickpick to user if filepath is not on disk', async () => {
             const session = ((await createSession()) as unknown) as ITensorBoardSessionTestAPI;
@@ -486,7 +488,6 @@ suite('TensorBoard session creation', async () => {
                 stubs.reduce((prev, current) => current.calledOnce && prev, true),
                 'Stubs called an unexpected number of times',
             );
-            sandbox.restore();
         });
     });
 });
