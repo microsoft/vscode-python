@@ -181,7 +181,7 @@ suite('Activation of Environments in Terminal', () => {
             this.skip();
         }
         await testActivation(envPaths.venvPath);
-    });
+    }).timeout(TEST_TIMEOUT * 2);
     test('Should activate with pipenv', async () => {
         await testActivation(envPaths.pipenvPath);
     });
