@@ -6,6 +6,7 @@ import * as path from 'path';
 import {
     CancellationToken,
     CancellationTokenSource,
+    env,
     Position,
     Progress,
     ProgressLocation,
@@ -100,7 +101,7 @@ export class TensorBoardSession {
         }
         const startedSuccessfully = await this.startTensorboardSession(logDir);
         if (startedSuccessfully) {
-            this.showPanel();
+            await this.showPanel();
             // Not using captureTelemetry on this method as we only want to send
             // this particular telemetry event if the whole session creation succeeded
             sendTelemetryEvent(
@@ -408,23 +409,24 @@ export class TensorBoardSession {
         return urlThatTensorBoardIsRunningAt.promise;
     }
 
-    private showPanel() {
+    private async showPanel() {
         traceInfo('Showing TensorBoard panel');
-        const panel = this.webviewPanel || this.createPanel();
+        const panel = this.webviewPanel || (await this.createPanel());
         panel.reveal();
         this.active = true;
     }
 
-    private createPanel() {
+    private async createPanel() {
         const webviewPanel = window.createWebviewPanel('tensorBoardSession', 'TensorBoard', this.globalMemento.value, {
             enableScripts: true,
             retainContextWhenHidden: true,
         });
+        const fullWebServerUri = await env.asExternalUri(Uri.parse(this.url!));
         webviewPanel.webview.html = `<!DOCTYPE html>
         <html lang="en">
             <head>
                 <meta charset="UTF-8">
-                <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'; frame-src ${this.url} http: https:;">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'; frame-src ${fullWebServerUri} http: https:;">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>TensorBoard</title>
             </head>
@@ -444,7 +446,7 @@ export class TensorBoardSession {
                     }
                     window.addEventListener('resize', resizeFrame);
                     window.addEventListener('message', (event) => {
-                        if (!"${this.url}".startsWith(event.origin) || !event.data || !event.data.filename || !event.data.line) {
+                        if (!"${fullWebServerUri}".startsWith(event.origin) || !event.data || !event.data.filename || !event.data.line) {
                             return;
                         }
                         const args = { filename: event.data.filename, line: event.data.line };
@@ -455,7 +457,7 @@ export class TensorBoardSession {
                     id="vscode-tensorboard-iframe"
                     class="responsive-iframe"
                     sandbox="allow-scripts allow-forms allow-same-origin allow-pointer-lock"
-                    src="${this.url}"
+                    src="${fullWebServerUri}"
                     frameborder="0"
                     border="0"
                     allowfullscreen
