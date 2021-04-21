@@ -77,7 +77,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
 
         let suggestions: (IInterpreterQuickPickItem | IFindInterpreterQuickPickItem)[] = [];
         if (inFindExperiment) {
-            suggestions = [...interpreterSuggestions, manualEntrySuggestion];
+            suggestions = [manualEntrySuggestion, ...interpreterSuggestions];
         } else {
             suggestions = [manualEntrySuggestion, ...interpreterSuggestions];
         }
