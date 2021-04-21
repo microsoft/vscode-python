@@ -156,6 +156,8 @@ suite('Activation of Environments in Terminal', () => {
             vscode.workspace.workspaceFolders![0].uri,
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
+        const result = experiments.inExperiment(DeprecatePythonPath.experiment);
+        console.warn(`inExperiment(DeprecatePythonPath.experiment): ${result}`);
         if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
             await setGlobalInterpreterPath(envPath);
         } else {
@@ -176,7 +178,15 @@ suite('Activation of Environments in Terminal', () => {
         expect(fileSystem.arePathsSame(content, PYTHON_PATH)).to.equal(false, 'Environment not activated');
     });
 
-    test('Should activate with venv', async function () {
+    test('Should activate with venv in DeprecatePythonPath experiment', async function () {
+        sandbox.stub(experiments, 'inExperiment').withArgs(DeprecatePythonPath.experiment).returns(true);
+        if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
+            this.skip();
+        }
+        await testActivation(envPaths.venvPath);
+    }).timeout(TEST_TIMEOUT * 2);
+    test('Should activate with venv not in DeprecatePythonPath experiment', async function () {
+        sandbox.stub(experiments, 'inExperiment').withArgs(DeprecatePythonPath.experiment).returns(false);
         if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
             this.skip();
         }
