@@ -10,7 +10,7 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
-import { IExperimentsManager } from '../../../../client/common/types';
+import { IExperimentService, IExperimentsManager } from '../../../../client/common/types';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import {
     PYTHON_PATH,
@@ -68,7 +68,10 @@ suite('Activation of Environments in Terminal', () => {
         defaultShell.Windows = terminalSettings.inspect('integrated.shell.windows').globalValue;
         defaultShell.Linux = terminalSettings.inspect('integrated.shell.linux').globalValue;
         await terminalSettings.update('integrated.shell.linux', '/bin/bash', vscode.ConfigurationTarget.Global);
-        experiments = (await initialize()).serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        const serviceContainer = (await initialize()).serviceContainer;
+        experiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
+        sandbox.stub(experimentService, 'inExperiment').resolves(false);
     });
 
     setup(async () => {
