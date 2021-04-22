@@ -181,44 +181,82 @@ suite('Activation of Environments in Terminal', () => {
         expect(fileSystem.arePathsSame(content, PYTHON_PATH)).to.equal(false, 'Environment not activated');
     });
 
-    suite('venv', () => {
-        let deprecatePythonPathStub: sinon.SinonStub;
-        setup(() => {
-            deprecatePythonPathStub = sandbox.stub(experiments, 'inExperiment');
-        });
+    [true, false].forEach((value) => {
+        suite(`Test activation with DeprecatePythonPath experiment value set to ${value}`, () => {
+            let deprecatePythonPathStub: sinon.SinonStub;
+            setup(() => {
+                deprecatePythonPathStub = sandbox.stub(experiments, 'inExperiment');
+                deprecatePythonPathStub.withArgs(DeprecatePythonPath.experiment).returns(value);
+            });
 
-        teardown(() => {
-            deprecatePythonPathStub.restore();
-        });
+            teardown(() => {
+                deprecatePythonPathStub.restore();
+            });
 
-        test('Should activate with venv in DeprecatePythonPath experiment', async function () {
-            deprecatePythonPathStub.withArgs(DeprecatePythonPath.experiment).returns(true);
-            if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
-                this.skip();
-            }
-            await testActivation(envPaths.venvPath);
-        }).timeout(TEST_TIMEOUT * 2);
-        test('Should activate with venv not in DeprecatePythonPath experiment', async function () {
-            deprecatePythonPathStub.withArgs(DeprecatePythonPath.experiment).returns(false);
-            if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
-                this.skip();
-            }
-            await testActivation(envPaths.venvPath);
-        }).timeout(TEST_TIMEOUT * 2);
+            test('Should activate with venv', async function () {
+                if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
+                    this.skip();
+                }
+                await testActivation(envPaths.venvPath);
+            });
+
+            test('Should activate with pipenv', async () => {
+                await testActivation(envPaths.pipenvPath);
+            });
+
+            test('Should activate with virtualenv', async () => {
+                await testActivation(envPaths.virtualEnvPath);
+            });
+
+            test('Should activate with conda', async () => {
+                await terminalSettings.update(
+                    'integrated.shell.windows',
+                    'C:\\Windows\\System32\\cmd.exe',
+                    vscode.ConfigurationTarget.Global,
+                );
+                await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
+                await testActivation(envPaths.condaPath);
+            }).timeout(TEST_TIMEOUT * 2);
+        });
     });
-    test('Should activate with pipenv', async () => {
-        await testActivation(envPaths.pipenvPath);
-    });
-    test('Should activate with virtualenv', async () => {
-        await testActivation(envPaths.virtualEnvPath);
-    });
-    test('Should activate with conda', async () => {
-        await terminalSettings.update(
-            'integrated.shell.windows',
-            'C:\\Windows\\System32\\cmd.exe',
-            vscode.ConfigurationTarget.Global,
-        );
-        await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
-        await testActivation(envPaths.condaPath);
-    }).timeout(TEST_TIMEOUT * 2);
+    // suite('venv', () => {
+    //     let deprecatePythonPathStub: sinon.SinonStub;
+    //     setup(() => {
+    //         deprecatePythonPathStub = sandbox.stub(experiments, 'inExperiment');
+    //     });
+
+    //     teardown(() => {
+    //         deprecatePythonPathStub.restore();
+    //     });
+
+    //     test('Should activate with venv in DeprecatePythonPath experiment', async function () {
+    //         deprecatePythonPathStub.withArgs(DeprecatePythonPath.experiment).returns(true);
+    //         if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
+    //             this.skip();
+    //         }
+    //         await testActivation(envPaths.venvPath);
+    //     }).timeout(TEST_TIMEOUT * 2);
+    //     test('Should activate with venv not in DeprecatePythonPath experiment', async function () {
+    //         deprecatePythonPathStub.withArgs(DeprecatePythonPath.experiment).returns(false);
+    //         if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
+    //             this.skip();
+    //         }
+    //         await testActivation(envPaths.venvPath);
+    //     }).timeout(TEST_TIMEOUT * 2);
+    // });
+    // test('Should activate with pipenv', async () => {
+    //     await testActivation(envPaths.pipenvPath);
+    // });
+    // test('Should activate with virtualenv', async () => {
+    //     await testActivation(envPaths.virtualEnvPath);
+    // });
+    // test('Should activate with conda', async () => {
+    //     await terminalSettings.update(
+    //         'integrated.shell.windows',
+    //         'C:\\Windows\\System32\\cmd.exe',
+    //         vscode.ConfigurationTarget.Global,
+    //     );
+    //     await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
+    //     await testActivation(envPaths.condaPath);
+    // }).timeout(TEST_TIMEOUT * 2);
 });
