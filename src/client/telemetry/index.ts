@@ -1275,6 +1275,21 @@ export interface IEventNamePropertyMapping {
         error?: string;
     };
     /**
+     * Telemetry event sent once on session start with details on which experiments are opted into and opted out from.
+     */
+    [EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS]: {
+        /**
+         * List of valid experiments in the python.experiments.optInto setting
+         * @type {string[]}
+         */
+        optedInto: string[];
+        /**
+         * List of valid experiments in the python.experiments.optOutFrom setting
+         * @type {string[]}
+         */
+        optedOutFrom: string[];
+    };
+    /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
      */
     [EventName.LANGUAGE_SERVER_ENABLED]: {
