@@ -179,18 +179,20 @@ suite('Activation of Environments in Terminal', () => {
     });
 
     test('Should activate with venv in DeprecatePythonPath experiment', async function () {
-        sandbox.stub(experiments, 'inExperiment').withArgs(DeprecatePythonPath.experiment).returns(true);
+        const foo = sandbox.stub(experiments, 'inExperiment').withArgs(DeprecatePythonPath.experiment).returns(true);
         if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
             this.skip();
         }
         await testActivation(envPaths.venvPath);
+        foo.restore();
     }).timeout(TEST_TIMEOUT * 2);
     test('Should activate with venv not in DeprecatePythonPath experiment', async function () {
-        sandbox.stub(experiments, 'inExperiment').withArgs(DeprecatePythonPath.experiment).returns(false);
+        const foo = sandbox.stub(experiments, 'inExperiment').withArgs(DeprecatePythonPath.experiment).returns(false);
         if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
             this.skip();
         }
         await testActivation(envPaths.venvPath);
+        foo.restore();
     }).timeout(TEST_TIMEOUT * 2);
     test('Should activate with pipenv', async () => {
         await testActivation(envPaths.pipenvPath);
