@@ -19,7 +19,7 @@ import {
     setGlobalInterpreterPath,
     setPythonPathInWorkspaceRoot,
     updateSetting,
-    // waitForCondition,
+    waitForCondition,
 } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, TEST_TIMEOUT } from '../../../constants';
 import { sleep } from '../../../core';
@@ -138,9 +138,12 @@ suite('Activation of Environments in Terminal', () => {
     ): Promise<string> {
         const terminal = vscode.window.createTerminal();
         await sleep(consoleInitWaitMs);
+        const command = `python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`;
+        console.warn(`command sent to terminal: ${command}`);
         terminal.sendText(`python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`, true);
-        // await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
-
+        await waitForCondition(() => fs.pathExists(logFile), 10_000, `${logFile} file not created.`);
+        const exists = await fs.pathExists(logFile);
+        console.warn(`Does the path to ${logFile} exist? ${exists}`);
         return 'foo';
         // return fs.readFile(logFile, 'utf-8');
     }
