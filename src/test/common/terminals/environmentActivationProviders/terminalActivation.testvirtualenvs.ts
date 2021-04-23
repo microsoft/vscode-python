@@ -164,14 +164,17 @@ suite('Activation of Environments in Terminal', () => {
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
         const result = experiments.inExperiment(DeprecatePythonPath.experiment);
-        console.warn(`testActivation - inExperiment(DeprecatePythonPath.experiment): ${result}`);
+        console.warn(
+            `testActivation for envPath: ${envPath} - inExperiment(DeprecatePythonPath.experiment): ${result}`,
+        );
         if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
             await setGlobalInterpreterPath(envPath);
         } else {
             await setPythonPathInWorkspaceRoot(envPath);
         }
-        expect(true).to.equal(true);
+
         await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
+        console.warn(`openTerminalAndAwaitCommandContent done for envPath: ${envPath}`);
         expect(true).to.equal(true);
         // expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
     }
