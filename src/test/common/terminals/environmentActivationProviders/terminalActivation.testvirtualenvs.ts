@@ -144,8 +144,8 @@ suite('Activation of Environments in Terminal', () => {
         await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
         const exists = await fs.pathExists(logFile);
         console.warn(`Does the path to ${logFile} exist? ${exists}`);
-        return 'foo';
-        // return fs.readFile(logFile, 'utf-8');
+        // return 'foo';
+        return fs.readFile(logFile, 'utf-8');
     }
 
     /**
@@ -173,10 +173,10 @@ suite('Activation of Environments in Terminal', () => {
             await setPythonPathInWorkspaceRoot(envPath);
         }
 
-        await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
+        const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         console.warn(`openTerminalAndAwaitCommandContent done for envPath: ${envPath}`);
-        expect(true).to.equal(true);
-        // expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
+        // expect(true).to.equal(true);
+        expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
     }
 
     test('Should not activate', async () => {
