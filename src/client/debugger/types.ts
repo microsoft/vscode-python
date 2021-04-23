@@ -31,6 +31,13 @@ type Connection = {
     port?: number;
 };
 
+export interface IAutomaticCodeReload {
+    enable?: boolean;
+    exclude?: string[];
+    include?: string[];
+    pollingInterval?: number;
+}
+
 interface ICommonDebugArguments {
     redirectOutput?: boolean;
     django?: boolean;
@@ -97,6 +104,9 @@ interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
     // Legacy interpreter setting. Equivalent to setting "python", "debugAdapterPython",
     // and "debugLauncherPython" all at once.
     pythonPath?: string;
+
+    // Configures automatic code reloading.
+    autoReload?: IAutomaticCodeReload;
 }
 
 export interface LaunchRequestArguments

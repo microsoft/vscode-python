@@ -798,6 +798,43 @@
                                 "type": "boolean",
                                 "description": "Whether to enable Sub Process debugging",
                                 "default": false
+                            },
+                            "autoReload": {
+                                "type": "object",
+                                "description": "Configures automatic reload of code on edit.",
+                                "default": {},
+                                "properties": {
+                                    "enable": {
+                                        "type": "boolean",
+                                        "description": "Automatically reload code on edit.",
+                                        "default": false
+                                    },
+                                    "exclude": {
+                                        "type": "array",
+                                        "description": "Glob patterns of paths to exclude from auto reload.",
+                                        "default": [
+                                            "**/.git/**",
+                                            "**/__pycache__/**",
+                                            "**/node_modules/**",
+                                            "**/.metadata/**",
+                                            "**/site-packages/**"
+                                        ],
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "include": {
+                                        "type": "array",
+                                        "description": "Glob patterns of paths to include in auto reload.",
+                                        "default": [
+                                            "**/*.py",
+                                            "**/*.pyw"
+                                        ],
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
                             }
                         }
                     },
@@ -1075,6 +1112,7 @@
                             "pythonDiscoveryModule",
                             "pythonJediLSP",
                             "pythonSurveyNotification",
+                            "pythonDebuggerAutoReload",
                             "All"
                         ]
                     },
@@ -1092,6 +1130,7 @@
                             "pythonDiscoveryModule",
                             "pythonJediLSP",
                             "pythonSurveyNotification",
+                            "pythonDebuggerAutoReload",
                             "All"
                         ]
                     },

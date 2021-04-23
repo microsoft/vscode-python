@@ -9,9 +9,10 @@ import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEdito
 import { IInvalidPythonPathInDebuggerService } from '../../../../../client/application/diagnostics/types';
 import { IDocumentManager, IWorkspaceService } from '../../../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
+import { DebuggerAutoReload } from '../../../../../client/common/experiments/groups';
 import { IPlatformService } from '../../../../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../../client/common/process/types';
-import { IConfigurationService, IPythonSettings } from '../../../../../client/common/types';
+import { IConfigurationService, IExperimentService, IPythonSettings } from '../../../../../client/common/types';
 import { OSType } from '../../../../../client/common/utils/platform';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
 import { IDebugEnvironmentVariablesService } from '../../../../../client/debugger/extension/configuration/resolvers/helper';
@@ -37,12 +38,18 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         let documentManager: TypeMoq.IMock<IDocumentManager>;
         let diagnosticsService: TypeMoq.IMock<IInvalidPythonPathInDebuggerService>;
         let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
+        let experiments: TypeMoq.IMock<IExperimentService>;
 
         function createMoqWorkspaceFolder(folderPath: string) {
             const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
             folder.setup((f) => f.uri).returns(() => Uri.file(folderPath));
             return folder.object;
         }
+
+        setup(() => {
+            experiments = TypeMoq.Mock.ofType<IExperimentService>();
+            experiments.setup((e) => e.inExperiment(DebuggerAutoReload.reload)).returns(() => Promise.resolve(false));
+        });
 
         function setupIoc(pythonPath: string, workspaceFolder?: WorkspaceFolder) {
             configService = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -83,6 +90,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 platformService.object,
                 configService.object,
                 debugEnvHelper.object,
+                experiments.object,
             );
         }
 
@@ -138,6 +146,37 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             return config as LaunchRequestArguments;
         }
+
+        test('Auto reload must be set when in experiment.', async () => {
+            const pythonPath = `PythonPath_${new Date().toString()}`;
+            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+            const pythonFile = 'xyz.py';
+
+            experiments.setup((e) => e.inExperiment(DebuggerAutoReload.reload)).returns(() => Promise.resolve(true));
+            setupIoc(pythonPath, workspaceFolder);
+            setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
+
+            const debugConfig = await resolveDebugConfiguration(workspaceFolder, {});
+
+            expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
+            expect(debugConfig).to.have.property('type', 'python');
+            expect(debugConfig).to.have.property('request', 'launch');
+            expect(debugConfig).to.not.have.property('pythonPath');
+            expect(debugConfig).to.have.property('python', pythonPath);
+            expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
+            expect(debugConfig).to.have.property('debugLauncherPython', pythonPath);
+            expect(debugConfig).to.have.property('program', pythonFile);
+            expect(debugConfig).to.have.property('cwd');
+            expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(__dirname.toLowerCase());
+            expect(debugConfig).to.have.property('envFile');
+            expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env2').toLowerCase());
+            expect(debugConfig).to.have.property('env');
+
+            expect(debugConfig).to.have.property('autoReload');
+            expect(debugConfig?.autoReload).to.have.property('enable', true);
+
+            expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
+        });
 
         test('Defaults should be returned when an empty object is passed with a Workspace Folder and active file', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
