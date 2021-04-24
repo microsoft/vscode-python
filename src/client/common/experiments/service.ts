@@ -117,7 +117,7 @@ export class ExperimentService implements IExperimentService {
 
         // return treatmentVariable !== undefined;
 
-        return this.experimentationService?.isCachedFlightEnabled(experiment);
+        return this.experimentationService.isCachedFlightEnabled(experiment);
     }
 
     public async getExperimentValue<T extends boolean | number | string>(experiment: string): Promise<T | undefined> {
