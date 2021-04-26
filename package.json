@@ -1112,7 +1112,6 @@
                             "pythonDiscoveryModule",
                             "pythonJediLSP",
                             "pythonSurveyNotification",
-                            "pythonDebuggerAutoReload",
                             "All"
                         ]
                     },
@@ -1130,7 +1129,6 @@
                             "pythonDiscoveryModule",
                             "pythonJediLSP",
                             "pythonSurveyNotification",
-                            "pythonDebuggerAutoReload",
                             "All"
                         ]
                     },
