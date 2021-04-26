@@ -181,6 +181,11 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
     context.subscriptions.push(manager);
+
+    await interpreterManager
+        .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
+        .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
+
     const activationPromise = manager.activate();
 
     serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
@@ -192,10 +197,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     sortImports.registerCommands();
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
-
-    interpreterManager
-        .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
-        .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
 
     context.subscriptions.push(new LinterCommands(serviceManager));
 

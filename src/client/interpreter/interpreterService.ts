@@ -1,5 +1,4 @@
 import { inject, injectable } from 'inversify';
-import * as md5 from 'md5';
 import * as path from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import '../common/extensions';
@@ -283,16 +282,14 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (!info.cachedEntry && info.path && this.inMemoryCacheOfDisplayNames.has(info.path)) {
             return this.inMemoryCacheOfDisplayNames.get(info.path)!;
         }
-        const fileHash = (info.path ? await getInterpreterHash(info.path).catch(() => '') : '') || '';
-        // Do not include display name into hash as that changes.
-        const interpreterHash = `${fileHash}-${md5(JSON.stringify({ ...info, displayName: '' }))}`;
+        const interpreterKey = info.path ?? '';
         const store = this.persistentStateFactory.createGlobalPersistentState<{ hash: string; displayName: string }>(
             `${info.path}.interpreter.displayName.v7`,
             undefined,
             EXPIRY_DURATION,
         );
 
-        if (store.value && store.value.hash === interpreterHash && store.value.displayName) {
+        if (store.value && store.value.hash === interpreterKey && store.value.displayName) {
             this.inMemoryCacheOfDisplayNames.set(info.path!, store.value.displayName);
             return store.value.displayName;
         }
@@ -301,7 +298,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
         // If dealing with cached entry, then do not store the display name in cache.
         if (!info.cachedEntry) {
-            await store.updateValue({ displayName, hash: interpreterHash });
+            await store.updateValue({ displayName, hash: interpreterKey });
             this.inMemoryCacheOfDisplayNames.set(info.path!, displayName);
         }
 
