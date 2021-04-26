@@ -52,7 +52,7 @@ class ChangeType:
 
 
 class Change:
-    """"""
+    """ """
 
     EDIT = 0
     NEW = 1
