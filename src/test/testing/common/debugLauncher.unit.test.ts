@@ -18,7 +18,7 @@ import {
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import '../../../client/common/extensions';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { IConfigurationService, IExperimentService, IPythonSettings } from '../../../client/common/types';
+import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
 import { IDebugEnvironmentVariablesService } from '../../../client/debugger/extension/configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from '../../../client/debugger/extension/configuration/resolvers/launch';
@@ -43,7 +43,6 @@ suite('Unit Tests - Debug Launcher', () => {
     let settings: TypeMoq.IMock<IPythonSettings>;
     let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
     let hasWorkspaceFolders: boolean;
-    let experiments: TypeMoq.IMock<IExperimentService>;
 
     setup(async () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
@@ -51,10 +50,6 @@ suite('Unit Tests - Debug Launcher', () => {
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
             .returns(() => configService.object);
-
-        experiments = TypeMoq.Mock.ofType<IExperimentService>();
-        experiments.setup((e) => e.inExperiment(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(false));
-        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IExperimentService))).returns(() => experiments.object);
 
         debugService = TypeMoq.Mock.ofType<IDebugService>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IDebugService))).returns(() => debugService.object);
@@ -106,7 +101,6 @@ suite('Unit Tests - Debug Launcher', () => {
             platformService.object,
             configService,
             debugEnvHelper.object,
-            experiments.object,
         );
     }
     function setupDebugManager(

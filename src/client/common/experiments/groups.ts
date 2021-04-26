@@ -51,8 +51,3 @@ export enum FindInterpreterVariants {
 export enum TorchProfiler {
     experiment = 'PythonPyTorchProfiler',
 }
-
-// Feature to enable automatic code reloading in the debugger.
-export enum DebuggerAutoReload {
-    reload = 'pythonDebuggerAutoReload',
-}

@@ -8,9 +8,8 @@ import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
 import { InvalidPythonPathInDebuggerServiceId } from '../../../../application/diagnostics/checks/invalidPythonPathInDebugger';
 import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../../../application/diagnostics/types';
 import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
-import { DebuggerAutoReload } from '../../../../common/experiments/groups';
 import { IPlatformService } from '../../../../common/platform/types';
-import { IConfigurationService, IExperimentService } from '../../../../common/types';
+import { IConfigurationService } from '../../../../common/types';
 import { DebuggerTypeName } from '../../../constants';
 import { DebugOptions, LaunchRequestArguments } from '../../../types';
 import { PythonPathSource } from '../../types';
@@ -28,7 +27,6 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         @inject(IPlatformService) platformService: IPlatformService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IDebugEnvironmentVariablesService) private readonly debugEnvHelper: IDebugEnvironmentVariablesService,
-        @inject(IExperimentService) private readonly experiments: IExperimentService,
     ) {
         super(workspaceService, documentManager, platformService, configurationService);
     }
@@ -53,14 +51,6 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.env = {};
         }
 
-        if (debugConfiguration.autoReload === undefined || debugConfiguration.autoReload.enable === undefined) {
-            if (await this.experiments.inExperiment(DebuggerAutoReload.reload)) {
-                debugConfiguration.autoReload = {
-                    enable: true,
-                };
-            }
-        }
-
         const workspaceFolder = this.getWorkspaceFolder(folder);
         this.resolveAndUpdatePaths(workspaceFolder, debugConfiguration);
         return debugConfiguration;
@@ -83,14 +73,6 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.debugOptions = debugConfiguration.debugOptions!.filter(
                 (item, pos) => debugConfiguration.debugOptions!.indexOf(item) === pos,
             );
-        }
-
-        if (debugConfiguration.autoReload === undefined || debugConfiguration.autoReload.enable === undefined) {
-            if (await this.experiments.inExperiment(DebuggerAutoReload.reload)) {
-                debugConfiguration.autoReload = {
-                    enable: true,
-                };
-            }
         }
 
         return debugConfiguration;
