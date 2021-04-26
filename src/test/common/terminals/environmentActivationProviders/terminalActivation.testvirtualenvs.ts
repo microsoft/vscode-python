@@ -51,11 +51,11 @@ suite('Activation of Environments in Terminal', () => {
         virtualEnvPath: string;
     };
     let envPaths: EnvPath;
-    const defaultShell = {
-        Windows: '',
-        Linux: '',
-        MacOS: '',
-    };
+    // const defaultShell = {
+    //     Windows: '',
+    //     Linux: '',
+    //     MacOS: '',
+    // };
     let terminalSettings: any;
     let pythonSettings: any;
     let experiments: IExperimentsManager;
@@ -65,9 +65,9 @@ suite('Activation of Environments in Terminal', () => {
         envPaths = await fs.readJson(envsLocation);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders![0].uri);
         pythonSettings = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders![0].uri);
-        defaultShell.Windows = terminalSettings.inspect('integrated.shell.windows').globalValue;
-        defaultShell.Linux = terminalSettings.inspect('integrated.shell.linux').globalValue;
-        await terminalSettings.update('integrated.shell.linux', '/bin/bash', vscode.ConfigurationTarget.Global);
+        // defaultShell.Windows = terminalSettings.inspect('integrated.shell.windows').globalValue;
+        // defaultShell.Linux = terminalSettings.inspect('integrated.shell.linux').globalValue;
+        // await terminalSettings.update('integrated.shell.linux', '/bin/bash', vscode.ConfigurationTarget.Global);
         const serviceContainer = (await initialize()).serviceContainer;
         experiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
         const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
@@ -107,12 +107,12 @@ suite('Activation of Environments in Terminal', () => {
             vscode.workspace.workspaceFolders![0].uri,
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
-        await terminalSettings.update(
-            'integrated.shell.windows',
-            defaultShell.Windows,
-            vscode.ConfigurationTarget.Global,
-        );
-        await terminalSettings.update('integrated.shell.linux', defaultShell.Linux, vscode.ConfigurationTarget.Global);
+        // await terminalSettings.update(
+        //     'integrated.shell.windows',
+        //     defaultShell.Windows,
+        //     vscode.ConfigurationTarget.Global,
+        // );
+        // await terminalSettings.update('integrated.shell.linux', defaultShell.Linux, vscode.ConfigurationTarget.Global);
         await pythonSettings.update('condaPath', undefined, vscode.ConfigurationTarget.Workspace);
         if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
             await resetGlobalInterpreterPathSetting();
