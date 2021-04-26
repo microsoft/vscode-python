@@ -43,7 +43,6 @@ suite('Unit Tests - Debug Launcher', () => {
     let settings: TypeMoq.IMock<IPythonSettings>;
     let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
     let hasWorkspaceFolders: boolean;
-
     setup(async () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         const configService = TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);

@@ -74,7 +74,6 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
                 (item, pos) => debugConfiguration.debugOptions!.indexOf(item) === pos,
             );
         }
-
         return debugConfiguration;
     }
 
