@@ -67,7 +67,7 @@ suite('Set Interpreter Command', () => {
 
         experimentService = TypeMoq.Mock.ofType<IExperimentService>();
         experimentService
-            .setup((x) => x.inExperiment(TypeMoq.It.isValue(FindInterpreterVariants.findLast)))
+            .setup((x) => x.inExperiment(TypeMoq.It.isValue(FindInterpreterVariants.useFind)))
             .returns(() => Promise.resolve(false));
 
         configurationService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
@@ -217,7 +217,7 @@ suite('Set Interpreter Command', () => {
         test('Picker should be displayed with expected items: In find path experiment', async () => {
             const experiments = TypeMoq.Mock.ofType<IExperimentService>();
             experiments
-                .setup((x) => x.inExperiment(TypeMoq.It.isValue(FindInterpreterVariants.findLast)))
+                .setup((x) => x.inExperiment(TypeMoq.It.isValue(FindInterpreterVariants.useFind)))
                 .returns(() => Promise.resolve(true));
 
             const inExpSetInterpreterCommand = new SetInterpreterCommand(
@@ -234,7 +234,7 @@ suite('Set Interpreter Command', () => {
             );
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
-            const suggestions = [item, expectedFindInterpreterPathSuggestion];
+            const suggestions = [expectedFindInterpreterPathSuggestion, item];
             const expectedParameters = {
                 placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
                 items: suggestions,
@@ -266,7 +266,7 @@ suite('Set Interpreter Command', () => {
             await refreshButtonCallback!(quickPick as any); // Invoke callback, meaning that the refresh button is clicked.
             assert.deepStrictEqual(
                 quickPick.items,
-                [refreshedItem, expectedFindInterpreterPathSuggestion],
+                [expectedFindInterpreterPathSuggestion, refreshedItem],
                 'Quickpick not updated correctly',
             );
         });

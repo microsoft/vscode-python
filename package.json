@@ -1801,7 +1801,7 @@
                     "type": "array",
                     "default": [],
                     "description": "Folders in your home directory to look into for virtual environments (supports pyenv, direnv and virtualenvwrapper by default).",
-                    "scope": "resource",
+                    "scope": "machine",
                     "items": {
                         "type": "string"
                     }
@@ -1810,7 +1810,7 @@
                     "type": "string",
                     "default": "",
                     "description": "Path to folder with a list of Virtual Environments (e.g. ~/.pyenv, ~/Envs, ~/.virtualenvs).",
-                    "scope": "resource"
+                    "scope": "machine"
                 },
                 "python.workspaceSymbols.ctagsPath": {
                     "type": "string",

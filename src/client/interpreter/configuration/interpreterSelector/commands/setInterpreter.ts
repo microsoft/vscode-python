@@ -64,7 +64,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         let interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
 
-        const inFindExperiment = await this.experiments.inExperiment(FindInterpreterVariants.findLast);
+        const inFindExperiment = await this.experiments.inExperiment(FindInterpreterVariants.useFind);
         const manualEntrySuggestion: IFindInterpreterQuickPickItem = {
             label: inFindExperiment
                 ? InterpreterQuickPickList.findPath.label()
@@ -75,12 +75,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             alwaysShow: true,
         };
 
-        let suggestions: (IInterpreterQuickPickItem | IFindInterpreterQuickPickItem)[] = [];
-        if (inFindExperiment) {
-            suggestions = [...interpreterSuggestions, manualEntrySuggestion];
-        } else {
-            suggestions = [manualEntrySuggestion, ...interpreterSuggestions];
-        }
+        const suggestions: (IInterpreterQuickPickItem | IFindInterpreterQuickPickItem)[] = [
+            manualEntrySuggestion,
+            ...interpreterSuggestions,
+        ];
 
         const currentPythonPath = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
@@ -98,7 +96,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         >({
             placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
             items: suggestions,
-            activeItem: inFindExperiment ? suggestions[0] : suggestions[1],
+            activeItem: suggestions[1],
             matchOnDetail: true,
             matchOnDescription: true,
             customButtonSetup: {
@@ -106,11 +104,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 callback: async (quickPick) => {
                     quickPick.busy = true;
                     interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace, true);
-                    if (inFindExperiment) {
-                        quickPick.items = [...interpreterSuggestions, manualEntrySuggestion];
-                    } else {
-                        quickPick.items = [manualEntrySuggestion, ...interpreterSuggestions];
-                    }
+                    quickPick.items = [manualEntrySuggestion, ...interpreterSuggestions];
                     quickPick.busy = false;
                 },
             },

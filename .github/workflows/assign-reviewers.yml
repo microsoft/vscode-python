@@ -9,6 +9,9 @@ on:
       - 'review_request_removed'
       - 'ready_for_review'
 
+permissions:
+  pull-requests: write
+
 jobs:
   assign:
     name: 'Assignee & Code Reviewers'
