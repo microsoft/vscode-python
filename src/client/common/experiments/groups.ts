@@ -42,7 +42,7 @@ export enum DiscoveryVariants {
 
 // Find Interpreter suggestion experiment variants
 export enum FindInterpreterVariants {
-    findLast = 'pythonFindInterpreter',
+    useFind = 'pythonFindInterpreter',
 }
 
 // Feature gate to control whether we install the PyTorch profiler package

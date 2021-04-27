@@ -4,13 +4,16 @@ on:
   issues:
     types: [opened, reopened]
 
+permissions:
+  issues: write
+
 jobs:
   # From https://github.com/marketplace/actions/github-script#apply-a-label-to-an-issue.
   add-classify-label:
     name: "Add 'classify'"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/github-script@v3
+      - uses: actions/github-script@v4.0.1
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
