@@ -28,7 +28,7 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
         this.disposables.forEach((disposable) => disposable.dispose());
     }
 
-    public abstract async activate(): Promise<void>;
+    public abstract activate(): Promise<void>;
 
     protected async getConfigTarget(): Promise<
         | {

@@ -7,8 +7,6 @@
     "python.command.python.debugtests.title": "Testleri Debug Et",
     "python.command.python.execInTerminal.title": "Terminalde Çalıştır",
     "python.command.python.setInterpreter.title": "Bir Interpreter Seçin",
-    "python.command.python.refactorExtractVariable.title": "Değişken Çıkar",
-    "python.command.python.refactorExtractMethod.title": "Metot Çıkar",
     "python.command.python.viewTestOutput.title": "Test Çıktısını Görüntüle",
     "python.command.python.selectAndRunTestMethod.title": "Test Metodu Çalıştır",
     "python.command.python.selectAndDebugTestMethod.title": "Test Metodu Debug Et",

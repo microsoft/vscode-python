@@ -7,8 +7,6 @@
     "python.command.python.debugtests.title": "Alle unittests debuggen",
     "python.command.python.execInTerminal.title": "Python-bestand in terminal uitvoeren",
     "python.command.python.setInterpreter.title": "Interpreter selecteren",
-    "python.command.python.refactorExtractVariable.title": "Variabelen selecteren",
-    "python.command.python.refactorExtractMethod.title": "Methode selecteren",
     "python.command.python.viewTestOutput.title": "Unittest-resultaat laten zien",
     "python.command.python.selectAndRunTestMethod.title": "Unittest-methode uitvoeren ...",
     "python.command.python.selectAndDebugTestMethod.title": "Unittest-methode debuggen ...",

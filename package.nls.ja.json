@@ -6,8 +6,6 @@
     "python.command.python.debugtests.title": "すべての単体テストをデバッグ",
     "python.command.python.execInTerminal.title": "ターミナルで Python ファイルを実行",
     "python.command.python.setInterpreter.title": "インタープリターを選択",
-    "python.command.python.refactorExtractVariable.title": "変数を抽出",
-    "python.command.python.refactorExtractMethod.title": "メソッドを抽出",
     "python.command.python.viewTestOutput.title": "単体テストの出力を表示",
     "python.command.python.selectAndRunTestMethod.title": "単体テストメソッドを実行...",
     "python.command.python.selectAndDebugTestMethod.title": "単体テストメソッドをデバッグ...",

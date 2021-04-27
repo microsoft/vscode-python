@@ -7,8 +7,6 @@
     "python.command.python.debugtests.title": "Esegui debug di tutti i test",
     "python.command.python.execInTerminal.title": "Esegui file Python nel terminale",
     "python.command.python.setInterpreter.title": "Seleziona interprete",
-    "python.command.python.refactorExtractVariable.title": "Estrai variable",
-    "python.command.python.refactorExtractMethod.title": "Estrai metodo",
     "python.command.python.viewTestOutput.title": "Mostra output dei test",
     "python.command.python.selectAndRunTestMethod.title": "Esegui metodo di test ...",
     "python.command.python.selectAndDebugTestMethod.title": "Esegui debug del metodo di test ...",

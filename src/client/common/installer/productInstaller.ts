@@ -281,22 +281,6 @@ class TestFrameworkInstaller extends BaseInstaller {
     }
 }
 
-class RefactoringLibraryInstaller extends BaseInstaller {
-    protected async promptToInstallImplementation(
-        product: Product,
-        resource?: Uri,
-        cancel?: CancellationToken,
-    ): Promise<InstallerResponse> {
-        const productName = ProductNames.get(product)!;
-        const item = await this.appShell.showErrorMessage(
-            `Refactoring library ${productName} is not installed. Install?`,
-            'Yes',
-            'No',
-        );
-        return item === 'Yes' ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
-    }
-}
-
 class DataScienceInstaller extends BaseInstaller {
     // Override base installer to support a more DS-friendly streamlined installation.
     public async install(
@@ -445,8 +429,6 @@ export class ProductInstaller implements IInstaller {
                 return new FormatterInstaller(this.serviceContainer, this.outputChannel);
             case ProductType.TestFramework:
                 return new TestFrameworkInstaller(this.serviceContainer, this.outputChannel);
-            case ProductType.RefactoringLibrary:
-                return new RefactoringLibraryInstaller(this.serviceContainer, this.outputChannel);
             case ProductType.DataScience:
                 return new DataScienceInstaller(this.serviceContainer, this.outputChannel);
             default:

@@ -11,7 +11,6 @@ pycodestyle
 pydocstyle
 nose
 pytest==4.6.9 # Last version of pytest with Python 2.7 support
-rope
 fastapi ; python_version>='3.6'
 uvicorn ; python_version>='3.6'
 flask

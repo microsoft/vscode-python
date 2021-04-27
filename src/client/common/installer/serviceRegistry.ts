@@ -16,7 +16,6 @@ import {
     DataScienceProductPathService,
     FormatterProductPathService,
     LinterProductPathService,
-    RefactoringLibraryProductPathService,
     TestFrameworkProductPathService,
 } from './productPath';
 import { ProductService } from './productService';
@@ -58,11 +57,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         IProductPathService,
         TestFrameworkProductPathService,
         ProductType.TestFramework,
-    );
-    serviceManager.addSingleton<IProductPathService>(
-        IProductPathService,
-        RefactoringLibraryProductPathService,
-        ProductType.RefactoringLibrary,
     );
     serviceManager.addSingleton<IProductPathService>(
         IProductPathService,
