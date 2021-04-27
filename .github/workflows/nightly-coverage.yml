@@ -71,7 +71,6 @@ jobs:
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
         shell: pwsh
-        if: matrix.test-suite == 'venv'
         run: |
           python -m pip install poetry
           Move-Item -Path ".\build\ci\pyproject.toml" -Destination .
