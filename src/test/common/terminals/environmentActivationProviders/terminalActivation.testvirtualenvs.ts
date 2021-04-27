@@ -61,7 +61,7 @@ suite('Activation of Environments in Terminal', () => {
     let experiments: IExperimentsManager;
     const sandbox = sinon.createSandbox();
     suiteSetup(async () => {
-        sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(true);
+        sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(false);
         envPaths = await fs.readJson(envsLocation);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders![0].uri);
         pythonSettings = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders![0].uri);
