@@ -133,7 +133,7 @@ export namespace Pylance {
 
     export const pylanceDefaultLSMessage = localize(
         'Pylance.pylanceDefaultLSMessage',
-        'The Python extension now includes Pylance to improve completions, code navigation, overall performance and much more! You can learn more about the update and learn to change your language server [here].\n\nRead Pylance’s license [here]',
+        'The Python extension now includes Pylance to improve completions, code navigation, overall performance and much more! You can learn more about the update and learn to change your language server [here]. Read Pylance’s license [here]',
     );
 }
 
