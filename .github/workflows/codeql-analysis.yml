@@ -18,7 +18,7 @@ on:
     - cron: '0 3 * * 0'
 
 permissions:
-  statuses: write
+  security-events: write
 
 jobs:
   analyze:
