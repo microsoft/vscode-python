@@ -3,7 +3,6 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { LanguageServerType } from '../activation/types';
 import { IWorkspaceService } from '../common/application/types';
 import { ExecutionInfo, IConfigurationService, Product } from '../common/types';
 import { ILinterInfo, LinterId } from './types';
@@ -89,11 +88,7 @@ export class PylintLinterInfo extends LinterInfo {
         // we want default to be `false`. So inspection here makes sure we are not getting
         // `true` because there is no setting and LS is active.
         const enabled = super.isEnabled(resource); // Is it enabled by settings?
-        const usingJedi = this.configService.getSettings(resource).languageServer === LanguageServerType.Jedi;
-        if (usingJedi) {
-            // In Jedi case adhere to default behavior. Missing setting means `enabled`.
-            return enabled;
-        }
+
         // If we're using LS, then by default Pylint is disabled unless user provided
         // the value. We have to resort to direct inspection of settings here.
         const configuration = this.workspaceService.getConfiguration('python', resource);
