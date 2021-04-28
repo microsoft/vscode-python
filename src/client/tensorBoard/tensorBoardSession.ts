@@ -7,6 +7,8 @@ import {
     CancellationToken,
     CancellationTokenSource,
     env,
+    Event,
+    EventEmitter,
     Position,
     Progress,
     ProgressLocation,
@@ -67,13 +69,17 @@ export class TensorBoardSession {
         return this.process;
     }
 
-    private active = false;
+    private _active = false;
 
     private webviewPanel: WebviewPanel | undefined;
 
     private url: string | undefined;
 
     private process: ChildProcess | undefined;
+
+    private onDidChangeViewStateEventEmitter = new EventEmitter<void>();
+
+    private onDidDisposeEventEmitter = new EventEmitter<TensorBoardSession>();
 
     // This tracks the total duration of time that the user kept the TensorBoard panel open
     private sessionDurationStopwatch: StopWatch | undefined;
@@ -90,6 +96,26 @@ export class TensorBoardSession {
         private readonly globalMemento: IPersistentState<ViewColumn>,
         private readonly multiStepFactory: IMultiStepInputFactory,
     ) {}
+
+    public get onDidDispose(): Event<TensorBoardSession> {
+        return this.onDidDisposeEventEmitter.event;
+    }
+
+    public get onDidChangeViewState(): Event<void> {
+        return this.onDidChangeViewStateEventEmitter.event;
+    }
+
+    public get active(): boolean {
+        return this._active;
+    }
+
+    public async refresh(): Promise<void> {
+        if (!this.webviewPanel) {
+            return;
+        }
+        this.webviewPanel.webview.html = '';
+        this.webviewPanel.webview.html = await this.getHtml();
+    }
 
     public async initialize(): Promise<void> {
         const e2eStartupDurationStopwatch = new StopWatch();
@@ -415,67 +441,15 @@ export class TensorBoardSession {
         traceInfo('Showing TensorBoard panel');
         const panel = this.webviewPanel || (await this.createPanel());
         panel.reveal();
-        this.active = true;
+        this._active = true;
+        this.onDidChangeViewStateEventEmitter.fire();
     }
 
     private async createPanel() {
         const webviewPanel = window.createWebviewPanel('tensorBoardSession', 'TensorBoard', this.globalMemento.value, {
             enableScripts: true,
         });
-        const fullWebServerUri = await env.asExternalUri(Uri.parse(this.url!));
-        webviewPanel.webview.html = `<!DOCTYPE html>
-        <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'; frame-src ${fullWebServerUri} http: https:;">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>TensorBoard</title>
-            </head>
-            <body>
-                <script type="text/javascript">
-                    const vscode = acquireVsCodeApi();
-                    function resizeFrame() {
-                        var f = window.document.getElementById('vscode-tensorboard-iframe');
-                        if (f) {
-                            f.style.height = window.innerHeight / 0.8 + "px";
-                            f.style.width = window.innerWidth / 0.8 + "px";
-                        }
-                    }
-                    resizeFrame();
-                    window.onload = function() {
-                        resizeFrame();
-                    }
-                    window.addEventListener('resize', resizeFrame);
-                    window.addEventListener('message', (event) => {
-                        if (!"${fullWebServerUri}".startsWith(event.origin) || !event.data || !event.data.filename || !event.data.line) {
-                            return;
-                        }
-                        const args = { filename: event.data.filename, line: event.data.line };
-                        vscode.postMessage({ command: '${Messages.JumpToSource}', args: args });
-                    });
-                </script>
-                <iframe
-                    id="vscode-tensorboard-iframe"
-                    class="responsive-iframe"
-                    sandbox="allow-scripts allow-forms allow-same-origin allow-pointer-lock"
-                    src="${fullWebServerUri}"
-                    frameborder="0"
-                    border="0"
-                    allowfullscreen
-                ></iframe>
-                <style>
-                    .responsive-iframe {
-                        transform: scale(0.8);
-                        transform-origin: 0 0;
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        overflow: hidden;
-                        display: block;
-                    }
-                </style>
-            </body>
-        </html>`;
+        webviewPanel.webview.html = await this.getHtml();
         this.webviewPanel = webviewPanel;
         this.disposables.push(
             webviewPanel.onDidDispose(() => {
@@ -484,6 +458,8 @@ export class TensorBoardSession {
                 this.process?.kill();
                 sendTelemetryEvent(EventName.TENSORBOARD_SESSION_DURATION, this.sessionDurationStopwatch?.elapsedTime);
                 this.process = undefined;
+                this._active = false;
+                this.onDidDisposeEventEmitter.fire(this);
             }),
         );
         this.disposables.push(
@@ -492,7 +468,8 @@ export class TensorBoardSession {
                 if (this.active && args.webviewPanel.active) {
                     await this.globalMemento.updateValue(webviewPanel.viewColumn ?? ViewColumn.Active);
                 }
-                this.active = args.webviewPanel.active;
+                this._active = args.webviewPanel.active;
+                this.onDidChangeViewStateEventEmitter.fire();
             }),
         );
         this.disposables.push(
@@ -573,5 +550,70 @@ export class TensorBoardSession {
             editor.selection = selection;
             editor.revealRange(selection, TextEditorRevealType.InCenterIfOutsideViewport);
         }
+    }
+
+    private async getHtml() {
+        // We cannot cache the result of calling asExternalUri, so regenerate
+        // it each time. From docs: "Note that extensions should not cache the
+        // result of asExternalUri as the resolved uri may become invalid due
+        // to a system or user action — for example, in remote cases, a user may
+        // close a port forwarding tunnel that was opened by asExternalUri."
+        const fullWebServerUri = await env.asExternalUri(Uri.parse(this.url!));
+        return `<!DOCTYPE html>
+        <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'; frame-src ${fullWebServerUri} http: https:;">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>TensorBoard</title>
+            </head>
+            <body>
+                <script type="text/javascript">
+                    (function() {
+                        const vscode = acquireVsCodeApi();
+                        function resizeFrame() {
+                            var f = window.document.getElementById('vscode-tensorboard-iframe');
+                            if (f) {
+                                f.style.height = window.innerHeight / 0.8 + "px";
+                                f.style.width = window.innerWidth / 0.8 + "px";
+                            }
+                        }
+                        window.onload = function() {
+                            resizeFrame();
+                        }
+                        window.addEventListener('resize', resizeFrame);
+                        window.addEventListener('message', (event) => {
+                            if (!"${fullWebServerUri}".startsWith(event.origin) || !event.data || !event.data.filename || !event.data.line) {
+                                return;
+                            }
+                            const args = { filename: event.data.filename, line: event.data.line };
+                            vscode.postMessage({ command: '${Messages.JumpToSource}', args: args });
+                        });
+                    }())
+                </script>
+                <iframe
+                    id="vscode-tensorboard-iframe"
+                    class="responsive-iframe"
+                    sandbox="allow-scripts allow-forms allow-same-origin allow-pointer-lock"
+                    src="${fullWebServerUri}"
+                    frameborder="0"
+                    border="0"
+                    allowfullscreen
+                ></iframe>
+                <style>
+                    .responsive-iframe {
+                        transform: scale(0.8);
+                        transform-origin: 0 0;
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        overflow: hidden;
+                        display: block;
+                        width: 100%;
+                        height: 100%;
+                    }
+                </style>
+            </body>
+        </html>`;
     }
 }

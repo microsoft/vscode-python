@@ -68,6 +68,7 @@ export namespace Commands {
     export const ResetInterpreterSecurityStorage = 'python.resetInterpreterSecurityStorage';
     export const OpenStartPage = 'python.startPage.open';
     export const LaunchTensorBoard = 'python.launchTensorBoard';
+    export const RefreshTensorBoard = 'python.refreshTensorBoard';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';

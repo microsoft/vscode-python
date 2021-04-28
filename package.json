@@ -100,9 +100,22 @@
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
                 "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused"
+            },
+            {
+                "command": "python.refreshTensorBoard",
+                "key": "ctrl+r",
+                "mac": "cmd+r",
+                "when": "python.hasActiveTensorBoardSession"
             }
         ],
         "commands": [
+            {
+                "command": "python.refreshTensorBoard",
+                "title": "%python.command.python.refreshTensorBoard.title%",
+                "category": "Python",
+                "enablement": "python.hasActiveTensorBoardSession",
+                "icon": "$(refresh)"
+            },
             {
                 "command": "python.clearPersistentStorage",
                 "title": "%python.command.python.clearPersistentStorage.title%",
@@ -417,6 +430,13 @@
                     "title": "%python.command.python.execInTerminal.title%",
                     "group": "navigation",
                     "when": "resourceLangId == python && !isInDiffEditor"
+                }
+            ],
+            "editor/title": [
+                {
+                    "command": "python.refreshTensorBoard",
+                    "group": "navigation@0",
+                    "when": "python.hasActiveTensorBoardSession"
                 }
             ],
             "explorer/context": [
