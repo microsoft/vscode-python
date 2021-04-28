@@ -4,7 +4,6 @@ import { CancellationTokenSource, ConfigurationTarget, OutputChannel, Uri, works
 import { LanguageServerType } from '../../client/activation/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import {
-    CTagsProductPathService,
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
@@ -53,11 +52,6 @@ suite('Multiroot Linting', () => {
         await ioc.registerMockInterpreterTypes();
         ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
-            CTagsProductPathService,
-            ProductType.WorkspaceSymbols,
-        );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             FormatterProductPathService,

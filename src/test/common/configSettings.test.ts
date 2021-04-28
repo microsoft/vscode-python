@@ -2,7 +2,6 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
-import { IWorkspaceSymbolSettings } from '../../client/common/types';
 import { SystemVariables } from '../../client/common/variables/systemVariables';
 import { getExtensionSettings } from '../common';
 import { initialize } from './../initialize';
@@ -32,24 +31,6 @@ suite('Configuration Settings', () => {
                 assert.equal(
                     settingValue.toUpperCase(),
                     pythonSettingValue.toUpperCase(),
-                    `Setting ${key} not the same`,
-                );
-            } else if (key === 'workspaceSymbols' && IS_WINDOWS) {
-                const workspaceSettings = (pythonSettingValue as {}) as IWorkspaceSymbolSettings;
-                const workspaceSttings = (settingValue as {}) as IWorkspaceSymbolSettings;
-                assert.equal(
-                    workspaceSettings.tagFilePath.toUpperCase(),
-                    workspaceSttings.tagFilePath.toUpperCase(),
-                    `Setting ${key} not the same`,
-                );
-
-                const workspaceSettingsWithoutPath = { ...workspaceSettings };
-                workspaceSettingsWithoutPath.tagFilePath = '';
-                const pythonSettingValueWithoutPath = { ...((pythonSettingValue as {}) as IWorkspaceSymbolSettings) };
-                pythonSettingValueWithoutPath.tagFilePath = '';
-                assert.deepEqual(
-                    workspaceSettingsWithoutPath,
-                    pythonSettingValueWithoutPath,
                     `Setting ${key} not the same`,
                 );
             }
