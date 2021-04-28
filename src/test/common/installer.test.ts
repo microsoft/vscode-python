@@ -48,7 +48,6 @@ import {
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import {
-    CTagsProductPathService,
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
@@ -181,11 +180,6 @@ suite('Installer', () => {
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
-            CTagsProductPathService,
-            ProductType.WorkspaceSymbols,
-        );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             FormatterProductPathService,
@@ -335,7 +329,7 @@ suite('Installer', () => {
                 new MockModuleInstaller('two', true),
             );
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
-            if (prod.value === Product.ctags || prod.value === Product.unittest || prod.value === Product.isort) {
+            if (prod.value === Product.unittest || prod.value === Product.isort) {
                 return undefined;
             }
             await testCheckingIfProductIsInstalled(prod.value);
@@ -373,7 +367,7 @@ suite('Installer', () => {
                 new MockModuleInstaller('two', true),
             );
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
-            if (prod.value === Product.unittest || prod.value === Product.ctags || prod.value === Product.isort) {
+            if (prod.value === Product.unittest || prod.value === Product.isort) {
                 return undefined;
             }
             await testInstallingProduct(prod.value);

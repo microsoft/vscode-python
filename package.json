@@ -1812,47 +1812,6 @@
                     "description": "Path to folder with a list of Virtual Environments (e.g. ~/.pyenv, ~/Envs, ~/.virtualenvs).",
                     "scope": "machine"
                 },
-                "python.workspaceSymbols.ctagsPath": {
-                    "type": "string",
-                    "default": "ctags",
-                    "description": "Fully qualified path to the ctags executable (else leave as ctags, assuming it is in current path).",
-                    "scope": "resource"
-                },
-                "python.workspaceSymbols.enabled": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Set to 'true' to enable ctags to provide Workspace Symbols.",
-                    "scope": "resource"
-                },
-                "python.workspaceSymbols.exclusionPatterns": {
-                    "type": "array",
-                    "default": [
-                        "**/site-packages/**"
-                    ],
-                    "items": {
-                        "type": "string"
-                    },
-                    "description": "Pattern used to exclude files and folders from ctags See http://ctags.sourceforge.net/ctags.html.",
-                    "scope": "resource"
-                },
-                "python.workspaceSymbols.rebuildOnFileSave": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Whether to re-build the tags file on when changes made to python files are saved.",
-                    "scope": "resource"
-                },
-                "python.workspaceSymbols.rebuildOnStart": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Whether to re-build the tags file on start (defaults to true).",
-                    "scope": "resource"
-                },
-                "python.workspaceSymbols.tagFilePath": {
-                    "type": "string",
-                    "default": "${workspaceFolder}/.vscode/tags",
-                    "description": "Fully qualified path to tag file (exuberant ctag file), used to provide workspace symbols.",
-                    "scope": "resource"
-                },
                 "python.insidersChannel": {
                     "type": "string",
                     "default": "off",

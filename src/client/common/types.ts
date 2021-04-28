@@ -77,7 +77,6 @@ export enum ProductType {
     Formatter = 'Formatter',
     TestFramework = 'TestFramework',
     RefactoringLibrary = 'RefactoringLibrary',
-    WorkspaceSymbols = 'WorkspaceSymbols',
     DataScience = 'DataScience',
 }
 
@@ -94,7 +93,6 @@ export enum Product {
     autopep8 = 10,
     mypy = 11,
     unittest = 12,
-    ctags = 13,
     rope = 14,
     isort = 15,
     black = 16,
@@ -191,7 +189,6 @@ export interface IPythonSettings {
     readonly autoComplete: IAutoCompleteSettings;
     readonly terminal: ITerminalSettings;
     readonly sortImports: ISortImportSettings;
-    readonly workspaceSymbols: IWorkspaceSymbolSettings;
     readonly envFile: string;
     readonly disableInstallationChecks: boolean;
     readonly globalModuleInstallation: boolean;
@@ -292,14 +289,7 @@ export interface IAutoCompleteSettings {
     readonly showAdvancedMembers: boolean;
     readonly typeshedPaths: string[];
 }
-export interface IWorkspaceSymbolSettings {
-    readonly enabled: boolean;
-    tagFilePath: string;
-    readonly rebuildOnStart: boolean;
-    readonly rebuildOnFileSave: boolean;
-    readonly ctagsPath: string;
-    readonly exclusionPatterns: string[];
-}
+
 export interface ITerminalSettings {
     readonly executeInFileDir: boolean;
     readonly launchArgs: string[];
