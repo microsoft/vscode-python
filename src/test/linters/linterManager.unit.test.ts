@@ -138,7 +138,7 @@ suite('Linting - Linter Manager', () => {
                 return [];
             };
 
-            await linterManager.setActiveLintersAsync([Product.ctags, Product.pytest], resource);
+            await linterManager.setActiveLintersAsync([Product.pytest], resource);
 
             expect(getActiveLintersInvoked).to.be.equal(false, 'Should not be invoked');
         });

@@ -39,12 +39,10 @@ import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
 import { JediSymbolProvider } from '../providers/symbolProvider';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { WorkspaceSymbols } from '../workspaceSymbols/main';
 import { ILanguageServerActivator } from './types';
 
 @injectable()
 export class JediExtensionActivator implements ILanguageServerActivator {
-    private static workspaceSymbols: WorkspaceSymbols | undefined;
     private readonly context: IExtensionContext;
     private jediFactory?: JediFactory;
     private readonly documentSelector: DocumentFilter[];
@@ -82,12 +80,6 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         this.objectDefinitionProvider = new PythonObjectDefinitionProvider(jediFactory);
         this.symbolProvider = new JediSymbolProvider(serviceContainer, jediFactory);
         this.signatureProvider = new PythonSignatureProvider(jediFactory);
-
-        if (!JediExtensionActivator.workspaceSymbols) {
-            // Workspace symbols is static because it doesn't rely on the jediFactory.
-            JediExtensionActivator.workspaceSymbols = new WorkspaceSymbols(serviceContainer);
-            context.subscriptions.push(JediExtensionActivator.workspaceSymbols);
-        }
     }
 
     public deactivate() {

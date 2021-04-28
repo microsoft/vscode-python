@@ -13,7 +13,6 @@ import { PipEnvInstaller } from './pipEnvInstaller';
 import { PipInstaller } from './pipInstaller';
 import { PoetryInstaller } from './poetryInstaller';
 import {
-    CTagsProductPathService,
     DataScienceProductPathService,
     FormatterProductPathService,
     LinterProductPathService,
@@ -49,11 +48,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
 
     serviceManager.addSingleton<IProductService>(IProductService, ProductService);
-    serviceManager.addSingleton<IProductPathService>(
-        IProductPathService,
-        CTagsProductPathService,
-        ProductType.WorkspaceSymbols,
-    );
     serviceManager.addSingleton<IProductPathService>(
         IProductPathService,
         FormatterProductPathService,

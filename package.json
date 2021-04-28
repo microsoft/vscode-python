@@ -66,7 +66,6 @@
         "onCommand:python.viewOutput",
         "onCommand:python.execSelectionInTerminal",
         "onCommand:python.execSelectionInDjangoShell",
-        "onCommand:python.buildWorkspaceSymbols",
         "onCommand:python.startREPL",
         "onCommand:python.goToPythonObject",
         "onCommand:python.reportIssue",
@@ -164,7 +163,7 @@
                     {
                         "id": "python.learnMore",
                         "title": "Learn more",
-                        "description": "• Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands).\n• [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list.\n• Explore more features in our [Tutorials](https://aka.ms/AA8dqti) or check [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n• Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
+                        "description": "� Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands).\n� [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list.\n� Explore more features in our [Tutorials](https://aka.ms/AA8dqti) or check [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n� Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
                         "media": {
                             "image": "resources/walkthrough/python-docs-learn-more.png",
                             "altText": "Documentation page for Python in VS Code"
@@ -249,7 +248,7 @@
                     {
                         "id": "python.dataScienceLearnMore",
                         "title": "Learn more",
-                        "description": "• Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands).\n• [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list.\n• Explore more features in our [Tutorials](https://aka.ms/AAdar6q) or check the [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n• Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
+                        "description": "� Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands).\n� [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list.\n� Explore more features in our [Tutorials](https://aka.ms/AAdar6q) or check the [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n� Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
                         "media": {
                             "image": "resources/walkthrough/datascience-learn-more.png",
                             "altText": "Learning more from python visual studio code documentation"
@@ -279,11 +278,6 @@
                 "category": "Python",
                 "command": "python.analysis.restartLanguageServer",
                 "title": "%python.command.python.analysis.restartLanguageServer.title%"
-            },
-            {
-                "category": "Python",
-                "command": "python.buildWorkspaceSymbols",
-                "title": "%python.command.python.buildWorkspaceSymbols.title%"
             },
             {
                 "category": "Python",
@@ -380,7 +374,6 @@
             {
                 "category": "Test",
                 "command": "testing.reRunFailTests",
-
                 "icon": {
                     "dark": "resources/dark/run-failed-tests.svg",
                     "light": "resources/light/run-failed-tests.svg"
@@ -1249,47 +1242,6 @@
                     "description": "Path to folder with a list of Virtual Environments (e.g. ~/.pyenv, ~/Envs, ~/.virtualenvs).",
                     "scope": "machine",
                     "type": "string"
-                },
-                "python.workspaceSymbols.ctagsPath": {
-                    "default": "ctags",
-                    "description": "Fully qualified path to the ctags executable (else leave as ctags, assuming it is in current path).",
-                    "scope": "resource",
-                    "type": "string"
-                },
-                "python.workspaceSymbols.enabled": {
-                    "default": false,
-                    "description": "Set to 'true' to enable ctags to provide Workspace Symbols.",
-                    "scope": "resource",
-                    "type": "boolean"
-                },
-                "python.workspaceSymbols.exclusionPatterns": {
-                    "default": [
-                        "**/site-packages/**"
-                    ],
-                    "description": "Pattern used to exclude files and folders from ctags See http://ctags.sourceforge.net/ctags.html.",
-                    "items": {
-                        "type": "string"
-                    },
-                    "scope": "resource",
-                    "type": "array"
-                },
-                "python.workspaceSymbols.rebuildOnFileSave": {
-                    "default": true,
-                    "description": "Whether to re-build the tags file on when changes made to python files are saved.",
-                    "scope": "resource",
-                    "type": "boolean"
-                },
-                "python.workspaceSymbols.rebuildOnStart": {
-                    "default": true,
-                    "description": "Whether to re-build the tags file on start (defaults to true).",
-                    "scope": "resource",
-                    "type": "boolean"
-                },
-                "python.workspaceSymbols.tagFilePath": {
-                    "default": "${workspaceFolder}/.vscode/tags",
-                    "description": "Fully qualified path to tag file (exuberant ctag file), used to provide workspace symbols.",
-                    "scope": "resource",
-                    "type": "string"
                 }
             },
             "title": "Python",
@@ -1886,7 +1838,7 @@
                     "when": "resourceLangId == python"
                 }
             ],
-            "view/title":[
+            "view/title": [
                 {
                     "command": "python.refreshTests",
                     "when": "view == workbench.view.testing",
