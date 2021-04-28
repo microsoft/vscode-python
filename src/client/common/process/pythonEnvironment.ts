@@ -8,12 +8,11 @@ import { getExecutablePath } from '../../pythonEnvironments/info/executable';
 import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
 import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
-import { createDeferred, Deferred } from '../utils/async';
 import * as internalPython from './internal/python';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types';
 
-const cachedExecutablePath: Map<string, Deferred<string>> = new Map<string, Deferred<string>>();
 class PythonEnvironment {
+    private cachedExecutablePath: Map<string, Promise<string>> = new Map<string, Promise<string>>();
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
 
     constructor(
@@ -51,18 +50,15 @@ class PythonEnvironment {
         if (await this.deps.isValidExecutable(this.pythonPath)) {
             return this.pythonPath;
         }
-        const result = cachedExecutablePath.get(this.pythonPath);
+        const result = this.cachedExecutablePath.get(this.pythonPath);
         if (result !== undefined) {
             // Another call for this environment has already been made, return its result
-            return result.promise;
+            return result;
         }
-        const deferred = createDeferred<string>();
-        cachedExecutablePath.set(this.pythonPath, deferred);
         const python = this.getExecutionInfo();
-        return getExecutablePath(python, this.deps.exec).then((r) => {
-            deferred.resolve(r);
-            return r;
-        });
+        const promise = getExecutablePath(python, this.deps.exec);
+        this.cachedExecutablePath.set(this.pythonPath, promise);
+        return promise;
     }
 
     public async getModuleVersion(moduleName: string): Promise<string | undefined> {

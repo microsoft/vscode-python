@@ -75,8 +75,8 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         }
     }
     private async updateDisplay(workspaceFolder?: Uri) {
-        const interpreterPath = this.configService.getSettings(workspaceFolder).pythonPath;
-        if (interpreterPath.length == 0 || interpreterPath === 'python') {
+        const interpreterPath = this.configService.getSettings(workspaceFolder)?.pythonPath;
+        if (!interpreterPath || interpreterPath === 'python') {
             await this.autoSelection.autoSelectInterpreter(workspaceFolder); // Block on this only if no interpreter selected.
         }
         const interpreter = await this.interpreterService.getActiveInterpreter(workspaceFolder);

@@ -6,7 +6,6 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { Container } from 'inversify';
-import * as md5 from 'md5';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { SemVer } from 'semver';
@@ -394,7 +393,6 @@ suite('Interpreters service', () => {
         test('Return cached display name', async () => {
             const pythonPath = '1234';
             const interpreterInfo: Partial<PythonEnvironment> = { path: pythonPath };
-            const hash = `-${md5(JSON.stringify({ ...interpreterInfo, displayName: '' }))}`;
             const expectedDisplayName = 'Formatted display name';
 
             getInterpreterHashStub.rejects({});
@@ -403,7 +401,7 @@ suite('Interpreters service', () => {
                 .returns(() => {
                     const state = {
                         updateValue: () => Promise.resolve(),
-                        value: { hash, displayName: expectedDisplayName },
+                        value: { hash: pythonPath, displayName: expectedDisplayName },
                     };
                     return state as any;
                 })
@@ -413,31 +411,6 @@ suite('Interpreters service', () => {
             const displayName = await service.getDisplayName(interpreterInfo, undefined);
 
             expect(displayName).to.equal(expectedDisplayName);
-            persistentStateFactory.verifyAll();
-        });
-        test('Cached display name is not used if file hashes differ', async () => {
-            const pythonPath = '1234';
-            const interpreterInfo: Partial<PythonEnvironment> = { path: pythonPath };
-            const fileHash = 'File_Hash';
-
-            getInterpreterHashStub.withArgs(pythonPath).resolves(fileHash);
-            const expectedDisplayName = 'Formatted display name';
-            persistentStateFactory
-                .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                .returns(() => {
-                    const state = {
-                        updateValue: () => Promise.resolve(),
-                        value: { fileHash: 'something else', displayName: expectedDisplayName },
-                    };
-                    return state as any;
-                })
-                .verifiable(TypeMoq.Times.once());
-
-            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
-            const displayName = await service.getDisplayName(interpreterInfo, undefined).catch(() => '');
-
-            expect(displayName).to.not.equal(expectedDisplayName);
-            expect(getInterpreterHashStub.calledOnce).to.equal(true);
             persistentStateFactory.verifyAll();
         });
     });

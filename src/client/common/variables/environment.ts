@@ -33,7 +33,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         if (!contents) {
             return;
         }
-        return parseEnvFile(await this.fs.readFile(filePath), baseVars);
+        return parseEnvFile(contents, baseVars);
     }
 
     public mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables) {
