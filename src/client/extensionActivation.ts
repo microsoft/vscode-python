@@ -62,7 +62,7 @@ import * as pythonEnvironments from './pythonEnvironments';
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
 import { setDefaultLanguageServerByExperiment } from './common/experiments/helpers';
-import { DefaultLanguageServerActivation } from './activation/defaultLanguageServerActivation';
+import { DefaultLanguageServerSupport } from './activation/defaultLanguageServerSupport';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -129,7 +129,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        DefaultLanguageServerActivation,
+        DefaultLanguageServerSupport,
     );
 
     const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);

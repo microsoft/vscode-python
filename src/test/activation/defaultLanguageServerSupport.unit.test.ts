@@ -7,9 +7,9 @@ import * as assert from 'assert';
 import * as typemoq from 'typemoq';
 import { ExtensionContext } from 'vscode';
 import {
-    DefaultLanguageServerActivation,
+    DefaultLanguageServerSupport,
     PYLANCE_PROMPT_MEMENTO,
-} from '../../client/activation/defaultLanguageServerActivation';
+} from '../../client/activation/defaultLanguageServerSupport';
 import { IApplicationShell } from '../../client/common/application/types';
 import { EXTENSION_VERSION_MEMENTO } from '../../client/common/startPage/startPage';
 import { IExtensionContext } from '../../client/common/types';
@@ -60,7 +60,7 @@ suite('Default language server - Show prompt', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
 
-        const defaultLanguageServerActivation = new DefaultLanguageServerActivation(appShell.object, context.object);
+        const defaultLanguageServerActivation = new DefaultLanguageServerSupport(appShell.object, context.object);
         await defaultLanguageServerActivation.activate();
 
         appShell.verifyAll();
@@ -81,7 +81,7 @@ suite('Default language server - Show prompt', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.never());
 
-        const defaultLanguageServerActivation = new DefaultLanguageServerActivation(appShell.object, context.object);
+        const defaultLanguageServerActivation = new DefaultLanguageServerSupport(appShell.object, context.object);
         await defaultLanguageServerActivation.activate();
 
         appShell.verifyAll();
@@ -101,7 +101,7 @@ suite('Default language server - Show prompt', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.never());
 
-        const defaultLanguageServerActivation = new DefaultLanguageServerActivation(appShell.object, context.object);
+        const defaultLanguageServerActivation = new DefaultLanguageServerSupport(appShell.object, context.object);
         await defaultLanguageServerActivation.activate();
 
         appShell.verifyAll();

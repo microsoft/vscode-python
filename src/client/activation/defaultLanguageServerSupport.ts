@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { IApplicationShell } from '../common/application/types';
 import { EXTENSION_VERSION_MEMENTO } from '../common/startPage/startPage';
 import { IExtensionContext } from '../common/types';
@@ -12,7 +12,8 @@ import { IExtensionSingleActivationService } from './types';
 
 export const PYLANCE_PROMPT_MEMENTO = 'pylanceDefaultPromptMemento';
 
-export class DefaultLanguageServerActivation implements IExtensionSingleActivationService {
+@injectable()
+export class DefaultLanguageServerSupport implements IExtensionSingleActivationService {
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
