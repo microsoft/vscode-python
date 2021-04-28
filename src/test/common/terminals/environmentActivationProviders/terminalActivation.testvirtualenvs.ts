@@ -167,12 +167,14 @@ suite('Activation of Environments in Terminal', () => {
         console.warn(
             `testActivation for envPath: ${envPath} - inExperiment(DeprecatePythonPath.experiment): ${result}`,
         );
+        const before = pythonSettings.inspect('defaultInterpreterPath');
         if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
             await setGlobalInterpreterPath(envPath);
         } else {
             await setPythonPathInWorkspaceRoot(envPath);
         }
-
+        const after = pythonSettings.inspect('defaultInterpreterPath');
+        console.warn(`interpreter path before: ${JSON.stringify(before)} - after: ${JSON.stringify(after)}`);
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation * 3, file, outputFile, 5_000);
         console.warn(`openTerminalAndAwaitCommandContent done for envPath: ${envPath}`);
         console.warn(`content: ${content} - envPath: ${envPath}`);
