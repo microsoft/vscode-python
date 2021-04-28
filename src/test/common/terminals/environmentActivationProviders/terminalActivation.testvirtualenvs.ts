@@ -173,7 +173,7 @@ suite('Activation of Environments in Terminal', () => {
             await setPythonPathInWorkspaceRoot(envPath);
         }
 
-        const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
+        const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation * 3, file, outputFile, 5_000);
         console.warn(`openTerminalAndAwaitCommandContent done for envPath: ${envPath}`);
         console.warn(`content: ${content} - envPath: ${envPath}`);
         // expect(true).to.equal(true);
