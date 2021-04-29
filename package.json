@@ -42,12 +42,10 @@
         "Linters",
         "Formatters",
         "Other",
+        "Extension Packs",
         "Data Science",
         "Machine Learning",
         "Notebooks"
-    ],
-    "extensionPack": [
-        "ms-python.vscode-pylance"
     ],
     "requiresWorkspaceTrust": "onStart",
     "activationEvents": [
