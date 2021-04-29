@@ -5,8 +5,6 @@
     "python.command.python.buildWorkspaceSymbols.title": "Çalışma Alanındaki Sembolleri Derle",
     "python.command.python.execInTerminal.title": "Terminalde Çalıştır",
     "python.command.python.setInterpreter.title": "Bir Interpreter Seçin",
-    "python.command.python.refactorExtractVariable.title": "Değişken Çıkar",
-    "python.command.python.refactorExtractMethod.title": "Metot Çıkar",
     "python.command.python.execSelectionInTerminal.title": "Seçimi/Satırı Terminalde Çalıştır",
     "python.command.python.execSelectionInDjangoShell.title": "Seçimi/Satırı Django Shell'inde Çalıştır",
     "python.command.python.goToPythonObject.title": "Python Nesnesine Git",

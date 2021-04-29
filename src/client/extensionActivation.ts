@@ -40,7 +40,6 @@ import { PythonCodeActionProvider } from './providers/codeActionProvider/pythonC
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { ReplProvider } from './providers/replProvider';
 import { registerTypes as providersRegisterTypes } from './providers/serviceRegistry';
-import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
 import { TerminalProvider } from './providers/terminalProvider';
 import { ISortImportsEditingProvider } from './providers/types';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
@@ -100,8 +99,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const { serviceManager, serviceContainer } = legacyIOC;
 
     // register "services"
-
-    const standardOutputChannel = serviceManager.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
 
     // We need to setup this property before any telemetry is sent
     const fs = serviceManager.get<IFileSystem>(IFileSystem);
@@ -176,8 +173,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
     const pythonSettings = configuration.getSettings();
-
-    activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
 
     const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
     sortImports.registerCommands();

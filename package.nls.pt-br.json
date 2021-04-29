@@ -5,8 +5,6 @@
     "python.command.python.buildWorkspaceSymbols.title": "Construir Símbolos da Área de Trabalho",
     "python.command.python.execInTerminal.title": "Executar Arquivo no Terminal",
     "python.command.python.setInterpreter.title": "Selecionar Interpretador",
-    "python.command.python.refactorExtractVariable.title": "Extrair Variável",
-    "python.command.python.refactorExtractMethod.title": "Extrair Método",
     "python.command.python.execSelectionInTerminal.title": "Executar Seleção/Linha no Terminal",
     "python.command.python.execSelectionInDjangoShell.title": "Executar Seleção/Linha no Django Shell",
     "python.command.python.goToPythonObject.title": "Ir para Objeto Python",

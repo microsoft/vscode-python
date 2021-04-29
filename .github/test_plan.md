@@ -224,14 +224,6 @@ def foo():pass
     -   [ ] yapf
 -   [ ] `"editor.formatOnType": true` works and has expected results
 
-#### [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring)
-
--   [ ] [`Extract Variable`](https://code.visualstudio.com/docs/python/editing#_extract-variable) works
-    -   [ ] You are prompted to install `rope` if it is not already available
--   [ ] [`Extract method`](https://code.visualstudio.com/docs/python/editing#_extract-method) works
-    -   [ ] You are prompted to install `rope` if it is not already available
--   [ ] [`Sort Imports`](https://code.visualstudio.com/docs/python/editing#_sort-imports) works
-
 ### [Debugging](https://code.visualstudio.com/docs/python/debugging)
 
 -   [ ] [Configurations](https://code.visualstudio.com/docs/python/debugging#_debugging-specific-app-types) work (see [`package.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) and the `"configurationSnippets"` section for all of the possible configurations)

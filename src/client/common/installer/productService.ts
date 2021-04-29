@@ -25,7 +25,6 @@ export class ProductService implements IProductService {
         this.ProductTypes.set(Product.autopep8, ProductType.Formatter);
         this.ProductTypes.set(Product.black, ProductType.Formatter);
         this.ProductTypes.set(Product.yapf, ProductType.Formatter);
-        this.ProductTypes.set(Product.rope, ProductType.RefactoringLibrary);
         this.ProductTypes.set(Product.jupyter, ProductType.DataScience);
         this.ProductTypes.set(Product.notebook, ProductType.DataScience);
         this.ProductTypes.set(Product.ipykernel, ProductType.DataScience);

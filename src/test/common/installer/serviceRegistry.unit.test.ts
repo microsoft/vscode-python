@@ -15,7 +15,6 @@ import { PoetryInstaller } from '../../../client/common/installer/poetryInstalle
 import {
     FormatterProductPathService,
     LinterProductPathService,
-    RefactoringLibraryProductPathService,
     TestFrameworkProductPathService,
 } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
@@ -87,13 +86,6 @@ suite('Common installer Service Registry', () => {
                 IProductPathService,
                 TestFrameworkProductPathService,
                 ProductType.TestFramework,
-            ),
-        ).once();
-        verify(
-            serviceManager.addSingleton<IProductPathService>(
-                IProductPathService,
-                RefactoringLibraryProductPathService,
-                ProductType.RefactoringLibrary,
             ),
         ).once();
         verify(serviceManager.addSingleton<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider)).once();

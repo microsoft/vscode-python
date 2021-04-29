@@ -179,8 +179,6 @@ export function translateProductToModule(product: Product): string {
             return 'flake8';
         case Product.unittest:
             return 'unittest';
-        case Product.rope:
-            return 'rope';
         case Product.bandit:
             return 'bandit';
         case Product.jupyter:

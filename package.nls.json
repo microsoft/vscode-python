@@ -9,8 +9,6 @@
     "python.command.python.switchToDailyChannel.title": "Switch to Insiders Daily Channel",
     "python.command.python.switchToWeeklyChannel.title": "Switch to Insiders Weekly Channel",
     "python.command.python.clearWorkspaceInterpreter.title": "Clear Workspace Interpreter Setting",
-    "python.command.python.refactorExtractVariable.title": "Extract Variable",
-    "python.command.python.refactorExtractMethod.title": "Extract Method",
     "python.command.python.viewOutput.title": "Show Output",
     "python.command.python.viewLanguageServerOutput.title": "Show Language Server Output",
     "python.command.python.configureTests.title": "Configure Tests",

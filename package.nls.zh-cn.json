@@ -9,8 +9,6 @@
     "python.command.python.switchToDailyChannel.title": "切换到每日预览版本",
     "python.command.python.switchToWeeklyChannel.title": "切换到每周预览版本",
     "python.command.python.clearWorkspaceInterpreter.title": "清除工作区解释器设置",
-    "python.command.python.refactorExtractVariable.title": "提取变量",
-    "python.command.python.refactorExtractMethod.title": "提取方法",
     "python.command.python.viewOutput.title": "显示输出",
     "python.command.python.viewLanguageServerOutput.title": "显示语言服务器输出",
     "python.command.python.configureTests.title": "配置单元测试",

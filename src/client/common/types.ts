@@ -92,7 +92,6 @@ export enum Product {
     autopep8 = 10,
     mypy = 11,
     unittest = 12,
-    rope = 14,
     isort = 15,
     black = 16,
     bandit = 17,

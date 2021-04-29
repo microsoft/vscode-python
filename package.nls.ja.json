@@ -4,8 +4,6 @@
     "python.command.python.buildWorkspaceSymbols.title": "ワークスペースのシンボルをビルド",
     "python.command.python.execInTerminal.title": "ターミナルで Python ファイルを実行",
     "python.command.python.setInterpreter.title": "インタープリターを選択",
-    "python.command.python.refactorExtractVariable.title": "変数を抽出",
-    "python.command.python.refactorExtractMethod.title": "メソッドを抽出",
     "python.command.python.execSelectionInTerminal.title": "Python ターミナルで選択範囲/行を実行",
     "python.command.python.execSelectionInDjangoShell.title": "Django シェルで選択範囲/行を実行",
     "python.command.python.goToPythonObject.title": "Python オブジェクトに移動",

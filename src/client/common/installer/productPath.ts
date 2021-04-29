@@ -79,16 +79,6 @@ export class TestFrameworkProductPathService extends BaseProductPathsService {
 }
 
 @injectable()
-export class RefactoringLibraryProductPathService extends BaseProductPathsService {
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer);
-    }
-    public getExecutableNameFromSettings(product: Product, _?: Uri): string {
-        return this.productInstaller.translateProductToModuleName(product);
-    }
-}
-
-@injectable()
 export class DataScienceProductPathService extends BaseProductPathsService {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);

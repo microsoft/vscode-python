@@ -5,8 +5,6 @@
     "python.command.python.buildWorkspaceSymbols.title": "建構工作區符號",
     "python.command.python.execInTerminal.title": "在終端機中執行 Python 檔案",
     "python.command.python.setInterpreter.title": "選擇直譯器",
-    "python.command.python.refactorExtractVariable.title": "提取變數",
-    "python.command.python.refactorExtractMethod.title": "提取方法",
     "python.command.python.execSelectionInTerminal.title": "在 Python 終端機中執行選定內容／行",
     "python.command.python.execSelectionInDjangoShell.title": "在 Django Shell 中執行選定內容／行",
     "python.command.python.goToPythonObject.title": "跳至 Python 物件",
