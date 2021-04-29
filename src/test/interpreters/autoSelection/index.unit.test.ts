@@ -176,7 +176,7 @@ suite('Interpreters - Auto Selection', () => {
         await autoSelectionService.initializeStore(undefined);
         await autoSelectionService.initializeStore(undefined);
 
-        verify(stateFactory.createGlobalPersistentState(preferredGlobalInterpreter, undefined)).once();
+        verify(stateFactory.createGlobalPersistentState(preferredGlobalInterpreter, undefined)).twice();
     });
     test("Clear file stored in cache if it doesn't exist", async () => {
         const pythonPath = 'Hello World';
@@ -192,7 +192,7 @@ suite('Interpreters - Auto Selection', () => {
 
         await autoSelectionService.initializeStore(undefined);
 
-        verify(stateFactory.createGlobalPersistentState(preferredGlobalInterpreter, undefined)).once();
+        verify(stateFactory.createGlobalPersistentState(preferredGlobalInterpreter, undefined)).twice();
         verify(state.value).atLeast(1);
         verify(fs.fileExists(pythonPath)).once();
         verify(state.updateValue(undefined)).once();
@@ -211,7 +211,7 @@ suite('Interpreters - Auto Selection', () => {
 
         await autoSelectionService.initializeStore(undefined);
 
-        verify(stateFactory.createGlobalPersistentState(preferredGlobalInterpreter, undefined)).once();
+        verify(stateFactory.createGlobalPersistentState(preferredGlobalInterpreter, undefined)).twice();
         verify(state.value).atLeast(1);
         verify(fs.fileExists(pythonPath)).once();
         verify(state.updateValue(undefined)).never();
