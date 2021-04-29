@@ -59,19 +59,16 @@ export class PylanceDefaultDiagnosticService extends BaseDiagnosticsService {
             return;
         }
 
-        const options = [
-            {
-                prompt: Common.ok(),
-                command: {
-                    diagnostic,
-                    invoke: async (): Promise<void> => {
-                        await this.context.globalState.update(PYLANCE_PROMPT_MEMENTO, true);
-                    },
-                },
-            },
-        ];
+        const options = [{ prompt: Common.ok() }];
 
-        await this.messageService.handle(diagnostic, { commandPrompts: options });
+        await this.messageService.handle(diagnostic, {
+            commandPrompts: options,
+            onClose: this.updateMemento.bind(this),
+        });
+    }
+
+    private async updateMemento() {
+        await this.context.globalState.update(PYLANCE_PROMPT_MEMENTO, true);
     }
 
     private shouldShowPrompt(): boolean {
