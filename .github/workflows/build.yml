@@ -130,7 +130,7 @@ jobs:
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
-        python: [2.7, '${{ env.PYTHON_VERSION }}']
+        python: [2.7, ${{ env.PYTHON_VERSION }}]
         test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
     steps:
       - name: Checkout
