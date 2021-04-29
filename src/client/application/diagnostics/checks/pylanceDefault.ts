@@ -4,7 +4,7 @@
 // eslint-disable-next-line max-classes-per-file
 import { inject, named } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
-import { EXTENSION_VERSION_MEMENTO } from '../../../common/startPage/startPage';
+import { IStartPage } from '../../../common/startPage/types';
 import { IDisposableRegistry, IExtensionContext, Resource } from '../../../common/types';
 import { Diagnostics, Common } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
@@ -33,6 +33,7 @@ export class PylanceDefaultDiagnosticService extends BaseDiagnosticsService {
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IStartPage) private readonly startPage: IStartPage,
         @inject(IDiagnosticHandlerService)
         @named(DiagnosticCommandPromptHandlerServiceId)
         protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>,
@@ -72,7 +73,7 @@ export class PylanceDefaultDiagnosticService extends BaseDiagnosticsService {
     }
 
     private shouldShowPrompt(): boolean {
-        const savedVersion: string | undefined = this.context.globalState.get(EXTENSION_VERSION_MEMENTO);
+        const savedVersion: string | undefined = this.startPage.initialMementoValue;
         const promptShown: boolean | undefined = this.context.globalState.get(PYLANCE_PROMPT_MEMENTO);
 
         // savedVersion being undefined means that this is the first time the user activates the extension.

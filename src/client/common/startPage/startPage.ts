@@ -41,6 +41,8 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
     private actionTakenOnFirstTime = false;
     private firstTime = false;
     private webviewDidLoad = false;
+    public initialMementoValue: string | undefined = undefined;
+
     constructor(
         @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
@@ -68,6 +70,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
             false,
         );
         this.timer = new StopWatch();
+        this.initialMementoValue = this.context.globalState.get(EXTENSION_VERSION_MEMENTO);
     }
 
     public async activate(): Promise<void> {
