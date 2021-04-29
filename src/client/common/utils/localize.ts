@@ -67,6 +67,10 @@ export namespace Diagnostics {
         'diagnostics.checkIsort5UpgradeGuide',
         'We found outdated configuration for sorting imports in this workspace. Check the [isort upgrade guide](https://aka.ms/AA9j5x4) to update your settings.',
     );
+    export const pylanceDefaultLSMessage = localize(
+        'Pylance.pylanceDefaultLSMessage',
+        'The Python extension now includes Pylance to improve completions, code navigation, overall performance and much more! You can learn more about the update and learn to change your language server [here].\n\nRead Pylance’s license [here]',
+    );
 }
 
 export namespace Common {
@@ -130,11 +134,6 @@ export namespace Pylance {
     );
     export const pylanceInstallPylance = localize('Pylance.pylanceInstallPylance', 'Install Pylance');
     export const pylanceRevertToJedi = localize('Pylance.pylanceRevertToJedi', 'Revert to Jedi');
-
-    export const pylanceDefaultLSMessage = localize(
-        'Pylance.pylanceDefaultLSMessage',
-        'The Python extension now includes Pylance to improve completions, code navigation, overall performance and much more! You can learn more about the update and learn to change your language server [here].\n\nRead Pylance’s license [here]',
-    );
 }
 
 export namespace Jupyter {

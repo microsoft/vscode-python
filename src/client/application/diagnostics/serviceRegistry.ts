@@ -28,6 +28,7 @@ import {
     PowerShellActivationHackDiagnosticsService,
     PowerShellActivationHackDiagnosticsServiceId,
 } from './checks/powerShellActivation';
+import { PylanceDefaultDiagnosticService, PylanceDefaultDiagnosticServiceId } from './checks/pylanceDefault';
 import { InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId } from './checks/pythonInterpreter';
 import {
     PythonPathDeprecatedDiagnosticService,
@@ -92,6 +93,13 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         UpgradeCodeRunnerDiagnosticService,
         UpgradeCodeRunnerDiagnosticServiceId,
     );
+
+    serviceManager.addSingleton<IDiagnosticsService>(
+        IDiagnosticsService,
+        PylanceDefaultDiagnosticService,
+        PylanceDefaultDiagnosticServiceId,
+    );
+
     serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory);
     serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics);
 

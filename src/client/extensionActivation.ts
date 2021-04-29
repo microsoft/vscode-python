@@ -62,7 +62,6 @@ import * as pythonEnvironments from './pythonEnvironments';
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
 import { setDefaultLanguageServerByExperiment } from './common/experiments/helpers';
-import { DefaultLanguageServerSupport } from './activation/defaultLanguageServerSupport';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -126,11 +125,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
     tensorBoardRegisterTypes(serviceManager);
-
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        DefaultLanguageServerSupport,
-    );
 
     const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
     // This guarantees that all experiment information has loaded & all telemetry will contain experiment info.
