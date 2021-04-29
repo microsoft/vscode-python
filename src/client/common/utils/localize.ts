@@ -68,7 +68,7 @@ export namespace Diagnostics {
         'We found outdated configuration for sorting imports in this workspace. Check the [isort upgrade guide](https://aka.ms/AA9j5x4) to update your settings.',
     );
     export const pylanceDefaultMessage = localize(
-        'Pylance.pylanceDefaultMessage',
+        'diagnostics.pylanceDefaultMessage',
         'The Python extension now includes Pylance to improve completions, code navigation, overall performance and much more! You can learn more about the update and learn to change your language server [here].\n\nRead Pylance’s license [here]',
     );
 }
