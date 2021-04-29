@@ -36,7 +36,6 @@ import { PythonDefinitionProvider } from '../providers/definitionProvider';
 import { PythonHoverProvider } from '../providers/hoverProvider';
 import { PythonObjectDefinitionProvider } from '../providers/objectDefinitionProvider';
 import { PythonReferenceProvider } from '../providers/referenceProvider';
-import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
 import { JediSymbolProvider } from '../providers/symbolProvider';
 import { PythonEnvironment } from '../pythonEnvironments/info';
@@ -48,7 +47,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
     private readonly context: IExtensionContext;
     private jediFactory?: JediFactory;
     private readonly documentSelector: DocumentFilter[];
-    private renameProvider: PythonRenameProvider | undefined;
+    private renameProvider: undefined;
     private hoverProvider: PythonHoverProvider | undefined;
     private definitionProvider: PythonDefinitionProvider | undefined;
     private referenceProvider: PythonReferenceProvider | undefined;
@@ -73,7 +72,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         context.subscriptions.push(jediFactory);
         const serviceContainer = this.serviceManager.get<IServiceContainer>(IServiceContainer);
 
-        this.renameProvider = new PythonRenameProvider(this.serviceManager);
+        this.renameProvider = undefined;
         this.definitionProvider = new PythonDefinitionProvider(jediFactory);
         this.hoverProvider = new PythonHoverProvider(jediFactory);
         this.referenceProvider = new PythonReferenceProvider(jediFactory);
@@ -97,7 +96,6 @@ export class JediExtensionActivator implements ILanguageServerActivator {
     public activate() {
         if (
             this.registrations.length === 0 &&
-            this.renameProvider &&
             this.definitionProvider &&
             this.hoverProvider &&
             this.referenceProvider &&
@@ -113,7 +111,6 @@ export class JediExtensionActivator implements ILanguageServerActivator {
                     this.objectDefinitionProvider!.goToObjectDefinition(),
                 ),
             );
-            this.registrations.push(languages.registerRenameProvider(this.documentSelector, this.renameProvider));
             this.registrations.push(
                 languages.registerDefinitionProvider(this.documentSelector, this.definitionProvider),
             );
@@ -135,14 +132,9 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         }
     }
 
-    public provideRenameEdits(
-        document: TextDocument,
-        position: Position,
-        newName: string,
-        token: CancellationToken,
-    ): ProviderResult<WorkspaceEdit> {
+    public provideRenameEdits(): ProviderResult<WorkspaceEdit> {
         if (this.renameProvider) {
-            return this.renameProvider.provideRenameEdits(document, position, newName, token);
+            return Promise.resolve(undefined);
         }
     }
     public provideDefinition(

@@ -14,7 +14,6 @@ import {
     BaseProductPathsService,
     FormatterProductPathService,
     LinterProductPathService,
-    RefactoringLibraryProductPathService,
     TestFrameworkProductPathService,
 } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
@@ -162,21 +161,6 @@ suite('Product Path', () => {
                         expect(value).to.be.equal(expectedPath);
                         linterInfo.verifyAll();
                         linterManager.verifyAll();
-                    });
-                    break;
-                }
-                case ProductType.RefactoringLibrary: {
-                    test(`Ensure path is returned for ${product.name} (${
-                        resource ? 'With a resource' : 'without a resource'
-                    })`, async () => {
-                        const productPathService = new RefactoringLibraryProductPathService(serviceContainer.object);
-
-                        const value = productPathService.getExecutableNameFromSettings(product.value, resource);
-                        const moduleName = productInstaller.translateProductToModuleName(
-                            product.value,
-                            ModuleNamePurpose.run,
-                        );
-                        expect(value).to.be.equal(moduleName);
                     });
                     break;
                 }

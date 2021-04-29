@@ -220,16 +220,6 @@
                 "category": "Python"
             },
             {
-                "command": "python.refactorExtractVariable",
-                "title": "%python.command.python.refactorExtractVariable.title%",
-                "category": "Python Refactor"
-            },
-            {
-                "command": "python.refactorExtractMethod",
-                "title": "%python.command.python.refactorExtractMethod.title%",
-                "category": "Python Refactor"
-            },
-            {
                 "command": "python.viewTestOutput",
                 "title": "%python.command.python.viewTestOutput.title%",
                 "category": "Python",
@@ -372,18 +362,6 @@
         ],
         "menus": {
             "editor/context": [
-                {
-                    "command": "python.refactorExtractVariable",
-                    "title": "Refactor: Extract Variable",
-                    "group": "Refactor",
-                    "when": "editorHasSelection && editorLangId == python && !notebookEditorFocused"
-                },
-                {
-                    "command": "python.refactorExtractMethod",
-                    "title": "Refactor: Extract Method",
-                    "group": "Refactor",
-                    "when": "editorHasSelection && editorLangId == python && !notebookEditorFocused"
-                },
                 {
                     "command": "python.sortImports",
                     "title": "Refactor: Sort Imports",

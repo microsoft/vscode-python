@@ -7,8 +7,6 @@
     "python.command.python.debugtests.title": "Alle Unittests debuggen",
     "python.command.python.execInTerminal.title": "Python-Datei im Terminal ausführen",
     "python.command.python.setInterpreter.title": "Interpreter auswählen",
-    "python.command.python.refactorExtractVariable.title": "Variable extrahieren",
-    "python.command.python.refactorExtractMethod.title": "Methode extrahieren",
     "python.command.python.viewTestOutput.title": "Unittest-Ausgabe anzeigen",
     "python.command.python.selectAndRunTestMethod.title": "Unittest-Methode ausführen ...",
     "python.command.python.selectAndDebugTestMethod.title": "Unittest-Debug-Methode ausführen ...",

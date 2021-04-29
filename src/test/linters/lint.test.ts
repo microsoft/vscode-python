@@ -10,7 +10,6 @@ import { Product } from '../../client/common/installer/productInstaller';
 import {
     FormatterProductPathService,
     LinterProductPathService,
-    RefactoringLibraryProductPathService,
     TestFrameworkProductPathService,
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
@@ -74,11 +73,6 @@ suite('Linting Settings', () => {
             IProductPathService,
             TestFrameworkProductPathService,
             ProductType.TestFramework,
-        );
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
-            RefactoringLibraryProductPathService,
-            ProductType.RefactoringLibrary,
         );
     }
 

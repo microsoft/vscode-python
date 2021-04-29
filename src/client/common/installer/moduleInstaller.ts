@@ -181,8 +181,6 @@ export function translateProductToModule(product: Product, purpose: ModuleNamePu
             return 'flake8';
         case Product.unittest:
             return 'unittest';
-        case Product.rope:
-            return 'rope';
         case Product.bandit:
             return 'bandit';
         case Product.jupyter:

@@ -7,8 +7,6 @@
     "python.command.python.debugtests.title": "Debuguj wszystkie testy jednostkowe",
     "python.command.python.execInTerminal.title": "Uruchom plik pythonowy w terminalu",
     "python.command.python.setInterpreter.title": "Wybierz wersję interpretera",
-    "python.command.python.refactorExtractVariable.title": "Wyodrębnij zmienną",
-    "python.command.python.refactorExtractMethod.title": "Wyodrębnij metodę",
     "python.command.python.viewOutput.title": "Pokaż wyniki",
     "python.command.python.viewTestOutput.title": "Pokaż wyniki testów jednostkowych",
     "python.command.python.selectAndRunTestMethod.title": "Uruchom metodę testów jednostkowych ...",

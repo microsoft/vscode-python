@@ -12,8 +12,6 @@
     "python.command.python.switchToWeeklyChannel.title": "Switch to Insiders Weekly Channel",
     "python.command.python.clearWorkspaceInterpreter.title": "Clear Workspace Interpreter Setting",
     "python.command.python.resetInterpreterSecurityStorage.title": "Reset Stored Info for Untrusted Interpreters",
-    "python.command.python.refactorExtractVariable.title": "Extract Variable",
-    "python.command.python.refactorExtractMethod.title": "Extract Method",
     "python.command.python.viewOutput.title": "Show Output",
     "python.command.python.viewTestOutput.title": "Show Test Output",
     "python.command.python.viewLanguageServerOutput.title": "Show Language Server Output",

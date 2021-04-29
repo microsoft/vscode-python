@@ -50,7 +50,6 @@ import { ProductInstaller } from '../../client/common/installer/productInstaller
 import {
     FormatterProductPathService,
     LinterProductPathService,
-    RefactoringLibraryProductPathService,
     TestFrameworkProductPathService,
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
@@ -194,11 +193,6 @@ suite('Installer', () => {
             IProductPathService,
             TestFrameworkProductPathService,
             ProductType.TestFramework,
-        );
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
-            RefactoringLibraryProductPathService,
-            ProductType.RefactoringLibrary,
         );
         ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
         ioc.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
