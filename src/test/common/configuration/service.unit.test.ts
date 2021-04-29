@@ -12,7 +12,7 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { DeprecatePythonPath } from '../../../client/common/experiments/groups';
 import { IExperimentsManager, IInterpreterPathService } from '../../../client/common/types';
 import {
-    IInterpreterAutoSelectionProxyService,
+    IInterpreterAutoSelectionService,
     IInterpreterSecurityService,
 } from '../../../client/interpreter/autoSelection/types';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -56,13 +56,13 @@ suite('Configuration Service', () => {
     }
 
     test('Fetching settings goes as expected', () => {
-        const interpreterAutoSelectionProxyService = TypeMoq.Mock.ofType<IInterpreterAutoSelectionProxyService>();
+        const interpreterAutoSelectionProxyService = TypeMoq.Mock.ofType<IInterpreterAutoSelectionService>();
         serviceContainer
             .setup((s) => s.get(IInterpreterSecurityService))
             .returns(() => interpreterSecurityService.object)
             .verifiable(TypeMoq.Times.once());
         serviceContainer
-            .setup((s) => s.get(IInterpreterAutoSelectionProxyService))
+            .setup((s) => s.get(IInterpreterAutoSelectionService))
             .returns(() => interpreterAutoSelectionProxyService.object)
             .verifiable(TypeMoq.Times.once());
         const settings = configService.getSettings();
