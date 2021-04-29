@@ -126,12 +126,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest, windows-latest]
-        # Run the tests on the oldest and most recent versions of Python.
-        python: [2.7, ${{ env.PYTHON_VERSION }}]
         test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
+        # We're not running CI on macOS for now because it's one less matrix
+        # entry to lower the number of runners used, macOS runners are expensive,
+        # and we assume that Ubuntu is enough to cover the UNIX case.
+        include:
+          - python: '2.7'
+          - python: ${{ env.PYTHON_VERSION }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
