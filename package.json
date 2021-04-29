@@ -1635,7 +1635,7 @@
                 },
                 "python.linting.pylintEnabled": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Whether to lint Python files using pylint.",
                     "scope": "resource"
                 },
@@ -1643,12 +1643,6 @@
                     "type": "string",
                     "default": "pylint",
                     "description": "Path to Pylint, you can use a custom version of pylint by modifying this setting to include the full path.",
-                    "scope": "resource"
-                },
-                "python.linting.pylintUseMinimalCheckers": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Whether to run Pylint with minimal set of rules.",
                     "scope": "resource"
                 },
                 "python.pythonPath": {

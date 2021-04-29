@@ -711,7 +711,6 @@ suite('Linting Scenarios', () => {
                 useMinimal ? '' : 'out'
             } minimal checkers`, async () => {
                 const fixture = new TestFixture();
-                fixture.lintingSettings.pylintUseMinimalCheckers = useMinimal;
                 await testEnablingDisablingOfLinter(fixture, Product.pylint, enabled);
             });
         }

@@ -102,7 +102,6 @@ export class LintingSettings {
     public banditEnabled: boolean;
     public banditArgs: string[];
     public banditPath: string;
-    public pylintUseMinimalCheckers: boolean;
 
     constructor() {
         // mostly from configSettings.ts
@@ -164,7 +163,6 @@ export class LintingSettings {
             refactor: DiagnosticSeverity.Hint,
             warning: DiagnosticSeverity.Warning,
         };
-        this.pylintUseMinimalCheckers = false;
     }
 }
 

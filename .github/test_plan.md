@@ -141,37 +141,15 @@ SPAM='hello ${WHO}'
     -   [ ] Create a virtual environment
     -   [ ] Install `requests` into the virtual environment
 
-#### Pylint/default linting
-
-[Prompting to install Pylint is covered under `Environments` above]
-
-For testing the disablement of the default linting rules for Pylint:
-
-```ini
-# pylintrc
-[MESSAGES CONTROL]
-enable=bad-names
-```
-
-```python3
-# example.py
-foo = 42  # Marked as a disallowed name.
-```
-
--   [ ] Installation via the prompt installs Pylint as appropriate
-    -   [ ] Uses `--user` for system-install of Python
-    -   [ ] Installs into a virtual environment environment directly
--   [ ] Pylint works
--   [ ] `"python.linting.pylintUseMinimalCheckers": false` turns off the default rules w/ no `pylintrc` file present
--   [ ] The existence of a `pylintrc` file turns off the default rules
-
-#### Other linters
+#### Linting
 
 **Note**:
 
 -   You can use the `Run Linting` command to run a newly installed linter
 -   When the extension installs a new linter, it turns off all other linters
 
+-   [ ] pylint works
+    -   [ ] `Select linter` lists the linter and installs it if necessary
 -   [ ] flake8 works
     -   [ ] `Select linter` lists the linter and installs it if necessary
 -   [ ] mypy works
