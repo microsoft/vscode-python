@@ -11,7 +11,7 @@ import { IConfigurationService, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Bandit } from './bandit';
 import { Flake8 } from './flake8';
-import { LinterInfo, PylintLinterInfo } from './linterInfo';
+import { LinterInfo } from './linterInfo';
 import { MyPy } from './mypy';
 import { Prospector } from './prospector';
 import { Pycodestyle } from './pycodestyle';
@@ -45,7 +45,7 @@ export class LinterManager implements ILinterManager {
         this.linters = [
             new LinterInfo(Product.bandit, LinterId.Bandit, this.configService),
             new LinterInfo(Product.flake8, LinterId.Flake8, this.configService),
-            new PylintLinterInfo(this.configService, this.workspaceService, ['.pylintrc', 'pylintrc']),
+            new LinterInfo(Product.pylint, LinterId.PyLint, this.configService),
             new LinterInfo(Product.mypy, LinterId.MyPy, this.configService),
             new LinterInfo(Product.pycodestyle, LinterId.PyCodeStyle, this.configService),
             new LinterInfo(Product.prospector, LinterId.Prospector, this.configService),
