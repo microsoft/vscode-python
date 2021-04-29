@@ -2,11 +2,11 @@ name: Build
 
 on:
   push:
-    branches:
-      - 'main'
-      - 'release'
-      - 'release/*'
-      - 'release-*'
+    # branches:
+    #   - 'main'
+    #   - 'release'
+    #   - 'release/*'
+    #   - 'release-*'
 
 env:
   PYTHON_VERSION: 3.9
