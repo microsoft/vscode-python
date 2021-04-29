@@ -2,11 +2,11 @@ name: Build
 
 on:
   push:
-    # branches:
-    #   - 'main'
-    #   - 'release'
-    #   - 'release/*'
-    #   - 'release-*'
+    branches:
+      - 'main'
+      - 'release'
+      - 'release/*'
+      - 'release-*'
 
 env:
   PYTHON_DEBUGPY_WHEEL_VERSION: 3.8
@@ -19,6 +19,7 @@ env:
 jobs:
   setup:
     name: Set up
+    if: github.repository == 'microsoft/vscode-python'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -40,9 +41,9 @@ jobs:
 
   build-vsix:
     name: Build VSIX
-    runs-on: ubuntu-latest
+    if: github.repository == 'microsoft/vscode-python'
     needs: setup
-    #if: github.repository == 'microsoft/vscode-python'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -76,8 +77,8 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: ubuntu-latest
     if: github.repository == 'microsoft/vscode-python'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -116,12 +117,11 @@ jobs:
   ### Non-smoke tests
   tests:
     name: Tests
-    # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
+    if: github.repository == 'microsoft/vscode-python'
     runs-on: ${{ matrix.os }}
     defaults:
       run:
         working-directory: ${{env.special-working-directory}}
-    if: github.repository == 'microsoft/vscode-python'
     strategy:
       fail-fast: false
       matrix:
@@ -274,12 +274,10 @@ jobs:
       # Run TypeScript unit tests only for Python 3.X.
       - name: Run TypeScript unit tests
         run: npm run test:unittests
-        if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
+        if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, '3.')
 
-      # Run the Python tests in our codebase.
       - name: Run Python unit tests
-        run: |
-          python pythonFiles/tests/run_all.py
+        run: python pythonFiles/tests/run_all.py
         if: matrix.test-suite == 'python-unit'
 
       # The virtual environment based tests use the `testSingleWorkspace` set of tests
@@ -332,9 +330,8 @@ jobs:
 
   smoke-tests:
     name: Smoke tests
-    # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
-    runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-python'
+    runs-on: ${{ matrix.os }}
     needs: [setup, build-vsix]
     strategy:
       fail-fast: false
@@ -344,7 +341,6 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         python: ['3.x']
     steps:
-      # Need the source to have the tests available.
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -379,7 +375,6 @@ jobs:
         with:
           name: ${{ needs.setup.outputs.vsix_artifactname }}
 
-      # Compile the test files.
       - name: Prepare for smoke tests
         run: npx tsc -p ./
         shell: bash
@@ -400,18 +395,16 @@ jobs:
 
   insider-tests:
     name: Insider tests
-    # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
-    runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-python'
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
-        python: [3.8]
+        python: [3.8] # For Jupyter.
     steps:
-      # Need the source to have the tests available.
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -466,8 +459,8 @@ jobs:
   upload:
     name: Upload VSIX to Azure Blob Storage
     if: github.repository == 'microsoft/vscode-python' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
     needs: [setup, tests, smoke-tests, build-vsix]
+    runs-on: ubuntu-latest
     env:
       BLOB_CONTAINER_NAME: extension-builds
       BLOB_NAME: ms-python-insiders.vsix
