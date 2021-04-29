@@ -74,7 +74,7 @@ suite('Application Diagnostics - Pylance informational prompt', () => {
         const diagnostics = await diagnosticService.diagnose(undefined);
 
         assert.deepStrictEqual(diagnostics, [
-            new PylanceDefaultDiagnostic(Diagnostics.pylanceDefaultLSMessage(), undefined),
+            new PylanceDefaultDiagnostic(Diagnostics.pylanceDefaultMessage(), undefined),
         ]);
     });
 

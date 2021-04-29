@@ -45,7 +45,8 @@ export class PylanceDefaultDiagnosticService extends BaseDiagnosticsService {
         if (!this.shouldShowPrompt()) {
             return [];
         }
-        return [new PylanceDefaultDiagnostic(Diagnostics.pylanceDefaultLSMessage(), resource)];
+
+        return [new PylanceDefaultDiagnostic(Diagnostics.pylanceDefaultMessage(), resource)];
     }
 
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
