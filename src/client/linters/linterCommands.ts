@@ -36,7 +36,7 @@ export class LinterCommands implements IDisposable {
         const linters = this.linterManager.getAllLinterInfos();
         const suggestions = linters.map((x) => x.id).sort();
         const linterList = ['Disable Linting', ...suggestions];
-        const activeLinters = await this.linterManager.getActiveLinters(true, this.settingsUri);
+        const activeLinters = await this.linterManager.getActiveLinters(this.settingsUri);
 
         let current: string;
         switch (activeLinters.length) {
@@ -82,7 +82,7 @@ export class LinterCommands implements IDisposable {
 
     public async enableLintingAsync(): Promise<void> {
         const options = ['Enable', 'Disable'];
-        const current = (await this.linterManager.isLintingEnabled(true, this.settingsUri)) ? options[0] : options[1];
+        const current = (await this.linterManager.isLintingEnabled(this.settingsUri)) ? options[0] : options[1];
 
         const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,

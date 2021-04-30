@@ -132,7 +132,7 @@ suite('Linting - Arguments', () => {
                         const platformService = TypeMoq.Mock.ofType<IPlatformService>();
                         serviceManager.addSingletonInstance<IPlatformService>(IPlatformService, platformService.object);
 
-                        lm = new LinterManager(serviceContainer, workspaceService.object);
+                        lm = new LinterManager(configService.object);
                         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);
                         document = TypeMoq.Mock.ofType<TextDocument>();
                     });

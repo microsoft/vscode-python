@@ -4,7 +4,6 @@
 
 import * as assert from 'assert';
 import { ConfigurationTarget } from 'vscode';
-import { WorkspaceService } from '../../client/common/application/workspace';
 import { Product } from '../../client/common/installer/productInstaller';
 import {
     FormatterProductPathService,
@@ -52,8 +51,8 @@ suite('Linting Settings', () => {
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
         ioc.registerPlatformTypes();
-        linterManager = new LinterManager(ioc.serviceContainer, new WorkspaceService());
         configService = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        linterManager = new LinterManager(configService);
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,

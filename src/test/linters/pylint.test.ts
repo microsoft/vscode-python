@@ -84,7 +84,7 @@ suite('Linting - Pylint', () => {
         workspace.setup((w) => w.getConfiguration('python')).returns(() => workspaceConfig.object);
 
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, config.object);
-        const linterManager = new LinterManager(serviceContainer, workspace.object);
+        const linterManager = new LinterManager(config.object);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, linterManager);
         const installer = TypeMoq.Mock.ofType<IInstaller>();
         serviceManager.addSingletonInstance<IInstaller>(IInstaller, installer.object);

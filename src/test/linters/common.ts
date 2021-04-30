@@ -262,7 +262,7 @@ export class BaseTestFixture {
 
         // linting
 
-        this.linterManager = new LinterManager(this.serviceContainer.object, this.workspaceService.object!);
+        this.linterManager = new LinterManager(this.configService.object);
         this.serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny()))
             .returns(() => this.linterManager);
