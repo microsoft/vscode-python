@@ -1110,6 +1110,7 @@
                             "tryPylance",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
+                            "pythonDiscoveryModuleWithoutWatcher",
                             "pythonJediLSP",
                             "pythonSurveyNotification",
                             "All"
@@ -1127,6 +1128,7 @@
                             "tryPylance",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
+                            "pythonDiscoveryModuleWithoutWatcher",
                             "pythonJediLSP",
                             "pythonSurveyNotification",
                             "All"
