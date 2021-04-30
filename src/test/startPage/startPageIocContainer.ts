@@ -15,6 +15,7 @@ import {
     ConfigurationChangeEvent,
     Disposable,
     EventEmitter,
+    ExtensionContext,
     FileSystemWatcher,
     Uri,
     WorkspaceFolder,
@@ -249,7 +250,9 @@ export class StartPageIocContainer extends UnitTestIocContainer {
 
         this.serviceManager.add<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
 
+        const mockMemento = TypeMoq.Mock.ofType<ExtensionContext['globalState']>();
         const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
+        mockExtensionContext.setup((m) => m.globalState).returns(() => mockMemento.object);
         mockExtensionContext.setup((m) => m.globalStoragePath).returns(() => os.tmpdir());
         mockExtensionContext.setup((m) => m.extensionPath).returns(() => this.extensionRootPath || os.tmpdir());
         this.serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, mockExtensionContext.object);
