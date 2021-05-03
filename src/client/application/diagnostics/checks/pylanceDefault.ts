@@ -40,19 +40,11 @@ export class PylanceDefaultDiagnosticService extends BaseDiagnosticsService {
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
         super([DiagnosticCodes.PylanceDefaultDiagnostic], serviceContainer, disposableRegistry, false);
-
-        const savedVersion: string | undefined = this.startPage.initialMementoValue;
-
-        // savedVersion being undefined means that this is the first time the user activates the extension,
-        // and we don't want to show the prompt to first-time users.
-        // We set PYLANCE_PROMPT_MEMENTO to false in case the user reloads the extension and savedVersion becomes set.
-        if (savedVersion === undefined) {
-            this.context.globalState.update(PYLANCE_PROMPT_MEMENTO, false);
-        }
     }
 
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
-        if (!this.shouldShowPrompt()) {
+        if (!(await this.shouldShowPrompt())) {
+            await this.updateMemento();
             return [];
         }
 
@@ -81,9 +73,17 @@ export class PylanceDefaultDiagnosticService extends BaseDiagnosticsService {
         await this.context.globalState.update(PYLANCE_PROMPT_MEMENTO, true);
     }
 
-    private shouldShowPrompt(): boolean {
+    private async shouldShowPrompt(): Promise<boolean> {
         const savedVersion: string | undefined = this.startPage.initialMementoValue;
         const promptShown: boolean | undefined = this.context.globalState.get(PYLANCE_PROMPT_MEMENTO);
+
+        // savedVersion being undefined means that this is the first time the user activates the extension,
+        // and we don't want to show the prompt to first-time users.
+        // We set PYLANCE_PROMPT_MEMENTO here to skip the prompt
+        // in case the user reloads the extension and savedVersion becomes set
+        if (savedVersion === undefined) {
+            await this.updateMemento();
+        }
 
         // promptShown being undefined means that this is the first time we check if we should show the prompt.
         return savedVersion !== undefined && promptShown === undefined;
