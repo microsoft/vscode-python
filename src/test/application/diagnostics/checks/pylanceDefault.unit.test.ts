@@ -89,6 +89,14 @@ suite('Application Diagnostics - Pylance informational prompt', () => {
         assert.deepStrictEqual(diagnostics, []);
     });
 
+    test("Should return empty diagnostics if it's an existing installation of the extension and the prompt has been skipped", async () => {
+        setupMementos('1.0.0', false);
+
+        const diagnostics = await diagnosticService.diagnose(undefined);
+
+        assert.deepStrictEqual(diagnostics, []);
+    });
+
     test("Should return empty diagnostics if it's a fresh installation of the extension", async () => {
         setupMementos(undefined, undefined);
 
