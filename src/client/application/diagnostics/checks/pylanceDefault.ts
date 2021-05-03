@@ -44,7 +44,6 @@ export class PylanceDefaultDiagnosticService extends BaseDiagnosticsService {
 
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (!(await this.shouldShowPrompt())) {
-            await this.updateMemento();
             return [];
         }
 
@@ -82,7 +81,7 @@ export class PylanceDefaultDiagnosticService extends BaseDiagnosticsService {
         // We set PYLANCE_PROMPT_MEMENTO here to skip the prompt
         // in case the user reloads the extension and savedVersion becomes set
         if (savedVersion === undefined) {
-            await this.updateMemento();
+            return false;
         }
 
         // promptShown being undefined means that this is the first time we check if we should show the prompt.
