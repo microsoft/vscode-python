@@ -67,7 +67,6 @@ suite('Application Diagnostics - Pylance informational prompt', () => {
 
     function setupMementos(version?: string, promptShown?: boolean) {
         startPage.setup((s) => s.initialMementoValue).returns(() => version);
-        // memento.setup((m) => m.get(EXTENSION_VERSION_MEMENTO)).returns(() => version);
         memento.setup((m) => m.get(PYLANCE_PROMPT_MEMENTO)).returns(() => promptShown);
     }
 
