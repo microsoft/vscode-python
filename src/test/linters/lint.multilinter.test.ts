@@ -17,7 +17,7 @@ import { deleteFile, IExtensionTestApi, PythonSettingKeys, rootWorkspaceUri } fr
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 
 const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
-const pythoFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'linting');
+const pythonFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'linting');
 
 // Mocked out python tool execution (all we need is mocked linter return values).
 class MockPythonToolExecService extends PythonToolExecutionService {
@@ -90,7 +90,7 @@ suite('Linting - Multiple Linters Enabled Test', () => {
 
     test('Multiple linters', async () => {
         await closeActiveWindows();
-        const document = await workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
+        const document = await workspace.openTextDocument(path.join(pythonFilesPath, 'print.py'));
         await window.showTextDocument(document);
         await configService.updateSetting(
             'languageServer',

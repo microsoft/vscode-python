@@ -33,7 +33,7 @@ class DisabledLinter implements ILinter {
 export class LinterManager implements ILinterManager {
     protected linters: ILinterInfo[];
 
-    constructor(@inject(IServiceContainer) private configService: IConfigurationService) {
+    constructor(@inject(IConfigurationService) private configService: IConfigurationService) {
         // Note that we use unit tests to ensure all the linters are here.
         this.linters = [
             new LinterInfo(Product.bandit, LinterId.Bandit, this.configService),
