@@ -160,7 +160,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             environments
                 .filter((item) => !item.displayName)
                 .map(async (item) => {
-                    item.displayName = await this.getDisplayName(item, resource);
+                    item.displayName = await this.getDisplayName(item, resource, options?.ignoreCache);
                     // Keep information up to date with latest details.
                     if (!item.cachedEntry) {
                         this.updateCachedInterpreterInformation(item, resource).ignoreErrors();
@@ -277,9 +277,13 @@ export class InterpreterService implements Disposable, IInterpreterService {
      * @returns {string}
      * @memberof InterpreterService
      */
-    public async getDisplayName(info: Partial<PythonEnvironment>, resource?: Uri): Promise<string> {
+    public async getDisplayName(
+        info: Partial<PythonEnvironment>,
+        resource?: Uri,
+        ignoreCache = false,
+    ): Promise<string> {
         // faster than calculating file has again and again, only when dealing with cached items.
-        if (!info.cachedEntry && info.path && this.inMemoryCacheOfDisplayNames.has(info.path)) {
+        if (!ignoreCache && !info.cachedEntry && info.path && this.inMemoryCacheOfDisplayNames.has(info.path)) {
             return this.inMemoryCacheOfDisplayNames.get(info.path)!;
         }
         const interpreterKey = info.path ?? '';
@@ -289,7 +293,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             EXPIRY_DURATION,
         );
 
-        if (store.value && store.value.hash === interpreterKey && store.value.displayName) {
+        if (!ignoreCache && store.value && store.value.hash === interpreterKey && store.value.displayName) {
             this.inMemoryCacheOfDisplayNames.set(info.path!, store.value.displayName);
             return store.value.displayName;
         }

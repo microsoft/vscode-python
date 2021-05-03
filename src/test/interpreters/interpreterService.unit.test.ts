@@ -579,6 +579,7 @@ suite('Interpreters service', () => {
                                                 const displayName = await service.getDisplayName(
                                                     interpreterInfo,
                                                     resource,
+                                                    true,
                                                 );
                                                 expect(displayName).to.equal(expectedDisplayName);
                                             });

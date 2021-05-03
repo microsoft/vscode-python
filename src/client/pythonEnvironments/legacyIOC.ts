@@ -156,6 +156,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
                 const query = {
                     kinds: e.kind ? [e.kind] : undefined,
                     searchLocations: e.searchLocation ? { roots: [e.searchLocation] } : undefined,
+                    ignoreCache: true,
                 };
                 // Trigger a background refresh of the environments.
                 getEnvs(this.api.iterEnvs(query)).ignoreErrors();
