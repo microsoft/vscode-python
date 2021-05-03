@@ -1,0 +1,9 @@
+This license applies to the Python extension for Visual Studio Code.
+
+By installing this extension, you may also cause the automatic installation of
+the following extensions, which have their own licenses and can be uninstalled if you wish:
+
+- ms-python.vscode-pylance: https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance
+- ms-toolsai.jupyter: https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter
+
+------------------------------------------------------------------------------
