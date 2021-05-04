@@ -41,16 +41,6 @@ async function getDefaultLanguageServer(
         return LanguageServerType.Node;
     }
 
-    // If Pylance is installed and functional, use it as the default.
-    // TODO: This causes a dependency cycle, as VS Code is trying to wait for python to even start pylance...
-    // console.log('Activating Pylance');
-    // const pylance = await extensions.getExtension<ILSExtensionApi>(PYLANCE_EXTENSION_ID)?.activate();
-    // console.log('Activated Pylance');
-    // if (pylance && Object.keys(pylance).length !== 0) {
-    //     return LanguageServerType.Node;
-    // }
-
-    // Otherwise, use jedi.
     return (await experimentService.inExperiment(JediLSP.experiment))
         ? LanguageServerType.JediLSP
         : LanguageServerType.Jedi;
