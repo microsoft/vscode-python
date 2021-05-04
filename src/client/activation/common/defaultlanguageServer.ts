@@ -26,7 +26,6 @@ export async function setDefaultLanguageServer(
     serviceManager: IServiceManager,
 ): Promise<void> {
     const lsType = await getDefaultLanguageServer(experimentService, extensions);
-    console.log(`Default LS will be ${lsType}`);
     serviceManager.addSingletonInstance<IDefaultLanguageServer>(
         IDefaultLanguageServer,
         new DefaultLanguageServer(lsType),
