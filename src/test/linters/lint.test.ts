@@ -3,9 +3,7 @@
 'use strict';
 
 import * as assert from 'assert';
-import * as path from 'path';
-import { ConfigurationTarget, Uri } from 'vscode';
-import { WorkspaceService } from '../../client/common/application/workspace';
+import { ConfigurationTarget } from 'vscode';
 import { Product } from '../../client/common/installer/productInstaller';
 import {
     FormatterProductPathService,
@@ -21,9 +19,6 @@ import { ILinterManager } from '../../client/linters/types';
 import { rootWorkspaceUri } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
-
-const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
-const workspaceUri = Uri.file(workspaceDir);
 
 suite('Linting Settings', () => {
     let ioc: UnitTestIocContainer;
@@ -56,8 +51,8 @@ suite('Linting Settings', () => {
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
         ioc.registerPlatformTypes();
-        linterManager = new LinterManager(ioc.serviceContainer, new WorkspaceService());
         configService = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        linterManager = new LinterManager(configService);
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
@@ -82,7 +77,6 @@ suite('Linting Settings', () => {
 
         await configService.updateSetting('linting.enabled', lintingEnabled, rootWorkspaceUri, target);
         await configService.updateSetting('linting.lintOnSave', false, rootWorkspaceUri, target);
-        await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
 
         linterManager.getAllLinterInfos().forEach(async (x) => {
             const settingKey = `linting.${x.enabledSettingName}`;

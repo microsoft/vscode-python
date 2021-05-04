@@ -88,5 +88,4 @@ export class MockLintingSettings implements ILintingSettings {
     public banditEnabled!: boolean;
     public banditArgs!: string[];
     public banditPath!: string;
-    public pylintUseMinimalCheckers!: boolean;
 }
