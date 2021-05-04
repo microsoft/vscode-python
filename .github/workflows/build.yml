@@ -25,7 +25,7 @@ jobs:
         shell: python
     outputs:
       vsix_name: ${{ steps.vsix_names.outputs.vsix_name }}
-      vsix_artifact_name: $ {{ steps.vsix_names.outputs.vsix_artifact_name }}
+      vsix_artifact_name: ${{ steps.vsix_names.outputs.vsix_artifact_name }}
     steps:
       - name: VSIX names
         id: vsix_names
