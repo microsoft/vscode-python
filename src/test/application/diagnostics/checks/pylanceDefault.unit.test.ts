@@ -23,7 +23,7 @@ import {
 } from '../../../../client/application/diagnostics/types';
 import { IStartPage } from '../../../../client/common/startPage/types';
 import { IExtensionContext } from '../../../../client/common/types';
-import { Diagnostics } from '../../../../client/common/utils/localize';
+import { Common, Diagnostics } from '../../../../client/common/utils/localize';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
 suite('Application Diagnostics - Pylance informational prompt', () => {
@@ -94,6 +94,28 @@ suite('Application Diagnostics - Pylance informational prompt', () => {
         const diagnostics = await diagnosticService.diagnose(undefined);
 
         assert.deepStrictEqual(diagnostics, []);
+    });
+
+    test('Should display a prompt when handling the diagnostic code', async () => {
+        const diagnostic = new PylanceDefaultDiagnostic(DiagnosticCodes.PylanceDefaultDiagnostic, undefined);
+        let messagePrompt: MessageCommandPrompt | undefined;
+
+        messageHandler
+            .setup((f) => f.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
+            .callback((_d, prompt: MessageCommandPrompt) => {
+                messagePrompt = prompt;
+            })
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+
+        await diagnosticService.handle([diagnostic]);
+
+        filterService.verifyAll();
+        messageHandler.verifyAll();
+
+        assert.notDeepStrictEqual(messagePrompt, undefined);
+        assert.notDeepStrictEqual(messagePrompt!.onClose, undefined);
+        assert.deepStrictEqual(messagePrompt!.commandPrompts, [{ prompt: Common.ok() }]);
     });
 
     test('Should return empty diagnostics if the diagnostic code has been ignored', async () => {
