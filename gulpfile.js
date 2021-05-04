@@ -358,7 +358,7 @@ function hasNativeDependencies() {
         path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep),
     )
         .filter((item) => item.length > 0)
-        .filter((item) => !item.includes('zeromq') && item !== 'fsevents') // This is a known native. Allow this one for now
+        .filter((item) => !item.includes('zeromq') && item !== 'fsevents' && !item.includes('canvas')) // This is a known native. Allow this one for now
         .filter(
             (item) =>
                 jsonProperties.findIndex((flattenedDependency) =>
