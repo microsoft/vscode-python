@@ -28,6 +28,8 @@ import { WebviewPanelHost } from './webviewPanelHost';
 
 const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'startPage-ui', 'viewers');
 
+export const EXTENSION_VERSION_MEMENTO = 'extensionVersion';
+
 // Class that opens, disposes and handles messages and actions for the Python Extension Start Page.
 // It also runs when the extension activates.
 @injectable()
@@ -39,6 +41,8 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
     private actionTakenOnFirstTime = false;
     private firstTime = false;
     private webviewDidLoad = false;
+    public initialMementoValue: string | undefined = undefined;
+
     constructor(
         @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
@@ -66,6 +70,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
             false,
         );
         this.timer = new StopWatch();
+        this.initialMementoValue = this.context.globalState.get(EXTENSION_VERSION_MEMENTO);
     }
 
     public async activate(): Promise<void> {
@@ -129,7 +134,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                 sendTelemetryEvent(Telemetry.StartPageOpenBlankNotebook);
                 this.setTelemetryFlags();
 
-                const savedVersion: string | undefined = this.context.globalState.get('extensionVersion');
+                const savedVersion: string | undefined = this.context.globalState.get(EXTENSION_VERSION_MEMENTO);
 
                 if (savedVersion) {
                     await this.commandManager.executeCommand(
@@ -220,7 +225,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
 
     // Public for testing
     public async extensionVersionChanged(): Promise<boolean> {
-        const savedVersion: string | undefined = this.context.globalState.get('extensionVersion');
+        const savedVersion: string | undefined = this.context.globalState.get(EXTENSION_VERSION_MEMENTO);
         const version: string = this.appEnvironment.packageJson.version;
         let shouldShowStartPage: boolean;
 
@@ -239,7 +244,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
 
         // savedVersion being undefined means this is the first time the user activates the extension.
         // if savedVersion != version, there was an update
-        await this.context.globalState.update('extensionVersion', version);
+        await this.context.globalState.update(EXTENSION_VERSION_MEMENTO, version);
         return shouldShowStartPage;
     }
 

@@ -19,4 +19,5 @@ export enum DiagnosticCodes {
     ConsoleTypeDiagnostic = 'ConsoleTypeDiagnostic',
     ConfigPythonPathDiagnostic = 'ConfigPythonPathDiagnostic',
     UpgradeCodeRunnerDiagnostic = 'UpgradeCodeRunnerDiagnostic',
+    PylanceDefaultDiagnostic = 'PylanceDefaultDiagnostic',
 }

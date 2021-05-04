@@ -1,0 +1,5 @@
+PLEASE NOTE: This Python extension for Visual Studio Code has a hard dependency on the Jupyter extension for Visual Studio Code which is installed automatically alongside it. The Python extension for Visual Studio Code also holds an optional dependency on the Pylance extension for Visual Studio Code, which is also installed automatically but is separately licensed.
+
+All the source code for the Python extension for Visual Studio Code is available under the MIT License (given below) as is the source code for the Jupyter extension for Visual Studio Code. But the optional Pylance extension for Visual Studio Code is only available in binary form and it is not licensed under the MIT License. The Pylance extension for Visual Studio Code is licensed under a Microsoft proprietary license, the terms of which are available here: https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license.
+
+------------------------------------------------------------------------------

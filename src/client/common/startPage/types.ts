@@ -10,6 +10,7 @@ export type JSONArray = JSONValue[];
 
 export const IStartPage = Symbol('IStartPage');
 export interface IStartPage {
+    readonly initialMementoValue?: string;
     open(): Promise<void>;
     extensionVersionChanged(): Promise<boolean>;
 }
