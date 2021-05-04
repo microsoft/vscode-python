@@ -111,11 +111,9 @@ async function addExtensionPackDependencies() {
 async function buildLicense() {
     const headerPath = path.join(__dirname, 'build', 'license-header.txt');
     const licenseHeader = await fsExtra.readFile(headerPath, 'utf-8');
+    const license = await fsExtra.readFile('LICENSE', 'utf-8');
 
-    let license = await fsExtra.readFile('LICENSE', 'utf-8');
-    license = `${licenseHeader}\n${license}`;
-
-    await fsExtra.writeFile('LICENSE', license, 'utf-8');
+    await fsExtra.writeFile('LICENSE', `${licenseHeader}\n${license}`, 'utf-8');
 }
 
 gulp.task('updateBuildNumber', async () => {
