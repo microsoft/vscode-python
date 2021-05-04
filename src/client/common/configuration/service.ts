@@ -34,7 +34,7 @@ export class ConfigurationService implements IConfigurationService {
         const interpreterSecurityService = this.serviceContainer.get<IInterpreterSecurityService>(
             IInterpreterSecurityService,
         );
-        const defaultLS = this.serviceContainer.get<IDefaultLanguageServer>(IDefaultLanguageServer);
+        const defaultLS = this.serviceContainer.tryGet<IDefaultLanguageServer>(IDefaultLanguageServer);
         return PythonSettings.getInstance(
             resource,
             InterpreterAutoSelectionService,
