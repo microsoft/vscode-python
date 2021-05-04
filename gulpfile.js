@@ -82,6 +82,7 @@ gulp.task('addExtensionDependencies', async () => {
 });
 
 gulp.task('addExtensionPackDependencies', async () => {
+    await buildLicense();
     await addExtensionPackDependencies();
 });
 
@@ -105,6 +106,14 @@ async function addExtensionPackDependencies() {
         packageJson.extensionPack ? packageJson.extensionPack : [],
     );
     await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
+}
+
+async function buildLicense() {
+    const headerPath = path.join(__dirname, 'build', 'license-header.txt');
+    const licenseHeader = await fsExtra.readFile(headerPath, 'utf-8');
+    const license = await fsExtra.readFile('LICENSE', 'utf-8');
+
+    await fsExtra.writeFile('LICENSE', `${licenseHeader}\n${license}`, 'utf-8');
 }
 
 gulp.task('updateBuildNumber', async () => {
