@@ -21,7 +21,7 @@ import {
 import { LanguageServerType } from '../activation/types';
 import { LogLevel } from '../logging/levels';
 import type { ExtensionChannels } from './insidersBuild/types';
-import type { InterpreterUri } from './installer/types';
+import type { InterpreterUri, ModuleInstallFlags } from './installer/types';
 import { EnvironmentVariables } from './variables/types';
 import { ITestingSettings } from '../testing/configuration/types';
 
@@ -122,13 +122,13 @@ export interface IInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        isUpgrade?: boolean,
+        flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse>;
     install(
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        isUpgrade?: boolean,
+        flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean>;
     isProductVersionCompatible(

@@ -36,6 +36,7 @@ import {
     InterpreterUri,
     IProductPathService,
     IProductService,
+    ModuleInstallFlags,
 } from './types';
 
 export { Product } from '../types';
@@ -72,7 +73,7 @@ abstract class BaseInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        isUpgrade?: boolean,
+        flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse> {
         // If this method gets called twice, while previous promise has not been resolved, then return that same promise.
         // E.g. previous promise is not resolved as a message has been displayed to the user, so no point displaying
@@ -83,7 +84,7 @@ abstract class BaseInstaller {
         if (BaseInstaller.PromptPromises.has(key)) {
             return BaseInstaller.PromptPromises.get(key)!;
         }
-        const promise = this.promptToInstallImplementation(product, resource, cancel, isUpgrade);
+        const promise = this.promptToInstallImplementation(product, resource, cancel, flags);
         BaseInstaller.PromptPromises.set(key, promise);
         promise.then(() => BaseInstaller.PromptPromises.delete(key)).ignoreErrors();
         promise.catch(() => BaseInstaller.PromptPromises.delete(key)).ignoreErrors();
@@ -95,7 +96,7 @@ abstract class BaseInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        isUpgrade?: boolean,
+        flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse> {
         if (product === Product.unittest) {
             return InstallerResponse.Installed;
@@ -112,7 +113,7 @@ abstract class BaseInstaller {
         }
 
         await installer
-            .installModule(product, resource, cancel, isUpgrade)
+            .installModule(product, resource, cancel, flags)
             .catch((ex) => traceError(`Error in installing the product '${ProductNames.get(product)}', ${ex}`));
 
         return this.isInstalled(product, resource).then((isInstalled) => {
@@ -207,7 +208,7 @@ abstract class BaseInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        isUpgrade?: boolean,
+        flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse>;
 
     protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
@@ -349,7 +350,7 @@ class DataScienceInstaller extends BaseInstaller {
         product: Product,
         interpreterUri?: InterpreterUri,
         cancel?: CancellationToken,
-        isUpgrade?: boolean,
+        flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse> {
         // Precondition
         if (isResource(interpreterUri)) {
@@ -390,7 +391,7 @@ class DataScienceInstaller extends BaseInstaller {
         }
 
         await installerModule
-            .installModule(product, interpreter, cancel, isUpgrade)
+            .installModule(product, interpreter, cancel, flags)
             .catch((ex) => traceError(`Error in installing the module '${moduleName}', ${ex}`));
 
         return this.isInstalled(product, interpreter).then((isInstalled) => {
@@ -447,7 +448,7 @@ export class ProductInstaller implements IInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        isUpgrade?: boolean,
+        flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse> {
         const currentInterpreter = isResource(resource)
             ? await this.interpreterService.getActiveInterpreter(resource)
@@ -455,7 +456,7 @@ export class ProductInstaller implements IInstaller {
         if (!currentInterpreter) {
             return InstallerResponse.Ignore;
         }
-        return this.createInstaller(product).promptToInstall(product, resource, cancel, isUpgrade);
+        return this.createInstaller(product).promptToInstall(product, resource, cancel, flags);
     }
 
     public async isProductVersionCompatible(
@@ -470,9 +471,9 @@ export class ProductInstaller implements IInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        isUpgrade?: boolean,
+        flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse> {
-        return this.createInstaller(product).install(product, resource, cancel, isUpgrade);
+        return this.createInstaller(product).install(product, resource, cancel, flags);
     }
 
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean> {

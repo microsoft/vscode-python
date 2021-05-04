@@ -19,7 +19,7 @@ import { ExecutionInfo, IConfigurationService, IOutputChannel, ModuleNamePurpose
 import { Products } from '../utils/localize';
 import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
-import { IModuleInstaller, InterpreterUri } from './types';
+import { IModuleInstaller, InterpreterUri, ModuleInstallFlags } from './types';
 
 @injectable()
 export abstract class ModuleInstaller implements IModuleInstaller {
@@ -33,7 +33,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         productOrModuleName: Product | string,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        isUpgrade?: boolean,
+        flags?: ModuleInstallFlags,
     ): Promise<void> {
         const name =
             typeof productOrModuleName == 'string'
@@ -48,7 +48,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         } else {
             options.interpreter = resource;
         }
-        const executionInfo = await this.getExecutionInfo(name, resource, isUpgrade);
+        const executionInfo = await this.getExecutionInfo(name, resource, flags);
         const terminalService = this.serviceContainer
             .get<ITerminalServiceFactory>(ITerminalServiceFactory)
             .getTerminalService(options);
@@ -132,7 +132,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
     protected abstract getExecutionInfo(
         moduleName: string,
         resource?: InterpreterUri,
-        isUpgrade?: boolean,
+        flags?: ModuleInstallFlags,
     ): Promise<ExecutionInfo>;
     private async processInstallArgs(args: string[], resource?: InterpreterUri): Promise<string[]> {
         const indexOfPylint = args.findIndex((arg) => arg.toUpperCase() === 'PYLINT');

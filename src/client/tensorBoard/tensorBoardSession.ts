@@ -45,6 +45,7 @@ import { EventName } from '../telemetry/constants';
 import { ImportTracker } from '../telemetry/importTracker';
 import { TensorBoardPromptSelection, TensorBoardSessionStartResult } from './constants';
 import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
+import { ModuleInstallFlags } from '../common/installer/types';
 
 enum Messages {
     JumpToSource = 'jump_to_source',
@@ -236,7 +237,9 @@ export class TensorBoardSession {
                     Product.tensorboard,
                     interpreter,
                     installerToken,
-                    tensorboardInstallStatus === ProductInstallStatus.NeedsUpgrade,
+                    tensorboardInstallStatus === ProductInstallStatus.NeedsUpgrade
+                        ? ModuleInstallFlags.upgrade
+                        : undefined,
                 ),
             );
         }

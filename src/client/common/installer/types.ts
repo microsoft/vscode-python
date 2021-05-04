@@ -27,7 +27,7 @@ export interface IModuleInstaller {
         product: string,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        isUpgrade?: boolean,
+        flags?: ModuleInstallFlags,
     ): Promise<void>;
     /**
      * Installs a Product
@@ -44,7 +44,7 @@ export interface IModuleInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        isUpgrade?: boolean,
+        flags?: ModuleInstallFlags,
     ): Promise<void>;
     isSupported(resource?: InterpreterUri): Promise<boolean>;
 }
@@ -75,4 +75,10 @@ export const STABLE_INSTALLER = 'STABLE_INSTALLER';
 export const IExtensionBuildInstaller = Symbol('IExtensionBuildInstaller');
 export interface IExtensionBuildInstaller {
     install(): Promise<void>;
+}
+
+export enum ModuleInstallFlags {
+    upgrade = 1,
+    updateDependencies = 2,
+    reInstall = 4,
 }

@@ -9,7 +9,7 @@ import { inDiscoveryExperiment } from '../experiments/helpers';
 import { ExecutionInfo, IConfigurationService, IExperimentService } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
-import { InterpreterUri } from './types';
+import { InterpreterUri, ModuleInstallFlags } from './types';
 
 /**
  * A Python module installer for a conda environment.
@@ -64,7 +64,7 @@ export class CondaInstaller extends ModuleInstaller {
     protected async getExecutionInfo(
         moduleName: string,
         resource?: InterpreterUri,
-        isUpgrade?: boolean,
+        flags: ModuleInstallFlags = 0,
     ): Promise<ExecutionInfo> {
         const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
         const condaFile = await condaService.getCondaFile();
@@ -77,7 +77,7 @@ export class CondaInstaller extends ModuleInstaller {
             ? this.serviceContainer.get<IComponentAdapter>(IComponentAdapter)
             : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
         const info = await condaLocatorService.getCondaEnvironment(pythonPath);
-        const args = [isUpgrade ? 'update' : 'install'];
+        const args = [flags & ModuleInstallFlags.upgrade ? 'update' : 'install'];
 
         // Temporarily ensure tensorboard is installed from the conda-forge
         // channel since 2.4.1 is not yet available in the default index
@@ -92,6 +92,12 @@ export class CondaInstaller extends ModuleInstaller {
             // Else provide the full path to the environment path.
             args.push('--prefix');
             args.push(info.path.fileToCommandArgument());
+        }
+        if (flags & ModuleInstallFlags.updateDependencies) {
+            args.push('--update-deps');
+        }
+        if (flags & ModuleInstallFlags.reInstall) {
+            args.push('--force-reinstall');
         }
         args.push(moduleName);
         args.push('-y');
