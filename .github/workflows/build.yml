@@ -9,6 +9,7 @@ on:
       - 'release-*'
 
 env:
+  PYTHON_VERSION: 3.9
   NODE_VERSION: 12.15.0
   # Force a path with spaces and to test extension works in these scenarios
   # Unicode characters are causing 2.7 failures so skip that for now.
