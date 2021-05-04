@@ -1,7 +1,6 @@
 name: PR/CI Check
 
 on:
-  pull_request:
   push:
     branches-ignore:
       - main

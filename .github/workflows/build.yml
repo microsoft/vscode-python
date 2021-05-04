@@ -1,6 +1,7 @@
 name: Build
 
 on:
+  pull_request:
   push:
     branches:
       - 'main'
@@ -333,7 +334,7 @@ jobs:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest, windows-latest]
-        python: ['3.x']
+        python: [3.8]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
