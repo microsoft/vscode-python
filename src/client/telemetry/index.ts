@@ -1832,4 +1832,17 @@ export interface IEventNamePropertyMapping {
      * `from torch import profiler`.
      */
     [EventName.TENSORBOARD_TORCH_PROFILER_IMPORT]: never | undefined;
+    /**
+     * Telemetry event sent when the extension host receives a message from the
+     * TensorBoard webview containing a valid jump to source payload from the
+     * PyTorch profiler TensorBoard plugin.
+     */
+    [EventName.TENSORBOARD_JUMP_TO_SOURCE_REQUEST]: never | undefined;
+    /**
+     * Telemetry event sent when the extension host receives a message from the
+     * TensorBoard webview containing a valid jump to source payload from the
+     * PyTorch profiler TensorBoard plugin, but the source file does not exist
+     * on the machine currently running TensorBoard.
+     */
+    [EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND]: never | undefined;
 }

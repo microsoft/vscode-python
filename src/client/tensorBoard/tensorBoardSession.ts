@@ -499,10 +499,12 @@ export class TensorBoardSession {
     }
 
     private async jumpToSource(fsPath: string, line: number) {
+        sendTelemetryEvent(EventName.TENSORBOARD_JUMP_TO_SOURCE_REQUEST);
         let uri: Uri | undefined;
         if (fs.existsSync(fsPath)) {
             uri = Uri.file(fsPath);
         } else {
+            sendTelemetryEvent(EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND);
             traceError(
                 `Requested jump to source filepath ${fsPath} does not exist. Prompting user to select source file...`,
             );
