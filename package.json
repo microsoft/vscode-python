@@ -1250,13 +1250,14 @@
                 "python.languageServer": {
                     "type": "string",
                     "enum": [
+                        "Default",
                         "Jedi",
                         "JediLSP",
                         "Pylance",
                         "Microsoft",
                         "None"
                     ],
-                    "default": "Jedi",
+                    "default": "Default",
                     "description": "Defines type of the language server.",
                     "scope": "window"
                 },
