@@ -26,6 +26,7 @@ import {
     IDisposableRegistry,
     IExperimentService,
     IExperimentsManager,
+    IExtensions,
     IOutputChannel,
 } from './common/types';
 import { noop } from './common/utils/misc';
@@ -61,7 +62,7 @@ import * as pythonEnvironments from './pythonEnvironments';
 
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
-import { setDefaultLanguageServerByExperiment } from './common/experiments/helpers';
+import { setDefaultLanguageServer } from './activation/common/defaultlanguageServer';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -131,7 +132,8 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     await experimentService.activate();
 
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    await setDefaultLanguageServerByExperiment(experimentService, workspaceService, serviceManager);
+    const extensions = serviceContainer.get<IExtensions>(IExtensions);
+    await setDefaultLanguageServer(experimentService, extensions, serviceManager);
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.

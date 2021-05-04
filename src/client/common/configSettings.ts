@@ -167,7 +167,7 @@ export class PythonSettings implements IPythonSettings {
         private readonly experimentsManager?: IExperimentsManager,
         private readonly interpreterPathService?: IInterpreterPathService,
         private readonly interpreterSecurityService?: IInterpreterSecurityService,
-        private readonly defaultJedi?: IDefaultLanguageServer,
+        private readonly defaultLS?: IDefaultLanguageServer,
     ) {
         this.workspace = workspace || new WorkspaceService();
         this.workspaceRoot = workspaceFolder;
@@ -181,7 +181,7 @@ export class PythonSettings implements IPythonSettings {
         experimentsManager?: IExperimentsManager,
         interpreterPathService?: IInterpreterPathService,
         interpreterSecurityService?: IInterpreterSecurityService,
-        defaultJedi?: IDefaultLanguageServer,
+        defaultLS?: IDefaultLanguageServer,
     ): PythonSettings {
         workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
@@ -195,7 +195,7 @@ export class PythonSettings implements IPythonSettings {
                 experimentsManager,
                 interpreterPathService,
                 interpreterSecurityService,
-                defaultJedi,
+                defaultLS,
             );
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
             // Pass null to avoid VSC from complaining about not passing in a value.
@@ -284,14 +284,21 @@ export class PythonSettings implements IPythonSettings {
 
         this.useIsolation = systemVariables.resolveAny(pythonSettings.get<boolean>('useIsolation', true))!;
 
-        const defaultServer = this.defaultJedi
-            ? this.defaultJedi.defaultLSType
-            : pythonSettings.get<LanguageServerType>('languageServer');
-        let ls = defaultServer ?? LanguageServerType.Jedi;
-        ls = systemVariables.resolveAny(ls);
-        if (!Object.values(LanguageServerType).includes(ls)) {
-            ls = LanguageServerType.Jedi;
+        // Get as a string and verify; don't just accept.
+        let userLS = pythonSettings.get<string>('languageServer');
+        userLS = systemVariables.resolveAny(userLS);
+
+        let ls: LanguageServerType;
+        if (
+            !userLS ||
+            userLS === 'Default' ||
+            !Object.values(LanguageServerType).includes(userLS as LanguageServerType)
+        ) {
+            ls = this.defaultLS?.defaultLSType ?? LanguageServerType.Jedi;
+        } else {
+            ls = userLS as LanguageServerType;
         }
+
         this.languageServer = ls;
 
         this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
