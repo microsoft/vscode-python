@@ -344,16 +344,6 @@
                 "title": "%python.command.python.launchTensorBoard.title%"
             },
             {
-                "category": "Python Refactor",
-                "command": "python.refactorExtractMethod",
-                "title": "%python.command.python.refactorExtractMethod.title%"
-            },
-            {
-                "category": "Python Refactor",
-                "command": "python.refactorExtractVariable",
-                "title": "%python.command.python.refactorExtractVariable.title%"
-            },
-            {
                 "category": "Python",
                 "command": "python.refreshTensorBoard",
                 "enablement": "python.hasActiveTensorBoardSession",
@@ -1070,7 +1060,7 @@
                     "type": "string"
                 },
                 "python.linting.pylintEnabled": {
-                    "default": true,
+                    "default": false,
                     "description": "Whether to lint Python files using pylint.",
                     "scope": "resource",
                     "type": "boolean"
@@ -1080,12 +1070,6 @@
                     "description": "Path to Pylint, you can use a custom version of pylint by modifying this setting to include the full path.",
                     "scope": "resource",
                     "type": "string"
-                },
-                "python.linting.pylintUseMinimalCheckers": {
-                    "default": true,
-                    "description": "Whether to run Pylint with minimal set of rules.",
-                    "scope": "resource",
-                    "type": "boolean"
                 },
                 "python.logging.level": {
                     "default": "error",
@@ -1796,18 +1780,6 @@
                     "command": "python.execSelectionInTerminal",
                     "group": "Python",
                     "when": "editorFocus && editorLangId == python"
-                },
-                {
-                    "command": "python.refactorExtractMethod",
-                    "group": "Refactor",
-                    "title": "Refactor: Extract Method",
-                    "when": "editorHasSelection && editorLangId == python && !notebookEditorFocused"
-                },
-                {
-                    "command": "python.refactorExtractVariable",
-                    "group": "Refactor",
-                    "title": "Refactor: Extract Variable",
-                    "when": "editorHasSelection && editorLangId == python && !notebookEditorFocused"
                 },
                 {
                     "command": "python.sortImports",

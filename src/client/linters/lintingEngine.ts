@@ -90,7 +90,7 @@ export class LintingEngine implements ILintingEngine {
 
         this.pendingLintings.set(document.uri.fsPath, cancelToken);
 
-        const activeLinters = await this.linterManager.getActiveLinters(false, document.uri);
+        const activeLinters = await this.linterManager.getActiveLinters(document.uri);
         const promises: Promise<ILintMessage[]>[] = activeLinters.map(async (info: ILinterInfo) => {
             const stopWatch = new StopWatch();
             const linter = await this.linterManager.createLinter(
@@ -161,7 +161,7 @@ export class LintingEngine implements ILintingEngine {
     }
 
     private async shouldLintDocument(document: vscode.TextDocument): Promise<boolean> {
-        if (!(await this.linterManager.isLintingEnabled(false, document.uri))) {
+        if (!(await this.linterManager.isLintingEnabled(document.uri))) {
             this.diagnosticCollection.set(document.uri, []);
             return false;
         }

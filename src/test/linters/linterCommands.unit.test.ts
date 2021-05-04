@@ -57,7 +57,7 @@ suite('Linting - Linter Commands', () => {
         currentState: boolean,
         selectedState: 'Enable' | 'Disable' | undefined,
     ) {
-        when(manager.isLintingEnabled(true, anything())).thenResolve(currentState);
+        when(manager.isLintingEnabled(anything())).thenResolve(currentState);
         const expectedQuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
@@ -101,7 +101,7 @@ suite('Linting - Linter Commands', () => {
 
     test('Set Linter should display a quickpick', async () => {
         when(manager.getAllLinterInfos()).thenReturn([]);
-        when(manager.getActiveLinters(true, anything())).thenResolve([]);
+        when(manager.getActiveLinters(anything())).thenResolve([]);
         when(shell.showQuickPick(anything(), anything())).thenResolve();
         const expectedQuickPickOptions = {
             matchOnDetail: true,
@@ -120,7 +120,7 @@ suite('Linting - Linter Commands', () => {
         const linterId = 'Hello World';
         const activeLinters: ILinterInfo[] = [{ id: linterId } as any];
         when(manager.getAllLinterInfos()).thenReturn([]);
-        when(manager.getActiveLinters(true, anything())).thenResolve(activeLinters);
+        when(manager.getActiveLinters(anything())).thenResolve(activeLinters);
         when(shell.showQuickPick(anything(), anything())).thenResolve();
         const expectedQuickPickOptions = {
             matchOnDetail: true,
@@ -138,7 +138,7 @@ suite('Linting - Linter Commands', () => {
     test('Set Linter should display a quickpick and with message about multiple linters being enabled', async () => {
         const activeLinters: ILinterInfo[] = [{ id: 'linterId' } as any, { id: 'linterId2' } as any];
         when(manager.getAllLinterInfos()).thenReturn([]);
-        when(manager.getActiveLinters(true, anything())).thenResolve(activeLinters);
+        when(manager.getActiveLinters(anything())).thenResolve(activeLinters);
         when(shell.showQuickPick(anything(), anything())).thenResolve();
         const expectedQuickPickOptions = {
             matchOnDetail: true,
@@ -157,7 +157,7 @@ suite('Linting - Linter Commands', () => {
         const linters: ILinterInfo[] = [{ id: '1' }, { id: '2' }, { id: '3', product: 'Three' }] as any;
         const activeLinters: ILinterInfo[] = [{ id: '1' }, { id: '3' }] as any;
         when(manager.getAllLinterInfos()).thenReturn(linters);
-        when(manager.getActiveLinters(true, anything())).thenResolve(activeLinters);
+        when(manager.getActiveLinters(anything())).thenResolve(activeLinters);
         when(shell.showQuickPick(anything(), anything())).thenResolve('3' as any);
         when(shell.showWarningMessage(anything(), 'Yes', 'No')).thenResolve('Yes' as any);
         const expectedQuickPickOptions = {

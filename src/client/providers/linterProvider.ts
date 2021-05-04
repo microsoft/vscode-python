@@ -90,7 +90,7 @@ export class LinterProvider implements IExtensionActivationService, Disposable {
         }
 
         this.linterManager
-            .getActiveLinters(false, document.uri)
+            .getActiveLinters(document.uri)
             .then((linters) => {
                 const fileName = path.basename(document.uri.fsPath).toLowerCase();
                 const watchers = linters.filter((info) => info.configFileNames.indexOf(fileName) >= 0);

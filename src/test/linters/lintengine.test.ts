@@ -73,10 +73,7 @@ suite('Linting - LintingEngine', () => {
         try {
             lintingEngine.lintDocument(doc, 'auto').ignoreErrors();
         } catch {
-            lintManager.verify(
-                (l) => l.isLintingEnabled(TypeMoq.It.isAny(), TypeMoq.It.isValue(doc.uri)),
-                TypeMoq.Times.once(),
-            );
+            lintManager.verify((l) => l.isLintingEnabled(TypeMoq.It.isValue(doc.uri)), TypeMoq.Times.once());
         }
     });
     test('Ensure document.uri is passed into createLinter', () => {
