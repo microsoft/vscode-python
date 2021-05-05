@@ -240,6 +240,13 @@ export class LanguageServerExtensionActivationService
             }
         }
 
+        if (serverType === LanguageServerType.Node && interpreter && interpreter.version) {
+            if (interpreter.version.major < 3) {
+                sendTelemetryEvent(EventName.JEDI_FALLBACK);
+                serverType = LanguageServerType.Jedi;
+            }
+        }
+
         this.sendTelemetryForChosenLanguageServer(serverType).ignoreErrors();
 
         await this.logStartup(serverType);
@@ -310,7 +317,7 @@ export class LanguageServerExtensionActivationService
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const serverType = configurationService.getSettings(this.resource).languageServer;
         if (serverType === LanguageServerType.Node) {
-            return 'shared-ls';
+            return LanguageServerType.Node;
         }
 
         const resourcePortion = this.workspaceService.getWorkspaceFolderIdentifier(
