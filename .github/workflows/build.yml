@@ -9,7 +9,6 @@ on:
       - 'release-*'
 
 env:
-  PYTHON_VERSION: 3.9
   NODE_VERSION: 12.15.0
   # Force a path with spaces and to test extension works in these scenarios
   # Unicode characters are causing 2.7 failures so skip that for now.
@@ -57,7 +56,7 @@ jobs:
           node-version: ${{env.NODE_VERSION}}
 
       # Jedi LS depends on dataclasses which was a pypi install in 3.6
-      - name: Use Python Python 3.6 for JediLSP
+      - name: Use Python 3.6 for JediLSP
         uses: actions/setup-python@v2
         with:
         python-version: 3.6
@@ -65,14 +64,6 @@ jobs:
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
         id: build-vsix
-
-      - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{env.PYTHON_VERSION}}
-
-      - name: Upgrade pip
-        run: python -m pip install -U pip
 
       - name: Rename VSIX
         if: steps.build-vsix.outputs.path != needs.setup.outputs.vsix_name
