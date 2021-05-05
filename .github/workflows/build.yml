@@ -367,7 +367,7 @@ jobs:
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
-          name: ${{ needs.setup.outputs.vsix_artifactname }}
+          name: ${{ needs.setup.outputs.vsix_artifact_name }}
 
       - name: Prepare for smoke tests
         run: npx tsc -p ./
