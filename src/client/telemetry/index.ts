@@ -831,25 +831,6 @@ export interface IEventNamePropertyMapping {
     };
 
     /**
-     * Telemetry event sent after user had selected one of the options
-     * provided by the linter prompt.
-     */
-    [EventName.LINTER_INSTALL_PROMPT_ACTION]: {
-        /**
-         * Identify which prompt was shown.
-         *
-         * @type {('pylintFirst' | 'flake8first')}
-         */
-        prompt: 'pylintFirst' | 'flake8first';
-
-        /**
-         * Which of the following actions did user select
-         *
-         * @type {('pylint' | 'flake8' | 'disablePrompt' | 'close')}
-         */
-        action: 'installPylint' | 'installFlake8' | 'disablePrompt' | 'close';
-    };
-    /**
      * Telemetry event sent when installing modules
      */
     [EventName.PYTHON_INSTALL_PACKAGE]: {
