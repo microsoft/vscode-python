@@ -6,6 +6,11 @@
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
+    "capabilities": {
+        "untrustedWorkspaces": {
+            "supported": false
+        }
+    },
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
     "enableProposedApi": true,
@@ -47,7 +52,6 @@
         "Machine Learning",
         "Notebooks"
     ],
-    "requiresWorkspaceTrust": "onStart",
     "activationEvents": [
         "onLanguage:python",
         "onDebugResolve:python",
