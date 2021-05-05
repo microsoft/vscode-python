@@ -34,13 +34,6 @@ export enum NativeTensorBoard {
     experiment = 'pythonTensorboardExperiment',
 }
 
-// Experiment to show a prompt asking users to install or select linter
-export enum LinterInstallationPromptVariants {
-    pylintFirst = 'pythonInstallPylintButtonFirst',
-    flake8First = 'pythonInstallFlake8ButtonFirst',
-    noPrompt = 'pythonNotDisplayLinterPrompt',
-}
-
 // Experiment to control which environment discovery mechanism can be used
 export enum DiscoveryVariants {
     discoverWithFileWatching = 'pythonDiscoveryModule',
