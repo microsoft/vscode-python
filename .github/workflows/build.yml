@@ -59,7 +59,7 @@ jobs:
       - name: Use Python 3.6 for JediLSP
         uses: actions/setup-python@v2
         with:
-        python-version: 3.6
+          python-version: 3.6
 
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
