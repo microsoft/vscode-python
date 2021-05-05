@@ -289,6 +289,8 @@ export class PythonSettings implements IPythonSettings {
         userLS = systemVariables.resolveAny(userLS);
 
         let ls: LanguageServerType;
+
+        // Validate the user's input; if invalid, set it to the default.
         if (
             !userLS ||
             userLS === 'Default' ||

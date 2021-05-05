@@ -4,18 +4,16 @@
 import { injectable } from 'inversify';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { JediLSP } from '../../common/experiments/groups';
-import { IDefaultLanguageServer, IExperimentService, IExtensions } from '../../common/types';
+import { IDefaultLanguageServer, IExperimentService, IExtensions, DefaultLSType } from '../../common/types';
 import { IServiceManager } from '../../ioc/types';
 import { ILSExtensionApi } from '../node/languageServerFolderService';
 import { LanguageServerType } from '../types';
 
-export type PotentialDefault = LanguageServerType.Jedi | LanguageServerType.JediLSP | LanguageServerType.Node;
-
 @injectable()
 class DefaultLanguageServer implements IDefaultLanguageServer {
-    public readonly defaultLSType: PotentialDefault;
+    public readonly defaultLSType: DefaultLSType;
 
-    constructor(defaultServer: PotentialDefault) {
+    constructor(defaultServer: DefaultLSType) {
         this.defaultLSType = defaultServer;
     }
 }
@@ -35,7 +33,7 @@ export async function setDefaultLanguageServer(
 async function getDefaultLanguageServer(
     experimentService: IExperimentService,
     extensions: IExtensions,
-): Promise<PotentialDefault> {
+): Promise<DefaultLSType> {
     if (extensions.getExtension<ILSExtensionApi>(PYLANCE_EXTENSION_ID)) {
         return LanguageServerType.Node;
     }
