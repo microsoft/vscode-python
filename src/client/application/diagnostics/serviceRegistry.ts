@@ -45,7 +45,7 @@ import {
 } from './promptHandler';
 import { IDiagnosticFilterService, IDiagnosticHandlerService, IDiagnosticsService } from './types';
 
-export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType) {
+export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType): void {
     serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService);
     serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(
         IDiagnosticHandlerService,

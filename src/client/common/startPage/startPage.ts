@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -36,11 +37,17 @@ export const EXTENSION_VERSION_MEMENTO = 'extensionVersion';
 export class StartPage extends WebviewPanelHost<IStartPageMapping>
     implements IStartPage, IExtensionSingleActivationService {
     protected closedEvent: EventEmitter<IStartPage> = new EventEmitter<IStartPage>();
+
     private timer: StopWatch;
+
     private actionTaken = false;
+
     private actionTakenOnFirstTime = false;
+
     private firstTime = false;
+
     private webviewDidLoad = false;
+
     public initialMementoValue: string | undefined = undefined;
 
     constructor(
@@ -103,6 +110,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
         }, 3000);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public get owningResource(): Resource {
         return undefined;
     }
@@ -119,18 +127,19 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
         this.closedEvent.fire(this);
     }
 
-    public async onMessage(message: string, payload: any) {
+    public async onMessage(message: string, payload: unknown): Promise<void> {
         switch (message) {
             case StartPageMessages.Started:
                 this.webviewDidLoad = true;
                 break;
-            case StartPageMessages.RequestShowAgainSetting:
+            case StartPageMessages.RequestShowAgainSetting: {
                 const settings = this.configuration.getSettings();
                 await this.postMessage(StartPageMessages.SendSetting, {
                     showAgainSetting: settings.showStartPage,
                 });
                 break;
-            case StartPageMessages.OpenBlankNotebook:
+            }
+            case StartPageMessages.OpenBlankNotebook: {
                 sendTelemetryEvent(Telemetry.StartPageOpenBlankNotebook);
                 this.setTelemetryFlags();
 
@@ -146,7 +155,8 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                     this.openSampleNotebook().ignoreErrors();
                 }
                 break;
-            case StartPageMessages.OpenBlankPythonFile:
+            }
+            case StartPageMessages.OpenBlankPythonFile: {
                 sendTelemetryEvent(Telemetry.StartPageOpenBlankPythonFile);
                 this.setTelemetryFlags();
 
@@ -156,7 +166,8 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                 });
                 await this.documentManager.showTextDocument(doc, 1, true);
                 break;
-            case StartPageMessages.OpenInteractiveWindow:
+            }
+            case StartPageMessages.OpenInteractiveWindow: {
                 sendTelemetryEvent(Telemetry.StartPageOpenInteractiveWindow);
                 this.setTelemetryFlags();
 
@@ -167,6 +178,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                 await this.documentManager.showTextDocument(doc2, 1, true);
                 await this.commandManager.executeCommand('jupyter.runallcells', Uri.parse(''));
                 break;
+            }
             case StartPageMessages.OpenCommandPalette:
                 sendTelemetryEvent(Telemetry.StartPageOpenCommandPalette);
                 this.setTelemetryFlags();
@@ -185,7 +197,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
 
                 this.openSampleNotebook().ignoreErrors();
                 break;
-            case StartPageMessages.OpenFileBrowser:
+            case StartPageMessages.OpenFileBrowser: {
                 sendTelemetryEvent(Telemetry.StartPageOpenFileBrowser);
                 this.setTelemetryFlags();
 
@@ -200,6 +212,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                     await this.documentManager.showTextDocument(doc3);
                 }
                 break;
+            }
             case StartPageMessages.OpenFolder:
                 sendTelemetryEvent(Telemetry.StartPageOpenFolder);
                 this.setTelemetryFlags();
@@ -226,7 +239,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
     // Public for testing
     public async extensionVersionChanged(): Promise<boolean> {
         const savedVersion: string | undefined = this.context.globalState.get(EXTENSION_VERSION_MEMENTO);
-        const version: string = this.appEnvironment.packageJson.version;
+        const { version } = this.appEnvironment.packageJson;
         let shouldShowStartPage: boolean;
 
         if (savedVersion) {
@@ -263,6 +276,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
         }
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private savedVersionisOlder(savedVersion: string, actualVersion: string): boolean {
         const saved = savedVersion.split('.');
         const actual = actualVersion.split('.');

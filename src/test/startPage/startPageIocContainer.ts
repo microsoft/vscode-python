@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+/* eslint-disable max-classes-per-file */
+
+// eslint-disable-next-line camelcase
 import * as child_process from 'child_process';
 import { ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
@@ -95,7 +98,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
 
     private webPanelProvider = mock(WebviewPanelProvider);
 
-    private settingsMap = new Map<string, any>();
+    private settingsMap = new Map<string, unknown>();
 
     private experimentState = new Map<string, boolean>();
 
@@ -161,6 +164,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         if (!this.uiTest) {
             // Blur window focus so we don't have editors polling
 
+            // eslint-disable-next-line global-require
             const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
             reactHelpers.blurWindow();
         }
@@ -179,7 +183,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         EnvironmentActivationServiceCache.forceUseNormal();
     }
 
-    public registerStartPageTypes() {
+    public registerStartPageTypes(): void {
         this.defaultPythonPath = this.findPythonPath();
 
         this.serviceManager.addSingletonInstance<StartPageIocContainer>(StartPageIocContainer, this);
@@ -193,6 +197,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         // Create the workspace service first as it's used to set config values.
         this.createWorkspaceService();
 
+        // eslint-disable-next-line global-require
         const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
         reactHelpers.setUpDomEnvironment();
 
@@ -269,7 +274,10 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         });
     }
 
-    public createWebView(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, id: string) {
+    public createWebView(
+        mount: () => ReactWrapper<unknown, Readonly<unknown>, React.Component>,
+        id: string,
+    ): IMountedWebView {
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
         this.pendingWebPanel = this.get<IMountedWebViewFactory>(IMountedWebViewFactory).create(id, mount);
         return this.pendingWebPanel;
@@ -294,7 +302,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         } else if (this.disposed) {
             setting = this.generatePythonSettings(this.languageServerType);
         }
-        return setting;
+        return setting as IPythonSettings;
     }
 
     public getWorkspaceConfig(section: string | undefined, resource?: Resource): MockWorkspaceConfiguration {
@@ -310,7 +318,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         return result;
     }
 
-    public addWorkspaceFolder(folderPath: string) {
+    public addWorkspaceFolder(folderPath: string): MockWorkspaceFolder {
         const workspaceFolder = new MockWorkspaceFolder(folderPath, this.workspaceFolders.length);
         this.workspaceFolders.push(workspaceFolder);
         return workspaceFolder;
@@ -333,15 +341,30 @@ export class StartPageIocContainer extends UnitTestIocContainer {
 
             public ignoreDeleteEvents = false;
 
-            public onDidChange(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+            // eslint-disable-next-line class-methods-use-this
+            public onDidChange(
+                _listener: (e: Uri) => unknown,
+                _thisArgs?: unknown,
+                _disposables?: Disposable[],
+            ): Disposable {
                 return { dispose: noop };
             }
 
-            public onDidDelete(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+            // eslint-disable-next-line class-methods-use-this
+            public onDidDelete(
+                _listener: (e: Uri) => unknown,
+                _thisArgs?: unknown,
+                _disposables?: Disposable[],
+            ): Disposable {
                 return { dispose: noop };
             }
 
-            public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+            // eslint-disable-next-line class-methods-use-this
+            public onDidCreate(
+                _listener: (e: Uri) => unknown,
+                _thisArgs?: unknown,
+                _disposables?: Disposable[],
+            ): Disposable {
                 return { dispose: noop };
             }
 
@@ -413,6 +436,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         return undefined;
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private findPythonPath(): string {
         try {
             // Use a static variable so we don't have to recompute this on subsequenttests

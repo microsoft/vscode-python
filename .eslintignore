@@ -521,8 +521,6 @@ src/client/common/nuget/types.ts
 src/client/common/nuget/nugetService.ts
 src/client/common/cancellation.ts
 src/client/common/interpreterPathService.ts
-src/client/common/startPage/startPage.ts
-src/client/common/startPage/types.ts
 src/client/common/startPage/startPageMessageListener.ts
 src/client/common/application/customEditorService.ts
 src/client/common/application/commands.ts
@@ -629,7 +627,6 @@ src/client/application/serviceRegistry.ts
 src/client/application/diagnostics/surceMapSupportService.ts
 src/client/application/diagnostics/base.ts
 src/client/application/diagnostics/applicationDiagnostics.ts
-src/client/application/diagnostics/serviceRegistry.ts
 src/client/application/diagnostics/filter.ts
 src/client/application/diagnostics/promptHandler.ts
 src/client/application/diagnostics/commands/base.ts
@@ -664,7 +661,6 @@ src/startPage-ui/react-common/logger.ts
 src/startPage-ui/react-common/postOffice.ts
 src/startPage-ui/startPage/index.tsx
 src/startPage-ui/startPage/startPage.tsx
-src/test/startPage/startPageIocContainer.ts
 src/test/startPage/mockCommandManager.ts
 src/test/startPage/mockDocument.ts
 src/test/startPage/mockDocumentManager.ts
