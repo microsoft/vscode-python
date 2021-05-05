@@ -6,7 +6,7 @@ import * as express from 'express';
 import * as http from 'http';
 import { IDisposable } from 'monaco-editor';
 import * as path from 'path';
-import * as socketIO from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { env, Event, EventEmitter, Uri, WebviewOptions, WebviewPanel, window } from 'vscode';
 import { IWebviewPanel, IWebviewPanelOptions } from '../../client/common/application/types';
 import { IDisposableRegistry } from '../../client/common/types';
@@ -15,6 +15,7 @@ import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 
 const nocache = require('nocache');
+const socketIO = require('socket.io');
 
 export interface IWebServer extends IDisposable {
     onDidReceiveMessage: Event<any>;
@@ -28,12 +29,12 @@ export class WebServer implements IWebServer {
         return this._onDidReceiveMessage.event;
     }
     private app?: express.Express;
-    private io?: socketIO.Server;
+    private io?: Server;
     private server?: http.Server;
     private disposed: boolean = false;
-    private readonly socketPromise = createDeferred<socketIO.Socket>();
+    private readonly socketPromise = createDeferred<Socket>();
     private readonly _onDidReceiveMessage = new EventEmitter<any>();
-    private socket?: socketIO.Socket;
+    private socket?: Socket;
     public static create() {
         return new WebServer();
     }
@@ -67,7 +68,7 @@ export class WebServer implements IWebServer {
         this.app.use(express.static(resourcesRoot, { cacheControl: false, etag: false }));
         this.app.use(express.static(cwd));
         this.app.use(cors());
-        // Ensure browser does'nt cache anything (for UI tests/debugging).
+        // Ensure browser doesn't cache anything (for UI tests/debugging).
         this.app.use(nocache());
         this.app.disable('view cache');
         this.app.get('/source', (req, res) => {
@@ -83,7 +84,7 @@ export class WebServer implements IWebServer {
             }
         });
 
-        this.io.on('connection', (socket) => {
+        this.io?.on('connection', (socket) => {
             // Possible we close browser and reconnect, or hit refresh button.
             this.socket = socket;
             this.socketPromise.resolve(socket);
