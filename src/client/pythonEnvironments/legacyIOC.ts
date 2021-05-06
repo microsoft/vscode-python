@@ -4,11 +4,10 @@
 import { injectable } from 'inversify';
 import { intersection } from 'lodash';
 import * as vscode from 'vscode';
-import { IExtensionSingleActivationService } from '../activation/types';
 import { DiscoveryVariants } from '../common/experiments/groups';
 import { traceError } from '../common/logger';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
-import { IDisposableRegistry, Resource } from '../common/types';
+import { Resource } from '../common/types';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -69,6 +68,7 @@ import { EnvironmentType, PythonEnvironment } from './info';
 import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
 import { toSemverLikeVersion } from './base/info/pythonVersion';
 import { PythonVersion } from './info/pythonVersion';
+import { IExtensionSingleActivationService } from '../activation/types';
 
 const convertedKinds = new Map(
     Object.entries({
@@ -136,7 +136,7 @@ export async function isComponentEnabled(): Promise<boolean> {
 interface IPythonEnvironments extends ILocator {}
 
 @injectable()
-class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationService {
+class ComponentAdapter implements IComponentAdapter {
     private readonly refreshing = new vscode.EventEmitter<void>();
 
     private readonly refreshed = new vscode.EventEmitter<void>();
@@ -147,22 +147,7 @@ class ComponentAdapter implements IComponentAdapter, IExtensionSingleActivationS
         // The adapter only wraps one thing: the component API.
         private readonly api: IPythonEnvironments,
         private readonly environmentsSecurity: IEnvironmentsSecurity,
-        private readonly disposables: IDisposableRegistry,
     ) {}
-
-    public async activate(): Promise<void> {
-        this.disposables.push(
-            this.api.onChanged((e) => {
-                const query = {
-                    kinds: e.kind ? [e.kind] : undefined,
-                    searchLocations: e.searchLocation ? { roots: [e.searchLocation] } : undefined,
-                    ignoreCache: true,
-                };
-                // Trigger a background refresh of the environments.
-                getEnvs(this.api.iterEnvs(query)).ignoreErrors();
-            }),
-        );
-    }
 
     // For use in VirtualEnvironmentPrompt.activate()
 
@@ -437,11 +422,9 @@ export function registerNewDiscoveryForIOC(
     serviceManager: IServiceManager,
     api: IPythonEnvironments,
     environmentsSecurity: EnvironmentsSecurity,
-    disposables: IDisposableRegistry,
 ): void {
     serviceManager.addSingletonInstance<IComponentAdapter>(
         IComponentAdapter,
-        new ComponentAdapter(api, environmentsSecurity, disposables),
+        new ComponentAdapter(api, environmentsSecurity),
     );
-    serviceManager.addBinding(IComponentAdapter, IExtensionSingleActivationService);
 }

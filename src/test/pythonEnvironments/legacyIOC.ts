@@ -22,7 +22,6 @@ export async function registerForIOC(
         serviceManager,
         instance(mock(PythonEnvironments)),
         instance(mock(EnvironmentsSecurity)),
-        [],
     );
     await registerLegacyDiscoveryForIOC(serviceManager);
 }
