@@ -56,9 +56,9 @@ pydantic==1.8.1 \
     # via
     #   jedi-language-server
     #   pygls
-pygls==0.10.2 \
-    --hash=sha256:5b50a1931613f36af446b16c644a85b52ceb2beceb09bddd05f9ce054f13e9ab \
-    --hash=sha256:bb3e287693bb06a4edfdfb0bd5bfb550b582654c39803e6fc4cd82e08d85a240
+pygls==0.10.3 \
+    --hash=sha256:055281413d303a816374a51956d94c8554c32f8a499265aac41b0bd5c124bb68 \
+    --hash=sha256:522c1068dd38c4945925ca742daba6aff5621168e0e5ddd954813e8b957ca831
     # via
     #   -r jedils_requirements.in
     #   jedi-language-server
