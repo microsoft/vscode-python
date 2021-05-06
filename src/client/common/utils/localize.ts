@@ -69,7 +69,7 @@ export namespace Diagnostics {
     );
     export const pylanceDefaultMessage = localize(
         'diagnostics.pylanceDefaultMessage',
-        'The Python extension now includes Pylance to improve completions, code navigation, overall performance and much more! You can learn more about the update and learn to change your language server [here](https://aka.ms/new-python-bundle).\n\nRead Pylance’s license [here](https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license).',
+        'The Python extension now includes Pylance to improve completions, code navigation, overall performance and much more! You can learn more about the update and learn how to change your language server [here](https://aka.ms/new-python-bundle).\n\nRead Pylance’s license [here](https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license).',
     );
 }
 
