@@ -4,19 +4,9 @@
 #
 #    pip-compile --generate-hashes jedils_requirements.in
 #
-dataclasses==0.8 ; python_version <= "3.6" \
-    --hash=sha256:0201d89fa866f68c8ebd9d08ee6ff50c0b255f8ec63a71c16fda7af82bb887bf \
-    --hash=sha256:8479067f342acf957dc82ec415d355ab5edb7e7646b90dc6e2fd1d96ad084c97
-    # via
-    #   -r jedils_requirements.in
-    #   pydantic
 docstring-to-markdown==0.7 \
     --hash=sha256:374bad3595b970bc558e1422225f313229988424d5b242d85cbda7da30370375 \
     --hash=sha256:d1811fb2ad38bf8ac24e8bac6c74503cdb120a6a3b2c62bf9a0ab44a59656901
-    # via jedi-language-server
-importlib-metadata==3.10.0 \
-    --hash=sha256:c9db46394197244adf2f0b08ec5bc3cf16757e9590b02af1fca085c16c0d600a \
-    --hash=sha256:d2d46ef77ffc85cbf7dac7e81dd663fde71c45326131bea8033b9bad42268ebe
     # via jedi-language-server
 jedi-language-server==0.30.2 \
     --hash=sha256:68f40862b86342525628ebb39f6056a2526d56afab445e7a2c63e714694c2dd5 \
@@ -56,9 +46,9 @@ pydantic==1.8.1 \
     # via
     #   jedi-language-server
     #   pygls
-pygls==0.10.2 \
-    --hash=sha256:5b50a1931613f36af446b16c644a85b52ceb2beceb09bddd05f9ce054f13e9ab \
-    --hash=sha256:bb3e287693bb06a4edfdfb0bd5bfb550b582654c39803e6fc4cd82e08d85a240
+pygls==0.10.3 \
+    --hash=sha256:055281413d303a816374a51956d94c8554c32f8a499265aac41b0bd5c124bb68 \
+    --hash=sha256:522c1068dd38c4945925ca742daba6aff5621168e0e5ddd954813e8b957ca831
     # via
     #   -r jedils_requirements.in
     #   jedi-language-server
@@ -70,10 +60,4 @@ typing-extensions==3.7.4.3 \
     --hash=sha256:7cb407020f00f7bfc3cb3e7881628838e69d8f3fcab2f64742a5e76b2f841918 \
     --hash=sha256:99d4073b617d30288f569d3f13d2bd7548c3a7e4c8de87db09a9d29bb3a4a60c \
     --hash=sha256:dafc7639cde7f1b6e1acc0f457842a83e722ccca8eef5270af2d74792619a89f
-    # via
-    #   importlib-metadata
-    #   pydantic
-zipp==3.4.1 \
-    --hash=sha256:3607921face881ba3e026887d8150cca609d517579abe052ac81fc5aeffdbd76 \
-    --hash=sha256:51cb66cc54621609dd593d1787f286ee42a5c0adbb4b29abea5a63edc3e03098
-    # via importlib-metadata
+    # via pydantic
