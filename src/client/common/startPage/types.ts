@@ -19,11 +19,6 @@ export interface ISettingPackage {
     showAgainSetting: boolean;
 }
 
-export enum StartPageMsgs {
-    Started = 'started',
-    UpdateSettings = 'update_ettings',
-}
-
 export enum StartPageMessages {
     Started = 'started',
     UpdateSettings = 'update_settings',
