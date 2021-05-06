@@ -25,7 +25,7 @@
 ### Fixes
 
 1. Stop `unittest.TestCase` appearing as a test suite in the test explorer tree.
-   (thanks [Bob](https://github.com/bobwalker99).
+   (thanks [Bob](https://github.com/bobwalker99)).
    ([#15681](https://github.com/Microsoft/vscode-python/issues/15681))
 1. Support `~` in WORKON_HOME and venvPath setting when in discovery experiment.
    ([#15788](https://github.com/Microsoft/vscode-python/issues/15788))
@@ -34,7 +34,7 @@
 1. Ensure venvPath and venvFolders setting can only be set at User or Remote settings.
    ([#15947](https://github.com/Microsoft/vscode-python/issues/15947))
 1. Added compatability with pypy3.7 interpreter.
-   (thanks [Oliver Margetts](https://github.com/olliemath)
+   (thanks [Oliver Margetts](https://github.com/olliemath))
    ([#15968](https://github.com/Microsoft/vscode-python/issues/15968))
 1. Revert linter installation prompt removal.
    ([#16027](https://github.com/Microsoft/vscode-python/issues/16027))
