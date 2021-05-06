@@ -2095,7 +2095,7 @@
         "inversify": "^5.0.4",
         "jsonc-parser": "^2.0.3",
         "line-by-line": "^0.1.6",
-        "lodash": "^4.17.19",
+        "lodash": "^4.17.21",
         "log4js": "^6.1.2",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
