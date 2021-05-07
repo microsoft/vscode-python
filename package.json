@@ -2229,7 +2229,7 @@
         "gulp-untar": "0.0.8",
         "gulp-vinyl-zip": "^2.1.2",
         "html-webpack-plugin": "^3.2.0",
-        "husky": "^1.1.2",
+        "husky": "^6.0.0",
         "immutable": "^4.0.0-rc.12",
         "jsdom": "^15.0.0",
         "json-loader": "^0.5.7",
