@@ -1293,21 +1293,6 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_EXPERIMENTS_DISABLED]: never | undefined;
     /**
-     * Telemetry event sent with details when doing best effort to download the experiments within timeout and using it in the current session only
-     */
-    [EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE]: {
-        /**
-         * Carries `true` if downloading experiments successfully finishes within timeout, `false` otherwise
-         * @type {boolean}
-         */
-        success?: boolean;
-        /**
-         * Carries an error string if downloading experiments fails with error
-         * @type {string}
-         */
-        error?: string;
-    };
-    /**
      * Telemetry event sent once on session start with details on which experiments are opted into and opted out from.
      */
     [EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS]: {
