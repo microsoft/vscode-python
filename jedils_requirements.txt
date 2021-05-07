@@ -10,13 +10,13 @@ dataclasses==0.8 ; python_version <= "3.6" \
     # via
     #   -r jedils_requirements.in
     #   pydantic
-docstring-to-markdown==0.7 \
-    --hash=sha256:374bad3595b970bc558e1422225f313229988424d5b242d85cbda7da30370375 \
-    --hash=sha256:d1811fb2ad38bf8ac24e8bac6c74503cdb120a6a3b2c62bf9a0ab44a59656901
+docstring-to-markdown==0.9 \
+    --hash=sha256:0b810e6e16737d2d0ede6182f66f513f814a11fad1222e645fbc14acde78e171 \
+    --hash=sha256:488b9f26339651edc7fc9386caeffd3924569072a8b67b727e253f83d5b18c59
     # via jedi-language-server
-importlib-metadata==3.10.0 \
-    --hash=sha256:c9db46394197244adf2f0b08ec5bc3cf16757e9590b02af1fca085c16c0d600a \
-    --hash=sha256:d2d46ef77ffc85cbf7dac7e81dd663fde71c45326131bea8033b9bad42268ebe
+importlib-metadata==3.10.1 \
+    --hash=sha256:2ec0faae539743ae6aaa84b49a169670a465f7f5d64e6add98388cc29fd1f2f6 \
+    --hash=sha256:c9356b657de65c53744046fa8f7358afe0714a1af7d570c00c3835c2d724a7c1
     # via jedi-language-server
 jedi-language-server==0.30.2 \
     --hash=sha256:68f40862b86342525628ebb39f6056a2526d56afab445e7a2c63e714694c2dd5 \
@@ -26,9 +26,9 @@ jedi==0.18.0 \
     --hash=sha256:18456d83f65f400ab0c2d3319e48520420ef43b23a086fdc05dff34132f0fb93 \
     --hash=sha256:92550a404bad8afed881a137ec9a461fed49eca661414be45059329614ed0707
     # via jedi-language-server
-parso==0.8.1 \
-    --hash=sha256:15b00182f472319383252c18d5913b69269590616c947747bc50bf4ac768f410 \
-    --hash=sha256:8519430ad07087d4c997fda3a7918f7cfa27cb58972a8c89c2a0295a1c940e9e
+parso==0.8.2 \
+    --hash=sha256:12b83492c6239ce32ff5eed6d3639d6a536170723c6f3f1506869f1ace413398 \
+    --hash=sha256:a8c4922db71e4fdb90e0d0bc6e50f9b273d3397925e5e60a717e719201778d22
     # via jedi
 pydantic==1.8.1 \
     --hash=sha256:0c40162796fc8d0aa744875b60e4dc36834db9f2a25dbf9ba9664b1915a23850 \
@@ -62,14 +62,14 @@ pygls==0.10.3 \
     # via
     #   -r jedils_requirements.in
     #   jedi-language-server
-typeguard==2.11.1 \
-    --hash=sha256:33243c1cbfcb9736a06c6db22dd08876b5f297e6344aa272a2862c0f8e669f64 \
-    --hash=sha256:c62706201ec6c14962162fa67d70bd2762753247533d70ff2442e5ac08f94fa2
+typeguard==2.12.0 \
+    --hash=sha256:7d1cf82b35e9ff3cd083133ebda54ad1d7a40296471397e6c6b229cf07fe5307 \
+    --hash=sha256:fca77fd4ccba63465b421cdbbab5a1a8e3994e6d6f18b45da2bb475c09f147ef
     # via pygls
-typing-extensions==3.7.4.3 \
-    --hash=sha256:7cb407020f00f7bfc3cb3e7881628838e69d8f3fcab2f64742a5e76b2f841918 \
-    --hash=sha256:99d4073b617d30288f569d3f13d2bd7548c3a7e4c8de87db09a9d29bb3a4a60c \
-    --hash=sha256:dafc7639cde7f1b6e1acc0f457842a83e722ccca8eef5270af2d74792619a89f
+typing-extensions==3.10.0.0 \
+    --hash=sha256:0ac0f89795dd19de6b97debb0c6af1c70987fd80a2d62d1958f7e56fcc31b497 \
+    --hash=sha256:50b6f157849174217d0656f99dc82fe932884fb250826c18350e159ec6cdf342 \
+    --hash=sha256:779383f6086d90c99ae41cf0ff39aac8a7937a9283ce0a414e5dd782f4c94a84
     # via
     #   importlib-metadata
     #   pydantic
