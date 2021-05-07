@@ -5,5 +5,5 @@
 # 2) pip-compile --generate-hashes jedils_requirements.in
 
 jedi-language-server>=0.30.2
-pygls>=0.10.2
+pygls>=0.10.3
 dataclasses==0.8;python_version<="3.6"
