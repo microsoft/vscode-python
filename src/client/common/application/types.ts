@@ -51,7 +51,6 @@ import {
     Uri,
     ViewColumn,
     WebviewPanel,
-    WebviewPanelOptions,
     WindowState,
     WorkspaceConfiguration,
     WorkspaceEdit,

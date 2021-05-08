@@ -13,7 +13,6 @@ import { ClipboardService } from '../../client/common/application/clipboard';
 import { CommandManager } from '../../client/common/application/commandManager';
 import { ReloadVSCodeCommandHandler } from '../../client/common/application/commands/reloadCommand';
 import { ReportIssueCommandHandler } from '../../client/common/application/commands/reportIssueCommand';
-import { CustomEditorService } from '../../client/common/application/customEditorService';
 import { DebugService } from '../../client/common/application/debugService';
 import { DebugSessionTelemetry } from '../../client/common/application/debugSessionTelemetry';
 import { DocumentManager } from '../../client/common/application/documentManager';
