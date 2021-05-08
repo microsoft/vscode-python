@@ -19,7 +19,6 @@ import {
     IApplicationShell,
     IClipboard,
     ICommandManager,
-    ICustomEditorService,
     IDebugService,
     IDocumentManager,
     IWorkspaceService,
@@ -296,7 +295,6 @@ suite('Installer', () => {
             IExtensionSingleActivationService,
             DebugSessionTelemetry,
         );
-        ioc.serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
     }
     async function resetSettings() {
         await updateSetting('linting.pylintEnabled', true, rootWorkspaceUri, ConfigurationTarget.Workspace);

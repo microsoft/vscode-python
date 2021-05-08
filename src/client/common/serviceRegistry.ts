@@ -35,7 +35,6 @@ import {
     IApplicationShell,
     IClipboard,
     ICommandManager,
-    ICustomEditorService,
     IDebugService,
     IDocumentManager,
     IJupyterExtensionDependencyManager,
@@ -235,7 +234,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         DebugSessionTelemetry,
     );
-    serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
     serviceManager.addSingleton<IStartPage>(IStartPage, StartPage, undefined, [IExtensionSingleActivationService]);
     serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
     serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);

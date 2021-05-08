@@ -24,7 +24,6 @@ import {
     IApplicationShell,
     IClipboard,
     ICommandManager,
-    ICustomEditorService,
     IDebugService,
     IDocumentManager,
     IJupyterExtensionDependencyManager,
@@ -334,7 +333,6 @@ suite('Module Installer', () => {
                 IExtensionSingleActivationService,
                 DebugSessionTelemetry,
             );
-            ioc.serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
         }
         async function resetSettings(): Promise<void> {
             const configService = ioc.serviceManager.get<IConfigurationService>(IConfigurationService);
