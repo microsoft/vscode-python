@@ -11,7 +11,6 @@ import { ICommandManager } from '../../client/common/application/types';
 import { IDisposableRegistry } from '../../client/common/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { IServiceContainer } from '../../client/ioc/types';
-import { JediSymbolProvider } from '../../client/providers/symbolProvider';
 import { UnitTestManagementService } from '../../client/testing/main';
 
 suite('Unit Tests - ManagementService', () => {
@@ -24,7 +23,6 @@ suite('Unit Tests - ManagementService', () => {
             serviceContainer = mock(ServiceContainer);
             sandbox = sinon.createSandbox();
 
-            sandbox.stub(UnitTestManagementService.prototype, 'registerSymbolProvider');
             sandbox.stub(UnitTestManagementService.prototype, 'registerCommands');
             sandbox.stub(UnitTestManagementService.prototype, 'registerHandlers');
             sandbox.stub(UnitTestManagementService.prototype, 'autoDiscoverTests').callsFake(() => Promise.resolve());
@@ -42,7 +40,7 @@ suite('Unit Tests - ManagementService', () => {
         });
 
         test('Do not execute command', async () => {
-            await testManagementService.activate(instance(mock(JediSymbolProvider)));
+            await testManagementService.activate();
 
             verify(commandManager.executeCommand('setContext', 'testsDiscovered', anything())).never();
         });
