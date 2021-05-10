@@ -24,6 +24,7 @@ import { PythonEnvironment } from './pythonEnvironments/info';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
 import { EditorLoadTelemetry } from './telemetry/types';
+import { IStartupDurations } from './types';
 
 interface IStopWatch {
     elapsedTime: number;
@@ -31,7 +32,7 @@ interface IStopWatch {
 
 export async function sendStartupTelemetry(
     activatedPromise: Promise<any>,
-    durations: Record<string, number>,
+    durations: IStartupDurations,
     stopWatch: IStopWatch,
     serviceContainer: IServiceContainer,
 ) {
@@ -41,7 +42,7 @@ export async function sendStartupTelemetry(
 
     try {
         await activatedPromise;
-        durations.totalActivateTime = stopWatch.elapsedTime;
+        durations.totalNonBlockingActivateTime = stopWatch.elapsedTime - durations.startActivateTime;
         const props = await getActivationTelemetryProps(serviceContainer);
         sendTelemetryEvent(EventName.EDITOR_LOAD, durations, props);
     } catch (ex) {
@@ -51,7 +52,7 @@ export async function sendStartupTelemetry(
 
 export async function sendErrorTelemetry(
     ex: Error,
-    durations: Record<string, number>,
+    durations: IStartupDurations,
     serviceContainer?: IServiceContainer,
 ) {
     try {
