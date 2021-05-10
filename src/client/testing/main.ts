@@ -21,7 +21,6 @@ import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { EventName } from '../telemetry/constants';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry/index';
-import { activateCodeLenses } from './codeLenses/main';
 import { CANCELLATION_REASON } from './common/constants';
 import { selectTestWorkspace } from './common/testUtils';
 import { TestSettingsPropertyNames } from './configuration/types';
@@ -103,7 +102,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
     public get onDidStatusChange(): Event<WorkspaceTestStatus> {
         return this._onDidStatusChange.event;
     }
-    public async activate(symbolProvider: DocumentSymbolProvider): Promise<void> {
+    public async activate(): Promise<void> {
         if (this.activatedOnce) {
             return;
         }
@@ -117,7 +116,6 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         this.autoDiscoverTests(undefined).catch((ex) =>
             traceError('Failed to auto discover tests upon activation', ex),
         );
-        await this.registerSymbolProvider(symbolProvider);
     }
     public async getTestManager(
         displayTestNotConfiguredMessage: boolean,
@@ -430,23 +428,6 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
 
         this.testResultDisplay.displayProgressStatus(promise, debug);
         await promise;
-    }
-
-    public async registerSymbolProvider(symbolProvider: DocumentSymbolProvider): Promise<void> {
-        const testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(
-            ITestCollectionStorageService,
-        );
-        const event = new EventEmitter<void>();
-        this.disposableRegistry.push(event);
-        const handler = this._onDidStatusChange.event((e) => {
-            if (e.status !== TestStatus.Discovering && e.status !== TestStatus.Running) {
-                event.fire();
-            }
-        });
-        this.disposableRegistry.push(handler);
-        this.disposableRegistry.push(
-            activateCodeLenses(event, symbolProvider, testCollectionStorage, this.serviceContainer),
-        );
     }
 
     @captureTelemetry(EventName.UNITTEST_CONFIGURE, undefined, false)
