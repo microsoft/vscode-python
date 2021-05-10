@@ -17,7 +17,13 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { Commands } from '../../../client/common/constants';
 import { ExperimentService } from '../../../client/common/experiments/service';
 import '../../../client/common/extensions';
-import { FormatterInstaller, ProductInstaller } from '../../../client/common/installer/productInstaller';
+import {
+    FormatterInstaller,
+    LinterInstaller,
+    ProductInstaller,
+} from '../../../client/common/installer/productInstaller';
+import { ProductNames } from '../../../client/common/installer/productNames';
+import { LinterProductPathService } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
 import {
     IInstallationChannelManager,
