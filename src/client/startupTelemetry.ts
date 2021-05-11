@@ -13,6 +13,7 @@ import {
     InspectInterpreterSettingType,
     Resource,
 } from './common/types';
+import { IStopWatch } from './common/utils/stopWatch';
 import {
     AutoSelectionRule,
     IInterpreterAutoSelectionRule,
@@ -25,10 +26,6 @@ import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
 import { EditorLoadTelemetry } from './telemetry/types';
 import { IStartupDurations } from './types';
-
-interface IStopWatch {
-    elapsedTime: number;
-}
 
 export async function sendStartupTelemetry(
     activatedPromise: Promise<any>,

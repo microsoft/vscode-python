@@ -36,6 +36,7 @@ import {
     ILanguageServerCache,
     LanguageServerType,
 } from './types';
+import { StopWatch } from '../common/utils/stopWatch';
 
 const languageServerSetting: keyof IPythonSettings = 'languageServer';
 const workspacePathNameForGlobalWorkspaces = '';
@@ -93,6 +94,7 @@ export class LanguageServerExtensionActivationService
     }
 
     public async activate(resource: Resource): Promise<void> {
+        const stopWatch = new StopWatch();
         // Get a new server and dispose of the old one (might be the same one)
         this.resource = resource;
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
@@ -119,6 +121,9 @@ export class LanguageServerExtensionActivationService
         // Force this server to reconnect (if disconnected) as it should be the active
         // language server for all of VS code.
         this.activatedServer.server.activate();
+        sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_STARTUP_DURATION, stopWatch.elapsedTime, {
+            languageServerType: result.type,
+        });
     }
 
     public async get(resource: Resource, interpreter?: PythonEnvironment): Promise<RefCountedLanguageServer> {

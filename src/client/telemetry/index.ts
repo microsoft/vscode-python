@@ -1145,6 +1145,18 @@ export interface IEventNamePropertyMapping {
         switchTo?: LanguageServerType;
     };
     /**
+     * Telemetry event sent with details after selected Language server has finished activating. This event
+     * is sent with `durationMs` specifying the total duration of time that the given language server took
+     * to activate.
+     */
+    [EventName.PYTHON_LANGUAGE_SERVER_STARTUP_DURATION]: {
+        /**
+         * Type of Language server activated. Note it can be different from one that is chosen, if the
+         * chosen one fails to start.
+         */
+        languageServerType?: LanguageServerType;
+    };
+    /**
      * Telemetry event sent with details after attempting to download LS
      */
     [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: {
