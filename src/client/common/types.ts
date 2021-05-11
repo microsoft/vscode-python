@@ -200,6 +200,7 @@ export interface IPythonSettings {
     readonly onDidChange: Event<void>;
     readonly experiments: IExperiments;
     readonly languageServer: LanguageServerType;
+    readonly languageServerIsDefault: boolean;
     readonly defaultInterpreterPath: string;
     readonly logging: ILoggingSettings;
     readonly useIsolation: boolean;
