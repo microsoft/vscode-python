@@ -68,7 +68,7 @@ suite('Unit Tests - Track Enablement', () => {
         assert.ok(telemetryReporter.notCalled);
         assert.ok(affectsConfiguration.callCount > 0);
     });
-    test('Check whether unittest, pytest and nose settings have been enabled', async () => {
+    test('Check whether unittest, pytest settings have been enabled', async () => {
         const expectedSettingsChecked = ['python.testing.unittestEnabled', 'python.testing.pytestEnabled'];
 
         const telemetryReporter = sandbox.stub(EnablementTracker.prototype, 'sendTelemetry');
@@ -84,11 +84,7 @@ suite('Unit Tests - Track Enablement', () => {
         verify(workspaceService.getConfiguration(anything(), anything())).never();
         assert.ok(telemetryReporter.notCalled);
         assert.ok(affectsConfiguration.callCount > 0);
-        const settingsChecked = [
-            affectsConfiguration.args[0][0],
-            affectsConfiguration.args[1][0],
-            affectsConfiguration.args[2][0],
-        ];
+        const settingsChecked = [affectsConfiguration.args[0][0], affectsConfiguration.args[1][0]];
         assert.deepEqual(settingsChecked.sort(), expectedSettingsChecked.sort());
     });
     test('Check settings related to unittest, pytest and nose', async () => {
@@ -109,21 +105,13 @@ suite('Unit Tests - Track Enablement', () => {
         enablementTracker = createEnablementTracker();
         enablementTracker.onDidChangeConfiguration({ affectsConfiguration });
 
-        verify(workspaceService.getConfiguration(anything(), anything())).atLeast(3);
+        verify(workspaceService.getConfiguration(anything(), anything())).atLeast(2);
         assert.ok(telemetryReporter.notCalled);
         assert.ok(affectsConfiguration.callCount > 0);
-        const settingsChecked = [
-            affectsConfiguration.args[0][0],
-            affectsConfiguration.args[1][0],
-            affectsConfiguration.args[2][0],
-        ];
+        const settingsChecked = [affectsConfiguration.args[0][0], affectsConfiguration.args[1][0]];
         assert.deepEqual(settingsChecked.sort(), expectedSettingsChecked.sort());
 
-        const settingsRetrieved = [
-            getConfigSettings.args[0][0],
-            getConfigSettings.args[1][0],
-            getConfigSettings.args[2][0],
-        ];
+        const settingsRetrieved = [getConfigSettings.args[0][0], getConfigSettings.args[1][0]];
         assert.deepEqual(settingsRetrieved.sort(), expectedSettingsRetrieved.sort());
     });
     function testSendingTelemetry(sendForProvider: TestProvider) {
@@ -146,22 +134,14 @@ suite('Unit Tests - Track Enablement', () => {
         enablementTracker = createEnablementTracker();
         enablementTracker.onDidChangeConfiguration({ affectsConfiguration });
 
-        verify(workspaceService.getConfiguration(anything(), anything())).atLeast(3);
+        verify(workspaceService.getConfiguration(anything(), anything())).atLeast(2);
         assert.equal(telemetryReporter.callCount, 1);
         assert.deepEqual(telemetryReporter.args[0][0], { [sendForProvider]: true });
         assert.ok(affectsConfiguration.callCount > 0);
-        const settingsChecked = [
-            affectsConfiguration.args[0][0],
-            affectsConfiguration.args[1][0],
-            affectsConfiguration.args[2][0],
-        ];
+        const settingsChecked = [affectsConfiguration.args[0][0], affectsConfiguration.args[1][0]];
         assert.deepEqual(settingsChecked.sort(), expectedSettingsChecked.sort());
 
-        const settingsRetrieved = [
-            getConfigSettings.args[0][0],
-            getConfigSettings.args[1][0],
-            getConfigSettings.args[2][0],
-        ];
+        const settingsRetrieved = [getConfigSettings.args[0][0], getConfigSettings.args[1][0]];
         assert.deepEqual(settingsRetrieved.sort(), expectedSettingsRetrieved.sort());
     }
     test('Send telemetry for unittest', () => testSendingTelemetry('unittest'));
