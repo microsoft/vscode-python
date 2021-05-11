@@ -5,7 +5,7 @@ import { Uri } from 'vscode';
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { ArgumentsHelper } from './common/argumentsHelper';
-import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './common/constants';
+import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from './common/constants';
 import { DebugLauncher } from './common/debugLauncher';
 import { EnablementTracker } from './common/enablementTracker';
 import { TestRunner } from './common/runner';
@@ -69,11 +69,6 @@ import { TreeViewService } from './explorer/treeView';
 import { TestingService, UnitTestManagementService } from './main';
 import { registerTypes as registerNavigationTypes } from './navigation/serviceRegistry';
 import { ITestExplorerCommandHandler } from './navigation/types';
-import { TestManager as NoseTestManager } from './nosetest/main';
-import { TestManagerRunner as NoseTestManagerRunner } from './nosetest/runner';
-import { ArgumentsService as NoseTestArgumentsService } from './nosetest/services/argsService';
-import { TestDiscoveryService as NoseTestDiscoveryService } from './nosetest/services/discoveryService';
-import { TestsParser as NoseTestTestsParser } from './nosetest/services/parserService';
 import { TestManager as PyTestTestManager } from './pytest/main';
 import { TestManagerRunner as PytestManagerRunner } from './pytest/runner';
 import { ArgumentsService as PyTestArgumentsService } from './pytest/services/argsService';
@@ -113,11 +108,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<ITestVisitor>(ITestVisitor, TestResultResetVisitor, 'TestResultResetVisitor');
 
     serviceManager.add<ITestsParser>(ITestsParser, UnitTestTestsParser, UNITTEST_PROVIDER);
-    serviceManager.add<ITestsParser>(ITestsParser, NoseTestTestsParser, NOSETEST_PROVIDER);
 
     serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, UnitTestTestDiscoveryService, UNITTEST_PROVIDER);
     serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, PytestTestDiscoveryService, PYTEST_PROVIDER);
-    serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, NoseTestDiscoveryService, NOSETEST_PROVIDER);
 
     serviceManager.add<IArgumentsHelper>(IArgumentsHelper, ArgumentsHelper);
     serviceManager.add<ITestRunner>(ITestRunner, TestRunner);
@@ -125,10 +118,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IUnitTestHelper>(IUnitTestHelper, UnitTestHelper);
 
     serviceManager.add<IArgumentsService>(IArgumentsService, PyTestArgumentsService, PYTEST_PROVIDER);
-    serviceManager.add<IArgumentsService>(IArgumentsService, NoseTestArgumentsService, NOSETEST_PROVIDER);
     serviceManager.add<IArgumentsService>(IArgumentsService, UnitTestArgumentsService, UNITTEST_PROVIDER);
     serviceManager.add<ITestManagerRunner>(ITestManagerRunner, PytestManagerRunner, PYTEST_PROVIDER);
-    serviceManager.add<ITestManagerRunner>(ITestManagerRunner, NoseTestManagerRunner, NOSETEST_PROVIDER);
     serviceManager.add<ITestManagerRunner>(ITestManagerRunner, UnitTestTestManagerRunner, UNITTEST_PROVIDER);
 
     serviceManager.addSingleton<ITestConfigurationService>(ITestConfigurationService, UnitTestConfigurationService);
@@ -164,9 +155,6 @@ export function registerTypes(serviceManager: IServiceManager) {
             const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
 
             switch (testProvider) {
-                case NOSETEST_PROVIDER: {
-                    return new NoseTestManager(workspaceFolder, rootDirectory, serviceContainer);
-                }
                 case PYTEST_PROVIDER: {
                     return new PyTestTestManager(workspaceFolder, rootDirectory, serviceContainer);
                 }

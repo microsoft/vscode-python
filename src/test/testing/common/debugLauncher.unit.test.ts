@@ -145,8 +145,7 @@ suite('Unit Tests - Debug Launcher', () => {
             case 'unittest': {
                 return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'visualstudio_py_testlauncher.py');
             }
-            case 'pytest':
-            case 'nosetest': {
+            case 'pytest': {
                 return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'testlauncher.py');
             }
             default: {
@@ -250,7 +249,7 @@ suite('Unit Tests - Debug Launcher', () => {
         setupDebugManager(workspaceFolders[0], expected, testProvider);
     }
 
-    const testProviders: TestProvider[] = ['nosetest', 'pytest', 'unittest'];
+    const testProviders: TestProvider[] = ['pytest', 'unittest'];
 
     testProviders.forEach((testProvider) => {
         const testTitleSuffix = `(Test Framework '${testProvider}')`;

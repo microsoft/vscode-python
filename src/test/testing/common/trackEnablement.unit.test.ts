@@ -69,11 +69,7 @@ suite('Unit Tests - Track Enablement', () => {
         assert.ok(affectsConfiguration.callCount > 0);
     });
     test('Check whether unittest, pytest and nose settings have been enabled', async () => {
-        const expectedSettingsChecked = [
-            'python.testing.nosetestEnabled',
-            'python.testing.unittestEnabled',
-            'python.testing.pytestEnabled',
-        ];
+        const expectedSettingsChecked = ['python.testing.unittestEnabled', 'python.testing.pytestEnabled'];
 
         const telemetryReporter = sandbox.stub(EnablementTracker.prototype, 'sendTelemetry');
         telemetryReporter.callsFake(noop);
@@ -81,7 +77,6 @@ suite('Unit Tests - Track Enablement', () => {
         when(workspaceService.workspaceFolders).thenReturn([]);
         when(configService.getTestEnablingSetting(Product.unittest)).thenReturn('testing.unittestEnabled');
         when(configService.getTestEnablingSetting(Product.pytest)).thenReturn('testing.pytestEnabled');
-        when(configService.getTestEnablingSetting(Product.nosetest)).thenReturn('testing.nosetestEnabled');
 
         enablementTracker = createEnablementTracker();
         enablementTracker.onDidChangeConfiguration({ affectsConfiguration });
@@ -97,16 +92,8 @@ suite('Unit Tests - Track Enablement', () => {
         assert.deepEqual(settingsChecked.sort(), expectedSettingsChecked.sort());
     });
     test('Check settings related to unittest, pytest and nose', async () => {
-        const expectedSettingsChecked = [
-            'python.testing.nosetestEnabled',
-            'python.testing.unittestEnabled',
-            'python.testing.pytestEnabled',
-        ];
-        const expectedSettingsRetrieved = [
-            'testing.nosetestEnabled',
-            'testing.unittestEnabled',
-            'testing.pytestEnabled',
-        ];
+        const expectedSettingsChecked = ['python.testing.unittestEnabled', 'python.testing.pytestEnabled'];
+        const expectedSettingsRetrieved = ['testing.unittestEnabled', 'testing.pytestEnabled'];
 
         const telemetryReporter = sandbox.stub(EnablementTracker.prototype, 'sendTelemetry');
         telemetryReporter.callsFake(noop);
@@ -118,7 +105,6 @@ suite('Unit Tests - Track Enablement', () => {
         when(workspaceService.getConfiguration('python', anything())).thenReturn({ get: getConfigSettings } as any);
         when(configService.getTestEnablingSetting(Product.unittest)).thenReturn('testing.unittestEnabled');
         when(configService.getTestEnablingSetting(Product.pytest)).thenReturn('testing.pytestEnabled');
-        when(configService.getTestEnablingSetting(Product.nosetest)).thenReturn('testing.nosetestEnabled');
 
         enablementTracker = createEnablementTracker();
         enablementTracker.onDidChangeConfiguration({ affectsConfiguration });
@@ -141,16 +127,8 @@ suite('Unit Tests - Track Enablement', () => {
         assert.deepEqual(settingsRetrieved.sort(), expectedSettingsRetrieved.sort());
     });
     function testSendingTelemetry(sendForProvider: TestProvider) {
-        const expectedSettingsChecked = [
-            'python.testing.nosetestEnabled',
-            'python.testing.unittestEnabled',
-            'python.testing.pytestEnabled',
-        ];
-        const expectedSettingsRetrieved = [
-            'testing.nosetestEnabled',
-            'testing.unittestEnabled',
-            'testing.pytestEnabled',
-        ];
+        const expectedSettingsChecked = ['python.testing.unittestEnabled', 'python.testing.pytestEnabled'];
+        const expectedSettingsRetrieved = ['testing.unittestEnabled', 'testing.pytestEnabled'];
 
         const telemetryReporter = sandbox.stub(EnablementTracker.prototype, 'sendTelemetry');
         telemetryReporter.callsFake(noop);
@@ -164,7 +142,6 @@ suite('Unit Tests - Track Enablement', () => {
         when(workspaceService.getConfiguration('python', anything())).thenReturn({ get: getConfigSettings } as any);
         when(configService.getTestEnablingSetting(Product.unittest)).thenReturn('testing.unittestEnabled');
         when(configService.getTestEnablingSetting(Product.pytest)).thenReturn('testing.pytestEnabled');
-        when(configService.getTestEnablingSetting(Product.nosetest)).thenReturn('testing.nosetestEnabled');
 
         enablementTracker = createEnablementTracker();
         enablementTracker.onDidChangeConfiguration({ affectsConfiguration });
@@ -189,5 +166,4 @@ suite('Unit Tests - Track Enablement', () => {
     }
     test('Send telemetry for unittest', () => testSendingTelemetry('unittest'));
     test('Send telemetry for pytest', () => testSendingTelemetry('pytest'));
-    test('Send telemetry for nosetest', () => testSendingTelemetry('nosetest'));
 });

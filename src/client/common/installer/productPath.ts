@@ -10,7 +10,7 @@ import { IFormatterHelper } from '../../formatters/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ILinterManager } from '../../linters/types';
 import { ITestingService } from '../../testing/types';
-import { IConfigurationService, IInstaller, ModuleNamePurpose, Product } from '../types';
+import { IConfigurationService, IInstaller, Product } from '../types';
 import { IProductPathService } from './types';
 
 @injectable()
@@ -25,7 +25,7 @@ export abstract class BaseProductPathsService implements IProductPathService {
     public isExecutableAModule(product: Product, resource?: Uri): boolean {
         let moduleName: string | undefined;
         try {
-            moduleName = this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);
+            moduleName = this.productInstaller.translateProductToModuleName(product);
         } catch {}
 
         // User may have customized the module name or provided the fully qualifieid path.
@@ -82,7 +82,7 @@ export class TestFrameworkProductPathService extends BaseProductPathsService {
         const settingsPropNames = testHelper.getSettingsPropertyNames(product);
         if (!settingsPropNames.pathName) {
             // E.g. in the case of UnitTests we don't allow customizing the paths.
-            return this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);
+            return this.productInstaller.translateProductToModuleName(product);
         }
         const settings = this.configService.getSettings(resource);
         return settings.testing[settingsPropNames.pathName] as string;
@@ -95,7 +95,7 @@ export class RefactoringLibraryProductPathService extends BaseProductPathsServic
         super(serviceContainer);
     }
     public getExecutableNameFromSettings(product: Product, _?: Uri): string {
-        return this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);
+        return this.productInstaller.translateProductToModuleName(product);
     }
 }
 
@@ -105,6 +105,6 @@ export class DataScienceProductPathService extends BaseProductPathsService {
         super(serviceContainer);
     }
     public getExecutableNameFromSettings(product: Product, _?: Uri): string {
-        return this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);
+        return this.productInstaller.translateProductToModuleName(product);
     }
 }

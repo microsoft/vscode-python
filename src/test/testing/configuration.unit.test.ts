@@ -215,11 +215,11 @@ suite('Unit Tests - ConfigurationService', () => {
                 workspaceService.verifyAll();
                 workspaceConfig.verifyAll();
             });
-            test('Select Test runner displays 3 items', async () => {
+            test('Select Test runner displays 2 items', async () => {
                 const placeHolder = 'Some message';
                 appShell
                     .setup((s) => s.showQuickPick(typeMoq.It.isAny(), typeMoq.It.isObjectWith({ placeHolder })))
-                    .callback((items) => expect(items).be.lengthOf(3))
+                    .callback((items) => expect(items).be.lengthOf(2))
                     .verifiable(typeMoq.Times.once());
 
                 await testConfigService.target.selectTestRunner(placeHolder);
@@ -227,10 +227,10 @@ suite('Unit Tests - ConfigurationService', () => {
             });
             test('Ensure selected item is returned', async () => {
                 const placeHolder = 'Some message';
-                const indexes = [Product.unittest, Product.pytest, Product.nosetest];
+                const indexes = [Product.unittest, Product.pytest];
                 appShell
                     .setup((s) => s.showQuickPick(typeMoq.It.isAny(), typeMoq.It.isObjectWith({ placeHolder })))
-                    .callback((items) => expect(items).be.lengthOf(3))
+                    .callback((items) => expect(items).be.lengthOf(2))
                     .returns((items) => items[indexes.indexOf(product)])
                     .verifiable(typeMoq.Times.once());
 
@@ -252,7 +252,6 @@ suite('Unit Tests - ConfigurationService', () => {
             test('Prompt to enable a test if a test framework is not enabled', async () => {
                 unitTestSettings.setup((u) => u.pytestEnabled).returns(() => false);
                 unitTestSettings.setup((u) => u.unittestEnabled).returns(() => false);
-                unitTestSettings.setup((u) => u.nosetestsEnabled).returns(() => false);
 
                 appShell
                     .setup((s) => s.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny()))
@@ -275,7 +274,6 @@ suite('Unit Tests - ConfigurationService', () => {
             test('Prompt to select a test if a test framework is not enabled', async () => {
                 unitTestSettings.setup((u) => u.pytestEnabled).returns(() => false);
                 unitTestSettings.setup((u) => u.unittestEnabled).returns(() => false);
-                unitTestSettings.setup((u) => u.nosetestsEnabled).returns(() => false);
 
                 appShell
                     .setup((s) => s.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny()))
@@ -307,7 +305,6 @@ suite('Unit Tests - ConfigurationService', () => {
             test('Configure selected test framework and disable others', async () => {
                 unitTestSettings.setup((u) => u.pytestEnabled).returns(() => false);
                 unitTestSettings.setup((u) => u.unittestEnabled).returns(() => false);
-                unitTestSettings.setup((u) => u.nosetestsEnabled).returns(() => false);
 
                 const workspaceConfig = typeMoq.Mock.ofType<WorkspaceConfiguration>(
                     undefined,
@@ -367,7 +364,6 @@ suite('Unit Tests - ConfigurationService', () => {
             test('If more than one test framework is enabled, then prompt to select a test framework', async () => {
                 unitTestSettings.setup((u) => u.pytestEnabled).returns(() => true);
                 unitTestSettings.setup((u) => u.unittestEnabled).returns(() => true);
-                unitTestSettings.setup((u) => u.nosetestsEnabled).returns(() => true);
 
                 appShell
                     .setup((s) => s.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny()))
@@ -394,7 +390,6 @@ suite('Unit Tests - ConfigurationService', () => {
             test('If more than one test framework is enabled, then prompt to select a test framework and enable test, but do not configure', async () => {
                 unitTestSettings.setup((u) => u.pytestEnabled).returns(() => true);
                 unitTestSettings.setup((u) => u.unittestEnabled).returns(() => true);
-                unitTestSettings.setup((u) => u.nosetestsEnabled).returns(() => true);
 
                 appShell
                     .setup((s) => s.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny()))
@@ -450,7 +445,6 @@ suite('Unit Tests - ConfigurationService', () => {
             test('Prompt to enable and configure selected test framework', async () => {
                 unitTestSettings.setup((u) => u.pytestEnabled).returns(() => false);
                 unitTestSettings.setup((u) => u.unittestEnabled).returns(() => false);
-                unitTestSettings.setup((u) => u.nosetestsEnabled).returns(() => false);
 
                 const workspaceConfig = typeMoq.Mock.ofType<WorkspaceConfiguration>(
                     undefined,

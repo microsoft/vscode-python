@@ -9,7 +9,6 @@ ProductNames.set(Product.bandit, 'bandit');
 ProductNames.set(Product.black, 'black');
 ProductNames.set(Product.flake8, 'flake8');
 ProductNames.set(Product.mypy, 'mypy');
-ProductNames.set(Product.nosetest, 'nosetest');
 ProductNames.set(Product.pycodestyle, 'pycodestyle');
 ProductNames.set(Product.pylama, 'pylama');
 ProductNames.set(Product.prospector, 'prospector');

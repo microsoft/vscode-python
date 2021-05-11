@@ -41,7 +41,6 @@ import {
     TestDiscoveryOptions,
 } from '../../../../client/testing/common/types';
 import { TEST_OUTPUT_CHANNEL } from '../../../../client/testing/constants';
-import { TestManager as NoseTestManager } from '../../../../client/testing/nosetest/main';
 import { TestManager as PyTestTestManager } from '../../../../client/testing/pytest/main';
 import { ArgumentsService } from '../../../../client/testing/pytest/services/argsService';
 import { TestDiscoveryService } from '../../../../client/testing/pytest/services/discoveryService';
@@ -55,7 +54,6 @@ const IGNORED_OPTIONS = ({} as unknown) as TestDiscoveryOptions;
 
 suite('Unit Tests - Base Test Manager', () => {
     [
-        { name: 'nose', class: NoseTestManager },
         { name: 'pytest', class: PyTestTestManager },
         { name: 'unittest', class: UnitTestTestManager },
     ].forEach((item) => {

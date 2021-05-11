@@ -12,7 +12,7 @@ import {
 import { ExecutionInfo, IConfigurationService, IPythonSettings } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { TestProvider } from '../types';
-import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './constants';
+import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from './constants';
 import { ITestRunner, ITestsHelper, Options } from './types';
 export { Options } from './types';
 
@@ -105,10 +105,6 @@ async function run(serviceContainer: IServiceContainer, testProvider: TestProvid
 function getExecutablePath(testProvider: TestProvider, settings: IPythonSettings): string | undefined {
     let testRunnerExecutablePath: string | undefined;
     switch (testProvider) {
-        case NOSETEST_PROVIDER: {
-            testRunnerExecutablePath = settings.testing.nosetestPath;
-            break;
-        }
         case PYTEST_PROVIDER: {
             testRunnerExecutablePath = settings.testing.pytestPath;
             break;
@@ -121,9 +117,6 @@ function getExecutablePath(testProvider: TestProvider, settings: IPythonSettings
 }
 function getTestModuleName(testProvider: TestProvider) {
     switch (testProvider) {
-        case NOSETEST_PROVIDER: {
-            return 'nose';
-        }
         case PYTEST_PROVIDER: {
             return 'pytest';
         }
