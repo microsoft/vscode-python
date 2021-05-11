@@ -125,7 +125,9 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
             traceError('Failed to auto discover tests upon activation', ex),
         );
 
-        this.disposableRegistry.push(test.registerTestController(new PythonTestController()));
+        if (test && test.registerTestController) {
+            this.disposableRegistry.push(test.registerTestController(new PythonTestController()));
+        }
     }
     public async getTestManager(
         displayTestNotConfiguredMessage: boolean,
