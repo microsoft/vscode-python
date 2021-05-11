@@ -144,6 +144,8 @@ export class PythonSettings implements IPythonSettings {
 
     public languageServer: LanguageServerType = LanguageServerType.Microsoft;
 
+    public languageServerIsDefault = true;
+
     public logging: ILoggingSettings = { level: LogLevel.Error };
 
     public useIsolation = true;
@@ -288,20 +290,18 @@ export class PythonSettings implements IPythonSettings {
         let userLS = pythonSettings.get<string>('languageServer');
         userLS = systemVariables.resolveAny(userLS);
 
-        let ls: LanguageServerType;
-
         // Validate the user's input; if invalid, set it to the default.
         if (
             !userLS ||
             userLS === 'Default' ||
             !Object.values(LanguageServerType).includes(userLS as LanguageServerType)
         ) {
-            ls = this.defaultLS?.defaultLSType ?? LanguageServerType.Jedi;
+            this.languageServer = this.defaultLS?.defaultLSType ?? LanguageServerType.Jedi;
+            this.languageServerIsDefault = true;
         } else {
-            ls = userLS as LanguageServerType;
+            this.languageServer = userLS as LanguageServerType;
+            this.languageServerIsDefault = false;
         }
-
-        this.languageServer = ls;
 
         this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
         if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {

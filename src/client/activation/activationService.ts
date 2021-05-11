@@ -212,6 +212,11 @@ export class LanguageServerExtensionActivationService
         return configurationService.getSettings(this.resource).languageServer;
     }
 
+    private getCurrentLanguageServerTypeIsDefault(): boolean {
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        return configurationService.getSettings(this.resource).languageServerIsDefault;
+    }
+
     private async createRefCountedServer(
         resource: Resource,
         interpreter: PythonEnvironment | undefined,
@@ -240,10 +245,14 @@ export class LanguageServerExtensionActivationService
             }
         }
 
-        if (serverType === LanguageServerType.Node && interpreter && interpreter.version) {
-            if (interpreter.version.major < 3) {
-                sendTelemetryEvent(EventName.JEDI_FALLBACK);
-                serverType = LanguageServerType.Jedi;
+        // If "Pylance" was explicitly chosen, use it even though it's not guaranteed to work
+        // properly with Python 2.
+        if (!this.getCurrentLanguageServerTypeIsDefault()) {
+            if (serverType === LanguageServerType.Node && interpreter && interpreter.version) {
+                if (interpreter.version.major < 3) {
+                    sendTelemetryEvent(EventName.JEDI_FALLBACK);
+                    serverType = LanguageServerType.Jedi;
+                }
             }
         }
 
