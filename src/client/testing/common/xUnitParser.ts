@@ -116,7 +116,7 @@ function updateTests(tests: Tests, testSuiteResult: TestSuiteResult) {
             // Possible we're dealing with nosetests, where the file name isn't returned to us
             // When dealing with nose tests
             // It is possible to have a test file named x in two separate test sub directories and have same functions/classes
-            // And unforutnately xunit log doesn't output the filename
+            // And unfortunately xunit log doesn't output the filename
 
             // result = tests.testFunctions.find(fn => fn.testFunction.name === testcase.$.name &&
             //     fn.parentTestSuite && fn.parentTestSuite.name === testcase.$.classname);
