@@ -65,7 +65,6 @@ import { TestDisplay } from './display/picker';
 import { TestExplorerCommandHandler } from './explorer/commandHandlers';
 import { FailedTestHandler } from './explorer/failedTestHandler';
 import { TestTreeViewProvider } from './explorer/testTreeViewProvider';
-import { TreeViewService } from './explorer/treeView';
 import { TestingService, UnitTestManagementService } from './main';
 import { registerTypes as registerNavigationTypes } from './navigation/serviceRegistry';
 import { ITestExplorerCommandHandler } from './navigation/types';
@@ -148,7 +147,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestTreeViewProvider>(ITestTreeViewProvider, TestTreeViewProvider);
     serviceManager.addSingleton<ITestDataItemResource>(ITestDataItemResource, TestTreeViewProvider);
     serviceManager.addSingleton<ITestExplorerCommandHandler>(ITestExplorerCommandHandler, TestExplorerCommandHandler);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, TreeViewService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         FailedTestHandler,
