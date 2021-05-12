@@ -342,22 +342,6 @@ def test_failure():
     -   [ ] The appropriate `DiagnosticRelatedInformation` is shown for each `Diagnostic`
     -   [ ] The `DiagnosticRelatedInformation` reflects the traceback for the test
 
-#### [`nose`](https://code.visualstudio.com/docs/python/unit-testing#_nose-configuration-settings)
-
-```python
-def test_passing():
-    assert 42 == 42
-
-def test_failure():
-    assert 42 == -13
-```
-
--   [ ] `Run All Unit Tests` triggers the prompt to configure the test runner
-    -   [ ] Nose gets installed
--   [ ] Tests are discovered (as shown by code lenses on each test)
-    -   [ ] `Run Test` works
-    -   [ ] `Debug Test` works
-
 #### General
 
 -   [ ] Code lenses appears

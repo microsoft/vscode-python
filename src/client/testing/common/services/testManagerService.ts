@@ -37,9 +37,7 @@ export class TestManagerService implements ITestManagerService {
     }
     public getPreferredTestManager(): UnitTestProduct | undefined {
         const settings = this.configurationService.getSettings(this.wkspace);
-        if (settings.testing.nosetestsEnabled) {
-            return Product.nosetest;
-        } else if (settings.testing.pytestEnabled) {
+        if (settings.testing.pytestEnabled) {
             return Product.pytest;
         } else if (settings.testing.unittestEnabled) {
             return Product.unittest;

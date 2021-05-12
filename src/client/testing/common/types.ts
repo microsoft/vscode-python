@@ -21,7 +21,7 @@ import { ConsoleType } from '../../debugger/types';
 import { TestProvider } from '../types';
 import { TestSettingsPropertyNames } from '../configuration/types';
 
-export type UnitTestProduct = Product.nosetest | Product.pytest | Product.unittest;
+export type UnitTestProduct = Product.pytest | Product.unittest;
 
 // ****************
 // test args/options

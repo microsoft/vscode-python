@@ -8,16 +8,10 @@ import { createDeferred } from '../../client/common/utils/async';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { CondaService } from '../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { TestManagerRunner as NoseTestManagerRunner } from '../../client/testing//nosetest/runner';
 import { TestManagerRunner as PytestManagerRunner } from '../../client/testing//pytest/runner';
 import { TestManagerRunner as UnitTestTestManagerRunner } from '../../client/testing//unittest/runner';
 import { ArgumentsHelper } from '../../client/testing/common/argumentsHelper';
-import {
-    CANCELLATION_REASON,
-    NOSETEST_PROVIDER,
-    PYTEST_PROVIDER,
-    UNITTEST_PROVIDER,
-} from '../../client/testing/common/constants';
+import { CANCELLATION_REASON, PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../client/testing/common/constants';
 import { TestRunner } from '../../client/testing/common/runner';
 import {
     IArgumentsHelper,
@@ -31,7 +25,6 @@ import {
     IXUnitParser,
 } from '../../client/testing/common/types';
 import { XUnitParser } from '../../client/testing/common/xUnitParser';
-import { ArgumentsService as NoseTestArgumentsService } from '../../client/testing/nosetest/services/argsService';
 import { ArgumentsService as PyTestArgumentsService } from '../../client/testing/pytest/services/argsService';
 import { TestMessageService } from '../../client/testing/pytest/services/testMessageService';
 import { TestProvider } from '../../client/testing/types';
@@ -56,7 +49,6 @@ suite('Unit Tests - debugging', () => {
         await initialize();
         await Promise.all([
             updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget),
-            updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget),
             updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget),
         ]);
     });
@@ -73,7 +65,6 @@ suite('Unit Tests - debugging', () => {
         await ioc.dispose();
         await Promise.all([
             updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget),
-            updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget),
             updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget),
         ]);
     });
@@ -99,11 +90,9 @@ suite('Unit Tests - debugging', () => {
         ioc.serviceManager.add<ITestRunner>(ITestRunner, TestRunner);
         ioc.serviceManager.add<IXUnitParser>(IXUnitParser, XUnitParser);
         ioc.serviceManager.add<IUnitTestHelper>(IUnitTestHelper, UnitTestHelper);
-        ioc.serviceManager.add<IArgumentsService>(IArgumentsService, NoseTestArgumentsService, NOSETEST_PROVIDER);
         ioc.serviceManager.add<IArgumentsService>(IArgumentsService, PyTestArgumentsService, PYTEST_PROVIDER);
         ioc.serviceManager.add<IArgumentsService>(IArgumentsService, UnitTestArgumentsService, UNITTEST_PROVIDER);
         ioc.serviceManager.add<ITestManagerRunner>(ITestManagerRunner, PytestManagerRunner, PYTEST_PROVIDER);
-        ioc.serviceManager.add<ITestManagerRunner>(ITestManagerRunner, NoseTestManagerRunner, NOSETEST_PROVIDER);
         ioc.serviceManager.add<ITestManagerRunner>(ITestManagerRunner, UnitTestTestManagerRunner, UNITTEST_PROVIDER);
         ioc.serviceManager.addSingleton<ITestDebugLauncher>(ITestDebugLauncher, MockDebugLauncher);
         ioc.serviceManager.addSingleton<ITestMessageService>(ITestMessageService, TestMessageService, PYTEST_PROVIDER);
@@ -155,11 +144,6 @@ suite('Unit Tests - debugging', () => {
         await testStartingDebugger('pytest');
     });
 
-    test('Debugger should start (nosetest)', async () => {
-        await updateSetting('testing.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
-        await testStartingDebugger('nosetest');
-    });
-
     async function testStoppingDebugger(testProvider: TestProvider) {
         const testManager = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory)(
             testProvider,
@@ -197,11 +181,6 @@ suite('Unit Tests - debugging', () => {
     test('Debugger should stop when user invokes a test discovery (pytest)', async () => {
         await updateSetting('testing.pytestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         await testStoppingDebugger('pytest');
-    });
-
-    test('Debugger should stop when user invokes a test discovery (nosetest)', async () => {
-        await updateSetting('testing.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
-        await testStoppingDebugger('nosetest');
     });
 
     async function testDebuggerWhenRediscoveringTests(testProvider: TestProvider) {
@@ -251,10 +230,5 @@ suite('Unit Tests - debugging', () => {
     test('Debugger should not stop when test discovery is invoked automatically by extension (pytest)', async () => {
         await updateSetting('testing.pytestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         await testDebuggerWhenRediscoveringTests('pytest');
-    });
-
-    test('Debugger should not stop when test discovery is invoked automatically by extension (nosetest)', async () => {
-        await updateSetting('testing.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
-        await testDebuggerWhenRediscoveringTests('nosetest');
     });
 });

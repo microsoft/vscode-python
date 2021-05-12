@@ -1780,27 +1780,6 @@
                     "description": "Port number used for debugging of tests.",
                     "scope": "resource"
                 },
-                "python.testing.nosetestArgs": {
-                    "type": "array",
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
-                    "default": [],
-                    "items": {
-                        "type": "string"
-                    },
-                    "scope": "resource"
-                },
-                "python.testing.nosetestsEnabled": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enable testing using nosetests.",
-                    "scope": "resource"
-                },
-                "python.testing.nosetestPath": {
-                    "type": "string",
-                    "default": "nosetests",
-                    "description": "Path to nosetests, you can use a custom version of nosetests by modifying this setting to include the full path.",
-                    "scope": "resource"
-                },
                 "python.testing.promptToConfigure": {
                     "type": "boolean",
                     "default": true,

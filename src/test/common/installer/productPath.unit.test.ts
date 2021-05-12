@@ -26,7 +26,6 @@ import {
     IInstaller,
     IPythonSettings,
     IWorkspaceSymbolSettings,
-    ModuleNamePurpose,
     Product,
     ProductType,
 } from '../../../client/common/types';
@@ -178,10 +177,7 @@ suite('Product Path', () => {
                         const productPathService = new RefactoringLibraryProductPathService(serviceContainer.object);
 
                         const value = productPathService.getExecutableNameFromSettings(product.value, resource);
-                        const moduleName = productInstaller.translateProductToModuleName(
-                            product.value,
-                            ModuleNamePurpose.run,
-                        );
+                        const moduleName = productInstaller.translateProductToModuleName(product.value);
                         expect(value).to.be.equal(moduleName);
                     });
                     break;
@@ -219,12 +215,12 @@ suite('Product Path', () => {
                                 return {
                                     argsName: 'autoTestDiscoverOnSaveEnabled',
                                     enabledName: 'autoTestDiscoverOnSaveEnabled',
-                                    pathName: 'nosetestPath',
+                                    pathName: 'pytestPath',
                                 };
                             })
                             .verifiable(TypeMoq.Times.once());
                         unitTestSettings
-                            .setup((u) => u.nosetestPath)
+                            .setup((u) => u.pytestPath)
                             .returns(() => expectedPath)
                             .verifiable(TypeMoq.Times.atLeastOnce());
 
@@ -253,10 +249,7 @@ suite('Product Path', () => {
                             .verifiable(TypeMoq.Times.once());
 
                         const value = productPathService.getExecutableNameFromSettings(product.value, resource);
-                        const moduleName = productInstaller.translateProductToModuleName(
-                            product.value,
-                            ModuleNamePurpose.run,
-                        );
+                        const moduleName = productInstaller.translateProductToModuleName(product.value);
                         expect(value).to.be.equal(moduleName);
                         testHelper.verifyAll();
                     });

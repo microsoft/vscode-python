@@ -7,7 +7,7 @@ import { DocumentSymbolProvider } from 'vscode';
 import { Product } from '../common/types';
 import { TestSettingsPropertyNames } from './configuration/types';
 
-export type TestProvider = 'nosetest' | 'pytest' | 'unittest';
+export type TestProvider = 'pytest' | 'unittest';
 
 // ****************
 // interfaces
