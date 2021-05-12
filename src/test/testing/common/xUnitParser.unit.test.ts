@@ -139,7 +139,6 @@ suite('Testing - parse JUnit XML file', () => {
 
     // Missing tests (see https://github.com/microsoft/vscode-python/issues/7447):
     // * simple pytest
-    // * simple nose
     // * complex
     // * error
     // * failure

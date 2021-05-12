@@ -152,12 +152,7 @@ export class TestResultDisplay implements ITestResultDisplay {
     @captureTelemetry(EventName.UNITTEST_DISABLE)
     private async disableTests(): Promise<any> {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const settingsToDisable = [
-            'testing.promptToConfigure',
-            'testing.pytestEnabled',
-            'testing.unittestEnabled',
-            'testing.nosetestsEnabled',
-        ];
+        const settingsToDisable = ['testing.promptToConfigure', 'testing.pytestEnabled', 'testing.unittestEnabled'];
 
         for (const setting of settingsToDisable) {
             await configurationService.updateSetting(setting, false).catch(noop);

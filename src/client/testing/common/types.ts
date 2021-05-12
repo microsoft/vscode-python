@@ -21,7 +21,7 @@ import { TestProvider } from '../types';
 import { TestSettingsPropertyNames } from '../configuration/types';
 import { CommandSource } from '../../common/constants';
 
-export type UnitTestProduct = Product.nosetest | Product.pytest | Product.unittest;
+export type UnitTestProduct = Product.pytest | Product.unittest;
 
 // ****************
 // test args/options

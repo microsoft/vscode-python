@@ -15,7 +15,7 @@ import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from '../process/internal/python';
 import { ITerminalServiceFactory, TerminalCreationOptions } from '../terminal/types';
-import { ExecutionInfo, IConfigurationService, IOutputChannel, ModuleNamePurpose, Product } from '../types';
+import { ExecutionInfo, IConfigurationService, IOutputChannel, Product } from '../types';
 import { Products } from '../utils/localize';
 import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
@@ -39,7 +39,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         const name =
             typeof productOrModuleName == 'string'
                 ? productOrModuleName
-                : translateProductToModule(productOrModuleName, ModuleNamePurpose.install);
+                : translateProductToModule(productOrModuleName);
         const productName = typeof productOrModuleName === 'string' ? name : ProductNames.get(productOrModuleName);
         sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName, productName });
         const uri = isResource(resource) ? resource : undefined;
@@ -153,13 +153,10 @@ export abstract class ModuleInstaller implements IModuleInstaller {
     }
 }
 
-export function translateProductToModule(product: Product, purpose: ModuleNamePurpose): string {
+export function translateProductToModule(product: Product): string {
     switch (product) {
         case Product.mypy:
             return 'mypy';
-        case Product.nosetest: {
-            return purpose === ModuleNamePurpose.install ? 'nose' : 'nosetests';
-        }
         case Product.pylama:
             return 'pylama';
         case Product.prospector:
