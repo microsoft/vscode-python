@@ -34,7 +34,7 @@ jobs:
 
       # Jedi LS depends on dataclasses which was a pypi install in 3.6
       - name: Use Python 3.6 for JediLSP
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: 3.6
 
@@ -80,7 +80,7 @@ jobs:
         run: npm run format-check
 
       - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
@@ -129,7 +129,7 @@ jobs:
         run: npx gulp prePublishNonBundle
 
       - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: ${{matrix.python}}
 
@@ -328,7 +328,7 @@ jobs:
           node-version: ${{env.NODE_VERSION}}
 
       - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: ${{matrix.python}}
 
@@ -394,7 +394,7 @@ jobs:
           node-version: ${{env.NODE_VERSION}}
 
       - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: ${{matrix.python}}
 
@@ -463,7 +463,7 @@ jobs:
         run: npx gulp prePublishNonBundle
 
       - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
