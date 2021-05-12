@@ -8,6 +8,7 @@ import {
     Event,
     EventEmitter,
     OutputChannel,
+    test,
     TextDocument,
     Uri,
 } from 'vscode';
@@ -49,6 +50,7 @@ import {
 } from './common/types';
 import { TEST_OUTPUT_CHANNEL } from './constants';
 import { ITestingService } from './types';
+import { PythonTestController } from './testController/controller';
 
 @injectable()
 export class TestingService implements ITestingService {
@@ -122,6 +124,10 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         this.autoDiscoverTests(undefined).catch((ex) =>
             traceError('Failed to auto discover tests upon activation', ex),
         );
+
+        if (test && test.registerTestController) {
+            this.disposableRegistry.push(test.registerTestController(new PythonTestController()));
+        }
     }
     public async getTestManager(
         displayTestNotConfiguredMessage: boolean,
