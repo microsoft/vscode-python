@@ -9,7 +9,6 @@ pylint
 pycodestyle
 pydocstyle
 prospector ; python_version > '2.7'
-nose
 pytest<6 ; python_version > '2.7'  # Tests currently fail against pytest 6.
 rope
 flask

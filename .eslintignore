@@ -117,9 +117,6 @@ src/test/testing/unittest/unittest.discovery.test.ts
 src/test/testing/unittest/unittest.run.test.ts
 src/test/testing/unittest/unittest.unit.test.ts
 src/test/testing/codeLenses/testFiles.unit.test.ts
-src/test/testing/nosetest/nosetest.test.ts
-src/test/testing/nosetest/nosetest.disovery.test.ts
-src/test/testing/nosetest/nosetest.run.test.ts
 src/test/testing/rediscover.test.ts
 src/test/testing/helper.ts
 src/test/testing/navigation/fileNavigator.unit.test.ts
@@ -402,12 +399,6 @@ src/client/testing/unittest/services/argsService.ts
 src/client/testing/unittest/services/discoveryService.ts
 src/client/testing/codeLenses/main.ts
 src/client/testing/codeLenses/testFiles.ts
-src/client/testing/nosetest/main.ts
-src/client/testing/nosetest/testConfigurationManager.ts
-src/client/testing/nosetest/runner.ts
-src/client/testing/nosetest/services/parserService.ts
-src/client/testing/nosetest/services/argsService.ts
-src/client/testing/nosetest/services/discoveryService.ts
 src/client/testing/main.ts
 src/client/testing/configurationFactory.ts
 src/client/testing/navigation/serviceRegistry.ts

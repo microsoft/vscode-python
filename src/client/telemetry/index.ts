@@ -1668,7 +1668,6 @@ export interface IEventNamePropertyMapping {
      * Values sent include:
      * unittest -   If this value is `true`, then unittest has been enabled by the user.
      * pytest   -   If this value is `true`, then pytest has been enabled by the user.
-     * nosetest -   If this value is `true`, then nose has been enabled by the user.
      * @type {(never | undefined)}
      * @memberof IEventNamePropertyMapping
      */

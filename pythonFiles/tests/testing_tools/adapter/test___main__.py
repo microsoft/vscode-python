@@ -111,8 +111,6 @@ class ParseDiscoverTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             parse_args(["discover", "unittest"])
         with self.assertRaises(SystemExit):
-            parse_args(["discover", "nose"])
-        with self.assertRaises(SystemExit):
             parse_args(["discover", "???"])
 
 
@@ -153,15 +151,6 @@ class MainTests(unittest.TestCase):
         with self.assertRaises(UnsupportedToolError):
             main(
                 "unittest",
-                "discover",
-                {"spam": "eggs"},
-                [],
-                _tools={"pytest": None},
-                _reporters=None,
-            )
-        with self.assertRaises(UnsupportedToolError):
-            main(
-                "nose",
                 "discover",
                 {"spam": "eggs"},
                 [],

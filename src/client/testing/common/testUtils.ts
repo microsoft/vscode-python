@@ -58,8 +58,6 @@ export class TestsHelper implements ITestsHelper {
     }
     public parseProviderName(product: UnitTestProduct): TestProvider {
         switch (product) {
-            case Product.nosetest:
-                return 'nosetest';
             case Product.pytest:
                 return 'pytest';
             case Product.unittest:
@@ -71,8 +69,6 @@ export class TestsHelper implements ITestsHelper {
     }
     public parseProduct(provider: TestProvider): UnitTestProduct {
         switch (provider) {
-            case 'nosetest':
-                return Product.nosetest;
             case 'pytest':
                 return Product.pytest;
             case 'unittest':
@@ -90,13 +86,6 @@ export class TestsHelper implements ITestsHelper {
                     argsName: 'pytestArgs' as keyof ITestingSettings,
                     pathName: 'pytestPath' as keyof ITestingSettings,
                     enabledName: 'pytestEnabled' as keyof ITestingSettings,
-                };
-            }
-            case 'nosetest': {
-                return {
-                    argsName: 'nosetestArgs' as keyof ITestingSettings,
-                    pathName: 'nosetestPath' as keyof ITestingSettings,
-                    enabledName: 'nosetestsEnabled' as keyof ITestingSettings,
                 };
             }
             case 'unittest': {

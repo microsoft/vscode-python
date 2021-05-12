@@ -110,7 +110,6 @@ import {
     IPersistentStateFactory,
     IRandom,
     IsWindows,
-    ModuleNamePurpose,
     Product,
     ProductType,
 } from '../../client/common/types';
@@ -306,7 +305,7 @@ suite('Installer', () => {
             .create()) as MockProcessService;
         const checkInstalledDef = createDeferred<boolean>();
         processService.onExec((_file, args, _options, callback) => {
-            const moduleName = installer.translateProductToModuleName(product, ModuleNamePurpose.run);
+            const moduleName = installer.translateProductToModuleName(product);
             // args[0] is pyvsc-run-isolated.py.
             if (args.length > 1 && args[1] === '-c' && args[2] === `import ${moduleName}`) {
                 checkInstalledDef.resolve(true);

@@ -384,12 +384,7 @@ suite('Unit Tests - TestResultDisplay', () => {
             .returns(() => Promise.resolve(Testing.disableTests()))
             .verifiable(typeMoq.Times.once());
 
-        for (const setting of [
-            'testing.promptToConfigure',
-            'testing.pytestEnabled',
-            'testing.unittestEnabled',
-            'testing.nosetestsEnabled',
-        ]) {
+        for (const setting of ['testing.promptToConfigure', 'testing.pytestEnabled', 'testing.unittestEnabled']) {
             configurationService
                 .setup((c) => c.updateSetting(typeMoq.It.isValue(setting), typeMoq.It.isValue(false)))
                 .returns(() => Promise.resolve())
