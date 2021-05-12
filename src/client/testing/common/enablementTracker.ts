@@ -30,7 +30,7 @@ export class EnablementTracker implements IExtensionSingleActivationService {
             this.workspaceService.workspaceFolders.forEach((item) => resourcesToCheck.push(item.uri));
         }
 
-        const testProviders: TestProvider[] = ['nosetest', 'pytest', 'unittest'];
+        const testProviders: TestProvider[] = ['pytest', 'unittest'];
         resourcesToCheck.forEach((resource) => {
             const telemetry: Partial<Record<TestProvider, undefined | boolean>> = {};
             testProviders.forEach((item) => {
@@ -46,7 +46,7 @@ export class EnablementTracker implements IExtensionSingleActivationService {
                 }
             });
             // If anyone of the items have been enabled, then send telemetry.
-            if (telemetry.nosetest || telemetry.pytest || telemetry.unittest) {
+            if (telemetry.pytest || telemetry.unittest) {
                 this.sendTelemetry(telemetry);
             }
         });

@@ -173,11 +173,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         const settings = this.serviceContainer
             .get<IConfigurationService>(IConfigurationService)
             .getSettings(workspaceUri);
-        if (
-            !settings.testing.nosetestsEnabled &&
-            !settings.testing.pytestEnabled &&
-            !settings.testing.unittestEnabled
-        ) {
+        if (!settings.testing.pytestEnabled && !settings.testing.unittestEnabled) {
             if (this.testResultDisplay) {
                 this.testResultDisplay.enabled = false;
             }
@@ -227,11 +223,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const settings = configurationService.getSettings(resource);
-        if (
-            !settings.testing.nosetestsEnabled &&
-            !settings.testing.pytestEnabled &&
-            !settings.testing.unittestEnabled
-        ) {
+        if (!settings.testing.pytestEnabled && !settings.testing.unittestEnabled) {
             return;
         }
 

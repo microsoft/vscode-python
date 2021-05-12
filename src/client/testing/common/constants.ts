@@ -4,8 +4,7 @@ import { UnitTestProduct } from './types';
 
 export const CANCELLATION_REASON = 'cancelled_user_request';
 
-export const UNIT_TEST_PRODUCTS: UnitTestProduct[] = [Product.pytest, Product.unittest, Product.nosetest];
-export const NOSETEST_PROVIDER: TestProvider = 'nosetest';
+export const UNIT_TEST_PRODUCTS: UnitTestProduct[] = [Product.pytest, Product.unittest];
 export const PYTEST_PROVIDER: TestProvider = 'pytest';
 export const UNITTEST_PROVIDER: TestProvider = 'unittest';
 

@@ -31,8 +31,6 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
                 return 'testing.unittestEnabled';
             case Product.pytest:
                 return 'testing.pytestEnabled';
-            case Product.nosetest:
-                return 'testing.nosetestsEnabled';
             default:
                 throw new Error('Invalid Test Product');
         }
@@ -43,8 +41,6 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
                 return 'testing.unittestArgs';
             case Product.pytest:
                 return 'testing.pytestArgs';
-            case Product.nosetest:
-                return 'testing.nosetestArgs';
             default:
                 throw new Error('Invalid Test Product');
         }

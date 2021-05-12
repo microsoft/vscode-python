@@ -1288,27 +1288,6 @@
                     "scope": "resource",
                     "type": "number"
                 },
-                "python.testing.nosetestArgs": {
-                    "default": [],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
-                    "items": {
-                        "type": "string"
-                    },
-                    "scope": "resource",
-                    "type": "array"
-                },
-                "python.testing.nosetestPath": {
-                    "default": "nosetests",
-                    "description": "Path to nosetests, you can use a custom version of nosetests by modifying this setting to include the full path.",
-                    "scope": "resource",
-                    "type": "string"
-                },
-                "python.testing.nosetestsEnabled": {
-                    "default": false,
-                    "description": "Enable testing using nosetests.",
-                    "scope": "resource",
-                    "type": "boolean"
-                },
                 "python.testing.promptToConfigure": {
                     "default": true,
                     "description": "Prompt to configure a test framework if potential tests directories are discovered.",

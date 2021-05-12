@@ -24,7 +24,6 @@ import {
     IOutputChannel,
     IPersistentStateFactory,
     ProductInstallStatus,
-    ModuleNamePurpose,
     Product,
     ProductType,
 } from '../types';
@@ -467,7 +466,7 @@ export class DataScienceInstaller extends BaseInstaller {
             .getInstallationChannels(interpreter);
 
         // Pick an installerModule based on whether the interpreter is conda or not. Default is pip.
-        const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
+        const moduleName = translateProductToModule(product);
 
         const isAvailableThroughConda = !UnsupportedChannelsForProduct.get(product)?.has(EnvironmentType.Conda);
         let requiredInstaller = ModuleInstallerType.Unknown;
@@ -604,8 +603,8 @@ export class ProductInstaller implements IInstaller {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string {
-        return translateProductToModule(product, purpose);
+    public translateProductToModuleName(product: Product): string {
+        return translateProductToModule(product);
     }
 
     private createInstaller(product: Product): BaseInstaller {

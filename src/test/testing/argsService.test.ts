@@ -13,7 +13,6 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { ArgumentsHelper } from '../../client/testing/common/argumentsHelper';
 import { UNIT_TEST_PRODUCTS } from '../../client/testing/common/constants';
 import { IArgumentsHelper, IArgumentsService } from '../../client/testing/common/types';
-import { ArgumentsService as NoseTestArgumentsService } from '../../client/testing/nosetest/services/argsService';
 import { ArgumentsService as PyTestArgumentsService } from '../../client/testing/pytest/services/argsService';
 import { ArgumentsService as UnitTestArgumentsService } from '../../client/testing/unittest/services/argsService';
 import { PYTHON_PATH } from '../common';
@@ -45,11 +44,6 @@ suite('ArgsService: Common', () => {
                     case Product.unittest: {
                         argumentsService = new UnitTestArgumentsService(serviceContainer.object);
                         moduleName = 'unittest';
-                        break;
-                    }
-                    case Product.nosetest: {
-                        argumentsService = new NoseTestArgumentsService(serviceContainer.object);
-                        moduleName = 'nose';
                         break;
                     }
                     case Product.pytest: {

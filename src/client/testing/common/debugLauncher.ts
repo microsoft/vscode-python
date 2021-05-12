@@ -212,8 +212,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             case 'unittest': {
                 return internalScripts.visualstudio_py_testlauncher;
             }
-            case 'pytest':
-            case 'nosetest': {
+            case 'pytest': {
                 return internalScripts.testlauncher;
             }
             default: {
