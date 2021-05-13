@@ -45,3 +45,11 @@ enum ColumnType {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type IRowsResponse = any[];
+
+// Note: While #16102 is being worked on, this enum will be updated as we add ways to display this notification.
+export enum JupyterNotInstalledOrigin {
+    StartPageCreateBlankNotebook = 'startpage_create_blank_notebook',
+    StartPageCreateJupyterNotebook = 'startpage_create_jupyter_notebook',
+    StartPageCreateSampleNotebook = 'startpage_sample_notebook',
+    StartPageUseInteractiveWindow = 'startpage_use_interactive_window',
+}

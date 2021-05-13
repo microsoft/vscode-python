@@ -27,6 +27,7 @@ import {
 import { TestProvider } from '../testing/types';
 import { EventName, PlatformErrors } from './constants';
 import type { LinterTrigger, TestTool } from './types';
+import { JupyterNotInstalledOrigin } from '../jupyter/types';
 
 /**
  * Checks whether telemetry is supported.
@@ -1754,20 +1755,12 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the notification about the Jupyter extension not being installed is displayed.
      * Since this notification will only be displayed after an action that requires the Jupyter extension,
      * the telemetry event will include the action the user took, under the `entrypoint` property.
-     *
-     * Note: While #16102 is being worked on, the `entrypoint` enum will be updated as we add ways to display this notification.
      */
     [EventName.JUPYTER_NOT_INSTALLED_NOTIFICATION_DISPLAYED]: {
         /**
          * Action that the user took to trigger the notification.
-         *
-         * Note: While #16102 is being worked on, this enum will be updated as we add ways to display this notification.
          */
-        entrypoint:
-            | 'startpage_create_blank_notebook'
-            | 'startpage_create_jupyter_notebook'
-            | 'startpage_sample_notebook'
-            | 'startpage_use_interactive_window';
+        entrypoint: JupyterNotInstalledOrigin;
     };
 
     /**
@@ -1778,9 +1771,9 @@ export interface IEventNamePropertyMapping {
          * Action selected by the user in response to the notification: install Jupyter,
          * close the notification using the close button, or "Do not show again".
          *
-         * @type {('install' | 'closed' | 'do_not_show_again')}
+         * @type {('Install' | 'Do not show again' | undefined)}
          */
-        action: 'install' | 'closed' | 'do_not_show_again';
+        selection: 'Install' | 'Do not show again' | undefined;
     };
 
     [Telemetry.WebviewStyleUpdate]: never | undefined;
