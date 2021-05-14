@@ -250,9 +250,10 @@ export class LanguageServerExtensionActivationService
             }
         }
 
-        // If "Pylance" was explicitly chosen, use it even though it's not guaranteed to work
-        // properly with Python 2.
-        if (!this.getCurrentLanguageServerTypeIsDefault()) {
+        // If Pylance was chosen via the default and the interpreter is Python 2, fall back to
+        // Jedi. If Pylance was explicitly chosen, continue anyway, even if Pylance won't work
+        // as expected, matching pre-default behavior.
+        if (this.getCurrentLanguageServerTypeIsDefault()) {
             if (serverType === LanguageServerType.Node && interpreter && interpreter.version) {
                 if (interpreter.version.major < 3) {
                     sendTelemetryEvent(EventName.JEDI_FALLBACK);
