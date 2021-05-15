@@ -29,6 +29,7 @@ import { BaseFormatter } from '../../client/formatters/baseFormatter';
 import { BlackFormatter } from '../../client/formatters/blackFormatter';
 import { FormatterHelper } from '../../client/formatters/helper';
 import { IFormatterHelper } from '../../client/formatters/types';
+import { UfmtFormatter } from '../../client/formatters/ufmtFormatter';
 import { YapfFormatter } from '../../client/formatters/yapfFormatter';
 import { ServiceContainer } from '../../client/ioc/container';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -50,6 +51,8 @@ suite('Formatting - Test Arguments', () => {
         autopep8Path: path.join('a', 'exe'),
         blackArgs: ['1', '2'],
         blackPath: path.join('a', 'exe'),
+        ufmtArgs: ['1', '2'],
+        ufmtPath: path.join('a', 'exe'),
         provider: '',
         yapfArgs: ['1', '2'],
         yapfPath: path.join('a', 'exe'),
@@ -60,6 +63,8 @@ suite('Formatting - Test Arguments', () => {
         autopep8Path: 'module_name',
         blackArgs: ['1', '2'],
         blackPath: 'module_name',
+        ufmtArgs: ['1', '2'],
+        ufmtPath: 'module_name',
         provider: '',
         yapfArgs: ['1', '2'],
         yapfPath: 'module_name',
@@ -144,7 +149,7 @@ suite('Formatting - Test Arguments', () => {
         assert.equal(execInfo.moduleName, undefined);
         assert.deepEqual(execInfo.args, formattingSettingsWithPath.autopep8Args.concat(['--diff', docUri.fsPath]));
     });
-    test('Ensure autpep8 modulename and args used to launch the formatter', async () => {
+    test('Ensure autopep8 modulename and args used to launch the formatter', async () => {
         const formatter = new AutoPep8Formatter(instance(container));
 
         const execInfo = await setupFormatter(formatter, formattingSettingsWithModuleName);
@@ -152,6 +157,30 @@ suite('Formatting - Test Arguments', () => {
         assert.equal(execInfo.execPath, formattingSettingsWithModuleName.autopep8Path);
         assert.equal(execInfo.moduleName, formattingSettingsWithModuleName.autopep8Path);
         assert.deepEqual(execInfo.args, formattingSettingsWithPath.autopep8Args.concat(['--diff', docUri.fsPath]));
+    });
+    test('Ensure ufmtPath and args used to launch the formatter', async () => {
+        const formatter = new UfmtFormatter(instance(container));
+
+        const execInfo = await setupFormatter(formatter, formattingSettingsWithPath);
+
+        assert.equal(execInfo.execPath, formattingSettingsWithPath.ufmtPath);
+        assert.equal(execInfo.moduleName, undefined);
+        assert.deepEqual(
+            execInfo.args,
+            formattingSettingsWithPath.ufmtArgs.concat(['diff', docUri.fsPath]),
+        );
+    });
+    test('Ensure ufmt modulename and args used to launch the formatter', async () => {
+        const formatter = new UfmtFormatter(instance(container));
+
+        const execInfo = await setupFormatter(formatter, formattingSettingsWithModuleName);
+
+        assert.equal(execInfo.execPath, formattingSettingsWithModuleName.ufmtPath);
+        assert.equal(execInfo.moduleName, formattingSettingsWithModuleName.ufmtPath);
+        assert.deepEqual(
+            execInfo.args,
+            formattingSettingsWithPath.ufmtArgs.concat(['diff', docUri.fsPath]),
+        );
     });
     test('Ensure yapfpath and args used to launch the formatter', async () => {
         const formatter = new YapfFormatter(instance(container));

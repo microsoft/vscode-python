@@ -9,6 +9,7 @@ import { CancellationTokenSource, Position, Uri, window, workspace } from 'vscod
 import { IProcessServiceFactory } from '../../client/common/process/types';
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { BlackFormatter } from '../../client/formatters/blackFormatter';
+import { UfmtFormatter } from '../../client/formatters/ufmtFormatter';
 import { YapfFormatter } from '../../client/formatters/yapfFormatter';
 import { isPythonVersionInProcess } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
@@ -26,11 +27,14 @@ const autoPep8FileToFormat = path.join(formatFilesPath, 'autoPep8FileToFormat.py
 const autoPep8Formatted = path.join(formatFilesPath, 'autoPep8Formatted.py');
 const blackFileToFormat = path.join(formatFilesPath, 'blackFileToFormat.py');
 const blackFormatted = path.join(formatFilesPath, 'blackFormatted.py');
+const ufmtFileToFormat = path.join(formatFilesPath, 'ufmtFileToFormat.py');
+const ufmtFormatted = path.join(formatFilesPath, 'ufmtFormatted.py');
 const yapfFileToFormat = path.join(formatFilesPath, 'yapfFileToFormat.py');
 const yapfFormatted = path.join(formatFilesPath, 'yapfFormatted.py');
 
 let formattedYapf = '';
 let formattedBlack = '';
+let formattedUfmt = '';
 let formattedAutoPep8 = '';
 
 suite('Formatting - General', () => {
@@ -43,15 +47,23 @@ suite('Formatting - General', () => {
         return this.skip();
         await initialize();
         await initializeDI();
-        [autoPep8FileToFormat, blackFileToFormat, yapfFileToFormat].forEach((file) => {
+        [autoPep8FileToFormat, blackFileToFormat, ufmtFileToFormat, yapfFileToFormat].forEach((file) => {
             fs.copySync(originalUnformattedFile, file, { overwrite: true });
         });
         formattedYapf = fs.readFileSync(yapfFormatted).toString();
         formattedAutoPep8 = fs.readFileSync(autoPep8Formatted).toString();
         formattedBlack = fs.readFileSync(blackFormatted).toString();
+        formattedUfmt = fs.readFileSync(ufmtFormatted).toString();
     });
 
     async function formattingTestIsBlackSupported(): Promise<boolean> {
+        const processService = await ioc.serviceContainer
+            .get<IProcessServiceFactory>(IProcessServiceFactory)
+            .create(Uri.file(workspaceRootPath));
+        return !(await isPythonVersionInProcess(processService, '2', '3.0', '3.1', '3.2', '3.3', '3.4', '3.5'));
+    }
+
+    async function formattingTestIsUfmtSupported(): Promise<boolean> {
         const processService = await ioc.serviceContainer
             .get<IProcessServiceFactory>(IProcessServiceFactory)
             .create(Uri.file(workspaceRootPath));
@@ -63,7 +75,7 @@ suite('Formatting - General', () => {
         await initializeDI();
     });
     suiteTeardown(async () => {
-        [autoPep8FileToFormat, blackFileToFormat, yapfFileToFormat].forEach((file) => {
+        [autoPep8FileToFormat, blackFileToFormat, ufmtFileToFormat, yapfFileToFormat].forEach((file) => {
             if (fs.existsSync(file)) {
                 fs.unlinkSync(file);
             }
@@ -105,7 +117,7 @@ suite('Formatting - General', () => {
     }
 
     async function testFormatting(
-        formatter: AutoPep8Formatter | BlackFormatter | YapfFormatter,
+        formatter: AutoPep8Formatter | BlackFormatter | UfmtFormatter | YapfFormatter,
         formattedContents: string,
         fileToFormat: string,
         outputFileName: string,
@@ -154,6 +166,24 @@ suite('Formatting - General', () => {
             'black.output',
         );
     });
+
+    test('Ufmt', async function () {
+        // https://github.com/microsoft/vscode-python/issues/12564
+
+        return this.skip();
+        if (!(await formattingTestIsUfmtSupported())) {
+            // Skip for versions of python below 3.6, as ufmt doesn't support them at all.
+
+            return this.skip();
+        }
+        await testFormatting(
+            new UfmtFormatter(ioc.serviceContainer),
+            formattedUfmt,
+            ufmtFileToFormat,
+            'ufmt.output',
+        );
+    });
+
     test('Yapf', async () =>
         testFormatting(new YapfFormatter(ioc.serviceContainer), formattedYapf, yapfFileToFormat, 'yapf.output'));
 

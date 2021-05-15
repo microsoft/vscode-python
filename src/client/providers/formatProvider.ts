@@ -10,6 +10,7 @@ import { AutoPep8Formatter } from './../formatters/autoPep8Formatter';
 import { BaseFormatter } from './../formatters/baseFormatter';
 import { BlackFormatter } from './../formatters/blackFormatter';
 import { DummyFormatter } from './../formatters/dummyFormatter';
+import { UfmtFormatter } from './../formatters/ufmtFormatter';
 import { YapfFormatter } from './../formatters/yapfFormatter';
 
 export class PythonFormattingEditProvider
@@ -30,9 +31,11 @@ export class PythonFormattingEditProvider
         const yapfFormatter = new YapfFormatter(serviceContainer);
         const autoPep8 = new AutoPep8Formatter(serviceContainer);
         const black = new BlackFormatter(serviceContainer);
+        const ufmt = new UfmtFormatter(serviceContainer);
         const dummy = new DummyFormatter(serviceContainer);
         this.formatters.set(yapfFormatter.Id, yapfFormatter);
         this.formatters.set(black.Id, black);
+        this.formatters.set(ufmt.Id, ufmt);
         this.formatters.set(autoPep8.Id, autoPep8);
         this.formatters.set(dummy.Id, dummy);
 

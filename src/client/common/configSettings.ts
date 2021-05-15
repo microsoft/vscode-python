@@ -448,6 +448,8 @@ export class PythonSettings implements IPythonSettings {
                   provider: 'autopep8',
                   blackArgs: [],
                   blackPath: 'black',
+                  ufmtArgs: [],
+                  ufmtPath: 'ufmt',
                   yapfArgs: [],
                   yapfPath: 'yapf',
               };
@@ -458,6 +460,10 @@ export class PythonSettings implements IPythonSettings {
         this.formatting.yapfPath = getAbsolutePath(systemVariables.resolveAny(this.formatting.yapfPath), workspaceRoot);
         this.formatting.blackPath = getAbsolutePath(
             systemVariables.resolveAny(this.formatting.blackPath),
+            workspaceRoot,
+        );
+        this.formatting.ufmtPath = getAbsolutePath(
+            systemVariables.resolveAny(this.formatting.ufmtPath),
             workspaceRoot,
         );
 

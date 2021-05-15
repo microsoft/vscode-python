@@ -17,6 +17,8 @@ export class FormatterHelper implements IFormatterHelper {
                 return 'autopep8';
             case Product.black:
                 return 'black';
+            case Product.ufmt:
+                return 'ufmt';
             case Product.yapf:
                 return 'yapf';
             default: {

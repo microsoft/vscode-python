@@ -203,6 +203,8 @@ export function translateProductToModule(product: Product, purpose: ModuleNamePu
             return 'torch-tb-profiler';
         case Product.torchProfilerImportName:
             return 'torch_tb_profiler';
+        case Product.ufmt:
+            return 'ufmt';
         default: {
             throw new Error(`Product ${product} cannot be installed as a Python Module.`);
         }

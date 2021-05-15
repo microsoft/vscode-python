@@ -16,6 +16,7 @@ ProductNames.set(Product.prospector, 'prospector');
 ProductNames.set(Product.pydocstyle, 'pydocstyle');
 ProductNames.set(Product.pylint, 'pylint');
 ProductNames.set(Product.pytest, 'pytest');
+ProductNames.set(Product.ufmt, 'ufmt');
 ProductNames.set(Product.yapf, 'yapf');
 ProductNames.set(Product.rope, 'rope');
 ProductNames.set(Product.tensorboard, 'tensorboard');

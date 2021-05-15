@@ -24,7 +24,7 @@ suite('Formatting - Helper', () => {
     });
 
     test('Ensure product is set in Execution Info', async () => {
-        [Product.autopep8, Product.black, Product.yapf].forEach((formatter) => {
+        [Product.autopep8, Product.black, Product.ufmt, Product.yapf].forEach((formatter) => {
             const info = formatHelper.getExecutionInfo(formatter, []);
             assert.equal(info.product, formatter, `Incorrect products for ${formatHelper.translateToId(formatter)}`);
         });
@@ -33,7 +33,7 @@ suite('Formatting - Helper', () => {
     test('Ensure executable is set in Execution Info', async () => {
         const settings = getExtensionSettings(undefined);
 
-        [Product.autopep8, Product.black, Product.yapf].forEach((formatter) => {
+        [Product.autopep8, Product.black, Product.ufmt, Product.yapf].forEach((formatter) => {
             const info = formatHelper.getExecutionInfo(formatter, []);
             const names = formatHelper.getSettingsPropertyNames(formatter);
             const execPath = settings.formatting[names.pathName] as string;
@@ -50,7 +50,7 @@ suite('Formatting - Helper', () => {
         const settings = getExtensionSettings(undefined);
         const customArgs = ['1', '2', '3'];
 
-        [Product.autopep8, Product.black, Product.yapf].forEach((formatter) => {
+        [Product.autopep8, Product.black, Product.ufmt, Product.yapf].forEach((formatter) => {
             const names = formatHelper.getSettingsPropertyNames(formatter);
             const args: string[] = Array.isArray(settings.formatting[names.argsName])
                 ? (settings.formatting[names.argsName] as string[])
@@ -66,7 +66,7 @@ suite('Formatting - Helper', () => {
     });
 
     test('Ensure correct setting names are returned', async () => {
-        [Product.autopep8, Product.black, Product.yapf].forEach((formatter) => {
+        [Product.autopep8, Product.black, Product.ufmt, Product.yapf].forEach((formatter) => {
             const translatedId = formatHelper.translateToId(formatter)!;
             const settings = {
                 argsName: `${translatedId}Args` as keyof IFormattingSettings,
@@ -85,9 +85,10 @@ suite('Formatting - Helper', () => {
         const formatterMapping = new Map<Product, FormatterId>();
         formatterMapping.set(Product.autopep8, 'autopep8');
         formatterMapping.set(Product.black, 'black');
+        formatterMapping.set(Product.ufmt, 'ufmt');
         formatterMapping.set(Product.yapf, 'yapf');
 
-        [Product.autopep8, Product.black, Product.yapf].forEach((formatter) => {
+        [Product.autopep8, Product.black, Product.ufmt, Product.yapf].forEach((formatter) => {
             const translatedId = formatHelper.translateToId(formatter);
             assert.equal(
                 translatedId,
@@ -101,6 +102,7 @@ suite('Formatting - Helper', () => {
         const formatterMapping = new Map<Product, FormatterId>();
         formatterMapping.set(Product.autopep8, 'autopep8');
         formatterMapping.set(Product.black, 'black');
+        formatterMapping.set(Product.ufmt, 'ufmt');
         formatterMapping.set(Product.yapf, 'yapf');
         if (formatterMapping.has(product)) {
             return;

@@ -108,6 +108,7 @@ export enum Product {
     tensorboard = 24,
     torchProfilerInstallName = 25,
     torchProfilerImportName = 26,
+    ufmt = 27,
 }
 
 export enum ModuleNamePurpose {
@@ -284,6 +285,8 @@ export interface IFormattingSettings {
     readonly autopep8Args: string[];
     blackPath: string;
     readonly blackArgs: string[];
+    ufmtPath: string;
+    readonly ufmtArgs: string[];
     yapfPath: string;
     readonly yapfArgs: string[];
 }

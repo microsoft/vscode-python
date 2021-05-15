@@ -751,7 +751,7 @@ export interface IEventNamePropertyMapping {
         /**
          * Tool being used to format
          */
-        tool: 'autopep8' | 'black' | 'yapf';
+        tool: 'autopep8' | 'black' | 'ufmt' | 'yapf';
         /**
          * If arguments for formatter is provided in resource settings
          */

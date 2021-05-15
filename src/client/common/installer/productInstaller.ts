@@ -274,7 +274,7 @@ export class FormatterInstaller extends BaseInstaller {
     ): Promise<InstallerResponse> {
         // Hard-coded on purpose because the UI won't necessarily work having
         // another formatter.
-        const formatters = [Product.autopep8, Product.black, Product.yapf];
+        const formatters = [Product.autopep8, Product.black, Product.ufmt, Product.yapf];
         const formatterNames = formatters.map((formatter) => ProductNames.get(formatter)!);
         const productName = ProductNames.get(product)!;
         formatterNames.splice(formatterNames.indexOf(productName), 1);
