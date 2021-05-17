@@ -77,32 +77,17 @@ gulp.task('webpack', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
 });
 
-gulp.task('addExtensionDependencies', async () => {
-    await addExtensionDependencies();
-});
-
 gulp.task('addExtensionPackDependencies', async () => {
     await buildLicense();
     await addExtensionPackDependencies();
 });
-
-async function addExtensionDependencies() {
-    // Update the package.json to add extension dependencies at build time so that
-    // extension dependencies need not be installed during development
-    const packageJsonContents = await fsExtra.readFile('package.json', 'utf-8');
-    const packageJson = JSON.parse(packageJsonContents);
-    packageJson.extensionDependencies = ['ms-toolsai.jupyter'].concat(
-        packageJson.extensionDependencies ? packageJson.extensionDependencies : [],
-    );
-    await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
-}
 
 async function addExtensionPackDependencies() {
     // Update the package.json to add extension pack dependencies at build time so that
     // extension dependencies need not be installed during development
     const packageJsonContents = await fsExtra.readFile('package.json', 'utf-8');
     const packageJson = JSON.parse(packageJsonContents);
-    packageJson.extensionPack = ['ms-python.vscode-pylance'].concat(
+    packageJson.extensionPack = ['ms-toolsai.jupyter', 'ms-python.vscode-pylance'].concat(
         packageJson.extensionPack ? packageJson.extensionPack : [],
     );
     await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
