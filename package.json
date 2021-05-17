@@ -9,7 +9,8 @@
     "capabilities": {
         "untrustedWorkspaces": {
             "supported": false
-        }
+        },
+        "virtualWorkspaces": false
     },
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
