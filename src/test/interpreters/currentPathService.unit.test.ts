@@ -4,7 +4,6 @@
 'use strict';
 
 import { expect } from 'chai';
-import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
@@ -26,9 +25,6 @@ import {
     PythonInPathCommandProvider,
 } from '../../client/pythonEnvironments/discovery/locators/services/currentPathService';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
-
-const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
 
 suite('Interpreters CurrentPath Service', () => {
     let processService: TypeMoq.IMock<IProcessService>;
@@ -100,7 +96,7 @@ suite('Interpreters CurrentPath Service', () => {
                 .setup((v) => v.getInterpreterInformation(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve({ version }));
 
-            const execArgs = [isolated, '-c', 'import sys;print(sys.executable)'];
+            const execArgs = ['-c', 'import sys;print(sys.executable)'];
             pythonSettings.setup((p) => p.pythonPath).returns(() => 'root:Python');
             processService
                 .setup((p) =>
