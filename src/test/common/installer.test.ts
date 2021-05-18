@@ -307,8 +307,7 @@ suite('Installer', () => {
         const checkInstalledDef = createDeferred<boolean>();
         processService.onExec((_file, args, _options, callback) => {
             const moduleName = installer.translateProductToModuleName(product, ModuleNamePurpose.run);
-            // args[0] is pyvsc-run-isolated.py.
-            if (args.length > 1 && args[1] === '-c' && args[2] === `import ${moduleName}`) {
+            if (args.length > 1 && args[0] === '-c' && args[1] === `import ${moduleName}`) {
                 checkInstalledDef.resolve(true);
             }
             callback({ stdout: '' });
