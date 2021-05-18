@@ -1863,12 +1863,6 @@
                     "description": "Enable auto run test discovery when saving a test file.",
                     "scope": "resource"
                 },
-                "python.useIsolation": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Execute tools in isolation from the workspace.",
-                    "scope": "machine"
-                },
                 "python.venvFolders": {
                     "type": "array",
                     "default": [],
