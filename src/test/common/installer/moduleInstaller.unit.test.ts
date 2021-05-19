@@ -371,6 +371,7 @@ suite('Module Installer', () => {
                                                 const proxyArgs =
                                                     proxyServer.length === 0 ? [] : ['--proxy', proxyServer];
                                                 const expectedArgs = [
+                                                    '-m',
                                                     'pip',
                                                     ...proxyArgs,
                                                     'install',
@@ -412,7 +413,14 @@ suite('Module Installer', () => {
                                                 setActiveInterpreter(interpreterInfo);
                                                 const proxyArgs =
                                                     proxyServer.length === 0 ? [] : ['--proxy', proxyServer];
-                                                const expectedArgs = ['pip', ...proxyArgs, 'install', '-U', 'pylint'];
+                                                const expectedArgs = [
+                                                    '-m',
+                                                    'pip',
+                                                    ...proxyArgs,
+                                                    'install',
+                                                    '-U',
+                                                    'pylint',
+                                                ];
                                                 await installModuleAndVerifyCommand(pythonPath, expectedArgs);
                                             });
                                         }
@@ -467,7 +475,7 @@ suite('Module Installer', () => {
                                         } catch (ex) {
                                             noop();
                                         }
-                                        const args = ['executionInfo'];
+                                        const args = ['-m', 'executionInfo'];
                                         assert.ok(elevatedInstall.calledOnceWith(pythonPath, args));
                                         interpreterService.verifyAll();
                                     });
@@ -482,7 +490,7 @@ suite('Module Installer', () => {
                                         fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
                                             Promise.resolve(false),
                                         );
-                                        const args = ['executionInfo'];
+                                        const args = ['-m', 'executionInfo'];
                                         terminalService
                                             .setup((t) => t.sendCommand(pythonPath, args, undefined))
                                             .returns(() => Promise.resolve())
@@ -503,7 +511,7 @@ suite('Module Installer', () => {
                                         info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
                                         setActiveInterpreter(info.object);
                                         pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => false);
-                                        const args = ['executionInfo', '--user'];
+                                        const args = ['-m', 'executionInfo', '--user'];
                                         terminalService
                                             .setup((t) => t.sendCommand(pythonPath, args, undefined))
                                             .returns(() => Promise.resolve())
@@ -539,7 +547,7 @@ suite('Module Installer', () => {
                                         } catch (ex) {
                                             noop();
                                         }
-                                        const args = ['executionInfo'];
+                                        const args = ['-m', 'executionInfo'];
                                         assert.ok(elevatedInstall.calledOnceWith(pythonPath, args));
                                         interpreterService.verifyAll();
                                     });
@@ -584,7 +592,7 @@ suite('Module Installer', () => {
                                 test(`Test Args (${product.name})`, async () => {
                                     setActiveInterpreter();
                                     const proxyArgs = proxyServer.length === 0 ? [] : ['--proxy', proxyServer];
-                                    const expectedArgs = ['pip', ...proxyArgs, 'install', '-U', moduleName];
+                                    const expectedArgs = ['-m', 'pip', ...proxyArgs, 'install', '-U', moduleName];
                                     await installModuleAndVerifyCommand(pythonPath, expectedArgs);
                                     interpreterService.verifyAll();
                                 });
