@@ -46,7 +46,7 @@ suite('PythonProcessService', () => {
     test('execModuleObservable should call processService.execObservable with the -m argument', () => {
         const args = ['-a', 'b', '-c'];
         const moduleName = 'foo';
-        const expectedArgs = [moduleName, ...args];
+        const expectedArgs = ['-m', moduleName, ...args];
         const options = {};
         const observable = {
             proc: undefined,
@@ -83,7 +83,7 @@ suite('PythonProcessService', () => {
     test('execModule should call processService.exec with the -m argument', async () => {
         const args = ['-a', 'b', '-c'];
         const moduleName = 'foo';
-        const expectedArgs = [moduleName, ...args];
+        const expectedArgs = ['-m', moduleName, ...args];
         const options = {};
         const stdout = 'bar';
         processService
@@ -101,7 +101,7 @@ suite('PythonProcessService', () => {
     test('execModule should throw an error if the module is not installed', async () => {
         const args = ['-a', 'b', '-c'];
         const moduleName = 'foo';
-        const expectedArgs = [moduleName, ...args];
+        const expectedArgs = ['-m', moduleName, ...args];
         const options = {};
         processService
             .setup((p) => p.exec(pythonPath, expectedArgs, options))
