@@ -48,7 +48,6 @@ import { setExtensionInstallTelemetryProperties } from './telemetry/extensionIns
 import { registerTypes as tensorBoardRegisterTypes } from './tensorBoard/serviceRegistry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
-import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from './testing/navigation/types';
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
 import { ITestingService } from './testing/types';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
@@ -165,8 +164,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
 
     serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
-    serviceContainer.get<ITestCodeNavigatorCommandHandler>(ITestCodeNavigatorCommandHandler).register();
-    serviceContainer.get<ITestExplorerCommandHandler>(ITestExplorerCommandHandler).register();
     serviceContainer.get<ILanguageServerExtension>(ILanguageServerExtension).register();
     serviceContainer.get<ITestingService>(ITestingService).register();
 

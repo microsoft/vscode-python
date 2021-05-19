@@ -31,7 +31,6 @@ import {
     ITestConfigurationManagerFactory,
     ITestConfigurationService,
     ITestContextService,
-    ITestDataItemResource,
     ITestDebugLauncher,
     ITestDiagnosticService,
     ITestDiscoveryService,
@@ -49,7 +48,6 @@ import {
     ITestsHelper,
     ITestsParser,
     ITestsStatusUpdaterService,
-    ITestTreeViewProvider,
     ITestVisitor,
     IUnitTestHelper,
     IUnitTestSocketServer,
@@ -62,12 +60,7 @@ import { UnitTestConfigurationService } from './configuration';
 import { TestConfigurationManagerFactory } from './configurationFactory';
 import { TestResultDisplay } from './display/main';
 import { TestDisplay } from './display/picker';
-import { TestExplorerCommandHandler } from './explorer/commandHandlers';
-import { FailedTestHandler } from './explorer/failedTestHandler';
-import { TestTreeViewProvider } from './explorer/testTreeViewProvider';
 import { TestingService, UnitTestManagementService } from './main';
-import { registerTypes as registerNavigationTypes } from './navigation/serviceRegistry';
-import { ITestExplorerCommandHandler } from './navigation/types';
 import { TestManager as PyTestTestManager } from './pytest/main';
 import { TestManagerRunner as PytestManagerRunner } from './pytest/runner';
 import { ArgumentsService as PyTestArgumentsService } from './pytest/services/argsService';
@@ -83,7 +76,6 @@ import { TestsParser as UnitTestTestsParser } from './unittest/services/parserSe
 import { UnitTestSocketServer } from './unittest/socketServer';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    registerNavigationTypes(serviceManager);
     serviceManager.addSingleton<ITestDebugLauncher>(ITestDebugLauncher, DebugLauncher);
     serviceManager.addSingleton<ITestCollectionStorageService>(
         ITestCollectionStorageService,
@@ -135,13 +127,6 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<ITestDiagnosticService>(ITestDiagnosticService, UnitTestDiagnosticService);
     serviceManager.addSingleton<ITestMessageService>(ITestMessageService, TestMessageService, PYTEST_PROVIDER);
-    serviceManager.addSingleton<ITestTreeViewProvider>(ITestTreeViewProvider, TestTreeViewProvider);
-    serviceManager.addSingleton<ITestDataItemResource>(ITestDataItemResource, TestTreeViewProvider);
-    serviceManager.addSingleton<ITestExplorerCommandHandler>(ITestExplorerCommandHandler, TestExplorerCommandHandler);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        FailedTestHandler,
-    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         EnablementTracker,
