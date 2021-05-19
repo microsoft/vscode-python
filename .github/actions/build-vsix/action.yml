@@ -44,11 +44,7 @@ runs:
       run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
       shell: bash
 
-    - name: Update extension dependencies
-      run: npm run addExtensionDependencies
-      shell: bash
-
-    - name: Update Optional extension dependencies
+    - name: Update optional extension dependencies
       run: npm run addExtensionPackDependencies
       shell: bash
 
