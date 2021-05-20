@@ -46,7 +46,6 @@
     "Experiments.inGroup": "使用者屬於 \"{0}\" 實驗性群組",
     "Interpreters.RefreshingInterpreters": "正在重新整理 Python 解譯器",
     "Interpreters.LoadingInterpreters": "正在載入 Python 解譯器",
-    "Interpreters.condaInheritEnvMessage": "我們發覺到您在使用 conda 環境。如果你在整合式終端器中使用這個環境時遇到問題，建議您讓 Python 延伸模組變更使用者設定中的 \"terminal.integrated.inheritEnv\" 為 false。",
     "Logging.CurrentWorkingDirectory": "cwd:",
     "Common.doNotShowAgain": "不再顯示",
     "Common.reload": "重新載入",

@@ -53,7 +53,6 @@ import { ShebangCodeLensProvider } from './display/shebangCodeLensProvider';
 import { InterpreterHelper } from './helpers';
 import { InterpreterService } from './interpreterService';
 import { InterpreterVersionService } from './interpreterVersion';
-import { CondaInheritEnvPrompt } from './virtualEnvs/condaInheritEnvPrompt';
 import { VirtualEnvironmentPrompt } from './virtualEnvs/virtualEnvPrompt';
 
 /**
@@ -145,8 +144,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
         IInterpreterAutoSelectionService,
         InterpreterAutoSelectionService,
     );
-
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, CondaInheritEnvPrompt);
 }
 
 export function registerTypes(serviceManager: IServiceManager): void {

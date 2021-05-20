@@ -271,10 +271,6 @@ export namespace Experiments {
 export namespace Interpreters {
     export const loading = localize('Interpreters.LoadingInterpreters', 'Loading Python Interpreters');
     export const refreshing = localize('Interpreters.RefreshingInterpreters', 'Refreshing Python Interpreters');
-    export const condaInheritEnvMessage = localize(
-        'Interpreters.condaInheritEnvMessage',
-        'We noticed you\'re using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we recommend that you let the Python extension change "terminal.integrated.inheritEnv" to false in your user settings.',
-    );
     export const unsafeInterpreterMessage = localize(
         'Interpreters.unsafeInterpreterMessage',
         'We found a Python environment in this workspace. Do you want to select it to start up the features in the Python extension? Only accept if you trust this environment.',

@@ -57,7 +57,6 @@
     "Interpreters.pythonInterpreterPath": "Python 解释器路径: {0}",
     "Interpreters.LoadingInterpreters": "正在加载 Python 解释器",
     "Interpreters.unsafeInterpreterMessage": "此工作区中有一个 Python 环境，是否启用它来激活扩展中的功能？请在信任此环境时启用。",
-    "Interpreters.condaInheritEnvMessage": "您正在使用 conda 环境，如果您在集成终端中遇到相关问题，建议您允许 Python 扩展将用户设置中的 \"terminal.integrated.inheritEnv\" 改为 false。",
     "Logging.CurrentWorkingDirectory": "cwd:",
     "InterpreterQuickPickList.quickPickListPlaceholder": "当前: {0}",
     "InterpreterQuickPickList.enterPath.detail": "输入路径或选择一个现有的解释器",
