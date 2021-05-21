@@ -67,10 +67,6 @@ export namespace Commands {
     export const Enable_Linter = 'python.enableLinting';
     export const Run_Linter = 'python.runLinting';
     export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
-    export const navigateToTestFunction = 'navigateToTestFunction';
-    export const navigateToTestSuite = 'navigateToTestSuite';
-    export const navigateToTestFile = 'navigateToTestFile';
-    export const openTestNodeInEditor = 'python.openTestNodeInEditor';
     export const runTestNode = 'python.runTestNode';
     export const debugTestNode = 'python.debugTestNode';
     export const SwitchOffInsidersChannel = 'python.switchOffInsidersChannel';
