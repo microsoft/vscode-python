@@ -151,14 +151,6 @@
                 "category": "Python"
             },
             {
-                "command": "python.openTestNodeInEditor",
-                "title": "Open",
-                "icon": {
-                    "light": "resources/light/open-file.svg",
-                    "dark": "resources/dark/open-file.svg"
-                }
-            },
-            {
                 "command": "python.runTestNode",
                 "title": "Run",
                 "icon": {
@@ -517,12 +509,6 @@
                     "when": "config.noExists"
                 },
                 {
-                    "command": "python.openTestNodeInEditor",
-                    "title": "Open",
-                    "category": "Python",
-                    "when": "config.noExists"
-                },
-                {
                     "command": "python.startPage.open",
                     "title": "%python.command.python.startPage.open.title%",
                     "category": "Python"
@@ -586,11 +572,6 @@
                     "group": "inline@2"
                 },
                 {
-                    "command": "python.openTestNodeInEditor",
-                    "when": "view == python_tests && viewItem == function",
-                    "group": "inline@2"
-                },
-                {
                     "command": "python.debugTestNode",
                     "when": "view == python_tests && viewItem == function && !busyTests",
                     "group": "inline@1"
@@ -601,11 +582,6 @@
                     "group": "inline@0"
                 },
                 {
-                    "command": "python.openTestNodeInEditor",
-                    "when": "view == python_tests && viewItem == file",
-                    "group": "inline@2"
-                },
-                {
                     "command": "python.debugTestNode",
                     "when": "view == python_tests && viewItem == file && !busyTests",
                     "group": "inline@1"
@@ -614,11 +590,6 @@
                     "command": "python.runTestNode",
                     "when": "view == python_tests && viewItem == file && !busyTests",
                     "group": "inline@0"
-                },
-                {
-                    "command": "python.openTestNodeInEditor",
-                    "when": "view == python_tests && viewItem == suite",
-                    "group": "inline@2"
                 },
                 {
                     "command": "python.debugTestNode",
