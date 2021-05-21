@@ -22,7 +22,6 @@ export namespace Commands {
     export const Exec_In_Terminal_Icon = 'python.execInTerminal-icon';
     export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
     export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
-    export const Tests_View_UI = 'python.viewTestUI';
     export const Tests_Picker_UI = 'python.selectTestToRun';
     export const Tests_Picker_UI_Debug = 'python.selectTestToDebug';
     export const Tests_Configure = 'python.configureTests';
@@ -75,8 +74,6 @@ export namespace Octicons {
     export const Installing = '$(desktop-download)';
     export const Search_Stop = '$(search-stop)';
 }
-
-export const Button_Text_Tests_View_Output = 'View Output';
 
 export namespace Text {
     export const CodeLensRunUnitTest = 'Run Test';

@@ -102,16 +102,6 @@ suite('Unit Tests - Picker (execution of commands)', () => {
                             ).once();
                             return;
                         }
-                        case Type.ViewTestOutput: {
-                            verify(
-                                commandManager.executeCommand(
-                                    Commands.Tests_ViewOutput,
-                                    undefined,
-                                    commandSource.value,
-                                ),
-                            ).once();
-                            return;
-                        }
                         case Type.RunFailed: {
                             verify(
                                 commandManager.executeCommand(

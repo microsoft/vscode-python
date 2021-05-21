@@ -82,7 +82,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 const flattener = typeMoq.Mock.ofType<TestFlatteningVisitor>(undefined, typeMoq.MockBehavior.Strict);
                 serviceContainer
                     .setup((c) => c.get(typeMoq.It.isValue(ITestsHelper)))
-                    .returns(() => new TestsHelper(flattener.object, serviceContainer.object));
+                    .returns(() => new TestsHelper(flattener.object));
                 testConfigService = typeMoq.Mock.ofType(
                     UnitTestConfigurationService,
                     typeMoq.MockBehavior.Loose,

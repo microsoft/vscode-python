@@ -1,11 +1,8 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { Uri, workspace } from 'vscode';
-import { CommandSource } from '../../common/application/types';
-import { IApplicationShell, ICommandManager } from '../../common/application/types';
-import * as constants from '../../common/constants';
+import { IApplicationShell } from '../../common/application/types';
 import { Product } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
 import { ITestingSettings, TestSettingsPropertyNames } from '../configuration/types';
 import { TestProvider } from '../types';
 import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
@@ -47,15 +44,9 @@ export function convertFileToPackage(filePath: string): string {
 
 @injectable()
 export class TestsHelper implements ITestsHelper {
-    private readonly appShell: IApplicationShell;
-    private readonly commandManager: ICommandManager;
     constructor(
         @inject(ITestVisitor) @named('TestFlatteningVisitor') private readonly flatteningVisitor: TestFlatteningVisitor,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
-    ) {
-        this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
-    }
+    ) {}
     public parseProviderName(product: UnitTestProduct): TestProvider {
         switch (product) {
             case Product.pytest:
@@ -215,13 +206,6 @@ export class TestsHelper implements ITestsHelper {
                 },
             ],
         };
-    }
-    public displayTestErrorMessage(message: string) {
-        this.appShell.showErrorMessage(message, constants.Button_Text_Tests_View_Output).then((action) => {
-            if (action === constants.Button_Text_Tests_View_Output) {
-                this.commandManager.executeCommand(constants.Commands.Tests_ViewOutput, undefined, CommandSource.ui);
-            }
-        });
     }
     public mergeTests(items: Tests[]): Tests {
         return items.reduce((tests, otherTests, index) => {

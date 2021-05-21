@@ -166,7 +166,6 @@ suite('Unit Tests - TestResultDisplay', () => {
 
         tests.verifyAll();
         appShell.verifyAll();
-        statusBar.verify((s) => (s.command = typeMoq.It.isValue(Commands.Tests_View_UI)), typeMoq.Times.atLeastOnce());
     });
     test('Ensure status bar is updated with success with ability to view ui with results', async () => {
         const statusBar = typeMoq.Mock.ofType<StatusBarItem>();
@@ -210,7 +209,6 @@ suite('Unit Tests - TestResultDisplay', () => {
 
         tests.verifyAll();
         appShell.verifyAll();
-        statusBar.verify((s) => (s.command = typeMoq.It.isValue(Commands.Tests_View_UI)), typeMoq.Times.atLeastOnce());
     });
     test('Ensure status bar is updated with error when cancelled by user with ability to view ui with results', async () => {
         const statusBar = typeMoq.Mock.ofType<StatusBarItem>();
@@ -233,14 +231,10 @@ suite('Unit Tests - TestResultDisplay', () => {
         );
         statusBar.verify((s) => (s.text = typeMoq.It.isValue('$(stop) Running Tests')), typeMoq.Times.atLeastOnce());
 
-        testsHelper.setup((t) => t.displayTestErrorMessage(typeMoq.It.isAny())).verifiable(typeMoq.Times.never());
-
         def.reject(CANCELLATION_REASON);
         await sleep(1);
 
         appShell.verifyAll();
-        statusBar.verify((s) => (s.command = typeMoq.It.isValue(Commands.Tests_View_UI)), typeMoq.Times.atLeastOnce());
-        testsHelper.verifyAll();
     });
     test('Ensure status bar is updated, and error message display with error in running tests, with ability to view ui with results', async () => {
         const statusBar = typeMoq.Mock.ofType<StatusBarItem>();
@@ -263,14 +257,10 @@ suite('Unit Tests - TestResultDisplay', () => {
         );
         statusBar.verify((s) => (s.text = typeMoq.It.isValue('$(stop) Running Tests')), typeMoq.Times.atLeastOnce());
 
-        testsHelper.setup((t) => t.displayTestErrorMessage(typeMoq.It.isAny())).verifiable(typeMoq.Times.once());
-
         def.reject('Some other reason');
         await sleep(1);
 
         appShell.verifyAll();
-        statusBar.verify((s) => (s.command = typeMoq.It.isValue(Commands.Tests_View_UI)), typeMoq.Times.atLeastOnce());
-        testsHelper.verifyAll();
     });
 
     test('Ensure status bar is displayed and updated with progress with ability to stop test discovery', async () => {
@@ -337,7 +327,6 @@ suite('Unit Tests - TestResultDisplay', () => {
 
         tests.verifyAll();
         appShell.verifyAll();
-        statusBar.verify((s) => (s.command = typeMoq.It.isValue(Commands.Tests_View_UI)), typeMoq.Times.atLeastOnce());
     });
     test('Ensure tests are disabled when there are errors and user choses to disable tests', async () => {
         const statusBar = typeMoq.Mock.ofType<StatusBarItem>();
@@ -395,7 +384,6 @@ suite('Unit Tests - TestResultDisplay', () => {
 
         tests.verifyAll();
         appShell.verifyAll();
-        statusBar.verify((s) => (s.command = typeMoq.It.isValue(Commands.Tests_View_UI)), typeMoq.Times.atLeastOnce());
         configurationService.verifyAll();
         cmdManager.verifyAll();
     });
@@ -453,7 +441,6 @@ suite('Unit Tests - TestResultDisplay', () => {
 
         tests.verifyAll();
         appShell.verifyAll();
-        statusBar.verify((s) => (s.command = typeMoq.It.isValue(Commands.Tests_View_UI)), typeMoq.Times.atLeastOnce());
         cmdManager.verifyAll();
     });
     test('Ensure status bar is displayed and updated with error info when test discovery is cancelled by the user', async () => {

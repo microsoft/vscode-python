@@ -360,7 +360,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         testParser.verifyAll();
     });
     test('Ensure discovery resolves test suites in n-depth directories', async () => {
-        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor(), serviceContainer.object);
+        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor());
 
         const testsParser: TestsParser = new TestsParser(testHelper);
 
@@ -407,7 +407,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         });
     });
     test('Ensure discovery resolves test files in n-depth directories', async () => {
-        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor(), serviceContainer.object);
+        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor());
 
         const testsParser: TestsParser = new TestsParser(testHelper);
 
@@ -454,7 +454,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         });
     });
     test('Ensure discovery resolves test suites in n-depth directories when no start directory is given', async () => {
-        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor(), serviceContainer.object);
+        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor());
 
         const testsParser: TestsParser = new TestsParser(testHelper);
 
@@ -501,7 +501,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         });
     });
     test('Ensure discovery resolves test suites in n-depth directories when a relative start directory is given', async () => {
-        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor(), serviceContainer.object);
+        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor());
 
         const testsParser: TestsParser = new TestsParser(testHelper);
 
@@ -548,7 +548,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         });
     });
     test('Ensure discovery will not fail with blank content', async () => {
-        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor(), serviceContainer.object);
+        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor());
 
         const testsParser: TestsParser = new TestsParser(testHelper);
 
@@ -569,7 +569,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         expect(tests.testFolders.length).to.be.equal(0);
     });
     test('Ensure discovery will not fail with corrupt content', async () => {
-        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor(), serviceContainer.object);
+        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor());
 
         const testsParser: TestsParser = new TestsParser(testHelper);
 
@@ -598,7 +598,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         expect(tests.testFolders.length).to.be.equal(0);
     });
     test('Ensure discovery resolves when no tests are found in the given path', async () => {
-        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor(), serviceContainer.object);
+        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor());
 
         const testsParser: TestsParser = new TestsParser(testHelper);
 
