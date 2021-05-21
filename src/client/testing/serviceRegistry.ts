@@ -34,7 +34,6 @@ import {
     ITestDebugLauncher,
     ITestDiagnosticService,
     ITestDiscoveryService,
-    ITestDisplay,
     ITestManagementService,
     ITestManager,
     ITestManagerFactory,
@@ -42,7 +41,6 @@ import {
     ITestManagerService,
     ITestManagerServiceFactory,
     ITestMessageService,
-    ITestResultDisplay,
     ITestResultsService,
     ITestRunner,
     ITestsHelper,
@@ -58,8 +56,6 @@ import { UpdateTestSettingService } from './common/updateTestSettings';
 import { XUnitParser } from './common/xUnitParser';
 import { UnitTestConfigurationService } from './configuration';
 import { TestConfigurationManagerFactory } from './configurationFactory';
-import { TestResultDisplay } from './display/main';
-import { TestDisplay } from './display/picker';
 import { TestingService, UnitTestManagementService } from './main';
 import { TestManager as PyTestTestManager } from './pytest/main';
 import { TestManagerRunner as PytestManagerRunner } from './pytest/runner';
@@ -117,8 +113,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestManagementService>(ITestManagementService, UnitTestManagementService);
     serviceManager.addSingleton<ITestingService>(ITestingService, TestingService);
 
-    serviceManager.addSingleton<ITestResultDisplay>(ITestResultDisplay, TestResultDisplay);
-    serviceManager.addSingleton<ITestDisplay>(ITestDisplay, TestDisplay);
     serviceManager.addSingleton<ITestConfigSettingsService>(ITestConfigSettingsService, TestConfigSettingsService);
     serviceManager.addSingleton<ITestConfigurationManagerFactory>(
         ITestConfigurationManagerFactory,
