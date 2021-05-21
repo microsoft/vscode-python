@@ -1088,6 +1088,18 @@ export interface IEventNamePropertyMapping {
     [EventName.PIPENV_INTERPRETER_DISCOVERY]: never | undefined;
     /**
      * Telemetry event sent with details when user clicks the prompt with the following message
+     * `Prompt message` :- 'We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the "terminal.integrated.inheritEnv" setting to be changed to false. Would you like to update this setting?'
+     */
+    [EventName.CONDA_INHERIT_ENV_PROMPT]: {
+        /**
+         * `Yes` When 'Yes' option is selected
+         * `No` When 'No' option is selected
+         * `More info` When 'More Info' option is selected
+         */
+        selection: 'Yes' | 'No' | 'More Info' | undefined;
+    };
+    /**
+     * Telemetry event sent with details when user clicks the prompt with the following message
      * `Prompt message` :- 'We found a Python environment in this workspace. Do you want to select it to start up the features in the Python extension? Only accept if you trust this environment.'
      */
     [EventName.UNSAFE_INTERPRETER_PROMPT]: {
