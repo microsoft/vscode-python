@@ -385,14 +385,6 @@
                 "title": "%python.command.python.launchTensorBoard.title%"
             },
             {
-                "command": "python.openTestNodeInEditor",
-                "icon": {
-                    "dark": "resources/dark/open-file.svg",
-                    "light": "resources/light/open-file.svg"
-                },
-                "title": "Open"
-            },
-            {
                 "category": "Python Refactor",
                 "command": "python.refactorExtractMethod",
                 "title": "%python.command.python.refactorExtractMethod.title%"
@@ -1911,12 +1903,6 @@
                 },
                 {
                     "category": "Python",
-                    "command": "python.openTestNodeInEditor",
-                    "title": "Open",
-                    "when": "config.noExists"
-                },
-                {
-                    "category": "Python",
                     "command": "python.runTestNode",
                     "title": "Run",
                     "when": "config.noExists"
@@ -2052,21 +2038,6 @@
                     "command": "python.discoverTests",
                     "group": "inline@2",
                     "when": "view == python_tests && viewItem == testWorkspaceFolder && !busyTests"
-                },
-                {
-                    "command": "python.openTestNodeInEditor",
-                    "group": "inline@2",
-                    "when": "view == python_tests && viewItem == file"
-                },
-                {
-                    "command": "python.openTestNodeInEditor",
-                    "group": "inline@2",
-                    "when": "view == python_tests && viewItem == function"
-                },
-                {
-                    "command": "python.openTestNodeInEditor",
-                    "group": "inline@2",
-                    "when": "view == python_tests && viewItem == suite"
                 },
                 {
                     "command": "python.runTestNode",

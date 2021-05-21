@@ -127,10 +127,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.runTestNode]: [TestDataItem];
     // When command is invoked from a tree node, first argument is the node data.
     [Commands.debugTestNode]: [TestDataItem];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.openTestNodeInEditor]: [TestDataItem];
-    [Commands.navigateToTestFile]: [Uri, TestDataItem, boolean];
-    [Commands.navigateToTestFunction]: [Uri, TestDataItem, boolean];
-    [Commands.navigateToTestSuite]: [Uri, TestDataItem, boolean];
     [Commands.LaunchTensorBoard]: [TensorBoardEntrypoint, TensorBoardEntrypointTrigger];
 }
