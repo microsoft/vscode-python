@@ -9,7 +9,6 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { Product } from '../../../client/common/types';
-import { ServiceContainer } from '../../../client/ioc/container';
 import { EnablementTracker } from '../../../client/testing/common/enablementTracker';
 import { TestConfigSettingsService } from '../../../client/testing/common/services/configSettingService';
 import { TestsHelper } from '../../../client/testing/common/testUtils';
@@ -28,7 +27,7 @@ suite('Unit Tests - Track Enablement', () => {
         sandbox.restore();
         workspaceService = mock(WorkspaceService);
         configService = mock(TestConfigSettingsService);
-        testsHelper = new TestsHelper(instance(mock(TestFlatteningVisitor)), instance(mock(ServiceContainer)));
+        testsHelper = new TestsHelper(instance(mock(TestFlatteningVisitor)));
     });
     teardown(() => {
         sandbox.restore();
