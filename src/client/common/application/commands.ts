@@ -40,7 +40,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.Exec_Selection_In_Terminal]: [];
     [Commands.Exec_Selection_In_Django_Shell]: [];
     [Commands.Create_Terminal]: [];
-    [Commands.Tests_View_UI]: [];
     [Commands.Tests_Ask_To_Stop_Discovery]: [];
     [Commands.Tests_Ask_To_Stop_Test]: [];
     [Commands.Tests_Discovering]: [];
@@ -95,7 +94,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];
     [Commands.Exec_In_Terminal_Icon]: [undefined, Uri];
-    [Commands.Tests_ViewOutput]: [undefined, CommandSource];
     [Commands.Tests_Select_And_Run_File]: [undefined, CommandSource];
     [Commands.Tests_Run_Current_File]: [undefined, CommandSource];
     [Commands.Tests_Stop]: [undefined, Uri];

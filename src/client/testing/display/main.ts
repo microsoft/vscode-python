@@ -13,7 +13,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { CANCELLATION_REASON } from '../common/constants';
-import { ITestsHelper, ITestResultDisplay, Tests } from '../common/types';
+import { ITestResultDisplay, Tests } from '../common/types';
 
 @injectable()
 export class TestResultDisplay implements ITestResultDisplay {
@@ -25,7 +25,6 @@ export class TestResultDisplay implements ITestResultDisplay {
     private progressPrefix!: string;
     private readonly didChange = new EventEmitter<void>();
     private readonly appShell: IApplicationShell;
-    private readonly testsHelper: ITestsHelper;
     private readonly cmdManager: ICommandManager;
     public get onDidChange(): Event<void> {
         return this.didChange.event;
@@ -34,7 +33,6 @@ export class TestResultDisplay implements ITestResultDisplay {
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.statusBar = this.appShell.createStatusBarItem(StatusBarAlignment.Left);
-        this.testsHelper = serviceContainer.get<ITestsHelper>(ITestsHelper);
         this.cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
     }
     public dispose() {
@@ -106,7 +104,6 @@ export class TestResultDisplay implements ITestResultDisplay {
         }
         this.statusBar.tooltip = toolTip.length === 0 ? 'No Tests Ran' : `${toolTip.join(', ')} (Tests)`;
         this.statusBar.text = statusText.length === 0 ? 'No Tests Ran' : statusText.join(' ');
-        this.statusBar.command = constants.Commands.Tests_View_UI;
         this.didChange.fire();
         if (statusText.length === 0 && !debug) {
             this.appShell.showWarningMessage('No tests ran, please check the configuration settings for the tests.');
@@ -116,14 +113,12 @@ export class TestResultDisplay implements ITestResultDisplay {
 
     private updateTestRunWithFailure(reason: any): Promise<any> {
         this.clearProgressTicker();
-        this.statusBar.command = constants.Commands.Tests_View_UI;
         if (reason === CANCELLATION_REASON) {
             this.statusBar.text = '$(zap) Run Tests';
             this.statusBar.tooltip = 'Run Tests';
         } else {
             this.statusBar.text = '$(alert) Tests Failed';
             this.statusBar.tooltip = 'Running Tests Failed';
-            this.testsHelper.displayTestErrorMessage('There was an error in running the tests.');
         }
         return Promise.reject(reason);
     }
@@ -165,7 +160,6 @@ export class TestResultDisplay implements ITestResultDisplay {
         const haveTests = tests && tests.testFunctions.length > 0;
         this.statusBar.text = '$(zap) Run Tests';
         this.statusBar.tooltip = 'Run Tests';
-        this.statusBar.command = constants.Commands.Tests_View_UI;
         this.statusBar.show();
         if (this.didChange) {
             this.didChange.fire();

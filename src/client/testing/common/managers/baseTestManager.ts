@@ -42,7 +42,6 @@ import {
     ITestManager,
     ITestNonPassingMessage,
     ITestResultsService,
-    ITestsHelper,
     ITestsStatusUpdaterService,
     TestDiscoveryOptions,
     Tests,
@@ -254,21 +253,15 @@ export abstract class BaseTestManager implements ITestManager {
                 this.updateStatus(TestStatus.Idle);
                 this.discoverTestsPromise = undefined;
 
-                // have errors in Discovering
-                let haveErrorsInDiscovering = false;
                 tests.testFiles.forEach((file) => {
                     if (file.errorsWhenDiscovering && file.errorsWhenDiscovering.length > 0) {
-                        haveErrorsInDiscovering = true;
                         this.outputChannel.append('_'.repeat(10));
                         this.outputChannel.append(`There was an error in identifying unit tests in ${file.nameToRun}`);
                         this.outputChannel.appendLine('_'.repeat(10));
                         this.outputChannel.appendLine(file.errorsWhenDiscovering);
                     }
                 });
-                if (haveErrorsInDiscovering && !quietMode) {
-                    const testsHelper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
-                    testsHelper.displayTestErrorMessage('There were some errors in discovering unit tests');
-                }
+
                 this.disposeCancellationToken(CancellationTokenType.testDiscovery);
                 sendTelemetryEvent(EventName.UNITTEST_DISCOVER, undefined, telementryProperties);
                 return tests;
@@ -384,8 +377,6 @@ export abstract class BaseTestManager implements ITestManager {
                 ) {
                     return Promise.reject<Tests>(reason);
                 }
-                const testsHelper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
-                testsHelper.displayTestErrorMessage('Errors in discovering tests, continuing with tests');
                 return {
                     rootTestFolders: [],
                     testFiles: [],

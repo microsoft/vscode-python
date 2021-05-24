@@ -116,7 +116,6 @@ export enum Type {
     RunFile = 4,
     RunClass = 5,
     RunMethod = 6,
-    ViewTestOutput = 7,
     Null = 8,
     SelectAndRunMethod = 9,
     DebugMethod = 10,
@@ -140,35 +139,12 @@ type TestFileItem = QuickPickItem & {
     testFile?: TestFile;
 };
 
-function getSummary(tests?: Tests) {
-    if (!tests || !tests.summary) {
-        return '';
-    }
-    const statusText: string[] = [];
-    if (tests.summary.passed > 0) {
-        statusText.push(`${constants.Octicons.Test_Pass} ${tests.summary.passed} Passed`);
-    }
-    if (tests.summary.failures > 0) {
-        statusText.push(`${constants.Octicons.Test_Fail} ${tests.summary.failures} Failed`);
-    }
-    if (tests.summary.errors > 0) {
-        const plural = tests.summary.errors === 1 ? '' : 's';
-        statusText.push(`${constants.Octicons.Test_Error} ${tests.summary.errors} Error${plural}`);
-    }
-    if (tests.summary.skipped > 0) {
-        statusText.push(`${constants.Octicons.Test_Skip} ${tests.summary.skipped} Skipped`);
-    }
-    return statusText.join(', ').trim();
-}
 function buildItems(tests?: Tests): TestItem[] {
     const items: TestItem[] = [];
     items.push({ description: '', label: 'Run All Tests', type: Type.RunAll });
     items.push({ description: '', label: 'Discover Tests', type: Type.ReDiscover });
     items.push({ description: '', label: 'Run Test Method ...', type: Type.SelectAndRunMethod });
     items.push({ description: '', label: 'Configure Tests', type: Type.Configure });
-
-    const summary = getSummary(tests);
-    items.push({ description: '', label: 'View Test Output', type: Type.ViewTestOutput, detail: summary });
 
     if (tests && tests.summary.failures > 0) {
         items.push({
@@ -309,9 +285,6 @@ export function onItemSelected(
         }
         case Type.ReDiscover: {
             return commandManager.executeCommand(constants.Commands.Tests_Discover, undefined, cmdSource, wkspace);
-        }
-        case Type.ViewTestOutput: {
-            return commandManager.executeCommand(constants.Commands.Tests_ViewOutput, undefined, cmdSource);
         }
         case Type.RunFailed: {
             return commandManager.executeCommand(constants.Commands.Tests_Run_Failed, undefined, cmdSource, wkspace);
