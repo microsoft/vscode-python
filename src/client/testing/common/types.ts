@@ -300,7 +300,6 @@ export interface ITestManagementService {
     ): Promise<void>;
     stopTests(resource: Uri): Promise<void>;
     displayStopUI(message: string): Promise<void>;
-    displayUI(cmdSource: CommandSource): Promise<void>;
     displayPickerUI(cmdSource: CommandSource, file: Uri, testFunctions: TestFunction[], debug?: boolean): Promise<void>;
     runTestsImpl(
         cmdSource: CommandSource,
@@ -314,8 +313,6 @@ export interface ITestManagementService {
     selectAndRunTestFile(cmdSource: CommandSource): Promise<void>;
 
     selectAndRunTestMethod(cmdSource: CommandSource, resource: Uri, debug?: boolean): Promise<void>;
-
-    viewOutput(cmdSource: CommandSource): void;
 }
 
 export interface ITestManagerService extends Disposable {
@@ -381,7 +378,6 @@ export interface ITestsHelper {
     getSettingsPropertyNames(product: Product): TestSettingsPropertyNames;
     flattenTestFiles(testFiles: TestFile[], workspaceFolder: string): Tests;
     placeTestFilesIntoFolders(tests: Tests, workspaceFolder: string): void;
-    displayTestErrorMessage(message: string): void;
     shouldRunAllTests(testsToRun?: TestsToRun): boolean;
     mergeTests(items: Tests[]): Tests;
 }

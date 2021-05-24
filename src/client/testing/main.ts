@@ -277,21 +277,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         const testDisplay = this.serviceContainer.get<ITestDisplay>(ITestDisplay);
         testDisplay.displayStopTestUI(testManager.workspaceFolder, message);
     }
-    public async displayUI(cmdSource: constants.CommandSource) {
-        const testManager = await this.getTestManager(true);
-        if (!testManager) {
-            return;
-        }
-
-        const testDisplay = this.serviceContainer.get<ITestDisplay>(ITestDisplay);
-        testDisplay.displayTestUI(cmdSource, testManager.workspaceFolder);
-    }
-    public async displayPickerUI(
-        cmdSource: constants.CommandSource,
-        file: Uri,
-        testFunctions: TestFunction[],
-        debug?: boolean,
-    ) {
+    public async displayPickerUI(cmdSource: CommandSource, file: Uri, testFunctions: TestFunction[], debug?: boolean) {
         const testManager = await this.getTestManager(true, file);
         if (!testManager) {
             return;
@@ -319,11 +305,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         }
         await this.runTestsImpl(cmdSource, resource, { testFunction: testFunctions }, undefined, debug);
     }
-    public viewOutput(_cmdSource: constants.CommandSource) {
-        sendTelemetryEvent(EventName.UNITTEST_VIEW_OUTPUT);
-        this.outputChannel.show();
-    }
-    public async selectAndRunTestMethod(cmdSource: constants.CommandSource, resource: Uri, debug?: boolean) {
+    public async selectAndRunTestMethod(cmdSource: CommandSource, resource: Uri, debug?: boolean) {
         const testManager = await this.getTestManager(true, resource);
         if (!testManager) {
             return;
@@ -509,9 +491,6 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
                     return this.runTestsImpl(cmdSource, resource, testToRun, false, true);
                 },
             ),
-            commandManager.registerCommand(constants.Commands.Tests_View_UI, () =>
-                this.displayUI(constants.CommandSource.commandPalette),
-            ),
             commandManager.registerCommand(
                 constants.Commands.Tests_Picker_UI,
                 (
@@ -542,11 +521,6 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
             ),
             commandManager.registerCommand(constants.Commands.Tests_Stop, (_, resource: Uri) =>
                 this.stopTests(resource),
-            ),
-            commandManager.registerCommand(
-                constants.Commands.Tests_ViewOutput,
-                (_, cmdSource: constants.CommandSource = constants.CommandSource.commandPalette) =>
-                    this.viewOutput(cmdSource),
             ),
             commandManager.registerCommand(constants.Commands.Tests_Ask_To_Stop_Discovery, () =>
                 this.displayStopUI('Stop discovering tests'),
