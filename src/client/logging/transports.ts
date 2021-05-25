@@ -6,6 +6,7 @@
 // delete everything in '../client' except for '../client/logging' before running smoke tests.
 
 import * as logform from 'logform';
+import { EOL } from 'os';
 import * as path from 'path';
 import { OutputChannel } from 'vscode';
 import * as winston from 'winston';
@@ -70,17 +71,28 @@ export function getConsoleTransport(formatter: logform.Format): Transport {
     });
 }
 
-class PythonOutputChannelTransport extends Transport {
+export interface IPythonOutputChannelContent {
+    getContent(): Promise<string>;
+}
+
+class PythonOutputChannelTransport extends Transport implements IPythonOutputChannelContent {
+    private content: string[] = [];
     constructor(private readonly channel: OutputChannel, options?: any) {
         super(options);
     }
 
     public log?(info: { message: string; [formattedMessage]: string }, next: () => void): any {
         setImmediate(() => this.emit('logged', info));
-        this.channel.appendLine(info[formattedMessage] || info.message);
+        const message = info[formattedMessage] || info.message;
+        this.channel.appendLine(message);
+        this.content.push(message);
         if (next) {
             next();
         }
+    }
+
+    public getContent(): Promise<string> {
+        return Promise.resolve(this.content.join(EOL));
     }
 }
 

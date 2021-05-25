@@ -40,7 +40,7 @@ You can attach such things **after** you create your issue on GitHub.
 
 <!-- Run the "Python: Show Output" command to see the requested output. --->
 ```
-XXX
+Python Output
 ```
 
 </p>

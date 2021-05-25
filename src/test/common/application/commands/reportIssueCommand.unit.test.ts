@@ -6,7 +6,7 @@
 import * as sinon from 'sinon';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { anyString, anything, capture, instance, mock, verify, when } from 'ts-mockito';
+import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { expect } from 'chai';
 import { LanguageServerType } from '../../../../client/activation/types';
 import { CommandManager } from '../../../../client/common/application/commandManager';
@@ -20,6 +20,7 @@ import * as EnvIdentifier from '../../../../client/pythonEnvironments/common/env
 import { MockWorkspaceConfiguration } from '../../../startPage/mockWorkspaceConfig';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
+import * as Logging from '../../../../client/logging/_global';
 
 suite('Report Issue Command', () => {
     let reportIssueCommandHandler: ReportIssueCommandHandler;
@@ -28,6 +29,7 @@ suite('Report Issue Command', () => {
     let interpreterVersionService: IInterpreterVersionService;
     let interpreterService: IInterpreterService;
     let identifyEnvironmentStub: sinon.SinonStub;
+    let getPythonOutputContentStub: sinon.SinonStub;
 
     setup(async () => {
         interpreterVersionService = mock(InterpreterVersionService);
@@ -35,6 +37,7 @@ suite('Report Issue Command', () => {
         cmdManager = mock(CommandManager);
         interpreterService = mock(InterpreterService);
 
+        when(cmdManager.executeCommand('workbench.action.openIssueReporter', anything())).thenResolve();
         when(interpreterVersionService.getVersion(anything(), anything())).thenResolve('3.9.0');
         when(workspaceService.getConfiguration('python')).thenReturn(
             new MockWorkspaceConfiguration({
@@ -46,19 +49,21 @@ suite('Report Issue Command', () => {
         identifyEnvironmentStub.resolves(PythonEnvKind.Venv);
 
         cmdManager = mock(CommandManager);
+
+        getPythonOutputContentStub = sinon.stub(Logging, 'getPythonOutputChannelContent');
+        getPythonOutputContentStub.resolves('Python Output');
         reportIssueCommandHandler = new ReportIssueCommandHandler(
             instance(cmdManager),
             instance(workspaceService),
             instance(interpreterService),
             instance(interpreterVersionService),
         );
-
-        when(cmdManager.executeCommand(anyString(), anything())).thenResolve();
         await reportIssueCommandHandler.activate();
     });
 
     teardown(() => {
         identifyEnvironmentStub.restore();
+        getPythonOutputContentStub.restore();
     });
 
     test('Test if issue body is filled', async () => {

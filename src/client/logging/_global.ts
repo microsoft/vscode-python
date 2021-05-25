@@ -9,10 +9,11 @@ import { getFormatter } from './formatters';
 import { LogLevel, resolveLevelName } from './levels';
 import { configureLogger, createLogger, getPreDefinedConfiguration, logToAll } from './logger';
 import { createTracingDecorator, LogInfo, TraceOptions, tracing as _tracing } from './trace';
-import { getPythonOutputChannelTransport } from './transports';
+import { getPythonOutputChannelTransport, IPythonOutputChannelContent } from './transports';
 import { Arguments } from './util';
 
 const globalLogger = createLogger();
+let _globalLoggerContent: IPythonOutputChannelContent;
 initialize();
 
 /**
@@ -61,7 +62,12 @@ export function setLoggingLevel(level: LogLevel | 'off') {
 export function addOutputChannelLogging(channel: IOutputChannel) {
     const formatter = getFormatter();
     const transport = getPythonOutputChannelTransport(channel, formatter);
+    _globalLoggerContent = transport;
     globalLogger.add(transport);
+}
+
+export function getPythonOutputChannelContent(): Promise<string> {
+    return _globalLoggerContent?.getContent() ?? '';
 }
 
 // Emit a log message derived from the args to all enabled transports.

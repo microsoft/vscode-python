@@ -11,6 +11,7 @@ import { ICommandManager, IWorkspaceService } from '../types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService, IInterpreterVersionService } from '../../../interpreter/contracts';
 import { identifyEnvironment } from '../../../pythonEnvironments/common/environmentIdentifier';
+import { getPythonOutputChannelContent } from '../../../logging';
 
 /**
  * Allows the user to report an issue related to the Python extension using our template.
@@ -31,6 +32,7 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
     private templatePath = path.join(EXTENSION_ROOT_DIR, 'resources', 'report_issue_template.md');
 
     public async openReportIssue(): Promise<void> {
+        const pythonLogs = await getPythonOutputChannelContent();
         const template = await fs.readFile(this.templatePath, 'utf8');
         const interpreterPath = (await this.interpreterService.getActiveInterpreter())?.path || 'not-selected';
         const pythonVersion = await this.interpreterVersionService.getVersion(interpreterPath, '');
@@ -40,7 +42,7 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
 
         this.commandManager.executeCommand('workbench.action.openIssueReporter', {
             extensionId: 'ms-python.python',
-            issueBody: template.format(pythonVersion, virtualEnv, languageServer),
+            issueBody: template.format(pythonVersion, virtualEnv, languageServer, pythonLogs),
         });
     }
 }
