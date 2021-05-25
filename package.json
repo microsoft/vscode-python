@@ -1352,7 +1352,7 @@
                 },
                 "python.linting.enabled": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Whether to lint Python files.",
                     "scope": "resource"
                 },
