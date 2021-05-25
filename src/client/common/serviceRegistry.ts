@@ -120,7 +120,7 @@ import {
 } from './types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { Random } from './utils/random';
-import { JupyterNotInstalledNotificationHelper } from '../jupyter/jupyterNotInstalled';
+import { JupyterNotInstalledNotificationHelper } from '../jupyter/jupyterNotInstalledNotificationHelper';
 import { IJupyterNotInstalledNotificationHelper } from '../jupyter/types';
 
 export function registerTypes(serviceManager: IServiceManager) {

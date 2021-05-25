@@ -134,7 +134,7 @@ import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initializeTest } from '../initialize';
-import { JupyterNotInstalledNotificationHelper } from '../../client/jupyter/jupyterNotInstalled';
+import { JupyterNotInstalledNotificationHelper } from '../../client/jupyter/jupyterNotInstalledNotificationHelper';
 import { IJupyterNotInstalledNotificationHelper } from '../../client/jupyter/types';
 
 chaiUse(chaiAsPromised);
