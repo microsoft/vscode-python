@@ -2084,7 +2084,6 @@
         "format-check": "prettier --check 'src/**/*.ts' 'src/**/*.tsx' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
         "format-fix": "prettier --write 'src/**/*.ts' 'src/**/*.tsx' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
         "clean": "gulp clean",
-        "addExtensionDependencies": "gulp addExtensionDependencies",
         "addExtensionPackDependencies": "gulp addExtensionPackDependencies",
         "updateBuildNumber": "gulp updateBuildNumber",
         "verifyBundle": "gulp verifyBundle",
