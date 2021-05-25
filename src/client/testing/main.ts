@@ -17,7 +17,6 @@ import * as constants from '../common/constants';
 import '../common/extensions';
 import { traceError } from '../common/logger';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel, Product, Resource } from '../common/types';
-import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { EventName } from '../telemetry/constants';
@@ -39,7 +38,6 @@ import {
     ITestsHelper,
     TestStatus,
     TestsToRun,
-    TestWorkspaceFolder,
     WorkspaceTestStatus,
 } from './common/types';
 import { TEST_OUTPUT_CHANNEL } from './constants';
@@ -366,22 +364,6 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
 
         const disposables = [
             commandManager.registerCommand(
-                constants.Commands.Tests_Discover,
-                (
-                    treeNode?: TestWorkspaceFolder,
-                    cmdSource: constants.CommandSource = constants.CommandSource.commandPalette,
-                    resource?: Uri,
-                ) => {
-                    if (treeNode && treeNode instanceof TestWorkspaceFolder) {
-                        resource = treeNode.resource;
-                        cmdSource = constants.CommandSource.testExplorer;
-                    }
-                    // Ignore the exceptions returned.
-                    // This command will be invoked from other places of the extension.
-                    return this.discoverTests(cmdSource, resource, true, true, false, true).ignoreErrors();
-                },
-            ),
-            commandManager.registerCommand(
                 constants.Commands.Tests_Configure,
                 (_, _cmdSource: constants.CommandSource = constants.CommandSource.commandPalette, resource?: Uri) => {
                     // Ignore the exceptions returned.
@@ -389,66 +371,6 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
                     this.configureTests(resource).ignoreErrors();
                 },
             ),
-            commandManager.registerCommand(
-                constants.Commands.Tests_Run_Failed,
-                (_, cmdSource: constants.CommandSource = constants.CommandSource.commandPalette, resource: Uri) =>
-                    this.runTestsImpl(cmdSource, resource, undefined, true),
-            ),
-            commandManager.registerCommand(
-                constants.Commands.Tests_Run,
-                (
-                    treeNode?: TestWorkspaceFolder,
-                    cmdSource: constants.CommandSource = constants.CommandSource.commandPalette,
-                    resource?: Uri,
-                    testToRun?: TestsToRun,
-                ) => {
-                    if (treeNode && treeNode instanceof TestWorkspaceFolder) {
-                        resource = treeNode.resource;
-                        cmdSource = constants.CommandSource.testExplorer;
-                    }
-                    return this.runTestsImpl(cmdSource, resource, testToRun);
-                },
-            ),
-            commandManager.registerCommand(
-                constants.Commands.Tests_Debug,
-                (
-                    treeNode?: TestWorkspaceFolder,
-                    cmdSource: constants.CommandSource = constants.CommandSource.commandPalette,
-                    resource?: Uri,
-                    testToRun?: TestsToRun,
-                ) => {
-                    if (treeNode && treeNode instanceof TestWorkspaceFolder) {
-                        resource = treeNode.resource;
-                        cmdSource = constants.CommandSource.testExplorer;
-                    }
-                    return this.runTestsImpl(cmdSource, resource, testToRun, false, true);
-                },
-            ),
-            commandManager.registerCommand(
-                constants.Commands.Tests_Run_Parametrized,
-                (
-                    _,
-                    cmdSource: constants.CommandSource = constants.CommandSource.commandPalette,
-                    resource: Uri,
-                    testFunctions: TestFunction[],
-                    debug: boolean,
-                ) => this.runParametrizedTests(cmdSource, resource, testFunctions, debug),
-            ),
-            commandManager.registerCommand(constants.Commands.Tests_Stop, (_, resource: Uri) =>
-                this.stopTests(resource),
-            ),
-            commandManager.registerCommand(constants.Commands.Tests_Ask_To_Stop_Discovery, () =>
-                this.displayStopUI('Stop discovering tests'),
-            ),
-            commandManager.registerCommand(constants.Commands.Tests_Ask_To_Stop_Test, () =>
-                this.displayStopUI('Stop running tests'),
-            ),
-            commandManager.registerCommand(
-                constants.Commands.Tests_Run_Current_File,
-                (_, cmdSource: constants.CommandSource = constants.CommandSource.commandPalette) =>
-                    this.runCurrentTestFile(cmdSource),
-            ),
-            commandManager.registerCommand(constants.Commands.Tests_Discovering, noop),
         ];
 
         disposablesRegistry.push(...disposables);
