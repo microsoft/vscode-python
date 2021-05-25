@@ -283,22 +283,6 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         const testDisplay = this.serviceContainer.get<ITestDisplay>(ITestDisplay);
         testDisplay.displayStopTestUI(testManager.workspaceFolder, message);
     }
-    public async displayPickerUI(cmdSource: CommandSource, file: Uri, testFunctions: TestFunction[], debug?: boolean) {
-        const testManager = await this.getTestManager(true, file);
-        if (!testManager) {
-            return;
-        }
-
-        const testDisplay = this.serviceContainer.get<ITestDisplay>(ITestDisplay);
-        testDisplay.displayFunctionTestPickerUI(
-            cmdSource,
-            testManager.workspaceFolder,
-            testManager.workingDirectory,
-            file,
-            testFunctions,
-            debug,
-        );
-    }
     public async runParametrizedTests(
         cmdSource: CommandSource,
         resource: Uri,
@@ -311,58 +295,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         }
         await this.runTestsImpl(cmdSource, resource, { testFunction: testFunctions }, undefined, debug);
     }
-    public async selectAndRunTestMethod(cmdSource: CommandSource, resource: Uri, debug?: boolean) {
-        const testManager = await this.getTestManager(true, resource);
-        if (!testManager) {
-            return;
-        }
-        try {
-            await testManager.discoverTests(cmdSource, true, true, true);
-        } catch (ex) {
-            return;
-        }
 
-        const testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(
-            ITestCollectionStorageService,
-        );
-        const tests = testCollectionStorage.getTests(testManager.workspaceFolder)!;
-        const testDisplay = this.serviceContainer.get<ITestDisplay>(ITestDisplay);
-        const selectedTestFn = await testDisplay.selectTestFunction(testManager.workspaceFolder.fsPath, tests);
-        if (!selectedTestFn) {
-            return;
-        }
-
-        await this.runTestsImpl(
-            cmdSource,
-            testManager.workspaceFolder,
-
-            { testFunction: [selectedTestFn.testFunction] } as TestsToRun,
-            false,
-            debug,
-        );
-    }
-    public async selectAndRunTestFile(cmdSource: CommandSource) {
-        const testManager = await this.getTestManager(true);
-        if (!testManager) {
-            return;
-        }
-        try {
-            await testManager.discoverTests(cmdSource, true, true, true);
-        } catch (ex) {
-            return;
-        }
-
-        const testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(
-            ITestCollectionStorageService,
-        );
-        const tests = testCollectionStorage.getTests(testManager.workspaceFolder)!;
-        const testDisplay = this.serviceContainer.get<ITestDisplay>(ITestDisplay);
-        const selectedFile = await testDisplay.selectTestFile(testManager.workspaceFolder.fsPath, tests);
-        if (!selectedFile) {
-            return;
-        }
-        await this.runTestsImpl(cmdSource, testManager.workspaceFolder, { testFile: [selectedFile] });
-    }
     public async runCurrentTestFile(cmdSource: CommandSource) {
         if (!this.documentManager.activeTextEditor) {
             return;
@@ -498,24 +431,6 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
                 },
             ),
             commandManager.registerCommand(
-                constants.Commands.Tests_Picker_UI,
-                (
-                    _,
-                    cmdSource: CommandSource = CommandSource.commandPalette,
-                    file: Uri,
-                    testFunctions: TestFunction[],
-                ) => this.displayPickerUI(cmdSource, file, testFunctions),
-            ),
-            commandManager.registerCommand(
-                constants.Commands.Tests_Picker_UI_Debug,
-                (
-                    _,
-                    cmdSource: CommandSource = CommandSource.commandPalette,
-                    file: Uri,
-                    testFunctions: TestFunction[],
-                ) => this.displayPickerUI(cmdSource, file, testFunctions, true),
-            ),
-            commandManager.registerCommand(
                 constants.Commands.Tests_Run_Parametrized,
                 (
                     _,
@@ -533,20 +448,6 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
             ),
             commandManager.registerCommand(constants.Commands.Tests_Ask_To_Stop_Test, () =>
                 this.displayStopUI('Stop running tests'),
-            ),
-            commandManager.registerCommand(
-                constants.Commands.Tests_Select_And_Run_Method,
-                (_, cmdSource: CommandSource = CommandSource.commandPalette, resource: Uri) =>
-                    this.selectAndRunTestMethod(cmdSource, resource),
-            ),
-            commandManager.registerCommand(
-                constants.Commands.Tests_Select_And_Debug_Method,
-                (_, cmdSource: CommandSource = CommandSource.commandPalette, resource: Uri) =>
-                    this.selectAndRunTestMethod(cmdSource, resource, true),
-            ),
-            commandManager.registerCommand(
-                constants.Commands.Tests_Select_And_Run_File,
-                (_, cmdSource: CommandSource = CommandSource.commandPalette) => this.selectAndRunTestFile(cmdSource),
             ),
             commandManager.registerCommand(
                 constants.Commands.Tests_Run_Current_File,

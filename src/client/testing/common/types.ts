@@ -300,7 +300,6 @@ export interface ITestManagementService {
     ): Promise<void>;
     stopTests(resource: Uri): Promise<void>;
     displayStopUI(message: string): Promise<void>;
-    displayPickerUI(cmdSource: CommandSource, file: Uri, testFunctions: TestFunction[], debug?: boolean): Promise<void>;
     runTestsImpl(
         cmdSource: CommandSource,
         resource?: Uri,
@@ -309,10 +308,6 @@ export interface ITestManagementService {
         debug?: boolean,
     ): Promise<void>;
     runCurrentTestFile(cmdSource: CommandSource): Promise<void>;
-
-    selectAndRunTestFile(cmdSource: CommandSource): Promise<void>;
-
-    selectAndRunTestMethod(cmdSource: CommandSource, resource: Uri, debug?: boolean): Promise<void>;
 }
 
 export interface ITestManagerService extends Disposable {
