@@ -64,13 +64,9 @@
         "onCommand:python.debugtests",
         "onCommand:python.setInterpreter",
         "onCommand:python.setShebangInterpreter",
-        "onCommand:python.viewTestUI",
         "onCommand:python.viewLanguageServerOutput",
-        "onCommand:python.viewTestOutput",
         "onCommand:python.viewOutput",
-        "onCommand:python.selectAndRunTestMethod",
         "onCommand:python.selectAndDebugTestMethod",
-        "onCommand:python.selectAndRunTestFile",
         "onCommand:python.runCurrentTestFile",
         "onCommand:python.runFailedTests",
         "onCommand:python.execSelectionInTerminal",
@@ -459,16 +455,6 @@
             },
             {
                 "category": "Python",
-                "command": "python.selectAndRunTestFile",
-                "title": "%python.command.python.selectAndRunTestFile.title%"
-            },
-            {
-                "category": "Python",
-                "command": "python.selectAndRunTestMethod",
-                "title": "%python.command.python.selectAndRunTestMethod.title%"
-            },
-            {
-                "category": "Python",
                 "command": "python.setInterpreter",
                 "title": "%python.command.python.setInterpreter.title%"
             },
@@ -525,15 +511,6 @@
                     "light": "resources/light/repl.svg"
                 },
                 "title": "%python.command.python.viewOutput.title%"
-            },
-            {
-                "category": "Python",
-                "command": "python.viewTestOutput",
-                "icon": {
-                    "dark": "resources/dark/repl.svg",
-                    "light": "resources/light/repl.svg"
-                },
-                "title": "%python.command.python.viewTestOutput.title%"
             }
         ],
         "configuration": {
@@ -2103,11 +2080,6 @@
                     "command": "python.stopTests",
                     "group": "navigation@1",
                     "when": "view == python_tests && busyTests"
-                },
-                {
-                    "command": "python.viewTestOutput",
-                    "group": "navigation@5",
-                    "when": "view == python_tests"
                 }
             ]
         },
