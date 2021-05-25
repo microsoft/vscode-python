@@ -53,3 +53,9 @@ export enum JupyterNotInstalledOrigin {
     StartPageCreateSampleNotebook = 'startpage_sample_notebook',
     StartPageUseInteractiveWindow = 'startpage_use_interactive_window',
 }
+
+export const IJupyterNotInstalledNotificationHelper = Symbol('IJupyterNotInstalledNotificationHelper');
+export interface IJupyterNotInstalledNotificationHelper {
+    shouldShowJupypterExtensionNotInstalledPrompt(): boolean;
+    jupyterNotInstalledPrompt(entrypoint: JupyterNotInstalledOrigin): Promise<void>;
+}
