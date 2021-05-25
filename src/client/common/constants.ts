@@ -23,19 +23,8 @@ export namespace Commands {
     export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
     export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
     export const Tests_Configure = 'python.configureTests';
-    export const Tests_Discover = 'python.discoverTests';
-    export const Tests_Discovering = 'python.discoveringTests';
-    export const Tests_Run_Failed = 'python.runFailedTests';
     export const Sort_Imports = 'python.sortImports';
-    export const Tests_Run = 'python.runtests';
-    export const Tests_Run_Parametrized = 'python.runParametrizedTests';
-    export const Tests_Debug = 'python.debugtests';
-    export const Tests_Ask_To_Stop_Test = 'python.askToStopTests';
-    export const Tests_Ask_To_Stop_Discovery = 'python.askToStopTestDiscovery';
-    export const Tests_Stop = 'python.stopTests';
-    export const Test_Reveal_Test_Item = 'python.revealTestItem';
     export const ViewOutput = 'python.viewOutput';
-    export const Tests_Run_Current_File = 'python.runCurrentTestFile';
     export const Refactor_Extract_Variable = 'python.refactorExtractVariable';
     export const Refactor_Extract_Method = 'python.refactorExtractMethod';
     export const Build_Workspace_Symbols = 'python.buildWorkspaceSymbols';
@@ -45,8 +34,6 @@ export namespace Commands {
     export const Enable_Linter = 'python.enableLinting';
     export const Run_Linter = 'python.runLinting';
     export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
-    export const runTestNode = 'python.runTestNode';
-    export const debugTestNode = 'python.debugTestNode';
     export const SwitchOffInsidersChannel = 'python.switchOffInsidersChannel';
     export const SwitchToInsidersDaily = 'python.switchToDailyChannel';
     export const SwitchToInsidersWeekly = 'python.switchToWeeklyChannel';
@@ -67,15 +54,6 @@ export namespace Octicons {
     export const Downloading = '$(cloud-download)';
     export const Installing = '$(desktop-download)';
     export const Search_Stop = '$(search-stop)';
-}
-
-export namespace Text {
-    export const CodeLensRunUnitTest = 'Run Test';
-    export const CodeLensDebugUnitTest = 'Debug Test';
-}
-export namespace Delays {
-    // Max time to wait before aborting the generation of code lenses for unit tests
-    export const MaxUnitTestCodeLensDelay = 5000;
 }
 
 export const DEFAULT_INTERPRETER_SETTING = 'python';

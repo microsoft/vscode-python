@@ -57,15 +57,10 @@
         "onDebugResolve:python",
         "onCommand:python.execInTerminal",
         "onCommand:python.sortImports",
-        "onCommand:python.runtests",
-        "onCommand:python.debugtests",
         "onCommand:python.setInterpreter",
         "onCommand:python.setShebangInterpreter",
         "onCommand:python.viewLanguageServerOutput",
         "onCommand:python.viewOutput",
-        "onCommand:python.selectAndDebugTestMethod",
-        "onCommand:python.runCurrentTestFile",
-        "onCommand:python.runFailedTests",
         "onCommand:python.execSelectionInTerminal",
         "onCommand:python.execSelectionInDjangoShell",
         "onCommand:python.buildWorkspaceSymbols",
@@ -75,7 +70,6 @@
         "onCommand:python.setLinter",
         "onCommand:python.enableLinting",
         "onCommand:python.createTerminal",
-        "onCommand:python.discoverTests",
         "onCommand:python.configureTests",
         "onCommand:python.switchOffInsidersChannel",
         "onCommand:python.switchToDailyChannel",
@@ -147,40 +141,6 @@
                 "category": "Python"
             },
             {
-                "command": "python.runTestNode",
-                "title": "Run",
-                "icon": {
-                    "light": "resources/light/start.svg",
-                    "dark": "resources/dark/start.svg"
-                }
-            },
-            {
-                "command": "python.debugTestNode",
-                "title": "Debug",
-                "icon": {
-                    "light": "resources/light/debug.svg",
-                    "dark": "resources/dark/debug.svg"
-                }
-            },
-            {
-                "command": "python.runtests",
-                "title": "%python.command.python.runtests.title%",
-                "category": "Python",
-                "icon": {
-                    "light": "resources/light/run-tests.svg",
-                    "dark": "resources/dark/run-tests.svg"
-                }
-            },
-            {
-                "command": "python.debugtests",
-                "title": "%python.command.python.debugtests.title%",
-                "category": "Python",
-                "icon": {
-                    "light": "resources/light/debug.svg",
-                    "dark": "resources/dark/debug.svg"
-                }
-            },
-            {
                 "command": "python.execInTerminal",
                 "title": "%python.command.python.execInTerminal.title%",
                 "category": "Python"
@@ -247,52 +207,6 @@
                 "icon": {
                     "light": "resources/light/repl.svg",
                     "dark": "resources/dark/repl.svg"
-                }
-            },
-            {
-                "command": "python.selectAndDebugTestMethod",
-                "title": "%python.command.python.selectAndDebugTestMethod.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.runCurrentTestFile",
-                "title": "%python.command.python.runCurrentTestFile.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.runFailedTests",
-                "title": "%python.command.python.runFailedTests.title%",
-                "category": "Python",
-                "icon": {
-                    "light": "resources/light/run-failed-tests.svg",
-                    "dark": "resources/dark/run-failed-tests.svg"
-                }
-            },
-            {
-                "command": "python.discoverTests",
-                "title": "%python.command.python.discoverTests.title%",
-                "category": "Python",
-                "icon": {
-                    "light": "resources/light/refresh.svg",
-                    "dark": "resources/dark/refresh.svg"
-                }
-            },
-            {
-                "command": "python.discoveringTests",
-                "title": "%python.command.python.discoveringTests.title%",
-                "category": "Python",
-                "icon": {
-                    "light": "resources/light/discovering-tests.svg",
-                    "dark": "resources/dark/discovering-tests.svg"
-                }
-            },
-            {
-                "command": "python.stopTests",
-                "title": "%python.command.python.stopTests.title%",
-                "category": "Python",
-                "icon": {
-                    "light": "resources/light/stop.svg",
-                    "dark": "resources/dark/stop.svg"
                 }
             },
             {
@@ -390,11 +304,6 @@
                     "when": "resourceLangId == python",
                     "command": "python.execInTerminal",
                     "group": "Python"
-                },
-                {
-                    "when": "resourceLangId == python",
-                    "command": "python.runCurrentTestFile",
-                    "group": "Python"
                 }
             ],
             "editor/title/run": [
@@ -413,16 +322,6 @@
                 }
             ],
             "explorer/context": [
-                {
-                    "when": "resourceLangId == python && !busyTests && !notebookEditorFocused",
-                    "command": "python.runtests",
-                    "group": "Python"
-                },
-                {
-                    "when": "resourceLangId == python && !busyTests && !notebookEditorFocused",
-                    "command": "python.debugtests",
-                    "group": "Python"
-                },
                 {
                     "when": "resourceLangId == python",
                     "command": "python.execInTerminal",
@@ -464,28 +363,6 @@
                     "category": "Python"
                 },
                 {
-                    "command": "python.runTestNode",
-                    "title": "Run",
-                    "category": "Python",
-                    "when": "config.noExists"
-                },
-                {
-                    "command": "python.discoveringTests",
-                    "category": "Python",
-                    "when": "config.noExists"
-                },
-                {
-                    "command": "python.stopTests",
-                    "category": "Python",
-                    "when": "config.noExists"
-                },
-                {
-                    "command": "python.debugTestNode",
-                    "title": "Debug",
-                    "category": "Python",
-                    "when": "config.noExists"
-                },
-                {
                     "command": "python.startPage.open",
                     "title": "%python.command.python.startPage.open.title%",
                     "category": "Python"
@@ -493,95 +370,6 @@
                 {
                     "command": "python.launchTensorBoard",
                     "category": "Python"
-                }
-            ],
-            "view/title": [
-                {
-                    "command": "python.debugtests",
-                    "when": "view == python_tests && !busyTests",
-                    "group": "navigation@3"
-                },
-                {
-                    "command": "python.runtests",
-                    "when": "view == python_tests && !busyTests",
-                    "group": "navigation@1"
-                },
-                {
-                    "command": "python.stopTests",
-                    "when": "view == python_tests && busyTests",
-                    "group": "navigation@1"
-                },
-                {
-                    "command": "python.discoverTests",
-                    "when": "view == python_tests && !busyTests",
-                    "group": "navigation@4"
-                },
-                {
-                    "command": "python.discoveringTests",
-                    "when": "view == python_tests && discoveringTests",
-                    "group": "navigation@4"
-                },
-                {
-                    "command": "python.runFailedTests",
-                    "when": "view == python_tests && hasFailedTests && !busyTests",
-                    "group": "navigation@2"
-                }
-            ],
-            "view/item/context": [
-                {
-                    "command": "python.runtests",
-                    "when": "view == python_tests && viewItem == testWorkspaceFolder && !busyTests",
-                    "group": "inline@0"
-                },
-                {
-                    "command": "python.debugtests",
-                    "when": "view == python_tests && viewItem == testWorkspaceFolder && !busyTests",
-                    "group": "inline@1"
-                },
-                {
-                    "command": "python.discoverTests",
-                    "when": "view == python_tests && viewItem == testWorkspaceFolder && !busyTests",
-                    "group": "inline@2"
-                },
-                {
-                    "command": "python.debugTestNode",
-                    "when": "view == python_tests && viewItem == function && !busyTests",
-                    "group": "inline@1"
-                },
-                {
-                    "command": "python.runTestNode",
-                    "when": "view == python_tests && viewItem == function && !busyTests",
-                    "group": "inline@0"
-                },
-                {
-                    "command": "python.debugTestNode",
-                    "when": "view == python_tests && viewItem == file && !busyTests",
-                    "group": "inline@1"
-                },
-                {
-                    "command": "python.runTestNode",
-                    "when": "view == python_tests && viewItem == file && !busyTests",
-                    "group": "inline@0"
-                },
-                {
-                    "command": "python.debugTestNode",
-                    "when": "view == python_tests && viewItem == suite && !busyTests",
-                    "group": "inline@1"
-                },
-                {
-                    "command": "python.runTestNode",
-                    "when": "view == python_tests && viewItem == suite && !busyTests",
-                    "group": "inline@0"
-                },
-                {
-                    "command": "python.debugTestNode",
-                    "when": "view == python_tests && viewItem == folder && !busyTests",
-                    "group": "inline@1"
-                },
-                {
-                    "command": "python.runTestNode",
-                    "when": "view == python_tests && viewItem == folder && !busyTests",
-                    "group": "inline@0"
                 }
             ]
         },
