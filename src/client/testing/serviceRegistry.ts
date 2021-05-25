@@ -10,7 +10,6 @@ import { DebugLauncher } from './common/debugLauncher';
 import { EnablementTracker } from './common/enablementTracker';
 import { TestRunner } from './common/runner';
 import { TestConfigSettingsService } from './common/services/configSettingService';
-import { TestContextService } from './common/services/contextService';
 import { TestDiscoveredTestParser } from './common/services/discoveredTestParser';
 import { TestsDiscoveryService } from './common/services/discovery';
 import { TestCollectionStorageService } from './common/services/storageService';
@@ -30,7 +29,6 @@ import {
     ITestConfigSettingsService,
     ITestConfigurationManagerFactory,
     ITestConfigurationService,
-    ITestContextService,
     ITestDebugLauncher,
     ITestDiagnosticService,
     ITestDiscoveryService,
@@ -86,7 +84,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<ITestDiscoveredTestParser>(ITestDiscoveredTestParser, TestDiscoveredTestParser);
     serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, TestsDiscoveryService, 'common');
     serviceManager.add<IUnitTestSocketServer>(IUnitTestSocketServer, UnitTestSocketServer);
-    serviceManager.addSingleton<ITestContextService>(ITestContextService, TestContextService);
     serviceManager.addSingleton<ITestsStatusUpdaterService>(ITestsStatusUpdaterService, TestsStatusUpdaterService);
 
     serviceManager.add<ITestResultsService>(ITestResultsService, TestResultsService);
@@ -111,6 +108,7 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<ITestConfigurationService>(ITestConfigurationService, UnitTestConfigurationService);
     serviceManager.addSingleton<ITestManagementService>(ITestManagementService, UnitTestManagementService);
+    serviceManager.addBinding(ITestManagementService, IExtensionActivationService);
     serviceManager.addSingleton<ITestingService>(ITestingService, TestingService);
 
     serviceManager.addSingleton<ITestConfigSettingsService>(ITestConfigSettingsService, TestConfigSettingsService);

@@ -49,7 +49,6 @@ import { registerTypes as tensorBoardRegisterTypes } from './tensorBoard/service
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
-import { ITestingService } from './testing/types';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 
 // components
@@ -165,7 +164,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
     serviceContainer.get<ILanguageServerExtension>(ILanguageServerExtension).register();
-    serviceContainer.get<ITestingService>(ITestingService).register();
 
     // "activate" everything else
 

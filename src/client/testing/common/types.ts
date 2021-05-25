@@ -495,11 +495,6 @@ export interface ITestDebugConfig extends DebugConfiguration {
     subProcess?: boolean;
 }
 
-export const ITestContextService = Symbol('ITestContextService');
-export interface ITestContextService extends Disposable {
-    register(): void;
-}
-
 export const ITestsStatusUpdaterService = Symbol('ITestsStatusUpdaterService');
 export interface ITestsStatusUpdaterService {
     updateStatusAsDiscovering(resource: Uri, tests?: Tests): void;
