@@ -37,8 +37,6 @@ export namespace Commands {
     export const Exec_In_Terminal_Icon = 'python.execInTerminal-icon';
     export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
     export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
-    export const Tests_Picker_UI = 'python.selectTestToRun';
-    export const Tests_Picker_UI_Debug = 'python.selectTestToDebug';
     export const Tests_Configure = 'python.configureTests';
     export const Tests_Discover = 'python.discoverTests';
     export const Tests_Discovering = 'python.discoveringTests';
@@ -52,10 +50,6 @@ export namespace Commands {
     export const Tests_Stop = 'python.stopTests';
     export const Test_Reveal_Test_Item = 'python.revealTestItem';
     export const ViewOutput = 'python.viewOutput';
-    export const Tests_ViewOutput = 'python.viewTestOutput';
-    export const Tests_Select_And_Run_Method = 'python.selectAndRunTestMethod';
-    export const Tests_Select_And_Debug_Method = 'python.selectAndDebugTestMethod';
-    export const Tests_Select_And_Run_File = 'python.selectAndRunTestFile';
     export const Tests_Run_Current_File = 'python.runCurrentTestFile';
     export const Refactor_Extract_Variable = 'python.refactorExtractVariable';
     export const Refactor_Extract_Method = 'python.refactorExtractMethod';

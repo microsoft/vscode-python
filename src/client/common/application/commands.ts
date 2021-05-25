@@ -94,7 +94,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];
     [Commands.Exec_In_Terminal_Icon]: [undefined, Uri];
-    [Commands.Tests_Select_And_Run_File]: [undefined, CommandSource];
     [Commands.Tests_Run_Current_File]: [undefined, CommandSource];
     [Commands.Tests_Stop]: [undefined, Uri];
     [Commands.Test_Reveal_Test_Item]: [TestDataItem];
@@ -116,11 +115,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     // When command is invoked from a tree node, first argument is the node data.
     [Commands.Tests_Discover]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri];
     [Commands.Tests_Run_Failed]: [undefined, CommandSource, Uri];
-    [Commands.Tests_Select_And_Debug_Method]: [undefined, CommandSource, Uri];
-    [Commands.Tests_Select_And_Run_Method]: [undefined, CommandSource, Uri];
     [Commands.Tests_Configure]: [undefined, undefined | CommandSource, undefined | Uri];
-    [Commands.Tests_Picker_UI]: [undefined, undefined | CommandSource, Uri, TestFunction[]];
-    [Commands.Tests_Picker_UI_Debug]: [undefined, undefined | CommandSource, Uri, TestFunction[]];
     // When command is invoked from a tree node, first argument is the node data.
     [Commands.runTestNode]: [TestDataItem];
     // When command is invoked from a tree node, first argument is the node data.
