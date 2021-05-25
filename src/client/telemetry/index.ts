@@ -1768,12 +1768,12 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.JUPYTER_NOT_INSTALLED_NOTIFICATION_ACTION]: {
         /**
-         * Action selected by the user in response to the notification: install Jupyter,
+         * Action selected by the user in response to the notification:
          * close the notification using the close button, or "Do not show again".
          *
-         * @type {('Install' | 'Do not show again' | undefined)}
+         * @type {('Do not show again' | undefined)}
          */
-        selection: 'Install' | 'Do not show again' | undefined;
+        selection: 'Do not show again' | undefined;
     };
 
     [Telemetry.WebviewStyleUpdate]: never | undefined;
