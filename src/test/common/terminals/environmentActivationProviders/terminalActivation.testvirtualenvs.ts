@@ -182,16 +182,16 @@ suite('Activation of Environments in Terminal', () => {
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
     }
 
-    test('Should not activate', async () => {
-        await updateSetting(
-            'terminal.activateEnvironment',
-            false,
-            vscode.workspace.workspaceFolders![0].uri,
-            vscode.ConfigurationTarget.WorkspaceFolder,
-        );
-        const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
-        expect(fileSystem.arePathsSame(content, PYTHON_PATH)).to.equal(false, 'Environment not activated');
-    });
+    // test('Should not activate', async () => {
+    //     await updateSetting(
+    //         'terminal.activateEnvironment',
+    //         false,
+    //         vscode.workspace.workspaceFolders![0].uri,
+    //         vscode.ConfigurationTarget.WorkspaceFolder,
+    //     );
+    //     const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
+    //     expect(fileSystem.arePathsSame(content, PYTHON_PATH)).to.equal(false, 'Environment not activated');
+    // });
 
     [true, false].forEach((value) => {
         suite(`Test activation with DeprecatePythonPath experiment value set to ${value}`, () => {
