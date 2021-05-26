@@ -67,6 +67,7 @@ suite('Activation of Environments in Terminal', () => {
         pythonSettings = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders![0].uri);
         defaultShell.Windows = terminalSettings.inspect('integrated.shell.windows').globalValue;
         defaultShell.Linux = terminalSettings.inspect('integrated.shell.linux').globalValue;
+        console.warn(`defaultShell values: ${defaultShell}`);
         await terminalSettings.update('integrated.shell.linux', '/bin/bash', vscode.ConfigurationTarget.Global);
         const serviceContainer = (await initialize()).serviceContainer;
         experiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
