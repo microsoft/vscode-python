@@ -102,20 +102,21 @@ export class ExperimentService implements IExperimentService {
             // Check if the user was already in the experiment server-side. We need to do
             // this to ensure the experiment service is ready and internal states are fully
             // synced with the experiment server.
-            await this.experimentationService.getTreatmentVariableAsync(EXP_CONFIG_ID, experiment, true);
-
+            // await this.experimentationService.getTreatmentVariableAsync(EXP_CONFIG_ID, experiment, true);
+            await this.experimentationService.isCachedFlightEnabled(experiment);
             return true;
         }
 
         // If getTreatmentVariableAsync returns undefined,
         // it means that the value for this experiment was not found on the server.
-        const treatmentVariable = await this.experimentationService.getTreatmentVariableAsync(
-            EXP_CONFIG_ID,
-            experiment,
-            true,
-        );
+        // const treatmentVariable = await this.experimentationService.getTreatmentVariableAsync(
+        //     EXP_CONFIG_ID,
+        //     experiment,
+        //     true,
+        // );
 
-        return treatmentVariable !== undefined;
+        // return treatmentVariable !== undefined;
+        return this.experimentationService.isCachedFlightEnabled(experiment);
     }
 
     public async getExperimentValue<T extends boolean | number | string>(experiment: string): Promise<T | undefined> {
