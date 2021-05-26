@@ -208,10 +208,13 @@ suite('Activation of Environments in Terminal', () => {
             });
 
             test('Should activate with venv', async function () {
+                console.warn(`Should activate with venv with DeprecatePythonPath.experiment set to ${value}`);
                 if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
                     this.skip();
                 }
+                console.warn(`Did not skip test`);
                 await testActivation(envPaths.venvPath);
+                console.warn(`tested activation with venv`);
             });
 
             test('Should activate with pipenv', async () => {
