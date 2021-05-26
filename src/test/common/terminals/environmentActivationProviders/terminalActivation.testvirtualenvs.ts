@@ -197,8 +197,10 @@ suite('Activation of Environments in Terminal', () => {
         suite(`Test activation with DeprecatePythonPath experiment value set to ${value}`, () => {
             let deprecatePythonPathStub: sinon.SinonStub;
             setup(() => {
+                console.warn('setup');
                 deprecatePythonPathStub = sandbox.stub(experiments, 'inExperiment');
                 deprecatePythonPathStub.withArgs(DeprecatePythonPath.experiment).returns(value);
+                console.warn(`DeprecatePythonPath.experiment set to ${value}`);
             });
 
             teardown(() => {
