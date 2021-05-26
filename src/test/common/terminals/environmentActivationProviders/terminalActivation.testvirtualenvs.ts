@@ -13,7 +13,7 @@ import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IExperimentService, IExperimentsManager } from '../../../../client/common/types';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import {
-    PYTHON_PATH,
+    // PYTHON_PATH,
     resetGlobalInterpreterPathSetting,
     restorePythonPathInWorkspaceRoot,
     setGlobalInterpreterPath,
