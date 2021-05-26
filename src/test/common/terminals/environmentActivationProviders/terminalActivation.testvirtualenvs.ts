@@ -10,7 +10,7 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
-import { IExperimentService, IExperimentsManager } from '../../../../client/common/types';
+import { ICurrentProcess, IExperimentService, IExperimentsManager } from '../../../../client/common/types';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import {
     // PYTHON_PATH,
@@ -25,6 +25,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, TEST_TIMEOUT } from '../../../constants';
 import { sleep } from '../../../core';
 import { initialize, initializeTest } from '../../../initialize';
 import * as ExperimentHelpers from '../../../../client/common/experiments/helpers';
+import { getCommandPromptLocation } from '../../../../client/common/terminal/commandPrompt';
 
 suite('Activation of Environments in Terminal', () => {
     const file = path.join(
@@ -73,6 +74,12 @@ suite('Activation of Environments in Terminal', () => {
         experiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
         const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
         sandbox.stub(experimentService, 'inExperiment').resolves(true);
+
+        const currentProcess = serviceContainer.get<ICurrentProcess>(ICurrentProcess);
+        const cmdPath = getCommandPromptLocation(currentProcess);
+        console.warn(`cmdPath: ${cmdPath}`);
+        await terminalSettings.update('integrated.shell.windows', cmdPath, vscode.ConfigurationTarget.Global);
+        console.warn(`Updated terminal.integrated.shell.windows to ${cmdPath}`);
     });
 
     setup(async () => {
