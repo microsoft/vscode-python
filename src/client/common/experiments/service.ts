@@ -15,6 +15,7 @@ import { Experiments } from '../utils/localize';
 import { ExperimentationTelemetry } from './telemetry';
 
 const EXP_MEMENTO_KEY = 'VSCode.ABExp.FeatureData';
+const EXP_CONFIG_ID = 'vscode';
 
 @injectable()
 export class ExperimentService implements IExperimentService {
@@ -106,6 +107,32 @@ export class ExperimentService implements IExperimentService {
         }
 
         return this.experimentationService.isCachedFlightEnabled(experiment);
+    }
+
+    public inExperimentSync(experiment: string): boolean {
+        if (!this.experimentationService) {
+            return false;
+        }
+
+        // Currently the service doesn't support opting in and out of experiments.
+        // so we need to perform these checks manually.
+        if (this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
+            return false;
+        }
+
+        if (this._optInto.includes('All') || this._optInto.includes(experiment)) {
+            // Check if the user was already in the experiment server-side. We need to do
+            // this to ensure the experiment service is ready and internal states are fully
+            // synced with the experiment server.
+            this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment);
+            return true;
+        }
+
+        // If getTreatmentVariable returns undefined,
+        // it means that the value for this experiment was not found on the server.
+        const treatmentVariable = this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment);
+
+        return treatmentVariable !== undefined;
     }
 
     public async getExperimentValue<T extends boolean | number | string>(experiment: string): Promise<T | undefined> {
