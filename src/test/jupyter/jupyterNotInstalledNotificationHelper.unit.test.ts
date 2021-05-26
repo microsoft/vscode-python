@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import * as sinon from 'sinon';
 import { IApplicationShell, IJupyterExtensionDependencyManager } from '../../client/common/application/types';
-import { IPersistentStateFactory, IPersistentState } from '../../client/common/types';
+import { IPersistentStateFactory } from '../../client/common/types';
 import { Jupyter, Common } from '../../client/common/utils/localize';
 import {
     jupyterExtensionNotInstalledKey,
@@ -13,126 +13,137 @@ import {
 import { JupyterNotInstalledOrigin } from '../../client/jupyter/types';
 
 suite('Jupyter not installed notification helper', () => {
-    let appShell: IApplicationShell;
-    let persistentStateFactory: IPersistentStateFactory;
-    let jupyterExtDependencyManager: IJupyterExtensionDependencyManager;
-
-    setup(() => {
-        appShell = mock<IApplicationShell>();
-        persistentStateFactory = mock<IPersistentStateFactory>();
-        jupyterExtDependencyManager = mock<IJupyterExtensionDependencyManager>();
+    teardown(() => {
+        sinon.restore();
     });
 
     test('Notification check should return false if the Jupyter extension is installed', () => {
-        const persistentState = mock<IPersistentState<boolean | undefined>>();
-        when(persistentState.value).thenReturn(undefined);
+        const createGlobalPersistentStateStub = sinon
+            .stub()
+            .withArgs(jupyterExtensionNotInstalledKey, sinon.match.bool)
+            .returns({ value: undefined });
 
-        when(
-            persistentStateFactory.createGlobalPersistentState(jupyterExtensionNotInstalledKey, anything()),
-        ).thenReturn(instance(persistentState));
-
-        when(jupyterExtDependencyManager.isJupyterExtensionInstalled).thenReturn(true);
+        // Need to define 'isJupyterExtensionInstalled' for it to be stubbed.
+        const jupyterExtDependencyManager = {
+            isJupyterExtensionInstalled: false,
+        } as IJupyterExtensionDependencyManager;
+        const isJupyterExtensionInstalledStub = sinon.stub().returns(true);
+        sinon.stub(jupyterExtDependencyManager, 'isJupyterExtensionInstalled').get(isJupyterExtensionInstalledStub);
 
         const notificationHelper = new JupyterNotInstalledNotificationHelper(
-            instance(appShell),
-            instance(persistentStateFactory),
-            instance(jupyterExtDependencyManager),
+            {} as IApplicationShell,
+            ({ createGlobalPersistentState: createGlobalPersistentStateStub } as unknown) as IPersistentStateFactory,
+            jupyterExtDependencyManager,
         );
 
         const result = notificationHelper.shouldShowJupypterExtensionNotInstalledPrompt();
 
         assert.strictEqual(result, false);
-        verify(persistentStateFactory.createGlobalPersistentState(jupyterExtensionNotInstalledKey, anything())).once();
-        verify(jupyterExtDependencyManager.isJupyterExtensionInstalled).once();
+        sinon.assert.calledOnce(createGlobalPersistentStateStub);
+        sinon.assert.calledWith(createGlobalPersistentStateStub, jupyterExtensionNotInstalledKey, sinon.match.bool);
+        sinon.assert.calledOnce(isJupyterExtensionInstalledStub);
     });
 
     test('Notification check should return false if the doNotShowAgain persistent value is set', () => {
-        const persistentState = mock<IPersistentState<boolean | undefined>>();
-        when(persistentState.value).thenReturn(true);
+        const createGlobalPersistentStateStub = sinon
+            .stub()
+            .withArgs(jupyterExtensionNotInstalledKey, sinon.match.bool)
+            .returns({ value: true });
 
-        when(
-            persistentStateFactory.createGlobalPersistentState(jupyterExtensionNotInstalledKey, anything()),
-        ).thenReturn(instance(persistentState));
-
-        when(jupyterExtDependencyManager.isJupyterExtensionInstalled).thenReturn(true);
+        const jupyterExtDependencyManager = {
+            isJupyterExtensionInstalled: false,
+        } as IJupyterExtensionDependencyManager;
+        const isJupyterExtensionInstalledStub = sinon.stub().returns(false);
+        sinon.stub(jupyterExtDependencyManager, 'isJupyterExtensionInstalled').get(isJupyterExtensionInstalledStub);
 
         const notificationHelper = new JupyterNotInstalledNotificationHelper(
-            instance(appShell),
-            instance(persistentStateFactory),
-            instance(jupyterExtDependencyManager),
+            {} as IApplicationShell,
+            ({ createGlobalPersistentState: createGlobalPersistentStateStub } as unknown) as IPersistentStateFactory,
+            jupyterExtDependencyManager,
         );
 
         const result = notificationHelper.shouldShowJupypterExtensionNotInstalledPrompt();
 
         assert.strictEqual(result, false);
-        verify(persistentStateFactory.createGlobalPersistentState(jupyterExtensionNotInstalledKey, anything())).once();
-        verify(jupyterExtDependencyManager.isJupyterExtensionInstalled).never();
+        sinon.assert.calledOnce(createGlobalPersistentStateStub);
+        sinon.assert.calledWith(createGlobalPersistentStateStub, jupyterExtensionNotInstalledKey, sinon.match.bool);
+        sinon.assert.notCalled(isJupyterExtensionInstalledStub);
     });
 
     test('Notification check should return true if the doNotShowAgain persistent value is not set and the Jupyter extension is not installed', () => {
-        const persistentState = mock<IPersistentState<boolean | undefined>>();
-        when(persistentState.value).thenReturn(undefined);
+        const createGlobalPersistentStateStub = sinon
+            .stub()
+            .withArgs(jupyterExtensionNotInstalledKey, sinon.match.bool)
+            .returns({ value: undefined });
 
-        when(
-            persistentStateFactory.createGlobalPersistentState(jupyterExtensionNotInstalledKey, anything()),
-        ).thenReturn(instance(persistentState));
-
-        when(jupyterExtDependencyManager.isJupyterExtensionInstalled).thenReturn(false);
+        const jupyterExtDependencyManager = {
+            isJupyterExtensionInstalled: false,
+        } as IJupyterExtensionDependencyManager;
+        const isJupyterExtensionInstalledStub = sinon.stub().returns(false);
+        sinon.stub(jupyterExtDependencyManager, 'isJupyterExtensionInstalled').get(isJupyterExtensionInstalledStub);
 
         const notificationHelper = new JupyterNotInstalledNotificationHelper(
-            instance(appShell),
-            instance(persistentStateFactory),
-            instance(jupyterExtDependencyManager),
+            {} as IApplicationShell,
+            ({ createGlobalPersistentState: createGlobalPersistentStateStub } as unknown) as IPersistentStateFactory,
+            (jupyterExtDependencyManager as unknown) as IJupyterExtensionDependencyManager,
         );
 
         const result = notificationHelper.shouldShowJupypterExtensionNotInstalledPrompt();
 
         assert.strictEqual(result, true);
-        verify(persistentStateFactory.createGlobalPersistentState(jupyterExtensionNotInstalledKey, anything())).once();
-        verify(jupyterExtDependencyManager.isJupyterExtensionInstalled).once();
+        sinon.assert.calledOnce(createGlobalPersistentStateStub);
+        sinon.assert.calledWith(createGlobalPersistentStateStub, jupyterExtensionNotInstalledKey, sinon.match.bool);
+        sinon.assert.calledOnce(isJupyterExtensionInstalledStub);
     });
 
     test('Selecting "Do not show again" should set the doNotShowAgain persistent value', async () => {
-        const persistentState = mock<IPersistentState<boolean | undefined>>();
+        const updateValueStub = sinon.stub();
+        const createGlobalPersistentStateStub = sinon
+            .stub()
+            .withArgs(jupyterExtensionNotInstalledKey, sinon.match.bool)
+            .returns({ updateValue: updateValueStub });
 
-        when(
-            persistentStateFactory.createGlobalPersistentState(jupyterExtensionNotInstalledKey, anything()),
-        ).thenReturn(instance(persistentState));
-
-        when(
-            appShell.showInformationMessage(Jupyter.jupyterExtensionNotInstalled(), Common.doNotShowAgain()),
-        ).thenReturn(Promise.resolve(Common.doNotShowAgain()));
+        const showInformationMessageStub = sinon.stub().returns(Promise.resolve(Common.doNotShowAgain));
 
         const notificationHelper = new JupyterNotInstalledNotificationHelper(
-            instance(appShell),
-            instance(persistentStateFactory),
-            instance(jupyterExtDependencyManager),
+            ({ showInformationMessage: showInformationMessageStub } as unknown) as IApplicationShell,
+            ({ createGlobalPersistentState: createGlobalPersistentStateStub } as unknown) as IPersistentStateFactory,
+            {} as IJupyterExtensionDependencyManager,
         );
-
         await notificationHelper.jupyterNotInstalledPrompt(JupyterNotInstalledOrigin.StartPageCreateBlankNotebook);
 
-        verify(persistentStateFactory.createGlobalPersistentState(jupyterExtensionNotInstalledKey, false)).once();
-        verify(persistentState.updateValue(true)).once();
+        sinon.assert.calledOnce(createGlobalPersistentStateStub);
+        sinon.assert.calledOnce(showInformationMessageStub);
+        sinon.assert.calledWith(
+            showInformationMessageStub,
+            Jupyter.jupyterExtensionNotInstalled(),
+            Common.doNotShowAgain(),
+        );
+        sinon.assert.calledOnce(updateValueStub);
+        sinon.assert.calledWith(updateValueStub, true);
     });
 
     test('Selecting "Do not show again" should make the prompt check return false', async () => {
-        const persistentState = mock<IPersistentState<boolean | undefined>>();
+        const persistentState: { value: boolean | undefined; updateValue: (v: boolean) => void } = {
+            value: undefined,
+            updateValue(v: boolean) {
+                this.value = v;
+            },
+        };
+        const createGlobalPersistentStateStub = sinon
+            .stub()
+            .withArgs(jupyterExtensionNotInstalledKey, sinon.match.bool)
+            .returns(persistentState);
 
-        when(
-            persistentStateFactory.createGlobalPersistentState(jupyterExtensionNotInstalledKey, anything()),
-        ).thenReturn(instance(persistentState));
-
-        when(
-            appShell.showInformationMessage(Jupyter.jupyterExtensionNotInstalled(), Common.doNotShowAgain()),
-        ).thenReturn(Promise.resolve(Common.doNotShowAgain()));
+        const showInformationMessageStub = sinon.stub().returns(Promise.resolve(Common.doNotShowAgain));
 
         const notificationHelper = new JupyterNotInstalledNotificationHelper(
-            instance(appShell),
-            instance(persistentStateFactory),
-            instance(jupyterExtDependencyManager),
+            ({ showInformationMessage: showInformationMessageStub } as unknown) as IApplicationShell,
+            ({ createGlobalPersistentState: createGlobalPersistentStateStub } as unknown) as IPersistentStateFactory,
+            {} as IJupyterExtensionDependencyManager,
         );
-
         await notificationHelper.jupyterNotInstalledPrompt(JupyterNotInstalledOrigin.StartPageCreateBlankNotebook);
+
         const result = notificationHelper.shouldShowJupypterExtensionNotInstalledPrompt();
 
         assert.strictEqual(result, false);
