@@ -74,12 +74,6 @@ suite('Activation of Environments in Terminal', () => {
         experiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
         const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
         sandbox.stub(experimentService, 'inExperiment').resolves(true);
-
-        const currentProcess = serviceContainer.get<ICurrentProcess>(ICurrentProcess);
-        const cmdPath = getCommandPromptLocation(currentProcess);
-        console.warn(`cmdPath: ${cmdPath}`);
-        await terminalSettings.update('integrated.shell.windows', cmdPath, vscode.ConfigurationTarget.Global);
-        console.warn(`Updated terminal.integrated.shell.windows to ${cmdPath}`);
     });
 
     setup(async () => {
