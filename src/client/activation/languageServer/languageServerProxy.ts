@@ -8,13 +8,10 @@ import { Disposable, LanguageClient, LanguageClientOptions, State } from 'vscode
 import { traceDecorators, traceError } from '../../common/logger';
 import { IConfigurationService, Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
-import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
-import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ITestingService } from '../../testing/types';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 
@@ -28,7 +25,6 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
 
     constructor(
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
-        @inject(ITestingService) private readonly testManager: ITestingService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
     ) {
         this.startupCompleted = createDeferred<void>();
@@ -77,8 +73,6 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
                 // Check if it got disposed in the interim.
                 return;
             }
-
-            await this.registerTestServices();
         } else {
             await this.startupCompleted.promise;
         }
@@ -107,13 +101,6 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
             await this.languageClient.onReady();
         }
         this.startupCompleted.resolve();
-    }
-    @swallowExceptions('Activating Unit Tests Manager for Microsoft Python Language Server')
-    protected async registerTestServices() {
-        if (!this.languageClient) {
-            throw new Error('languageClient not initialized');
-        }
-        await this.testManager.activate(new LanguageServerSymbolProvider(this.languageClient!));
     }
 
     private registerHandlers(resource: Resource) {

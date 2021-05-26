@@ -15,14 +15,11 @@ import { DeprecatePythonPath } from '../../common/experiments/groups';
 import { traceDecorators, traceError } from '../../common/logger';
 import { IConfigurationService, IExperimentService, IInterpreterPathService, Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
-import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ITestingService } from '../../testing/types';
 import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerFolderService, ILanguageServerProxy } from '../types';
@@ -62,7 +59,6 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
 
     constructor(
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
-        @inject(ITestingService) private readonly testManager: ITestingService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
@@ -138,8 +134,6 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
                 // Check if it got disposed in the interim.
                 return;
             }
-
-            await this.registerTestServices();
         } else {
             await this.startupCompleted.promise;
         }
@@ -162,14 +156,6 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
             await this.languageClient.onReady();
         }
         this.startupCompleted.resolve();
-    }
-
-    @swallowExceptions('Activating Unit Tests Manager for Pylance language server')
-    protected async registerTestServices() {
-        if (!this.languageClient) {
-            throw new Error('languageClient not initialized');
-        }
-        await this.testManager.activate(new LanguageServerSymbolProvider(this.languageClient!));
     }
 
     private registerHandlers(resource: Resource) {

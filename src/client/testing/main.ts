@@ -4,7 +4,6 @@ import { inject, injectable } from 'inversify';
 import {
     ConfigurationChangeEvent,
     Disposable,
-    DocumentSymbolProvider,
     Event,
     EventEmitter,
     OutputChannel,
@@ -33,7 +32,6 @@ import {
     ITestDisplay,
     TestFile,
     TestFunction,
-    ITestContextService,
     ITestResultDisplay,
     ITestsHelper,
     TestStatus,
@@ -43,20 +41,11 @@ import {
 import { TEST_OUTPUT_CHANNEL } from './constants';
 import { ITestingService } from './types';
 import { PythonTestController } from './testController/controller';
+import { IExtensionActivationService } from '../activation/types';
 
 @injectable()
 export class TestingService implements ITestingService {
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
-
-    public async activate(symbolProvider: DocumentSymbolProvider): Promise<void> {
-        const mgmt = this.serviceContainer.get<ITestManagementService>(ITestManagementService);
-        return ((mgmt as unknown) as ITestingService).activate(symbolProvider);
-    }
-
-    public register(): void {
-        const context = this.serviceContainer.get<ITestContextService>(ITestContextService);
-        context.register();
-    }
 
     public getSettingsPropertyNames(product: Product): TestSettingsPropertyNames {
         const helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
@@ -65,7 +54,7 @@ export class TestingService implements ITestingService {
 }
 
 @injectable()
-export class UnitTestManagementService implements ITestManagementService, Disposable {
+export class UnitTestManagementService implements ITestManagementService, IExtensionActivationService, Disposable {
     private readonly outputChannel: OutputChannel;
     private activatedOnce: boolean = false;
     private readonly disposableRegistry: Disposable[];

@@ -10,7 +10,6 @@ import { IInterpreterHelper } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { IServiceContainer } from '../../client/ioc/types';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../client/testing/common/constants';
-import { TestContextService } from '../../client/testing/common/services/contextService';
 import { TestDiscoveredTestParser } from '../../client/testing/common/services/discoveredTestParser';
 import { TestsDiscoveryService } from '../../client/testing/common/services/discovery';
 import { TestCollectionStorageService } from '../../client/testing/common/services/storageService';
@@ -24,7 +23,6 @@ import { TestFlatteningVisitor } from '../../client/testing/common/testVisitors/
 import { TestResultResetVisitor } from '../../client/testing/common/testVisitors/resultResetVisitor';
 import {
     ITestCollectionStorageService,
-    ITestContextService,
     ITestDiagnosticService,
     ITestDiscoveryService,
     ITestManager,
@@ -66,7 +64,6 @@ export class UnitTestIocContainer extends IocContainer {
             ITestsStatusUpdaterService,
             TestsStatusUpdaterService,
         );
-        this.serviceManager.addSingleton<ITestContextService>(ITestContextService, TestContextService);
     }
 
     public registerTestStorage(): void {
