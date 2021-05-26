@@ -56,7 +56,9 @@ export function getLanguageConfiguration(): LanguageConfiguration {
                                 elif |
                                 while |
                                 with |
-                                async \\s+ with
+                                async \\s+ with |
+                                match |
+                                case
                             )
                             \\b .*
                         ) |

@@ -21,7 +21,6 @@ import { CommandManager } from './application/commandManager';
 import { IPythonCommandManager } from './application/commands';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand';
 import { ReportIssueCommandHandler } from './application/commands/reportIssueCommand';
-import { CustomEditorService } from './application/customEditorService';
 import { DebugService } from './application/debugService';
 import { DebugSessionTelemetry } from './application/debugSessionTelemetry';
 import { DocumentManager } from './application/documentManager';
@@ -35,7 +34,6 @@ import {
     IApplicationShell,
     IClipboard,
     ICommandManager,
-    ICustomEditorService,
     IDebugService,
     IDocumentManager,
     IJupyterExtensionDependencyManager,
@@ -235,7 +233,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         DebugSessionTelemetry,
     );
-    serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
     serviceManager.addSingleton<IStartPage>(IStartPage, StartPage, undefined, [IExtensionSingleActivationService]);
     serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
     serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);

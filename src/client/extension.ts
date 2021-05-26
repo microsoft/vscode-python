@@ -17,7 +17,7 @@ require('./common/logger');
 // locations at which we record various Intervals are marked below in
 // the same way as this.
 
-const durations: Record<string, number> = {};
+const durations = {} as IStartupDurations;
 import { StopWatch } from './common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
@@ -37,6 +37,7 @@ import { activateComponents } from './extensionActivation';
 import { initializeStandard, initializeComponents, initializeGlobals } from './extensionInit';
 import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
+import { IStartupDurations } from './types';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -87,7 +88,7 @@ export function deactivate(): Thenable<void> {
 async function activateUnsafe(
     context: IExtensionContext,
     startupStopWatch: StopWatch,
-    startupDurations: Record<string, number>,
+    startupDurations: IStartupDurations,
 ): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
     const activationDeferred = createDeferred<void>();
     displayProgress(activationDeferred.promise);
@@ -114,7 +115,7 @@ async function activateUnsafe(
     //===============================================
     // activation ends here
 
-    startupDurations.endActivateTime = startupStopWatch.elapsedTime;
+    startupDurations.totalActivateTime = startupStopWatch.elapsedTime - startupDurations.startActivateTime;
     activationDeferred.resolve();
 
     const api = buildApi(activationPromise, ext.legacyIOC.serviceManager, ext.legacyIOC.serviceContainer);
@@ -129,7 +130,7 @@ function displayProgress(promise: Promise<any>) {
 /////////////////////////////
 // error handling
 
-async function handleError(ex: Error, startupDurations: Record<string, number>) {
+async function handleError(ex: Error, startupDurations: IStartupDurations) {
     notifyUser(
         "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information.",
     );

@@ -3,7 +3,7 @@
 
 'use strict';
 
-export class StopWatch {
+export class StopWatch implements IStopWatch {
     private started = new Date().getTime();
     public get elapsedTime() {
         return new Date().getTime() - this.started;
@@ -11,4 +11,8 @@ export class StopWatch {
     public reset() {
         this.started = new Date().getTime();
     }
+}
+
+export interface IStopWatch {
+    elapsedTime: number;
 }

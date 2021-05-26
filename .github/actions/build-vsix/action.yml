@@ -9,33 +9,49 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: Upgrade Pip
+      run: python -m pip install -U pip
+      shell: bash
+
     # For faster/better builds of sdists.
-    - run: python -m pip install wheel
+    - name: Install build pre-requisite
+      run: python -m pip install wheel
       shell: bash
 
-    - run: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+    - name: Install python dependencies
+      run: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
       shell: bash
 
-    - run: |
-        python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py --platform any --abi none --no-deps --only-binary :all: --upgrade -r jedils_requirements.txt
-      shell: bash
-
-    - run: |
+    - name: Install debugpy
+      run: |
         python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
         python ./pythonFiles/install_debugpy.py
       shell: bash
 
-    - run: npm ci --prefer-offline
+    - name: Install Jedi LSP
+      run: |
+        python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py --platform any --abi none --no-deps --only-binary :all: --upgrade -r jedils_requirements.txt
+      shell: bash
+
+    - name: Run npm ci
+      run: npm ci --prefer-offline
       shell: bash
 
     # Use the GITHUB_RUN_ID environment variable to update the build number.
     # GITHUB_RUN_ID is a unique number for each run within a repository.
     # This number does not change if you re-run the workflow run.
-    - run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
+    - name: Update extension build number
+      run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
       shell: bash
 
-    - run: npm run addExtensionDependencies
+    - name: Update extension dependencies
+      run: npm run addExtensionDependencies
       shell: bash
 
-    - run: npm run package
+    - name: Update Optional extension dependencies
+      run: npm run addExtensionPackDependencies
+      shell: bash
+
+    - name: Build VSIX
+      run: npm run package
       shell: bash

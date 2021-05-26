@@ -1,10 +1,16 @@
 {
     "name": "python",
     "displayName": "Python",
-    "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2021.5.0-dev",
+    "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
+    "version": "2021.6.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
+    },
+    "capabilities": {
+        "untrustedWorkspaces": {
+            "supported": false
+        },
+        "virtualWorkspaces": false
     },
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
@@ -42,12 +48,10 @@
         "Linters",
         "Formatters",
         "Other",
-        "Extension Packs",
         "Data Science",
         "Machine Learning",
         "Notebooks"
     ],
-    "requiresWorkspaceTrust": "onStart",
     "activationEvents": [
         "onLanguage:python",
         "onDebugResolve:python",
@@ -100,9 +104,22 @@
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
                 "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused"
+            },
+            {
+                "command": "python.refreshTensorBoard",
+                "key": "ctrl+r",
+                "mac": "cmd+r",
+                "when": "python.hasActiveTensorBoardSession"
             }
         ],
         "commands": [
+            {
+                "command": "python.refreshTensorBoard",
+                "title": "%python.command.python.refreshTensorBoard.title%",
+                "category": "Python",
+                "enablement": "python.hasActiveTensorBoardSession",
+                "icon": "$(refresh)"
+            },
             {
                 "command": "python.clearPersistentStorage",
                 "title": "%python.command.python.clearPersistentStorage.title%",
@@ -417,6 +434,13 @@
                     "title": "%python.command.python.execInTerminal.title%",
                     "group": "navigation",
                     "when": "resourceLangId == python && !isInDiffEditor"
+                }
+            ],
+            "editor/title": [
+                {
+                    "command": "python.refreshTensorBoard",
+                    "group": "navigation@0",
+                    "when": "python.hasActiveTensorBoardSession"
                 }
             ],
             "explorer/context": [
@@ -798,6 +822,43 @@
                                 "type": "boolean",
                                 "description": "Whether to enable Sub Process debugging",
                                 "default": false
+                            },
+                            "autoReload": {
+                                "type": "object",
+                                "description": "Configures automatic reload of code on edit.",
+                                "default": {},
+                                "properties": {
+                                    "enable": {
+                                        "type": "boolean",
+                                        "description": "Automatically reload code on edit.",
+                                        "default": false
+                                    },
+                                    "exclude": {
+                                        "type": "array",
+                                        "description": "Glob patterns of paths to exclude from auto reload.",
+                                        "default": [
+                                            "**/.git/**",
+                                            "**/__pycache__/**",
+                                            "**/node_modules/**",
+                                            "**/.metadata/**",
+                                            "**/site-packages/**"
+                                        ],
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "include": {
+                                        "type": "array",
+                                        "description": "Glob patterns of paths to include in auto reload.",
+                                        "default": [
+                                            "**/*.py",
+                                            "**/*.pyw"
+                                        ],
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
                             }
                         }
                     },
@@ -1073,6 +1134,7 @@
                             "tryPylance",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
+                            "pythonDiscoveryModuleWithoutWatcher",
                             "pythonJediLSP",
                             "pythonSurveyNotification",
                             "All"
@@ -1090,6 +1152,7 @@
                             "tryPylance",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
+                            "pythonDiscoveryModuleWithoutWatcher",
                             "pythonJediLSP",
                             "pythonSurveyNotification",
                             "All"
@@ -1188,13 +1251,22 @@
                 "python.languageServer": {
                     "type": "string",
                     "enum": [
+                        "Default",
                         "Jedi",
                         "JediLSP",
                         "Pylance",
                         "Microsoft",
                         "None"
                     ],
-                    "default": "Jedi",
+                    "enumDescriptions": [
+                        "Automatically select a language server: Pylance if installed and available, otherwise fallback to Jedi.",
+                        "Use Jedi as a language server.",
+                        "Use Jedi behind the Language Server Protocol (LSP) as a language server.",
+                        "Use Pylance as a language server.",
+                        "Use the Microsoft Python Language Server (MPLS) as a language server. (legacy)",
+                        "Disable language server capabilities."
+                    ],
+                    "default": "Default",
                     "description": "Defines type of the language server.",
                     "scope": "window"
                 },
@@ -2013,6 +2085,7 @@
         "format-fix": "prettier --write 'src/**/*.ts' 'src/**/*.tsx' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
         "clean": "gulp clean",
         "addExtensionDependencies": "gulp addExtensionDependencies",
+        "addExtensionPackDependencies": "gulp addExtensionPackDependencies",
         "updateBuildNumber": "gulp updateBuildNumber",
         "verifyBundle": "gulp verifyBundle",
         "webpack": "webpack"
@@ -2031,7 +2104,7 @@
         "inversify": "^5.0.4",
         "jsonc-parser": "^2.0.3",
         "line-by-line": "^0.1.6",
-        "lodash": "^4.17.19",
+        "lodash": "^4.17.21",
         "log4js": "^6.1.2",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
@@ -2125,7 +2198,6 @@
         "babel-plugin-transform-runtime": "^6.23.0",
         "babel-polyfill": "^6.26.0",
         "cache-loader": "^4.1.0",
-        "canvas": "^2.6.0",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
@@ -2189,7 +2261,7 @@
         "node-html-parser": "^1.1.13",
         "node-loader": "^1.0.2",
         "nyc": "^15.0.0",
-        "postcss": "^7.0.27",
+        "postcss": "^8.2.10",
         "postcss-cssnext": "^3.1.0",
         "postcss-import": "^12.0.1",
         "postcss-loader": "^3.0.0",
@@ -2247,5 +2319,8 @@
         "id": "f1f59ae4-9318-4f3c-a9b5-81b2eaa5f8a5",
         "publisherDisplayName": "Microsoft",
         "publisherId": "998b010b-e2af-44a5-a6cd-0b5fd3b9b6f8"
+    },
+    "optionalDependencies": {
+        "canvas": "^2.7.0"
     }
 }

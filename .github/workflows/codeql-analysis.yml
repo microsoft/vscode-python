@@ -17,6 +17,9 @@ on:
   schedule:
     - cron: '0 3 * * 0'
 
+permissions:
+  security-events: write
+
 jobs:
   analyze:
     name: Analyze
@@ -33,7 +36,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL

@@ -24,6 +24,7 @@ import { PYTHON_PATH } from '../common';
 import { TorchProfiler } from '../../client/common/experiments/groups';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IMultiStepInput, IMultiStepInputFactory } from '../../client/common/utils/multiStepInput';
+import { ModuleInstallFlags } from '../../client/common/installer/types';
 
 // Class methods exposed just for testing purposes
 interface ITensorBoardSessionTestAPI {
@@ -176,7 +177,7 @@ suite('TensorBoard session creation', async () => {
                         Product.tensorboard,
                         sinon.match.any,
                         sinon.match.any,
-                        expectTensorBoardUpgrade,
+                        expectTensorBoardUpgrade ? ModuleInstallFlags.upgrade : undefined,
                     ),
                 );
             }

@@ -6,11 +6,7 @@
 import { CodeActionKind, debug, DebugConfigurationProvider, languages, OutputChannel, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
-import {
-    IExtensionActivationManager,
-    IExtensionSingleActivationService,
-    ILanguageServerExtension,
-} from './activation/types';
+import { IExtensionActivationManager, ILanguageServerExtension } from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
@@ -26,6 +22,7 @@ import {
     IDisposableRegistry,
     IExperimentService,
     IExperimentsManager,
+    IExtensions,
     IOutputChannel,
 } from './common/types';
 import { noop } from './common/utils/misc';
@@ -35,7 +32,7 @@ import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
 import { IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
-import { IComponentAdapter, IInterpreterService } from './interpreter/contracts';
+import { IInterpreterService } from './interpreter/contracts';
 import { getLanguageConfiguration } from './language/languageConfiguration';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
@@ -61,7 +58,7 @@ import * as pythonEnvironments from './pythonEnvironments';
 
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
-import { setDefaultLanguageServerByExperiment } from './common/experiments/helpers';
+import { setDefaultLanguageServer } from './activation/common/defaultlanguageServer';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -131,7 +128,8 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     await experimentService.activate();
 
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    await setDefaultLanguageServerByExperiment(experimentService, workspaceService, serviceManager);
+    const extensions = serviceContainer.get<IExtensions>(IExtensions);
+    await setDefaultLanguageServer(experimentService, extensions, serviceManager);
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
@@ -150,11 +148,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     activationRegisterTypes(serviceManager, languageServerType);
 
     // "initialize" "services"
-
-    // There's a bug now due to which IExtensionSingleActivationService is only activated in background.
-    // However for some cases particularly IComponentAdapter we need to block on activation before rest
-    // of the extension is activated. Hence explicitly activate it for now.
-    await serviceContainer.get<IExtensionSingleActivationService>(IComponentAdapter).activate();
 
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
     interpreterManager.initialize();
@@ -181,6 +174,11 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
     context.subscriptions.push(manager);
+
+    await interpreterManager
+        .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
+        .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
+
     const activationPromise = manager.activate();
 
     serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
@@ -192,10 +190,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     sortImports.registerCommands();
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
-
-    interpreterManager
-        .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
-        .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
 
     context.subscriptions.push(new LinterCommands(serviceManager));
 

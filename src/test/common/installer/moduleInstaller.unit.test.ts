@@ -27,7 +27,11 @@ import { ModuleInstaller } from '../../../client/common/installer/moduleInstalle
 import { PipEnvInstaller, pipenvName } from '../../../client/common/installer/pipEnvInstaller';
 import { PipInstaller } from '../../../client/common/installer/pipInstaller';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
-import { IInstallationChannelManager, IModuleInstaller } from '../../../client/common/installer/types';
+import {
+    IInstallationChannelManager,
+    IModuleInstaller,
+    ModuleInstallFlags,
+} from '../../../client/common/installer/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import {
@@ -340,7 +344,7 @@ suite('Module Installer', () => {
                             async function installModuleAndVerifyCommand(
                                 command: string,
                                 expectedArgs: string[],
-                                isUpgrade?: boolean,
+                                flags?: ModuleInstallFlags,
                             ) {
                                 terminalService
                                     .setup((t) =>
@@ -353,7 +357,7 @@ suite('Module Installer', () => {
                                     .returns(() => Promise.resolve())
                                     .verifiable(TypeMoq.Times.once());
 
-                                await installer.installModule(product.value, resource, undefined, isUpgrade);
+                                await installer.installModule(product.value, resource, undefined, flags);
                                 terminalService.verifyAll();
                             }
 
@@ -604,7 +608,11 @@ suite('Module Installer', () => {
                                         if (moduleName === 'black') {
                                             expectedArgs.push('--pre');
                                         }
-                                        await installModuleAndVerifyCommand(pipenvName, expectedArgs, isUpgrade);
+                                        await installModuleAndVerifyCommand(
+                                            pipenvName,
+                                            expectedArgs,
+                                            isUpgrade ? ModuleInstallFlags.upgrade : undefined,
+                                        );
                                     });
                                 });
                             }
@@ -625,7 +633,11 @@ suite('Module Installer', () => {
                                         }
                                         expectedArgs.push(moduleName);
                                         expectedArgs.push('-y');
-                                        await installModuleAndVerifyCommand(condaExecutable, expectedArgs, isUpgrade);
+                                        await installModuleAndVerifyCommand(
+                                            condaExecutable,
+                                            expectedArgs,
+                                            isUpgrade ? ModuleInstallFlags.upgrade : undefined,
+                                        );
                                     });
                                 });
                             }

@@ -796,6 +796,39 @@ export interface IEventNamePropertyMapping {
         hashedName: string;
     };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
+    /**
+     * Telemetry event sent with details of selection in prompt
+     * `Prompt message` :- 'Linter ${productName} is not installed'
+     */
+    [EventName.LINTER_NOT_INSTALLED_PROMPT]: {
+        /**
+         * Name of the linter
+         *
+         * @type {LinterId}
+         */
+        tool?: LinterId;
+        /**
+         * `select` When 'Select linter' option is selected
+         * `disablePrompt` When 'Do not show again' option is selected
+         * `install` When 'Install' option is selected
+         *
+         * @type {('select' | 'disablePrompt' | 'install')}
+         */
+        action: 'select' | 'disablePrompt' | 'install';
+    };
+
+    /**
+     * Telemetry event sent before showing the linter prompt to install
+     * pylint or flake8.
+     */
+    [EventName.LINTER_INSTALL_PROMPT]: {
+        /**
+         * Identify which prompt was shown.
+         *
+         * @type {('old' | 'noPrompt' | 'pylintFirst' | 'flake8first')}
+         */
+        prompt: 'old' | 'noPrompt' | 'pylintFirst' | 'flake8first';
+    };
 
     /**
      * Telemetry event sent when installing modules
@@ -1143,6 +1176,18 @@ export interface IEventNamePropertyMapping {
          * Used to track switch between language servers. Carries the final state after the switch.
          */
         switchTo?: LanguageServerType;
+    };
+    /**
+     * Telemetry event sent with details after selected Language server has finished activating. This event
+     * is sent with `durationMs` specifying the total duration of time that the given language server took
+     * to activate.
+     */
+    [EventName.PYTHON_LANGUAGE_SERVER_STARTUP_DURATION]: {
+        /**
+         * Type of Language server activated. Note it can be different from one that is chosen, if the
+         * chosen one fails to start.
+         */
+        languageServerType?: LanguageServerType;
     };
     /**
      * Telemetry event sent with details after attempting to download LS
@@ -1832,4 +1877,17 @@ export interface IEventNamePropertyMapping {
      * `from torch import profiler`.
      */
     [EventName.TENSORBOARD_TORCH_PROFILER_IMPORT]: never | undefined;
+    /**
+     * Telemetry event sent when the extension host receives a message from the
+     * TensorBoard webview containing a valid jump to source payload from the
+     * PyTorch profiler TensorBoard plugin.
+     */
+    [EventName.TENSORBOARD_JUMP_TO_SOURCE_REQUEST]: never | undefined;
+    /**
+     * Telemetry event sent when the extension host receives a message from the
+     * TensorBoard webview containing a valid jump to source payload from the
+     * PyTorch profiler TensorBoard plugin, but the source file does not exist
+     * on the machine currently running TensorBoard.
+     */
+    [EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND]: never | undefined;
 }

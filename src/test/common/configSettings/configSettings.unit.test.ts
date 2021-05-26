@@ -187,7 +187,11 @@ suite('Python Settings', async () => {
         config.verifyAll();
     });
 
-    function testLanguageServer(languageServer: LanguageServerType, expectedValue: LanguageServerType) {
+    function testLanguageServer(
+        languageServer: LanguageServerType,
+        expectedValue: LanguageServerType,
+        isDefault: boolean,
+    ) {
         test(languageServer, () => {
             expected.pythonPath = 'python3';
             expected.languageServer = languageServer;
@@ -200,16 +204,17 @@ suite('Python Settings', async () => {
             settings.update(config.object);
 
             expect(settings.languageServer).to.be.equal(expectedValue);
+            expect(settings.languageServerIsDefault).to.be.equal(isDefault);
             config.verifyAll();
         });
     }
 
     suite('languageServer settings', async () => {
         Object.values(LanguageServerType).forEach(async (languageServer) => {
-            testLanguageServer(languageServer, languageServer);
+            testLanguageServer(languageServer, languageServer, false);
         });
 
-        testLanguageServer('invalid' as LanguageServerType, LanguageServerType.Jedi);
+        testLanguageServer('invalid' as LanguageServerType, LanguageServerType.Jedi, true);
     });
 
     function testExperiments(enabled: boolean) {

@@ -9,10 +9,11 @@ import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
+import { ExperimentsManager } from '../../../client/common/experiments/manager';
 import { PersistentState, PersistentStateFactory } from '../../../client/common/persistentState';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IPersistentStateFactory, Resource } from '../../../client/common/types';
+import { IExperimentsManager, IPersistentStateFactory, Resource } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { InterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection';
 import { InterpreterSecurityService } from '../../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
@@ -51,6 +52,7 @@ suite('Interpreters - Auto Selection', () => {
     let helper: IInterpreterHelper;
     let proxy: IInterpreterAutoSelectionProxyService;
     let interpreterSecurityService: IInterpreterSecurityService;
+    let experiments: IExperimentsManager;
     class InterpreterAutoSelectionServiceTest extends InterpreterAutoSelectionService {
         public initializeStore(resource: Resource): Promise<void> {
             return super.initializeStore(resource);
@@ -78,7 +80,8 @@ suite('Interpreters - Auto Selection', () => {
         workspaceInterpreter = mock(WorkspaceVirtualEnvInterpretersAutoSelectionRule);
         helper = mock(InterpreterHelper);
         proxy = mock(InterpreterAutoSelectionProxyService);
-        when(interpreterSecurityService.isSafe(anything())).thenReturn(undefined);
+        experiments = mock(ExperimentsManager);
+        when(experiments.inExperiment(anything())).thenReturn(false);
 
         autoSelectionService = new InterpreterAutoSelectionServiceTest(
             instance(workspaceService),
@@ -92,6 +95,7 @@ suite('Interpreters - Auto Selection', () => {
             instance(workspaceInterpreter),
             instance(proxy),
             instance(helper),
+            instance(experiments),
             instance(interpreterSecurityService),
         );
     });
@@ -172,7 +176,7 @@ suite('Interpreters - Auto Selection', () => {
         await autoSelectionService.initializeStore(undefined);
         await autoSelectionService.initializeStore(undefined);
 
-        verify(stateFactory.createGlobalPersistentState(preferredGlobalInterpreter, undefined)).once();
+        verify(stateFactory.createGlobalPersistentState(preferredGlobalInterpreter, undefined)).twice();
     });
     test("Clear file stored in cache if it doesn't exist", async () => {
         const pythonPath = 'Hello World';
@@ -188,7 +192,7 @@ suite('Interpreters - Auto Selection', () => {
 
         await autoSelectionService.initializeStore(undefined);
 
-        verify(stateFactory.createGlobalPersistentState(preferredGlobalInterpreter, undefined)).once();
+        verify(stateFactory.createGlobalPersistentState(preferredGlobalInterpreter, undefined)).twice();
         verify(state.value).atLeast(1);
         verify(fs.fileExists(pythonPath)).once();
         verify(state.updateValue(undefined)).once();
@@ -207,7 +211,7 @@ suite('Interpreters - Auto Selection', () => {
 
         await autoSelectionService.initializeStore(undefined);
 
-        verify(stateFactory.createGlobalPersistentState(preferredGlobalInterpreter, undefined)).once();
+        verify(stateFactory.createGlobalPersistentState(preferredGlobalInterpreter, undefined)).twice();
         verify(state.value).atLeast(1);
         verify(fs.fileExists(pythonPath)).once();
         verify(state.updateValue(undefined)).never();
@@ -235,7 +239,8 @@ suite('Interpreters - Auto Selection', () => {
         expect(selectedInterpreter).to.deep.equal(interpreterInfo);
         expect(eventFired).to.deep.equal(false, 'event fired');
     });
-    test('If interpreter chosen is unsafe, return `undefined` as the auto-selected interpreter', async () => {
+    test('When in experiment, if interpreter chosen is unsafe, return `undefined` as the auto-selected interpreter', async () => {
+        when(experiments.inExperiment(anything())).thenReturn(true);
         const interpreterInfo = { path: 'pythonPath' } as any;
         autoSelectionService._getAutoSelectedInterpreter = () => interpreterInfo;
         reset(interpreterSecurityService);

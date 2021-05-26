@@ -21,7 +21,7 @@ import {
 import { LanguageServerType } from '../activation/types';
 import { LogLevel } from '../logging/levels';
 import type { ExtensionChannels } from './insidersBuild/types';
-import type { InterpreterUri } from './installer/types';
+import type { InterpreterUri, ModuleInstallFlags } from './installer/types';
 import { EnvironmentVariables } from './variables/types';
 import { ITestingSettings } from '../testing/configuration/types';
 
@@ -122,13 +122,13 @@ export interface IInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        isUpgrade?: boolean,
+        flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse>;
     install(
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        isUpgrade?: boolean,
+        flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean>;
     isProductVersionCompatible(
@@ -200,6 +200,7 @@ export interface IPythonSettings {
     readonly onDidChange: Event<void>;
     readonly experiments: IExperiments;
     readonly languageServer: LanguageServerType;
+    readonly languageServerIsDefault: boolean;
     readonly defaultInterpreterPath: string;
     readonly logging: ILoggingSettings;
     readonly useIsolation: boolean;
@@ -589,8 +590,10 @@ export interface IInterpreterPathService {
     copyOldInterpreterStorageValuesToNew(resource: Uri | undefined): Promise<void>;
 }
 
+export type DefaultLSType = LanguageServerType.Jedi | LanguageServerType.JediLSP | LanguageServerType.Node;
+
 /**
- * Interface used to retrieve the default language server to use when in experiment
+ * Interface used to retrieve the default language server.
  *
  * Note: This is added to get around a problem that the config service is not `async`.
  * Adding experiment check there would mean touching the entire extension. For simplicity
@@ -599,5 +602,5 @@ export interface IInterpreterPathService {
 export const IDefaultLanguageServer = Symbol('IDefaultLanguageServer');
 
 export interface IDefaultLanguageServer {
-    readonly defaultLSType: LanguageServerType;
+    readonly defaultLSType: DefaultLSType;
 }

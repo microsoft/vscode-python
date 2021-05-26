@@ -10,7 +10,7 @@ import { CancellationToken, Disposable, Event, Extension, Memento, Uri } from 'v
 import * as lsp from 'vscode-languageserver-protocol';
 import { ILanguageServerCache, ILanguageServerConnection } from '../activation/types';
 import { JUPYTER_EXTENSION_ID } from '../common/constants';
-import { InterpreterUri } from '../common/installer/types';
+import { InterpreterUri, ModuleInstallFlags } from '../common/installer/types';
 import {
     GLOBAL_MEMENTO,
     IExperimentService,
@@ -179,7 +179,16 @@ export class JupyterExtensionIntegration {
                 product: JupyterProductToInstall,
                 resource?: InterpreterUri,
                 cancel?: CancellationToken,
-            ): Promise<InstallerResponse> => this.installer.install(ProductMapping[product], resource, cancel),
+                reInstallAndUpdate?: boolean,
+            ): Promise<InstallerResponse> =>
+                this.installer.install(
+                    ProductMapping[product],
+                    resource,
+                    cancel,
+                    reInstallAndUpdate === true
+                        ? ModuleInstallFlags.updateDependencies | ModuleInstallFlags.reInstall
+                        : undefined,
+                ),
             getDebuggerPath: async () => dirname(getDebugpyPackagePath()),
             getInterpreterPathSelectedForJupyterServer: () =>
                 this.globalState.get<string | undefined>('INTERPRETER_PATH_SELECTED_FOR_JUPYTER_SERVER'),

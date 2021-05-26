@@ -51,7 +51,6 @@ import {
     Uri,
     ViewColumn,
     WebviewPanel,
-    WebviewPanelOptions,
     WindowState,
     WorkspaceConfiguration,
     WorkspaceEdit,
@@ -1456,44 +1455,6 @@ export interface CustomEditorProvider<T extends CustomDocument = CustomDocument>
 
 // #endregion
 
-export const ICustomEditorService = Symbol('ICustomEditorService');
-export interface ICustomEditorService {
-    /**
-     * Register a new provider for webview editors of a given type.
-     *
-     * @param viewType  Type of the webview editor provider.
-     * @param provider Resolves webview editors.
-     * @param options Content settings for a webview panels the provider is given.
-     *
-     * @return Disposable that unregisters the `WebviewCustomEditorProvider`.
-     */
-    registerCustomEditorProvider(
-        viewType: string,
-        provider: CustomReadonlyEditorProvider | CustomEditorProvider,
-        options?: {
-            readonly webviewOptions?: WebviewPanelOptions;
-
-            /**
-             * Only applies to `CustomReadonlyEditorProvider | CustomEditorProvider`.
-             *
-             * Indicates that the provider allows multiple editor instances to be open at the same time for
-             * the same resource.
-             *
-             * If not set, VS Code only allows one editor instance to be open at a time for each resource. If the
-             * user tries to open a second editor instance for the resource, the first one is instead moved to where
-             * the second one was to be opened.
-             *
-             * When set, users can split and create copies of the custom editor. The custom editor must make sure it
-             * can properly synchronize the states of all editor instances for a resource so that they are consistent.
-             */
-            readonly supportsMultipleEditorsPerDocument?: boolean;
-        },
-    ): Disposable;
-    /**
-     * Opens a file with a custom editor
-     */
-    openEditor(file: Uri, viewType: string): Promise<void>;
-}
 export const IClipboard = Symbol('IClipboard');
 export interface IClipboard {
     /**

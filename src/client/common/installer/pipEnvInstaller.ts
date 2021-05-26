@@ -11,7 +11,7 @@ import { inDiscoveryExperiment } from '../experiments/helpers';
 import { ExecutionInfo, IExperimentService } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
-import { InterpreterUri } from './types';
+import { InterpreterUri, ModuleInstallFlags } from './types';
 
 export const pipenvName = 'pipenv';
 
@@ -61,9 +61,14 @@ export class PipEnvInstaller extends ModuleInstaller {
     protected async getExecutionInfo(
         moduleName: string,
         _resource?: InterpreterUri,
-        isUpgrade?: boolean,
+        flags: ModuleInstallFlags = 0,
     ): Promise<ExecutionInfo> {
-        const args = [isUpgrade ? 'update' : 'install', moduleName, '--dev'];
+        // In pipenv the only way to update/upgrade or re-install is update (apart from a complete uninstall and re-install).
+        const update =
+            flags & ModuleInstallFlags.reInstall ||
+            flags & ModuleInstallFlags.updateDependencies ||
+            flags & ModuleInstallFlags.upgrade;
+        const args = [update ? 'update' : 'install', moduleName, '--dev'];
         if (moduleName === 'black') {
             args.push('--pre');
         }

@@ -49,7 +49,6 @@ export async function initialize(ext: ExtensionState): Promise<PythonEnvironment
         ext.legacyIOC.serviceManager,
         api,
         environmentsSecurity,
-        ext.disposables,
     );
     // Deal with legacy IOC.
     await registerLegacyDiscoveryForIOC(ext.legacyIOC.serviceManager);

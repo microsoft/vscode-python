@@ -36,6 +36,7 @@ import {
     ILanguageServerCache,
     LanguageServerType,
 } from './types';
+import { StopWatch } from '../common/utils/stopWatch';
 
 const languageServerSetting: keyof IPythonSettings = 'languageServer';
 const workspacePathNameForGlobalWorkspaces = '';
@@ -93,6 +94,7 @@ export class LanguageServerExtensionActivationService
     }
 
     public async activate(resource: Resource): Promise<void> {
+        const stopWatch = new StopWatch();
         // Get a new server and dispose of the old one (might be the same one)
         this.resource = resource;
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
@@ -119,6 +121,9 @@ export class LanguageServerExtensionActivationService
         // Force this server to reconnect (if disconnected) as it should be the active
         // language server for all of VS code.
         this.activatedServer.server.activate();
+        sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_STARTUP_DURATION, stopWatch.elapsedTime, {
+            languageServerType: result.type,
+        });
     }
 
     public async get(resource: Resource, interpreter?: PythonEnvironment): Promise<RefCountedLanguageServer> {
@@ -212,6 +217,11 @@ export class LanguageServerExtensionActivationService
         return configurationService.getSettings(this.resource).languageServer;
     }
 
+    private getCurrentLanguageServerTypeIsDefault(): boolean {
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        return configurationService.getSettings(this.resource).languageServerIsDefault;
+    }
+
     private async createRefCountedServer(
         resource: Resource,
         interpreter: PythonEnvironment | undefined,
@@ -237,6 +247,18 @@ export class LanguageServerExtensionActivationService
             if (interpreter.version.major < 3 || (interpreter.version.major === 3 && interpreter.version.minor < 6)) {
                 sendTelemetryEvent(EventName.JEDI_FALLBACK);
                 serverType = LanguageServerType.Jedi;
+            }
+        }
+
+        // If Pylance was chosen via the default and the interpreter is Python 2, fall back to
+        // Jedi. If Pylance was explicitly chosen, continue anyway, even if Pylance won't work
+        // as expected, matching pre-default behavior.
+        if (this.getCurrentLanguageServerTypeIsDefault()) {
+            if (serverType === LanguageServerType.Node && interpreter && interpreter.version) {
+                if (interpreter.version.major < 3) {
+                    sendTelemetryEvent(EventName.JEDI_FALLBACK);
+                    serverType = LanguageServerType.Jedi;
+                }
             }
         }
 
@@ -310,7 +332,7 @@ export class LanguageServerExtensionActivationService
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const serverType = configurationService.getSettings(this.resource).languageServer;
         if (serverType === LanguageServerType.Node) {
-            return 'shared-ls';
+            return LanguageServerType.Node;
         }
 
         const resourcePortion = this.workspaceService.getWorkspaceFolderIdentifier(

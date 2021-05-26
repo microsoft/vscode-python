@@ -28,9 +28,9 @@ You can attach such things **after** you create your issue on GitHub.
 
 # Diagnostic data
 
--   Python version (& distribution if applicable, e.g. Anaconda): {0}
--   Type of virtual environment used (e.g. conda, venv, virtualenv, etc.): {1}
--   Value of the `python.languageServer` setting: {2}
+-   Python version (& distribution if applicable, e.g. Anaconda): 3.9.0
+-   Type of virtual environment used (e.g. conda, venv, virtualenv, etc.): virt-venv
+-   Value of the `python.languageServer` setting: Pylance
 
 <details>
 
@@ -40,7 +40,7 @@ You can attach such things **after** you create your issue on GitHub.
 
 <!-- Run the "Python: Show Output" command to see the requested output. --->
 ```
-{3}
+Python Output
 ```
 
 </p>

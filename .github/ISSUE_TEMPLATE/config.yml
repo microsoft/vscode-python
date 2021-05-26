@@ -15,3 +15,6 @@ contact_links:
   - name: Help/Support
     url: https://github.com/microsoft/vscode-python/discussions/categories/q-a
     about: Having trouble with the extension? Need help getting something to work?
+  - name: Chat
+    url: https://aka.ms/python-discord
+    about: You can ask for help or chat in the `#vscode` channel of our microsoft-python Discord server

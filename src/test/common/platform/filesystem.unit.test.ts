@@ -56,6 +56,7 @@ interface IRawFS extends IPaths {
     writeFile(uri: vscode.Uri, content: Uint8Array): Thenable<void>;
 
     // "fs-extra"
+    pathExists(filename: string): Promise<boolean>;
     lstat(filename: string): Promise<fs.Stats>;
     chmod(filePath: string, mode: string | number): Promise<void>;
     appendFile(filename: string, data: {}): Promise<void>;
@@ -926,9 +927,8 @@ suite('FileSystemUtils', () => {
     suite('pathExists', () => {
         test('exists (without type)', async () => {
             const filename = 'x/y/z/spam.py';
-            const stat = createMockStat();
-            deps.setup((d) => d.stat(filename)) // The "file" exists.
-                .returns(() => Promise.resolve(stat.object));
+            deps.setup((d) => d.pathExists(filename)) // The "file" exists.
+                .returns(() => Promise.resolve(true));
 
             const exists = await utils.pathExists(filename);
 
@@ -936,38 +936,14 @@ suite('FileSystemUtils', () => {
             verifyAll();
         });
 
-        test('does not exist', async () => {
+        test('does not exist (without type)', async () => {
             const filename = 'x/y/z/spam.py';
-            const err = vscode.FileSystemError.FileNotFound(filename);
-            deps.setup((d) => d.stat(filename)) // The file does not exist.
-                .throws(err);
+            deps.setup((d) => d.pathExists(filename)) // The "file" exists.
+                .returns(() => Promise.resolve(false));
 
             const exists = await utils.pathExists(filename);
 
             expect(exists).to.equal(false);
-            verifyAll();
-        });
-
-        test('ignores errors from stat()', async () => {
-            const filename = 'x/y/z/spam.py';
-            deps.setup((d) => d.stat(filename)) // It's broken.
-                .returns(() => Promise.reject(new Error('oops!')));
-
-            const exists = await utils.pathExists(filename);
-
-            expect(exists).to.equal(false);
-            verifyAll();
-        });
-
-        test('matches (type: undefined)', async () => {
-            const filename = 'x/y/z/spam.py';
-            const stat = createMockStat();
-            deps.setup((d) => d.stat(filename)) // The "file" exists.
-                .returns(() => Promise.resolve(stat.object));
-
-            const exists = await utils.pathExists(filename);
-
-            expect(exists).to.equal(true);
             verifyAll();
         });
 
@@ -1231,8 +1207,8 @@ suite('FileSystemUtils', () => {
             const err = vscode.FileSystemError.FileNotFound(dirname);
             deps.setup((d) => d.listdir(dirname)) // The "file" does not exist.
                 .returns(() => Promise.reject(err));
-            deps.setup((d) => d.stat(dirname)) // The "file" does not exist.
-                .returns(() => Promise.reject(err));
+            deps.setup((d) => d.pathExists(dirname)) // The "file" does not exist.
+                .returns(() => Promise.resolve(false));
 
             const entries = await utils.listdir(dirname);
 
@@ -1245,9 +1221,7 @@ suite('FileSystemUtils', () => {
             const err = vscode.FileSystemError.FileNotADirectory(dirname);
             deps.setup((d) => d.listdir(dirname)) // Fail (async) with not-a-directory.
                 .returns(() => Promise.reject(err));
-            const stat = createMockStat();
-            deps.setup((d) => d.stat(dirname)) // The "file" exists.
-                .returns(() => Promise.resolve(stat.object));
+            deps.setup((d) => d.pathExists(dirname)).returns(() => Promise.resolve(true)); // The "file" exists.
 
             const promise = utils.listdir(dirname);
 
@@ -1260,27 +1234,11 @@ suite('FileSystemUtils', () => {
             const err = new Error('oops!');
             deps.setup((d) => d.listdir(dirname)) // Fail (async) with an arbitrary error.
                 .returns(() => Promise.reject(err));
-            deps.setup((d) => d.stat(dirname)) // Fail with file-not-found.
-                .throws(vscode.FileSystemError.FileNotFound(dirname));
+            deps.setup((d) => d.pathExists(dirname)).returns(() => Promise.resolve(false));
 
             const entries = await utils.listdir(dirname);
 
             expect(entries).to.deep.equal([]);
-            verifyAll();
-        });
-
-        test('fails if the raw call fails', async () => {
-            const dirname = 'x/y/z/spam';
-            const err = new Error('oops!');
-            deps.setup((d) => d.listdir(dirname)) // Fail with an arbirary error.
-                .throws(err);
-            const stat = createMockStat();
-            deps.setup((d) => d.stat(dirname)) // The "file" exists.
-                .returns(() => Promise.resolve(stat.object));
-
-            const promise = utils.listdir(dirname);
-
-            await expect(promise).to.eventually.be.rejected;
             verifyAll();
         });
     });

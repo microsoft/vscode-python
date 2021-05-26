@@ -6,10 +6,17 @@ import { ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { Commands } from '../common/constants';
+import { ContextKey } from '../common/contextKey';
 import { TorchProfiler } from '../common/experiments/groups';
 import { traceError, traceInfo } from '../common/logger';
 import { IProcessServiceFactory } from '../common/process/types';
-import { IDisposableRegistry, IExperimentService, IInstaller, IPersistentStateFactory } from '../common/types';
+import {
+    IDisposableRegistry,
+    IExperimentService,
+    IInstaller,
+    IPersistentState,
+    IPersistentStateFactory,
+} from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
 import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -22,6 +29,12 @@ const PREFERRED_VIEWGROUP = 'PythonTensorBoardWebviewPreferredViewGroup';
 
 @injectable()
 export class TensorBoardSessionProvider implements IExtensionSingleActivationService {
+    private knownSessions: TensorBoardSession[] = [];
+
+    private preferredViewGroupMemento: IPersistentState<ViewColumn>;
+
+    private hasActiveTensorBoardSessionContext: ContextKey;
+
     constructor(
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -33,7 +46,16 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
-    ) {}
+    ) {
+        this.preferredViewGroupMemento = this.stateFactory.createGlobalPersistentState<ViewColumn>(
+            PREFERRED_VIEWGROUP,
+            ViewColumn.Active,
+        );
+        this.hasActiveTensorBoardSessionContext = new ContextKey(
+            'python.hasActiveTensorBoardSession',
+            this.commandManager,
+        );
+    }
 
     public async activate(): Promise<void> {
         this.disposables.push(
@@ -50,16 +72,30 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                     return this.createNewSession();
                 },
             ),
+            this.commandManager.registerCommand(Commands.RefreshTensorBoard, () =>
+                this.knownSessions.map((w) => w.refresh()),
+            ),
         );
+    }
+
+    private async updateTensorBoardSessionContext() {
+        let hasActiveTensorBoardSession = false;
+        this.knownSessions.forEach((viewer) => {
+            if (viewer.active) {
+                hasActiveTensorBoardSession = true;
+            }
+        });
+        await this.hasActiveTensorBoardSessionContext.set(hasActiveTensorBoardSession);
+    }
+
+    private async didDisposeSession(session: TensorBoardSession) {
+        this.knownSessions = this.knownSessions.filter((s) => s !== session);
+        this.updateTensorBoardSessionContext();
     }
 
     private async createNewSession(): Promise<TensorBoardSession | undefined> {
         traceInfo('Starting new TensorBoard session...');
         try {
-            const memento = this.stateFactory.createGlobalPersistentState<ViewColumn>(
-                PREFERRED_VIEWGROUP,
-                ViewColumn.Active,
-            );
             const newSession = new TensorBoardSession(
                 this.installer,
                 this.interpreterService,
@@ -69,9 +105,12 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                 this.disposables,
                 this.applicationShell,
                 await this.experimentService.inExperiment(TorchProfiler.experiment),
-                memento,
+                this.preferredViewGroupMemento,
                 this.multiStepFactory,
             );
+            newSession.onDidChangeViewState(() => this.updateTensorBoardSessionContext(), this, this.disposables);
+            newSession.onDidDispose((e) => this.didDisposeSession(e), this, this.disposables);
+            this.knownSessions.push(newSession);
             await newSession.initialize();
             return newSession;
         } catch (e) {

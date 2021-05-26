@@ -38,7 +38,6 @@ suite('StartPage tests', () => {
     const dummySettings = new PythonSettings(undefined, new MockAutoSelectionService());
 
     function setupVersions(savedVersion: string, actualVersion: string) {
-        context.setup((c) => c.globalState).returns(() => memento.object);
         memento.setup((m) => m.get(typemoq.It.isAnyString())).returns(() => savedVersion);
         memento
             .setup((m) => m.update(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
@@ -50,7 +49,6 @@ suite('StartPage tests', () => {
     }
 
     function reset() {
-        context.reset();
         memento.reset();
         appEnvironment.reset();
     }
@@ -69,6 +67,7 @@ suite('StartPage tests', () => {
         appEnvironment = typemoq.Mock.ofType<IApplicationEnvironment>();
         memento = typemoq.Mock.ofType<ExtensionContext['globalState']>();
 
+        context.setup((c) => c.globalState).returns(() => memento.object);
         configuration.setup((cs) => cs.getSettings(undefined)).returns(() => dummySettings);
 
         startPage = new StartPage(
