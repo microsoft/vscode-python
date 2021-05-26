@@ -26,7 +26,6 @@ import {
 } from 'vscode';
 
 import { PYTHON } from '../common/constants';
-import { traceError } from '../common/logger';
 import { IConfigurationService, IDisposable, IExtensionContext, Resource } from '../common/types';
 import { IShebangCodeLensProvider } from '../interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
@@ -40,7 +39,6 @@ import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
 import { JediSymbolProvider } from '../providers/symbolProvider';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { ITestingService } from '../testing/types';
 import { WorkspaceSymbols } from '../workspaceSymbols/main';
 import { ILanguageServerActivator } from './types';
 
@@ -90,11 +88,6 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             JediExtensionActivator.workspaceSymbols = new WorkspaceSymbols(serviceContainer);
             context.subscriptions.push(JediExtensionActivator.workspaceSymbols);
         }
-
-        const testManagementService = this.serviceManager.get<ITestingService>(ITestingService);
-        testManagementService
-            .activate(this.symbolProvider)
-            .catch((ex) => traceError('Failed to activate Unit Tests', ex));
     }
 
     public deactivate() {
