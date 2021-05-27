@@ -28,7 +28,7 @@ export class Bandit extends BaseLinter {
                 '-f',
                 'custom',
                 '--msg-template',
-                '{line},{col},{severity},{test_id}:{msg}',
+                '{line},0,{severity},{test_id}:{msg}',
                 '-n',
                 '-1',
                 document.uri.fsPath,
