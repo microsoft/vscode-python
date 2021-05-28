@@ -203,7 +203,6 @@ export interface IPythonSettings {
     readonly languageServerIsDefault: boolean;
     readonly defaultInterpreterPath: string;
     readonly logging: ILoggingSettings;
-    readonly useIsolation: boolean;
     readonly tensorBoard: ITensorBoardSettings | undefined;
     initialize(): void;
 }

@@ -66,7 +66,6 @@ suite('Terminal Service (synchronous)', () => {
         });
     });
     suite('sendCommand', () => {
-        const isolated = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py');
         const shellExecFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'shell_exec.py');
 
         test('run sendCommand in terminalService if there is no cancellation token', async () => {
@@ -106,7 +105,7 @@ suite('Terminal Service (synchronous)', () => {
             verify(
                 terminalService.sendCommand(
                     'python',
-                    deepEqual([isolated, shellExecFile, 'cmd', '1', '2', tmpFile.filePath.fileToCommandArgument()]),
+                    deepEqual([shellExecFile, 'cmd', '1', '2', tmpFile.filePath.fileToCommandArgument()]),
                 ),
             ).once();
         }).timeout(1_000);
@@ -142,7 +141,7 @@ suite('Terminal Service (synchronous)', () => {
             verify(
                 terminalService.sendCommand(
                     'python',
-                    deepEqual([isolated, shellExecFile, 'cmd', '1', '2', tmpFile.filePath.fileToCommandArgument()]),
+                    deepEqual([shellExecFile, 'cmd', '1', '2', tmpFile.filePath.fileToCommandArgument()]),
                 ),
             ).once();
         }).timeout(2_000);
