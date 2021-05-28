@@ -38,6 +38,7 @@ export class Bandit extends BaseLinter {
             ],
             document,
             cancellation,
+            BANDIT_REGEX,
         );
 
         messages.forEach((msg) => {
