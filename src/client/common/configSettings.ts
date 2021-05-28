@@ -148,8 +148,6 @@ export class PythonSettings implements IPythonSettings {
 
     public logging: ILoggingSettings = { level: LogLevel.Error };
 
-    public useIsolation = true;
-
     protected readonly changed = new EventEmitter<void>();
 
     private workspaceRoot: Resource;
@@ -283,8 +281,6 @@ export class PythonSettings implements IPythonSettings {
         this.autoUpdateLanguageServer = systemVariables.resolveAny(
             pythonSettings.get<boolean>('autoUpdateLanguageServer', true),
         )!;
-
-        this.useIsolation = systemVariables.resolveAny(pythonSettings.get<boolean>('useIsolation', true))!;
 
         // Get as a string and verify; don't just accept.
         let userLS = pythonSettings.get<string>('languageServer');
