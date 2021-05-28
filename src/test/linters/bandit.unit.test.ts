@@ -5,9 +5,9 @@
 
 import { expect } from 'chai';
 import { parseLine } from '../../client/linters/baseLinter';
-import { ILintMessage, LinterId } from '../../client/linters/types';
+import { BANDIT_REGEX } from '../../client/linters/bandit';
 
-const REGEX = '(?<line>\\d+),(?<column>-?\\d+),(?<type>\\w+),(?<code>\\w+\\d+):(?<message>.*)\\r?(\\n|$)';
+import { ILintMessage, LinterId } from '../../client/linters/types';
 
 suite('Linting - Bandit', () => {
     test('parsing new bandit with col', () => {
@@ -21,28 +21,28 @@ suite('Linting - Bandit', () => {
             [
                 lines[0],
                 {
-                    code: undefined,
-                    message: 'B404:Consider possible security implications associated with subprocess module.',
+                    code: 'B404',
+                    message: 'Consider possible security implications associated with subprocess module.',
                     column: 0,
                     line: 1,
-                    type: 'warning',
+                    type: 'LOW',
                     provider: 'bandit',
                 },
             ],
             [
                 lines[1],
                 {
-                    code: undefined,
-                    message: 'B602:subprocess call with shell=True identified, security issue.',
-                    column: 4,
+                    code: 'B602',
+                    message: 'subprocess call with shell=True identified, security issue.',
+                    column: 3,
                     line: 19,
-                    type: 'error',
+                    type: 'HIGH',
                     provider: 'bandit',
                 },
             ],
         ];
         for (const [line, expected] of tests) {
-            const msg = parseLine(line, REGEX, LinterId.Bandit, 1);
+            const msg = parseLine(line, BANDIT_REGEX, LinterId.Bandit, 1);
 
             expect(msg).to.deep.equal(expected);
         }
@@ -58,28 +58,28 @@ suite('Linting - Bandit', () => {
             [
                 lines[0],
                 {
-                    code: undefined,
-                    message: 'B404:Consider possible security implications associated with subprocess module.',
+                    code: 'B404',
+                    message: 'Consider possible security implications associated with subprocess module.',
                     column: 0,
                     line: 1,
-                    type: 'warning',
+                    type: 'LOW',
                     provider: 'bandit',
                 },
             ],
             [
                 lines[1],
                 {
-                    code: undefined,
-                    message: 'B602:subprocess call with shell=True identified, security issue.',
+                    code: 'B602',
+                    message: 'subprocess call with shell=True identified, security issue.',
                     column: 0,
                     line: 19,
-                    type: 'error',
+                    type: 'HIGH',
                     provider: 'bandit',
                 },
             ],
         ];
         for (const [line, expected] of tests) {
-            const msg = parseLine(line, REGEX, LinterId.Bandit, 1);
+            const msg = parseLine(line, BANDIT_REGEX, LinterId.Bandit, 1);
 
             expect(msg).to.deep.equal(expected);
         }
