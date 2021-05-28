@@ -38,8 +38,6 @@ export class Bandit extends BaseLinter {
         );
 
         messages.forEach((msg) => {
-            if (isNaN(msg.column))
-                msg.column = 0;
             msg.severity = severityMapping[msg.type];
         });
         return messages;
