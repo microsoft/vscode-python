@@ -177,11 +177,11 @@ export namespace TensorBoard {
     );
     export const installTensorBoardAndProfilerPluginPrompt = localize(
         'TensorBoard.installTensorBoardAndProfilerPluginPrompt',
-        'TensorBoard >= 2.4.1 and the PyTorch Profiler TensorBoard plugin are required. Would you like to install these packages?',
+        'TensorBoard >= 2.4.1 and the PyTorch Profiler TensorBoard plugin >= 0.2.0 are required. Would you like to install these packages?',
     );
     export const installProfilerPluginPrompt = localize(
         'TensorBoard.installProfilerPluginPrompt',
-        'We recommend installing the PyTorch Profiler TensorBoard plugin. Would you like to install the package?',
+        'We recommend installing version >= 0.2.0 of the PyTorch Profiler TensorBoard plugin. Would you like to install the package?',
     );
     export const upgradePrompt = localize(
         'TensorBoard.upgradePrompt',
