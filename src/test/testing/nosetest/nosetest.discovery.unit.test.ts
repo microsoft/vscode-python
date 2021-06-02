@@ -204,7 +204,7 @@ suite('Unit Tests - nose - Discovery', () => {
 
         // Check that the visible file name is just the last item in the path, not the whole path
         tests.testFiles.forEach((file) => {
-            const pathItems = file.nameToRun.split(path.sep);
+            const pathItems = file.nameToRun.split('/'); //Not path.sep because test input is from posix discovery
             expect(pathItems[pathItems.length - 1]).to.equal(file.name);
         });
     });

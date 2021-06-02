@@ -461,8 +461,8 @@ suite('Unit Tests - Unittest - Discovery', () => {
 
         // Check that the visible file name is just the last item in the path, not the whole path
         tests.testFiles.forEach((file) => {
-            const pathItems = file.nameToRun.split(path.sep);
-            expect(pathItems[pathItems.length - 1]).to.equal(file.name);
+            const pathItems = file.nameToRun.split('.');
+            expect(pathItems[pathItems.length - 1] + '.py').to.equal(file.name);
         });
     });
 
