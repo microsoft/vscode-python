@@ -27,6 +27,7 @@ import {
 import { TestProvider } from '../testing/types';
 import { EventName, PlatformErrors } from './constants';
 import type { LinterTrigger, TestTool } from './types';
+import { JupyterNotInstalledOrigin } from '../jupyter/types';
 
 /**
  * Checks whether telemetry is supported.
@@ -1748,6 +1749,31 @@ export interface IEventNamePropertyMapping {
          * @type {TerminalShellType}
          */
         terminal: TerminalShellType;
+    };
+
+    /**
+     * Telemetry event sent when the notification about the Jupyter extension not being installed is displayed.
+     * Since this notification will only be displayed after an action that requires the Jupyter extension,
+     * the telemetry event will include the action the user took, under the `entrypoint` property.
+     */
+    [EventName.JUPYTER_NOT_INSTALLED_NOTIFICATION_DISPLAYED]: {
+        /**
+         * Action that the user took to trigger the notification.
+         */
+        entrypoint: JupyterNotInstalledOrigin;
+    };
+
+    /**
+     * Telemetry event sent when the notification about the Jupyter extension not being installed is closed.
+     */
+    [EventName.JUPYTER_NOT_INSTALLED_NOTIFICATION_ACTION]: {
+        /**
+         * Action selected by the user in response to the notification:
+         * close the notification using the close button, or "Do not show again".
+         *
+         * @type {('Do not show again' | undefined)}
+         */
+        selection: 'Do not show again' | undefined;
     };
 
     [Telemetry.WebviewStyleUpdate]: never | undefined;
