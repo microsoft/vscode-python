@@ -12,7 +12,7 @@ export const RESOURCE = Uri.file(__filename);
 export function lookForTestFile(tests: Tests, testFile: string) {
     let found: boolean;
     const pathTokens = testFile.split(sep);
-    const fileName = pathTokens[(pathTokens.length = 1)];
+    const fileName = pathTokens[pathTokens.length - 1];
     // Perform case insensitive search on windows.
     if (IS_WINDOWS) {
         // In the mock output, we'd have paths separated using '/' (but on windows, path separators are '\')
