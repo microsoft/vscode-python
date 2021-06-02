@@ -3,14 +3,15 @@
 
 import { inject, injectable } from 'inversify';
 import { commands, Disposable, TextEditor, TextEditorEdit } from 'vscode';
+import { IJupyterNotInstalledNotificationHelper, JupyterNotInstalledOrigin } from '../../jupyter/types';
 import { ICommandNameArgumentTypeMapping } from './commands';
-import { ICommandManager, IJupyterExtensionDependencyManager } from './types';
+import { ICommandManager } from './types';
 
 @injectable()
 export class CommandManager implements ICommandManager {
     constructor(
-        @inject(IJupyterExtensionDependencyManager)
-        private jupyterExtensionDependencyManager: IJupyterExtensionDependencyManager,
+        @inject(IJupyterNotInstalledNotificationHelper)
+        private jupyterNotInstalledNotificationHelper: IJupyterNotInstalledNotificationHelper,
     ) {}
 
     /**
@@ -73,8 +74,13 @@ export class CommandManager implements ICommandManager {
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
     >(command: E, ...rest: U): Thenable<T | undefined> {
-        if (command.includes('jupyter') && !this.jupyterExtensionDependencyManager.isJupyterExtensionInstalled) {
-            return this.jupyterExtensionDependencyManager.installJupyterExtension(this);
+        if (
+            command.includes('jupyter') &&
+            !this.jupyterNotInstalledNotificationHelper.shouldShowJupypterExtensionNotInstalledPrompt()
+        ) {
+            return this.jupyterNotInstalledNotificationHelper
+                .showJupyterNotInstalledPrompt(JupyterNotInstalledOrigin.JupyterCommand)
+                .then(() => undefined);
         } else {
             return commands.executeCommand<T>(command, ...rest);
         }
