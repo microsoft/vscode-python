@@ -10,7 +10,10 @@
         "untrustedWorkspaces": {
             "supported": false
         },
-        "virtualWorkspaces": false
+        "virtualWorkspaces": {
+            "supported": false,
+            "description": "Python only works with local file paths."
+        }
     },
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
