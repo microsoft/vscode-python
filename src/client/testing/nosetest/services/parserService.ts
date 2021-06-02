@@ -98,11 +98,12 @@ export class TestsParser implements ITestsParser {
                 }
                 currentPackage = convertFileToPackage(fileName);
                 const fullyQualifiedName = path.isAbsolute(fileName) ? fileName : path.resolve(rootDirectory, fileName);
+                const baseName = path.basename(fullyQualifiedName);
                 testFile = {
                     resource,
                     functions: [],
                     suites: [],
-                    name: fileName,
+                    name: baseName,
                     nameToRun: fileName,
                     xmlName: currentPackage,
                     time: 0,
