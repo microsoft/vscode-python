@@ -18,9 +18,9 @@ importlib-metadata==3.10.1 \
     --hash=sha256:2ec0faae539743ae6aaa84b49a169670a465f7f5d64e6add98388cc29fd1f2f6 \
     --hash=sha256:c9356b657de65c53744046fa8f7358afe0714a1af7d570c00c3835c2d724a7c1
     # via jedi-language-server
-jedi-language-server==0.30.2 \
-    --hash=sha256:68f40862b86342525628ebb39f6056a2526d56afab445e7a2c63e714694c2dd5 \
-    --hash=sha256:97704bd426a61d41c34cb9aa356919f38e05fe13c60efbb19b0ccde7be28df6f
+jedi-language-server==0.30.3 \
+    --hash=sha256:4c6bce4f4764b431cbfebfe004d0bbc7723be86414824b8f752285a716e95bd8 \
+    --hash=sha256:c942cdef100d9c23418449d642133a50529595338ecc3c226763d068d0f64b8c
     # via -r jedils_requirements.in
 jedi==0.18.0 \
     --hash=sha256:18456d83f65f400ab0c2d3319e48520420ef43b23a086fdc05dff34132f0fb93 \

@@ -324,6 +324,176 @@ suite('Experimentation service', () => {
         });
     });
 
+    suite('In-experiment-sync check', () => {
+        const experiment = 'Test Experiment - experiment';
+        let telemetryEvents: { eventName: string; properties: Record<string, unknown> }[] = [];
+        let getTreatmentVariable: sinon.SinonStub;
+        let sendTelemetryEventStub: sinon.SinonStub;
+
+        setup(() => {
+            sendTelemetryEventStub = sinon
+                .stub(Telemetry, 'sendTelemetryEvent')
+                .callsFake((eventName: string, _, properties: Record<string, unknown>) => {
+                    const telemetry = { eventName, properties };
+                    telemetryEvents.push(telemetry);
+                });
+
+            getTreatmentVariable = sinon.stub().returns(Promise.resolve(true));
+            sinon.stub(tasClient, 'getExperimentationService').returns({
+                getTreatmentVariable,
+            } as never);
+
+            configureApplicationEnvironment('stable', extensionVersion);
+        });
+
+        teardown(() => {
+            telemetryEvents = [];
+        });
+
+        test('If the opt-in and opt-out arrays are empty, return the value from the experimentation framework for a given experiment', async () => {
+            configureSettings(true, [], []);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+            const result = experimentService.inExperimentSync(experiment);
+
+            assert.isTrue(result);
+            sinon.assert.notCalled(sendTelemetryEventStub);
+            sinon.assert.calledOnce(getTreatmentVariable);
+        });
+
+        test('If the experiment setting is disabled, inExperiment should return false', async () => {
+            configureSettings(false, [], []);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+            const result = experimentService.inExperimentSync(experiment);
+
+            assert.isFalse(result);
+            sinon.assert.notCalled(sendTelemetryEventStub);
+            sinon.assert.notCalled(getTreatmentVariable);
+        });
+
+        test('If the opt-in setting contains "All", inExperiment should return true', async () => {
+            configureSettings(true, ['All'], []);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+            const result = experimentService.inExperimentSync(experiment);
+
+            assert.isTrue(result);
+            assert.strictEqual(telemetryEvents.length, 0);
+        });
+
+        test('If the opt-in setting contains `All`, inExperiment should check the value cached by the experiment service', async () => {
+            configureSettings(true, ['All'], []);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+            const result = experimentService.inExperimentSync(experiment);
+
+            assert.isTrue(result);
+            sinon.assert.notCalled(sendTelemetryEventStub);
+            sinon.assert.calledOnce(getTreatmentVariable);
+        });
+
+        test('If the opt-in setting contains `All` and the experiment setting is disabled, inExperiment should return false', async () => {
+            configureSettings(false, ['All'], []);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+            const result = experimentService.inExperimentSync(experiment);
+
+            assert.isFalse(result);
+            sinon.assert.notCalled(sendTelemetryEventStub);
+            sinon.assert.notCalled(getTreatmentVariable);
+        });
+
+        test('If the opt-in setting contains the experiment name, inExperiment should return true', async () => {
+            configureSettings(true, [experiment], []);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+            const result = experimentService.inExperimentSync(experiment);
+
+            assert.isTrue(result);
+            assert.strictEqual(telemetryEvents.length, 0);
+            sinon.assert.calledOnce(getTreatmentVariable);
+        });
+
+        test('If the opt-out setting contains "All", inExperiment should return false', async () => {
+            configureSettings(true, [], ['All']);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+            const result = experimentService.inExperimentSync(experiment);
+
+            assert.isFalse(result);
+            sinon.assert.notCalled(sendTelemetryEventStub);
+            sinon.assert.notCalled(getTreatmentVariable);
+        });
+
+        test('If the opt-out setting contains "All" and the experiment setting is enabled, inExperiment should return false', async () => {
+            configureSettings(true, [], ['All']);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+            const result = experimentService.inExperimentSync(experiment);
+
+            assert.isFalse(result);
+            sinon.assert.notCalled(sendTelemetryEventStub);
+            sinon.assert.notCalled(getTreatmentVariable);
+        });
+
+        test('If the opt-out setting contains the experiment name, inExperiment should return false', async () => {
+            configureSettings(true, [], [experiment]);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+            const result = experimentService.inExperimentSync(experiment);
+
+            assert.isFalse(result);
+            assert.strictEqual(telemetryEvents.length, 0);
+            sinon.assert.notCalled(getTreatmentVariable);
+        });
+    });
+
     suite('Experiment value retrieval', () => {
         const experiment = 'Test Experiment - experiment';
         let getTreatmentVariableAsyncStub: sinon.SinonStub;

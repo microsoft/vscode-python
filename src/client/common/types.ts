@@ -568,6 +568,7 @@ export const IExperimentService = Symbol('IExperimentService');
 export interface IExperimentService {
     activate(): Promise<void>;
     inExperiment(experimentName: string): Promise<boolean>;
+    inExperimentSync(experimentName: string): boolean;
     getExperimentValue<T extends boolean | number | string>(experimentName: string): Promise<T | undefined>;
 }
 
