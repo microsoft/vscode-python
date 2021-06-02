@@ -1,18 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import { commands, Disposable, TextEditor, TextEditorEdit } from 'vscode';
-import { IJupyterNotInstalledNotificationHelper, JupyterNotInstalledOrigin } from '../../jupyter/types';
 import { ICommandNameArgumentTypeMapping } from './commands';
 import { ICommandManager } from './types';
 
 @injectable()
 export class CommandManager implements ICommandManager {
-    constructor(
-        @inject(IJupyterNotInstalledNotificationHelper)
-        private jupyterNotInstalledNotificationHelper: IJupyterNotInstalledNotificationHelper,
-    ) {}
+    constructor() {}
 
     /**
      * Registers a command that can be invoked via a keyboard shortcut,
@@ -74,16 +70,7 @@ export class CommandManager implements ICommandManager {
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
     >(command: E, ...rest: U): Thenable<T | undefined> {
-        if (
-            command.includes('jupyter') &&
-            !this.jupyterNotInstalledNotificationHelper.shouldShowJupypterExtensionNotInstalledPrompt()
-        ) {
-            return this.jupyterNotInstalledNotificationHelper
-                .showJupyterNotInstalledPrompt(JupyterNotInstalledOrigin.JupyterCommand)
-                .then(() => undefined);
-        } else {
-            return commands.executeCommand<T>(command, ...rest);
-        }
+        return commands.executeCommand<T>(command, ...rest);
     }
 
     /**
