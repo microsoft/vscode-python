@@ -110,7 +110,7 @@ suite('Jupyter not installed notification helper', () => {
             ({ createGlobalPersistentState: createGlobalPersistentStateStub } as unknown) as IPersistentStateFactory,
             {} as IJupyterExtensionDependencyManager,
         );
-        await notificationHelper.jupyterNotInstalledPrompt(JupyterNotInstalledOrigin.StartPageCreateBlankNotebook);
+        await notificationHelper.showJupyterNotInstalledPrompt(JupyterNotInstalledOrigin.StartPageCreateBlankNotebook);
 
         sinon.assert.calledOnce(createGlobalPersistentStateStub);
         sinon.assert.calledOnce(showInformationMessageStub);
@@ -142,7 +142,7 @@ suite('Jupyter not installed notification helper', () => {
             ({ createGlobalPersistentState: createGlobalPersistentStateStub } as unknown) as IPersistentStateFactory,
             {} as IJupyterExtensionDependencyManager,
         );
-        await notificationHelper.jupyterNotInstalledPrompt(JupyterNotInstalledOrigin.StartPageCreateBlankNotebook);
+        await notificationHelper.showJupyterNotInstalledPrompt(JupyterNotInstalledOrigin.StartPageCreateBlankNotebook);
 
         const result = notificationHelper.shouldShowJupypterExtensionNotInstalledPrompt();
 

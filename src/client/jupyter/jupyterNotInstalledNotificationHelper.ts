@@ -31,7 +31,7 @@ export class JupyterNotInstalledNotificationHelper implements IJupyterNotInstall
         return !isInstalled;
     }
 
-    public async jupyterNotInstalledPrompt(entrypoint: JupyterNotInstalledOrigin): Promise<void> {
+    public async showJupyterNotInstalledPrompt(entrypoint: JupyterNotInstalledOrigin): Promise<void> {
         sendTelemetryEvent(EventName.JUPYTER_NOT_INSTALLED_NOTIFICATION_DISPLAYED, undefined, { entrypoint });
 
         const prompts = [Common.doNotShowAgain()];

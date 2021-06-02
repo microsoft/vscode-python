@@ -57,5 +57,5 @@ export enum JupyterNotInstalledOrigin {
 export const IJupyterNotInstalledNotificationHelper = Symbol('IJupyterNotInstalledNotificationHelper');
 export interface IJupyterNotInstalledNotificationHelper {
     shouldShowJupypterExtensionNotInstalledPrompt(): boolean;
-    jupyterNotInstalledPrompt(entrypoint: JupyterNotInstalledOrigin): Promise<void>;
+    showJupyterNotInstalledPrompt(entrypoint: JupyterNotInstalledOrigin): Promise<void>;
 }
