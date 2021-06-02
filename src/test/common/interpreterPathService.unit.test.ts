@@ -200,7 +200,7 @@ suite('Interpreter Path Service', async () => {
         persistentState.verifyAll();
     });
 
-    test('If the one-off transfer to new storage has not happened yet for the user setting, do it, record the transfer and remove the original user setting', async () => {
+    test('If the one-off transfer to new storage has not happened yet for the user setting, do it, record the transfer', async () => {
         const update = sinon.stub(InterpreterPathService.prototype, 'update');
         const persistentState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         persistentStateFactory
@@ -208,19 +208,12 @@ suite('Interpreter Path Service', async () => {
             .returns(() => persistentState.object);
         persistentState.setup((p) => p.value).returns(() => false);
         persistentState.setup((p) => p.updateValue(true)).verifiable(TypeMoq.Times.once());
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        workspaceService.setup((w) => w.getConfiguration('python')).returns(() => workspaceConfig.object);
-        workspaceConfig
-            .setup((w) => w.update('pythonPath', undefined, ConfigurationTarget.Global))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
 
         interpreterPathService = new InterpreterPathService(persistentStateFactory.object, workspaceService.object, []);
         await interpreterPathService._moveGlobalSettingValueToNewStorage('globalPythonPath');
 
         assert(update.calledWith(undefined, ConfigurationTarget.Global, 'globalPythonPath'));
         persistentState.verifyAll();
-        workspaceConfig.verifyAll();
     });
 
     test('If the one-off transfer to new storage has already happened for the user setting, do not update and simply return', async () => {

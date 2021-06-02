@@ -198,10 +198,6 @@ export class InterpreterPathService implements IInterpreterPathService {
         const shouldUpdateGlobalSetting = !isGlobalSettingCopiedStorage.value;
         if (shouldUpdateGlobalSetting) {
             await this.update(undefined, ConfigurationTarget.Global, value);
-            // Make sure to delete the original setting after copying it
-            await this.workspaceService
-                .getConfiguration('python')
-                .update('pythonPath', undefined, ConfigurationTarget.Global);
             await isGlobalSettingCopiedStorage.updateValue(true);
         }
     }
