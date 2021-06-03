@@ -68,7 +68,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ];
     ['workbench.action.files.openFolder']: [];
     ['workbench.action.openWorkspace']: [];
-    ['workbench.action.openIssueReporter']: [{ extensionId: string; issueBody: string }];
     ['setContext']: [string, boolean] | ['python.vscode.channel', Channel];
     ['python.reloadVSCode']: [string];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];

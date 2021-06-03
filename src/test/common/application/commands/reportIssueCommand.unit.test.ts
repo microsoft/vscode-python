@@ -80,9 +80,10 @@ suite('Report Issue Command', () => {
         );
         const expectedIssueBody = fs.readFileSync(templatePath, 'utf8');
 
-        const args = capture<'workbench.action.openIssueReporter', { extensionId: string; issueBody: string }>(
-            cmdManager.executeCommand,
-        ).last();
+        const args: [string, { extensionId: string; issueBody: string }] = capture<
+            string,
+            { extensionId: string; issueBody: string }
+        >(cmdManager.executeCommand).last();
 
         verify(cmdManager.registerCommand('python.reportIssue', anything(), anything())).once();
         verify(cmdManager.executeCommand('workbench.action.openIssueReporter', anything())).once();

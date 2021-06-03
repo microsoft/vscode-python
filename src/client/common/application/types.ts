@@ -61,7 +61,6 @@ import {
 import type { NotebookConcatTextDocument, NotebookDocument } from 'vscode-proposed';
 
 import { IAsyncDisposable, Resource } from '../types';
-import { ICommandNameArgumentTypeMapping } from './commands';
 
 export enum CommandSource {
     auto = 'auto',
@@ -474,10 +473,7 @@ export interface ICommandManager {
      * @return A thenable that resolves to the returned value of the given command. `undefined` when
      * the command handler function doesn't return anything.
      */
-    executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
-        command: E,
-        ...rest: U
-    ): Thenable<T | undefined>;
+    executeCommand<T>(command: string, ...rest: any[]): Thenable<T | undefined>;
 
     /**
      * Retrieve the list of all available commands. Commands starting an underscore are
