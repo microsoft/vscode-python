@@ -102,8 +102,8 @@ async function closeWindowsInteral() {
 
 function isANotebookOpen() {
     if (
-        Array.isArray((vscode as any).notebook.visibleNotebookEditors) &&
-        (vscode as any).notebook.visibleNotebookEditors.length
+        Array.isArray((vscode as any).window.visibleNotebookEditors) &&
+        (vscode as any).window.visibleNotebookEditors.length
     ) {
         return true;
     }
