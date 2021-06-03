@@ -8,7 +8,7 @@ import sys
 
 class Visitor(ast.NodeVisitor):
     def __init__(self):
-        self.symbols = {"classes": [], "methods": [], "functions": []}
+        self.symbols = []
 
     def visit_Module(self, node):
         self.visitChildren(node)
@@ -26,13 +26,10 @@ class Visitor(ast.NodeVisitor):
                 pass
 
     def visitDef(self, node, namespace=""):
-        end_position = self.getEndPosition(node)
-        symbol = "functions" if namespace == "" else "methods"
-        self.symbols[symbol].append(self.getDataObject(node, namespace))
+        self.symbols.append(self.getDataObject(node, namespace))
 
     def visitClassDef(self, node, namespace=""):
-        end_position = self.getEndPosition(node)
-        self.symbols["classes"].append(self.getDataObject(node, namespace))
+        self.symbols.append(self.getDataObject(node, namespace))
 
         if len(namespace) > 0:
             namespace = "{0}::{1}".format(namespace, node.name)

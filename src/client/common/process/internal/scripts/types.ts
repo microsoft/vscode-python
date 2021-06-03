@@ -91,24 +91,3 @@ type HoverItem = {
     docstring: string;
     signature: string;
 };
-
-// Symbol providers
-
-type Position = {
-    line: number;
-    character: number;
-};
-type RawSymbol = {
-    // If no namespace then ''.
-    namespace: string;
-    name: string;
-    range: {
-        start: Position;
-        end: Position;
-    };
-};
-export type SymbolProviderSymbols = {
-    classes: RawSymbol[];
-    methods: RawSymbol[];
-    functions: RawSymbol[];
-};

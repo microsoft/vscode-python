@@ -11,7 +11,7 @@ import { IFileSystem } from '../platform/types';
 import * as internalPython from './internal/python';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types';
 
-class PythonEnvironment {
+export class PythonExecutionEnvironment {
     private cachedExecutablePath: Map<string, Promise<string>> = new Map<string, Promise<string>>();
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
 
@@ -119,7 +119,7 @@ export function createPythonEnv(
     // These are used to generate the deps.
     procs: IProcessService,
     fs: IFileSystem,
-): PythonEnvironment {
+): PythonExecutionEnvironment {
     const deps = createDeps(
         async (filename) => fs.pathExists(filename),
         // We use the default: [pythonPath].
@@ -128,7 +128,7 @@ export function createPythonEnv(
         (file, args, opts) => procs.exec(file, args, opts),
         (command, opts) => procs.shellExec(command, opts),
     );
-    return new PythonEnvironment(pythonPath, deps);
+    return new PythonExecutionEnvironment(pythonPath, deps);
 }
 
 export function createCondaEnv(
@@ -138,7 +138,7 @@ export function createCondaEnv(
     // These are used to generate the deps.
     procs: IProcessService,
     fs: IFileSystem,
-): PythonEnvironment {
+): PythonExecutionEnvironment {
     const runArgs = ['run'];
     if (condaInfo.name === '') {
         runArgs.push('-p', condaInfo.path);
@@ -157,14 +157,14 @@ export function createCondaEnv(
         (file, args, opts) => procs.exec(file, args, opts),
         (command, opts) => procs.shellExec(command, opts),
     );
-    return new PythonEnvironment(pythonPath, deps);
+    return new PythonExecutionEnvironment(pythonPath, deps);
 }
 
 export function createWindowsStoreEnv(
     pythonPath: string,
     // These are used to generate the deps.
     procs: IProcessService,
-): PythonEnvironment {
+): PythonExecutionEnvironment {
     const deps = createDeps(
         /**
          * With windows store python apps, we have generally use the
@@ -181,5 +181,5 @@ export function createWindowsStoreEnv(
         (file, args, opts) => procs.exec(file, args, opts),
         (command, opts) => procs.shellExec(command, opts),
     );
-    return new PythonEnvironment(pythonPath, deps);
+    return new PythonExecutionEnvironment(pythonPath, deps);
 }
