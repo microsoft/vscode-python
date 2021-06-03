@@ -33,7 +33,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['workbench.action.debug.stop']: [];
     ['workbench.action.reloadWindow']: [];
     ['workbench.action.closeActiveEditor']: [];
-    ['workbench.action.openIssueReporter']: [{ extensionId: string; issueBody: string }];
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
     [Commands.ViewOutput]: [];
@@ -89,6 +88,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['jupyter.opennotebook']: [undefined | Uri, undefined | CommandSource];
     ['jupyter.runallcells']: [Uri];
     ['extension.open']: [string];
+    ['workbench.action.openIssueReporter']: [{ extensionId: string; issueBody: string }];
     [Commands.GetSelectedInterpreterPath]: [{ workspaceFolder: string } | string[]];
     [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
     [Commands.Sort_Imports]: [undefined, Uri];
