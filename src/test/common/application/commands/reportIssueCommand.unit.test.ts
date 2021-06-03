@@ -21,6 +21,8 @@ import { MockWorkspaceConfiguration } from '../../../startPage/mockWorkspaceConf
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 import * as Logging from '../../../../client/logging/_global';
+import { Commands } from '../../../../client/common/constants';
+import { AllCommands } from '../../../../client/common/application/commands';
 
 suite('Report Issue Command', () => {
     let reportIssueCommandHandler: ReportIssueCommandHandler;
@@ -81,12 +83,13 @@ suite('Report Issue Command', () => {
         const expectedIssueBody = fs.readFileSync(templatePath, 'utf8');
 
         const args: [string, { extensionId: string; issueBody: string }] = capture<
-            string,
+            AllCommands,
             { extensionId: string; issueBody: string }
         >(cmdManager.executeCommand).last();
 
-        verify(cmdManager.registerCommand('python.reportIssue', anything(), anything())).once();
+        verify(cmdManager.registerCommand(Commands.ReportIssue, anything(), anything())).once();
         verify(cmdManager.executeCommand('workbench.action.openIssueReporter', anything())).once();
+        expect(args[0]).to.be.equal('workbench.action.openIssueReporter');
         expect(args[1].issueBody).to.be.equal(expectedIssueBody);
     });
 });

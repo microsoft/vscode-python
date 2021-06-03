@@ -3,12 +3,12 @@
 
 'use strict';
 
-import { CancellationToken, Disposable, Position, TextDocument, Uri } from 'vscode';
+import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as LSCommands } from '../../activation/commands';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../tensorBoard/constants';
 import { TestDataItem, TestFunction, TestsToRun, TestWorkspaceFolder } from '../../testing/common/types';
 import { Commands } from '../constants';
-import { Channel, CommandSource, ICommandManager } from './types';
+import { Channel, CommandSource } from './types';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 
@@ -33,6 +33,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['workbench.action.debug.stop']: [];
     ['workbench.action.reloadWindow']: [];
     ['workbench.action.closeActiveEditor']: [];
+    ['workbench.action.openIssueReporter']: [{ extensionId: string; issueBody: string }];
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
     [Commands.ViewOutput]: [];
@@ -48,9 +49,14 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.Tests_Discovering]: [];
     [Commands.PickLocalProcess]: [];
     [Commands.OpenStartPage]: [];
+    [Commands.ClearStorage]: [];
+    [Commands.ReportIssue]: [];
+    [Commands.RefreshTensorBoard]: [];
     [LSCommands.ClearAnalyisCache]: [];
     [LSCommands.RestartLS]: [];
 }
+
+export type AllCommands = keyof ICommandNameArgumentTypeMapping;
 
 /**
  * Mapping between commands and list of arguments.
@@ -126,18 +132,4 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.navigateToTestFunction]: [Uri, TestDataItem, boolean];
     [Commands.navigateToTestSuite]: [Uri, TestDataItem, boolean];
     [Commands.LaunchTensorBoard]: [TensorBoardEntrypoint, TensorBoardEntrypointTrigger];
-}
-
-//export const IPythonCommandManager = Symbol('IPythonCommandManager');
-export interface IPythonCommandManager extends ICommandManager {
-    registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
-        command: E,
-        callback: (...args: U) => any,
-        thisArg?: any,
-    ): Disposable;
-
-    executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
-        command: E,
-        ...rest: U
-    ): Thenable<T | undefined>;
 }

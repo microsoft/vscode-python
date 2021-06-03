@@ -12,6 +12,7 @@ import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService, IInterpreterVersionService } from '../../../interpreter/contracts';
 import { identifyEnvironment } from '../../../pythonEnvironments/common/environmentIdentifier';
 import { getPythonOutputChannelContent } from '../../../logging';
+import { Commands } from '../../constants';
 
 /**
  * Allows the user to report an issue related to the Python extension using our template.
@@ -26,7 +27,7 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
     ) {}
 
     public async activate(): Promise<void> {
-        this.commandManager.registerCommand('python.reportIssue', this.openReportIssue, this);
+        this.commandManager.registerCommand(Commands.ReportIssue, this.openReportIssue, this);
     }
 
     private templatePath = path.join(EXTENSION_ROOT_DIR, 'resources', 'report_issue_template.md');

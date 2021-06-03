@@ -69,6 +69,7 @@ export namespace Commands {
     export const OpenStartPage = 'python.startPage.open';
     export const LaunchTensorBoard = 'python.launchTensorBoard';
     export const RefreshTensorBoard = 'python.refreshTensorBoard';
+    export const ReportIssue = 'python.reportIssue';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';
