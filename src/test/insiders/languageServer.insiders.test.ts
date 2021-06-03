@@ -88,10 +88,9 @@ suite('Insiders Test: Language Server', () => {
         const notebookDocument = await openNotebookAndWaitForLS(notebookDefinitions);
         let tested = false;
         for (let i = 0; i < 5; i += 1) {
-            const uri = notebookDocument.cellAt(2).document.uri;
             const locations = await vscode.commands.executeCommand<vscode.Location[]>(
                 'vscode.executeDefinitionProvider',
-                uri, // Second cell should have a function with the decorator on it
+                notebookDocument.cellAt(2).document.uri, // Second cell should have a function with the decorator on it
                 startPosition,
             );
             if (locations && locations.length > 0) {
