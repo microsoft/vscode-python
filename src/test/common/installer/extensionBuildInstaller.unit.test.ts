@@ -45,16 +45,18 @@ suite('Extension build installer - Stable build installer', async () => {
     test('Installing stable build logs progress and installs stable', async () => {
         when(output.append(ExtensionChannels.installingStableMessage())).thenReturn();
         when(output.appendLine(ExtensionChannels.installationCompleteMessage())).thenReturn();
-        when(cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID)).thenResolve(
-            undefined,
-        );
+        when(
+            cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID, anything()),
+        ).thenResolve(undefined);
         when(appShell.withProgressCustomIcon(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
         await stableBuildInstaller.install();
         verify(output.append(ExtensionChannels.installingStableMessage())).once();
         verify(output.appendLine(ExtensionChannels.installationCompleteMessage())).once();
         verify(appShell.withProgressCustomIcon(anything(), anything()));
         expect(progressReportStub.callCount).to.equal(1);
-        verify(cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID)).once();
+        verify(
+            cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID, anything()),
+        ).once();
     });
 });
 
@@ -102,9 +104,12 @@ suite('Extension build installer - Insiders build installer', async () => {
             },
         );
         when(appShell.withProgressCustomIcon(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
-        when(cmdManager.executeCommand('workbench.extensions.installExtension', anything())).thenCall((_, cb) => {
-            assert.deepEqual(cb, Uri.file(vsixFilePath), 'Wrong VSIX installed');
-        });
+        when(cmdManager.executeCommand('workbench.extensions.installExtension', anything(), anything())).thenCall(
+            (_, uri, options) => {
+                assert.deepStrictEqual(uri, Uri.file(vsixFilePath), 'Wrong VSIX installed');
+                assert.deepStrictEqual(options, { installOnlyNewlyAddedFromExtensionPackVSIX: true });
+            },
+        );
         when(fs.deleteFile(vsixFilePath)).thenResolve();
 
         await insidersBuildInstaller.install();
@@ -115,7 +120,7 @@ suite('Extension build installer - Insiders build installer', async () => {
         verify(output.appendLine(ExtensionChannels.installationCompleteMessage())).once();
         verify(appShell.withProgressCustomIcon(anything(), anything()));
         expect(progressReportStub.callCount).to.equal(1);
-        verify(cmdManager.executeCommand('workbench.extensions.installExtension', anything())).once();
+        verify(cmdManager.executeCommand('workbench.extensions.installExtension', anything(), anything())).once();
         verify(fs.deleteFile(vsixFilePath)).once();
     });
 });
