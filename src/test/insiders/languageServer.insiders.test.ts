@@ -101,15 +101,7 @@ suite('Insiders Test: Language Server', () => {
                 expect(activeEditor).not.to.be.equal(undefined, 'Active editor not found in notebook');
                 await activeEditor!.edit((edit) => {
                     edit.replaceCells(0, 0, [
-                        new vscode.NotebookCellData(
-                            vscode.NotebookCellKind.Code,
-                            PYTHON_LANGUAGE,
-                            'x = 4',
-                            [],
-                            new vscode.NotebookCellMetadata().with({
-                                hasExecutionOrder: false,
-                            }),
-                        ),
+                        new vscode.NotebookCellData(vscode.NotebookCellKind.Code, PYTHON_LANGUAGE, 'x = 4', []),
                     ]);
                 });
 
@@ -124,15 +116,7 @@ suite('Insiders Test: Language Server', () => {
                 await activeEditor!.edit((edit) => {
                     edit.replaceCells(0, 1, []);
                     edit.replaceCells(1, 0, [
-                        new vscode.NotebookCellData(
-                            vscode.NotebookCellKind.Code,
-                            PYTHON_LANGUAGE,
-                            'x = 4',
-                            [],
-                            new vscode.NotebookCellMetadata().with({
-                                hasExecutionOrder: false,
-                            }),
-                        ),
+                        new vscode.NotebookCellData(vscode.NotebookCellKind.Code, PYTHON_LANGUAGE, 'x = 4', []),
                     ]);
                 });
 
