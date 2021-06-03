@@ -3,7 +3,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import { ConfigurationTarget } from 'vscode';
-import { CommandSource } from '../../client/common/application/types';
+import { CommandSource } from '../../client/common/constants';
 import { createDeferred } from '../../client/common/utils/async';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';

@@ -7,8 +7,7 @@ import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as LSCommands } from '../../activation/commands';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../tensorBoard/constants';
 import { TestDataItem, TestFunction, TestsToRun, TestWorkspaceFolder } from '../../testing/common/types';
-import { Commands } from '../constants';
-import { Channel, CommandSource } from './types';
+import { Channel, Commands, CommandSource } from '../constants';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 

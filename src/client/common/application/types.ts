@@ -60,16 +60,9 @@ import {
 } from 'vscode';
 import type { NotebookConcatTextDocument, NotebookDocument } from 'vscode-proposed';
 
+import { Channel } from '../constants';
 import { IAsyncDisposable, Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';
-
-export enum CommandSource {
-    auto = 'auto',
-    ui = 'ui',
-    codelens = 'codelens',
-    commandPalette = 'commandpalette',
-    testExplorer = 'testExplorer',
-}
 
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
@@ -1171,8 +1164,6 @@ export interface ILanguageService {
         ...triggerCharacters: string[]
     ): Disposable;
 }
-
-export type Channel = 'stable' | 'insiders';
 
 /**
  * Wraps the `ActiveResourceService` API class. Created for injecting and mocking class methods in testing

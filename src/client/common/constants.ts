@@ -15,6 +15,16 @@ export const PYLANCE_EXTENSION_ID = 'ms-python.vscode-pylance';
 export const JUPYTER_EXTENSION_ID = 'ms-toolsai.jupyter';
 export const AppinsightsKey = 'AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217';
 
+export type Channel = 'stable' | 'insiders';
+
+export enum CommandSource {
+    auto = 'auto',
+    ui = 'ui',
+    codelens = 'codelens',
+    commandPalette = 'commandpalette',
+    testExplorer = 'testExplorer',
+}
+
 export namespace Commands {
     export const Set_Interpreter = 'python.setInterpreter';
     export const Set_ShebangInterpreter = 'python.setShebangInterpreter';

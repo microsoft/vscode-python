@@ -11,7 +11,7 @@ import {
     OutputChannel,
     Uri,
 } from 'vscode';
-import { CommandSource, ICommandManager, IWorkspaceService } from '../../../common/application/types';
+import { ICommandManager, IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
 import { isNotInstalledError } from '../../../common/helpers';
 import { traceError } from '../../../common/logger';
@@ -50,6 +50,7 @@ import {
     TestsToRun,
     WorkspaceTestStatus,
 } from '../types';
+import { CommandSource } from '../../../common/constants';
 
 enum CancellationTokenType {
     testDiscovery,

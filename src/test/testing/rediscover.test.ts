@@ -3,7 +3,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import { ConfigurationTarget } from 'vscode';
-import { CommandSource } from '../../client/common/application/types';
+import { CommandSource } from '../../client/common/constants';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { CondaService } from '../../client/pythonEnvironments/discovery/locators/services/condaService';

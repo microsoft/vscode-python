@@ -1,5 +1,5 @@
 import { Uri } from 'vscode';
-import { CommandSource } from '../../common/application/types';
+import { CommandSource } from '../../common/constants';
 import { Product } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';

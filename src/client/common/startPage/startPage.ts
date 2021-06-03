@@ -10,7 +10,6 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { sendTelemetryEvent } from '../../telemetry';
 import {
-    CommandSource,
     IApplicationEnvironment,
     IApplicationShell,
     ICommandManager,
@@ -18,6 +17,7 @@ import {
     IWebviewPanelProvider,
     IWorkspaceService,
 } from '../application/types';
+import { CommandSource } from '../constants';
 import { IFileSystem } from '../platform/types';
 import { IConfigurationService, IExtensionContext, Resource } from '../types';
 import * as localize from '../utils/localize';

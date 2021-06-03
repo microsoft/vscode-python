@@ -7,10 +7,11 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { parse } from 'semver';
 import * as vscode from 'vscode';
+import { Channel } from '../constants';
 import { IPlatformService } from '../platform/types';
 import { ICurrentProcess, IPathUtils } from '../types';
 import { OSType } from '../utils/platform';
-import { Channel, IApplicationEnvironment } from './types';
+import { IApplicationEnvironment } from './types';
 
 @injectable()
 export class ApplicationEnvironment implements IApplicationEnvironment {
