@@ -96,12 +96,10 @@ src/test/activation/activationManager.unit.test.ts
 
 src/test/utils/fs.ts
 
-src/test/language/braceCounter.unit.test.ts
 src/test/language/textRangeCollection.unit.test.ts
 src/test/language/characterStream.unit.test.ts
 src/test/language/languageConfiguration.unit.test.ts
 src/test/language/textIterator.unit.test.ts
-src/test/language/textBuilder.unit.test.ts
 src/test/language/textRange.unit.test.ts
 src/test/language/tokenizer.unit.test.ts
 
@@ -116,20 +114,8 @@ src/test/testing/unittest/unittest.discovery.unit.test.ts
 src/test/testing/unittest/unittest.discovery.test.ts
 src/test/testing/unittest/unittest.run.test.ts
 src/test/testing/unittest/unittest.unit.test.ts
-src/test/testing/codeLenses/testFiles.unit.test.ts
 src/test/testing/rediscover.test.ts
 src/test/testing/helper.ts
-src/test/testing/navigation/fileNavigator.unit.test.ts
-src/test/testing/navigation/functionNavigator.unit.test.ts
-src/test/testing/navigation/suiteNavigator.unit.test.ts
-src/test/testing/navigation/commandHandlers.unit.test.ts
-src/test/testing/navigation/helper.unit.test.ts
-src/test/testing/navigation/symbolNavigator.unit.test.ts
-src/test/testing/explorer/treeView.unit.test.ts
-src/test/testing/explorer/testExplorerCommandHandler.unit.test.ts
-src/test/testing/explorer/failedTestHandler.unit.test.ts
-src/test/testing/explorer/testTreeViewProvider.unit.test.ts
-src/test/testing/explorer/explorerTestData.ts
 src/test/testing/stoppingDiscoverAndTest.test.ts
 src/test/testing/banners/proposeNewLanguageServerBanner.unit.test.ts
 src/test/testing/common/argsHelper.unit.test.ts
@@ -178,7 +164,6 @@ src/test/common/utils/localize.functional.test.ts
 src/test/common/utils/version.unit.test.ts
 src/test/common/configSettings/configSettings.pythonPath.unit.test.ts
 src/test/common/configSettings/configSettings.unit.test.ts
-src/test/common/featureDeprecationManager.unit.test.ts
 src/test/common/serviceRegistry.unit.test.ts
 src/test/common/extensions.unit.test.ts
 src/test/common/variables/envVarsService.unit.test.ts
@@ -193,16 +178,13 @@ src/test/common/installer/productPath.unit.test.ts
 src/test/common/installer/extensionBuildInstaller.unit.test.ts
 src/test/common/socketCallbackHandler.test.ts
 src/test/common/process/decoder.test.ts
-src/test/common/process/pythonDaemonPool.unit.test.ts
 src/test/common/process/processFactory.unit.test.ts
 src/test/common/process/pythonToolService.unit.test.ts
 src/test/common/process/proc.observable.test.ts
 src/test/common/process/pythonProc.simple.multiroot.test.ts
 src/test/common/process/execFactory.test.ts
 src/test/common/process/logger.unit.test.ts
-src/test/common/process/pythonDaemonPool.functional.test.ts
 src/test/common/process/proc.exec.test.ts
-src/test/common/process/pythonDaemon.functional.test.ts
 src/test/common/process/pythonProcess.unit.test.ts
 src/test/common/process/proc.unit.test.ts
 src/test/common/asyncDump.ts
@@ -238,7 +220,6 @@ src/test/debugger/common/protocolparser.test.ts
 src/test/debugger/envVars.test.ts
 
 src/test/telemetry/index.unit.test.ts
-src/test/telemetry/importTracker.unit.test.ts
 src/test/telemetry/envFileTelemetry.unit.test.ts
 
 src/test/linters/pylint.unit.test.ts
@@ -362,12 +343,9 @@ src/client/activation/refCountedLanguageServer.ts
 src/client/activation/jedi.ts
 src/client/activation/languageClientMiddleware.ts
 src/client/activation/node/manager.ts
-src/client/activation/node/cancellationUtils.ts
 src/client/activation/node/languageServerProxy.ts
 src/client/activation/node/languageClientFactory.ts
-src/client/activation/node/languageServerPackageRepository.ts
 src/client/activation/node/languageServerFolderService.ts
-src/client/activation/node/languageServerPackageService.ts
 src/client/activation/node/analysisOptions.ts
 src/client/activation/node/activator.ts
 src/client/activation/none/activator.ts
@@ -384,9 +362,7 @@ src/client/language/characterStream.ts
 src/client/language/textIterator.ts
 src/client/language/types.ts
 src/client/language/iterableTextRange.ts
-src/client/language/braceCounter.ts
 src/client/language/unicode.ts
-src/client/language/textBuilder.ts
 
 src/client/testing/serviceRegistry.ts
 src/client/testing/unittest/main.ts
@@ -397,22 +373,8 @@ src/client/testing/unittest/runner.ts
 src/client/testing/unittest/services/parserService.ts
 src/client/testing/unittest/services/argsService.ts
 src/client/testing/unittest/services/discoveryService.ts
-src/client/testing/codeLenses/main.ts
-src/client/testing/codeLenses/testFiles.ts
 src/client/testing/main.ts
 src/client/testing/configurationFactory.ts
-src/client/testing/navigation/serviceRegistry.ts
-src/client/testing/navigation/symbolProvider.ts
-src/client/testing/navigation/helper.ts
-src/client/testing/navigation/commandHandler.ts
-src/client/testing/navigation/suiteNavigator.ts
-src/client/testing/navigation/functionNavigator.ts
-src/client/testing/navigation/fileNavigator.ts
-src/client/testing/explorer/testTreeViewItem.ts
-src/client/testing/explorer/testTreeViewProvider.ts
-src/client/testing/explorer/commandHandlers.ts
-src/client/testing/explorer/failedTestHandler.ts
-src/client/testing/explorer/treeView.ts
 src/client/testing/common/argumentsHelper.ts
 src/client/testing/common/enablementTracker.ts
 src/client/testing/common/debugLauncher.ts
@@ -435,7 +397,6 @@ src/client/testing/common/services/testManagerService.ts
 src/client/testing/common/services/workspaceTestManagerService.ts
 src/client/testing/display/main.ts
 src/client/testing/display/picker.ts
-src/client/testing/configuration.ts
 
 src/client/common/serviceRegistry.ts
 src/client/common/helpers.ts
@@ -449,11 +410,8 @@ src/client/common/asyncDisposableRegistry.ts
 src/client/common/editor.ts
 src/client/common/contextKey.ts
 src/client/common/markdown/restTextConverter.ts
-src/client/common/featureDeprecationManager.ts
 src/client/common/experiments/manager.ts
 src/client/common/experiments/telemetry.ts
-src/client/common/refBool.ts
-src/client/common/open.ts
 src/client/common/platform/serviceRegistry.ts
 src/client/common/platform/errors.ts
 src/client/common/platform/fs-temp.ts
@@ -484,10 +442,8 @@ src/client/common/utils/enum.ts
 src/client/common/utils/platform.ts
 src/client/common/utils/stopWatch.ts
 src/client/common/utils/random.ts
-src/client/common/utils/serializers.ts
 src/client/common/utils/sysTypes.ts
 src/client/common/utils/misc.ts
-src/client/common/utils/logging.ts
 src/client/common/utils/cacheUtils.ts
 src/client/common/utils/workerPool.ts
 src/client/common/extensions.ts
@@ -502,7 +458,6 @@ src/client/common/constants.ts
 src/client/common/variables/serviceRegistry.ts
 src/client/common/variables/environment.ts
 src/client/common/variables/types.ts
-src/client/common/variables/sysTypes.ts
 src/client/common/variables/systemVariables.ts
 src/client/common/nuget/azureBlobStoreNugetRepository.ts
 src/client/common/nuget/nugetRepository.ts
@@ -511,7 +466,6 @@ src/client/common/nuget/nugetService.ts
 src/client/common/cancellation.ts
 src/client/common/interpreterPathService.ts
 src/client/common/startPage/startPageMessageListener.ts
-src/client/common/application/customEditorService.ts
 src/client/common/application/commands.ts
 src/client/common/application/applicationShell.ts
 src/client/common/application/languageService.ts
@@ -523,8 +477,6 @@ src/client/common/application/extensions.ts
 src/client/common/application/types.ts
 src/client/common/application/commandManager.ts
 src/client/common/application/documentManager.ts
-src/client/common/application/webPanels/webPanelProvider.ts
-src/client/common/application/webPanels/webPanel.ts
 src/client/common/application/debugService.ts
 src/client/common/application/commands/reloadCommand.ts
 src/client/common/application/terminalManager.ts
@@ -542,15 +494,11 @@ src/client/common/installer/productPath.ts
 src/client/common/process/currentProcess.ts
 src/client/common/process/processFactory.ts
 src/client/common/process/serviceRegistry.ts
-src/client/common/process/pythonDaemon.ts
 src/client/common/process/pythonToolService.ts
 src/client/common/process/internal/python.ts
 src/client/common/process/internal/scripts/testing_tools.ts
-src/client/common/process/pythonDaemonPool.ts
-src/client/common/process/pythonDaemonFactory.ts
 src/client/common/process/types.ts
 src/client/common/process/logger.ts
-src/client/common/process/baseDaemon.ts
 src/client/common/process/pythonProcess.ts
 src/client/common/process/pythonEnvironment.ts
 src/client/common/process/decoder.ts
