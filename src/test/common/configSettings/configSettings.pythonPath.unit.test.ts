@@ -27,7 +27,7 @@ suite('Python Settings - pythonPath', () => {
         protected getPythonExecutable(pythonPath: string) {
             return pythonPath;
         }
-        protected initialize() {
+        public initialize() {
             noop();
         }
     }
