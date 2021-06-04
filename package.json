@@ -92,6 +92,7 @@
         "onCommand:python.startPage.open",
         "onCommand:python.enableSourceMapSupport",
         "onCommand:python.launchTensorBoard",
+        "onCommand:python.clearPersistentStorage",
         "workspaceContains:mspythonconfig.json",
         "workspaceContains:pyproject.toml",
         "workspaceContains:Pipfile",
