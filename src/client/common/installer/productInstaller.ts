@@ -487,7 +487,7 @@ class DataScienceInstaller extends BaseInstaller {
         }
 
         const version = `${interpreter.version?.major || ''}.${interpreter.version?.minor || ''}.${
-            interpreter.version?.build || ''
+            interpreter.version?.patch || ''
         }`;
 
         if (!installerModule) {
