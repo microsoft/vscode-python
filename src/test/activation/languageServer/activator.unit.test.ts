@@ -15,7 +15,7 @@ import {
 } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IConfigurationService, IPythonExtensionBanner, IPythonSettings } from '../../../client/common/types';
+import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { sleep } from '../../core';
@@ -29,7 +29,6 @@ suite('Microsoft Language Server - Activator', () => {
     let lsFolderService: ILanguageServerFolderService;
     let configuration: IConfigurationService;
     let settings: IPythonSettings;
-    let banner: IPythonExtensionBanner;
     setup(() => {
         manager = mock(DotNetLanguageServerManager);
         workspaceService = mock<IWorkspaceService>();
@@ -38,7 +37,6 @@ suite('Microsoft Language Server - Activator', () => {
         lsFolderService = mock<ILanguageServerFolderService>();
         configuration = mock<IConfigurationService>();
         settings = mock<IPythonSettings>();
-        banner = mock<IPythonExtensionBanner>();
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
         activator = new DotNetLanguageServerActivator(
             instance(manager),
@@ -47,7 +45,6 @@ suite('Microsoft Language Server - Activator', () => {
             instance(lsDownloader),
             instance(lsFolderService),
             instance(configuration),
-            instance(banner),
         );
     });
     test('Manager must be started without any workspace', async () => {

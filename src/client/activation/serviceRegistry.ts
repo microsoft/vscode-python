@@ -3,9 +3,7 @@
 
 import { registerTypes as registerDotNetTypes } from '../common/dotnet/serviceRegistry';
 import { INugetRepository } from '../common/nuget/types';
-import { BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../common/types';
 import { IServiceManager } from '../ioc/types';
-import { ProposePylanceBanner } from '../languageServices/proposeLanguageServerBanner';
 import { ExtensionActivationManager } from './activationManager';
 import { LanguageServerExtensionActivationService } from './activationService';
 import { DownloadBetaChannelRule, DownloadDailyChannelRule } from './common/downloadChannelRules';
@@ -67,12 +65,6 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
     serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
     serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
-
-    serviceManager.addSingleton<IPythonExtensionBanner>(
-        IPythonExtensionBanner,
-        ProposePylanceBanner,
-        BANNER_NAME_PROPOSE_LS,
-    );
 
     if (languageServerType === LanguageServerType.Microsoft) {
         serviceManager.add<ILanguageServerAnalysisOptions>(

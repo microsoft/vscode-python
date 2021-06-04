@@ -31,8 +31,6 @@
     "ExtensionSurveyBanner.bannerLabelNo": "Нет, спасибо",
     "ExtensionSurveyBanner.maybeLater": "Может быть, позже",
     "ExtensionSurveyBanner.bannerMessage": "Не могли бы вы потратить пару минут на опрос о языковом сервере Pylance?",
-    "Pylance.proposePylanceMessage": "Попробуйте новый языковый сервер для Python от Microsoft: Pylance! Установите расширение Pylance.",
-    "Pylance.tryItNow": "Да, хочу",
     "Pylance.remindMeLater": "Напомните позже",
     "Pylance.pylanceNotInstalledMessage": "Расширение Pylance не установлено.",
     "Pylance.pylanceInstalledReloadPromptMessage": "Расширение Pylance установлено. Перезагрузить окно для его активации?",

@@ -49,8 +49,6 @@
     "python.snippet.launch.fastapi.label": "Python: FastAPI",
     "python.snippet.launch.flask.label": "Python: Flask",
     "python.snippet.launch.pyramid.label": "Python: Pyramid Application",
-    "Pylance.proposePylanceMessage": "Try out a new faster, feature-rich language server for Python by Microsoft, Pylance! Install the extension now.",
-    "Pylance.tryItNow": "Try it now",
     "Pylance.remindMeLater": "Remind me later",
     "Pylance.pylanceNotInstalledMessage": "Pylance extension is not installed.",
     "Pylance.pylanceInstalledReloadPromptMessage": "Pylance extension is now installed. Reload window to activate?",

@@ -473,13 +473,6 @@ export interface IBrowserService {
     launch(url: string): void;
 }
 
-export const IPythonExtensionBanner = Symbol('IPythonExtensionBanner');
-export interface IPythonExtensionBanner {
-    readonly enabled: boolean;
-    showBanner(): Promise<void>;
-}
-export const BANNER_NAME_PROPOSE_LS = 'ProposePylance';
-
 export const IEditorUtils = Symbol('IEditorUtils');
 export interface IEditorUtils {
     getWorkspaceEditsFromPatch(originalContents: string, patch: string, uri: Uri): WorkspaceEdit;

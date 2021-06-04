@@ -46,10 +46,8 @@ import {
     LanguageServerType,
 } from '../../client/activation/types';
 import { INugetRepository } from '../../client/common/nuget/types';
-import { BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../../client/common/types';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceManager } from '../../client/ioc/types';
-import { ProposePylanceBanner } from '../../client/languageServices/proposeLanguageServerBanner';
 
 suite('Unit Tests - Language Server Activation Service Registry', () => {
     let serviceManager: IServiceManager;
@@ -78,13 +76,6 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
                 ILanguageServerActivator,
                 DotNetLanguageServerActivator,
                 LanguageServerType.Microsoft,
-            ),
-        ).once();
-        verify(
-            serviceManager.addSingleton<IPythonExtensionBanner>(
-                IPythonExtensionBanner,
-                ProposePylanceBanner,
-                BANNER_NAME_PROPOSE_LS,
             ),
         ).once();
         verify(
