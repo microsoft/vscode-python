@@ -10,7 +10,7 @@ import { ITestDiscoveryHelper } from '../common/discoveryHelper';
 import { updateTestRoot } from '../common/testItemUtilities';
 import { ITestDiscovery, PythonTestData } from '../common/types';
 import { WorkspaceTestRoot } from '../common/workspaceTestRoot';
-import { getTestFolders, prepareArgumentsForDiscovery } from './arguments';
+import { getTestFolders, preparePytestArgumentsForDiscovery } from './arguments';
 
 export class PytestDiscoveryService implements ITestDiscovery {
     constructor(private readonly discoveryHelper: ITestDiscoveryHelper) {}
@@ -20,7 +20,7 @@ export class PytestDiscoveryService implements ITestDiscovery {
         const testDirectories = getTestFolders(options.args);
 
         // Set arguments to use with pytest discovery script.
-        const args = runAdapter(['discover', 'pytest', '--', ...prepareArgumentsForDiscovery(options)]);
+        const args = runAdapter(['discover', 'pytest', '--', ...preparePytestArgumentsForDiscovery(options)]);
 
         // Build options for each directory selected by the user.
         let discoveryRunOptions: TestDiscoveryOptions[];

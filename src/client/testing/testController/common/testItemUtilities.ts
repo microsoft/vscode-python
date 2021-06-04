@@ -66,7 +66,7 @@ export function updateTestRoot(
         }
     });
 
-    const tests = rootData.tests.map((t) => TestCase.create(t));
+    const tests = rootData.tests.map((t) => TestCase.create(rootData.root, t));
     tests.forEach((testCase) => {
         const parent = parents.find((p) => {
             if (p) {

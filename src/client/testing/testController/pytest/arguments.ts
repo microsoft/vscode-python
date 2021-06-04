@@ -2,11 +2,7 @@
 // Licensed under the MIT License.
 
 import { TestDiscoveryOptions, TestFilter } from '../../common/types';
-import {
-    getOptionValues,
-    getPositionalArguments,
-    filterArguments as filterArgumentsHelper,
-} from '../common/argumentsHelper';
+import { getOptionValues, getPositionalArguments, filterArguments } from '../common/argumentsHelper';
 
 const OptionsWithArguments = [
     '-c',
@@ -151,7 +147,7 @@ export function getTestFolders(args: string[]): string[] {
     return positionalArgs.filter((arg) => !arg.toUpperCase().endsWith('.PY'));
 }
 
-export function filterArguments(args: string[], argumentToRemoveOrFilter: string[] | TestFilter): string[] {
+function pytestFilterArguments(args: string[], argumentToRemoveOrFilter: string[] | TestFilter): string[] {
     const optionsWithoutArgsToRemove: string[] = [];
     const optionsWithArgsToRemove: string[] = [];
     // Positional arguments in pytest are test directories and files.
@@ -265,12 +261,12 @@ export function filterArguments(args: string[], argumentToRemoveOrFilter: string
         const positionalArgs = getPositionalArguments(filteredArgs, OptionsWithArguments, OptionsWithoutArguments);
         filteredArgs = filteredArgs.filter((item) => positionalArgs.indexOf(item) === -1);
     }
-    return filterArgumentsHelper(filteredArgs, optionsWithArgsToRemove, optionsWithoutArgsToRemove);
+    return filterArguments(filteredArgs, optionsWithArgsToRemove, optionsWithoutArgsToRemove);
 }
 
-export function prepareArgumentsForDiscovery(options: TestDiscoveryOptions): string[] {
-    // Remove unwnted arguments (which happen to be test directories & test specific args).
-    const args = filterArguments(options.args, TestFilter.discovery);
+export function preparePytestArgumentsForDiscovery(options: TestDiscoveryOptions): string[] {
+    // Remove unwanted arguments (which happen to be test directories & test specific args).
+    const args = pytestFilterArguments(options.args, TestFilter.discovery);
     if (options.ignoreCache && args.indexOf('--cache-clear') === -1) {
         args.splice(0, 0, '--cache-clear');
     }

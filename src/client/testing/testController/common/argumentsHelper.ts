@@ -61,7 +61,7 @@ export function filterArguments(
         if (ignoreIndex === index) {
             return false;
         }
-        // Options can use willd cards (with trailing '*')
+        // Options can use wild cards (with trailing '*')
         if (
             optionsWithoutArguments.indexOf(arg) >= 0 ||
             optionsWithoutArguments.filter((option) => option.endsWith('*') && arg.startsWith(option.slice(0, -1)))
@@ -78,7 +78,7 @@ export function filterArguments(
         if (optionsWithArguments.filter((option) => arg.startsWith(`${option}=`)).length > 0) {
             return false;
         }
-        // Ignore args that match a wild card (ending with *) and no ineline values.
+        // Ignore args that match a wild card (ending with *) and no inline values.
         // Eg. arg='--log-cli-level' and optionsArguments=['--log-*']
         if (
             arg.indexOf('=') === -1 &&
@@ -88,7 +88,7 @@ export function filterArguments(
             ignoreIndex = index + 1;
             return false;
         }
-        // Ignore args that match a wild card (ending with *) and have ineline values.
+        // Ignore args that match a wild card (ending with *) and have inline values.
         // Eg. arg='--log-cli-level=XYZ' and optionsArguments=['--log-*']
         if (
             arg.indexOf('=') >= 0 &&
