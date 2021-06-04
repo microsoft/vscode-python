@@ -19,7 +19,7 @@ import { InterpreterService } from '../../../client/interpreter/interpreterServi
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { TestDiscoveredTestParser } from '../../../client/testing/common/services/discoveredTestParser';
 import { TestResultsService } from '../../../client/testing/common/services/testResultsService';
-import { DiscoveredTests } from '../../../client/testing/common/services/types';
+import { RawDiscoveredTests } from '../../../client/testing/common/services/types';
 import {
     FinalTestStatus,
     ILocationStackFrameDetails,
@@ -197,7 +197,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                         path.dirname(UNITTEST_TEST_FILES_PATH),
                     )
                     .replace(/\\/g, '/');
-                const discoveredTest: DiscoveredTests[] = JSON.parse(discoveryOutput);
+                const discoveredTest: RawDiscoveredTests[] = JSON.parse(discoveryOutput);
                 options.workspaceFolder = vscode.Uri.file(discoveredTest[0].root);
                 const parsedTests: Tests = parser.parse(options.workspaceFolder, discoveredTest);
                 const xUnitParser = new XUnitParser(filesystem);

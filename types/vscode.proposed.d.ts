@@ -1295,7 +1295,7 @@ declare module 'vscode' {
 
         /**
          * Custom extension data on the item. This data will never be serialized
-         * or shared outside the extenion who created the item.
+         * or shared outside the extension who created the item.
          */
         data: T;
 

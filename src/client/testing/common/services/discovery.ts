@@ -17,7 +17,7 @@ import { captureTelemetry } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { TEST_OUTPUT_CHANNEL } from '../../constants';
 import { ITestDiscoveryService, TestDiscoveryOptions, Tests } from '../types';
-import { DiscoveredTests, ITestDiscoveredTestParser } from './types';
+import { RawDiscoveredTests, ITestDiscoveredTestParser } from './types';
 
 @injectable()
 export class TestsDiscoveryService implements ITestDiscoveryService {
@@ -39,8 +39,8 @@ export class TestsDiscoveryService implements ITestDiscoveryService {
             throw ex;
         }
     }
-    public async exec(options: TestDiscoveryOptions): Promise<DiscoveredTests[]> {
-        const [args, parse] = internalScripts.testingTools.run_adapter(options.args);
+    public async exec(options: TestDiscoveryOptions): Promise<RawDiscoveredTests[]> {
+        const args = internalScripts.testingTools.runAdapter(options.args);
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
             resource: options.workspaceFolder,
@@ -54,7 +54,7 @@ export class TestsDiscoveryService implements ITestDiscoveryService {
         this.outChannel.appendLine(`python ${args.join(' ')}`);
         const proc = await execService.exec(args, spawnOptions);
         try {
-            return parse(proc.stdout);
+            return JSON.parse(proc.stdout);
         } catch (ex) {
             ex.stdout = proc.stdout;
             throw ex; // re-throw

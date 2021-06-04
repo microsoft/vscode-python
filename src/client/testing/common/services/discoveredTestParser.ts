@@ -17,7 +17,7 @@ import * as discovery from './types';
 export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestParser {
     constructor(@inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {}
 
-    public parse(resource: Uri, discoveredTests: discovery.DiscoveredTests[]): testing.Tests {
+    public parse(resource: Uri, discoveredTests: discovery.RawDiscoveredTests[]): testing.Tests {
         const tests: testing.Tests = {
             rootTestFolders: [],
             summary: { errors: 0, failures: 0, passed: 0, skipped: 0 },
@@ -66,7 +66,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
     public buildChildren(
         rootFolder: testing.TestFolder,
         parent: TestDataItem,
-        discoveredTests: discovery.DiscoveredTests,
+        discoveredTests: discovery.RawDiscoveredTests,
         tests: testing.Tests,
     ) {
         const parentType = getTestDataItemType(parent);
@@ -103,12 +103,12 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
     protected processFolder(
         rootFolder: testing.TestFolder,
         parentFolder: testing.TestFolder,
-        discoveredTests: discovery.DiscoveredTests,
+        discoveredTests: discovery.RawDiscoveredTests,
         tests: testing.Tests,
     ) {
         const folders = discoveredTests.parents
             .filter((child) => child.kind === 'folder' && child.parentid === parentFolder.nameToRun)
-            .map((folder) => createTestFolder(rootFolder, folder as discovery.TestFolder));
+            .map((folder) => createTestFolder(rootFolder, folder as discovery.RawTestFolder));
         folders.forEach((folder) => {
             parentFolder.folders.push(folder);
             tests.testFolders.push(folder);
@@ -117,7 +117,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
 
         const files = discoveredTests.parents
             .filter((child) => child.kind === 'file' && child.parentid === parentFolder.nameToRun)
-            .map((file) => createTestFile(rootFolder, file as discovery.TestFile));
+            .map((file) => createTestFile(rootFolder, file as discovery.RawTestFile));
         files.forEach((file) => {
             parentFolder.testFiles.push(file);
             tests.testFiles.push(file);
@@ -140,12 +140,12 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
     protected processFile(
         rootFolder: testing.TestFolder,
         parentFile: testing.TestFile,
-        discoveredTests: discovery.DiscoveredTests,
+        discoveredTests: discovery.RawDiscoveredTests,
         tests: testing.Tests,
     ) {
         const suites = discoveredTests.parents
             .filter((child) => child.kind === 'suite' && child.parentid === parentFile.nameToRun)
-            .map((suite) => createTestSuite(parentFile, rootFolder.resource, suite as discovery.TestSuite));
+            .map((suite) => createTestSuite(parentFile, rootFolder.resource, suite as discovery.RawTestSuite));
         suites.forEach((suite) => {
             parentFile.suites.push(suite);
             tests.testSuites.push(createFlattenedSuite(tests, suite));
@@ -162,7 +162,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
 
         const parameterizedFunctions = discoveredTests.parents
             .filter((child) => child.kind === 'function' && child.parentid === parentFile.nameToRun)
-            .map((func) => createParameterizedTestFunction(rootFolder, func as discovery.TestFunction));
+            .map((func) => createParameterizedTestFunction(rootFolder, func as discovery.RawTestFunction));
         parameterizedFunctions.forEach((func) =>
             this.processParameterizedFunction(rootFolder, parentFile, func, discoveredTests, tests),
         );
@@ -183,12 +183,12 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
     protected processSuite(
         rootFolder: testing.TestFolder,
         parentSuite: testing.TestSuite,
-        discoveredTests: discovery.DiscoveredTests,
+        discoveredTests: discovery.RawDiscoveredTests,
         tests: testing.Tests,
     ) {
         const suites = discoveredTests.parents
             .filter((child) => child.kind === 'suite' && child.parentid === parentSuite.nameToRun)
-            .map((suite) => createTestSuite(parentSuite, rootFolder.resource, suite as discovery.TestSuite));
+            .map((suite) => createTestSuite(parentSuite, rootFolder.resource, suite as discovery.RawTestSuite));
         suites.forEach((suite) => {
             parentSuite.suites.push(suite);
             tests.testSuites.push(createFlattenedSuite(tests, suite));
@@ -205,7 +205,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
 
         const parameterizedFunctions = discoveredTests.parents
             .filter((child) => child.kind === 'function' && child.parentid === parentSuite.nameToRun)
-            .map((func) => createParameterizedTestFunction(rootFolder, func as discovery.TestFunction));
+            .map((func) => createParameterizedTestFunction(rootFolder, func as discovery.RawTestFunction));
         parameterizedFunctions.forEach((func) =>
             this.processParameterizedFunction(rootFolder, parentSuite, func, discoveredTests, tests),
         );
@@ -229,7 +229,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
         rootFolder: testing.TestFolder,
         parent: testing.TestFile | testing.TestSuite,
         parentFunction: testing.SubtestParent,
-        discoveredTests: discovery.DiscoveredTests,
+        discoveredTests: discovery.RawDiscoveredTests,
         tests: testing.Tests,
     ) {
         if (!parentFunction.asSuite) {
@@ -247,7 +247,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
     }
 }
 
-function createTestFolder(root: testing.TestFolder, item: discovery.TestFolder): testing.TestFolder {
+function createTestFolder(root: testing.TestFolder, item: discovery.RawTestFolder): testing.TestFolder {
     return {
         name: item.name,
         nameToRun: item.id,
@@ -258,7 +258,7 @@ function createTestFolder(root: testing.TestFolder, item: discovery.TestFolder):
     };
 }
 
-function createTestFile(root: testing.TestFolder, item: discovery.TestFile): testing.TestFile {
+function createTestFile(root: testing.TestFolder, item: discovery.RawTestFile): testing.TestFile {
     const fullpath = path.isAbsolute(item.relpath) ? item.relpath : path.resolve(root.name, item.relpath);
     return {
         fullPath: fullpath,
@@ -275,7 +275,7 @@ function createTestFile(root: testing.TestFolder, item: discovery.TestFile): tes
 function createTestSuite(
     parentSuiteFile: testing.TestFile | testing.TestSuite,
     resource: Uri,
-    item: discovery.TestSuite,
+    item: discovery.RawTestSuite,
 ): testing.TestSuite {
     const suite = {
         functions: [],
@@ -333,7 +333,7 @@ function createFlattenedFunction(tests: testing.Tests, func: testing.TestFunctio
 
 function createParameterizedTestFunction(
     root: testing.TestFolder,
-    item: discovery.TestFunction,
+    item: discovery.RawTestFunction,
 ): testing.SubtestParent {
     const suite: testing.TestSuite = {
         functions: [],
@@ -354,7 +354,7 @@ function createParameterizedTestFunction(
     };
 }
 
-function createTestFunction(root: testing.TestFolder, item: discovery.Test): testing.TestFunction {
+function createTestFunction(root: testing.TestFolder, item: discovery.RawTest): testing.TestFunction {
     return {
         name: item.name,
         nameToRun: item.id,

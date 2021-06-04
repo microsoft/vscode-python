@@ -18,7 +18,7 @@ import {
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { TestDiscoveredTestParser } from '../../../../client/testing/common/services/discoveredTestParser';
 import { TestsDiscoveryService } from '../../../../client/testing/common/services/discovery';
-import { DiscoveredTests, ITestDiscoveredTestParser } from '../../../../client/testing/common/services/types';
+import { RawDiscoveredTests, ITestDiscoveredTestParser } from '../../../../client/testing/common/services/types';
 import { TestDiscoveryOptions, Tests } from '../../../../client/testing/common/types';
 import { MockOutputChannel } from '../../../mockClasses';
 
@@ -42,7 +42,7 @@ suite('Unit Tests - Common Discovery', () => {
             token: new CancellationTokenSource().token,
             outChannel: new MockOutputChannel('Test'),
         };
-        const discoveredTests: DiscoveredTests[] = [{ hello: 1 } as any];
+        const discoveredTests: RawDiscoveredTests[] = [{ hello: 1 } as any];
         const parsedResult = ({ done: true } as any) as Tests;
         discovery.exec = () => Promise.resolve(discoveredTests);
         when(parser.parse(options.workspaceFolder, deepEqual(discoveredTests))).thenResolve(parsedResult as any);

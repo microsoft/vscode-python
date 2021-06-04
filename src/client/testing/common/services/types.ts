@@ -4,19 +4,47 @@
 'use strict';
 
 import { Uri } from 'vscode';
-import * as internalScripts from '../../../common/process/internal/scripts';
 import { Tests } from '../types';
 
 // We expose these here as a convenience and to cut down on churn
 // elsewhere in the code.
-export type DiscoveredTests = internalScripts.testingTools.DiscoveredTests;
-export type Test = internalScripts.testingTools.Test;
-export type TestFolder = internalScripts.testingTools.TestFolder;
-export type TestFile = internalScripts.testingTools.TestFile;
-export type TestSuite = internalScripts.testingTools.TestSuite;
-export type TestFunction = internalScripts.testingTools.TestFunction;
+type RawTestNode = {
+    id: string;
+    name: string;
+    parentid: string;
+};
+type RawTestParent = RawTestNode & {
+    kind: 'folder' | 'file' | 'suite' | 'function';
+};
+type RawTestFSNode = RawTestParent & {
+    kind: 'folder' | 'file';
+    relpath: string;
+};
+
+export type RawTestFolder = RawTestFSNode & {
+    kind: 'folder';
+};
+export type RawTestFile = RawTestFSNode & {
+    kind: 'file';
+};
+export type RawTestSuite = RawTestParent & {
+    kind: 'suite';
+};
+// function-as-a-container is for parameterized ("sub") tests.
+export type RawTestFunction = RawTestParent & {
+    kind: 'function';
+};
+export type RawTest = RawTestNode & {
+    source: string;
+};
+export type RawDiscoveredTests = {
+    rootid: string;
+    root: string;
+    parents: RawTestParent[];
+    tests: RawTest[];
+};
 
 export const ITestDiscoveredTestParser = Symbol('ITestDiscoveredTestParser');
 export interface ITestDiscoveredTestParser {
-    parse(resource: Uri, discoveredTests: DiscoveredTests[]): Tests;
+    parse(resource: Uri, discoveredTests: RawDiscoveredTests[]): Tests;
 }
