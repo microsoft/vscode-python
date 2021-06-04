@@ -14,7 +14,7 @@ import { parseVersion } from '../../../client/pythonEnvironments/base/info/pytho
 import * as ExternalDep from '../../../client/pythonEnvironments/common/externalDependencies';
 import {
     EnvironmentInfoServiceQueuePriority,
-    GetEnvironmentInfoService,
+    getEnvironmentInfoService,
 } from '../../../client/pythonEnvironments/info/environmentInfoService';
 
 suite('Environment Info Service', () => {
@@ -55,7 +55,7 @@ suite('Environment Info Service', () => {
         disposables.forEach((d) => d.dispose());
     });
     test('Add items to queue and get results', async () => {
-        const envService = GetEnvironmentInfoService(disposables);
+        const envService = getEnvironmentInfoService(disposables);
         const promises: Promise<InterpreterInformation | undefined>[] = [];
         const expected: InterpreterInformation[] = [];
         for (let i = 0; i < 10; i = i + 1) {
@@ -78,7 +78,7 @@ suite('Environment Info Service', () => {
     });
 
     test('Add same item to queue', async () => {
-        const envService = GetEnvironmentInfoService(disposables);
+        const envService = getEnvironmentInfoService(disposables);
         const promises: Promise<InterpreterInformation | undefined>[] = [];
         const expected: InterpreterInformation[] = [];
 
@@ -100,7 +100,7 @@ suite('Environment Info Service', () => {
     });
 
     test('isInfoProvided() returns true for items already processed', async () => {
-        const envService = GetEnvironmentInfoService(disposables);
+        const envService = getEnvironmentInfoService(disposables);
         let result: boolean;
         const promises: Promise<InterpreterInformation | undefined>[] = [];
         const path1 = 'any-path1';
@@ -117,7 +117,7 @@ suite('Environment Info Service', () => {
     });
 
     test('isInfoProvided() returns false otherwise', async () => {
-        const envService = GetEnvironmentInfoService(disposables);
+        const envService = getEnvironmentInfoService(disposables);
         const promises: Promise<InterpreterInformation | undefined>[] = [];
         const path1 = 'any-path1';
         const path2 = 'any-path2';

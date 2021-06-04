@@ -19,7 +19,7 @@ import { getEnvs as getEnvsWithUpdates } from '../../../../../client/pythonEnvir
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import * as ExternalDep from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import {
-    GetEnvironmentInfoService,
+    getEnvironmentInfoService,
     IEnvironmentInfoService,
 } from '../../../../../client/pythonEnvironments/info/environmentInfoService';
 import { sleep } from '../../../../core';
@@ -31,7 +31,7 @@ suite('Python envs locator - Environments Resolver', () => {
 
     setup(() => {
         disposables = [];
-        envInfoService = GetEnvironmentInfoService(disposables);
+        envInfoService = getEnvironmentInfoService(disposables);
     });
     teardown(() => {
         sinon.restore();
