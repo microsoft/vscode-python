@@ -5,16 +5,11 @@ import * as assert from 'assert';
 import * as typeMoq from 'typemoq';
 import * as path from 'path';
 import { Uri, Range, Position } from 'vscode';
-import { PythonExecutionService } from '../../../client/common/process/pythonExecutionService';
-import {
-    ExecutionFactoryCreateWithEnvironmentOptions,
-    ExecutionFactoryCreationOptions,
-    IProcessService,
-    IPythonExecutionFactory,
-    IPythonExecutionService,
-} from '../../../client/common/process/types';
-import { TestRangeProvider } from '../../../client/testing/common/testLocationProvider';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+import { PythonExecutionService } from '../../../../client/common/process/pythonExecutionService';
+import { IPythonExecutionService } from '../../../../client/common/process/types';
+import { TestRangeProvider } from '../../../../client/testing/testController/common/testLocationProvider';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
+import { TestPythonExecutionFactory } from './testClasses';
 
 suite('Test Location Provider', () => {
     const testFileUri = Uri.file(
@@ -24,28 +19,6 @@ suite('Test Location Provider', () => {
     // data below comes from running 'symbolProvider.py' on `src\test\pythonFiles\testing\test_location.py`
     const testData =
         '[{"namespace": "", "name": "test_numbers", "range": {"start": {"line": 4, "character": 0}, "end": {"line": 5, "character": 4}}}, {"namespace": "", "name": "test_numbers2", "range": {"start": {"line": 9, "character": 0}, "end": {"line": 10, "character": 4}}}, {"namespace": "", "name": "test_numbers_skip", "range": {"start": {"line": 14, "character": 0}, "end": {"line": 15, "character": 4}}}, {"namespace": "", "name": "StringTest", "range": {"start": {"line": 18, "character": 0}, "end": {"line": 24, "character": 8}}}, {"namespace": "StringTest", "name": "test_str", "range": {"start": {"line": 19, "character": 4}, "end": {"line": 20, "character": 8}}}, {"namespace": "StringTest", "name": "test_str_skip", "range": {"start": {"line": 23, "character": 4}, "end": {"line": 24, "character": 8}}}]';
-
-    class TestPythonExecutionFactory implements IPythonExecutionFactory {
-        constructor(private readonly proc: IPythonExecutionService) {}
-
-        create(_options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
-            return Promise.resolve(this.proc);
-        }
-
-        createActivatedEnvironment(
-            _options: ExecutionFactoryCreateWithEnvironmentOptions,
-        ): Promise<IPythonExecutionService> {
-            return Promise.resolve(this.proc);
-        }
-
-        createCondaExecutionService(
-            _pythonPath: string,
-            _processService?: IProcessService,
-            _resource?: Uri,
-        ): Promise<IPythonExecutionService | undefined> {
-            return Promise.resolve(this.proc);
-        }
-    }
 
     test('Test function location', async () => {
         const pythonExecService = typeMoq.Mock.ofType<IPythonExecutionService>(PythonExecutionService);
