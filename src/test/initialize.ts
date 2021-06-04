@@ -69,7 +69,7 @@ export async function closeActiveNotebooks(): Promise<void> {
     }
     // We could have untitled notebooks, close them by reverting changes.
 
-    while ((vscode as any).notebook.activeNotebookEditor || vscode.window.activeTextEditor) {
+    while ((vscode as any).window.activeNotebookEditor || vscode.window.activeTextEditor) {
         await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
     }
     // Work around VS Code issues (sometimes notebooks do not get closed).
@@ -102,10 +102,10 @@ async function closeWindowsInteral() {
 
 function isANotebookOpen() {
     if (
-        Array.isArray((vscode as any).notebook.visibleNotebookEditors) &&
-        (vscode as any).notebook.visibleNotebookEditors.length
+        Array.isArray((vscode as any).window.visibleNotebookEditors) &&
+        (vscode as any).window.visibleNotebookEditors.length
     ) {
         return true;
     }
-    return !!(vscode as any).notebook.activeNotebookEditor;
+    return !!(vscode as any).window.activeNotebookEditor;
 }

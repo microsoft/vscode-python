@@ -29,7 +29,9 @@ export class StableBuildInstaller implements IExtensionBuildInstaller {
         this.output.append(ExtensionChannels.installingStableMessage());
         await this.appShell.withProgressCustomIcon(Octicons.Installing, async (progress) => {
             progress.report({ message: ExtensionChannels.installingStableMessage() });
-            return this.cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID);
+            return this.cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID, {
+                installOnlyNewlyAddedFromExtensionPackVSIX: true,
+            });
         });
         this.output.appendLine(ExtensionChannels.installationCompleteMessage());
     }
@@ -51,7 +53,9 @@ export class InsidersBuildInstaller implements IExtensionBuildInstaller {
         this.output.append(ExtensionChannels.installingInsidersMessage());
         await this.appShell.withProgressCustomIcon(Octicons.Installing, async (progress) => {
             progress.report({ message: ExtensionChannels.installingInsidersMessage() });
-            return this.cmdManager.executeCommand('workbench.extensions.installExtension', Uri.file(vsixFilePath));
+            return this.cmdManager.executeCommand('workbench.extensions.installExtension', Uri.file(vsixFilePath), {
+                installOnlyNewlyAddedFromExtensionPackVSIX: true,
+            });
         });
         this.output.appendLine(ExtensionChannels.installationCompleteMessage());
         await this.fs.deleteFile(vsixFilePath);
