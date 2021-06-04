@@ -87,7 +87,7 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
 }
 
 let envInfoService: IEnvironmentInfoService | undefined;
-export function GetEnvironmentInfoService(disposables?: IDisposableRegistry): IEnvironmentInfoService {
+export function getEnvironmentInfoService(disposables?: IDisposableRegistry): IEnvironmentInfoService {
     if (envInfoService === undefined) {
         const service = new EnvironmentInfoService();
         disposables?.push({

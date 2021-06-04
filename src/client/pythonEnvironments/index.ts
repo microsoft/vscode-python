@@ -25,7 +25,7 @@ import { PosixKnownPathsLocator } from './discovery/locators/services/posixKnown
 import { PyenvLocator } from './discovery/locators/services/pyenvLocator';
 import { WindowsRegistryLocator } from './discovery/locators/services/windowsRegistryLocator';
 import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreLocator';
-import { GetEnvironmentInfoService } from './info/environmentInfoService';
+import { getEnvironmentInfoService } from './info/environmentInfoService';
 import { isComponentEnabled, registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
 import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
 import { PoetryLocator } from './discovery/locators/services/poetryLocator';
@@ -94,7 +94,7 @@ async function createLocators(
     );
 
     // Create the env info service used by ResolvingLocator and CachingLocator.
-    const envInfoService = GetEnvironmentInfoService(ext.disposables);
+    const envInfoService = getEnvironmentInfoService(ext.disposables);
 
     // Build the stack of composite locators.
     locators = new PythonEnvsReducer(locators);

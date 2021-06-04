@@ -69,7 +69,7 @@ import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
 import { toSemverLikeVersion } from './base/info/pythonVersion';
 import { PythonVersion } from './info/pythonVersion';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { EnvironmentInfoServiceQueuePriority, GetEnvironmentInfoService } from './info/environmentInfoService';
+import { EnvironmentInfoServiceQueuePriority, getEnvironmentInfoService } from './info/environmentInfoService';
 
 const convertedKinds = new Map(
     Object.entries({
@@ -206,7 +206,7 @@ class ComponentAdapter implements IComponentAdapter {
 
         const env = (await this.api.resolveEnv(envInfo)) ?? envInfo;
         if (env.executable.sysPrefix) {
-            const execInfoService = GetEnvironmentInfoService();
+            const execInfoService = getEnvironmentInfoService();
             const info = await execInfoService.getEnvironmentInfo(pythonPath, EnvironmentInfoServiceQueuePriority.High);
             if (info) {
                 env.executable.sysPrefix = info.executable.sysPrefix;
