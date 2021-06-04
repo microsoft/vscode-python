@@ -27,6 +27,7 @@ import {
     IPythonExecutionService,
 } from './types';
 import { isWindowsStoreInterpreter } from '../../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
+import { PythonExecutionService } from './pythonExecutionService';
 
 // Minimum version number of conda required to be able to use 'conda run'
 export const CONDA_RUN_VERSION = '4.6.0';
@@ -155,16 +156,5 @@ function createPythonService(
     } else if (isWindowsStore) {
         env = createWindowsStoreEnv(pythonPath, procService);
     }
-    const procs = createPythonProcessService(procService, env);
-    return {
-        getInterpreterInformation: () => env.getInterpreterInformation(),
-        getExecutablePath: () => env.getExecutablePath(),
-        isModuleInstalled: (m) => env.isModuleInstalled(m),
-        getModuleVersion: (m) => env.getModuleVersion(m),
-        getExecutionInfo: (a) => env.getExecutionInfo(a),
-        execObservable: (a, o) => procs.execObservable(a, o),
-        execModuleObservable: (m, a, o) => procs.execModuleObservable(m, a, o),
-        exec: (a, o) => procs.exec(a, o),
-        execModule: (m, a, o) => procs.execModule(m, a, o),
-    };
+    return new PythonExecutionService(env, createPythonProcessService(procService, env));
 }

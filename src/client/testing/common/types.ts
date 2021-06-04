@@ -8,6 +8,7 @@ import {
     Location,
     OutputChannel,
     ProviderResult,
+    Range,
     TextDocument,
     TreeDataProvider,
     TreeItem,
@@ -568,4 +569,9 @@ export interface ITestTreeViewProvider extends TreeDataProvider<TestDataItem> {
 export const ITestDataItemResource = Symbol('ITestDataItemResource');
 export interface ITestDataItemResource {
     getResource(testData: Readonly<TestDataItem>): Uri;
+}
+
+export const ITestRangeProvider = Symbol('ITestRangeProvider');
+export interface ITestRangeProvider {
+    getRange(testFile: Uri, testNames: string[], token?: CancellationToken): Promise<(Range | undefined)[]>;
 }

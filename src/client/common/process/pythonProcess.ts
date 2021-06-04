@@ -7,7 +7,7 @@ import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
 import * as internalPython from './internal/python';
 import { ExecutionResult, IProcessService, ObservableExecutionResult, SpawnOptions } from './types';
 
-class PythonProcessService {
+export class PythonProcessService {
     constructor(
         // This is the externally defined functionality used by the class.
         private readonly deps: {

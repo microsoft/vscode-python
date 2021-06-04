@@ -4,7 +4,7 @@
 import * as path from 'path';
 import { workspace } from 'vscode';
 import { _ISOLATED, _SCRIPTS_DIR } from './constants';
-import { CompletionResponse, SymbolProviderSymbols } from './types';
+import { CompletionResponse } from './types';
 
 const SCRIPTS_DIR = _SCRIPTS_DIR;
 const ISOLATED = _ISOLATED;
@@ -149,22 +149,10 @@ export function normalizeSelection(): [string[], (out: string) => string] {
 
 // symbolProvider.py
 
-export function symbolProvider(
-    filename: string,
-    // If "text" is provided then it gets passed to the script as-is.
-    text?: string,
-): [string[], (out: string) => SymbolProviderSymbols] {
+export function symbolProvider(filename: string): string[] {
     const script = path.join(SCRIPTS_DIR, 'symbolProvider.py');
     const args = maybeIsolated([script, filename]);
-    if (text) {
-        args.push(text);
-    }
-
-    function parse(out: string): SymbolProviderSymbols {
-        return JSON.parse(out);
-    }
-
-    return [args, parse];
+    return args;
 }
 
 // printEnvVariables.py
