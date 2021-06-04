@@ -6,9 +6,8 @@ import * as path from 'path';
 import { TestItem, Uri } from 'vscode';
 import { runAdapter } from '../../../common/process/internal/scripts/testing_tools';
 import { TestDiscoveryOptions } from '../../common/types';
-import { ITestDiscoveryHelper } from '../common/discoveryHelper';
 import { updateTestRoot } from '../common/testItemUtilities';
-import { ITestDiscovery, PythonTestData } from '../common/types';
+import { ITestDiscovery, ITestDiscoveryHelper, PythonTestData } from '../common/types';
 import { WorkspaceTestRoot } from '../common/workspaceTestRoot';
 import { getTestFolders, preparePytestArgumentsForDiscovery } from './arguments';
 

@@ -31,9 +31,9 @@ export type TestDiscoveryOptions = {
     workspaceFolder: Uri;
     cwd: string;
     args: string[];
-    token: CancellationToken;
+    token?: CancellationToken;
     ignoreCache: boolean;
-    outChannel: OutputChannel;
+    outChannel?: OutputChannel;
 };
 
 export type TestRunOptions = {
@@ -64,7 +64,7 @@ export type Options = {
     cwd: string;
     args: string[];
     outChannel?: OutputChannel;
-    token: CancellationToken;
+    token?: CancellationToken;
 };
 
 export type TestsToRun = {

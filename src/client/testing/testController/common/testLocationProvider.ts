@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { Uri, CancellationToken, Range, Position } from 'vscode';
-import { traceError } from '../../common/logger';
-import { symbolProvider } from '../../common/process/internal/scripts';
-import { IPythonExecutionFactory } from '../../common/process/types';
-import { ITestRangeProvider } from './types';
+import { traceError } from '../../../common/logger';
+import { symbolProvider } from '../../../common/process/internal/scripts';
+import { IPythonExecutionFactory } from '../../../common/process/types';
+import { ITestRangeProvider } from '../../common/types';
 
 type RawSymbol = { namespace: string; name: string; range: Range };
 

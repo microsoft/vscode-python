@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { TestItem } from 'vscode';
+import { RawDiscoveredTests } from '../../common/services/types';
 import { TestDiscoveryOptions } from '../../common/types';
 import { TestCase } from './testCase';
 import { TestCollection } from './testCollection';
@@ -17,4 +18,8 @@ export interface ITestDiscovery {
      * @param {TestDiscoveryOptions} options
      */
     discoverWorkspaceTests(options: TestDiscoveryOptions): Promise<TestItem<PythonTestData> | undefined>;
+}
+
+export interface ITestDiscoveryHelper {
+    runTestDiscovery(options: TestDiscoveryOptions): Promise<RawDiscoveredTests[]>;
 }
