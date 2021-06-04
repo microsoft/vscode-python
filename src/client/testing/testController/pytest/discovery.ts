@@ -7,7 +7,7 @@ import { TestItem, Uri } from 'vscode';
 import { runAdapter } from '../../../common/process/internal/scripts/testing_tools';
 import { TestDiscoveryOptions } from '../../common/types';
 import { ITestDiscoveryHelper } from '../common/discoveryHelper';
-import { updateTestRoot } from '../common/discoveryUtilities';
+import { updateTestRoot } from '../common/testItemUtilities';
 import { ITestDiscovery, PythonTestData } from '../common/types';
 import { WorkspaceTestRoot } from '../common/workspaceTestRoot';
 import { getTestFolders, prepareArgumentsForDiscovery } from './arguments';
@@ -56,6 +56,7 @@ export class PytestDiscoveryService implements ITestDiscovery {
             return undefined;
         }
 
+        // This is the root object for all `pytest`
         const testRoot = WorkspaceTestRoot.create({
             id: 'pytest',
             uri: options.workspaceFolder,
