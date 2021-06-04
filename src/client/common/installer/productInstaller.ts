@@ -470,7 +470,7 @@ class DataScienceInstaller extends BaseInstaller {
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
         let installerModule: IModuleInstaller | undefined;
         const isAvailableThroughConda = !UnsupportedChannelsForProduct.get(product)?.has(EnvironmentType.Conda);
-        let requiredInstaller = 'unknwon';
+        let requiredInstaller = 'unknown';
         if (interpreter.envType === EnvironmentType.Conda && isAvailableThroughConda) {
             installerModule = channels.find((v) => v.name === EnvironmentType.Conda);
             requiredInstaller = EnvironmentType.Conda;
