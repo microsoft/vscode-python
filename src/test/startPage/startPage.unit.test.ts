@@ -73,13 +73,8 @@ suite('StartPage tests', () => {
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         context = typemoq.Mock.ofType<IExtensionContext>();
         appEnvironment = typemoq.Mock.ofType<IApplicationEnvironment>();
-        // notificationHelper = typemoq.Mock.ofType<IJupyterNotInstalledNotificationHelper>();
         depsManager = typemoq.Mock.ofType<IJupyterExtensionDependencyManager>();
         memento = typemoq.Mock.ofType<ExtensionContext['globalState']>();
-
-        // @inject(IApplicationShell) private appShell: IApplicationShell,
-        // @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
-        // @inject(IJupyterExtensionDependencyManager) private depsManager: IJupyterExtensionDependencyManager,
 
         // Notification helper object
         const stateFactory = typemoq.Mock.ofType<IPersistentStateFactory>();
