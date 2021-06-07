@@ -150,7 +150,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
             case StartPageMessages.OpenBlankNotebook: {
                 if (!isJupyterInstalled) {
                     if (shouldShowJupyterNotInstalledPrompt) {
-                        await this.notificationHelper.jupyterNotInstalledPrompt(
+                        await this.notificationHelper.showJupyterNotInstalledPrompt(
                             JupyterNotInstalledOrigin.StartPageOpenBlankNotebook,
                         );
                     }
@@ -186,7 +186,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
             case StartPageMessages.OpenInteractiveWindow: {
                 if (!isJupyterInstalled) {
                     if (shouldShowJupyterNotInstalledPrompt) {
-                        await this.notificationHelper.jupyterNotInstalledPrompt(
+                        await this.notificationHelper.showJupyterNotInstalledPrompt(
                             JupyterNotInstalledOrigin.StartPageOpenInteractiveWindow,
                         );
                     }
@@ -218,7 +218,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
             case StartPageMessages.OpenSampleNotebook:
                 if (!isJupyterInstalled) {
                     if (shouldShowJupyterNotInstalledPrompt) {
-                        await this.notificationHelper.jupyterNotInstalledPrompt(
+                        await this.notificationHelper.showJupyterNotInstalledPrompt(
                             JupyterNotInstalledOrigin.StartPageOpenSampleNotebook,
                         );
                     }
