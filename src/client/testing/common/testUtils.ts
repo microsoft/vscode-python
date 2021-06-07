@@ -1,7 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { Uri, workspace } from 'vscode';
-import { CommandSource } from '../../common/application/types';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { Product } from '../../common/types';
@@ -230,7 +229,11 @@ export class TestsHelper implements ITestsHelper {
     public displayTestErrorMessage(message: string) {
         this.appShell.showErrorMessage(message, constants.Button_Text_Tests_View_Output).then((action) => {
             if (action === constants.Button_Text_Tests_View_Output) {
-                this.commandManager.executeCommand(constants.Commands.Tests_ViewOutput, undefined, CommandSource.ui);
+                this.commandManager.executeCommand(
+                    constants.Commands.Tests_ViewOutput,
+                    undefined,
+                    constants.CommandSource.ui,
+                );
             }
         });
     }

@@ -16,6 +16,9 @@ const severityMapping: Record<string, LintMessageSeverity | undefined> = {
     HIGH: LintMessageSeverity.Error,
 };
 
+export const BANDIT_REGEX =
+    '(?<line>\\d+),(?<column>(col)?(\\d+)?),(?<type>\\w+),(?<code>\\w+\\d+):(?<message>.*)\\r?(\\n|$)';
+
 export class Bandit extends BaseLinter {
     constructor(outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
         super(Product.bandit, outputChannel, serviceContainer);
@@ -35,6 +38,7 @@ export class Bandit extends BaseLinter {
             ],
             document,
             cancellation,
+            BANDIT_REGEX,
         );
 
         messages.forEach((msg) => {

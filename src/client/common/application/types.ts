@@ -60,15 +60,9 @@ import {
 } from 'vscode';
 import type { NotebookConcatTextDocument, NotebookDocument } from 'vscode-proposed';
 
+import { Channel } from '../constants';
 import { IAsyncDisposable, Resource } from '../types';
-
-export enum CommandSource {
-    auto = 'auto',
-    ui = 'ui',
-    codelens = 'codelens',
-    commandPalette = 'commandpalette',
-    testExplorer = 'testExplorer',
-}
+import { ICommandNameArgumentTypeMapping } from './commands';
 
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
@@ -437,7 +431,11 @@ export interface ICommandManager {
      * @param thisArg The `this` context used when invoking the handler function.
      * @return Disposable which unregisters this command on disposal.
      */
-    registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any): Disposable;
+    registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
+        command: E,
+        callback: (...args: U) => any,
+        thisArg?: any,
+    ): Disposable;
 
     /**
      * Registers a text editor command that can be invoked via a keyboard shortcut,
@@ -473,7 +471,10 @@ export interface ICommandManager {
      * @return A thenable that resolves to the returned value of the given command. `undefined` when
      * the command handler function doesn't return anything.
      */
-    executeCommand<T>(command: string, ...rest: any[]): Thenable<T | undefined>;
+    executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
+        command: E,
+        ...rest: U
+    ): Thenable<T | undefined>;
 
     /**
      * Retrieve the list of all available commands. Commands starting an underscore are
@@ -1163,8 +1164,6 @@ export interface ILanguageService {
         ...triggerCharacters: string[]
     ): Disposable;
 }
-
-export type Channel = 'stable' | 'insiders';
 
 /**
  * Wraps the `ActiveResourceService` API class. Created for injecting and mocking class methods in testing

@@ -271,6 +271,7 @@ export class FormatterInstaller extends BaseInstaller {
         product: Product,
         resource?: Uri,
         cancel?: CancellationToken,
+        _flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse> {
         // Hard-coded on purpose because the UI won't necessarily work having
         // another formatter.
@@ -318,6 +319,7 @@ export class LinterInstaller extends BaseInstaller {
         product: Product,
         resource?: Uri,
         cancel?: CancellationToken,
+        _flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse> {
         sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT, undefined, {
             prompt: 'old',
@@ -408,6 +410,7 @@ export class TestFrameworkInstaller extends BaseInstaller {
         product: Product,
         resource?: Uri,
         cancel?: CancellationToken,
+        _flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
 
@@ -430,6 +433,7 @@ class RefactoringLibraryInstaller extends BaseInstaller {
         product: Product,
         resource?: Uri,
         cancel?: CancellationToken,
+        _flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const item = await this.appShell.showErrorMessage(
@@ -466,23 +470,34 @@ class DataScienceInstaller extends BaseInstaller {
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
         let installerModule: IModuleInstaller | undefined;
         const isAvailableThroughConda = !UnsupportedChannelsForProduct.get(product)?.has(EnvironmentType.Conda);
+        let requiredInstaller = 'unknown';
         if (interpreter.envType === EnvironmentType.Conda && isAvailableThroughConda) {
             installerModule = channels.find((v) => v.name === EnvironmentType.Conda);
+            requiredInstaller = EnvironmentType.Conda;
         } else if (interpreter.envType === EnvironmentType.Conda && !isAvailableThroughConda) {
             // This case is temporary and can be removed when https://github.com/microsoft/vscode-jupyter/issues/5034 is unblocked
             traceInfo(
                 `Interpreter type is conda but package ${moduleName} is not available through conda, using pip instead.`,
             );
             installerModule = channels.find((v) => v.name === 'Pip');
+            requiredInstaller = 'pip';
         } else {
             installerModule = channels.find((v) => v.name === 'Pip');
+            requiredInstaller = 'pip';
         }
+
+        const version = `${interpreter.version?.major || ''}.${interpreter.version?.minor || ''}.${
+            interpreter.version?.patch || ''
+        }`;
 
         if (!installerModule) {
             this.appShell.showErrorMessage(Installer.couldNotInstallLibrary().format(moduleName)).then(noop, noop);
             sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
                 installer: 'unavailable',
+                requiredInstaller,
                 productName: ProductNames.get(product),
+                version,
+                envType: interpreter.envType,
             });
             return InstallerResponse.Ignore;
         }
@@ -494,6 +509,9 @@ class DataScienceInstaller extends BaseInstaller {
         return this.isInstalled(product, interpreter).then((isInstalled) => {
             sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
                 installer: installerModule?.displayName || '',
+                requiredInstaller,
+                version,
+                envType: interpreter.envType,
                 isInstalled,
                 productName: ProductNames.get(product),
             });
@@ -509,6 +527,7 @@ class DataScienceInstaller extends BaseInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
+        _flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const item = await this.appShell.showErrorMessage(

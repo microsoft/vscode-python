@@ -205,6 +205,7 @@ export interface IPythonSettings {
     readonly logging: ILoggingSettings;
     readonly useIsolation: boolean;
     readonly tensorBoard: ITensorBoardSettings | undefined;
+    initialize(): void;
 }
 
 export interface ITensorBoardSettings {

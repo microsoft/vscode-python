@@ -3,12 +3,11 @@
 
 'use strict';
 
-import { CancellationToken, Disposable, Position, TextDocument, Uri } from 'vscode';
+import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as LSCommands } from '../../activation/commands';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../tensorBoard/constants';
 import { TestDataItem, TestFunction, TestsToRun, TestWorkspaceFolder } from '../../testing/common/types';
-import { Commands } from '../constants';
-import { Channel, CommandSource, ICommandManager } from './types';
+import { Channel, Commands, CommandSource } from '../constants';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 
@@ -48,9 +47,14 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.Tests_Discovering]: [];
     [Commands.PickLocalProcess]: [];
     [Commands.OpenStartPage]: [];
+    [Commands.ClearStorage]: [];
+    [Commands.ReportIssue]: [];
+    [Commands.RefreshTensorBoard]: [];
     [LSCommands.ClearAnalyisCache]: [];
     [LSCommands.RestartLS]: [];
 }
+
+export type AllCommands = keyof ICommandNameArgumentTypeMapping;
 
 /**
  * Mapping between commands and list of arguments.
@@ -62,7 +66,10 @@ interface ICommandNameWithoutArgumentTypeMapping {
 export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
     ['vscode.openWith']: [Uri, string];
     ['workbench.action.quickOpen']: [string];
-    ['workbench.extensions.installExtension']: [Uri | 'ms-python.python'];
+    ['workbench.extensions.installExtension']: [
+        Uri | 'ms-python.python',
+        { installOnlyNewlyAddedFromExtensionPackVSIX?: boolean } | undefined,
+    ];
     ['workbench.action.files.openFolder']: [];
     ['workbench.action.openWorkspace']: [];
     ['setContext']: [string, boolean] | ['python.vscode.channel', Channel];
@@ -83,6 +90,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['jupyter.opennotebook']: [undefined | Uri, undefined | CommandSource];
     ['jupyter.runallcells']: [Uri];
     ['extension.open']: [string];
+    ['workbench.action.openIssueReporter']: [{ extensionId: string; issueBody: string }];
     [Commands.GetSelectedInterpreterPath]: [{ workspaceFolder: string } | string[]];
     [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
     [Commands.Sort_Imports]: [undefined, Uri];
@@ -126,18 +134,4 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.navigateToTestFunction]: [Uri, TestDataItem, boolean];
     [Commands.navigateToTestSuite]: [Uri, TestDataItem, boolean];
     [Commands.LaunchTensorBoard]: [TensorBoardEntrypoint, TensorBoardEntrypointTrigger];
-}
-
-//export const IPythonCommandManager = Symbol('IPythonCommandManager');
-export interface IPythonCommandManager extends ICommandManager {
-    registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
-        command: E,
-        callback: (...args: U) => any,
-        thisArg?: any,
-    ): Disposable;
-
-    executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
-        command: E,
-        ...rest: U
-    ): Thenable<T | undefined>;
 }

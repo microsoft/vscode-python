@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { QuickPickItem, Uri } from 'vscode';
-import { CommandSource, IApplicationShell, ICommandManager } from '../../common/application/types';
+import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -34,7 +34,7 @@ export class TestDisplay implements ITestDisplay {
             }
         });
     }
-    public displayTestUI(cmdSource: CommandSource, wkspace: Uri) {
+    public displayTestUI(cmdSource: constants.CommandSource, wkspace: Uri) {
         const tests = this.testCollectionStorage.getTests(wkspace);
         this.appShell
             .showQuickPick(buildItems(tests), { matchOnDescription: true, matchOnDetail: true })
@@ -73,7 +73,7 @@ export class TestDisplay implements ITestDisplay {
         });
     }
     public displayFunctionTestPickerUI(
-        cmdSource: CommandSource,
+        cmdSource: constants.CommandSource,
         wkspace: Uri,
         rootDirectory: string,
         file: Uri,
@@ -276,7 +276,7 @@ function buildItemsForTestFiles(rootDirectory: string, testFiles: TestFile[]): T
 }
 export function onItemSelected(
     commandManager: ICommandManager,
-    cmdSource: CommandSource,
+    cmdSource: constants.CommandSource,
     wkspace: Uri,
     selection: TestItem,
     debug?: boolean,

@@ -15,7 +15,6 @@ import {
     TextDocument,
     Uri,
 } from 'vscode';
-import { CommandSource } from '../../common/application/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -167,12 +166,22 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
                     new CodeLens(range, {
                         title: getTestStatusIcon(cls.status) + constants.Text.CodeLensRunUnitTest,
                         command: constants.Commands.Tests_Run,
-                        arguments: [undefined, CommandSource.codelens, file, <TestsToRun>{ testSuite: [cls] }],
+                        arguments: [
+                            undefined,
+                            constants.CommandSource.codelens,
+                            file,
+                            <TestsToRun>{ testSuite: [cls] },
+                        ],
                     }),
                     new CodeLens(range, {
                         title: getTestStatusIcon(cls.status) + constants.Text.CodeLensDebugUnitTest,
                         command: constants.Commands.Tests_Debug,
-                        arguments: [undefined, CommandSource.codelens, file, <TestsToRun>{ testSuite: [cls] }],
+                        arguments: [
+                            undefined,
+                            constants.CommandSource.codelens,
+                            file,
+                            <TestsToRun>{ testSuite: [cls] },
+                        ],
                     }),
                 ];
             }
@@ -251,12 +260,12 @@ function getFunctionCodeLens(
             new CodeLens(range, {
                 title: getTestStatusIcon(fn.status) + constants.Text.CodeLensRunUnitTest,
                 command: constants.Commands.Tests_Run,
-                arguments: [undefined, CommandSource.codelens, file, <TestsToRun>{ testFunction: [fn] }],
+                arguments: [undefined, constants.CommandSource.codelens, file, <TestsToRun>{ testFunction: [fn] }],
             }),
             new CodeLens(range, {
                 title: getTestStatusIcon(fn.status) + constants.Text.CodeLensDebugUnitTest,
                 command: constants.Commands.Tests_Debug,
-                arguments: [undefined, CommandSource.codelens, file, <TestsToRun>{ testFunction: [fn] }],
+                arguments: [undefined, constants.CommandSource.codelens, file, <TestsToRun>{ testFunction: [fn] }],
             }),
         ];
     }
@@ -275,12 +284,12 @@ function getFunctionCodeLens(
         new CodeLens(range, {
             title: `${getTestStatusIcons(functions)} ${constants.Text.CodeLensRunUnitTest} (Multiple)`,
             command: constants.Commands.Tests_Picker_UI,
-            arguments: [undefined, CommandSource.codelens, file, functions],
+            arguments: [undefined, constants.CommandSource.codelens, file, functions],
         }),
         new CodeLens(range, {
             title: `${getTestStatusIcons(functions)} ${constants.Text.CodeLensDebugUnitTest} (Multiple)`,
             command: constants.Commands.Tests_Picker_UI_Debug,
-            arguments: [undefined, CommandSource.codelens, file, functions],
+            arguments: [undefined, constants.CommandSource.codelens, file, functions],
         }),
     ];
 }

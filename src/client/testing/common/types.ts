@@ -14,12 +14,12 @@ import {
     Uri,
     WorkspaceFolder,
 } from 'vscode';
-import { CommandSource } from '../../common/application/types';
 import { Product } from '../../common/types';
 import { DebuggerTypeName } from '../../debugger/constants';
 import { ConsoleType } from '../../debugger/types';
 import { TestProvider } from '../types';
 import { TestSettingsPropertyNames } from '../configuration/types';
+import { CommandSource } from '../../common/constants';
 
 export type UnitTestProduct = Product.nosetest | Product.pytest | Product.unittest;
 

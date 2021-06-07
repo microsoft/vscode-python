@@ -4,8 +4,8 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { CommandSource, ICommandManager } from '../../common/application/types';
-import { Commands } from '../../common/constants';
+import { ICommandManager } from '../../common/application/types';
+import { Commands, CommandSource } from '../../common/constants';
 import { traceDecorators } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
