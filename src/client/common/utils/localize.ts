@@ -137,11 +137,6 @@ export namespace Pylance {
 }
 
 export namespace Jupyter {
-    export const jupyterExtensionRequired = localize(
-        'Jupyter.extensionRequired',
-        'The Jupyter extension is required to perform that task. Click Yes to open the Jupyter extension installation page.',
-    );
-
     export const jupyterExtensionNotInstalled = localize(
         'Jupyter.extensionNotInstalled',
         "This feature is available in the Jupyter extension, which isn't currently installed.",
