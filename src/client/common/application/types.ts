@@ -489,7 +489,6 @@ export interface ICommandManager {
 export const IJupyterExtensionDependencyManager = Symbol('IJupyterExtensionDependencyManager');
 export interface IJupyterExtensionDependencyManager {
     readonly isJupyterExtensionInstalled: boolean;
-    installJupyterExtension(commandManager: ICommandManager): Promise<undefined>;
 }
 
 export const IDocumentManager = Symbol('IDocumentManager');
