@@ -249,6 +249,14 @@ suite('Pyenv Versions Parser Test', () => {
         { input: 'pypy3.6-7.3.1-src', expectedOutput: { pythonVer: '3.6', distro: 'pypy', distroVer: '7.3.1-src' } },
         { input: 'pypy3.6-7.3.1', expectedOutput: { pythonVer: '3.6', distro: 'pypy', distroVer: '7.3.1' } },
         {
+            input: 'pypy3.7-v7.3.5rc3-win64',
+            expectedOutput: { pythonVer: '3.7', distro: 'pypy', distroVer: '7.3.5rc3-win64' },
+        },
+        {
+            input: 'pypy3.7-v7.3.5-win64',
+            expectedOutput: { pythonVer: '3.7', distro: 'pypy', distroVer: '7.3.5-win64' },
+        },
+        {
             input: 'pypy-5.7.1-beta-src',
             expectedOutput: { pythonVer: undefined, distro: 'pypy', distroVer: '5.7.1-beta-src' },
         },

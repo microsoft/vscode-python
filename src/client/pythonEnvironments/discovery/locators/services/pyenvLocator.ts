@@ -169,11 +169,15 @@ function getKnownPyenvVersionParsers(): Map<string, (path: string) => Promise<IP
 
         if (
             parts.length === 3 &&
-            (parts[2].startsWith('src') || parts[2].startsWith('beta') || parts[2].startsWith('alpha'))
+            (parts[2].startsWith('src') ||
+                parts[2].startsWith('beta') ||
+                parts[2].startsWith('alpha') ||
+                parts[2].startsWith('win64'))
         ) {
+            const part1 = parts[1].startsWith('v') ? parts[1].substr(1) : parts[1];
             return Promise.resolve({
                 pythonVer,
-                distroVer: `${parts[1]}-${parts[2]}`,
+                distroVer: `${part1}-${parts[2]}`,
                 distro: 'pypy',
             });
         }
