@@ -8,12 +8,14 @@ import * as path from 'path';
 import { ConfigurationTarget, EventEmitter, UIKind, Uri, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { IJupyterNotInstalledNotificationHelper, JupyterNotInstalledOrigin } from '../../jupyter/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import {
     IApplicationEnvironment,
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
+    IJupyterExtensionDependencyManager,
     IWebviewPanelProvider,
     IWorkspaceService,
 } from '../application/types';
@@ -62,6 +64,9 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment,
+        @inject(IJupyterNotInstalledNotificationHelper)
+        private notificationHelper: IJupyterNotInstalledNotificationHelper,
+        @inject(IJupyterExtensionDependencyManager) private depsManager: IJupyterExtensionDependencyManager,
     ) {
         super(
             configuration,
@@ -128,6 +133,9 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
     }
 
     public async onMessage(message: string, payload: unknown): Promise<void> {
+        const shouldShowJupyterNotInstalledPrompt = await this.notificationHelper.shouldShowJupypterExtensionNotInstalledPrompt();
+        const isJupyterInstalled = this.depsManager.isJupyterExtensionInstalled;
+
         switch (message) {
             case StartPageMessages.Started:
                 this.webviewDidLoad = true;
@@ -140,19 +148,27 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                 break;
             }
             case StartPageMessages.OpenBlankNotebook: {
-                sendTelemetryEvent(Telemetry.StartPageOpenBlankNotebook);
-                this.setTelemetryFlags();
-
-                const savedVersion: string | undefined = this.context.globalState.get(EXTENSION_VERSION_MEMENTO);
-
-                if (savedVersion) {
-                    await this.commandManager.executeCommand(
-                        'jupyter.opennotebook',
-                        undefined,
-                        CommandSource.commandPalette,
-                    );
+                if (!isJupyterInstalled) {
+                    if (shouldShowJupyterNotInstalledPrompt) {
+                        await this.notificationHelper.jupyterNotInstalledPrompt(
+                            JupyterNotInstalledOrigin.StartPageOpenBlankNotebook,
+                        );
+                    }
                 } else {
-                    this.openSampleNotebook().ignoreErrors();
+                    sendTelemetryEvent(Telemetry.StartPageOpenBlankNotebook);
+                    this.setTelemetryFlags();
+
+                    const savedVersion: string | undefined = this.context.globalState.get(EXTENSION_VERSION_MEMENTO);
+
+                    if (savedVersion) {
+                        await this.commandManager.executeCommand(
+                            'jupyter.opennotebook',
+                            undefined,
+                            CommandSource.commandPalette,
+                        );
+                    } else {
+                        this.openSampleNotebook().ignoreErrors();
+                    }
                 }
                 break;
             }
@@ -168,15 +184,23 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                 break;
             }
             case StartPageMessages.OpenInteractiveWindow: {
-                sendTelemetryEvent(Telemetry.StartPageOpenInteractiveWindow);
-                this.setTelemetryFlags();
+                if (!isJupyterInstalled) {
+                    if (shouldShowJupyterNotInstalledPrompt) {
+                        await this.notificationHelper.jupyterNotInstalledPrompt(
+                            JupyterNotInstalledOrigin.StartPageOpenInteractiveWindow,
+                        );
+                    }
+                } else {
+                    sendTelemetryEvent(Telemetry.StartPageOpenInteractiveWindow);
+                    this.setTelemetryFlags();
 
-                const doc2 = await this.documentManager.openTextDocument({
-                    language: 'python',
-                    content: `#%%\nprint("${localize.StartPage.helloWorld()}")`,
-                });
-                await this.documentManager.showTextDocument(doc2, 1, true);
-                await this.commandManager.executeCommand('jupyter.runallcells', Uri.parse(''));
+                    const doc2 = await this.documentManager.openTextDocument({
+                        language: 'python',
+                        content: `#%%\nprint("${localize.StartPage.helloWorld()}")`,
+                    });
+                    await this.documentManager.showTextDocument(doc2, 1, true);
+                    await this.commandManager.executeCommand('jupyter.runallcells', Uri.parse(''));
+                }
                 break;
             }
             case StartPageMessages.OpenCommandPalette:
@@ -192,10 +216,18 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                 await this.commandManager.executeCommand('workbench.action.quickOpen', '>Create New Blank Notebook');
                 break;
             case StartPageMessages.OpenSampleNotebook:
-                sendTelemetryEvent(Telemetry.StartPageOpenSampleNotebook);
-                this.setTelemetryFlags();
+                if (!isJupyterInstalled) {
+                    if (shouldShowJupyterNotInstalledPrompt) {
+                        await this.notificationHelper.jupyterNotInstalledPrompt(
+                            JupyterNotInstalledOrigin.StartPageOpenSampleNotebook,
+                        );
+                    }
+                } else {
+                    sendTelemetryEvent(Telemetry.StartPageOpenSampleNotebook);
+                    this.setTelemetryFlags();
 
-                this.openSampleNotebook().ignoreErrors();
+                    this.openSampleNotebook().ignoreErrors();
+                }
                 break;
             case StartPageMessages.OpenFileBrowser: {
                 sendTelemetryEvent(Telemetry.StartPageOpenFileBrowser);
