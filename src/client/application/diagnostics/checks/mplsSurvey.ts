@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// eslint-disable-next-line max-classes-per-file
 import { inject, named } from 'inversify';
 import { DiagnosticSeverity, env, UIKind } from 'vscode';
 import * as querystring from 'querystring';
@@ -71,32 +72,34 @@ export class MPLSSurveyDiagnosticService extends BaseDiagnosticsService {
                     prompt: ExtensionSurveyBanner.bannerLabelYes(),
                     command: {
                         diagnostic,
-                        invoke: async () => this.launchSurvey(),
+                        invoke: () => this.launchSurvey(),
                     },
                 },
                 {
                     prompt: ExtensionSurveyBanner.maybeLater(),
                     command: {
                         diagnostic,
-                        invoke: async () => {
-                            this.disabledInCurrentSession = true;
-                        },
+                        invoke: async () => this.disable(),
                     },
                 },
                 {
                     prompt: ExtensionSurveyBanner.bannerLabelNo(),
                     command: {
                         diagnostic,
-                        invoke: async () => this.updateMemento(),
+                        invoke: () => this.updateMemento(),
                     },
                 },
             ],
-            onClose: () => this.updateMemento(),
+            onClose: () => this.disable(),
         });
     }
 
     private async updateMemento() {
         await this.context.globalState.update(MPLS_SURVEY_MEMENTO, true);
+    }
+
+    private disable() {
+        this.disabledInCurrentSession = true;
     }
 
     private get shouldShowPrompt(): boolean {
@@ -107,14 +110,15 @@ export class MPLSSurveyDiagnosticService extends BaseDiagnosticsService {
         );
     }
 
-    private launchSurvey() {
+    private async launchSurvey() {
         const query = querystring.stringify({
             o: encodeURIComponent(this.platformService.osType), // platform
             v: encodeURIComponent(this.appEnvironment.vscodeVersion),
             e: encodeURIComponent(this.appEnvironment.packageJson.version), // extension version
             m: encodeURIComponent(this.appEnvironment.sessionId),
         });
-        const url = `https://www.surveymonkey.com/r/HD7MM9X?${query}`;
+        const url = `https://aka.ms/mpls-experience-survey?${query}`;
         this.browserService.launch(url);
+        await this.updateMemento();
     }
 }
