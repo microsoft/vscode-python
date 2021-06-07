@@ -4,6 +4,7 @@
 'use strict';
 
 import * as assert from 'assert';
+import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
 import { ExtensionContext } from 'vscode';
 import {
@@ -11,15 +12,20 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
+    IJupyterExtensionDependencyManager,
     IWebviewPanelProvider,
     IWorkspaceService,
 } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { IFileSystem } from '../../client/common/platform/types';
 import { StartPage } from '../../client/common/startPage/startPage';
-import { ICodeCssGenerator, IStartPage, IThemeFinder } from '../../client/common/startPage/types';
-import { IConfigurationService, IExtensionContext } from '../../client/common/types';
+import { ICodeCssGenerator, IStartPage, IThemeFinder, StartPageMessages } from '../../client/common/startPage/types';
+import { IConfigurationService, IExtensionContext, IPersistentStateFactory } from '../../client/common/types';
+import { IJupyterNotInstalledNotificationHelper, JupyterNotInstalledOrigin } from '../../client/jupyter/types';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
+import * as Telemetry from '../../client/telemetry';
+import { EventName } from '../../client/telemetry/constants';
+import { JupyterNotInstalledNotificationHelper } from '../../client/jupyter/jupyterNotInstalledNotificationHelper';
 
 suite('StartPage tests', () => {
     let startPage: IStartPage;
@@ -34,7 +40,9 @@ suite('StartPage tests', () => {
     let appShell: typemoq.IMock<IApplicationShell>;
     let context: typemoq.IMock<IExtensionContext>;
     let appEnvironment: typemoq.IMock<IApplicationEnvironment>;
+    let depsManager: typemoq.IMock<IJupyterExtensionDependencyManager>;
     let memento: typemoq.IMock<ExtensionContext['globalState']>;
+    let notificationHelper: IJupyterNotInstalledNotificationHelper;
     const dummySettings = new PythonSettings(undefined, new MockAutoSelectionService());
 
     function setupVersions(savedVersion: string, actualVersion: string) {
@@ -65,7 +73,21 @@ suite('StartPage tests', () => {
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         context = typemoq.Mock.ofType<IExtensionContext>();
         appEnvironment = typemoq.Mock.ofType<IApplicationEnvironment>();
+        // notificationHelper = typemoq.Mock.ofType<IJupyterNotInstalledNotificationHelper>();
+        depsManager = typemoq.Mock.ofType<IJupyterExtensionDependencyManager>();
         memento = typemoq.Mock.ofType<ExtensionContext['globalState']>();
+
+        // @inject(IApplicationShell) private appShell: IApplicationShell,
+        // @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
+        // @inject(IJupyterExtensionDependencyManager) private depsManager: IJupyterExtensionDependencyManager,
+
+        // Notification helper object
+        const stateFactory = typemoq.Mock.ofType<IPersistentStateFactory>();
+        notificationHelper = new JupyterNotInstalledNotificationHelper(
+            appShell.object,
+            stateFactory.object,
+            depsManager.object,
+        );
 
         context.setup((c) => c.globalState).returns(() => memento.object);
         configuration.setup((cs) => cs.getSettings(undefined)).returns(() => dummySettings);
@@ -82,7 +104,13 @@ suite('StartPage tests', () => {
             appShell.object,
             context.object,
             appEnvironment.object,
+            notificationHelper,
+            depsManager.object,
         );
+    });
+
+    teardown(() => {
+        sinon.restore();
     });
 
     test('Check extension version', async () => {
@@ -115,5 +143,108 @@ suite('StartPage tests', () => {
         const test3 = await startPage.extensionVersionChanged();
         assert.equal(test3, true, 'The actual version is newer, start page should open.');
         reset();
+    });
+
+    suite('"Jupyter is not installed" prompt tests', () => {
+        type StartPageMessageForTests = IStartPage & {
+            onMessage(message: string, payload: unknown): Promise<void>;
+        };
+
+        let startPageWithMessageHandler: StartPageMessageForTests;
+        let telemetryEvents: { eventName: string; properties: Record<string, unknown> }[] = [];
+        let sendTelemetryEventStub: sinon.SinonStub;
+
+        setup(() => {
+            sendTelemetryEventStub = sinon
+                .stub(Telemetry, 'sendTelemetryEvent')
+                .callsFake((eventName: string, _, properties: Record<string, unknown>) => {
+                    const telemetry = { eventName, properties };
+                    telemetryEvents.push(telemetry);
+                });
+
+            startPageWithMessageHandler = (startPage as unknown) as StartPageMessageForTests;
+        });
+
+        teardown(() => {
+            telemetryEvents = [];
+            Telemetry._resetSharedProperties();
+        });
+
+        const notebookActions = [
+            {
+                testcase: 'a blank notebook',
+                message: StartPageMessages.OpenBlankNotebook,
+                entrypoint: JupyterNotInstalledOrigin.StartPageOpenBlankNotebook,
+            },
+            {
+                testcase: 'a sample notebook',
+                message: StartPageMessages.OpenSampleNotebook,
+                entrypoint: JupyterNotInstalledOrigin.StartPageOpenSampleNotebook,
+            },
+            {
+                testcase: 'the interactive window',
+                message: StartPageMessages.OpenInteractiveWindow,
+                entrypoint: JupyterNotInstalledOrigin.StartPageOpenInteractiveWindow,
+            },
+        ];
+
+        notebookActions.forEach(({ testcase, message, entrypoint }) => {
+            suite(`When opening ${testcase}`, () => {
+                test('Should display "Jupyter is not installed" prompt if the Jupyter extension is not installed and the prompt should not be shown', async () => {
+                    depsManager.setup((dm) => dm.isJupyterExtensionInstalled).returns(() => false);
+                    const shouldShowPromptStub = sinon.stub(
+                        notificationHelper,
+                        'shouldShowJupypterExtensionNotInstalledPrompt',
+                    );
+                    shouldShowPromptStub.returns(true);
+
+                    await startPageWithMessageHandler.onMessage(message, {});
+
+                    sinon.assert.called(sendTelemetryEventStub);
+                    sinon.assert.calledOnce(shouldShowPromptStub);
+                    // 2 events: one when the prompt is displayed, one with the prompt selection (in this case, nothing).
+                    assert.strictEqual(telemetryEvents.length, 2);
+                    assert.deepStrictEqual(telemetryEvents[0], {
+                        eventName: EventName.JUPYTER_NOT_INSTALLED_NOTIFICATION_DISPLAYED,
+                        properties: { entrypoint },
+                    });
+                });
+
+                test('Should not display "Jupyter is not installed" prompt if the Jupyter extension is not installed and the prompt should not be shown', async () => {
+                    depsManager.setup((dm) => dm.isJupyterExtensionInstalled).returns(() => false);
+                    const shouldShowPromptStub = sinon.stub(
+                        notificationHelper,
+                        'shouldShowJupypterExtensionNotInstalledPrompt',
+                    );
+                    shouldShowPromptStub.returns(false);
+
+                    await startPageWithMessageHandler.onMessage(StartPageMessages.OpenBlankNotebook, {});
+
+                    sinon.assert.notCalled(sendTelemetryEventStub);
+                    sinon.assert.calledOnce(shouldShowPromptStub);
+                    assert.strictEqual(telemetryEvents.length, 0);
+                });
+
+                test('Should not display "Jupyter is not installed" prompt if the Jupyter extension is installed', async () => {
+                    depsManager.setup((dm) => dm.isJupyterExtensionInstalled).returns(() => true);
+                    const shouldShowPromptStub = sinon.stub(
+                        notificationHelper,
+                        'shouldShowJupypterExtensionNotInstalledPrompt',
+                    );
+                    shouldShowPromptStub.returns(false);
+
+                    await startPageWithMessageHandler.onMessage(StartPageMessages.OpenBlankNotebook, {});
+
+                    sinon.assert.called(sendTelemetryEventStub);
+                    sinon.assert.calledOnce(shouldShowPromptStub);
+                    // There is a telemetry event sent when performing the action.
+                    assert.strictEqual(telemetryEvents.length, 1);
+                    assert.notDeepStrictEqual(telemetryEvents[0], {
+                        eventName: EventName.JUPYTER_NOT_INSTALLED_NOTIFICATION_DISPLAYED,
+                        properties: { entrypoint },
+                    });
+                });
+            });
+        });
     });
 });
