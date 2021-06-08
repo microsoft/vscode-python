@@ -199,7 +199,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                         content: `#%%\nprint("${localize.StartPage.helloWorld()}")`,
                     });
                     await this.documentManager.showTextDocument(doc2, 1, true);
-                    await this.commandManager.executeCommand('jupyter.runallcells', Uri.parse(''));
+                    await this.commandManager.executeCommand('jupyter.runallcells', doc2.uri);
                 }
                 break;
             }
