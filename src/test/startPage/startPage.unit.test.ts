@@ -20,12 +20,19 @@ import { PythonSettings } from '../../client/common/configSettings';
 import { IFileSystem } from '../../client/common/platform/types';
 import { StartPage } from '../../client/common/startPage/startPage';
 import { ICodeCssGenerator, IStartPage, IThemeFinder, StartPageMessages } from '../../client/common/startPage/types';
-import { IConfigurationService, IExtensionContext, IPersistentStateFactory } from '../../client/common/types';
+import {
+    IConfigurationService,
+    IExtensionContext,
+    IOutputChannel,
+    IPersistentState,
+    IPersistentStateFactory,
+} from '../../client/common/types';
 import { IJupyterNotInstalledNotificationHelper, JupyterNotInstalledOrigin } from '../../client/jupyter/types';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import * as Telemetry from '../../client/telemetry';
 import { EventName } from '../../client/telemetry/constants';
 import { JupyterNotInstalledNotificationHelper } from '../../client/jupyter/jupyterNotInstalledNotificationHelper';
+import { Jupyter } from '../../client/common/utils/localize';
 
 suite('StartPage tests', () => {
     let startPage: IStartPage;
@@ -41,6 +48,7 @@ suite('StartPage tests', () => {
     let context: typemoq.IMock<IExtensionContext>;
     let appEnvironment: typemoq.IMock<IApplicationEnvironment>;
     let depsManager: typemoq.IMock<IJupyterExtensionDependencyManager>;
+    let outputChannel: typemoq.IMock<IOutputChannel>;
     let memento: typemoq.IMock<ExtensionContext['globalState']>;
     let notificationHelper: IJupyterNotInstalledNotificationHelper;
     const dummySettings = new PythonSettings(undefined, new MockAutoSelectionService());
@@ -74,10 +82,16 @@ suite('StartPage tests', () => {
         context = typemoq.Mock.ofType<IExtensionContext>();
         appEnvironment = typemoq.Mock.ofType<IApplicationEnvironment>();
         depsManager = typemoq.Mock.ofType<IJupyterExtensionDependencyManager>();
+        outputChannel = typemoq.Mock.ofType<IOutputChannel>();
         memento = typemoq.Mock.ofType<ExtensionContext['globalState']>();
 
         // Notification helper object
         const stateFactory = typemoq.Mock.ofType<IPersistentStateFactory>();
+        const state = typemoq.Mock.ofType<IPersistentState<string>>();
+
+        stateFactory
+            .setup((s) => s.createGlobalPersistentState(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns(() => state.object);
         notificationHelper = new JupyterNotInstalledNotificationHelper(
             appShell.object,
             stateFactory.object,
@@ -101,6 +115,7 @@ suite('StartPage tests', () => {
             appEnvironment.object,
             notificationHelper,
             depsManager.object,
+            outputChannel.object,
         );
     });
 
@@ -238,6 +253,25 @@ suite('StartPage tests', () => {
                         eventName: EventName.JUPYTER_NOT_INSTALLED_NOTIFICATION_DISPLAYED,
                         properties: { entrypoint },
                     });
+                });
+
+                test('Should write something in the Python output channel if the Jupyter extension is not installed', async () => {
+                    let output = '';
+                    outputChannel
+                        .setup((oc) => oc.appendLine(typemoq.It.isAnyString()))
+                        .callback((line: string) => {
+                            output += line;
+                        })
+                        .verifiable(typemoq.Times.once());
+                    depsManager.setup((dm) => dm.isJupyterExtensionInstalled).returns(() => false);
+
+                    await startPageWithMessageHandler.onMessage(StartPageMessages.OpenBlankNotebook, {});
+
+                    outputChannel.verify(
+                        (oc) => oc.appendLine(Jupyter.jupyterExtensionNotInstalled()),
+                        typemoq.Times.once(),
+                    );
+                    assert.strictEqual(output, Jupyter.jupyterExtensionNotInstalled());
                 });
             });
         });

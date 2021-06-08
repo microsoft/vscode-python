@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { ConfigurationTarget, EventEmitter, UIKind, Uri, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
@@ -19,10 +19,11 @@ import {
     IWebviewPanelProvider,
     IWorkspaceService,
 } from '../application/types';
-import { CommandSource } from '../constants';
+import { CommandSource, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem } from '../platform/types';
-import { IConfigurationService, IExtensionContext, Resource } from '../types';
+import { IConfigurationService, IExtensionContext, IOutputChannel, Resource } from '../types';
 import * as localize from '../utils/localize';
+import { Jupyter } from '../utils/localize';
 import { StopWatch } from '../utils/stopWatch';
 import { Telemetry } from './constants';
 import { StartPageMessageListener } from './startPageMessageListener';
@@ -67,6 +68,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
         @inject(IJupyterNotInstalledNotificationHelper)
         private notificationHelper: IJupyterNotInstalledNotificationHelper,
         @inject(IJupyterExtensionDependencyManager) private depsManager: IJupyterExtensionDependencyManager,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
     ) {
         super(
             configuration,
@@ -149,6 +151,8 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
             }
             case StartPageMessages.OpenBlankNotebook: {
                 if (!isJupyterInstalled) {
+                    this.output.appendLine(Jupyter.jupyterExtensionNotInstalled());
+
                     if (shouldShowJupyterNotInstalledPrompt) {
                         await this.notificationHelper.showJupyterNotInstalledPrompt(
                             JupyterNotInstalledOrigin.StartPageOpenBlankNotebook,
@@ -185,6 +189,8 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
             }
             case StartPageMessages.OpenInteractiveWindow: {
                 if (!isJupyterInstalled) {
+                    this.output.appendLine(Jupyter.jupyterExtensionNotInstalled());
+
                     if (shouldShowJupyterNotInstalledPrompt) {
                         await this.notificationHelper.showJupyterNotInstalledPrompt(
                             JupyterNotInstalledOrigin.StartPageOpenInteractiveWindow,
@@ -217,6 +223,8 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                 break;
             case StartPageMessages.OpenSampleNotebook:
                 if (!isJupyterInstalled) {
+                    this.output.appendLine(Jupyter.jupyterExtensionNotInstalled());
+
                     if (shouldShowJupyterNotInstalledPrompt) {
                         await this.notificationHelper.showJupyterNotInstalledPrompt(
                             JupyterNotInstalledOrigin.StartPageOpenSampleNotebook,
