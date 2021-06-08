@@ -33,6 +33,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
+    IJupyterExtensionDependencyManager,
     IWebviewPanelOptions,
     IWebviewPanelProvider,
     IWorkspaceService,
@@ -73,6 +74,9 @@ import { sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 
 import { EnvironmentActivationServiceCache } from '../../client/interpreter/activation/service';
+import { JupyterExtensionDependencyManager } from '../../client/jupyter/jupyterExtensionDependencyManager';
+import { JupyterNotInstalledNotificationHelper } from '../../client/jupyter/jupyterNotInstalledNotificationHelper';
+import { IJupyterNotInstalledNotificationHelper } from '../../client/jupyter/types';
 
 import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
@@ -254,6 +258,15 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
 
         this.serviceManager.add<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
+
+        this.serviceManager.addSingleton<IJupyterExtensionDependencyManager>(
+            IJupyterExtensionDependencyManager,
+            JupyterExtensionDependencyManager,
+        );
+        this.serviceManager.addSingleton<IJupyterNotInstalledNotificationHelper>(
+            IJupyterNotInstalledNotificationHelper,
+            JupyterNotInstalledNotificationHelper,
+        );
 
         const mockMemento = TypeMoq.Mock.ofType<ExtensionContext['globalState']>();
         const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
