@@ -48,6 +48,7 @@ import { ExperimentService } from '../../client/common/experiments/service';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { IInstallationChannelManager } from '../../client/common/installer/types';
 import { HttpClient } from '../../client/common/net/httpClient';
+import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { PathUtils } from '../../client/common/platform/pathUtils';
@@ -66,6 +67,7 @@ import {
     IExtensions,
     IHttpClient,
     IPathUtils,
+    IPersistentStateFactory,
     IPythonSettings,
     IsWindows,
     Resource,
@@ -259,6 +261,8 @@ export class StartPageIocContainer extends UnitTestIocContainer {
 
         this.serviceManager.add<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
 
+        // "Jupyter is not installed" prompt.
+        this.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
         this.serviceManager.addSingleton<IJupyterExtensionDependencyManager>(
             IJupyterExtensionDependencyManager,
             JupyterExtensionDependencyManager,
