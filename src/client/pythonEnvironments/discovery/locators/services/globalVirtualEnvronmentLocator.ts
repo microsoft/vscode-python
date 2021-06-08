@@ -24,6 +24,7 @@ import {
     isVirtualenvwrapperEnvironment,
 } from './virtualEnvironmentIdentifier';
 import '../../../../common/extensions';
+import { asyncFilter } from '../../../../common/utils/arrayUtils';
 
 const DEFAULT_SEARCH_DEPTH = 2;
 /**
@@ -48,7 +49,10 @@ async function getGlobalVirtualEnvDirs(): Promise<string[]> {
         if (getOSType() !== OSType.Windows) {
             subDirs.push('envs');
         }
-        const filtered = await subDirs.map((d) => path.join(homeDir, d)).asyncFilter(pathExists);
+        const filtered = await asyncFilter(
+            subDirs.map((d) => path.join(homeDir, d)),
+            pathExists,
+        );
         filtered.forEach((d) => venvDirs.push(d));
     }
 

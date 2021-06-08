@@ -20,6 +20,7 @@ import {
 import { getFileInfo, isParentPath, pathExists } from '../../../common/externalDependencies';
 import { isPoetryEnvironment, localPoetryEnvDirName, Poetry } from './poetry';
 import '../../../../common/extensions';
+import { asyncFilter } from '../../../../common/utils/arrayUtils';
 
 /**
  * Gets all default virtual environment locations to look for in a workspace.
@@ -31,7 +32,7 @@ async function getVirtualEnvDirs(root: string): Promise<string[]> {
     if (virtualenvs) {
         envDirs.push(...virtualenvs);
     }
-    return envDirs.asyncFilter(pathExists);
+    return asyncFilter(envDirs, pathExists);
 }
 
 async function getRootVirtualEnvDir(root: string): Promise<string[]> {

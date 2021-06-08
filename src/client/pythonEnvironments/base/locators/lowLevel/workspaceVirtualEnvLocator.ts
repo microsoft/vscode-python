@@ -23,6 +23,7 @@ import { buildEnvInfo } from '../../info/env';
 import { IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
 import '../../../../common/extensions';
+import { asyncFilter } from '../../../../common/utils/arrayUtils';
 
 /**
  * Default number of levels of sub-directories to recurse when looking for interpreters.
@@ -33,7 +34,7 @@ const DEFAULT_SEARCH_DEPTH = 2;
  * Gets all default virtual environment locations to look for in a workspace.
  */
 function getWorkspaceVirtualEnvDirs(root: string): Promise<string[]> {
-    return [root, path.join(root, '.direnv')].asyncFilter(pathExists);
+    return asyncFilter([root, path.join(root, '.direnv')], pathExists);
 }
 
 /**
