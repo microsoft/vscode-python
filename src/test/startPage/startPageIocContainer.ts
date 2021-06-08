@@ -33,6 +33,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
+    IJupyterExtensionDependencyManager,
     IWebviewPanelOptions,
     IWebviewPanelProvider,
     IWorkspaceService,
@@ -47,6 +48,7 @@ import { ExperimentService } from '../../client/common/experiments/service';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { IInstallationChannelManager } from '../../client/common/installer/types';
 import { HttpClient } from '../../client/common/net/httpClient';
+import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { PathUtils } from '../../client/common/platform/pathUtils';
@@ -65,6 +67,7 @@ import {
     IExtensions,
     IHttpClient,
     IPathUtils,
+    IPersistentStateFactory,
     IPythonSettings,
     IsWindows,
     Resource,
@@ -73,6 +76,9 @@ import { sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 
 import { EnvironmentActivationServiceCache } from '../../client/interpreter/activation/service';
+import { JupyterExtensionDependencyManager } from '../../client/jupyter/jupyterExtensionDependencyManager';
+import { JupyterNotInstalledNotificationHelper } from '../../client/jupyter/jupyterNotInstalledNotificationHelper';
+import { IJupyterNotInstalledNotificationHelper } from '../../client/jupyter/types';
 
 import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
@@ -254,6 +260,17 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
 
         this.serviceManager.add<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
+
+        // "Jupyter is not installed" prompt.
+        this.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
+        this.serviceManager.addSingleton<IJupyterExtensionDependencyManager>(
+            IJupyterExtensionDependencyManager,
+            JupyterExtensionDependencyManager,
+        );
+        this.serviceManager.addSingleton<IJupyterNotInstalledNotificationHelper>(
+            IJupyterNotInstalledNotificationHelper,
+            JupyterNotInstalledNotificationHelper,
+        );
 
         const mockMemento = TypeMoq.Mock.ofType<ExtensionContext['globalState']>();
         const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();

@@ -3,24 +3,27 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { ConfigurationTarget, EventEmitter, UIKind, Uri, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { IJupyterNotInstalledNotificationHelper, JupyterNotInstalledOrigin } from '../../jupyter/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import {
     IApplicationEnvironment,
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
+    IJupyterExtensionDependencyManager,
     IWebviewPanelProvider,
     IWorkspaceService,
 } from '../application/types';
-import { CommandSource } from '../constants';
+import { CommandSource, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem } from '../platform/types';
-import { IConfigurationService, IExtensionContext, Resource } from '../types';
+import { IConfigurationService, IExtensionContext, IOutputChannel, Resource } from '../types';
 import * as localize from '../utils/localize';
+import { Jupyter } from '../utils/localize';
 import { StopWatch } from '../utils/stopWatch';
 import { Telemetry } from './constants';
 import { StartPageMessageListener } from './startPageMessageListener';
@@ -62,6 +65,10 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment,
+        @inject(IJupyterNotInstalledNotificationHelper)
+        private notificationHelper: IJupyterNotInstalledNotificationHelper,
+        @inject(IJupyterExtensionDependencyManager) private depsManager: IJupyterExtensionDependencyManager,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
     ) {
         super(
             configuration,
@@ -128,6 +135,9 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
     }
 
     public async onMessage(message: string, payload: unknown): Promise<void> {
+        const shouldShowJupyterNotInstalledPrompt = await this.notificationHelper.shouldShowJupypterExtensionNotInstalledPrompt();
+        const isJupyterInstalled = this.depsManager.isJupyterExtensionInstalled;
+
         switch (message) {
             case StartPageMessages.Started:
                 this.webviewDidLoad = true;
@@ -140,19 +150,29 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                 break;
             }
             case StartPageMessages.OpenBlankNotebook: {
-                sendTelemetryEvent(Telemetry.StartPageOpenBlankNotebook);
-                this.setTelemetryFlags();
+                if (!isJupyterInstalled) {
+                    this.output.appendLine(Jupyter.jupyterExtensionNotInstalled());
 
-                const savedVersion: string | undefined = this.context.globalState.get(EXTENSION_VERSION_MEMENTO);
-
-                if (savedVersion) {
-                    await this.commandManager.executeCommand(
-                        'jupyter.opennotebook',
-                        undefined,
-                        CommandSource.commandPalette,
-                    );
+                    if (shouldShowJupyterNotInstalledPrompt) {
+                        await this.notificationHelper.showJupyterNotInstalledPrompt(
+                            JupyterNotInstalledOrigin.StartPageOpenBlankNotebook,
+                        );
+                    }
                 } else {
-                    this.openSampleNotebook().ignoreErrors();
+                    sendTelemetryEvent(Telemetry.StartPageOpenBlankNotebook);
+                    this.setTelemetryFlags();
+
+                    const savedVersion: string | undefined = this.context.globalState.get(EXTENSION_VERSION_MEMENTO);
+
+                    if (savedVersion) {
+                        await this.commandManager.executeCommand(
+                            'jupyter.opennotebook',
+                            undefined,
+                            CommandSource.commandPalette,
+                        );
+                    } else {
+                        this.openSampleNotebook().ignoreErrors();
+                    }
                 }
                 break;
             }
@@ -168,15 +188,25 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                 break;
             }
             case StartPageMessages.OpenInteractiveWindow: {
-                sendTelemetryEvent(Telemetry.StartPageOpenInteractiveWindow);
-                this.setTelemetryFlags();
+                if (!isJupyterInstalled) {
+                    this.output.appendLine(Jupyter.jupyterExtensionNotInstalled());
 
-                const doc2 = await this.documentManager.openTextDocument({
-                    language: 'python',
-                    content: `#%%\nprint("${localize.StartPage.helloWorld()}")`,
-                });
-                await this.documentManager.showTextDocument(doc2, 1, true);
-                await this.commandManager.executeCommand('jupyter.runallcells', Uri.parse(''));
+                    if (shouldShowJupyterNotInstalledPrompt) {
+                        await this.notificationHelper.showJupyterNotInstalledPrompt(
+                            JupyterNotInstalledOrigin.StartPageOpenInteractiveWindow,
+                        );
+                    }
+                } else {
+                    sendTelemetryEvent(Telemetry.StartPageOpenInteractiveWindow);
+                    this.setTelemetryFlags();
+
+                    const doc2 = await this.documentManager.openTextDocument({
+                        language: 'python',
+                        content: `#%%\nprint("${localize.StartPage.helloWorld()}")`,
+                    });
+                    await this.documentManager.showTextDocument(doc2, 1, true);
+                    await this.commandManager.executeCommand('jupyter.runallcells', doc2.uri);
+                }
                 break;
             }
             case StartPageMessages.OpenCommandPalette:
@@ -192,10 +222,20 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                 await this.commandManager.executeCommand('workbench.action.quickOpen', '>Create New Blank Notebook');
                 break;
             case StartPageMessages.OpenSampleNotebook:
-                sendTelemetryEvent(Telemetry.StartPageOpenSampleNotebook);
-                this.setTelemetryFlags();
+                if (!isJupyterInstalled) {
+                    this.output.appendLine(Jupyter.jupyterExtensionNotInstalled());
 
-                this.openSampleNotebook().ignoreErrors();
+                    if (shouldShowJupyterNotInstalledPrompt) {
+                        await this.notificationHelper.showJupyterNotInstalledPrompt(
+                            JupyterNotInstalledOrigin.StartPageOpenSampleNotebook,
+                        );
+                    }
+                } else {
+                    sendTelemetryEvent(Telemetry.StartPageOpenSampleNotebook);
+                    this.setTelemetryFlags();
+
+                    this.openSampleNotebook().ignoreErrors();
+                }
                 break;
             case StartPageMessages.OpenFileBrowser: {
                 sendTelemetryEvent(Telemetry.StartPageOpenFileBrowser);

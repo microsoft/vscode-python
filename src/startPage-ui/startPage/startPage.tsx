@@ -214,7 +214,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.interactiveWindowDesc',
-                        '- You can create cells on a Python file by typing "#%%" <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window',
+                        '- You can create cells on a Python file by typing "#%%". Make sure you have the Jupyter extension installed. <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window',
                     ),
                 }}
             />
