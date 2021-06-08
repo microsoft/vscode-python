@@ -33,7 +33,7 @@ suite('Python Settings', async () => {
         public update(pythonSettings: WorkspaceConfiguration) {
             return super.update(pythonSettings);
         }
-        protected initialize() {
+        public initialize() {
             noop();
         }
     }

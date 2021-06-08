@@ -3,9 +3,7 @@
 
 import { registerTypes as registerDotNetTypes } from '../common/dotnet/serviceRegistry';
 import { INugetRepository } from '../common/nuget/types';
-import { BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../common/types';
 import { IServiceManager } from '../ioc/types';
-import { ProposePylanceBanner } from '../languageServices/proposeLanguageServerBanner';
 import { ExtensionActivationManager } from './activationManager';
 import { LanguageServerExtensionActivationService } from './activationService';
 import { DownloadBetaChannelRule, DownloadDailyChannelRule } from './common/downloadChannelRules';
@@ -61,18 +59,17 @@ import {
     LanguageServerType,
 } from './types';
 import { JediLanguageServerActivator } from './jedi/activator';
+import { IDiagnosticsService } from '../application/diagnostics/types';
+import {
+    MPLSSurveyDiagnosticService,
+    MPLSSurveyDiagnosticServiceId,
+} from '../application/diagnostics/checks/mplsSurvey';
 
 export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType): void {
     serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
     serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
     serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
-
-    serviceManager.addSingleton<IPythonExtensionBanner>(
-        IPythonExtensionBanner,
-        ProposePylanceBanner,
-        BANNER_NAME_PROPOSE_LS,
-    );
 
     if (languageServerType === LanguageServerType.Microsoft) {
         serviceManager.add<ILanguageServerAnalysisOptions>(
@@ -117,6 +114,11 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
             DotNetLanguageServerPackageService,
         );
         registerDotNetTypes(serviceManager);
+        serviceManager.addSingleton<IDiagnosticsService>(
+            IDiagnosticsService,
+            MPLSSurveyDiagnosticService,
+            MPLSSurveyDiagnosticServiceId,
+        );
     } else if (languageServerType === LanguageServerType.Node) {
         serviceManager.add<ILanguageServerAnalysisOptions>(
             ILanguageServerAnalysisOptions,

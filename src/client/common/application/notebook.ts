@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { DocumentSelector, Event, EventEmitter } from 'vscode';
+import { DocumentSelector, Event, EventEmitter, workspace } from 'vscode';
 import type { notebook, NotebookConcatTextDocument, NotebookDocument } from 'vscode-proposed';
 import { UseProposedApi } from '../constants';
 import { IApplicationEnvironment, IVSCodeNotebook } from './types';
@@ -10,21 +10,22 @@ import { IApplicationEnvironment, IVSCodeNotebook } from './types';
 @injectable()
 export class VSCodeNotebook implements IVSCodeNotebook {
     public get onDidOpenNotebookDocument(): Event<NotebookDocument> {
-        return this.canUseNotebookApi
-            ? this.notebook.onDidOpenNotebookDocument
-            : new EventEmitter<NotebookDocument>().event;
+        const onDidOpenNotebookDocument =
+            this.notebook.onDidOpenNotebookDocument ?? (workspace as any).onDidOpenNotebookDocument;
+        return this.canUseNotebookApi ? onDidOpenNotebookDocument : new EventEmitter<NotebookDocument>().event;
     }
     public get onDidCloseNotebookDocument(): Event<NotebookDocument> {
-        return this.canUseNotebookApi
-            ? this.notebook.onDidCloseNotebookDocument
-            : new EventEmitter<NotebookDocument>().event;
+        const onDidCloseNotebookDocument =
+            this.notebook.onDidCloseNotebookDocument ?? (workspace as any).onDidCloseNotebookDocument;
+        return this.canUseNotebookApi ? onDidCloseNotebookDocument : new EventEmitter<NotebookDocument>().event;
     }
     public get notebookDocuments(): ReadonlyArray<NotebookDocument> {
-        return this.canUseNotebookApi ? this.notebook.notebookDocuments : [];
+        const notebookDocuments = this.notebook.notebookDocuments ?? (workspace as any).notebookDocuments;
+        return this.canUseNotebookApi ? notebookDocuments : [];
     }
     private get notebook() {
         if (!this._notebook) {
-            this._notebook = require('vscode').notebook;
+            this._notebook = require('vscode').notebook ?? require('vscode').notebooks;
         }
         return this._notebook!;
     }

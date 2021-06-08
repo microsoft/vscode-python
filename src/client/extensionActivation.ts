@@ -175,6 +175,8 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
     context.subscriptions.push(manager);
 
+    // Settings are dependent on Experiment service, so we need to initialize it after experiments are activated.
+    serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().initialize();
     await interpreterManager
         .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
         .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));

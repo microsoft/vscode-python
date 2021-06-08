@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { traceVerbose } from '../../common/logger';
+import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../common/utils/workerPool';
 import { getInterpreterInfo, InterpreterInformation } from '../base/info/interpreter';
@@ -32,7 +33,7 @@ async function buildEnvironmentInfo(interpreterPath: string): Promise<Interprete
     return interpreterInfo;
 }
 
-export class EnvironmentInfoService implements IEnvironmentInfoService {
+class EnvironmentInfoService implements IEnvironmentInfoService {
     // Caching environment here in-memory. This is so that we don't have to run this on the same
     // path again and again in a given session. This information will likely not change in a given
     // session. There are definitely cases where this will change. But a simple reload should address
@@ -83,4 +84,19 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
         const result = this.cache.get(interpreterPath);
         return !!(result && result.completed);
     }
+}
+
+let envInfoService: IEnvironmentInfoService | undefined;
+export function getEnvironmentInfoService(disposables?: IDisposableRegistry): IEnvironmentInfoService {
+    if (envInfoService === undefined) {
+        const service = new EnvironmentInfoService();
+        disposables?.push({
+            dispose: () => {
+                service.dispose();
+                envInfoService = undefined;
+            },
+        });
+        envInfoService = service;
+    }
+    return envInfoService;
 }

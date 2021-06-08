@@ -112,11 +112,6 @@ export namespace AttachProcess {
 }
 
 export namespace Pylance {
-    export const proposePylanceMessage = localize(
-        'Pylance.proposePylanceMessage',
-        'Try out a new faster, feature-rich language server for Python by Microsoft, Pylance! Install the extension now.',
-    );
-    export const tryItNow = localize('Pylance.tryItNow', 'Try it now');
     export const remindMeLater = localize('Pylance.remindMeLater', 'Remind me later');
 
     export const pylanceNotInstalledMessage = localize(
@@ -416,6 +411,10 @@ export namespace ExtensionSurveyBanner {
     export const bannerLabelYes = localize('ExtensionSurveyBanner.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('ExtensionSurveyBanner.bannerLabelNo', 'No, thanks');
     export const maybeLater = localize('ExtensionSurveyBanner.maybeLater', 'Maybe later');
+    export const mplsMessage = localize(
+        'ExtensionSurveyBanner.mplsMessage',
+        'Can you please take 2 minutes to tell us about your experience using the Microsoft Python Language Server?',
+    );
 }
 
 export namespace Products {

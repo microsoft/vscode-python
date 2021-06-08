@@ -18,7 +18,6 @@ import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ApplicationShell } from './application/applicationShell';
 import { ClipboardService } from './application/clipboard';
 import { CommandManager } from './application/commandManager';
-import { IPythonCommandManager } from './application/commands';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand';
 import { ReportIssueCommandHandler } from './application/commands/reportIssueCommand';
 import { DebugService } from './application/debugService';
@@ -141,7 +140,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         IJupyterExtensionDependencyManager,
         JupyterExtensionDependencyManager,
     );
-    serviceManager.addSingleton<IPythonCommandManager>(ICommandManager, CommandManager);
+    serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);

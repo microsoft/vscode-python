@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
 import { IWorkspaceService } from '../../common/application/types';
-import { EXTENSION_ROOT_DIR, isTestExecution } from '../../common/constants';
+import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
-import { BANNER_NAME_PROPOSE_LS, IConfigurationService, IPythonExtensionBanner, Resource } from '../../common/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { IConfigurationService, Resource } from '../../common/types';
 import { LanguageServerActivatorBase } from '../common/activatorBase';
 import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../types';
 
@@ -30,18 +29,8 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
         @inject(ILanguageServerFolderService)
         private readonly languageServerFolderService: ILanguageServerFolderService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
-        @inject(IPythonExtensionBanner)
-        @named(BANNER_NAME_PROPOSE_LS)
-        private proposePylancePopup: IPythonExtensionBanner,
     ) {
         super(manager, workspace, fs, configurationService);
-    }
-
-    public async start(resource: Resource, interpreter?: PythonEnvironment): Promise<void> {
-        if (!isTestExecution()) {
-            this.proposePylancePopup.showBanner().ignoreErrors();
-        }
-        return super.start(resource, interpreter);
     }
 
     public async ensureLanguageServerIsAvailable(resource: Resource): Promise<void> {

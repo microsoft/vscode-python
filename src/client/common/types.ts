@@ -205,6 +205,7 @@ export interface IPythonSettings {
     readonly logging: ILoggingSettings;
     readonly useIsolation: boolean;
     readonly tensorBoard: ITensorBoardSettings | undefined;
+    initialize(): void;
 }
 
 export interface ITensorBoardSettings {
@@ -471,13 +472,6 @@ export const IBrowserService = Symbol('IBrowserService');
 export interface IBrowserService {
     launch(url: string): void;
 }
-
-export const IPythonExtensionBanner = Symbol('IPythonExtensionBanner');
-export interface IPythonExtensionBanner {
-    readonly enabled: boolean;
-    showBanner(): Promise<void>;
-}
-export const BANNER_NAME_PROPOSE_LS = 'ProposePylance';
 
 export const IEditorUtils = Symbol('IEditorUtils');
 export interface IEditorUtils {

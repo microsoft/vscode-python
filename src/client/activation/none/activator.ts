@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { inject, injectable, named } from 'inversify';
+import { injectable } from 'inversify';
 import {
     CancellationToken,
     CodeLens,
@@ -20,8 +20,7 @@ import {
     TextDocument,
     WorkspaceEdit,
 } from 'vscode';
-import { isTestExecution } from '../../common/constants';
-import { BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner, Resource } from '../../common/types';
+import { Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILanguageServerActivator } from '../types';
 
@@ -34,16 +33,7 @@ import { ILanguageServerActivator } from '../types';
  */
 @injectable()
 export class NoLanguageServerExtensionActivator implements ILanguageServerActivator {
-    constructor(
-        @inject(IPythonExtensionBanner)
-        @named(BANNER_NAME_PROPOSE_LS)
-        private proposePylancePopup: IPythonExtensionBanner,
-    ) {}
-    public async start(_resource: Resource, _interpreter?: PythonEnvironment): Promise<void> {
-        if (!isTestExecution()) {
-            this.proposePylancePopup.showBanner().ignoreErrors();
-        }
-    }
+    public async start(_resource: Resource, _interpreter?: PythonEnvironment): Promise<void> {}
 
     public dispose(): void {}
 

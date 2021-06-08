@@ -92,6 +92,7 @@
         "onCommand:python.startPage.open",
         "onCommand:python.enableSourceMapSupport",
         "onCommand:python.launchTensorBoard",
+        "onCommand:python.clearPersistentStorage",
         "workspaceContains:mspythonconfig.json",
         "workspaceContains:pyproject.toml",
         "workspaceContains:Pipfile",
@@ -1134,7 +1135,6 @@
                     "items": {
                         "enum": [
                             "DeprecatePythonPath - experiment",
-                            "tryPylance",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
                             "pythonDiscoveryModuleWithoutWatcher",
@@ -1152,7 +1152,6 @@
                     "items": {
                         "enum": [
                             "DeprecatePythonPath - experiment",
-                            "tryPylance",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
                             "pythonDiscoveryModuleWithoutWatcher",

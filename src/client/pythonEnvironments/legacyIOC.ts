@@ -69,6 +69,7 @@ import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
 import { toSemverLikeVersion } from './base/info/pythonVersion';
 import { PythonVersion } from './info/pythonVersion';
 import { IExtensionSingleActivationService } from '../activation/types';
+import { EnvironmentInfoServiceQueuePriority, getEnvironmentInfoService } from './info/environmentInfoService';
 
 const convertedKinds = new Map(
     Object.entries({
@@ -195,14 +196,23 @@ class ComponentAdapter implements IComponentAdapter {
 
     // We use the same getInterpreters() here as for IInterpreterLocatorService.
     public async getInterpreterDetails(pythonPath: string, resource?: vscode.Uri): Promise<PythonEnvironment> {
-        const info = buildEnvInfo({ executable: pythonPath });
+        const envInfo = buildEnvInfo({ executable: pythonPath });
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
             if (wsFolder !== undefined) {
-                info.searchLocation = wsFolder.uri;
+                envInfo.searchLocation = wsFolder.uri;
             }
         }
-        const env = await this.api.resolveEnv(info);
+
+        const env = (await this.api.resolveEnv(envInfo)) ?? envInfo;
+        if (env.executable.sysPrefix) {
+            const execInfoService = getEnvironmentInfoService();
+            const info = await execInfoService.getEnvironmentInfo(pythonPath, EnvironmentInfoServiceQueuePriority.High);
+            if (info) {
+                env.executable.sysPrefix = info.executable.sysPrefix;
+                env.version = info.version;
+            }
+        }
         return convertEnvInfo(env ?? buildEnvInfo({ executable: pythonPath }));
     }
 

@@ -11,13 +11,6 @@ export enum DeprecatePythonPath {
     experiment = 'DeprecatePythonPath - experiment',
 }
 
-// Experiment to offer switch to Pylance language server
-export enum TryPylance {
-    experiment = 'tryPylance',
-    jediPrompt1 = 'tryPylancePromptText1',
-    jediPrompt2 = 'tryPylancePromptText2',
-}
-
 // Experiment to switch Jedi to use an LSP instead of direct providers
 export enum JediLSP {
     experiment = 'pythonJediLSP',

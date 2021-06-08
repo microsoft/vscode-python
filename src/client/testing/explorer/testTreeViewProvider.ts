@@ -5,8 +5,8 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
-import { CommandSource, ICommandManager, IWorkspaceService } from '../../common/application/types';
-import { Commands } from '../../common/constants';
+import { ICommandManager, IWorkspaceService } from '../../common/application/types';
+import { Commands, CommandSource } from '../../common/constants';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';

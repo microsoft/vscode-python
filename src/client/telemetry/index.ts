@@ -17,7 +17,7 @@ import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { LinterId } from '../linters/types';
-import { EnvironmentType } from '../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import {
     TensorBoardPromptSelection,
     TensorBoardEntrypointTrigger,
@@ -840,6 +840,10 @@ export interface IEventNamePropertyMapping {
          */
         installer: string;
         /**
+         * The name of the installer required (expected to be available) for installation of pacakges. (pipenv, Conda etc.)
+         */
+        requiredInstaller?: string;
+        /**
          * Name of the corresponding product (package) to be installed.
          */
         productName?: string;
@@ -847,6 +851,14 @@ export interface IEventNamePropertyMapping {
          * Whether the product (package) has been installed or not.
          */
         isInstalled?: boolean;
+        /**
+         * Type of the Python environment into which the Python package is being installed.
+         */
+        envType?: PythonEnvironment['envType'];
+        /**
+         * Version of the Python environment into which the Python package is being installed.
+         */
+        version?: string;
     };
     /**
      * Telemetry sent with details immediately after linting a document completes
