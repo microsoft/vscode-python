@@ -229,7 +229,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         cmdManager = TypeMoq.Mock.ofType<ICommandManager>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         insidersPrompt = TypeMoq.Mock.ofType<IInsiderExtensionPrompt>(undefined, TypeMoq.MockBehavior.Strict);
-        hasUserBeenNotifiedState = mock(PersistentState);
+        hasUserBeenNotifiedState = mock(PersistentState) as IPersistentState<boolean>;
 
         insidersExtensionService = new InsidersExtensionService(
             extensionChannelService.object,
