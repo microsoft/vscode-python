@@ -10,6 +10,8 @@
    ([#16102](https://github.com/Microsoft/vscode-python/issues/16102))
 1. Add an `enumDescriptions` key under the `python.languageServer` setting to describe all language server options.
    ([#16141](https://github.com/Microsoft/vscode-python/issues/16141))
+1. Ensure users upgrade to v0.2.0 of the torch-tb-profiler TensorBoard plugin to access jump-to-source functionality.
+   ([#16330](https://github.com/Microsoft/vscode-python/issues/16339))
 
 ### Fixes
 
