@@ -1,5 +1,87 @@
 # Changelog
 
+## 2021.6.0-rc (9 June 2021)
+
+### Enhancements
+
+1. Improved telemetry around the availability of `pip` for installation of Jupyter dependencies.
+   ([#15937](https://github.com/Microsoft/vscode-python/issues/15937))
+1. Move the Jupyter extension from being a hard dependency to an optional one, and display an informational prompt if Jupyter commands try to be executed from the Start Page.
+   ([#16102](https://github.com/Microsoft/vscode-python/issues/16102))
+1. Add an `enumDescriptions` key under the `python.languageServer` setting to describe all language server options.
+   ([#16141](https://github.com/Microsoft/vscode-python/issues/16141))
+
+### Fixes
+
+1. Fixes a bug in the bandit linter where messages weren't being propagated to the editor.
+   (thanks [Anthony Shaw](https://github.com/tonybaloney))
+   ([#15561](https://github.com/Microsoft/vscode-python/issues/15561))
+1. Workaround existing MIME type misconfiguration on Windows preventing TensorBoard from loading when starting TensorBoard.
+   ([#16072](https://github.com/Microsoft/vscode-python/issues/16072))
+1. Changed the version of npm to version 6 instead of 7 in the lockfile.
+   ([#16208](https://github.com/Microsoft/vscode-python/issues/16208))
+1. Ensure selected interpreter doesn't change when the extension is starting up and in experiment.
+   ([#16291](https://github.com/Microsoft/vscode-python/issues/16291))
+1. Fix issue with sys.prefix when getting environment details.
+   ([#16355](https://github.com/Microsoft/vscode-python/issues/16355))
+1. Activate the extension when selecting the command `Clear Internal Extension Cache (python.clearPersistentStorage)`.
+   ([#16397](https://github.com/Microsoft/vscode-python/issues/16397))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2021.5.2 (14 May 2021)
 
 ### Fixes
