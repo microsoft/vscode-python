@@ -57,7 +57,7 @@ suite('Interpreters - Auto Selection - Current Path Rule', () => {
     }
     setup(() => {
         stateFactory = mock(PersistentStateFactory);
-        state = mock(PersistentState);
+        state = mock(PersistentState) as PersistentState<PythonEnvironment | undefined>;
         fs = mock(FileSystem);
         helper = mock(InterpreterHelper);
         locator = mock(KnownPathsService);

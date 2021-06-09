@@ -82,7 +82,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
     }
     setup(() => {
         stateFactory = mock(PersistentStateFactory);
-        state = mock(PersistentState);
+        state = mock(PersistentState) as PersistentState<PythonEnvironment | undefined>;
         fs = mock(FileSystem);
         helper = mock(InterpreterHelper);
         platform = mock(PlatformService);

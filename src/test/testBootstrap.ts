@@ -74,7 +74,7 @@ async function end(exitCode: number) {
 }
 
 async function startSocketServer() {
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
         server = createServer((socket) => {
             socket.on('data', (buffer) => {
                 const data = buffer.toString('utf8');
@@ -88,13 +88,16 @@ async function startSocketServer() {
             });
         });
 
-        server.listen({ host: '127.0.0.1', port: 0 }, async () => {
-            const port = (server!.address() as AddressInfo).port;
-            console.log(`Test server listening on port ${port}`);
-            await deletePortFile();
-            await fs.writeFile(portFile, port.toString());
-            resolve();
-        });
+        server.listen(
+            { host: '127.0.0.1', port: 0 },
+            async (): Promise<void> => {
+                const port = (server!.address() as AddressInfo).port;
+                console.log(`Test server listening on port ${port}`);
+                await deletePortFile();
+                await fs.writeFile(portFile, port.toString());
+                resolve();
+            },
+        );
         server.on('error', (ex) => {
             // Just log it, no need to do anything else.
             console.error(ex);

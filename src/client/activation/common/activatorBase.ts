@@ -61,7 +61,7 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         this.manager.dispose();
     }
 
-    public abstract async ensureLanguageServerIsAvailable(resource: Resource): Promise<void>;
+    public abstract ensureLanguageServerIsAvailable(resource: Resource): Promise<void>;
 
     public activate(): void {
         this.manager.connect();

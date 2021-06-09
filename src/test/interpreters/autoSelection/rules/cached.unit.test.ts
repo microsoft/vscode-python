@@ -50,7 +50,7 @@ suite('Interpreters - Auto Selection - Cached Rule', () => {
     }
     setup(() => {
         stateFactory = mock(PersistentStateFactory);
-        state = mock(PersistentState);
+        state = mock(PersistentState) as PersistentState<PythonEnvironment | undefined>;
         fs = mock(FileSystem);
         helper = mock(InterpreterHelper);
         systemInterpreter = mock(SystemWideInterpretersAutoSelectionRule);

@@ -43,7 +43,7 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
     }
     setup(() => {
         stateFactory = mock(PersistentStateFactory);
-        state = mock(PersistentState);
+        state = mock(PersistentState) as PersistentState<PythonEnvironment | undefined>;
         fs = mock(FileSystem);
         workspaceService = mock(WorkspaceService);
         experimentsManager = mock(ExperimentsManager);

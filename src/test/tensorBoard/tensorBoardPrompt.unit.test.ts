@@ -27,7 +27,7 @@ suite('TensorBoard prompt', () => {
         when(commandManager.executeCommand(Commands.LaunchTensorBoard, anything(), anything())).thenResolve();
 
         persistentStateFactory = mock(PersistentStateFactory);
-        persistentState = mock(PersistentState);
+        persistentState = mock(PersistentState) as PersistentState<boolean>;
         when(persistentState.value).thenReturn(persistentStateValue);
         when(persistentState.updateValue(anything())).thenResolve();
         when(persistentStateFactory.createWorkspacePersistentState<boolean>(anything(), anything())).thenReturn(

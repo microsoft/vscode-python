@@ -246,7 +246,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             .returns(() => instance(hasUserBeenNotifiedState))
             // Basically means "we don't care" (necessary for strict mocks).
             .verifiable(TypeMoq.Times.atLeast(0));
-        hasUserBeenNotifiedState = mock(PersistentState);
+        hasUserBeenNotifiedState = mock(PersistentState) as PersistentState<boolean>;
     }
 
     setup(() => {
