@@ -19,6 +19,13 @@ import { ITestsRunner, PythonRunnableTestData, PythonTestData, TestRunOptions } 
 import { WorkspaceTestRoot } from '../common/workspaceTestRoot';
 import { removePositionalFoldersAndFiles } from './arguments';
 
+export type TestRunOptions = {
+    workspaceFolder: Uri;
+    cwd: string;
+    args: string[];
+    token: CancellationToken;
+};
+
 type PytestRunInstanceOptions = TestRunOptions & {
     exclude?: TestItem<PythonTestData>[];
     debug: boolean;
@@ -50,6 +57,8 @@ export async function processTestNode(
     runTest: PytestRunTestFunction,
 ): Promise<void> {
     if (!options.exclude?.includes(testNode)) {
+        runInstance.appendOutput(`Running tests: ${testNode.label}`);
+        runInstance.setState(testNode, TestResultState.Running);
         if (testNode.data instanceof WorkspaceTestRoot) {
             const testSubNodes = Array.from(testNode.children.values());
             await Promise.all(testSubNodes.map((subNode) => processTestNode(subNode, runInstance, options, runTest)));
@@ -72,6 +81,10 @@ export async function processTestNode(
     return Promise.resolve();
 }
 
+export interface ITestRunner {
+    runTests(request: TestRunRequest<PythonTestData>, options: TestRunOptions): Promise<void>;
+}
+
 @injectable()
 export class PytestRunner implements ITestsRunner {
     constructor(
@@ -88,17 +101,17 @@ export class PytestRunner implements ITestsRunner {
         };
         const runInstance = test.createTestRun(request);
         try {
-            await Promise.all(
-                request.tests.map((testNode) =>
-                    processTestNode(testNode, runInstance, runOptions, this.runTest.bind(this)),
-                ),
-            );
+        await Promise.all(
+            request.tests.map((testNode) =>
+                processTestNode(testNode, runInstance, runOptions, this.runTest.bind(this)),
+            ),
+        );
         } catch (ex) {
             runInstance.appendOutput(`Error while running tests:\r\n${ex}\r\n\r\n`);
         } finally {
             runInstance.appendOutput(`Finished running tests!\r\n`);
             runInstance.end();
-        }
+    }
     }
 
     private async runTest(
@@ -122,17 +135,18 @@ export class PytestRunner implements ITestsRunner {
             // Remove positional test folders and files, we will add as needed per node
             let testArgs = removePositionalFoldersAndFiles(options.args);
 
-            // Remove the '--junitxml' or '--junit-xml' if it exists, and add it with our path.
+        // Remove the '--junitxml' or '--junit-xml' if it exists, and add it with our path.
             testArgs = filterArguments(testArgs, [JunitXmlArg, JunitXmlArgOld]);
-            testArgs.splice(0, 0, `${JunitXmlArg}=${junitFilePath}`);
+        testArgs.splice(0, 0, `${JunitXmlArg}=${junitFilePath}`);
 
             // Ensure that we use the xunit1 format.
             testArgs.splice(0, 0, '--override-ini', 'junit_family=xunit1');
 
             // Make sure root dir is set so pytest can find the relative paths
-            testArgs.splice(0, 0, '--rootdir', options.workspaceFolder.fsPath);
+        testArgs.splice(0, 0, '--rootdir', options.workspaceFolder.fsPath);
+        testArgs.splice(0, 0, '--override-ini', 'junit_family=xunit1');
 
-            // Positional arguments control the tests to be run.
+        // Positional arguments control the tests to be run.
             testArgs.push(testNode.data.raw.id);
 
             runInstance.appendOutput(`Running test with arguments: ${testArgs.join(' ')}\r\n`);
