@@ -119,7 +119,7 @@
     "Installer.searchForHelp": "Search for help",
     "Installer.couldNotInstallLibrary": "Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.",
     "Installer.dataScienceInstallPrompt": "Data Science library {0} is not installed. Install?",
-    "diagnostics.removedPythonPathFromSettings": "We removed the \"python.pythonPath\" setting from your settings.json file as the setting is no longer used by the Python extension. You can get the path of your selected interpreter in the Python output channel. [Learn more](https://aka.ms/AA7jfor).",
+    "diagnostics.removedPythonPathFromSettings": "The \"python.pythonPath\" setting in your settings.json is no longer used by the Python extension. If you want, you can use a new setting called \"python.defaultInterpreterPath\" instead. Keep in mind that you need to change the value of this setting manually as the Python extension doesn’t modify it when you change interpreters. [Learn more](https://aka.ms/AA7jfor).",
     "diagnostics.warnSourceMaps": "Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.",
     "diagnostics.disableSourceMaps": "Disable Source Map Support",
     "diagnostics.warnBeforeEnablingSourceMaps": "Enabling source map support in the Python Extension will adversely impact performance of the extension.",
