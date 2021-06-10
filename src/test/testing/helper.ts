@@ -19,8 +19,9 @@ export function lookForTestFile(tests: Tests, testFile: string) {
         const testFileToSearch = pathTokens.join('/');
         found = tests.testFiles.some(
             (t) =>
-                t.name.toUpperCase() === fileName.toUpperCase() &&
-                t.nameToRun.toUpperCase() === testFileToSearch.toUpperCase(),
+                (t.name === fileName && t.nameToRun === testFile) ||
+                (t.name.toUpperCase() === fileName.toUpperCase() &&
+                    t.nameToRun.toUpperCase() === testFileToSearch.toUpperCase()),
         );
     } else {
         found = tests.testFiles.some((t) => t.name === fileName && t.nameToRun === testFile);
