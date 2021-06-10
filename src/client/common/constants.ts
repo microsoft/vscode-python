@@ -81,6 +81,8 @@ export namespace Commands {
     export const RefreshTensorBoard = 'python.refreshTensorBoard';
     export const ReportIssue = 'python.reportIssue';
 }
+
+// Look at https://microsoft.github.io/vscode-codicons/dist/codicon.html for other Octicon icon ids
 export namespace Octicons {
     export const Test_Pass = '$(check)';
     export const Test_Fail = '$(alert)';
@@ -89,6 +91,7 @@ export namespace Octicons {
     export const Downloading = '$(cloud-download)';
     export const Installing = '$(desktop-download)';
     export const Search_Stop = '$(search-stop)';
+    export const Star = '$(star)';
 }
 
 export const Button_Text_Tests_View_Output = 'View Output';

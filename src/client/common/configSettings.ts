@@ -264,6 +264,12 @@ export class PythonSettings implements IPythonSettings {
 
         const defaultInterpreterPath = systemVariables.resolveAny(pythonSettings.get<string>('defaultInterpreterPath'));
         this.defaultInterpreterPath = defaultInterpreterPath || DEFAULT_INTERPRETER_SETTING;
+        if (this.defaultInterpreterPath === DEFAULT_INTERPRETER_SETTING) {
+            const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(
+                this.workspaceRoot,
+            );
+            this.defaultInterpreterPath = autoSelectedPythonInterpreter?.path ?? this.defaultInterpreterPath;
+        }
         this.defaultInterpreterPath = getAbsolutePath(this.defaultInterpreterPath, workspaceRoot);
 
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;

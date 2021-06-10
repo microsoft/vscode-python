@@ -180,7 +180,6 @@ src/test/common/utils/cacheUtils.unit.test.ts
 src/test/common/utils/decorators.unit.test.ts
 src/test/common/utils/localize.functional.test.ts
 src/test/common/utils/version.unit.test.ts
-src/test/common/configSettings/configSettings.pythonPath.unit.test.ts
 src/test/common/configSettings/configSettings.unit.test.ts
 src/test/common/featureDeprecationManager.unit.test.ts
 src/test/common/serviceRegistry.unit.test.ts

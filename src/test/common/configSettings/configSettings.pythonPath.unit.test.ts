@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
@@ -15,8 +15,10 @@ import { DeprecatePythonPath } from '../../../client/common/experiments/groups';
 import { IExperimentService, IInterpreterPathService } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import { IInterpreterSecurityService } from '../../../client/interpreter/autoSelection/types';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
+
 const untildify = require('untildify');
 
 suite('Python Settings - pythonPath', () => {
@@ -24,9 +26,13 @@ suite('Python Settings - pythonPath', () => {
         public update(settings: WorkspaceConfiguration) {
             return super.update(settings);
         }
+
+        // eslint-disable-next-line class-methods-use-this
         protected getPythonExecutable(pythonPath: string) {
             return pythonPath;
         }
+
+        // eslint-disable-next-line class-methods-use-this
         public initialize() {
             noop();
         }
@@ -115,7 +121,7 @@ suite('Python Settings - pythonPath', () => {
     });
     test("If we don't have a custom python path and we do have an auto selected interpreter, then use it", () => {
         const pythonPath = path.join(__dirname, 'this is a python path that was auto selected');
-        const interpreter: any = { path: pythonPath };
+        const interpreter = { path: pythonPath } as PythonEnvironment;
         const workspaceFolderUri = Uri.file(__dirname);
         const selectionService = mock(MockAutoSelectionService);
         when(selectionService.getAutoSelectedInterpreter(workspaceFolderUri)).thenReturn(interpreter);
@@ -128,12 +134,24 @@ suite('Python Settings - pythonPath', () => {
         configSettings.update(pythonSettings.object);
 
         expect(configSettings.pythonPath).to.be.equal(pythonPath);
-        verify(selectionService.getAutoSelectedInterpreter(workspaceFolderUri)).once();
+    });
+    test("If we don't have a custom default python path and we do have an auto selected interpreter, then use it", () => {
+        const pythonPath = path.join(__dirname, 'this is a python path that was auto selected');
+        const interpreter = { path: pythonPath } as PythonEnvironment;
+        const workspaceFolderUri = Uri.file(__dirname);
+        const selectionService = mock(MockAutoSelectionService);
+        when(selectionService.getAutoSelectedInterpreter(workspaceFolderUri)).thenReturn(interpreter);
+        configSettings = new CustomPythonSettings(workspaceFolderUri, instance(selectionService));
+        pythonSettings.setup((p) => p.get(typemoq.It.isValue('pythonPath'))).returns(() => 'custom');
+        pythonSettings.setup((p) => p.get(typemoq.It.isValue('defaultInterpreterPath'))).returns(() => 'python');
+        configSettings.update(pythonSettings.object);
+
+        expect(configSettings.defaultInterpreterPath).to.be.equal(pythonPath);
     });
     test("If user is in Deprecate Python Path experiment and we don't have a custom python path, get the autoselected interpreter and use it if it's safe", () => {
         const resource = Uri.parse('a');
         const pythonPath = path.join(__dirname, 'this is a python path that was auto selected');
-        const interpreter: any = { path: pythonPath };
+        const interpreter = { path: pythonPath } as PythonEnvironment;
         const selectionService = mock(MockAutoSelectionService);
         const interpreterSecurityService = typemoq.Mock.ofType<IInterpreterSecurityService>();
         when(selectionService.getAutoSelectedInterpreter(resource)).thenReturn(interpreter);
@@ -158,12 +176,11 @@ suite('Python Settings - pythonPath', () => {
         experimentsManager.verifyAll();
         interpreterPathService.verifyAll();
         pythonSettings.verifyAll();
-        verify(selectionService.getAutoSelectedInterpreter(resource)).once();
     });
     test("If user is in Deprecate Python Path experiment and we don't have a custom python path, get the autoselected interpreter and but don't use it if it's not safe", () => {
         const resource = Uri.parse('a');
         const pythonPath = path.join(__dirname, 'this is a python path that was auto selected');
-        const interpreter: any = { path: pythonPath };
+        const interpreter = { path: pythonPath } as PythonEnvironment;
         const selectionService = mock(MockAutoSelectionService);
         const interpreterSecurityService = typemoq.Mock.ofType<IInterpreterSecurityService>();
         when(selectionService.getAutoSelectedInterpreter(resource)).thenReturn(interpreter);
@@ -188,7 +205,6 @@ suite('Python Settings - pythonPath', () => {
         experimentsManager.verifyAll();
         interpreterPathService.verifyAll();
         pythonSettings.verifyAll();
-        verify(selectionService.getAutoSelectedInterpreter(resource)).once();
     });
     test('If user is in Deprecate Python Path experiment, use the new API to fetch Python Path', () => {
         const resource = Uri.parse('a');
