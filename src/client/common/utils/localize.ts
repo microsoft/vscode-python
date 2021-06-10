@@ -35,7 +35,7 @@ export namespace Diagnostics {
     );
     export const removedPythonPathFromSettings = localize(
         'diagnostics.removedPythonPathFromSettings',
-        'We removed the "python.pythonPath" setting from your settings.json file as the setting is no longer used by the Python extension. You can get the path of your selected interpreter in the Python output channel. [Learn more](https://aka.ms/AA7jfor).',
+        'The "python.pythonPath" setting in your settings.json is no longer used by the Python extension. If you want, you can use a new setting called "python.defaultInterpreterPath" instead. Keep in mind that you need to change the value of this setting manually as the Python extension doesn’t modify it when you change interpreters. [Learn more](https://aka.ms/AA7jfor).',
     );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',

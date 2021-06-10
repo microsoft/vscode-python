@@ -108,7 +108,6 @@
     "Installer.searchForHelp": "搜索帮助",
     "Installer.couldNotInstallLibrary": "无法安装 {0} 。如果 pip 不可用，请使用选择的包管理器手动将此库安装到您的 Python 环境中。",
     "Installer.dataScienceInstallPrompt": "数据科学库 {0} 未安装，是否安装？",
-    "diagnostics.removedPythonPathFromSettings": "已在 settings.json 文件中删除了 \"python.pythonPath\" ，因为 Python 扩展不再使用该设置。您可以在 Python 输出中获取所选解释器的路径。[了解更多](https://aka.ms/AA7jfor).",
     "diagnostics.warnSourceMaps": "已启用 Source Map 支持，这会影响 Python 扩展的性能。",
     "diagnostics.disableSourceMaps": "禁用 Source Map 支持",
     "diagnostics.warnBeforeEnablingSourceMaps": "启用 Source Map 支持将影响 Python 扩展的性能。",
