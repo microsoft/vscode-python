@@ -1,5 +1,12 @@
 # Changelog
 
+## 2021.5.3 (10 June 2021)
+
+### Fixes
+
+1. Fix go to definition in Python notebooks.
+   ([#16385](https://github.com/microsoft/vscode-python/issues/16385))
+
 ## 2021.5.2 (14 May 2021)
 
 ### Fixes
