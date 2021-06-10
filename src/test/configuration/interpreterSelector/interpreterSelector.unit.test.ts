@@ -8,7 +8,7 @@ import { Uri } from 'vscode';
 import { DeprecatePythonPath } from '../../../client/common/experiments/groups';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IExperimentsManager } from '../../../client/common/types';
+import { IExperimentService } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { IInterpreterSecurityService } from '../../../client/interpreter/autoSelection/types';
 import { InterpreterSelector } from '../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
@@ -45,7 +45,7 @@ suite('Interpreters - selector', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let comparer: TypeMoq.IMock<IInterpreterComparer>;
-    let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
+    let experimentsManager: TypeMoq.IMock<IExperimentService>;
     let interpreterSecurityService: TypeMoq.IMock<IInterpreterSecurityService>;
     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
     const ignoreCache = false;
@@ -61,11 +61,8 @@ suite('Interpreters - selector', () => {
     let selector: TestInterpreterSelector;
 
     setup(() => {
-        experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
-        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
-        experimentsManager
-            .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-            .returns(() => undefined);
+        experimentsManager = TypeMoq.Mock.ofType<IExperimentService>();
+        experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
         interpreterSecurityService = TypeMoq.Mock.ofType<IInterpreterSecurityService>();
         comparer = TypeMoq.Mock.ofType<IInterpreterComparer>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
@@ -147,10 +144,7 @@ suite('Interpreters - selector', () => {
 
         interpreterSecurityService.setup((i) => i.isSafe('interpreter3' as any)).returns(() => undefined);
         experimentsManager.reset();
-        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
-        experimentsManager
-            .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-            .returns(() => undefined);
+        experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
 
         selector.suggestionToQuickPickItem = (item, _) => Promise.resolve(item as any);
         const suggestion = await selector.getSuggestions(folder1.uri, ignoreCache);

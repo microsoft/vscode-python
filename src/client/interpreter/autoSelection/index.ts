@@ -9,7 +9,7 @@ import { IWorkspaceService } from '../../common/application/types';
 import { DeprecatePythonPath } from '../../common/experiments/groups';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IExperimentsManager, IPersistentState, IPersistentStateFactory, Resource } from '../../common/types';
+import { IExperimentService, IPersistentState, IPersistentStateFactory, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { compareSemVerLikeVersions } from '../../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -68,7 +68,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         workspaceInterpreter: IInterpreterAutoSelectionRule,
         @inject(IInterpreterAutoSelectionProxyService) proxy: IInterpreterAutoSelectionProxyService,
         @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
-        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
+        @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(IInterpreterSecurityService) private readonly interpreterSecurityService: IInterpreterSecurityService,
     ) {
         // It is possible we area always opening the same workspace folder, but we still need to determine and cache
@@ -133,7 +133,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         // This method gets invoked from settings class, and this class in turn uses classes that relies on settings.
         // I.e. we can end up in a recursive loop.
         const interpreter = this._getAutoSelectedInterpreter(resource);
-        if (!this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
+        if (!this.experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             return interpreter; // We do not about security service when not in experiment.
         }
         // Unless the interpreter is marked as unsafe, return interpreter.

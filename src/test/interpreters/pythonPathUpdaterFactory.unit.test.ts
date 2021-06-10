@@ -2,8 +2,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
-import { DeprecatePythonPath } from '../../client/common/experiments/groups';
-import { IExperimentsManager, IInterpreterPathService } from '../../client/common/types';
+import { IExperimentService, IInterpreterPathService } from '../../client/common/types';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
 import { IPythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/types';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -11,23 +10,20 @@ import { IServiceContainer } from '../../client/ioc/types';
 suite('Python Path Settings Updater', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
-    let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
+    let experimentsManager: TypeMoq.IMock<IExperimentService>;
     let interpreterPathService: TypeMoq.IMock<IInterpreterPathService>;
     let updaterServiceFactory: IPythonPathUpdaterServiceFactory;
     function setupMocks(inExperiment: boolean = false) {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
-        experimentsManager.setup((e) => e.inExperiment(TypeMoq.It.isAny())).returns(() => inExperiment);
-        experimentsManager
-            .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-            .returns(() => undefined);
+        experimentsManager = TypeMoq.Mock.ofType<IExperimentService>();
+        experimentsManager.setup((e) => e.inExperimentSync(TypeMoq.It.isAny())).returns(() => inExperiment);
         interpreterPathService = TypeMoq.Mock.ofType<IInterpreterPathService>();
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
         serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IExperimentsManager)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IExperimentService)))
             .returns(() => experimentsManager.object);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterPathService)))

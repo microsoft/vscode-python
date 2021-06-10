@@ -7,7 +7,7 @@ import { ConfigurationTarget, DiagnosticSeverity } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { DeprecatePythonPath } from '../../../common/experiments/groups';
-import { IDisposableRegistry, IExperimentsManager, IOutputChannel, Resource } from '../../../common/types';
+import { IDisposableRegistry, IExperimentService, IOutputChannel, Resource } from '../../../common/types';
 import { Common, Diagnostics } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
@@ -48,9 +48,8 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
     }
 
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
-        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
-        if (!experiments.inExperiment(DeprecatePythonPath.experiment)) {
+        const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
+        if (!experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             return [];
         }
         const setting = this.workspaceService.getConfiguration('python', resource).inspect<string>('pythonPath');

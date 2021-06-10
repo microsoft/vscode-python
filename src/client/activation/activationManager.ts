@@ -11,7 +11,7 @@ import { DEFAULT_INTERPRETER_SETTING, PYTHON_LANGUAGE } from '../common/constant
 import { DeprecatePythonPath } from '../common/experiments/groups';
 import { traceDecorators } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
-import { IDisposable, IExperimentsManager, IInterpreterPathService, Resource } from '../common/types';
+import { IDisposable, IExperimentService, IInterpreterPathService, Resource } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { IInterpreterAutoSelectionService, IInterpreterSecurityService } from '../interpreter/autoSelection/types';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -35,7 +35,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
-        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
+        @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
         @inject(IInterpreterSecurityService) private readonly interpreterSecurityService: IInterpreterSecurityService,
     ) {}
@@ -67,10 +67,9 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         }
         this.activatedWorkspaces.add(key);
 
-        if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
+        if (this.experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             await this.interpreterPathService.copyOldInterpreterStorageValuesToNew(resource);
         }
-        this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
 
         // Get latest interpreter list in the background.
         this.interpreterService.getInterpreters(resource).ignoreErrors();
@@ -103,7 +102,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     }
 
     public async evaluateAutoSelectedInterpreterSafety(resource: Resource) {
-        if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
+        if (this.experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             const workspaceKey = this.getWorkspaceKey(resource);
             const interpreterSettingValue = this.interpreterPathService.get(resource);
             if (interpreterSettingValue.length === 0 || interpreterSettingValue === DEFAULT_INTERPRETER_SETTING) {
@@ -125,7 +124,6 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
                 }
             }
         }
-        this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
     }
 
     protected addHandlers() {

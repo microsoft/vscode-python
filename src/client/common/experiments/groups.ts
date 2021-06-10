@@ -7,8 +7,7 @@ export enum ShowExtensionSurveyPrompt {
  * Experiment to check whether the extension should deprecate `python.pythonPath` setting
  */
 export enum DeprecatePythonPath {
-    control = 'DeprecatePythonPath - control',
-    experiment = 'DeprecatePythonPath - experiment',
+    experiment = 'pythonDeprecatePythonPath',
 }
 
 // Experiment to switch Jedi to use an LSP instead of direct providers
