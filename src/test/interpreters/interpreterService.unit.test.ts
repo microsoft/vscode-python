@@ -20,7 +20,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
-    IExperimentsManager,
     IInterpreterPathService,
     InterpreterConfigurationScope,
     IPersistentState,
@@ -73,7 +72,6 @@ suite('Interpreters service', () => {
     let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let interpreterPathService: TypeMoq.IMock<IInterpreterPathService>;
-    let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
     let experimentService: TypeMoq.IMock<IExperimentService>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
 
@@ -82,7 +80,6 @@ suite('Interpreters service', () => {
         serviceManager = new ServiceManager(cont);
         serviceContainer = new ServiceContainer(cont);
 
-        experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
         experimentService = TypeMoq.Mock.ofType<IExperimentService>();
         interpreterPathService = TypeMoq.Mock.ofType<IInterpreterPathService>();
         updater = TypeMoq.Mock.ofType<IPythonPathUpdaterServiceManager>();
@@ -131,7 +128,6 @@ suite('Interpreters service', () => {
             INTERPRETER_LOCATOR_SERVICE,
         );
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fileSystem.object);
-        serviceManager.addSingletonInstance<IExperimentsManager>(IExperimentsManager, experimentsManager.object);
         serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, experimentService.object);
         serviceManager.addSingletonInstance<IInterpreterPathService>(
             IInterpreterPathService,
@@ -198,10 +194,7 @@ suite('Interpreters service', () => {
             const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
-            experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
-            experimentsManager
-                .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-                .returns(() => undefined);
+            experimentService.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
             workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
             workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
             let activeTextEditorChangeHandler: (e: TextEditor | undefined) => any | undefined;
@@ -228,10 +221,7 @@ suite('Interpreters service', () => {
             const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
-            experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
-            experimentsManager
-                .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-                .returns(() => undefined);
+            experimentService.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
             workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
             workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
             let activeTextEditorChangeHandler: (e?: TextEditor | undefined) => any | undefined;
@@ -253,10 +243,7 @@ suite('Interpreters service', () => {
             const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
-            experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
-            experimentsManager
-                .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-                .returns(() => undefined);
+            experimentService.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
             workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
             workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
             let interpreterPathServiceHandler: (e: InterpreterConfigurationScope) => any | undefined = () => {

@@ -34,7 +34,6 @@ import { ConfigurationService } from '../../client/common/configuration/service'
 import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
 import { DiscoveryVariants } from '../../client/common/experiments/groups';
-import { ExperimentsManager } from '../../client/common/experiments/manager';
 import { ExperimentService } from '../../client/common/experiments/service';
 import {
     ExtensionInsidersDailyChannelRule,
@@ -99,7 +98,6 @@ import {
     ICurrentProcess,
     IEditorUtils,
     IExperimentService,
-    IExperimentsManager,
     IExtensions,
     IFileDownloader,
     IHttpClient,
@@ -262,7 +260,6 @@ suite('Module Installer', () => {
                 PowershellTerminalActivationFailedHandler,
             );
             ioc.serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
-            ioc.serviceManager.addSingleton<IExperimentsManager>(IExperimentsManager, ExperimentsManager);
             ioc.serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
 
             ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(

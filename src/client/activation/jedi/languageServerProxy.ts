@@ -13,7 +13,7 @@ import {
 import { ChildProcess } from 'child_process';
 import { DeprecatePythonPath } from '../../common/experiments/groups';
 import { traceDecorators, traceError } from '../../common/logger';
-import { IExperimentsManager, IInterpreterPathService, Resource } from '../../common/types';
+import { IExperimentService, IInterpreterPathService, Resource } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -41,7 +41,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
     constructor(
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
         @inject(ITestingService) private readonly testManager: ITestingService,
-        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
+        @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
     ) {}
 
@@ -166,7 +166,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         const progressReporting = new ProgressReporting(this.languageClient!);
         this.disposables.push(progressReporting);
 
-        if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
+        if (this.experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             this.disposables.push(
                 this.interpreterPathService.onDidChange(() => {
                     // Manually send didChangeConfiguration in order to get the server to re-query

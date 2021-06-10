@@ -12,7 +12,7 @@ import { DeprecatePythonPath } from '../experiments/groups';
 import {
     IConfigurationService,
     IDefaultLanguageServer,
-    IExperimentsManager,
+    IExperimentService,
     IInterpreterPathService,
     IPythonSettings,
 } from '../types';
@@ -30,7 +30,7 @@ export class ConfigurationService implements IConfigurationService {
             IInterpreterAutoSelectionService,
         );
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
         const interpreterSecurityService = this.serviceContainer.get<IInterpreterSecurityService>(
             IInterpreterSecurityService,
         );
@@ -53,10 +53,9 @@ export class ConfigurationService implements IConfigurationService {
         resource?: Uri,
         configTarget?: ConfigurationTarget,
     ): Promise<void> {
-        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-        const inExperiment = experiments.inExperiment(DeprecatePythonPath.experiment);
-        experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+        const inExperiment = experiments.inExperimentSync(DeprecatePythonPath.experiment);
         const defaultSetting = {
             uri: resource,
             target: configTarget || ConfigurationTarget.WorkspaceFolder,

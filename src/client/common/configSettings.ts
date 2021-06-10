@@ -32,7 +32,7 @@ import {
     IAutoCompleteSettings,
     IDefaultLanguageServer,
     IExperiments,
-    IExperimentsManager,
+    IExperimentService,
     IFormattingSettings,
     IInterpreterPathService,
     ILintingSettings,
@@ -166,7 +166,7 @@ export class PythonSettings implements IPythonSettings {
         workspaceFolder: Resource,
         private readonly interpreterAutoSelectionService: IInterpreterAutoSelectionProxyService,
         workspace?: IWorkspaceService,
-        private readonly experimentsManager?: IExperimentsManager,
+        private readonly experimentsManager?: IExperimentService,
         private readonly interpreterPathService?: IInterpreterPathService,
         private readonly interpreterSecurityService?: IInterpreterSecurityService,
         private readonly defaultLS?: IDefaultLanguageServer,
@@ -180,7 +180,7 @@ export class PythonSettings implements IPythonSettings {
         resource: Uri | undefined,
         interpreterAutoSelectionService: IInterpreterAutoSelectionProxyService,
         workspace?: IWorkspaceService,
-        experimentsManager?: IExperimentsManager,
+        experimentsManager?: IExperimentService,
         interpreterPathService?: IInterpreterPathService,
         interpreterSecurityService?: IInterpreterSecurityService,
         defaultLS?: IDefaultLanguageServer,
@@ -668,8 +668,7 @@ export class PythonSettings implements IPythonSettings {
          * But we can still use it here for this particular experiment. Reason being that this experiment only changes
          * `pythonPath` setting, and I've checked that `pythonPath` setting is not accessed anywhere in the constructor.
          */
-        const inExperiment = this.experimentsManager?.inExperiment(DeprecatePythonPath.experiment);
-        this.experimentsManager?.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+        const inExperiment = this.experimentsManager?.inExperimentSync(DeprecatePythonPath.experiment);
         // Use the interpreter path service if in the experiment otherwise use the normal settings
         this.pythonPath = systemVariables.resolveAny(
             inExperiment && this.interpreterPathService

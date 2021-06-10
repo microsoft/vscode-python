@@ -21,7 +21,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
-    IExperimentsManager,
     IExtensions,
     IOutputChannel,
 } from './common/types';
@@ -136,9 +135,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
     // XXX Move this *after* abExperiments is activated?
     setLoggingLevel(configuration.getSettings().logging.level);
-
-    const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-    await abExperiments.activate();
 
     const languageServerType = configuration.getSettings().languageServer;
 

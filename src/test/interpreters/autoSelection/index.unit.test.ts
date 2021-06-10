@@ -9,11 +9,11 @@ import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
-import { ExperimentsManager } from '../../../client/common/experiments/manager';
+import { ExperimentService } from '../../../client/common/experiments/service';
 import { PersistentState, PersistentStateFactory } from '../../../client/common/persistentState';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IExperimentsManager, IPersistentStateFactory, Resource } from '../../../client/common/types';
+import { IExperimentService, IPersistentStateFactory, Resource } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { InterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection';
 import { InterpreterSecurityService } from '../../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
@@ -52,7 +52,7 @@ suite('Interpreters - Auto Selection', () => {
     let helper: IInterpreterHelper;
     let proxy: IInterpreterAutoSelectionProxyService;
     let interpreterSecurityService: IInterpreterSecurityService;
-    let experiments: IExperimentsManager;
+    let experiments: IExperimentService;
     class InterpreterAutoSelectionServiceTest extends InterpreterAutoSelectionService {
         public initializeStore(resource: Resource): Promise<void> {
             return super.initializeStore(resource);
@@ -80,8 +80,8 @@ suite('Interpreters - Auto Selection', () => {
         workspaceInterpreter = mock(WorkspaceVirtualEnvInterpretersAutoSelectionRule);
         helper = mock(InterpreterHelper);
         proxy = mock(InterpreterAutoSelectionProxyService);
-        experiments = mock(ExperimentsManager);
-        when(experiments.inExperiment(anything())).thenReturn(false);
+        experiments = mock(ExperimentService);
+        when(experiments.inExperimentSync(anything())).thenReturn(false);
 
         autoSelectionService = new InterpreterAutoSelectionServiceTest(
             instance(workspaceService),
@@ -240,7 +240,7 @@ suite('Interpreters - Auto Selection', () => {
         expect(eventFired).to.deep.equal(false, 'event fired');
     });
     test('When in experiment, if interpreter chosen is unsafe, return `undefined` as the auto-selected interpreter', async () => {
-        when(experiments.inExperiment(anything())).thenReturn(true);
+        when(experiments.inExperimentSync(anything())).thenReturn(true);
         const interpreterInfo = { path: 'pythonPath' } as any;
         autoSelectionService._getAutoSelectedInterpreter = () => interpreterInfo;
         reset(interpreterSecurityService);
