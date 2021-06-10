@@ -296,6 +296,15 @@ export namespace InterpreterQuickPickList {
         label: localize('InterpreterQuickPickList.enterPath.label', 'Enter interpreter path...'),
         placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python interpreter.'),
     };
+    export const defaultInterpreterPath = {
+        label: (): string => {
+            const labelText = localize(
+                'InterpreterQuickPickList.defaultInterpreterPath.label',
+                'Use default Python interpreter path',
+            );
+            return `${Octicons.Star} ${labelText()}`;
+        },
+    };
     export const findPath = {
         detail: localize(
             'InterpreterQuickPickList.findPath.detail',
