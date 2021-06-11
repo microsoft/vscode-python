@@ -27,16 +27,14 @@ import { WindowsRegistryLocator } from './discovery/locators/services/windowsReg
 import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreLocator';
 import { getEnvironmentInfoService } from './info/environmentInfoService';
 import { isComponentEnabled, registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
-import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
 import { PoetryLocator } from './discovery/locators/services/poetryLocator';
 
 /**
  * Set up the Python environments component (during extension activation).'
  */
 export async function initialize(ext: ExtensionState): Promise<PythonEnvironments> {
-    const environmentsSecurity = new EnvironmentsSecurity();
     const api = new PythonEnvironments(
-        () => createLocators(ext, environmentsSecurity),
+        () => createLocators(ext),
         // Other sub-components (e.g. config, "current" env) will go here.
     );
     ext.disposables.push(api);
@@ -48,7 +46,6 @@ export async function initialize(ext: ExtensionState): Promise<PythonEnvironment
         // These are what get wrapped in the legacy adapter.
         ext.legacyIOC.serviceManager,
         api,
-        environmentsSecurity,
     );
     // Deal with legacy IOC.
     await registerLegacyDiscoveryForIOC(ext.legacyIOC.serviceManager);
@@ -84,7 +81,6 @@ export async function activate(api: PythonEnvironments): Promise<ActivationResul
 async function createLocators(
     ext: ExtensionState,
     // This is shared.
-    environmentsSecurity: IEnvironmentsSecurity,
 ): Promise<ILocator> {
     // Create the low-level locators.
     let locators: ILocator = new ExtensionLocators(
@@ -102,8 +98,6 @@ async function createLocators(
         locators,
         // These are shared.
         envInfoService,
-        // Class methods may depend on other properties which belong to the class, so bind the correct context.
-        environmentsSecurity.isEnvSafe.bind(environmentsSecurity),
     );
     const caching = await createCachingLocator(
         ext,
