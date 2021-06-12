@@ -410,9 +410,7 @@ export const testScenarios: ITestScenarioDetails[] = [
         discoveryOutput: 'one.output',
         runOutput: 'one.xml',
         testsToRun: IGNORED_TESTS_TO_RUN,
-        testDetails: allTestDetails.filter(() => {
-            return true;
-        }),
+        testDetails: allTestDetails.filter(() => true),
     },
     {
         scenarioName: 'Run Specific Test File',
@@ -435,9 +433,7 @@ export const testScenarios: ITestScenarioDetails[] = [
             testFunction: [],
             testSuite: [],
         },
-        testDetails: allTestDetails.filter((td) => {
-            return td.fileName === path.join('tests', 'test_another_pytest.py');
-        }),
+        testDetails: allTestDetails.filter((td) => td.fileName === path.join('tests', 'test_another_pytest.py')),
     },
     {
         scenarioName: 'Run Specific Test Suite',
@@ -445,9 +441,7 @@ export const testScenarios: ITestScenarioDetails[] = [
         runOutput: 'four.xml',
         testsToRun: IGNORED_TESTS_TO_RUN,
         testSuiteIndex: 0,
-        testDetails: allTestDetails.filter((td) => {
-            return td.className === 'test_root.Test_Root_test1';
-        }),
+        testDetails: allTestDetails.filter((td) => td.className === 'test_root.Test_Root_test1'),
     },
     {
         scenarioName: 'Run Specific Test Function',
@@ -455,9 +449,7 @@ export const testScenarios: ITestScenarioDetails[] = [
         runOutput: 'five.xml',
         testsToRun: IGNORED_TESTS_TO_RUN,
         testFunctionIndex: 0,
-        testDetails: allTestDetails.filter((td) => {
-            return td.testName === 'test_Root_A';
-        }),
+        testDetails: allTestDetails.filter((td) => td.testName === 'test_Root_A'),
     },
     {
         scenarioName: 'Run Failed Tests',
@@ -465,9 +457,7 @@ export const testScenarios: ITestScenarioDetails[] = [
         runOutput: 'two.xml',
         testsToRun: IGNORED_TESTS_TO_RUN,
         // We ignore the "td" arg to the filter callback.
-        testDetails: allTestDetails.filter(() => {
-            return true;
-        }),
+        testDetails: allTestDetails.filter(() => true),
         shouldRunFailed: true,
         failedRunOutput: 'two.again.xml',
     },

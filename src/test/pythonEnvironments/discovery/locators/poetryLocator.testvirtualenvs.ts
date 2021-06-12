@@ -43,7 +43,7 @@ suite('Poetry Watcher', async () => {
     suiteTeardown(() => sinon.restore());
 });
 
-suite('Poetry Locator', async function () {
+suite('Poetry Locator', async () => {
     let locator: ILocator;
     suiteSetup(async function () {
         if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {

@@ -40,9 +40,7 @@ suite('Multiroot Environment Variables Provider', () => {
 
         when(workspace.onDidChangeConfiguration).thenReturn(noop as any);
         when(workspace.getConfiguration('python', anything())).thenReturn({
-            get: (settingName: string) => {
-                return settingName === 'envFile' ? envFile : '';
-            },
+            get: (settingName: string) => (settingName === 'envFile' ? envFile : ''),
         } as any);
         provider = new EnvironmentVariablesProvider(
             instance(envVarsService),

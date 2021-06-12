@@ -337,9 +337,7 @@ suite('Module Installer only', () => {
                                     TypeMoq.It.isAny(),
                                 ),
                             )
-                                .returns(() => {
-                                    return promptDeferred!.promise;
-                                })
+                                .returns(() => promptDeferred!.promise)
                                 .verifiable(TypeMoq.Times.once());
                             const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
                             persistVal.setup((p) => p.value).returns(() => false);
@@ -427,17 +425,11 @@ suite('Module Installer only', () => {
                                         TypeMoq.It.isValue('Do not show again'),
                                     ),
                                 )
-                                    .returns(async () => {
-                                        return 'Do not show again';
-                                    })
+                                    .returns(async () => 'Do not show again')
                                     .verifiable(TypeMoq.Times.once());
                                 const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
                                 let mockPersistVal = false;
-                                persistVal
-                                    .setup((p) => p.value)
-                                    .returns(() => {
-                                        return mockPersistVal;
-                                    });
+                                persistVal.setup((p) => p.value).returns(() => mockPersistVal);
                                 persistVal
                                     .setup((p) => p.updateValue(TypeMoq.It.isValue(true)))
                                     .returns(() => {
@@ -452,9 +444,7 @@ suite('Module Installer only', () => {
                                             TypeMoq.It.isValue(undefined),
                                         ),
                                     )
-                                    .returns(() => {
-                                        return persistVal.object;
-                                    })
+                                    .returns(() => persistVal.object)
                                     .verifiable(TypeMoq.Times.exactly(3));
 
                                 // Display first prompt.
@@ -485,9 +475,7 @@ suite('Module Installer only', () => {
                                         TypeMoq.It.isValue('Select Linter'),
                                     ),
                                 )
-                                    .returns(async () => {
-                                        return undefined;
-                                    })
+                                    .returns(async () => undefined)
                                     .verifiable(TypeMoq.Times.once());
                                 app.setup((a) =>
                                     a.showErrorMessage(
@@ -497,17 +485,11 @@ suite('Module Installer only', () => {
                                         TypeMoq.It.isValue('Do not show again'),
                                     ),
                                 )
-                                    .returns(async () => {
-                                        return undefined;
-                                    })
+                                    .returns(async () => undefined)
                                     .verifiable(TypeMoq.Times.never());
                                 const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
                                 let mockPersistVal = false;
-                                persistVal
-                                    .setup((p) => p.value)
-                                    .returns(() => {
-                                        return mockPersistVal;
-                                    });
+                                persistVal.setup((p) => p.value).returns(() => mockPersistVal);
                                 persistVal
                                     .setup((p) => p.updateValue(TypeMoq.It.isValue(true)))
                                     .returns(() => {
@@ -521,9 +503,7 @@ suite('Module Installer only', () => {
                                             TypeMoq.It.isValue(undefined),
                                         ),
                                     )
-                                    .returns(() => {
-                                        return persistVal.object;
-                                    });
+                                    .returns(() => persistVal.object);
 
                                 // Display the prompt.
                                 await installer.promptToInstall(product.value, resource);

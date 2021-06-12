@@ -63,7 +63,7 @@ import { WorkspaceVirtualEnvWatcherService } from '../../client/pythonEnvironmen
 import { registerLegacyDiscoveryForIOC } from '../../client/pythonEnvironments/legacyIOC';
 
 suite('Interpreters - Service Registry', () => {
-    test('Registrations', async function () {
+    test('Registrations', async () => {
         const serviceManager = mock(ServiceManager);
         const serviceContainer = mock(ServiceContainer);
         const experimentService = mock(ExperimentService);

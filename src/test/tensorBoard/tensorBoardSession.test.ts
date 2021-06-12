@@ -61,7 +61,7 @@ suite('TensorBoard session creation', async () => {
         }
     });
 
-    setup(async function () {
+    setup(async () => {
         sandbox = sinon.createSandbox();
         ({ serviceManager } = await initialize());
         sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(false);

@@ -107,12 +107,8 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
             return configMgr.enable();
         }
         return pythonConfig.update('testing.promptToConfigure', undefined).then(
-            () => {
-                return configMgr.enable();
-            },
-            (reason) => {
-                return configMgr.enable().then(() => Promise.reject(reason));
-            },
+            () => configMgr.enable(),
+            (reason) => configMgr.enable().then(() => Promise.reject(reason)),
         );
     }
 
@@ -147,9 +143,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
                 await configMgr
                     .configure(wkspace)
                     .then(() => this._enableTest(wkspace, configMgr))
-                    .catch((reason) => {
-                        return this._enableTest(wkspace, configMgr).then(() => Promise.reject(reason));
-                    });
+                    .catch((reason) => this._enableTest(wkspace, configMgr).then(() => Promise.reject(reason)));
             }
             const cfg = this.serviceContainer.get<ITestConfigSettingsService>(ITestConfigSettingsService);
             try {

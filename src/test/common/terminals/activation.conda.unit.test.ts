@@ -660,11 +660,7 @@ suite('Terminal Environment Activation conda', () => {
             // each test simply tests the base windows activate command,
             // and then the specific result from the terminal selected.
             const condaSrv = TypeMoq.Mock.ofType<ICondaService>();
-            condaSrv
-                .setup((c) => c.getCondaFile())
-                .returns(async () => {
-                    return path.join(testParams.basePath, 'conda.exe');
-                });
+            condaSrv.setup((c) => c.getCondaFile()).returns(async () => path.join(testParams.basePath, 'conda.exe'));
 
             const tstCmdProvider = new CondaActivationCommandProvider(
                 condaSrv.object,

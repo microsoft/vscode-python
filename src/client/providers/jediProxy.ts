@@ -475,15 +475,13 @@ export class JediProxy implements Disposable {
         const defs = JediProxy.getProperty<any[]>(response, 'results');
         const defResult: IHoverResult = {
             requestId: command.id,
-            items: defs.map((def) => {
-                return {
-                    kind: getMappedVSCodeSymbol(def.type),
-                    description: def.description,
-                    signature: def.signature,
-                    docstring: def.docstring,
-                    text: def.text,
-                };
-            }),
+            items: defs.map((def) => ({
+                kind: getMappedVSCodeSymbol(def.type),
+                description: def.description,
+                signature: def.signature,
+                docstring: def.docstring,
+                text: def.text,
+            })),
         };
         this.safeResolve(command, defResult);
     }
@@ -520,15 +518,13 @@ export class JediProxy implements Disposable {
         defs = Array.isArray(defs) ? defs : [];
         const refResult: IReferenceResult = {
             requestId: command.id,
-            references: defs.map((item) => {
-                return {
-                    columnIndex: item.column,
-                    fileName: item.fileName,
-                    lineIndex: item.line - 1,
-                    moduleName: item.moduleName,
-                    name: item.name,
-                };
-            }),
+            references: defs.map((item) => ({
+                columnIndex: item.column,
+                fileName: item.fileName,
+                lineIndex: item.line - 1,
+                moduleName: item.moduleName,
+                name: item.name,
+            })),
         };
         this.safeResolve(command, refResult);
     }
@@ -609,11 +605,11 @@ export class JediProxy implements Disposable {
                 .catch(() => ''),
             // Python specific site packages.
             this.getPathFromPython(internalPython.getSitePackages)
-                .then((libPath) => {
+                .then((libPath) =>
                     // On windows we also need the libs path (second item will return c:\xxx\lib\site-packages).
                     // This is returned by "from distutils.sysconfig import get_python_lib; print(get_python_lib())".
-                    return IS_WINDOWS && libPath.length > 0 ? path.join(libPath, '..') : libPath;
-                })
+                    IS_WINDOWS && libPath.length > 0 ? path.join(libPath, '..') : libPath,
+                )
                 .catch(() => ''),
             // Python global site packages, as a fallback in case user hasn't installed them in custom environment.
             this.getPathFromPython(internalPython.getUserSitePackages).catch(() => ''),

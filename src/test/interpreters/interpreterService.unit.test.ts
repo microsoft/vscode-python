@@ -259,14 +259,10 @@ suite('Interpreters service', () => {
                 .returns(() => undefined);
             workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
             workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
-            let interpreterPathServiceHandler: (e: InterpreterConfigurationScope) => any | undefined = () => {
-                return 0;
-            };
+            let interpreterPathServiceHandler: (e: InterpreterConfigurationScope) => any | undefined = () => 0;
             documentManager
                 .setup((d) => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                .returns(() => {
-                    return { dispose: noop };
-                });
+                .returns(() => ({ dispose: noop }));
             const i: InterpreterConfigurationScope = {
                 uri: Uri.parse('a'),
                 configTarget: ConfigurationTarget.Workspace,
@@ -285,9 +281,7 @@ suite('Interpreters service', () => {
                 .callback((cb) => {
                     interpreterPathServiceHandler = cb;
                 })
-                .returns(() => {
-                    return { dispose: noop };
-                });
+                .returns(() => ({ dispose: noop }));
             serviceManager.addSingletonInstance(IDocumentManager, documentManager.object);
 
             service.initialize();
@@ -671,12 +665,10 @@ suite('Interpreters service', () => {
             const info = { path: 'hell', envType: EnvironmentType.Venv };
             state
                 .setup((s) => s.value)
-                .returns(() => {
-                    return {
-                        fileHash,
-                        info: info as any,
-                    };
-                })
+                .returns(() => ({
+                    fileHash,
+                    info: info as any,
+                }))
                 .verifiable(TypeMoq.Times.atLeastOnce());
             state
                 .setup((s) => s.updateValue(TypeMoq.It.isAny()))
@@ -706,12 +698,10 @@ suite('Interpreters service', () => {
             const info = { path: 'hell', envType: EnvironmentType.Venv };
             state
                 .setup((s) => s.value)
-                .returns(() => {
-                    return {
-                        fileHash,
-                        info: info as any,
-                    };
-                })
+                .returns(() => ({
+                    fileHash,
+                    info: info as any,
+                }))
                 .verifiable(TypeMoq.Times.atLeastOnce());
             state
                 .setup((s) => s.updateValue(TypeMoq.It.isValue({ fileHash: 'different value' })))

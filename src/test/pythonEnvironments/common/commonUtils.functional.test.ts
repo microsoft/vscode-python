@@ -38,7 +38,7 @@ suite('pyenvs common utils - finding Python executables', () => {
     suite('mixed', () => {
         const rootName = 'root_mixed';
 
-        suiteSetup(async function () {
+        suiteSetup(async () => {
             if (IS_WINDOWS) {
                 await ensureFSTree(`
                     ./.data/
@@ -189,7 +189,7 @@ suite('pyenvs common utils - finding Python executables', () => {
         suite('names', () => {
             const rootName = 'root_name_patterns';
 
-            suiteSetup(async function () {
+            suiteSetup(async () => {
                 if (IS_WINDOWS) {
                     await ensureFSTree(`
                         ./.data/
@@ -274,7 +274,7 @@ suite('pyenvs common utils - finding Python executables', () => {
         suite('trees', () => {
             const rootName = 'root_layouts';
 
-            suiteSetup(async function () {
+            suiteSetup(async () => {
                 if (IS_WINDOWS) {
                     await ensureFSTree(`
                         ./.data/
@@ -454,7 +454,7 @@ suite('pyenvs common utils - finding Python executables', () => {
     suite('tricky cases', () => {
         const rootName = 'root_tricky';
 
-        suiteSetup(async function () {
+        suiteSetup(async () => {
             if (IS_WINDOWS) {
                 await ensureFSTree(`
                     ./.data/
