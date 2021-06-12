@@ -353,35 +353,35 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         );
     }
 
-    private openBlankNotebook(): void {
+    private openBlankNotebook = (): void => {
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenBlankNotebook);
-    }
+    };
 
-    private createPythonFile(): void {
+    private createPythonFile = (): void => {
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenBlankPythonFile);
-    }
+    };
 
-    private openCommandPalette(): void {
+    private openCommandPalette = (): void => {
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenCommandPalette);
-    }
+    };
 
-    private openCommandPaletteWithSelection(): void {
+    private openCommandPaletteWithSelection = (): void => {
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenCommandPaletteWithOpenNBSelected);
-    }
+    };
 
-    private openSampleNotebook(): void {
+    private openSampleNotebook = (): void => {
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenSampleNotebook);
-    }
+    };
 
-    private openInteractiveWindow(): void {
+    private openInteractiveWindow = (): void => {
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenInteractiveWindow);
-    }
+    };
 
-    private updateSettings(): void {
+    private updateSettings = (): void => {
         this.releaseNotes.showAgainSetting = !this.releaseNotes.showAgainSetting;
         this.postOffice.sendMessage<IStartPageMapping>(
             StartPageMessages.UpdateSettings,
             this.releaseNotes.showAgainSetting,
         );
-    }
+    };
 }
