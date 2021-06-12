@@ -88,6 +88,21 @@ function getSafeInt(value: string, defaultValue = 0): number {
     return num;
 }
 
+async function getTestCaseNodes(
+    testNode: TestItem<SupportedTestItemType>,
+    collection: TestItem<TestCase>[] = [],
+): Promise<TestItem<TestCase>[]> {
+    const nodes = Array.from(testNode.children.values());
+    for (const node of nodes) {
+        if (node instanceof TestCase) {
+            collection.push(node);
+        } else {
+            await getTestCaseNodes(node, collection);
+        }
+    }
+    return Promise.resolve(collection);
+}
+
 export async function updateResultFromJunitXml(
     outputXmlFile: string,
     testNode: TestItem<SupportedTestItemType>,
@@ -109,6 +124,17 @@ export async function updateResultFromJunitXml(
         runInstance.appendOutput(`Total number of tests failed with errors: ${errors}\r\n`);
         runInstance.appendOutput(`Total number of tests skipped: ${skipped}\r\n`);
 
+        const testCaseResults = junitSuite.testcase.map((t) => {
+            const o = {
+                ...t,
+            };
+            o.$.classname = t.$.classname
+                .replace(/\(\)/g, '')
+                .replace(/\.\./g, '.')
+                .replace(/\.\./g, '.')
+                .replace(/\.+$/, '');
+            return o;
+        });
         testCaseNodes.forEach((node) => {
             const result = junitSuite.testcase.find((t) => {
                 const idResult = `${t.$.classname}.${t.$.name}`;

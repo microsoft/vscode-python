@@ -81,7 +81,7 @@ export async function processTestNode(
     return Promise.resolve();
 }
 
-export interface ITestRunner {
+export interface ITestsRunner {
     runTests(request: TestRunRequest<PythonTestData>, options: TestRunOptions): Promise<void>;
 }
 
