@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { inject, injectable } from 'inversify';
 import { flatten } from 'lodash';
 import * as path from 'path';
 import { TestItem, Uri } from 'vscode';
@@ -11,8 +12,9 @@ import { ITestDiscovery, ITestDiscoveryHelper, PythonTestData } from '../common/
 import { WorkspaceTestRoot } from '../common/workspaceTestRoot';
 import { getTestFolders, preparePytestArgumentsForDiscovery } from './arguments';
 
+@injectable()
 export class PytestDiscoveryService implements ITestDiscovery {
-    constructor(private readonly discoveryHelper: ITestDiscoveryHelper) {}
+    constructor(@inject(ITestDiscoveryHelper) private readonly discoveryHelper: ITestDiscoveryHelper) {}
 
     public async discoverWorkspaceTests(options: TestDiscoveryOptions): Promise<TestItem<PythonTestData> | undefined> {
         // Get individual test directories selected by the user.

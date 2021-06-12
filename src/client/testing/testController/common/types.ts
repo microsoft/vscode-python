@@ -12,6 +12,7 @@ import { WorkspaceTestRoot } from './workspaceTestRoot';
 
 export type PythonTestData = WorkspaceTestRoot | TestFolder | TestFile | TestCollection | TestCase;
 
+export const ITestDiscovery = Symbol('ITestDiscovery');
 export interface ITestDiscovery {
     /**
      * Runs test discovery for the entire workspace.
@@ -20,6 +21,7 @@ export interface ITestDiscovery {
     discoverWorkspaceTests(options: TestDiscoveryOptions): Promise<TestItem<PythonTestData> | undefined>;
 }
 
+export const ITestDiscoveryHelper = Symbol('ITestDiscoveryHelper');
 export interface ITestDiscoveryHelper {
     runTestDiscovery(options: TestDiscoveryOptions): Promise<RawDiscoveredTests[]>;
 }

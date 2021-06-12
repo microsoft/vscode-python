@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { inject, injectable } from 'inversify';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
@@ -10,8 +11,9 @@ import { RawDiscoveredTests } from '../../common/services/types';
 import { TestDiscoveryOptions } from '../../common/types';
 import { ITestDiscoveryHelper } from './types';
 
+@injectable()
 export class TestDiscoveryHelper implements ITestDiscoveryHelper {
-    constructor(private readonly pythonExecFactory: IPythonExecutionFactory) {}
+    constructor(@inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory) {}
 
     public async runTestDiscovery(options: TestDiscoveryOptions): Promise<RawDiscoveredTests[]> {
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
