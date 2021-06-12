@@ -8,7 +8,20 @@ import {
     IInterpreterPathService,
     IToolExecutionPath,
     ToolExecutionPath,
-} from '../common/types';
+    IAsyncDisposableRegistry,
+    IBrowserService,
+    IConfigurationService,
+    ICryptoUtils,
+    ICurrentProcess,
+    IEditorUtils,
+    IExperimentsManager,
+    IExtensions,
+    IInstaller,
+    IPathUtils,
+    IPersistentStateFactory,
+    IRandom,
+    IsWindows,
+} from './types';
 import { IServiceManager } from '../ioc/types';
 import { JupyterExtensionDependencyManager } from '../jupyter/jupyterExtensionDependencyManager';
 import { ImportTracker } from '../telemetry/importTracker';
@@ -102,27 +115,13 @@ import {
     ITerminalServiceFactory,
     TerminalActivationProviders,
 } from './terminal/types';
-import {
-    IAsyncDisposableRegistry,
-    IBrowserService,
-    IConfigurationService,
-    ICryptoUtils,
-    ICurrentProcess,
-    IEditorUtils,
-    IExperimentsManager,
-    IExtensions,
-    IInstaller,
-    IPathUtils,
-    IPersistentStateFactory,
-    IRandom,
-    IsWindows,
-} from './types';
+
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { Random } from './utils/random';
 import { JupyterNotInstalledNotificationHelper } from '../jupyter/jupyterNotInstalledNotificationHelper';
 import { IJupyterNotInstalledNotificationHelper } from '../jupyter/types';
 
-export function registerTypes(serviceManager: IServiceManager) {
+export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
 
     serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
