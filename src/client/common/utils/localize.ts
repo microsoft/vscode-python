@@ -139,6 +139,12 @@ export namespace Jupyter {
 }
 
 export namespace TensorBoard {
+    export const invalidUrl = localize('TensorBoard.invalidUrl', 'Please enter a valid URL.');
+    export const enterRemoteUrl = localize('TensorBoard.enterRemoteUrl', 'Enter remote URL');
+    export const enterRemoteUrlDetail = localize(
+        'TensorBoard.enterRemoteUrlDetail',
+        'Enter a URL pointing to a remote directory containing your TensorBoard log files',
+    );
     export const useCurrentWorkingDirectoryDetail = localize(
         'TensorBoard.useCurrentWorkingDirectoryDetail',
         'TensorBoard will search for tfevent files in all subdirectories of the current working directory',

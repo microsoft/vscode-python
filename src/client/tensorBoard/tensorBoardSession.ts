@@ -268,7 +268,6 @@ export class TensorBoardSession {
         return tensorboardInstallStatus === ProductInstallStatus.Installed;
     }
 
-    // eslint-disable-next-line class-methods-use-this
     private async showFilePicker(): Promise<string | undefined> {
         const selection = await this.applicationShell.showOpenDialog({
             canSelectFiles: false,
@@ -285,6 +284,8 @@ export class TensorBoardSession {
 
     // eslint-disable-next-line class-methods-use-this
     private getQuickPickItems(logDir: string | undefined) {
+        const items = [];
+
         if (logDir) {
             const useCwd = {
                 label: TensorBoard.useCurrentWorkingDirectory(),
@@ -294,13 +295,21 @@ export class TensorBoardSession {
                 label: TensorBoard.selectAnotherFolder(),
                 detail: TensorBoard.selectAnotherFolderDetail(),
             };
-            return [useCwd, selectAnotherFolder];
+            items.push(useCwd, selectAnotherFolder);
+        } else {
+            const selectAFolder = {
+                label: TensorBoard.selectAFolder(),
+                detail: TensorBoard.selectAFolderDetail(),
+            };
+            items.push(selectAFolder);
         }
-        const selectAFolder = {
-            label: TensorBoard.selectAFolder(),
-            detail: TensorBoard.selectAFolderDetail(),
-        };
-        return [selectAFolder];
+
+        items.push({
+            label: TensorBoard.enterRemoteUrl(),
+            detail: TensorBoard.enterRemoteUrlDetail(),
+        });
+
+        return items;
     }
 
     // Display a quickpick asking the user to acknowledge our autopopulated log directory or
@@ -319,6 +328,7 @@ export class TensorBoardSession {
         const useCurrentWorkingDirectory = TensorBoard.useCurrentWorkingDirectory();
         const selectAFolder = TensorBoard.selectAFolder();
         const selectAnotherFolder = TensorBoard.selectAnotherFolder();
+        const enterRemoteUrl = TensorBoard.enterRemoteUrl();
         const items: QuickPickItem[] = this.getQuickPickItems(logDir);
         const item = await this.applicationShell.showQuickPick(items, {
             canPickMany: false,
@@ -331,6 +341,10 @@ export class TensorBoardSession {
             case selectAFolder:
             case selectAnotherFolder:
                 return this.showFilePicker();
+            case enterRemoteUrl:
+                return this.applicationShell.showInputBox({
+                    prompt: TensorBoard.enterRemoteUrlDetail(),
+                });
             default:
                 return undefined;
         }
