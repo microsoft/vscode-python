@@ -254,5 +254,5 @@
     "TensorBoard.launchNativeTensorBoardSessionCodeAction": "Launch TensorBoard session",
     "TensorBoard.launchNativeTensorBoardSessionCodeLens": "▶ Launch TensorBoard Session",
     "TensorBoard.enterRemoteUrl": "Enter remote URL",
-    "TensorBoard.enterRemoteUrlDetail": "Enter a URL pointing to a remote directory contianing your TensorBoard log files"
+    "TensorBoard.enterRemoteUrlDetail": "Enter a URL pointing to a remote directory containing your TensorBoard log files"
 }
