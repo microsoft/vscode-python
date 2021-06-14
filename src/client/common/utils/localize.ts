@@ -139,7 +139,6 @@ export namespace Jupyter {
 }
 
 export namespace TensorBoard {
-    export const invalidUrl = localize('TensorBoard.invalidUrl', 'Please enter a valid URL.');
     export const enterRemoteUrl = localize('TensorBoard.enterRemoteUrl', 'Enter remote URL');
     export const enterRemoteUrlDetail = localize(
         'TensorBoard.enterRemoteUrlDetail',
