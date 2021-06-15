@@ -75,9 +75,7 @@ export class TerminalHelper implements ITerminalHelper {
     ): Promise<string[] | undefined> {
         console.warn('TerminalHelper.getEnvironmentActivationCommands');
         const providers = [this.pipenv, this.pyenv, this.bashCShellFish, this.commandPromptAndPowerShell];
-        console.warn(
-            `resource: ${resource} - interpreter: ${JSON.stringify(interpreter)} - shell type: ${terminalShellType}`,
-        );
+        console.warn(`resource: ${resource} - interpreter: ${interpreter?.envPath} - shell type: ${terminalShellType}`);
         const promise = this.getActivationCommands(resource || undefined, interpreter, terminalShellType, providers);
         this.sendTelemetry(
             terminalShellType,
@@ -166,7 +164,7 @@ export class TerminalHelper implements ITerminalHelper {
             const activationCommands = interpreter
                 ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
                 : await provider.getActivationCommands(resource, terminalShellType);
-            console.warn(`activation commands for ${provider.constructor.name}: ${JSON.stringify(activationCommands)}`);
+            console.warn(`activation commands for ${provider.constructor.name}: ${activationCommands}`);
             if (Array.isArray(activationCommands) && activationCommands.length > 0) {
                 return activationCommands;
             }
