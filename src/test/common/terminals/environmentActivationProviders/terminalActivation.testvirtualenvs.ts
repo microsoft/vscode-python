@@ -8,16 +8,16 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
+// import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
-import { IExperimentService, IExperimentsManager } from '../../../../client/common/types';
+import { IExperimentService } from '../../../../client/common/types';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import {
     PYTHON_PATH,
     resetGlobalInterpreterPathSetting,
-    restorePythonPathInWorkspaceRoot,
+    // restorePythonPathInWorkspaceRoot,
     setGlobalInterpreterPath,
-    setPythonPathInWorkspaceRoot,
+    // setPythonPathInWorkspaceRoot,
     updateSetting,
     waitForCondition,
 } from '../../../common';
@@ -58,10 +58,10 @@ suite('Activation of Environments in Terminal', () => {
     };
     let terminalSettings: any;
     let pythonSettings: any;
-    let experiments: IExperimentsManager;
+    // let experiments: IExperimentsManager;
     const sandbox = sinon.createSandbox();
     suiteSetup(async () => {
-        sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(false);
+        sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(true);
         envPaths = await fs.readJson(envsLocation);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders![0].uri);
         pythonSettings = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders![0].uri);
@@ -71,7 +71,7 @@ suite('Activation of Environments in Terminal', () => {
 
         // Initialize experiment service and manager to support both experimentation systems.
         const serviceContainer = (await initialize()).serviceContainer;
-        experiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        // experiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
         const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
         sandbox.stub(experimentService, 'inExperiment').resolves(true);
     });
@@ -116,11 +116,11 @@ suite('Activation of Environments in Terminal', () => {
         );
         await terminalSettings.update('integrated.shell.linux', defaultShell.Linux, vscode.ConfigurationTarget.Global);
         await pythonSettings.update('condaPath', undefined, vscode.ConfigurationTarget.Workspace);
-        if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
-            await resetGlobalInterpreterPathSetting();
-        } else {
-            await restorePythonPathInWorkspaceRoot();
-        }
+        // if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
+        await resetGlobalInterpreterPathSetting();
+        // } else {
+        //     await restorePythonPathInWorkspaceRoot();
+        // }
     }
 
     /**
@@ -161,11 +161,11 @@ suite('Activation of Environments in Terminal', () => {
             vscode.workspace.workspaceFolders![0].uri,
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
-        if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
-            await setGlobalInterpreterPath(envPath);
-        } else {
-            await setPythonPathInWorkspaceRoot(envPath);
-        }
+        // if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
+        await setGlobalInterpreterPath(envPath);
+        // } else {
+        //     await setPythonPathInWorkspaceRoot(envPath);
+        // }
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
     }
