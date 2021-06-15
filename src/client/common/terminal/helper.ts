@@ -134,6 +134,7 @@ export class TerminalHelper implements ITerminalHelper {
         terminalShellType: TerminalShellType,
         providers: ITerminalActivationCommandProvider[],
     ): Promise<string[] | undefined> {
+        console.warn(`TerminalHelper.getActivationCommands for interpreter: ${JSON.stringify(interpreter)}`);
         const settings = this.configurationService.getSettings(resource);
 
         const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
@@ -144,6 +145,7 @@ export class TerminalHelper implements ITerminalHelper {
         const isCondaEnvironment = interpreter
             ? interpreter.envType === EnvironmentType.Conda
             : await condaService.isCondaEnvironment(settings.pythonPath);
+        console.warn(`isCondaEnvironment: ${isCondaEnvironment}`);
         if (isCondaEnvironment) {
             const activationCommands = interpreter
                 ? await this.conda.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
@@ -154,14 +156,15 @@ export class TerminalHelper implements ITerminalHelper {
             }
         }
 
+        console.warn(`providers: ${JSON.stringify(providers)}`);
         // Search from the list of providers.
         const supportedProviders = providers.filter((provider) => provider.isShellSupported(terminalShellType));
-
+        console.warn(`supportedProviders: ${JSON.stringify(supportedProviders)}`);
         for (const provider of supportedProviders) {
             const activationCommands = interpreter
                 ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
                 : await provider.getActivationCommands(resource, terminalShellType);
-
+            console.warn(`activation commands for ${JSON.stringify(provider)}: ${JSON.stringify(activationCommands)}`);
             if (Array.isArray(activationCommands) && activationCommands.length > 0) {
                 return activationCommands;
             }
