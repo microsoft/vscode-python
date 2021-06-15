@@ -24,6 +24,7 @@ export class TerminalActivator implements ITerminalActivator {
         terminal: Terminal,
         options?: TerminalActivationOptions,
     ): Promise<boolean> {
+        console.warn('TerminalActivator.activateEnvironmentInTerminal');
         let promise = this.pendingActivations.get(terminal);
         if (promise) {
             return promise;

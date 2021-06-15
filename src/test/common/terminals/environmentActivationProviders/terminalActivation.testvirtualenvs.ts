@@ -138,6 +138,7 @@ suite('Activation of Environments in Terminal', () => {
         logFile: string,
         logFileCreationWaitMs: number,
     ): Promise<string> {
+        console.warn('--------------');
         console.warn('openTerminalAndAwaitCommandContent');
         const terminal = vscode.window.createTerminal();
         console.warn('vscode.window.createTerminal');
@@ -161,6 +162,7 @@ suite('Activation of Environments in Terminal', () => {
      * @param envPath Python environment path to activate in the terminal (via vscode config)
      */
     async function testActivation(envPath: string) {
+        console.warn(`testActivation - envPath: ${envPath}`);
         await updateSetting(
             'terminal.activateEnvironment',
             true,
