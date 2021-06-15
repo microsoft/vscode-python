@@ -24,7 +24,7 @@ import {
 import { EXTENSION_ROOT_DIR_FOR_TESTS, TEST_TIMEOUT } from '../../../constants';
 import { sleep } from '../../../core';
 import { initialize, initializeTest } from '../../../initialize';
-import * as ExperimentHelpers from '../../../../client/common/experiments/helpers';
+// import * as ExperimentHelpers from '../../../../client/common/experiments/helpers';
 
 suite('Activation of Environments in Terminal', () => {
     const file = path.join(
@@ -61,7 +61,7 @@ suite('Activation of Environments in Terminal', () => {
     // let experiments: IExperimentsManager;
     const sandbox = sinon.createSandbox();
     suiteSetup(async () => {
-        sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(true);
+        // sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(true);
         envPaths = await fs.readJson(envsLocation);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders![0].uri);
         pythonSettings = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders![0].uri);
@@ -138,12 +138,18 @@ suite('Activation of Environments in Terminal', () => {
         logFile: string,
         logFileCreationWaitMs: number,
     ): Promise<string> {
+        console.warn('openTerminalAndAwaitCommandContent');
         const terminal = vscode.window.createTerminal();
-        await sleep(consoleInitWaitMs);
+        console.warn('vscode.window.createTerminal');
+        await sleep(consoleInitWaitMs * 2);
+        console.warn(`sleep for consoleInitWaitMs * 2, total: ${consoleInitWaitMs * 2}`);
         terminal.sendText(`python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`, true);
-        await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
-
-        return fs.readFile(logFile, 'utf-8');
+        console.warn(`text sent to terminal: python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`);
+        await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs * 2, `${logFile} file not created.`);
+        console.warn(`wait for condition`);
+        const result = await fs.readFile(logFile, 'utf-8');
+        console.warn(`result: ${result}`);
+        return Promise.resolve(result);
     }
 
     /**
