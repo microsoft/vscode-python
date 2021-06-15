@@ -156,7 +156,7 @@ export class TerminalHelper implements ITerminalHelper {
             }
         }
 
-        console.warn(`providers: ${JSON.stringify(providers)}`);
+        console.warn(`providers: ${providers}`);
         // Search from the list of providers.
         const supportedProviders = providers.filter((provider) => provider.isShellSupported(terminalShellType));
         // console.warn(`supportedProviders: ${JSON.stringify(supportedProviders)}`);
@@ -164,7 +164,7 @@ export class TerminalHelper implements ITerminalHelper {
             const activationCommands = interpreter
                 ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
                 : await provider.getActivationCommands(resource, terminalShellType);
-            console.warn(`activation commands for ${provider.constructor.name}: ${JSON.stringify(activationCommands)}`);
+            console.warn(`activation commands for ${provider}: ${JSON.stringify(activationCommands)}`);
             if (Array.isArray(activationCommands) && activationCommands.length > 0) {
                 return activationCommands;
             }
