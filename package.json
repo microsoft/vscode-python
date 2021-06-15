@@ -1123,7 +1123,7 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "DeprecatePythonPath - experiment",
+                            "pythonDeprecatePythonPath",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
                             "pythonDiscoveryModuleWithoutWatcher",
@@ -1140,7 +1140,7 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "DeprecatePythonPath - experiment",
+                            "pythonDeprecatePythonPath",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
                             "pythonDiscoveryModuleWithoutWatcher",
