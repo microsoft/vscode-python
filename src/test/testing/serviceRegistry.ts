@@ -4,14 +4,6 @@
 import { Uri } from 'vscode';
 
 import { IProcessServiceFactory } from '../../client/common/process/types';
-import { InterpreterEvaluation } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
-import { InterpreterSecurityService } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
-import { InterpreterSecurityStorage } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage';
-import {
-    IInterpreterEvaluation,
-    IInterpreterSecurityService,
-    IInterpreterSecurityStorage,
-} from '../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -150,9 +142,6 @@ export class UnitTestIocContainer extends IocContainer {
     }
 
     public registerInterpreterStorageTypes() {
-        this.serviceManager.add<IInterpreterSecurityStorage>(IInterpreterSecurityStorage, InterpreterSecurityStorage);
-        this.serviceManager.add<IInterpreterSecurityService>(IInterpreterSecurityService, InterpreterSecurityService);
-        this.serviceManager.add<IInterpreterEvaluation>(IInterpreterEvaluation, InterpreterEvaluation);
         this.serviceManager.add<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
     }
 

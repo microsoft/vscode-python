@@ -88,7 +88,6 @@
         "onCommand:python.switchToDailyChannel",
         "onCommand:python.switchToWeeklyChannel",
         "onCommand:python.clearWorkspaceInterpreter",
-        "onCommand:python.resetInterpreterSecurityStorage",
         "onCommand:python.startPage.open",
         "onCommand:python.enableSourceMapSupport",
         "onCommand:python.launchTensorBoard",
@@ -233,11 +232,6 @@
             {
                 "command": "python.clearWorkspaceInterpreter",
                 "title": "%python.command.python.clearWorkspaceInterpreter.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.resetInterpreterSecurityStorage",
-                "title": "%python.command.python.resetInterpreterSecurityStorage.title%",
                 "category": "Python"
             },
             {
@@ -486,11 +480,6 @@
                 {
                     "command": "python.clearWorkspaceInterpreter",
                     "title": "%python.command.python.clearWorkspaceInterpreter.title%",
-                    "category": "Python"
-                },
-                {
-                    "command": "python.resetInterpreterSecurityStorage",
-                    "title": "%python.command.python.resetInterpreterSecurityStorage.title%",
                     "category": "Python"
                 },
                 {

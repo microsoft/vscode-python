@@ -8,9 +8,6 @@ import { IServiceManager } from '../ioc/types';
 import { EnvironmentActivationService } from './activation/service';
 import { IEnvironmentActivationService } from './activation/types';
 import { InterpreterAutoSelectionService } from './autoSelection/index';
-import { InterpreterEvaluation } from './autoSelection/interpreterSecurity/interpreterEvaluation';
-import { InterpreterSecurityService } from './autoSelection/interpreterSecurity/interpreterSecurityService';
-import { InterpreterSecurityStorage } from './autoSelection/interpreterSecurity/interpreterSecurityStorage';
 import { InterpreterAutoSelectionProxyService } from './autoSelection/proxy';
 import { CachedInterpretersAutoSelectionRule } from './autoSelection/rules/cached';
 import { CurrentPathInterpretersAutoSelectionRule } from './autoSelection/rules/currentPath';
@@ -23,9 +20,6 @@ import {
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService,
     IInterpreterAutoSelectionProxyService,
-    IInterpreterEvaluation,
-    IInterpreterSecurityService,
-    IInterpreterSecurityStorage,
 } from './autoSelection/types';
 import { InterpreterComparer } from './configuration/interpreterComparer';
 import { ResetInterpreterCommand } from './configuration/interpreterSelector/commands/resetInterpreter';
@@ -66,10 +60,6 @@ import { VirtualEnvironmentPrompt } from './virtualEnvs/virtualEnvPrompt';
 export function registerInterpreterTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        InterpreterSecurityStorage,
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
         SetInterpreterCommand,
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -80,9 +70,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
         IExtensionSingleActivationService,
         SetShebangInterpreterCommand,
     );
-    serviceManager.addSingleton<IInterpreterEvaluation>(IInterpreterEvaluation, InterpreterEvaluation);
-    serviceManager.addSingleton<IInterpreterSecurityStorage>(IInterpreterSecurityStorage, InterpreterSecurityStorage);
-    serviceManager.addSingleton<IInterpreterSecurityService>(IInterpreterSecurityService, InterpreterSecurityService);
 
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, VirtualEnvironmentPrompt);
 
