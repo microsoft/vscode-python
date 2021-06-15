@@ -75,6 +75,9 @@ export class TerminalHelper implements ITerminalHelper {
     ): Promise<string[] | undefined> {
         console.warn('TerminalHelper.getEnvironmentActivationCommands');
         const providers = [this.pipenv, this.pyenv, this.bashCShellFish, this.commandPromptAndPowerShell];
+        console.warn(
+            `resource: ${resource} - interpreter: ${JSON.stringify(interpreter)} - shell type: ${terminalShellType}`,
+        );
         const promise = this.getActivationCommands(resource || undefined, interpreter, terminalShellType, providers);
         this.sendTelemetry(
             terminalShellType,
@@ -82,6 +85,7 @@ export class TerminalHelper implements ITerminalHelper {
             interpreter,
             promise,
         ).ignoreErrors();
+        console.warn(`telemetry sent - return promise`);
         return promise;
     }
     public async getEnvironmentActivationShellCommands(
