@@ -7,7 +7,7 @@ import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { TextDocument, Uri } from 'vscode';
+import { TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../../client/activation/types';
@@ -94,7 +94,10 @@ suite('Activation Manager', () => {
             const disposable = typemoq.Mock.ofType<IDisposable>();
             const disposable2 = typemoq.Mock.ofType<IDisposable>();
             when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(() => disposable.object);
-            when(workspaceService.workspaceFolders).thenReturn([1 as any, 2 as any]);
+            when(workspaceService.workspaceFolders).thenReturn([
+                (1 as unknown) as WorkspaceFolder,
+                (2 as unknown) as WorkspaceFolder,
+            ]);
             when(workspaceService.hasWorkspaceFolders).thenReturn(true);
             const eventDef = () => disposable2.object;
             documentManager
@@ -122,7 +125,10 @@ suite('Activation Manager', () => {
             const disposable = typemoq.Mock.ofType<IDisposable>();
             const disposable2 = typemoq.Mock.ofType<IDisposable>();
             when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(() => disposable.object);
-            when(workspaceService.workspaceFolders).thenReturn([1 as any, 2 as any]);
+            when(workspaceService.workspaceFolders).thenReturn([
+                (1 as unknown) as WorkspaceFolder,
+                (2 as unknown) as WorkspaceFolder,
+            ]);
             when(workspaceService.hasWorkspaceFolders).thenReturn(true);
             const eventDef = () => disposable2.object;
             documentManager
@@ -159,6 +165,7 @@ suite('Activation Manager', () => {
             const disposable1 = typemoq.Mock.ofType<IDisposable>();
             const disposable2 = typemoq.Mock.ofType<IDisposable>();
             let fileOpenedHandler!: (e: TextDocument) => Promise<void>;
+            // eslint-disable-next-line @typescript-eslint/ban-types
             let workspaceFoldersChangedHandler!: Function;
             const documentUri = Uri.file('a');
             const document = typemoq.Mock.ofType<TextDocument>();
@@ -171,7 +178,9 @@ suite('Activation Manager', () => {
             });
             documentManager
                 .setup((w) => w.onDidOpenTextDocument(typemoq.It.isAny(), typemoq.It.isAny()))
-                .callback((cb) => (fileOpenedHandler = cb))
+                .callback(function (cb) {
+                    fileOpenedHandler = cb;
+                })
                 .returns(() => disposable2.object)
                 .verifiable(typemoq.Times.once());
 
@@ -291,7 +300,7 @@ suite('Activation Manager', () => {
                 languageId: 'NOT PYTHON',
             };
 
-            managerTest.onDocOpened(doc as any);
+            managerTest.onDocOpened((doc as unknown) as TextDocument);
             verify(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).never();
         });
 
@@ -303,7 +312,7 @@ suite('Activation Manager', () => {
             when(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).thenReturn('');
             when(workspaceService.hasWorkspaceFolders).thenReturn(true);
 
-            managerTest.onDocOpened(doc as any);
+            managerTest.onDocOpened((doc as unknown) as TextDocument);
 
             verify(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).once();
             verify(workspaceService.getWorkspaceFolder(doc.uri)).never();
@@ -317,7 +326,7 @@ suite('Activation Manager', () => {
             when(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).thenReturn('key');
             managerTest.activatedWorkspaces.add('key');
 
-            managerTest.onDocOpened(doc as any);
+            managerTest.onDocOpened((doc as unknown) as TextDocument);
 
             verify(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).once();
             verify(workspaceService.getWorkspaceFolder(doc.uri)).never();
@@ -327,6 +336,7 @@ suite('Activation Manager', () => {
             const disposable1 = typemoq.Mock.ofType<IDisposable>();
             const disposable2 = typemoq.Mock.ofType<IDisposable>();
             let docOpenedHandler!: (e: TextDocument) => Promise<void>;
+            // eslint-disable-next-line @typescript-eslint/ban-types
             let workspaceFoldersChangedHandler!: Function;
             const documentUri = Uri.file('a');
             const document = typemoq.Mock.ofType<TextDocument>();
@@ -338,7 +348,9 @@ suite('Activation Manager', () => {
             });
             documentManager
                 .setup((w) => w.onDidOpenTextDocument(typemoq.It.isAny(), typemoq.It.isAny()))
-                .callback((cb) => (docOpenedHandler = cb))
+                .callback(function (cb) {
+                    docOpenedHandler = cb;
+                })
                 .returns(() => disposable2.object)
                 .verifiable(typemoq.Times.once());
 
@@ -367,7 +379,7 @@ suite('Activation Manager', () => {
             verify(workspaceService.workspaceFolders).atLeast(1);
             verify(workspaceService.hasWorkspaceFolders).once();
 
-            //Removed no. of folders to one
+            // Removed no. of folders to one
             when(workspaceService.workspaceFolders).thenReturn([folder1]);
             when(workspaceService.hasWorkspaceFolders).thenReturn(true);
             disposable2.setup((d) => d.dispose()).verifiable(typemoq.Times.once());
@@ -393,8 +405,8 @@ suite('Activation Manager', () => {
         let activationService2: IExtensionActivationService;
         let fileSystem: IFileSystem;
         let singleActivationService: typemoq.IMock<IExtensionSingleActivationService>;
-        let initialize: sinon.SinonStub<any>;
-        let activateWorkspace: sinon.SinonStub<any>;
+        let initialize: sinon.SinonStub;
+        let activateWorkspace: sinon.SinonStub;
         let managerTest: ExtensionActivationManager;
         const resource = Uri.parse('a');
         let interpreterPathService: typemoq.IMock<IInterpreterPathService>;

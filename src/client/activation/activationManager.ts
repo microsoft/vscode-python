@@ -21,9 +21,13 @@ import { IExtensionActivationManager, IExtensionActivationService, IExtensionSin
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {
     public readonly activatedWorkspaces = new Set<string>();
+
     protected readonly isInterpreterSetForWorkspacePromises = new Map<string, Deferred<void>>();
+
     private readonly disposables: IDisposable[] = [];
+
     private docOpenedHandler?: IDisposable;
+
     constructor(
         @multiInject(IExtensionActivationService) private readonly activationServices: IExtensionActivationService[],
         @multiInject(IExtensionSingleActivationService)
@@ -39,7 +43,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
     ) {}
 
-    public dispose() {
+    public dispose(): void {
         while (this.disposables.length > 0) {
             const disposable = this.disposables.shift()!;
             disposable.dispose();
@@ -49,6 +53,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             this.docOpenedHandler = undefined;
         }
     }
+
     public async activate(): Promise<void> {
         await this.initialize();
         // Activate all activation services together.
@@ -58,8 +63,9 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         ]);
         await this.autoSelection.autoSelectInterpreter(undefined);
     }
+
     @traceDecorators.error('Failed to activate a workspace')
-    public async activateWorkspace(resource: Resource) {
+    public async activateWorkspace(resource: Resource): Promise<void> {
         const key = this.getWorkspaceKey(resource);
         if (this.activatedWorkspaces.has(key)) {
             return;
@@ -79,11 +85,13 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         await Promise.all(this.activationServices.map((item) => item.activate(resource)));
         await this.appDiagnostics.performPreStartupHealthCheck(resource);
     }
-    public async initialize() {
+
+    public async initialize(): Promise<void> {
         this.addHandlers();
         this.addRemoveDocOpenedHandlers();
     }
-    public onDocOpened(doc: TextDocument) {
+
+    public onDocOpened(doc: TextDocument): void {
         if (doc.languageId !== PYTHON_LANGUAGE) {
             return;
         }
@@ -99,10 +107,11 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         this.activateWorkspace(folder ? folder.uri : undefined).ignoreErrors();
     }
 
-    protected addHandlers() {
+    protected addHandlers(): void {
         this.disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
     }
-    protected addRemoveDocOpenedHandlers() {
+
+    protected addRemoveDocOpenedHandlers(): void {
         if (this.hasMultipleWorkspaces()) {
             if (!this.docOpenedHandler) {
                 this.docOpenedHandler = this.documentManager.onDidOpenTextDocument(this.onDocOpened, this);
@@ -114,8 +123,9 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             this.docOpenedHandler = undefined;
         }
     }
-    protected onWorkspaceFoldersChanged() {
-        //If an activated workspace folder was removed, delete its key
+
+    protected onWorkspaceFoldersChanged(): void {
+        // If an activated workspace folder was removed, delete its key
         const workspaceKeys = this.workspaceService.workspaceFolders!.map((workspaceFolder) =>
             this.getWorkspaceKey(workspaceFolder.uri),
         );
@@ -128,10 +138,12 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         }
         this.addRemoveDocOpenedHandlers();
     }
-    protected hasMultipleWorkspaces() {
+
+    protected hasMultipleWorkspaces(): boolean {
         return this.workspaceService.hasWorkspaceFolders && this.workspaceService.workspaceFolders!.length > 1;
     }
-    protected getWorkspaceKey(resource: Resource) {
+
+    protected getWorkspaceKey(resource: Resource): string {
         return this.workspaceService.getWorkspaceFolderIdentifier(resource, '');
     }
 }

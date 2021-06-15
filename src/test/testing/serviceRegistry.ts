@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
+
 import { Uri } from 'vscode';
 
 import { IProcessServiceFactory } from '../../client/common/process/types';
@@ -50,21 +52,17 @@ import { IocContainer } from '../serviceRegistry';
 import { MockUnitTestSocketServer } from './mocks';
 
 export class UnitTestIocContainer extends IocContainer {
-    constructor() {
-        super();
-    }
     public async getPythonMajorVersion(resource: Uri): Promise<number> {
         const procServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         const procService = await procServiceFactory.create(resource);
         const pythonVersion = await getPythonSemVer(procService);
         if (pythonVersion) {
             return pythonVersion.major;
-        } else {
-            return -1; // log warning already issued by underlying functions...
         }
+        return -1; // log warning already issued by underlying functions...
     }
 
-    public registerTestVisitors() {
+    public registerTestVisitors(): void {
         this.serviceManager.add<ITestVisitor>(ITestVisitor, TestFlatteningVisitor, 'TestFlatteningVisitor');
         this.serviceManager.add<ITestVisitor>(ITestVisitor, TestResultResetVisitor, 'TestResultResetVisitor');
         this.serviceManager.addSingleton<ITestsStatusUpdaterService>(
@@ -74,27 +72,27 @@ export class UnitTestIocContainer extends IocContainer {
         this.serviceManager.addSingleton<ITestContextService>(ITestContextService, TestContextService);
     }
 
-    public registerTestStorage() {
+    public registerTestStorage(): void {
         this.serviceManager.addSingleton<ITestCollectionStorageService>(
             ITestCollectionStorageService,
             TestCollectionStorageService,
         );
     }
 
-    public registerTestsHelper() {
+    public registerTestsHelper(): void {
         this.serviceManager.addSingleton<ITestsHelper>(ITestsHelper, TestsHelper);
     }
 
-    public registerTestResultsHelper() {
+    public registerTestResultsHelper(): void {
         this.serviceManager.add<ITestResultsService>(ITestResultsService, TestResultsService);
     }
 
-    public registerTestParsers() {
+    public registerTestParsers(): void {
         this.serviceManager.add<ITestsParser>(ITestsParser, UnitTestTestsParser, UNITTEST_PROVIDER);
         this.serviceManager.add<ITestsParser>(ITestsParser, NoseTestTestsParser, NOSETEST_PROVIDER);
     }
 
-    public registerTestDiscoveryServices() {
+    public registerTestDiscoveryServices(): void {
         this.serviceManager.add<ITestDiscoveryService>(
             ITestDiscoveryService,
             UnitTestTestDiscoveryService,
@@ -114,11 +112,11 @@ export class UnitTestIocContainer extends IocContainer {
         this.serviceManager.add<ITestDiscoveredTestParser>(ITestDiscoveredTestParser, TestDiscoveredTestParser);
     }
 
-    public registerTestDiagnosticServices() {
+    public registerTestDiagnosticServices(): void {
         this.serviceManager.addSingleton<ITestDiagnosticService>(ITestDiagnosticService, UnitTestDiagnosticService);
     }
 
-    public registerTestManagers() {
+    public registerTestManagers(): void {
         this.serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
             return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {
                 const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
@@ -141,11 +139,11 @@ export class UnitTestIocContainer extends IocContainer {
         });
     }
 
-    public registerInterpreterStorageTypes() {
+    public registerInterpreterStorageTypes(): void {
         this.serviceManager.add<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
     }
 
-    public registerTestManagerService() {
+    public registerTestManagerService(): void {
         this.serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, (context) => {
             return (workspaceFolder: Uri) => {
                 const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
@@ -155,7 +153,7 @@ export class UnitTestIocContainer extends IocContainer {
         });
     }
 
-    public registerMockUnitTestSocketServer() {
+    public registerMockUnitTestSocketServer(): void {
         this.serviceManager.addSingleton<IUnitTestSocketServer>(IUnitTestSocketServer, MockUnitTestSocketServer);
     }
 }

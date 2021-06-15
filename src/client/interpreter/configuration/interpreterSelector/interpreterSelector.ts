@@ -19,12 +19,16 @@ export class InterpreterSelector implements IInterpreterSelector {
         @inject(IInterpreterComparer) private readonly interpreterComparer: IInterpreterComparer,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
     ) {}
-    public dispose() {
+
+    public dispose(): void {
         this.disposables.forEach((disposable) => disposable.dispose());
     }
 
-    public async getSuggestions(resource: Resource, ignoreCache?: boolean) {
-        let interpreters = await this.interpreterManager.getInterpreters(resource, { onSuggestion: true, ignoreCache });
+    public async getSuggestions(resource: Resource, ignoreCache?: boolean): Promise<IInterpreterQuickPickItem[]> {
+        const interpreters = await this.interpreterManager.getInterpreters(resource, {
+            onSuggestion: true,
+            ignoreCache,
+        });
         interpreters.sort(this.interpreterComparer.compare.bind(this.interpreterComparer));
         return Promise.all(interpreters.map((item) => this.suggestionToQuickPickItem(item, resource)));
     }

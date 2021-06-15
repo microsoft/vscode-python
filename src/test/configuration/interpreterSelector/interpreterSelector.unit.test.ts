@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// eslint-disable-next-line max-classes-per-file
 import * as assert from 'assert';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
@@ -29,11 +30,15 @@ const info: PythonEnvironment = {
 
 class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
     public path: string;
+
     public label: string;
+
     public description!: string;
+
     public detail?: string;
 
-    public interpreter = {} as any;
+    public interpreter = ({} as unknown) as PythonEnvironment;
+
     constructor(l: string, p: string) {
         this.path = p;
         this.label = l;

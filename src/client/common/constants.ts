@@ -1,3 +1,5 @@
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-namespace */
 export const PYTHON_LANGUAGE = 'python';
 export const PYTHON_WARNINGS = 'PYTHONWARNINGS';
 
