@@ -164,9 +164,7 @@ export class TerminalHelper implements ITerminalHelper {
             const activationCommands = interpreter
                 ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
                 : await provider.getActivationCommands(resource, terminalShellType);
-            console.warn(
-                `activation commands for ${provider.constructor.toString()}: ${JSON.stringify(activationCommands)}`,
-            );
+            console.warn(`activation commands for ${provider.constructor.name}: ${JSON.stringify(activationCommands)}`);
             if (Array.isArray(activationCommands) && activationCommands.length > 0) {
                 return activationCommands;
             }
