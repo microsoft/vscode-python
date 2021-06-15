@@ -134,7 +134,7 @@ export class TerminalHelper implements ITerminalHelper {
         terminalShellType: TerminalShellType,
         providers: ITerminalActivationCommandProvider[],
     ): Promise<string[] | undefined> {
-        console.warn(`TerminalHelper.getActivationCommands for interpreter: ${JSON.stringify(interpreter)}`);
+        console.warn(`TerminalHelper.getActivationCommands for interpreter with path: ${interpreter?.envPath}`);
         const settings = this.configurationService.getSettings(resource);
 
         const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
