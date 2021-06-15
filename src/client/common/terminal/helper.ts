@@ -162,6 +162,7 @@ export class TerminalHelper implements ITerminalHelper {
         const supportedProviders = providers.filter((provider) => provider.isShellSupported(terminalShellType));
         // console.warn(`supportedProviders: ${JSON.stringify(supportedProviders)}`);
         for (const provider of supportedProviders) {
+            console.warn(`ask activation commands for ${provider.constructor.name}`);
             const activationCommands = interpreter
                 ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
                 : await provider.getActivationCommands(resource, terminalShellType);
