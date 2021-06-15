@@ -73,7 +73,7 @@ suite('Activation of Environments in Terminal', () => {
         const serviceContainer = (await initialize()).serviceContainer;
         experiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
         const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
-        sandbox.stub(experimentService, 'inExperiment').resolves(false);
+        sandbox.stub(experimentService, 'inExperiment').resolves(true);
     });
 
     setup(async () => {
