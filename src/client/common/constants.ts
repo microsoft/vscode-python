@@ -75,7 +75,6 @@ export namespace Commands {
     export const GetSelectedInterpreterPath = 'python.interpreterPath';
     export const ClearStorage = 'python.clearPersistentStorage';
     export const ClearWorkspaceInterpreter = 'python.clearWorkspaceInterpreter';
-    export const ResetInterpreterSecurityStorage = 'python.resetInterpreterSecurityStorage';
     export const OpenStartPage = 'python.startPage.open';
     export const LaunchTensorBoard = 'python.launchTensorBoard';
     export const RefreshTensorBoard = 'python.refreshTensorBoard';

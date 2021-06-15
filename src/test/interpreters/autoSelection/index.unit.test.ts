@@ -5,7 +5,7 @@
 
 import { expect } from 'chai';
 import { SemVer } from 'semver';
-import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
@@ -16,7 +16,6 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IExperimentService, IPersistentStateFactory, Resource } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { InterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection';
-import { InterpreterSecurityService } from '../../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
 import { InterpreterAutoSelectionProxyService } from '../../../client/interpreter/autoSelection/proxy';
 import { CachedInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/cached';
 import { CurrentPathInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/currentPath';
@@ -27,7 +26,6 @@ import { WorkspaceVirtualEnvInterpretersAutoSelectionRule } from '../../../clien
 import {
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionProxyService,
-    IInterpreterSecurityService,
 } from '../../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper } from '../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
@@ -51,7 +49,6 @@ suite('Interpreters - Auto Selection', () => {
     let state: PersistentState<PythonEnvironment | undefined>;
     let helper: IInterpreterHelper;
     let proxy: IInterpreterAutoSelectionProxyService;
-    let interpreterSecurityService: IInterpreterSecurityService;
     let experiments: IExperimentService;
     class InterpreterAutoSelectionServiceTest extends InterpreterAutoSelectionService {
         public initializeStore(resource: Resource): Promise<void> {
@@ -67,7 +64,6 @@ suite('Interpreters - Auto Selection', () => {
         }
     }
     setup(() => {
-        interpreterSecurityService = mock(InterpreterSecurityService);
         workspaceService = mock(WorkspaceService);
         stateFactory = mock(PersistentStateFactory);
         state = mock(PersistentState) as PersistentState<PythonEnvironment | undefined>;
@@ -95,8 +91,6 @@ suite('Interpreters - Auto Selection', () => {
             instance(workspaceInterpreter),
             instance(proxy),
             instance(helper),
-            instance(experiments),
-            instance(interpreterSecurityService),
         );
     });
 
@@ -238,15 +232,6 @@ suite('Interpreters - Auto Selection', () => {
         verify(state.updateValue(interpreterInfo)).once();
         expect(selectedInterpreter).to.deep.equal(interpreterInfo);
         expect(eventFired).to.deep.equal(false, 'event fired');
-    });
-    test('When in experiment, if interpreter chosen is unsafe, return `undefined` as the auto-selected interpreter', async () => {
-        when(experiments.inExperimentSync(anything())).thenReturn(true);
-        const interpreterInfo = { path: 'pythonPath' } as any;
-        autoSelectionService._getAutoSelectedInterpreter = () => interpreterInfo;
-        reset(interpreterSecurityService);
-        when(interpreterSecurityService.isSafe(interpreterInfo)).thenReturn(false);
-        const selectedInterpreter = autoSelectionService.getAutoSelectedInterpreter(undefined);
-        expect(selectedInterpreter).to.equal(undefined, 'Should be undefined');
     });
     test('Do not store global interpreter info in state store when resource is undefined and version is lower than one already in state', async () => {
         let eventFired = false;

@@ -15,7 +15,7 @@ import {
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
 import './extensions';
-import { IInterpreterAutoSelectionProxyService, IInterpreterSecurityService } from '../interpreter/autoSelection/types';
+import { IInterpreterAutoSelectionProxyService } from '../interpreter/autoSelection/types';
 import { LogLevel } from '../logging/levels';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -166,7 +166,6 @@ export class PythonSettings implements IPythonSettings {
         workspace?: IWorkspaceService,
         private readonly experimentsManager?: IExperimentService,
         private readonly interpreterPathService?: IInterpreterPathService,
-        private readonly interpreterSecurityService?: IInterpreterSecurityService,
         private readonly defaultLS?: IDefaultLanguageServer,
     ) {
         this.workspace = workspace || new WorkspaceService();
@@ -180,7 +179,6 @@ export class PythonSettings implements IPythonSettings {
         workspace?: IWorkspaceService,
         experimentsManager?: IExperimentService,
         interpreterPathService?: IInterpreterPathService,
-        interpreterSecurityService?: IInterpreterSecurityService,
         defaultLS?: IDefaultLanguageServer,
     ): PythonSettings {
         workspace = workspace || new WorkspaceService();
@@ -194,7 +192,6 @@ export class PythonSettings implements IPythonSettings {
                 workspace,
                 experimentsManager,
                 interpreterPathService,
-                interpreterSecurityService,
                 defaultLS,
             );
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
@@ -634,9 +631,6 @@ export class PythonSettings implements IPythonSettings {
         this.disposables.push(
             this.interpreterAutoSelectionService.onDidChangeAutoSelectedInterpreter(onDidChange.bind(this)),
         );
-        if (this.interpreterSecurityService) {
-            this.disposables.push(this.interpreterSecurityService.onDidChangeSafeInterpreters(onDidChange.bind(this)));
-        }
         this.disposables.push(
             this.workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
                 if (event.affectsConfiguration('python')) {
@@ -685,12 +679,8 @@ export class PythonSettings implements IPythonSettings {
             const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(
                 this.workspaceRoot,
             );
-            if (inExperiment && this.interpreterSecurityService) {
-                if (
-                    autoSelectedPythonInterpreter &&
-                    this.interpreterSecurityService.isSafe(autoSelectedPythonInterpreter) &&
-                    this.workspaceRoot
-                ) {
+            if (inExperiment) {
+                if (autoSelectedPythonInterpreter && this.workspaceRoot) {
                     this.pythonPath = autoSelectedPythonInterpreter.path;
                     this.interpreterAutoSelectionService
                         .setWorkspaceInterpreter(this.workspaceRoot, autoSelectedPythonInterpreter)

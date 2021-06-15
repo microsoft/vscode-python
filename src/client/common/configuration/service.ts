@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
-import { IInterpreterAutoSelectionService, IInterpreterSecurityService } from '../../interpreter/autoSelection/types';
+import { IInterpreterAutoSelectionService } from '../../interpreter/autoSelection/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { PythonSettings } from '../configSettings';
@@ -31,9 +31,6 @@ export class ConfigurationService implements IConfigurationService {
         );
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
-        const interpreterSecurityService = this.serviceContainer.get<IInterpreterSecurityService>(
-            IInterpreterSecurityService,
-        );
         const defaultLS = this.serviceContainer.tryGet<IDefaultLanguageServer>(IDefaultLanguageServer);
         return PythonSettings.getInstance(
             resource,
@@ -41,7 +38,6 @@ export class ConfigurationService implements IConfigurationService {
             this.workspaceService,
             experiments,
             interpreterPathService,
-            interpreterSecurityService,
             defaultLS,
         );
     }

@@ -14,7 +14,6 @@ import { PythonSettings } from '../../../client/common/configSettings';
 import { DeprecatePythonPath } from '../../../client/common/experiments/groups';
 import { IExperimentService, IInterpreterPathService } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
-import { IInterpreterSecurityService } from '../../../client/interpreter/autoSelection/types';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
@@ -153,9 +152,7 @@ suite('Python Settings - pythonPath', () => {
         const pythonPath = path.join(__dirname, 'this is a python path that was auto selected');
         const interpreter = { path: pythonPath } as PythonEnvironment;
         const selectionService = mock(MockAutoSelectionService);
-        const interpreterSecurityService = typemoq.Mock.ofType<IInterpreterSecurityService>();
         when(selectionService.getAutoSelectedInterpreter(resource)).thenReturn(interpreter);
-        interpreterSecurityService.setup((i) => i.isSafe(interpreter)).returns(() => true);
         when(selectionService.setWorkspaceInterpreter(resource, anything())).thenResolve();
         configSettings = new CustomPythonSettings(
             resource,
@@ -163,7 +160,6 @@ suite('Python Settings - pythonPath', () => {
             workspaceService.object,
             experimentsManager.object,
             interpreterPathService.object,
-            interpreterSecurityService.object,
         );
         experimentsManager
             .setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment))
@@ -173,35 +169,6 @@ suite('Python Settings - pythonPath', () => {
         configSettings.update(pythonSettings.object);
 
         expect(configSettings.pythonPath).to.be.equal(pythonPath);
-        experimentsManager.verifyAll();
-        interpreterPathService.verifyAll();
-        pythonSettings.verifyAll();
-    });
-    test("If user is in Deprecate Python Path experiment and we don't have a custom python path, get the autoselected interpreter and but don't use it if it's not safe", () => {
-        const resource = Uri.parse('a');
-        const pythonPath = path.join(__dirname, 'this is a python path that was auto selected');
-        const interpreter = { path: pythonPath } as PythonEnvironment;
-        const selectionService = mock(MockAutoSelectionService);
-        const interpreterSecurityService = typemoq.Mock.ofType<IInterpreterSecurityService>();
-        when(selectionService.getAutoSelectedInterpreter(resource)).thenReturn(interpreter);
-        interpreterSecurityService.setup((i) => i.isSafe(interpreter)).returns(() => false);
-        when(selectionService.setWorkspaceInterpreter(resource, anything())).thenResolve();
-        configSettings = new CustomPythonSettings(
-            resource,
-            instance(selectionService),
-            workspaceService.object,
-            experimentsManager.object,
-            interpreterPathService.object,
-            interpreterSecurityService.object,
-        );
-        experimentsManager
-            .setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment))
-            .returns(() => true)
-            .verifiable(typemoq.Times.once());
-        interpreterPathService.setup((i) => i.get(resource)).returns(() => 'python');
-        configSettings.update(pythonSettings.object);
-
-        expect(configSettings.pythonPath).to.be.equal('a');
         experimentsManager.verifyAll();
         interpreterPathService.verifyAll();
         pythonSettings.verifyAll();
