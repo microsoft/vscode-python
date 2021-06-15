@@ -166,6 +166,11 @@ export class TerminalHelper implements ITerminalHelper {
                 : await provider.getActivationCommands(resource, terminalShellType);
             console.warn(`activation commands for ${provider.constructor.name}: ${activationCommands}`);
             if (Array.isArray(activationCommands) && activationCommands.length > 0) {
+                console.warn(
+                    `isArray(activationCommands)? ${Array.isArray(
+                        activationCommands,
+                    )} - activationCommands.length > 0? ${activationCommands.length > 0}`,
+                );
                 return activationCommands;
             }
         }
