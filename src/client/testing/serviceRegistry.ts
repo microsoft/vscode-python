@@ -60,6 +60,7 @@ import { TestManagerRunner as PytestManagerRunner } from './pytest/runner';
 import { ArgumentsService as PyTestArgumentsService } from './pytest/services/argsService';
 import { TestDiscoveryService as PytestTestDiscoveryService } from './pytest/services/discoveryService';
 import { TestMessageService } from './pytest/services/testMessageService';
+import { registerTestControllerTypes } from './testController/serviceRegistry';
 import { ITestingService, TestProvider } from './types';
 import { UnitTestHelper } from './unittest/helper';
 import { TestManager as UnitTestTestManager } from './unittest/main';
@@ -150,4 +151,6 @@ export function registerTypes(serviceManager: IServiceManager) {
             return new TestManagerService(workspaceFolder, testsHelper, serviceContainer);
         };
     });
+
+    registerTestControllerTypes(serviceManager);
 }

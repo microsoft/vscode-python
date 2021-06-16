@@ -88,12 +88,15 @@ function getSafeInt(value: string, defaultValue = 0): number {
 }
 
 async function getTestCaseNodes(
-    testNode: TestItem<SupportedTestItemType>,
+    testNode: TestItem<PythonTestData>,
     collection: TestItem<TestCase>[] = [],
 ): Promise<TestItem<TestCase>[]> {
+    if (testNode.data instanceof TestCase) {
+        collection.push(testNode as TestItem<TestCase>);
+    }
     const nodes = Array.from(testNode.children.values());
     for (const node of nodes) {
-        if (node instanceof TestCase) {
+        if (node.data instanceof TestCase) {
             collection.push(node);
         } else {
             await getTestCaseNodes(node, collection);
@@ -123,20 +126,10 @@ export async function updateResultFromJunitXml(
         runInstance.appendOutput(`Total number of tests failed with errors: ${errors}`);
         runInstance.appendOutput(`Total number of tests skipped: ${skipped}`);
 
-        const testCaseResults = junitSuite.testcase.map((t) => {
-            const o = {
-                ...t,
-            };
-            o.$.classname = t.$.classname
-                .replace(/\(\)/g, '')
-                .replace(/\.\./g, '.')
-                .replace(/\.\./g, '.')
-                .replace(/\.+$/, '');
-            return o;
-        });
         testCaseNodes.forEach((node) => {
-            const result = testCaseResults.find((t) => {
-                return `${t.$.classname}:${t.$.name}` === node.data.raw.id;
+            const result = junitSuite.testcase.find((t) => {
+                const id = `${t.$.file.replace('\\', '/')}::${t.$.name}`;
+                return id === node.data.raw.id || node.data.raw.id.endsWith(id);
             });
             if (result) {
                 if (result.error) {

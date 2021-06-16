@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { TestItem } from 'vscode';
+import { CancellationToken, TestItem, TestRunRequest, TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { RawDiscoveredTests } from '../../common/services/types';
 import { TestDiscoveryOptions } from '../../common/types';
 import { TestCase } from './testCase';
@@ -25,3 +25,28 @@ export const ITestDiscoveryHelper = Symbol('ITestDiscoveryHelper');
 export interface ITestDiscoveryHelper {
     runTestDiscovery(options: TestDiscoveryOptions): Promise<RawDiscoveredTests[]>;
 }
+
+export const ITestController = Symbol('ITestController');
+export interface ITestController {
+    createWorkspaceTests(
+        workspace: WorkspaceFolder,
+        token: CancellationToken,
+    ): Promise<TestItem<PythonTestData> | undefined>;
+    createOrUpdateDocumentTests(
+        document: TextDocument,
+        token: CancellationToken,
+    ): Promise<TestItem<PythonTestData> | undefined>;
+    runTests(options: TestRunRequest<PythonTestData>, token: CancellationToken): Promise<void>;
+}
+
+export const ITestsRunner = Symbol('ITestsRunner');
+export interface ITestsRunner {
+    runTests(request: TestRunRequest<PythonTestData>, options: TestRunOptions): Promise<void>;
+}
+
+export type TestRunOptions = {
+    workspaceFolder: Uri;
+    cwd: string;
+    args: string[];
+    token: CancellationToken;
+};

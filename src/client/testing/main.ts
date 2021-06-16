@@ -20,7 +20,7 @@ import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { EventName } from '../telemetry/constants';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry/index';
-import { CANCELLATION_REASON } from './common/constants';
+import { CANCELLATION_REASON, PYTEST_PROVIDER } from './common/constants';
 import { selectTestWorkspace } from './common/testUtils';
 import { TestSettingsPropertyNames } from './configuration/types';
 import {
@@ -43,6 +43,7 @@ import { ITestingService } from './types';
 import { PythonTestController } from './testController/controller';
 import { IExtensionActivationService } from '../activation/types';
 import { CommandSource } from '../common/constants';
+import { ITestController } from './testController/common/types';
 
 @injectable()
 export class TestingService implements ITestingService {
@@ -108,7 +109,11 @@ export class UnitTestManagementService implements ITestManagementService, IExten
         );
 
         if (test && test.registerTestController) {
-            this.disposableRegistry.push(test.registerTestController(new PythonTestController()));
+            const controller = new PythonTestController(
+                this.serviceContainer.get<IConfigurationService>(IConfigurationService),
+                this.serviceContainer.get<ITestController>(ITestController, PYTEST_PROVIDER),
+            );
+            this.disposableRegistry.push(test.registerTestController(controller));
         }
     }
     public async getTestManager(

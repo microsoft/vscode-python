@@ -147,6 +147,10 @@ export function getTestFolders(args: string[]): string[] {
     return positionalArgs.filter((arg) => !arg.toUpperCase().endsWith('.PY'));
 }
 
+export function removePositionalFoldersAndFiles(args: string[]): string[] {
+    return pytestFilterArguments(args, TestFilter.removeTests);
+}
+
 function pytestFilterArguments(args: string[], argumentToRemoveOrFilter: string[] | TestFilter): string[] {
     const optionsWithoutArgsToRemove: string[] = [];
     const optionsWithArgsToRemove: string[] = [];

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Disposable, test, TestItem, TestResultState, TestRun, TestRunRequest, Uri } from 'vscode';
+import { Disposable, test, TestItem, TestResultState, TestRun, TestRunRequest } from 'vscode';
 import { IOutputChannel } from '../../../common/types';
 import { PYTEST_PROVIDER } from '../../common/constants';
 import { ITestDebugLauncher, ITestRunner, LaunchOptions, Options } from '../../common/types';
@@ -14,15 +14,9 @@ import { TestCase } from '../common/testCase';
 import { TestCollection } from '../common/testCollection';
 import { TestFile } from '../common/testFile';
 import { TestFolder } from '../common/testFolder';
-import { PythonTestData } from '../common/types';
+import { ITestsRunner, PythonTestData, TestRunOptions } from '../common/types';
 import { WorkspaceTestRoot } from '../common/workspaceTestRoot';
-
-export type TestRunOptions = {
-    workspaceFolder: Uri;
-    cwd: string;
-    args: string[];
-    token: CancellationToken;
-};
+import { removePositionalFoldersAndFiles } from './arguments';
 
 type PytestRunInstanceOptions = TestRunOptions & {
     exclude?: TestItem<PythonTestData>[];
@@ -55,8 +49,6 @@ export async function processTestNode(
     runTest: PytestRunTestFunction,
 ): Promise<void> {
     if (!options.exclude?.includes(testNode)) {
-        runInstance.appendOutput(`Running tests: ${testNode.label}`);
-        runInstance.setState(testNode, TestResultState.Running);
         if (testNode.data instanceof WorkspaceTestRoot) {
             const testSubNodes = Array.from(testNode.children.values());
             await Promise.all(testSubNodes.map((subNode) => processTestNode(subNode, runInstance, options, runTest)));
@@ -79,10 +71,6 @@ export async function processTestNode(
     return Promise.resolve();
 }
 
-export interface ITestsRunner {
-    runTests(request: TestRunRequest<PythonTestData>, options: TestRunOptions): Promise<void>;
-}
-
 @injectable()
 export class PytestRunner implements ITestsRunner {
     constructor(
@@ -98,11 +86,18 @@ export class PytestRunner implements ITestsRunner {
             debug: request.debug,
         };
         const runInstance = test.createTestRun(request);
-        await Promise.all(
-            request.tests.map((testNode) =>
-                processTestNode(testNode, runInstance, runOptions, this.runTest.bind(this)),
-            ),
-        );
+        try {
+            await Promise.all(
+                request.tests.map((testNode) =>
+                    processTestNode(testNode, runInstance, runOptions, this.runTest.bind(this)),
+                ),
+            );
+        } catch (ex) {
+            runInstance.appendOutput(`Error while running tests:\n${ex}`);
+        } finally {
+            runInstance.appendOutput(`Finished running tests!`);
+            runInstance.end();
+        }
     }
 
     private async runTest(
@@ -110,12 +105,18 @@ export class PytestRunner implements ITestsRunner {
         runInstance: TestRun<PythonTestData>,
         options: PytestRunInstanceOptions,
     ): Promise<void> {
+        runInstance.appendOutput(`Running tests: ${testNode.label}`);
+        runInstance.setState(testNode, TestResultState.Running);
+
         const disposables: Disposable[] = [];
         const junitFilePath = await getPytestJunitXmlTempFile(options.args, disposables);
 
         try {
+            // Remove positional test folders and files, we will add as needed per node
+            let testArgs = removePositionalFoldersAndFiles(options.args);
+
             // Remove the '--junitxml' or '--junit-xml' if it exists, and add it with our path.
-            const testArgs = filterArguments(options.args, [JunitXmlArg, JunitXmlArgOld]);
+            testArgs = filterArguments(testArgs, [JunitXmlArg, JunitXmlArgOld]);
             testArgs.splice(0, 0, `${JunitXmlArg}=${junitFilePath}`);
 
             testArgs.splice(0, 0, '--rootdir', options.workspaceFolder.fsPath);
@@ -142,11 +143,16 @@ export class PytestRunner implements ITestsRunner {
                     token: options.token,
                     workspaceFolder: options.workspaceFolder,
                 };
+                runInstance.appendOutput(`Running test with arguments: ${runOptions.args}`);
+                runInstance.appendOutput(`Current working directory: ${runOptions.cwd}`);
+                runInstance.appendOutput(`Workspace directory: ${runOptions.workspaceFolder.fsPath}`);
                 await this.runner.run(PYTEST_PROVIDER, runOptions);
             }
 
+            runInstance.appendOutput('Run completed, parsing output');
             await updateResultFromJunitXml(junitFilePath, testNode, runInstance);
         } catch (ex) {
+            runInstance.appendOutput(`Error while running tests: ${testNode.label}\n${ex}`);
             return Promise.reject(ex);
         } finally {
             disposables.forEach((d) => d.dispose());

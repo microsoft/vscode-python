@@ -1,18 +1,31 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { TestController } from 'vscode';
+import { CancellationToken, TestController, TestItem, TestRunRequest, WorkspaceFolder } from 'vscode';
+import { IConfigurationService } from '../../common/types';
+import { getUri } from './common/testItemUtilities';
+import { ITestController, PythonTestData } from './common/types';
 /* eslint-disable */
 
-// This is a place holder for a controller
-export class PythonTestController implements TestController<any> {
-    public createWorkspaceTestRoot() {
-        return undefined;
+export class PythonTestController implements TestController<PythonTestData> {
+    constructor(private readonly configSettings: IConfigurationService, private readonly pytest: ITestController) {}
+
+    public createWorkspaceTestRoot(
+        workspace: WorkspaceFolder,
+        token: CancellationToken,
+    ): Promise<TestItem<PythonTestData> | undefined> {
+        const settings = this.configSettings.getSettings(workspace.uri);
+        if (settings.testing.pytestEnabled) {
+            return this.pytest.createWorkspaceTests(workspace, token);
+        }
+        return Promise.resolve(undefined);
     }
 
-    public createDocumentTestRoot() {
-        return undefined;
+    public runTests(options: TestRunRequest<PythonTestData>, token: CancellationToken): Promise<void> {
+        const settings = this.configSettings.getSettings(getUri(options.tests[0]));
+        if (settings.testing.pytestEnabled) {
+            return this.pytest.runTests(options, token);
+        }
+        return Promise.resolve();
     }
-
-    public runTests() {}
 }
