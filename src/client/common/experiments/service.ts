@@ -107,8 +107,10 @@ export class ExperimentService implements IExperimentService {
             return true;
         }
 
-        const treatmentVariable = this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment);
-        return treatmentVariable !== undefined;
+        // const treatmentVariable = this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment);
+        // return treatmentVariable !== undefined;
+
+        return this.experimentationService.isCachedFlightEnabled(experiment);
     }
 
     public inExperimentSync(experiment: string): boolean {
