@@ -19,13 +19,6 @@ import { ITestsRunner, PythonRunnableTestData, PythonTestData, TestRunOptions } 
 import { WorkspaceTestRoot } from '../common/workspaceTestRoot';
 import { removePositionalFoldersAndFiles } from './arguments';
 
-export type TestRunOptions = {
-    workspaceFolder: Uri;
-    cwd: string;
-    args: string[];
-    token: CancellationToken;
-};
-
 type PytestRunInstanceOptions = TestRunOptions & {
     exclude?: TestItem<PythonTestData>[];
     debug: boolean;
@@ -57,8 +50,6 @@ export async function processTestNode(
     runTest: PytestRunTestFunction,
 ): Promise<void> {
     if (!options.exclude?.includes(testNode)) {
-        runInstance.appendOutput(`Running tests: ${testNode.label}`);
-        runInstance.setState(testNode, TestResultState.Running);
         if (testNode.data instanceof WorkspaceTestRoot) {
             const testSubNodes = Array.from(testNode.children.values());
             await Promise.all(testSubNodes.map((subNode) => processTestNode(subNode, runInstance, options, runTest)));
@@ -79,10 +70,6 @@ export async function processTestNode(
         runInstance.appendOutput(`Excluded: ${testNode.label}\r\n`);
     }
     return Promise.resolve();
-}
-
-export interface ITestsRunner {
-    runTests(request: TestRunRequest<PythonTestData>, options: TestRunOptions): Promise<void>;
 }
 
 @injectable()
@@ -171,6 +158,9 @@ export class PytestRunner implements ITestsRunner {
                     token: options.token,
                     workspaceFolder: options.workspaceFolder,
                 };
+                runInstance.appendOutput(`Running test with arguments: ${runOptions.args}`);
+                runInstance.appendOutput(`Current working directory: ${runOptions.cwd}`);
+                runInstance.appendOutput(`Workspace directory: ${runOptions.workspaceFolder.fsPath}`);
                 await this.runner.run(PYTEST_PROVIDER, runOptions);
             }
 

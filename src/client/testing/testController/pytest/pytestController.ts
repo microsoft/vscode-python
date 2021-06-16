@@ -33,6 +33,23 @@ export class PytestController implements ITestController {
         return this.discovery.discoverWorkspaceTests(options);
     }
 
+    public createOrUpdateDocumentTests(
+        document: TextDocument,
+        token: CancellationToken,
+    ): Promise<TestItem<PythonTestData> | undefined> {
+        const settings = this.configService.getSettings(document.uri);
+        const workspaceFolder = this.workspaceService.getWorkspaceFolder(document.uri);
+        const cwd = workspaceFolder?.uri.fsPath ?? process.cwd();
+        const options = {
+            workspaceFolder: document.uri,
+            cwd: settings.testing.cwd ?? cwd,
+            args: settings.testing.pytestArgs,
+            token,
+            ignoreCache: true,
+        };
+        return this.discovery.discoverWorkspaceTests(options);
+    }
+
     public runTests(options: TestRunRequest<PythonTestData>, token: CancellationToken): Promise<void> {
         const workspaceFolder = this.workspaceService.getWorkspaceFolder(getUri(options.tests[0]));
         const settings = this.configService.getSettings(workspaceFolder?.uri);
