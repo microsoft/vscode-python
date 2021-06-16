@@ -123,7 +123,7 @@ export async function updateResultFromJunitXml(
         const errors = getSafeInt(junitSuite.$.errors);
 
         runInstance.appendOutput(`Total number of tests passed: ${totalTests - failures - skipped - errors}${os.EOL}`);
-        runInstance.appendOutput(`Total number of tests failed : ${failures}${os.EOL}`);
+        runInstance.appendOutput(`Total number of tests failed: ${failures}${os.EOL}`);
         runInstance.appendOutput(`Total number of tests failed with errors: ${errors}${os.EOL}`);
         runInstance.appendOutput(`Total number of tests skipped: ${skipped}${os.EOL}`);
 
