@@ -142,11 +142,11 @@ suite('Activation of Environments in Terminal', () => {
         console.warn('openTerminalAndAwaitCommandContent');
         const terminal = vscode.window.createTerminal();
         console.warn('vscode.window.createTerminal');
-        await sleep(consoleInitWaitMs * 2);
-        console.warn(`sleep for consoleInitWaitMs * 2, total: ${consoleInitWaitMs * 2}`);
+        await sleep(consoleInitWaitMs);
+        console.warn(`sleep for consoleInitWaitMs, total: ${consoleInitWaitMs}`);
         terminal.sendText(`python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`, true);
         console.warn(`text sent to terminal: python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`);
-        await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs * 2, `${logFile} file not created.`);
+        await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
         console.warn(`wait for condition`);
         const result = await fs.readFile(logFile, 'utf-8');
         console.warn(`result: ${result}`);
