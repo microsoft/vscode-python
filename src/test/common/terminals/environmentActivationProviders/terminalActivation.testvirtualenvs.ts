@@ -139,17 +139,17 @@ suite('Activation of Environments in Terminal', () => {
         logFileCreationWaitMs: number,
     ): Promise<string> {
         console.warn('--------------');
-        console.warn('openTerminalAndAwaitCommandContent');
+        // console.warn('openTerminalAndAwaitCommandContent');
         const terminal = vscode.window.createTerminal();
-        console.warn('vscode.window.createTerminal');
-        await sleep(consoleInitWaitMs);
-        console.warn(`sleep for consoleInitWaitMs, total: ${consoleInitWaitMs}`);
+        // console.warn('vscode.window.createTerminal');
+        await sleep(consoleInitWaitMs * 2);
+        // console.warn(`sleep for consoleInitWaitMs, total: ${consoleInitWaitMs}`);
         terminal.sendText(`python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`, true);
-        console.warn(`text sent to terminal: python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`);
-        await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
-        console.warn(`wait for condition`);
+        // console.warn(`text sent to terminal: python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`);
+        await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs * 2, `${logFile} file not created.`);
+        // console.warn(`wait for condition`);
         const result = await fs.readFile(logFile, 'utf-8');
-        console.warn(`result: ${result}`);
+        // console.warn(`result: ${result}`);
         return Promise.resolve(result);
     }
 
@@ -162,7 +162,7 @@ suite('Activation of Environments in Terminal', () => {
      * @param envPath Python environment path to activate in the terminal (via vscode config)
      */
     async function testActivation(envPath: string) {
-        console.warn(`testActivation - envPath: ${envPath}`);
+        // console.warn(`testActivation - envPath: ${envPath}`);
         await updateSetting(
             'terminal.activateEnvironment',
             true,
