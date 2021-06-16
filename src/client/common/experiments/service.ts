@@ -109,6 +109,7 @@ export class ExperimentService implements IExperimentService {
         const treatmentVariable = await this.experimentationService.getTreatmentVariableAsync(
             EXP_CONFIG_ID,
             experiment,
+            true,
         );
         return treatmentVariable !== undefined;
     }
