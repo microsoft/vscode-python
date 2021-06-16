@@ -50,12 +50,16 @@ export async function activateExtension() {
 }
 
 export async function initializeTest(): Promise<any> {
+    console.warn('initializePython');
     await initializePython();
+    console.warn('closeActiveWindows');
     await closeActiveWindows();
     if (!IS_SMOKE_TEST) {
         // When running smoke tests, we won't have access to these.
+        console.warn('import ../client/common/configSettings');
         const configSettings = await import('../client/common/configSettings');
         // Dispose any cached python settings (used only in test env).
+        console.warn('Dispose any cached python settings (used only in test env).');
         configSettings.PythonSettings.dispose();
     }
 }

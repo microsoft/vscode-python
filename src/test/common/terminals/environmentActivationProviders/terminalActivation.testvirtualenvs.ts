@@ -77,7 +77,9 @@ suite('Activation of Environments in Terminal', () => {
     });
 
     setup(async () => {
+        console.warn(`initializeTest will be called`);
         await initializeTest();
+        console.warn(`initializeTest was called`);
         outputFile = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
@@ -87,6 +89,7 @@ suite('Activation of Environments in Terminal', () => {
         );
         outputFileCounter += 1;
         outputFilesCreated.push(outputFile);
+        console.warn(`outputFilesCreated: ${outputFilesCreated}`);
     });
 
     suiteTeardown(async function () {
@@ -139,17 +142,17 @@ suite('Activation of Environments in Terminal', () => {
         logFileCreationWaitMs: number,
     ): Promise<string> {
         console.warn('--------------');
-        // console.warn('openTerminalAndAwaitCommandContent');
+        console.warn('openTerminalAndAwaitCommandContent');
         const terminal = vscode.window.createTerminal();
-        // console.warn('vscode.window.createTerminal');
+        console.warn('vscode.window.createTerminal');
         await sleep(consoleInitWaitMs * 2);
-        // console.warn(`sleep for consoleInitWaitMs, total: ${consoleInitWaitMs}`);
+        console.warn(`sleep for consoleInitWaitMs, total: ${consoleInitWaitMs}`);
         terminal.sendText(`python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`, true);
-        // console.warn(`text sent to terminal: python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`);
+        console.warn(`text sent to terminal: python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`);
         await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs * 2, `${logFile} file not created.`);
-        // console.warn(`wait for condition`);
+        console.warn(`wait for condition`);
         const result = await fs.readFile(logFile, 'utf-8');
-        // console.warn(`result: ${result}`);
+        console.warn(`result: ${result}`);
         return Promise.resolve(result);
     }
 
