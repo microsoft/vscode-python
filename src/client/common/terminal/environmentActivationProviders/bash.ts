@@ -43,6 +43,7 @@ export class Bash extends VenvBaseActivationCommandProvider {
         targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
         const scriptFile = await this.findScriptFile(pythonPath, targetShell);
+        console.warn(`Bash activation command provider with path ${pythonPath} - scriptFile: ${scriptFile}`);
         if (!scriptFile) {
             return;
         }

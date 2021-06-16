@@ -158,6 +158,8 @@ export class TerminalHelper implements ITerminalHelper {
         console.warn(`providers: ${names}`);
         // Search from the list of providers.
         const supportedProviders = providers.filter((provider) => provider.isShellSupported(terminalShellType));
+        const supportedNames = providers.map((provider) => provider.constructor.name);
+        console.warn(`providers: ${supportedNames}`);
         // console.warn(`supportedProviders: ${JSON.stringify(supportedProviders)}`);
         for (const provider of supportedProviders) {
             console.warn(`ask activation commands for ${provider.constructor.name}`);

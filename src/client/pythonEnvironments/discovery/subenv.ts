@@ -163,10 +163,14 @@ export function getVenvExecutableFinder(
         const binDir = pathDirname(python);
         for (const name of basenames) {
             const filename = pathJoin(binDir, name);
+            console.warn(`getVenvExecutableFinder for filename ${filename}`);
             if (await fileExists(filename)) {
+                console.warn(`${filename} exists`);
                 return filename;
             }
+            console.warn(`${filename} does not exist`);
         }
+        console.warn('no matches');
         // No matches so return undefined.
         return undefined;
     };
