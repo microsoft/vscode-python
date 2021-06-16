@@ -14,7 +14,7 @@
    ([#16330](https://github.com/Microsoft/vscode-python/issues/16339))
 1. Added `python.defaultInterpreterPath` setting at workspace level when in `pythonDeprecatePythonPath` experiment.
    ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
-1. Add default Interpreter path entry at the bottom of the interpreter list.
+1. Added default Interpreter path entry at the bottom of the interpreter list.
    ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
 1. Remove execution isolation script used to run tools.
    ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
@@ -22,7 +22,7 @@
    ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
 1. Do not show safety prompt before autoselecting a workspace interpreter.
    ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
-1. Assume workspaces interpreters are safe to execute.
+1. Assume workspace interpreters are safe to execute for discovery.
    ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
 
 ### Fixes
