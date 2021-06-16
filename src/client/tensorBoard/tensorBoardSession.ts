@@ -50,6 +50,8 @@ import { ModuleInstallFlags } from '../common/installer/types';
 enum Messages {
     JumpToSource = 'jump_to_source',
 }
+const TensorBoardSemVerRequirement = '>= 2.4.1';
+const TorchProfilerSemVerRequirement = '>= 0.2.0';
 
 /**
  * Manages the lifecycle of a TensorBoard session.
@@ -196,8 +198,12 @@ export class TensorBoardSession {
 
         // First see what dependencies we're missing
         let [tensorboardInstallStatus, profilerPluginInstallStatus] = await Promise.all([
-            this.installer.isProductVersionCompatible(Product.tensorboard, '>= 2.4.1', interpreter),
-            this.installer.isProductVersionCompatible(Product.torchProfilerImportName, '>= 0.2.0', interpreter),
+            this.installer.isProductVersionCompatible(Product.tensorboard, TensorBoardSemVerRequirement, interpreter),
+            this.installer.isProductVersionCompatible(
+                Product.torchProfilerImportName,
+                TorchProfilerSemVerRequirement,
+                interpreter,
+            ),
         ]);
         const isTorchUserAndInExperiment = ImportTracker.hasModuleImport('torch') && this.isInTorchProfilerExperiment;
         const needsTensorBoardInstall = tensorboardInstallStatus !== ProductInstallStatus.Installed;
@@ -262,8 +268,12 @@ export class TensorBoardSession {
 
         // Check install status again after installing
         [tensorboardInstallStatus, profilerPluginInstallStatus] = await Promise.all([
-            this.installer.isProductVersionCompatible(Product.tensorboard, '>= 2.4.1', interpreter),
-            this.installer.isProductVersionCompatible(Product.torchProfilerImportName, '>= 0.2.0', interpreter),
+            this.installer.isProductVersionCompatible(Product.tensorboard, TensorBoardSemVerRequirement, interpreter),
+            this.installer.isProductVersionCompatible(
+                Product.torchProfilerImportName,
+                TorchProfilerSemVerRequirement,
+                interpreter,
+            ),
         ]);
         // Send telemetry regarding results of install
         sendTelemetryEvent(EventName.TENSORBOARD_PACKAGE_INSTALL_RESULT, undefined, {
