@@ -73,9 +73,7 @@ export class TerminalHelper implements ITerminalHelper {
         resource?: Uri,
         interpreter?: PythonEnvironment,
     ): Promise<string[] | undefined> {
-        console.warn('TerminalHelper.getEnvironmentActivationCommands');
         const providers = [this.pipenv, this.pyenv, this.bashCShellFish, this.commandPromptAndPowerShell];
-        console.warn(`resource: ${resource} - interpreter: ${interpreter?.envPath} - shell type: ${terminalShellType}`);
         const promise = this.getActivationCommands(resource || undefined, interpreter, terminalShellType, providers);
         this.sendTelemetry(
             terminalShellType,
@@ -83,7 +81,6 @@ export class TerminalHelper implements ITerminalHelper {
             interpreter,
             promise,
         ).ignoreErrors();
-        console.warn(`telemetry sent - return promise`);
         return promise;
     }
     public async getEnvironmentActivationShellCommands(
@@ -132,7 +129,6 @@ export class TerminalHelper implements ITerminalHelper {
         terminalShellType: TerminalShellType,
         providers: ITerminalActivationCommandProvider[],
     ): Promise<string[] | undefined> {
-        console.warn(`TerminalHelper.getActivationCommands for interpreter with path: ${interpreter?.envPath}`);
         const settings = this.configurationService.getSettings(resource);
 
         const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
@@ -143,7 +139,6 @@ export class TerminalHelper implements ITerminalHelper {
         const isCondaEnvironment = interpreter
             ? interpreter.envType === EnvironmentType.Conda
             : await condaService.isCondaEnvironment(settings.pythonPath);
-        console.warn(`isCondaEnvironment: ${isCondaEnvironment}`);
         if (isCondaEnvironment) {
             const activationCommands = interpreter
                 ? await this.conda.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
@@ -154,25 +149,13 @@ export class TerminalHelper implements ITerminalHelper {
             }
         }
 
-        const names = providers.map((provider) => provider.constructor.name);
-        console.warn(`providers: ${names}`);
         // Search from the list of providers.
         const supportedProviders = providers.filter((provider) => provider.isShellSupported(terminalShellType));
-        const supportedNames = providers.map((provider) => provider.constructor.name);
-        console.warn(`providers: ${supportedNames}`);
-        // console.warn(`supportedProviders: ${JSON.stringify(supportedProviders)}`);
         for (const provider of supportedProviders) {
-            console.warn(`ask activation commands for ${provider.constructor.name}`);
             const activationCommands = interpreter
                 ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
                 : await provider.getActivationCommands(resource, terminalShellType);
-            console.warn(`activation commands for ${provider.constructor.name}: ${activationCommands}`);
             if (Array.isArray(activationCommands) && activationCommands.length > 0) {
-                console.warn(
-                    `isArray(activationCommands)? ${Array.isArray(
-                        activationCommands,
-                    )} - activationCommands.length > 0? ${activationCommands.length > 0}`,
-                );
                 return activationCommands;
             }
         }

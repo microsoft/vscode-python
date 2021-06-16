@@ -21,7 +21,6 @@ abstract class BaseActivationCommandProvider implements ITerminalActivationComma
     ): Promise<string[] | undefined> {
         const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource)
             .pythonPath;
-        console.warn(`getActivationCommandsForInterpreter for pythonPath: ${pythonPath} `);
         return this.getActivationCommandsForInterpreter(pythonPath, targetShell);
     }
     public abstract getActivationCommandsForInterpreter(
@@ -40,12 +39,8 @@ export abstract class VenvBaseActivationCommandProvider extends BaseActivationCo
     protected abstract get scripts(): ActivationScripts;
 
     protected async findScriptFile(pythonPath: string, targetShell: TerminalShellType): Promise<string | undefined> {
-        console.warn(
-            `VenvBaseActivationCommandProvider findScriptFile for pythonPath ${pythonPath} and targetShell ${targetShell}`,
-        );
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         const candidates = this.scripts[targetShell];
-        console.warn(`candidates ${JSON.stringify(candidates)}`);
         if (!candidates) {
             return undefined;
         }
