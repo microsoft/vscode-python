@@ -151,10 +151,12 @@ export class TerminalHelper implements ITerminalHelper {
 
         // Search from the list of providers.
         const supportedProviders = providers.filter((provider) => provider.isShellSupported(terminalShellType));
+
         for (const provider of supportedProviders) {
             const activationCommands = interpreter
                 ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
                 : await provider.getActivationCommands(resource, terminalShellType);
+
             if (Array.isArray(activationCommands) && activationCommands.length > 0) {
                 return activationCommands;
             }

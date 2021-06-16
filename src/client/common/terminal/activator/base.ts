@@ -26,7 +26,6 @@ export class BaseTerminalActivator implements ITerminalActivator {
             options?.resource,
             options?.interpreter,
         );
-        console.warn(`activationCommands: ${activationCommands?.join(' ')}`);
         let activated = false;
         if (activationCommands) {
             for (const command of activationCommands) {

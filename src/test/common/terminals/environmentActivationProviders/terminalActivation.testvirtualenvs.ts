@@ -130,6 +130,7 @@ suite('Activation of Environments in Terminal', () => {
         await sleep(consoleInitWaitMs);
         terminal.sendText(`python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`, true);
         await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
+
         return fs.readFile(logFile, 'utf-8');
     }
 
