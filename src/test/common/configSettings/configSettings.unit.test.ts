@@ -78,7 +78,7 @@ suite('Python Settings', async () => {
         }
 
         // boolean settings
-        for (const name of ['downloadLanguageServer', 'autoUpdateLanguageServer', 'useIsolation']) {
+        for (const name of ['downloadLanguageServer', 'autoUpdateLanguageServer']) {
             config
                 .setup((c) => c.get<boolean>(name, true))
 
@@ -144,7 +144,7 @@ suite('Python Settings', async () => {
     });
 
     suite('Boolean settings', async () => {
-        ['downloadLanguageServer', 'autoUpdateLanguageServer', 'globalModuleInstallation', 'useIsolation'].forEach(
+        ['downloadLanguageServer', 'autoUpdateLanguageServer', 'globalModuleInstallation'].forEach(
             async (settingName) => {
                 testIfValueIsUpdated(settingName, true);
             },

@@ -35,7 +35,7 @@ export namespace Diagnostics {
     );
     export const removedPythonPathFromSettings = localize(
         'diagnostics.removedPythonPathFromSettings',
-        'We removed the "python.pythonPath" setting from your settings.json file as the setting is no longer used by the Python extension. You can get the path of your selected interpreter in the Python output channel. [Learn more](https://aka.ms/AA7jfor).',
+        'The "python.pythonPath" setting in your settings.json is no longer used by the Python extension. If you want, you can use a new setting called "python.defaultInterpreterPath" instead. Keep in mind that you need to change the value of this setting manually as the Python extension doesn’t modify it when you change interpreters. [Learn more](https://aka.ms/AA7jfor).',
     );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',
@@ -270,10 +270,6 @@ export namespace Interpreters {
         'Interpreters.condaInheritEnvMessage',
         'We noticed you\'re using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we recommend that you let the Python extension change "terminal.integrated.inheritEnv" to false in your user settings.',
     );
-    export const unsafeInterpreterMessage = localize(
-        'Interpreters.unsafeInterpreterMessage',
-        'We found a Python environment in this workspace. Do you want to select it to start up the features in the Python extension? Only accept if you trust this environment.',
-    );
     export const environmentPromptMessage = localize(
         'Interpreters.environmentPromptMessage',
         'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?',
@@ -295,6 +291,15 @@ export namespace InterpreterQuickPickList {
         detail: localize('InterpreterQuickPickList.enterPath.detail', 'Enter path or find an existing interpreter'),
         label: localize('InterpreterQuickPickList.enterPath.label', 'Enter interpreter path...'),
         placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python interpreter.'),
+    };
+    export const defaultInterpreterPath = {
+        label: (): string => {
+            const labelText = localize(
+                'InterpreterQuickPickList.defaultInterpreterPath.label',
+                'Use default Python interpreter path',
+            );
+            return `${Octicons.Star} ${labelText()}`;
+        },
     };
     export const findPath = {
         detail: localize(

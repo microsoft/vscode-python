@@ -8,7 +8,7 @@ import { traceError } from './common/logger';
 import { ITerminalHelper } from './common/terminal/types';
 import {
     IConfigurationService,
-    IExperimentsManager,
+    IExperimentService,
     IInterpreterPathService,
     InspectInterpreterSettingType,
     Resource,
@@ -77,16 +77,15 @@ function isUsingGlobalInterpreterInWorkspace(currentPythonPath: string, serviceC
 }
 
 export function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IServiceContainer) {
-    const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+    const abExperiments = serviceContainer.get<IExperimentService>(IExperimentService);
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
     let settings: InspectInterpreterSettingType;
-    if (abExperiments.inExperiment(DeprecatePythonPath.experiment)) {
+    if (abExperiments.inExperimentSync(DeprecatePythonPath.experiment)) {
         settings = interpreterPathService.inspect(resource);
     } else {
         settings = workspaceService.getConfiguration('python', resource)!.inspect<string>('pythonPath')!;
     }
-    abExperiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
     return (settings.workspaceFolderValue && settings.workspaceFolderValue !== 'python') ||
         (settings.workspaceValue && settings.workspaceValue !== 'python') ||
         (settings.globalValue && settings.globalValue !== 'python')

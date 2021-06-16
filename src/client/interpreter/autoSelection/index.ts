@@ -6,10 +6,9 @@
 import { inject, injectable, named } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { DeprecatePythonPath } from '../../common/experiments/groups';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IExperimentsManager, IPersistentState, IPersistentStateFactory, Resource } from '../../common/types';
+import { IPersistentState, IPersistentStateFactory, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { compareSemVerLikeVersions } from '../../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -21,7 +20,6 @@ import {
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService,
     IInterpreterAutoSelectionProxyService,
-    IInterpreterSecurityService,
 } from './types';
 
 const preferredGlobalInterpreter = 'preferredGlobalPyInterpreter';
@@ -68,8 +66,6 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         workspaceInterpreter: IInterpreterAutoSelectionRule,
         @inject(IInterpreterAutoSelectionProxyService) proxy: IInterpreterAutoSelectionProxyService,
         @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
-        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
-        @inject(IInterpreterSecurityService) private readonly interpreterSecurityService: IInterpreterSecurityService,
     ) {
         // It is possible we area always opening the same workspace folder, but we still need to determine and cache
         // the best available interpreters based on other rules (cache for furture use).
@@ -132,15 +128,6 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         // Do not execute anycode other than fetching fromm a property.
         // This method gets invoked from settings class, and this class in turn uses classes that relies on settings.
         // I.e. we can end up in a recursive loop.
-        const interpreter = this._getAutoSelectedInterpreter(resource);
-        if (!this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
-            return interpreter; // We do not about security service when not in experiment.
-        }
-        // Unless the interpreter is marked as unsafe, return interpreter.
-        return interpreter && this.interpreterSecurityService.isSafe(interpreter) === false ? undefined : interpreter;
-    }
-
-    public _getAutoSelectedInterpreter(resource: Resource): PythonEnvironment | undefined {
         const workspaceState = this.getWorkspaceState(resource);
         if (workspaceState && workspaceState.value) {
             return workspaceState.value;

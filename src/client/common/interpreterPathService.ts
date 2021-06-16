@@ -71,12 +71,13 @@ export class InterpreterPathService implements IInterpreterPathService {
                 undefined,
             );
         }
-        const globalValue = this.workspaceService.getConfiguration('python')!.inspect<string>('defaultInterpreterPath')!
-            .globalValue;
+        const defaultInterpreterPath = this.workspaceService
+            .getConfiguration('python', resource)!
+            .inspect<string>('defaultInterpreterPath')!;
         return {
-            globalValue,
-            workspaceFolderValue: workspaceFolderSetting?.value,
-            workspaceValue: workspaceSetting?.value,
+            globalValue: defaultInterpreterPath.globalValue,
+            workspaceFolderValue: workspaceFolderSetting?.value || defaultInterpreterPath.workspaceFolderValue,
+            workspaceValue: workspaceSetting?.value || defaultInterpreterPath.workspaceValue,
         };
     }
 
@@ -197,10 +198,6 @@ export class InterpreterPathService implements IInterpreterPathService {
         const shouldUpdateGlobalSetting = !isGlobalSettingCopiedStorage.value;
         if (shouldUpdateGlobalSetting) {
             await this.update(undefined, ConfigurationTarget.Global, value);
-            // Make sure to delete the original setting after copying it
-            await this.workspaceService
-                .getConfiguration('python')
-                .update('pythonPath', undefined, ConfigurationTarget.Global);
             await isGlobalSettingCopiedStorage.updateValue(true);
         }
     }

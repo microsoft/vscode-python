@@ -12,6 +12,18 @@
    ([#16141](https://github.com/Microsoft/vscode-python/issues/16141))
 1. Ensure users upgrade to v0.2.0 of the torch-tb-profiler TensorBoard plugin to access jump-to-source functionality.
    ([#16330](https://github.com/Microsoft/vscode-python/issues/16330))
+1. Added `python.defaultInterpreterPath` setting at workspace level when in `pythonDeprecatePythonPath` experiment.
+   ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
+1. Added default Interpreter path entry at the bottom of the interpreter list.
+   ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
+1. Remove execution isolation script used to run tools.
+   ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
+1. Show `python.pythonPath` deprecation prompt when in `pythonDeprecatePythonPath` experiment.
+   ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
+1. Do not show safety prompt before autoselecting a workspace interpreter.
+   ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
+1. Assume workspace interpreters are safe to execute for discovery.
+   ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
 
 ### Fixes
 1. Fixes a bug in the bandit linter where messages weren't being propagated to the editor.

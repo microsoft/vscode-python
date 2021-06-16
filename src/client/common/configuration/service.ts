@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
-import { IInterpreterAutoSelectionService, IInterpreterSecurityService } from '../../interpreter/autoSelection/types';
+import { IInterpreterAutoSelectionService } from '../../interpreter/autoSelection/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { PythonSettings } from '../configSettings';
@@ -12,7 +12,7 @@ import { DeprecatePythonPath } from '../experiments/groups';
 import {
     IConfigurationService,
     IDefaultLanguageServer,
-    IExperimentsManager,
+    IExperimentService,
     IInterpreterPathService,
     IPythonSettings,
 } from '../types';
@@ -30,10 +30,7 @@ export class ConfigurationService implements IConfigurationService {
             IInterpreterAutoSelectionService,
         );
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        const interpreterSecurityService = this.serviceContainer.get<IInterpreterSecurityService>(
-            IInterpreterSecurityService,
-        );
+        const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
         const defaultLS = this.serviceContainer.tryGet<IDefaultLanguageServer>(IDefaultLanguageServer);
         return PythonSettings.getInstance(
             resource,
@@ -41,7 +38,6 @@ export class ConfigurationService implements IConfigurationService {
             this.workspaceService,
             experiments,
             interpreterPathService,
-            interpreterSecurityService,
             defaultLS,
         );
     }
@@ -53,10 +49,9 @@ export class ConfigurationService implements IConfigurationService {
         resource?: Uri,
         configTarget?: ConfigurationTarget,
     ): Promise<void> {
-        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-        const inExperiment = experiments.inExperiment(DeprecatePythonPath.experiment);
-        experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+        const inExperiment = experiments.inExperimentSync(DeprecatePythonPath.experiment);
         const defaultSetting = {
             uri: resource,
             target: configTarget || ConfigurationTarget.WorkspaceFolder,

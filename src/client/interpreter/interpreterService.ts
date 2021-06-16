@@ -12,7 +12,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
-    IExperimentsManager,
     IInterpreterPathService,
     IPersistentState,
     IPersistentStateFactory,
@@ -79,7 +78,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     private readonly interpreterPathService: IInterpreterPathService;
 
-    private readonly experimentsManager: IExperimentsManager;
+    private readonly experimentsManager: IExperimentService;
 
     private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
 
@@ -97,7 +96,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.persistentStateFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-        this.experimentsManager = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        this.experimentsManager = this.serviceContainer.get<IExperimentService>(IExperimentService);
     }
 
     public async refresh(resource?: Uri): Promise<void> {
@@ -116,7 +115,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const pySettings = this.configService.getSettings();
         this._pythonPathSetting = pySettings.pythonPath;
-        if (this.experimentsManager.inExperiment(DeprecatePythonPath.experiment)) {
+        if (this.experimentsManager.inExperimentSync(DeprecatePythonPath.experiment)) {
             disposables.push(
                 this.interpreterPathService.onDidChange((i) => {
                     this._onConfigChanged(i.uri);
@@ -135,7 +134,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
             });
             disposables.push(disposable);
         }
-        this.experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
     }
 
     public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {

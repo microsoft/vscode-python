@@ -41,8 +41,6 @@ src/test/interpreters/mocks.ts
 src/test/interpreters/interpreterVersion.unit.test.ts
 src/test/interpreters/virtualEnvs/index.unit.test.ts
 src/test/interpreters/virtualEnvs/condaInheritEnvPrompt.unit.test.ts
-src/test/interpreters/autoSelection/interpreterSecurity/interpreterEvaluation.unit.test.ts
-src/test/interpreters/autoSelection/interpreterSecurity/interpreterSecurityService.unit.test.ts
 src/test/interpreters/autoSelection/rules/settings.unit.test.ts
 src/test/interpreters/autoSelection/rules/cached.unit.test.ts
 src/test/interpreters/autoSelection/rules/winRegistry.unit.test.ts
@@ -55,8 +53,6 @@ src/test/interpreters/activation/service.unit.test.ts
 src/test/interpreters/helpers.unit.test.ts
 src/test/interpreters/currentPathService.unit.test.ts
 src/test/interpreters/display.unit.test.ts
-
-src/test/configuration/interpreterSelector/interpreterSelector.unit.test.ts
 
 src/test/terminals/codeExecution/terminalCodeExec.unit.test.ts
 src/test/terminals/codeExecution/codeExecutionManager.unit.test.ts
@@ -93,7 +89,6 @@ src/test/activation/activeResource.unit.test.ts
 src/test/activation/node/languageServerChangeHandler.unit.test.ts
 src/test/activation/node/activator.unit.test.ts
 src/test/activation/extensionSurvey.unit.test.ts
-src/test/activation/activationManager.unit.test.ts
 
 src/test/utils/fs.ts
 
@@ -111,7 +106,6 @@ src/test/api.functional.test.ts
 src/test/testing/argsService.test.ts
 src/test/testing/mocks.ts
 src/test/testing/debugger.test.ts
-src/test/testing/serviceRegistry.ts
 src/test/testing/unittest/unittest.test.ts
 src/test/testing/unittest/unittest.discovery.unit.test.ts
 src/test/testing/unittest/unittest.discovery.test.ts
@@ -180,7 +174,6 @@ src/test/common/utils/cacheUtils.unit.test.ts
 src/test/common/utils/decorators.unit.test.ts
 src/test/common/utils/localize.functional.test.ts
 src/test/common/utils/version.unit.test.ts
-src/test/common/configSettings/configSettings.pythonPath.unit.test.ts
 src/test/common/configSettings/configSettings.unit.test.ts
 src/test/common/featureDeprecationManager.unit.test.ts
 src/test/common/serviceRegistry.unit.test.ts
@@ -287,7 +280,6 @@ src/client/interpreter/configuration/interpreterComparer.ts
 src/client/interpreter/configuration/interpreterSelector/commands/base.ts
 src/client/interpreter/configuration/interpreterSelector/commands/resetInterpreter.ts
 src/client/interpreter/configuration/interpreterSelector/commands/setShebangInterpreter.ts
-src/client/interpreter/configuration/interpreterSelector/interpreterSelector.ts
 src/client/interpreter/configuration/pythonPathUpdaterServiceFactory.ts
 src/client/interpreter/configuration/services/globalUpdaterService.ts
 src/client/interpreter/configuration/services/workspaceUpdaterService.ts
@@ -296,9 +288,6 @@ src/client/interpreter/helpers.ts
 src/client/interpreter/virtualEnvs/condaInheritEnvPrompt.ts
 src/client/interpreter/virtualEnvs/types.ts
 src/client/interpreter/virtualEnvs/index.ts
-src/client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage.ts
-src/client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation.ts
-src/client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService.ts
 src/client/interpreter/autoSelection/rules/baseRule.ts
 src/client/interpreter/autoSelection/rules/winRegistry.ts
 src/client/interpreter/autoSelection/rules/settings.ts
@@ -353,7 +342,6 @@ src/client/activation/languageServer/languageServerPackageService.ts
 src/client/activation/languageServer/analysisOptions.ts
 src/client/activation/languageServer/activator.ts
 src/client/activation/commands.ts
-src/client/activation/activationManager.ts
 src/client/activation/progress.ts
 src/client/activation/extensionSurvey.ts
 src/client/activation/common/languageServerChangeHandler.ts
@@ -509,7 +497,6 @@ src/client/common/dotnet/services/macCompatibilityService.ts
 src/client/common/dotnet/services/linuxCompatibilityService.ts
 src/client/common/dotnet/services/windowsCompatibilityService.ts
 src/client/common/logger.ts
-src/client/common/constants.ts
 src/client/common/variables/serviceRegistry.ts
 src/client/common/variables/environment.ts
 src/client/common/variables/types.ts
@@ -523,7 +510,6 @@ src/client/common/cancellation.ts
 src/client/common/interpreterPathService.ts
 src/client/common/startPage/startPageMessageListener.ts
 src/client/common/application/customEditorService.ts
-src/client/common/application/commands.ts
 src/client/common/application/applicationShell.ts
 src/client/common/application/languageService.ts
 src/client/common/application/notebook.ts

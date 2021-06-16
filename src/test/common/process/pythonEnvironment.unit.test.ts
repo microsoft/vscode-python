@@ -3,7 +3,6 @@
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../../client/common/platform/types';
@@ -14,9 +13,6 @@ import {
 } from '../../../client/common/process/pythonEnvironment';
 import { IProcessService, StdErrError } from '../../../client/common/process/types';
 import { Architecture } from '../../../client/common/utils/platform';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
-
-const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
 
 use(chaiAsPromised);
 
@@ -177,7 +173,7 @@ suite('PythonEnvironment', () => {
     test('getExecutablePath should not return pythonPath if pythonPath is not a file', async () => {
         const executablePath = 'path/to/dummy/executable';
         fileSystem.setup((f) => f.pathExists(pythonPath)).returns(() => Promise.resolve(false));
-        const argv = [isolated, '-c', 'import sys;print(sys.executable)'];
+        const argv = ['-c', 'import sys;print(sys.executable)'];
         processService
             .setup((p) => p.exec(pythonPath, argv, { throwOnStdErr: true }))
             .returns(() => Promise.resolve({ stdout: executablePath }));
@@ -191,7 +187,7 @@ suite('PythonEnvironment', () => {
     test('getExecutablePath should throw if the result of exec() writes to stderr', async () => {
         const stderr = 'bar';
         fileSystem.setup((f) => f.pathExists(pythonPath)).returns(() => Promise.resolve(false));
-        const argv = [isolated, '-c', 'import sys;print(sys.executable)'];
+        const argv = ['-c', 'import sys;print(sys.executable)'];
         processService
             .setup((p) => p.exec(pythonPath, argv, { throwOnStdErr: true }))
             .returns(() => Promise.reject(new StdErrError(stderr)));
@@ -204,7 +200,7 @@ suite('PythonEnvironment', () => {
 
     test('isModuleInstalled should call processService.exec()', async () => {
         const moduleName = 'foo';
-        const argv = [isolated, '-c', `import ${moduleName}`];
+        const argv = ['-c', `import ${moduleName}`];
         processService
             .setup((p) => p.exec(pythonPath, argv, { throwOnStdErr: true }))
             .returns(() => Promise.resolve({ stdout: '' }))
@@ -218,7 +214,7 @@ suite('PythonEnvironment', () => {
 
     test('isModuleInstalled should return true when processService.exec() succeeds', async () => {
         const moduleName = 'foo';
-        const argv = [isolated, '-c', `import ${moduleName}`];
+        const argv = ['-c', `import ${moduleName}`];
         processService
             .setup((p) => p.exec(pythonPath, argv, { throwOnStdErr: true }))
             .returns(() => Promise.resolve({ stdout: '' }));
@@ -231,7 +227,7 @@ suite('PythonEnvironment', () => {
 
     test('isModuleInstalled should return false when processService.exec() throws', async () => {
         const moduleName = 'foo';
-        const argv = [isolated, '-c', `import ${moduleName}`];
+        const argv = ['-c', `import ${moduleName}`];
         processService
             .setup((p) => p.exec(pythonPath, argv, { throwOnStdErr: true }))
             .returns(() => Promise.reject(new StdErrError('bar')));
