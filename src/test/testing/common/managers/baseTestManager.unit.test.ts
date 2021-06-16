@@ -7,10 +7,11 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, OutputChannel, Uri } from 'vscode';
 import { CommandManager } from '../../../../client/common/application/commandManager';
-import { CommandSource, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
+import { ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { PythonSettings } from '../../../../client/common/configSettings';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
+import { CommandSource } from '../../../../client/common/constants';
 import { ModuleNotInstalledError } from '../../../../client/common/errors/moduleNotInstalledError';
 import { ProductInstaller } from '../../../../client/common/installer/productInstaller';
 import {

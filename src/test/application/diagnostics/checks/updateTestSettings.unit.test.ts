@@ -28,7 +28,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
     setup(() => {
         fs = mock(FileSystem);
         appEnv = mock(ApplicationEnvironment);
-        storage = mock(PersistentState);
+        storage = mock(PersistentState) as IPersistentState<string[]>;
         workspace = mock(WorkspaceService);
         const stateFactory = mock(PersistentStateFactory);
 

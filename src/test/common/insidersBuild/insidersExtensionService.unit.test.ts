@@ -11,8 +11,8 @@ import * as TypeMoq from 'typemoq';
 import { EventEmitter, UIKind } from 'vscode';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { CommandManager } from '../../../client/common/application/commandManager';
-import { Channel, IApplicationEnvironment, ICommandManager } from '../../../client/common/application/types';
-import { Commands } from '../../../client/common/constants';
+import { IApplicationEnvironment, ICommandManager } from '../../../client/common/application/types';
+import { Channel, Commands } from '../../../client/common/constants';
 import { ExtensionChannelService } from '../../../client/common/insidersBuild/downloadChannelService';
 import { InsidersExtensionPrompt } from '../../../client/common/insidersBuild/insidersExtensionPrompt';
 import { InsidersExtensionService } from '../../../client/common/insidersBuild/insidersExtensionService';
@@ -229,7 +229,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         cmdManager = TypeMoq.Mock.ofType<ICommandManager>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         insidersPrompt = TypeMoq.Mock.ofType<IInsiderExtensionPrompt>(undefined, TypeMoq.MockBehavior.Strict);
-        hasUserBeenNotifiedState = mock(PersistentState);
+        hasUserBeenNotifiedState = mock(PersistentState) as IPersistentState<boolean>;
 
         insidersExtensionService = new InsidersExtensionService(
             extensionChannelService.object,
@@ -246,7 +246,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             .returns(() => instance(hasUserBeenNotifiedState))
             // Basically means "we don't care" (necessary for strict mocks).
             .verifiable(TypeMoq.Times.atLeast(0));
-        hasUserBeenNotifiedState = mock(PersistentState);
+        hasUserBeenNotifiedState = mock(PersistentState) as PersistentState<boolean>;
     }
 
     setup(() => {

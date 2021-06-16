@@ -48,7 +48,7 @@ class TestRunner {
     }
     private async launchTest(customEnvVars: Record<string, {}>) {
         console.log('Launch tests in test runner');
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             const env: Record<string, string> = {
                 TEST_FILES_SUFFIX: 'smoke.test',
                 IS_SMOKE_TEST: 'true',

@@ -222,7 +222,7 @@ class WorkerPool<T, R> implements IWorkerPool<T, R> {
         // new items are added to the queue.
         return new Promise<IWorkItem<T>>((resolve, reject) => {
             this.waitingWorkersUnblockQueue.push({
-                unblock: (workItem?: IWorkItem<T>) => {
+                unblock: (workItem: IWorkItem<T>) => {
                     // This will be called to unblock any worker waiting for items.
                     if (this.stopProcessing) {
                         // We should reject here since the processing should be stopped.

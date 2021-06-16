@@ -6,9 +6,10 @@
 import * as assert from 'assert';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { CommandSource, IWorkspaceService } from '../../../client/common/application/types';
+import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
+import { CommandSource } from '../../../client/common/constants';
 import {
     IConfigurationService,
     IDisposableRegistry,

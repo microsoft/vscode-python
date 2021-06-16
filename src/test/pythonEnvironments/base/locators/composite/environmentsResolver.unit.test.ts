@@ -8,6 +8,7 @@ import * as sinon from 'sinon';
 import { ImportMock } from 'ts-mock-imports';
 import { EventEmitter } from 'vscode';
 import { ExecutionResult } from '../../../../../client/common/process/types';
+import { IDisposableRegistry } from '../../../../../client/common/types';
 import { createDeferred } from '../../../../../client/common/utils/async';
 import { Architecture } from '../../../../../client/common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
@@ -17,19 +18,24 @@ import { PythonEnvsResolver } from '../../../../../client/pythonEnvironments/bas
 import { getEnvs as getEnvsWithUpdates } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import * as ExternalDep from '../../../../../client/pythonEnvironments/common/externalDependencies';
-import { EnvironmentInfoService } from '../../../../../client/pythonEnvironments/info/environmentInfoService';
+import {
+    getEnvironmentInfoService,
+    IEnvironmentInfoService,
+} from '../../../../../client/pythonEnvironments/info/environmentInfoService';
 import { sleep } from '../../../../core';
 import { createNamedEnv, getEnvs, SimpleLocator } from '../../common';
 
 suite('Python envs locator - Environments Resolver', () => {
-    let envInfoService: EnvironmentInfoService;
+    let envInfoService: IEnvironmentInfoService;
+    let disposables: IDisposableRegistry;
 
     setup(() => {
-        envInfoService = new EnvironmentInfoService();
+        disposables = [];
+        envInfoService = getEnvironmentInfoService(disposables);
     });
     teardown(() => {
         sinon.restore();
-        envInfoService.dispose();
+        disposables.forEach((d) => d.dispose());
     });
 
     /**

@@ -7,8 +7,8 @@ import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-m
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { CommandManager } from '../../../client/common/application/commandManager';
-import { CommandSource, ICommandManager } from '../../../client/common/application/types';
-import { Commands } from '../../../client/common/constants';
+import { ICommandManager } from '../../../client/common/application/types';
+import { Commands, CommandSource } from '../../../client/common/constants';
 import { IDisposable } from '../../../client/common/types';
 import {
     ITestDataItemResource,

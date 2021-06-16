@@ -46,8 +46,6 @@
     "python.snippet.launch.fastapi.label": "Python: FastAPI",
     "python.snippet.launch.flask.label": "Python: Flask",
     "python.snippet.launch.pyramid.label": "Python: Pyramid 应用",
-    "Pylance.proposePylanceMessage": "试试微软新的更快的、功能丰富的语言服务器 Pylance! ",
-    "Pylance.tryItNow": "立即安装",
     "Pylance.remindMeLater": "稍后提醒",
     "Pylance.pylanceNotInstalledMessage": "Pylance 扩展未安装。",
     "Pylance.pylanceInstalledReloadPromptMessage": "Pylance 扩展未安装。重新加载窗口以激活？",

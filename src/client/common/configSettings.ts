@@ -619,7 +619,7 @@ export class PythonSettings implements IPythonSettings {
         }
     }
 
-    protected initialize(): void {
+    public initialize(): void {
         const onDidChange = () => {
             const currentConfig = this.workspace.getConfiguration('python', this.workspaceRoot);
             this.update(currentConfig);

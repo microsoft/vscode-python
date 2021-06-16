@@ -39,26 +39,6 @@ declare interface String {
     trimQuotes(): string;
 }
 
-declare interface Array<T> {
-    /**
-     * Returns the elements of an array that meet the condition specified in an async callback function.
-     * @param asyncPredicate The filter method calls the async predicate function one time for each element in the array.
-     */
-    asyncFilter(asyncPredicate: (value: T) => Promise<unknown>): Promise<T[]>;
-}
-
-/**
- * Returns the elements of an array that meet the condition specified in an async callback function.
- * @param asyncPredicate The filter method calls the async predicate function one time for each element in the array.
- */
-Array.prototype.asyncFilter = async function <T>(
-    this: T[],
-    asyncPredicate: (value: T) => Promise<unknown>,
-): Promise<T[]> {
-    const results = await Promise.all(this.map(asyncPredicate));
-    return this.filter((_v, index) => results[index]);
-};
-
 /**
  * Split a string using the cr and lf characters and return them as an array.
  * By default lines are trimmed and empty lines are removed.

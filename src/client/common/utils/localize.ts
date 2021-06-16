@@ -112,11 +112,6 @@ export namespace AttachProcess {
 }
 
 export namespace Pylance {
-    export const proposePylanceMessage = localize(
-        'Pylance.proposePylanceMessage',
-        'Try out a new faster, feature-rich language server for Python by Microsoft, Pylance! Install the extension now.',
-    );
-    export const tryItNow = localize('Pylance.tryItNow', 'Try it now');
     export const remindMeLater = localize('Pylance.remindMeLater', 'Remind me later');
 
     export const pylanceNotInstalledMessage = localize(
@@ -137,9 +132,9 @@ export namespace Pylance {
 }
 
 export namespace Jupyter {
-    export const jupyterExtensionRequired = localize(
-        'Jupyter.extensionRequired',
-        'The Jupyter extension is required to perform that task. Click Yes to open the Jupyter extension installation page.',
+    export const jupyterExtensionNotInstalled = localize(
+        'Jupyter.extensionNotInstalled',
+        "This feature is available in the Jupyter extension, which isn't currently installed.",
     );
 }
 
@@ -416,6 +411,10 @@ export namespace ExtensionSurveyBanner {
     export const bannerLabelYes = localize('ExtensionSurveyBanner.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('ExtensionSurveyBanner.bannerLabelNo', 'No, thanks');
     export const maybeLater = localize('ExtensionSurveyBanner.maybeLater', 'Maybe later');
+    export const mplsMessage = localize(
+        'ExtensionSurveyBanner.mplsMessage',
+        'Can you please take 2 minutes to tell us about your experience using the Microsoft Python Language Server?',
+    );
 }
 
 export namespace Products {
@@ -441,7 +440,7 @@ export namespace StartPage {
     );
     export const interactiveWindowDesc = localize(
         'StartPage.interactiveWindowDesc',
-        '- You can create cells on a Python file by typing "#%%" <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window',
+        '- You can create cells on a Python file by typing "#%%". Make sure you have the Jupyter extension installed. <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window',
     );
 
     export const releaseNotes = localize(

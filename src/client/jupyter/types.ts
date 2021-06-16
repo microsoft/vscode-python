@@ -45,3 +45,15 @@ enum ColumnType {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type IRowsResponse = any[];
+
+export enum JupyterNotInstalledOrigin {
+    StartPageOpenBlankNotebook = 'startpage_open_blank_notebook',
+    StartPageOpenSampleNotebook = 'startpage_open_sample_notebook',
+    StartPageOpenInteractiveWindow = 'startpage_open_interactive_window',
+}
+
+export const IJupyterNotInstalledNotificationHelper = Symbol('IJupyterNotInstalledNotificationHelper');
+export interface IJupyterNotInstalledNotificationHelper {
+    shouldShowJupypterExtensionNotInstalledPrompt(): boolean;
+    showJupyterNotInstalledPrompt(entrypoint: JupyterNotInstalledOrigin): Promise<void>;
+}

@@ -1,17 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import { commands, Disposable, TextEditor, TextEditorEdit } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from './commands';
-import { ICommandManager, IJupyterExtensionDependencyManager } from './types';
+import { ICommandManager } from './types';
 
 @injectable()
 export class CommandManager implements ICommandManager {
-    constructor(
-        @inject(IJupyterExtensionDependencyManager)
-        private jupyterExtensionDependencyManager: IJupyterExtensionDependencyManager,
-    ) {}
+    constructor() {}
 
     /**
      * Registers a command that can be invoked via a keyboard shortcut,
@@ -73,11 +70,7 @@ export class CommandManager implements ICommandManager {
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
     >(command: E, ...rest: U): Thenable<T | undefined> {
-        if (command.includes('jupyter') && !this.jupyterExtensionDependencyManager.isJupyterExtensionInstalled) {
-            return this.jupyterExtensionDependencyManager.installJupyterExtension(this);
-        } else {
-            return commands.executeCommand<T>(command, ...rest);
-        }
+        return commands.executeCommand<T>(command, ...rest);
     }
 
     /**

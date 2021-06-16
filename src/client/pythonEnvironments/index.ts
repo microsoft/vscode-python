@@ -25,7 +25,7 @@ import { PosixKnownPathsLocator } from './discovery/locators/services/posixKnown
 import { PyenvLocator } from './discovery/locators/services/pyenvLocator';
 import { WindowsRegistryLocator } from './discovery/locators/services/windowsRegistryLocator';
 import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreLocator';
-import { EnvironmentInfoService } from './info/environmentInfoService';
+import { getEnvironmentInfoService } from './info/environmentInfoService';
 import { isComponentEnabled, registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
 import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
 import { PoetryLocator } from './discovery/locators/services/poetryLocator';
@@ -37,7 +37,7 @@ export async function initialize(ext: ExtensionState): Promise<PythonEnvironment
     const environmentsSecurity = new EnvironmentsSecurity();
     const api = new PythonEnvironments(
         () => createLocators(ext, environmentsSecurity),
-        // Other sub-commonents (e.g. config, "current" env) will go here.
+        // Other sub-components (e.g. config, "current" env) will go here.
     );
     ext.disposables.push(api);
 
@@ -94,8 +94,7 @@ async function createLocators(
     );
 
     // Create the env info service used by ResolvingLocator and CachingLocator.
-    const envInfoService = new EnvironmentInfoService();
-    ext.disposables.push(envInfoService);
+    const envInfoService = getEnvironmentInfoService(ext.disposables);
 
     // Build the stack of composite locators.
     locators = new PythonEnvsReducer(locators);

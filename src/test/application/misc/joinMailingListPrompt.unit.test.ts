@@ -27,7 +27,7 @@ suite('Join Mailing list Prompt Tests', () => {
     let sendTelemetryStub: sinon.SinonStub;
     setup(() => {
         const factory = mock(PersistentStateFactory);
-        storage = mock(PersistentState);
+        storage = mock(PersistentState) as PersistentState<boolean>;
         appShell = mock(ApplicationShell);
         experimentService = mock(ExperimentService);
         browserService = mock(BrowserService);
