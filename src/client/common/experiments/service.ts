@@ -103,7 +103,8 @@ export class ExperimentService implements IExperimentService {
             // this to ensure the experiment service is ready and internal states are fully
             // synced with the experiment server.
             // await this.experimentationService.getTreatmentVariableAsync(EXP_CONFIG_ID, experiment, true);
-            this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment);
+            // this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment);
+            this.experimentationService.isCachedFlightEnabled(experiment);
             return true;
         }
 
