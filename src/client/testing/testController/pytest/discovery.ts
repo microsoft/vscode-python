@@ -58,17 +58,27 @@ export class PytestDiscoveryService implements ITestDiscovery {
         }
 
         // This is the root object for all `pytest`
-        const testRoot = WorkspaceTestRoot.create({
-            id: 'pytest',
-            uri: options.workspaceFolder,
-            label: 'Pytest Tests',
-        });
+        let testRoot: TestItem<WorkspaceTestRoot>;
 
         if (rawTestData.length === 1) {
+            testRoot = WorkspaceTestRoot.create({
+                id: rawTestData[0].root,
+                uri: options.workspaceFolder,
+                label: path.basename(rawTestData[0].root),
+            });
             if (rawTestData[0].tests.length > 0) {
                 updateTestRoot(testRoot, rawTestData[0]);
+                return testRoot;
             }
         } else if (rawTestData.length > 1) {
+            testRoot = WorkspaceTestRoot.create({
+                id: options.workspaceFolder.fsPath,
+                uri: options.workspaceFolder,
+                label: path.basename(options.workspaceFolder.fsPath),
+            });
+            testRoot.description =
+                'This node is the root for all tests discovered with pytest, and may contain tests from multiple roots.';
+
             rawTestData.forEach((data) => {
                 if (data.tests.length > 0) {
                     const subRootItem = WorkspaceTestRoot.create({
@@ -80,7 +90,9 @@ export class PytestDiscoveryService implements ITestDiscovery {
                     updateTestRoot(subRootItem, data);
                 }
             });
+            return testRoot;
         }
-        return testRoot.children.size > 0 ? testRoot : undefined;
+
+        return undefined;
     }
 }

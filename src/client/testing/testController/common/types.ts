@@ -10,7 +10,8 @@ import { TestFile } from './testFile';
 import { TestFolder } from './testFolder';
 import { WorkspaceTestRoot } from './workspaceTestRoot';
 
-export type PythonTestData = WorkspaceTestRoot | TestFolder | TestFile | TestCollection | TestCase;
+export type PythonRunnableTestData = TestFolder | TestFile | TestCollection | TestCase;
+export type PythonTestData = WorkspaceTestRoot | PythonRunnableTestData;
 
 export const ITestDiscovery = Symbol('ITestDiscovery');
 export interface ITestDiscovery {
