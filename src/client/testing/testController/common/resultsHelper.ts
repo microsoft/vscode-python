@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as fsapi from 'fs-extra';
+import * as os from 'os';
 import { TestItem, TestMessage, TestMessageSeverity, TestResultState, TestRun } from 'vscode';
 import { TestCase } from './testCase';
 import { TestCollection } from './testCollection';
