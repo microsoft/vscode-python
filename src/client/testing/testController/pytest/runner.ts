@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as os from 'os';
 import { inject, injectable, named } from 'inversify';
 import { Disposable, test, TestItem, TestResultState, TestRun, TestRunRequest } from 'vscode';
 import { IOutputChannel } from '../../../common/types';
@@ -67,7 +66,7 @@ export async function processTestNode(
             return runTest(testNode as TestItem<TestCase>, runInstance, options);
         }
     } else {
-        runInstance.appendOutput(`Excluded: ${testNode.label}${os.EOL}`);
+        runInstance.appendOutput(`Excluded: ${testNode.label}\r\n`);
     }
     return Promise.resolve();
 }
@@ -94,9 +93,9 @@ export class PytestRunner implements ITestsRunner {
                 ),
             );
         } catch (ex) {
-            runInstance.appendOutput(`Error while running tests:${os.EOL}${ex}${os.EOL}${os.EOL}`);
+            runInstance.appendOutput(`Error while running tests:\r\n${ex}\r\n\r\n`);
         } finally {
-            runInstance.appendOutput(`Finished running tests!${os.EOL}`);
+            runInstance.appendOutput(`Finished running tests!\r\n`);
             runInstance.end();
         }
     }
@@ -106,7 +105,7 @@ export class PytestRunner implements ITestsRunner {
         runInstance: TestRun<PythonTestData>,
         options: PytestRunInstanceOptions,
     ): Promise<void> {
-        runInstance.appendOutput(`Running tests: ${testNode.label}${os.EOL}`);
+        runInstance.appendOutput(`Running tests: ${testNode.label}\r\n`);
         runInstance.setState(testNode, TestResultState.Running);
 
         const disposables: Disposable[] = [];
@@ -144,16 +143,16 @@ export class PytestRunner implements ITestsRunner {
                     token: options.token,
                     workspaceFolder: options.workspaceFolder,
                 };
-                runInstance.appendOutput(`Running test with arguments: ${runOptions.args.join(' ')}${os.EOL}`);
-                runInstance.appendOutput(`Current working directory: ${runOptions.cwd}${os.EOL}`);
-                runInstance.appendOutput(`Workspace directory: ${runOptions.workspaceFolder.fsPath}${os.EOL}`);
+                runInstance.appendOutput(`Running test with arguments: ${runOptions.args.join(' ')}\r\n`);
+                runInstance.appendOutput(`Current working directory: ${runOptions.cwd}\r\n`);
+                runInstance.appendOutput(`Workspace directory: ${runOptions.workspaceFolder.fsPath}\r\n`);
                 await this.runner.run(PYTEST_PROVIDER, runOptions);
             }
 
-            runInstance.appendOutput(`Run completed, parsing output${os.EOL}`);
+            runInstance.appendOutput(`Run completed, parsing output\r\n`);
             await updateResultFromJunitXml(junitFilePath, testNode, runInstance);
         } catch (ex) {
-            runInstance.appendOutput(`Error while running tests: ${testNode.label}${os.EOL}${ex}${os.EOL}${os.EOL}`);
+            runInstance.appendOutput(`Error while running tests: ${testNode.label}\r\n${ex}\r\n\r\n`);
             return Promise.reject(ex);
         } finally {
             disposables.forEach((d) => d.dispose());

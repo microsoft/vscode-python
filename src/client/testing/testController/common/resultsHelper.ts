@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import * as fsapi from 'fs-extra';
-import * as os from 'os';
 import { TestItem, TestMessage, TestMessageSeverity, TestResultState, TestRun } from 'vscode';
 import { TestCase } from './testCase';
 import { TestCollection } from './testCollection';
@@ -122,10 +121,10 @@ export async function updateResultFromJunitXml(
         const skipped = getSafeInt(junitSuite.$.skips ? junitSuite.$.skips : junitSuite.$.skip);
         const errors = getSafeInt(junitSuite.$.errors);
 
-        runInstance.appendOutput(`Total number of tests passed: ${totalTests - failures - skipped - errors}${os.EOL}`);
-        runInstance.appendOutput(`Total number of tests failed: ${failures}${os.EOL}`);
-        runInstance.appendOutput(`Total number of tests failed with errors: ${errors}${os.EOL}`);
-        runInstance.appendOutput(`Total number of tests skipped: ${skipped}${os.EOL}`);
+        runInstance.appendOutput(`Total number of tests passed: ${totalTests - failures - skipped - errors}\r\n`);
+        runInstance.appendOutput(`Total number of tests failed: ${failures}\r\n`);
+        runInstance.appendOutput(`Total number of tests failed with errors: ${errors}\r\n`);
+        runInstance.appendOutput(`Total number of tests skipped: ${skipped}\r\n`);
 
         testCaseNodes.forEach((node) => {
             const result = junitSuite.testcase.find((t) => {
@@ -135,7 +134,7 @@ export async function updateResultFromJunitXml(
             if (result) {
                 if (result.error) {
                     const error = result.error[0];
-                    const text = `${node.data.raw.id} Failed with Error: [${error.$.type}]${error.$.message}${os.EOL}${error._}${os.EOL}${os.EOL}`;
+                    const text = `${node.data.raw.id} Failed with Error: [${error.$.type}]${error.$.message}\r\n${error._}\r\n\r\n`;
                     const message = new TestMessage(text);
                     message.severity = TestMessageSeverity.Error;
 
@@ -144,7 +143,7 @@ export async function updateResultFromJunitXml(
                     runInstance.appendMessage(node, message);
                 } else if (result.failure) {
                     const failure = result.failure[0];
-                    const text = `${node.data.raw.id} Failed: [${failure.$.type}]${failure.$.message}${os.EOL}${failure._}${os.EOL}`;
+                    const text = `${node.data.raw.id} Failed: [${failure.$.type}]${failure.$.message}\r\n${failure._}\r\n`;
                     const message = new TestMessage(text);
                     message.severity = TestMessageSeverity.Information;
 
@@ -153,16 +152,16 @@ export async function updateResultFromJunitXml(
                     runInstance.appendMessage(node, message);
                 } else if (result.skipped) {
                     const skip = result.skipped[0];
-                    const text = `${node.data.raw.id} Skipped: [${skip.$.type}]${skip.$.message}${os.EOL}`;
+                    const text = `${node.data.raw.id} Skipped: [${skip.$.type}]${skip.$.message}\r\n`;
                     runInstance.setState(node, TestResultState.Skipped);
                     runInstance.appendOutput(text);
                 } else {
-                    const text = `${node.data.raw.id} Passed${os.EOL}`;
+                    const text = `${node.data.raw.id} Passed\r\n`;
                     runInstance.setState(node, TestResultState.Passed);
                     runInstance.appendOutput(text);
                 }
             } else {
-                runInstance.appendOutput(`Test result not found for: ${node.data.raw.id}${os.EOL}`);
+                runInstance.appendOutput(`Test result not found for: ${node.data.raw.id}\r\n`);
                 runInstance.setState(node, TestResultState.Unset);
             }
         });
