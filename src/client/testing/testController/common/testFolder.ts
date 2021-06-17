@@ -15,6 +15,7 @@ export class TestFolder {
             uri: Uri.file(fullPath),
         });
 
+        item.description = fullPath;
         item.debuggable = true;
         item.data = new TestFolder(item, rawData);
         return item;

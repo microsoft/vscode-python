@@ -18,6 +18,7 @@ export class TestFile {
 
         item.debuggable = true;
         item.data = new TestFile(item, rawData);
+        item.description = fullPath;
         return item;
     }
 

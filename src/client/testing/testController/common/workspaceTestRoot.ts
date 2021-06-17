@@ -7,6 +7,7 @@ export class WorkspaceTestRoot {
     public static create(options: vscode.TestItemOptions): vscode.TestItem<WorkspaceTestRoot> {
         const item = vscode.test.createTestItem<WorkspaceTestRoot>(options);
         item.data = new WorkspaceTestRoot(item);
+        item.description = item.uri?.fsPath;
         return item;
     }
 
