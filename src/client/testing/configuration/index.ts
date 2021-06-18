@@ -38,13 +38,13 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
         this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
     }
 
-    public async displayTestFrameworkError(wkspace: Uri): Promise<void> {
-        const settings = this.configurationService.getSettings(wkspace);
+    public async displayTestFrameworkError(workspace: Uri): Promise<void> {
+        const settings = this.configurationService.getSettings(workspace);
         let enabledCount = settings.testing.pytestEnabled ? 1 : 0;
         enabledCount += settings.testing.unittestEnabled ? 1 : 0;
         if (enabledCount > 1) {
             return this._promptToEnableAndConfigureTestFramework(
-                wkspace,
+                workspace,
                 'Enable only one of the test frameworks (unittest or pytest).',
                 true,
             );
@@ -57,7 +57,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
         if (item !== option) {
             throw NONE_SELECTED;
         }
-        return this._promptToEnableAndConfigureTestFramework(wkspace);
+        return this._promptToEnableAndConfigureTestFramework(workspace);
     }
 
     public async selectTestRunner(placeHolderMessage: string): Promise<UnitTestProduct | undefined> {
