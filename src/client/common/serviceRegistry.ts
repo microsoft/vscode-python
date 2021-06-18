@@ -2,25 +2,24 @@
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService } from '../activation/types';
 import {
-    IExperimentService,
-    IFileDownloader,
-    IHttpClient,
-    IInterpreterPathService,
-    IToolExecutionPath,
-    ToolExecutionPath,
     IAsyncDisposableRegistry,
     IBrowserService,
     IConfigurationService,
     ICryptoUtils,
     ICurrentProcess,
     IEditorUtils,
-    IExperimentsManager,
+    IExperimentService,
     IExtensions,
+    IFileDownloader,
+    IHttpClient,
     IInstaller,
+    IInterpreterPathService,
     IPathUtils,
     IPersistentStateFactory,
     IRandom,
+    IToolExecutionPath,
     IsWindows,
+    ToolExecutionPath,
 } from './types';
 import { IServiceManager } from '../ioc/types';
 import { JupyterExtensionDependencyManager } from '../jupyter/jupyterExtensionDependencyManager';
@@ -60,7 +59,6 @@ import { ConfigurationService } from './configuration/service';
 import { PipEnvExecutionPath } from './configuration/executionSettings/pipEnvExecution';
 import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
-import { ExperimentsManager } from './experiments/manager';
 import { ExperimentService } from './experiments/service';
 import {
     ExtensionInsidersDailyChannelRule,
@@ -165,7 +163,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
         PowershellTerminalActivationFailedHandler,
     );
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
-    serviceManager.addSingleton<IExperimentsManager>(IExperimentsManager, ExperimentsManager);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);

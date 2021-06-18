@@ -15,7 +15,7 @@ import {
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
 import './extensions';
-import { IInterpreterAutoSelectionProxyService, IInterpreterSecurityService } from '../interpreter/autoSelection/types';
+import { IInterpreterAutoSelectionProxyService } from '../interpreter/autoSelection/types';
 import { LogLevel } from '../logging/levels';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -32,7 +32,7 @@ import {
     IAutoCompleteSettings,
     IDefaultLanguageServer,
     IExperiments,
-    IExperimentsManager,
+    IExperimentService,
     IFormattingSettings,
     IInterpreterPathService,
     ILintingSettings,
@@ -148,8 +148,6 @@ export class PythonSettings implements IPythonSettings {
 
     public logging: ILoggingSettings = { level: LogLevel.Error };
 
-    public useIsolation = true;
-
     protected readonly changed = new EventEmitter<void>();
 
     private workspaceRoot: Resource;
@@ -166,9 +164,8 @@ export class PythonSettings implements IPythonSettings {
         workspaceFolder: Resource,
         private readonly interpreterAutoSelectionService: IInterpreterAutoSelectionProxyService,
         workspace?: IWorkspaceService,
-        private readonly experimentsManager?: IExperimentsManager,
+        private readonly experimentsManager?: IExperimentService,
         private readonly interpreterPathService?: IInterpreterPathService,
-        private readonly interpreterSecurityService?: IInterpreterSecurityService,
         private readonly defaultLS?: IDefaultLanguageServer,
     ) {
         this.workspace = workspace || new WorkspaceService();
@@ -180,9 +177,8 @@ export class PythonSettings implements IPythonSettings {
         resource: Uri | undefined,
         interpreterAutoSelectionService: IInterpreterAutoSelectionProxyService,
         workspace?: IWorkspaceService,
-        experimentsManager?: IExperimentsManager,
+        experimentsManager?: IExperimentService,
         interpreterPathService?: IInterpreterPathService,
-        interpreterSecurityService?: IInterpreterSecurityService,
         defaultLS?: IDefaultLanguageServer,
     ): PythonSettings {
         workspace = workspace || new WorkspaceService();
@@ -196,7 +192,6 @@ export class PythonSettings implements IPythonSettings {
                 workspace,
                 experimentsManager,
                 interpreterPathService,
-                interpreterSecurityService,
                 defaultLS,
             );
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
@@ -266,6 +261,12 @@ export class PythonSettings implements IPythonSettings {
 
         const defaultInterpreterPath = systemVariables.resolveAny(pythonSettings.get<string>('defaultInterpreterPath'));
         this.defaultInterpreterPath = defaultInterpreterPath || DEFAULT_INTERPRETER_SETTING;
+        if (this.defaultInterpreterPath === DEFAULT_INTERPRETER_SETTING) {
+            const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(
+                this.workspaceRoot,
+            );
+            this.defaultInterpreterPath = autoSelectedPythonInterpreter?.path ?? this.defaultInterpreterPath;
+        }
         this.defaultInterpreterPath = getAbsolutePath(this.defaultInterpreterPath, workspaceRoot);
 
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
@@ -283,8 +284,6 @@ export class PythonSettings implements IPythonSettings {
         this.autoUpdateLanguageServer = systemVariables.resolveAny(
             pythonSettings.get<boolean>('autoUpdateLanguageServer', true),
         )!;
-
-        this.useIsolation = systemVariables.resolveAny(pythonSettings.get<boolean>('useIsolation', true))!;
 
         // Get as a string and verify; don't just accept.
         let userLS = pythonSettings.get<string>('languageServer');
@@ -632,9 +631,6 @@ export class PythonSettings implements IPythonSettings {
         this.disposables.push(
             this.interpreterAutoSelectionService.onDidChangeAutoSelectedInterpreter(onDidChange.bind(this)),
         );
-        if (this.interpreterSecurityService) {
-            this.disposables.push(this.interpreterSecurityService.onDidChangeSafeInterpreters(onDidChange.bind(this)));
-        }
         this.disposables.push(
             this.workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
                 if (event.affectsConfiguration('python')) {
@@ -668,8 +664,7 @@ export class PythonSettings implements IPythonSettings {
          * But we can still use it here for this particular experiment. Reason being that this experiment only changes
          * `pythonPath` setting, and I've checked that `pythonPath` setting is not accessed anywhere in the constructor.
          */
-        const inExperiment = this.experimentsManager?.inExperiment(DeprecatePythonPath.experiment);
-        this.experimentsManager?.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+        const inExperiment = this.experimentsManager?.inExperimentSync(DeprecatePythonPath.experiment);
         // Use the interpreter path service if in the experiment otherwise use the normal settings
         this.pythonPath = systemVariables.resolveAny(
             inExperiment && this.interpreterPathService
@@ -684,12 +679,8 @@ export class PythonSettings implements IPythonSettings {
             const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(
                 this.workspaceRoot,
             );
-            if (inExperiment && this.interpreterSecurityService) {
-                if (
-                    autoSelectedPythonInterpreter &&
-                    this.interpreterSecurityService.isSafe(autoSelectedPythonInterpreter) &&
-                    this.workspaceRoot
-                ) {
+            if (inExperiment) {
+                if (autoSelectedPythonInterpreter && this.workspaceRoot) {
                     this.pythonPath = autoSelectedPythonInterpreter.path;
                     this.interpreterAutoSelectionService
                         .setWorkspaceInterpreter(this.workspaceRoot, autoSelectedPythonInterpreter)

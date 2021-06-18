@@ -1,3 +1,5 @@
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-namespace */
 export const PYTHON_LANGUAGE = 'python';
 export const PYTHON_WARNINGS = 'PYTHONWARNINGS';
 
@@ -75,12 +77,13 @@ export namespace Commands {
     export const GetSelectedInterpreterPath = 'python.interpreterPath';
     export const ClearStorage = 'python.clearPersistentStorage';
     export const ClearWorkspaceInterpreter = 'python.clearWorkspaceInterpreter';
-    export const ResetInterpreterSecurityStorage = 'python.resetInterpreterSecurityStorage';
     export const OpenStartPage = 'python.startPage.open';
     export const LaunchTensorBoard = 'python.launchTensorBoard';
     export const RefreshTensorBoard = 'python.refreshTensorBoard';
     export const ReportIssue = 'python.reportIssue';
 }
+
+// Look at https://microsoft.github.io/vscode-codicons/dist/codicon.html for other Octicon icon ids
 export namespace Octicons {
     export const Test_Pass = '$(check)';
     export const Test_Fail = '$(alert)';
@@ -89,6 +92,7 @@ export namespace Octicons {
     export const Downloading = '$(cloud-download)';
     export const Installing = '$(desktop-download)';
     export const Search_Stop = '$(search-stop)';
+    export const Star = '$(star)';
 }
 
 export const Button_Text_Tests_View_Output = 'View Output';

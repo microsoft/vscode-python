@@ -22,7 +22,6 @@ export class PythonEnvsResolver implements ILocator {
     constructor(
         private readonly parentLocator: ILocator,
         private readonly environmentInfoService: IEnvironmentInfoService,
-        private readonly isEnvSafe: (env: PythonEnvInfo) => boolean,
     ) {}
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
@@ -95,9 +94,6 @@ export class PythonEnvsResolver implements ILocator {
         didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
         seen: PythonEnvInfo[],
     ) {
-        if (!this.isEnvSafe(seen[envIndex])) {
-            return;
-        }
         state.pending += 1;
         // It's essential we increment the pending call count before any asynchronus calls in this method.
         // We want this to be run even when `resolveInBackground` is called in background.

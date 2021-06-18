@@ -74,10 +74,21 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 : InterpreterQuickPickList.enterPath.detail(),
             alwaysShow: true,
         };
+        const { defaultInterpreterPath } = this.configurationService.getSettings(state.workspace);
+        const defaultInterpreterPathSuggestion = {
+            label: InterpreterQuickPickList.defaultInterpreterPath.label(),
+            detail: this.pathUtils.getDisplayName(
+                defaultInterpreterPath,
+                state.workspace ? state.workspace.fsPath : undefined,
+            ),
+            path: defaultInterpreterPath,
+            alwaysShow: true,
+        };
 
         const suggestions: (IInterpreterQuickPickItem | IFindInterpreterQuickPickItem)[] = [
             manualEntrySuggestion,
             ...interpreterSuggestions,
+            defaultInterpreterPathSuggestion,
         ];
 
         const currentPythonPath = this.pathUtils.getDisplayName(
@@ -104,7 +115,11 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 callback: async (quickPick) => {
                     quickPick.busy = true;
                     interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace, true);
-                    quickPick.items = [manualEntrySuggestion, ...interpreterSuggestions];
+                    quickPick.items = [
+                        manualEntrySuggestion,
+                        ...interpreterSuggestions,
+                        defaultInterpreterPathSuggestion,
+                    ];
                     quickPick.busy = false;
                 },
             },

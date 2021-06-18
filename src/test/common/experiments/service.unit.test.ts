@@ -170,9 +170,9 @@ suite('Experimentation service', () => {
                 });
 
             isCachedFlightEnabledStub = sinon.stub().returns(Promise.resolve(true));
-            sinon.stub(tasClient, 'getExperimentationService').returns({
+            sinon.stub(tasClient, 'getExperimentationService').returns(({
                 isCachedFlightEnabled: isCachedFlightEnabledStub,
-            } as never);
+            } as unknown) as tasClient.IExperimentationService);
 
             configureApplicationEnvironment('stable', extensionVersion);
         });
@@ -340,9 +340,9 @@ suite('Experimentation service', () => {
                 });
 
             getTreatmentVariable = sinon.stub().returns(Promise.resolve(true));
-            sinon.stub(tasClient, 'getExperimentationService').returns({
+            sinon.stub(tasClient, 'getExperimentationService').returns(({
                 getTreatmentVariable,
-            } as never);
+            } as unknown) as tasClient.IExperimentationService);
 
             configureApplicationEnvironment('stable', extensionVersion);
         });
@@ -501,9 +501,9 @@ suite('Experimentation service', () => {
 
         setup(() => {
             getTreatmentVariableAsyncStub = sinon.stub().returns(Promise.resolve('value'));
-            sinon.stub(tasClient, 'getExperimentationService').returns({
+            sinon.stub(tasClient, 'getExperimentationService').returns(({
                 getTreatmentVariableAsync: getTreatmentVariableAsyncStub,
-            } as never);
+            } as unknown) as tasClient.IExperimentationService);
 
             configureApplicationEnvironment('stable', extensionVersion);
         });

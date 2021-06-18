@@ -32,7 +32,6 @@ import { ConfigurationService } from '../../client/common/configuration/service'
 import { PipEnvExecutionPath } from '../../client/common/configuration/executionSettings/pipEnvExecution';
 import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
-import { ExperimentsManager } from '../../client/common/experiments/manager';
 import {
     ExtensionInsidersDailyChannelRule,
     ExtensionInsidersOffChannelRule,
@@ -86,7 +85,6 @@ import {
     ICryptoUtils,
     ICurrentProcess,
     IEditorUtils,
-    IExperimentsManager,
     IExtensions,
     IHttpClient,
     IInstaller,
@@ -133,7 +131,6 @@ suite('Common - Service Registry', () => {
             [ITerminalActivator, TerminalActivator],
             [ITerminalActivationHandler, PowershellTerminalActivationFailedHandler],
             [ICryptoUtils, CryptoUtils],
-            [IExperimentsManager, ExperimentsManager],
             [ITerminalHelper, TerminalHelper],
             [ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, TerminalActivationProviders.pyenv],
             [ITerminalActivationCommandProvider, Bash, TerminalActivationProviders.bashCShellFish],

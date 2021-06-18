@@ -85,11 +85,7 @@ suite('Unit Tests - Navigation Command Handler', () => {
     });
     test('Ensure no symbols are returned when there are no symbols to be returned', async () => {
         const docUri = Uri.file(__filename);
-        const args = [
-            path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py'),
-            path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'symbolProvider.py'),
-            docUri.fsPath,
-        ];
+        const args = [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'symbolProvider.py'), docUri.fsPath];
         const proc: ExecutionResult<string> = {
             stdout: JSON.stringify({ classes: [], methods: [], functions: [] }),
         };
@@ -117,11 +113,7 @@ suite('Unit Tests - Navigation Command Handler', () => {
     });
     test('Ensure symbols are returned', async () => {
         const docUri = Uri.file(__filename);
-        const args = [
-            path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py'),
-            path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'symbolProvider.py'),
-            docUri.fsPath,
-        ];
+        const args = [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'symbolProvider.py'), docUri.fsPath];
         const proc: ExecutionResult<string> = {
             stdout: JSON.stringify({
                 classes: [

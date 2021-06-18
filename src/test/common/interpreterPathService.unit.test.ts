@@ -200,7 +200,7 @@ suite('Interpreter Path Service', async () => {
         persistentState.verifyAll();
     });
 
-    test('If the one-off transfer to new storage has not happened yet for the user setting, do it, record the transfer and remove the original user setting', async () => {
+    test('If the one-off transfer to new storage has not happened yet for the user setting, do it, record the transfer', async () => {
         const update = sinon.stub(InterpreterPathService.prototype, 'update');
         const persistentState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         persistentStateFactory
@@ -208,19 +208,12 @@ suite('Interpreter Path Service', async () => {
             .returns(() => persistentState.object);
         persistentState.setup((p) => p.value).returns(() => false);
         persistentState.setup((p) => p.updateValue(true)).verifiable(TypeMoq.Times.once());
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        workspaceService.setup((w) => w.getConfiguration('python')).returns(() => workspaceConfig.object);
-        workspaceConfig
-            .setup((w) => w.update('pythonPath', undefined, ConfigurationTarget.Global))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
 
         interpreterPathService = new InterpreterPathService(persistentStateFactory.object, workspaceService.object, []);
         await interpreterPathService._moveGlobalSettingValueToNewStorage('globalPythonPath');
 
         assert(update.calledWith(undefined, ConfigurationTarget.Global, 'globalPythonPath'));
         persistentState.verifyAll();
-        workspaceConfig.verifyAll();
     });
 
     test('If the one-off transfer to new storage has already happened for the user setting, do not update and simply return', async () => {
@@ -449,7 +442,9 @@ suite('Interpreter Path Service', async () => {
 
     test('Inspecting settings returns as expected if no workspace is opened', async () => {
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        workspaceService.setup((w) => w.getConfiguration('python')).returns(() => workspaceConfig.object);
+        workspaceService
+            .setup((w) => w.getConfiguration('python', TypeMoq.It.isAny()))
+            .returns(() => workspaceConfig.object);
         workspaceConfig
             .setup((w) => w.inspect<string>('defaultInterpreterPath'))
             .returns(
@@ -481,7 +476,7 @@ suite('Interpreter Path Service', async () => {
         // No workspace file is present if a folder is directly opened
         workspaceService.setup((w) => w.workspaceFile).returns(() => undefined);
         workspaceService.setup((w) => w.getWorkspaceFolderIdentifier(resource)).returns(() => resource.fsPath);
-        workspaceService.setup((w) => w.getConfiguration('python')).returns(() => workspaceConfig.object);
+        workspaceService.setup((w) => w.getConfiguration('python', resource)).returns(() => workspaceConfig.object);
         workspaceConfig
             .setup((w) => w.inspect<string>('defaultInterpreterPath'))
             .returns(
@@ -517,7 +512,7 @@ suite('Interpreter Path Service', async () => {
         // A workspace file is present in case of multiroot workspace folders
         workspaceService.setup((w) => w.workspaceFile).returns(() => workspaceFileUri);
         workspaceService.setup((w) => w.getWorkspaceFolderIdentifier(resource)).returns(() => resource.fsPath);
-        workspaceService.setup((w) => w.getConfiguration('python')).returns(() => workspaceConfig.object);
+        workspaceService.setup((w) => w.getConfiguration('python', resource)).returns(() => workspaceConfig.object);
         workspaceConfig
             .setup((w) => w.inspect<string>('defaultInterpreterPath'))
             .returns(
@@ -549,6 +544,48 @@ suite('Interpreter Path Service', async () => {
         });
     });
 
+    test('Inspecting settings falls back to default interpreter setting if no interpreter is set', async () => {
+        const workspaceFileUri = Uri.parse('path/to/workspaceFile');
+        const expectedWorkspaceSettingKey = `WORKSPACE_INTERPRETER_PATH_${fs.normCase(workspaceFileUri.fsPath)}`;
+        const expectedWorkspaceFolderSettingKey = `WORKSPACE_FOLDER_INTERPRETER_PATH_${resource.fsPath}`;
+        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        // A workspace file is present in case of multiroot workspace folders
+        workspaceService.setup((w) => w.workspaceFile).returns(() => workspaceFileUri);
+        workspaceService.setup((w) => w.getWorkspaceFolderIdentifier(resource)).returns(() => resource.fsPath);
+        workspaceService.setup((w) => w.getConfiguration('python', resource)).returns(() => workspaceConfig.object);
+        workspaceConfig
+            .setup((w) => w.inspect<string>('defaultInterpreterPath'))
+            .returns(
+                () =>
+                    ({
+                        globalValue: 'default/path/to/interpreter',
+                        workspaceValue: 'defaultWorkspaceValue',
+                        workspaceFolderValue: 'defaultWorkspaceFolderValue',
+                    } as any),
+            );
+        const workspaceFolderPersistentState = TypeMoq.Mock.ofType<IPersistentState<string | undefined>>();
+        const workspacePersistentState = TypeMoq.Mock.ofType<IPersistentState<string | undefined>>();
+        workspaceService.setup((w) => w.workspaceFolders).returns(() => undefined);
+        persistentStateFactory
+            .setup((p) =>
+                p.createGlobalPersistentState<string | undefined>(expectedWorkspaceFolderSettingKey, undefined),
+            )
+            .returns(() => workspaceFolderPersistentState.object);
+        persistentStateFactory
+            .setup((p) => p.createGlobalPersistentState<string | undefined>(expectedWorkspaceSettingKey, undefined))
+            .returns(() => workspacePersistentState.object);
+        workspaceFolderPersistentState.setup((p) => p.value).returns(() => undefined);
+        workspacePersistentState.setup((p) => p.value).returns(() => undefined);
+
+        const settings = interpreterPathService.inspect(resource);
+
+        assert.deepEqual(settings, {
+            globalValue: 'default/path/to/interpreter',
+            workspaceFolderValue: 'defaultWorkspaceFolderValue',
+            workspaceValue: 'defaultWorkspaceValue',
+        });
+    });
+
     test(`Getting setting value returns workspace folder value if it's defined`, async () => {
         interpreterPathService.inspect = () => ({
             globalValue: 'default/path/to/interpreter',
@@ -557,16 +594,6 @@ suite('Interpreter Path Service', async () => {
         });
         const settingValue = interpreterPathService.get(resource);
         expect(settingValue).to.equal('workspaceFolderValue');
-    });
-
-    test(`Getting setting value returns workspace value if workspace folder value is 'undefined'`, async () => {
-        interpreterPathService.inspect = () => ({
-            globalValue: 'default/path/to/interpreter',
-            workspaceFolderValue: undefined,
-            workspaceValue: 'workspaceValue',
-        });
-        const settingValue = interpreterPathService.get(resource);
-        expect(settingValue).to.equal('workspaceValue');
     });
 
     test(`Getting setting value returns workspace value if workspace folder value is 'undefined'`, async () => {

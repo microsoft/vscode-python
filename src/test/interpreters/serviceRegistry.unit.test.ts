@@ -8,9 +8,6 @@ import { IExtensionActivationService, IExtensionSingleActivationService } from '
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSelection';
-import { InterpreterEvaluation } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
-import { InterpreterSecurityService } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
-import { InterpreterSecurityStorage } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage';
 import { InterpreterAutoSelectionProxyService } from '../../client/interpreter/autoSelection/proxy';
 import { CachedInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/cached';
 import { CurrentPathInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/currentPath';
@@ -23,9 +20,6 @@ import {
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService,
     IInterpreterAutoSelectionProxyService,
-    IInterpreterEvaluation,
-    IInterpreterSecurityService,
-    IInterpreterSecurityStorage,
 } from '../../client/interpreter/autoSelection/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
 import { ResetInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/resetInterpreter';
@@ -67,10 +61,6 @@ suite('Interpreters - Service Registry', () => {
             [IExtensionSingleActivationService, SetInterpreterCommand],
             [IExtensionSingleActivationService, ResetInterpreterCommand],
             [IExtensionSingleActivationService, SetShebangInterpreterCommand],
-            [IExtensionSingleActivationService, InterpreterSecurityStorage],
-            [IInterpreterEvaluation, InterpreterEvaluation],
-            [IInterpreterSecurityStorage, InterpreterSecurityStorage],
-            [IInterpreterSecurityService, InterpreterSecurityService],
 
             [IExtensionActivationService, VirtualEnvironmentPrompt],
 

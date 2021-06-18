@@ -37,7 +37,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.54.0"
+        "vscode": "^1.57.0"
     },
     "keywords": [
         "python",
@@ -88,7 +88,6 @@
         "onCommand:python.switchToDailyChannel",
         "onCommand:python.switchToWeeklyChannel",
         "onCommand:python.clearWorkspaceInterpreter",
-        "onCommand:python.resetInterpreterSecurityStorage",
         "onCommand:python.startPage.open",
         "onCommand:python.enableSourceMapSupport",
         "onCommand:python.launchTensorBoard",
@@ -233,11 +232,6 @@
             {
                 "command": "python.clearWorkspaceInterpreter",
                 "title": "%python.command.python.clearWorkspaceInterpreter.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.resetInterpreterSecurityStorage",
-                "title": "%python.command.python.resetInterpreterSecurityStorage.title%",
                 "category": "Python"
             },
             {
@@ -486,11 +480,6 @@
                 {
                     "command": "python.clearWorkspaceInterpreter",
                     "title": "%python.command.python.clearWorkspaceInterpreter.title%",
-                    "category": "Python"
-                },
-                {
-                    "command": "python.resetInterpreterSecurityStorage",
-                    "title": "%python.command.python.resetInterpreterSecurityStorage.title%",
                     "category": "Python"
                 },
                 {
@@ -1126,15 +1115,15 @@
                 "python.defaultInterpreterPath": {
                     "type": "string",
                     "default": "python",
-                    "description": "Path to Python, you can use a custom version of Python by modifying this setting to include the full path.",
-                    "scope": "machine"
+                    "description": "Path to Python, you can use a custom version of Python by modifying this setting to include the full path. This default setting is used as a fallback if no interpreter is selected for the workspace. The extension will also not set nor change the value of this setting, it will only read from it.",
+                    "scope": "resource"
                 },
                 "python.experiments.optInto": {
                     "type": "array",
                     "default": [],
                     "items": {
                         "enum": [
-                            "DeprecatePythonPath - experiment",
+                            "pythonDeprecatePythonPath",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
                             "pythonDiscoveryModuleWithoutWatcher",
@@ -1151,7 +1140,7 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "DeprecatePythonPath - experiment",
+                            "pythonDeprecatePythonPath",
                             "pythonTensorboardExperiment",
                             "pythonDiscoveryModule",
                             "pythonDiscoveryModuleWithoutWatcher",
@@ -1713,7 +1702,7 @@
                 "python.pythonPath": {
                     "type": "string",
                     "default": "python",
-                    "description": "Path to Python, you can use a custom version of Python by modifying this setting to include the full path.",
+                    "description": "(DEPRECATED: Note this setting is not used when in pythonDeprecatePythonPath experiment) Path to Python, you can use a custom version of Python by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
                 "python.condaPath": {
@@ -1864,12 +1853,6 @@
                     "default": true,
                     "description": "Enable auto run test discovery when saving a test file.",
                     "scope": "resource"
-                },
-                "python.useIsolation": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Execute tools in isolation from the workspace.",
-                    "scope": "machine"
                 },
                 "python.venvFolders": {
                     "type": "array",

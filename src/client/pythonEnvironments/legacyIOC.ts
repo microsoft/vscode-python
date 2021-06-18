@@ -65,7 +65,6 @@ import {
 } from './discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
 import { EnvironmentType, PythonEnvironment } from './info';
-import { EnvironmentsSecurity, IEnvironmentsSecurity } from './security';
 import { toSemverLikeVersion } from './base/info/pythonVersion';
 import { PythonVersion } from './info/pythonVersion';
 import { IExtensionSingleActivationService } from '../activation/types';
@@ -142,12 +141,9 @@ class ComponentAdapter implements IComponentAdapter {
 
     private readonly refreshed = new vscode.EventEmitter<void>();
 
-    private allowOnSuggestionRefresh = true;
-
     constructor(
         // The adapter only wraps one thing: the component API.
         private readonly api: IPythonEnvironments,
-        private readonly environmentsSecurity: IEnvironmentsSecurity,
     ) {}
 
     // For use in VirtualEnvironmentPrompt.activate()
@@ -281,15 +277,6 @@ class ComponentAdapter implements IComponentAdapter {
         options?: GetInterpreterOptions,
         source?: PythonEnvSource[],
     ): Promise<PythonEnvironment[]> {
-        if (options?.onSuggestion && this.allowOnSuggestionRefresh) {
-            // For now, until we have the concept of trusted workspaces, we assume all interpreters as safe
-            // to run once user has triggered discovery, i.e interacted with the extension.
-            this.environmentsSecurity.markAllEnvsAsSafe();
-            // We can now run certain executables to collect more information than what is currently in
-            // cache, so trigger discovery for fresh envs in background.
-            getEnvs(this.api.iterEnvs({ ignoreCache: true })).ignoreErrors();
-            this.allowOnSuggestionRefresh = false; // We only need to refresh on suggestion once every session.
-        }
         const query: PythonLocatorQuery = { ignoreCache: options?.ignoreCache };
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
@@ -428,13 +415,6 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
 }
 
-export function registerNewDiscoveryForIOC(
-    serviceManager: IServiceManager,
-    api: IPythonEnvironments,
-    environmentsSecurity: EnvironmentsSecurity,
-): void {
-    serviceManager.addSingletonInstance<IComponentAdapter>(
-        IComponentAdapter,
-        new ComponentAdapter(api, environmentsSecurity),
-    );
+export function registerNewDiscoveryForIOC(serviceManager: IServiceManager, api: IPythonEnvironments): void {
+    serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, new ComponentAdapter(api));
 }

@@ -203,7 +203,6 @@ export interface IPythonSettings {
     readonly languageServerIsDefault: boolean;
     readonly defaultInterpreterPath: string;
     readonly logging: ILoggingSettings;
-    readonly useIsolation: boolean;
     readonly tensorBoard: ITensorBoardSettings | undefined;
     initialize(): void;
 }
@@ -527,33 +526,6 @@ export type ABExperiments = {
     min: number; // Lower limit for the experiment
     max: number; // Upper limit for the experiment
 }[];
-
-/**
- * Interface used to implement AB testing
- */
-export const IExperimentsManager = Symbol('IExperimentsManager');
-/**
- * @deprecated Use IExperimentService instead
- */
-export interface IExperimentsManager {
-    /**
-     * Checks if experiments are enabled, sets required environment to be used for the experiments, logs experiment groups
-     */
-    activate(): Promise<void>;
-
-    /**
-     * Checks if user is in experiment or not
-     * @param experimentName Name of the experiment
-     * @returns `true` if user is in experiment, `false` if user is not in experiment
-     */
-    inExperiment(experimentName: string): boolean;
-
-    /**
-     * Sends experiment telemetry if user is in experiment
-     * @param experimentName Name of the experiment
-     */
-    sendTelemetryIfInExperiment(experimentName: string): void;
-}
 
 /**
  * Experiment service leveraging VS Code's experiment framework.

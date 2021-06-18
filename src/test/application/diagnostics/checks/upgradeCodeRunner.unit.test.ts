@@ -27,7 +27,7 @@ import {
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { CODE_RUNNER_EXTENSION_ID } from '../../../../client/common/constants';
 import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
-import { IDisposableRegistry, IExperimentsManager, IExtensions, Resource } from '../../../../client/common/types';
+import { IDisposableRegistry, IExperimentService, IExtensions, Resource } from '../../../../client/common/types';
 import { Common, Diagnostics } from '../../../../client/common/utils/localize';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
@@ -39,12 +39,12 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
     let workspaceService: typemoq.IMock<IWorkspaceService>;
     let filterService: typemoq.IMock<IDiagnosticFilterService>;
     let serviceContainer: typemoq.IMock<IServiceContainer>;
-    let experimentsManager: typemoq.IMock<IExperimentsManager>;
+    let experimentsManager: typemoq.IMock<IExperimentService>;
     let extensions: typemoq.IMock<IExtensions>;
     function createContainer() {
         extensions = typemoq.Mock.ofType<IExtensions>();
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
-        experimentsManager = typemoq.Mock.ofType<IExperimentsManager>();
+        experimentsManager = typemoq.Mock.ofType<IExperimentService>();
         filterService = typemoq.Mock.ofType<IDiagnosticFilterService>();
         messageHandler = typemoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
         serviceContainer
@@ -57,7 +57,7 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
             .returns(() => messageHandler.object);
         commandFactory = typemoq.Mock.ofType<IDiagnosticsCommandFactory>();
         serviceContainer
-            .setup((s) => s.get(typemoq.It.isValue(IExperimentsManager)))
+            .setup((s) => s.get(typemoq.It.isValue(IExperimentService)))
             .returns(() => experimentsManager.object);
         serviceContainer
             .setup((s) => s.get(typemoq.It.isValue(IDiagnosticFilterService)))
@@ -226,10 +226,7 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
         });
 
         test('If not in DeprecatePythonPath experiment, empty diagnostics is returned', async () => {
-            experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
-            experimentsManager
-                .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-                .returns(() => undefined);
+            experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
 
             const diagnostics = await diagnosticService.diagnose(resource);
 
@@ -237,10 +234,7 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
         });
 
         test('If Code Runner extension is not installed, empty diagnostics is returned', async () => {
-            experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
-            experimentsManager
-                .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-                .returns(() => undefined);
+            experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
             extensions.setup((e) => e.getExtension(CODE_RUNNER_EXTENSION_ID)).returns(() => undefined);
 
             const diagnostics = await diagnosticService.diagnose(resource);
@@ -249,10 +243,7 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
         });
 
         test('If Code Runner extension is installed but the appropriate feature flag is set in package.json, empty diagnostics is returned', async () => {
-            experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
-            experimentsManager
-                .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-                .returns(() => undefined);
+            experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
             const extension = typemoq.Mock.ofType<Extension<any>>();
             extensions.setup((e) => e.getExtension(CODE_RUNNER_EXTENSION_ID)).returns(() => extension.object);
             extension
@@ -273,10 +264,7 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
         });
 
         test('If old version of Code Runner extension is installed but setting `code-runner.executorMap.python` is not set, empty diagnostics is returned', async () => {
-            experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
-            experimentsManager
-                .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-                .returns(() => undefined);
+            experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
             const workspaceConfig = typemoq.Mock.ofType<WorkspaceConfiguration>();
             const extension = typemoq.Mock.ofType<Extension<any>>();
             extensions.setup((e) => e.getExtension(CODE_RUNNER_EXTENSION_ID)).returns(() => extension.object);
@@ -294,10 +282,7 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
         });
 
         test('If old version of Code Runner extension is installed but $pythonPath is not being used, empty diagnostics is returned', async () => {
-            experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
-            experimentsManager
-                .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-                .returns(() => undefined);
+            experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
             const workspaceConfig = typemoq.Mock.ofType<WorkspaceConfiguration>();
             const extension = typemoq.Mock.ofType<Extension<any>>();
             extensions.setup((e) => e.getExtension(CODE_RUNNER_EXTENSION_ID)).returns(() => extension.object);
@@ -315,10 +300,7 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
         });
 
         test('If old version of Code Runner extension is installed and $pythonPath is being used, diagnostic with appropriate message is returned', async () => {
-            experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
-            experimentsManager
-                .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-                .returns(() => undefined);
+            experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
             const workspaceConfig = typemoq.Mock.ofType<WorkspaceConfiguration>();
             const extension = typemoq.Mock.ofType<Extension<any>>();
             extensions.setup((e) => e.getExtension(CODE_RUNNER_EXTENSION_ID)).returns(() => extension.object);

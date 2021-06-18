@@ -13,7 +13,6 @@ import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { DeprecatePythonPath, DiscoveryVariants } from '../../../../client/common/experiments/groups';
-import { ExperimentsManager } from '../../../../client/common/experiments/manager';
 import { ExperimentService } from '../../../../client/common/experiments/service';
 import { InterpreterPathService } from '../../../../client/common/interpreterPathService';
 import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
@@ -22,7 +21,6 @@ import { PlatformService } from '../../../../client/common/platform/platformServ
 import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
 import {
     IExperimentService,
-    IExperimentsManager,
     IInterpreterPathService,
     IPersistentStateFactory,
     Resource,
@@ -58,7 +56,6 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
     let workspaceService: IWorkspaceService;
     let experimentService: IExperimentService;
     let componentAdapter: IComponentAdapter;
-    let experimentsManager: IExperimentsManager;
     let interpreterPathService: IInterpreterPathService;
     class WorkspaceVirtualEnvInterpretersAutoSelectionRuleTest extends WorkspaceVirtualEnvInterpretersAutoSelectionRule {
         public async setGlobalInterpreter(
@@ -94,7 +91,6 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE),
         ).thenReturn(instance(virtualEnvLocator));
         when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
-        experimentsManager = mock(ExperimentsManager);
         interpreterPathService = mock(InterpreterPathService);
         componentAdapter = mock<IComponentAdapter>();
 
@@ -108,7 +104,6 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             instance(platform),
             instance(workspaceService),
             instance(serviceContainer),
-            instance(experimentsManager),
             instance(interpreterPathService),
             instance(componentAdapter),
             instance(experimentService),
@@ -191,8 +186,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as any);
         when(nextRule.autoSelectInterpreter(someUri, manager)).thenResolve();
         when(workspaceService.getConfiguration('python', folderUri)).thenReturn(pythonPath as any);
-        when(experimentsManager.inExperiment(DeprecatePythonPath.experiment)).thenReturn(true);
-        when(experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control)).thenReturn(undefined);
+        when(experimentService.inExperimentSync(DeprecatePythonPath.experiment)).thenReturn(true);
         when(interpreterPathService.inspect(folderUri)).thenReturn(pythonPathInConfig.object);
 
         rule.setNextRule(instance(nextRule));

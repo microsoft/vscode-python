@@ -3,16 +3,12 @@
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { createPythonEnv } from '../../../client/common/process/pythonEnvironment';
 import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
 import { IProcessService, StdErrError } from '../../../client/common/process/types';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { noop } from '../../core';
-
-const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
 
 use(chaiAsPromised);
 
@@ -50,7 +46,7 @@ suite('PythonProcessService', () => {
     test('execModuleObservable should call processService.execObservable with the -m argument', () => {
         const args = ['-a', 'b', '-c'];
         const moduleName = 'foo';
-        const expectedArgs = [isolated, moduleName, ...args];
+        const expectedArgs = ['-m', moduleName, ...args];
         const options = {};
         const observable = {
             proc: undefined,
@@ -87,7 +83,7 @@ suite('PythonProcessService', () => {
     test('execModule should call processService.exec with the -m argument', async () => {
         const args = ['-a', 'b', '-c'];
         const moduleName = 'foo';
-        const expectedArgs = [isolated, moduleName, ...args];
+        const expectedArgs = ['-m', moduleName, ...args];
         const options = {};
         const stdout = 'bar';
         processService
@@ -105,13 +101,13 @@ suite('PythonProcessService', () => {
     test('execModule should throw an error if the module is not installed', async () => {
         const args = ['-a', 'b', '-c'];
         const moduleName = 'foo';
-        const expectedArgs = [isolated, moduleName, ...args];
+        const expectedArgs = ['-m', moduleName, ...args];
         const options = {};
         processService
             .setup((p) => p.exec(pythonPath, expectedArgs, options))
             .returns(() => Promise.resolve({ stdout: 'bar', stderr: `Error: No module named ${moduleName}` }));
         processService
-            .setup((p) => p.exec(pythonPath, [isolated, '-c', `import ${moduleName}`], { throwOnStdErr: true }))
+            .setup((p) => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
             .returns(() => Promise.reject(new StdErrError('not installed')));
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
         const procs = createPythonProcessService(processService.object, env);

@@ -7,7 +7,7 @@ import { DiagnosticSeverity } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { CODE_RUNNER_EXTENSION_ID } from '../../../common/constants';
 import { DeprecatePythonPath } from '../../../common/experiments/groups';
-import { IDisposableRegistry, IExperimentsManager, IExtensions, Resource } from '../../../common/types';
+import { IDisposableRegistry, IExperimentService, IExtensions, Resource } from '../../../common/types';
 import { Common, Diagnostics } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
@@ -51,9 +51,8 @@ export class UpgradeCodeRunnerDiagnosticService extends BaseDiagnosticsService {
         if (this._diagnosticReturned) {
             return [];
         }
-        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
-        if (!experiments.inExperiment(DeprecatePythonPath.experiment)) {
+        const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
+        if (!experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             return [];
         }
         const extension = this.extensions.getExtension(CODE_RUNNER_EXTENSION_ID);

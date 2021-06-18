@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// eslint-disable-next-line max-classes-per-file
 import * as assert from 'assert';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
@@ -8,9 +9,8 @@ import { Uri } from 'vscode';
 import { DeprecatePythonPath } from '../../../client/common/experiments/groups';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IExperimentsManager } from '../../../client/common/types';
+import { IExperimentService } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
-import { IInterpreterSecurityService } from '../../../client/interpreter/autoSelection/types';
 import { InterpreterSelector } from '../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { IInterpreterComparer, IInterpreterQuickPickItem } from '../../../client/interpreter/configuration/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
@@ -30,11 +30,15 @@ const info: PythonEnvironment = {
 
 class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
     public path: string;
+
     public label: string;
+
     public description!: string;
+
     public detail?: string;
 
-    public interpreter = {} as any;
+    public interpreter = ({} as unknown) as PythonEnvironment;
+
     constructor(l: string, p: string) {
         this.path = p;
         this.label = l;
@@ -45,9 +49,7 @@ suite('Interpreters - selector', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let comparer: TypeMoq.IMock<IInterpreterComparer>;
-    let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
-    let interpreterSecurityService: TypeMoq.IMock<IInterpreterSecurityService>;
-    const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
+    let experimentsManager: TypeMoq.IMock<IExperimentService>;
     const ignoreCache = false;
     class TestInterpreterSelector extends InterpreterSelector {
         public async suggestionToQuickPickItem(
@@ -61,12 +63,8 @@ suite('Interpreters - selector', () => {
     let selector: TestInterpreterSelector;
 
     setup(() => {
-        experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
-        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
-        experimentsManager
-            .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-            .returns(() => undefined);
-        interpreterSecurityService = TypeMoq.Mock.ofType<IInterpreterSecurityService>();
+        experimentsManager = TypeMoq.Mock.ofType<IExperimentService>();
+        experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
         comparer = TypeMoq.Mock.ofType<IInterpreterComparer>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
@@ -75,13 +73,7 @@ suite('Interpreters - selector', () => {
             .returns((a: string, b: string) => a === b);
 
         comparer.setup((c) => c.compare(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => 0);
-        selector = new TestInterpreterSelector(
-            interpreterService.object,
-            comparer.object,
-            experimentsManager.object,
-            interpreterSecurityService.object,
-            new PathUtils(false),
-        );
+        selector = new TestInterpreterSelector(interpreterService.object, comparer.object, new PathUtils(false));
     });
 
     [true, false].forEach((isWindows) => {
@@ -89,8 +81,6 @@ suite('Interpreters - selector', () => {
             selector = new TestInterpreterSelector(
                 interpreterService.object,
                 comparer.object,
-                experimentsManager.object,
-                interpreterSecurityService.object,
                 new PathUtils(isWindows),
             );
 
@@ -133,27 +123,5 @@ suite('Interpreters - selector', () => {
                 );
             }
         });
-    });
-
-    test('When in Deprecate PythonPath experiment, remove unsafe interpreters from the suggested interpreters list', async () => {
-        const interpreterList = ['interpreter1', 'interpreter2', 'interpreter3'] as any;
-        interpreterService
-            .setup((i) => i.getInterpreters(folder1.uri, { onSuggestion: true, ignoreCache }))
-            .returns(() => interpreterList);
-
-        interpreterSecurityService.setup((i) => i.isSafe('interpreter1' as any)).returns(() => true);
-
-        interpreterSecurityService.setup((i) => i.isSafe('interpreter2' as any)).returns(() => false);
-
-        interpreterSecurityService.setup((i) => i.isSafe('interpreter3' as any)).returns(() => undefined);
-        experimentsManager.reset();
-        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
-        experimentsManager
-            .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-            .returns(() => undefined);
-
-        selector.suggestionToQuickPickItem = (item, _) => Promise.resolve(item as any);
-        const suggestion = await selector.getSuggestions(folder1.uri, ignoreCache);
-        assert.deepEqual(suggestion, ['interpreter1', 'interpreter3']);
     });
 });

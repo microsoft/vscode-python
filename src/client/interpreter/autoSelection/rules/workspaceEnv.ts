@@ -10,13 +10,7 @@ import { DeprecatePythonPath } from '../../../common/experiments/groups';
 import { inDiscoveryExperiment } from '../../../common/experiments/helpers';
 import { traceVerbose } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
-import {
-    IExperimentService,
-    IExperimentsManager,
-    IInterpreterPathService,
-    IPersistentStateFactory,
-    Resource,
-} from '../../../common/types';
+import { IExperimentService, IInterpreterPathService, IPersistentStateFactory, Resource } from '../../../common/types';
 import { OSType } from '../../../common/utils/platform';
 import { IServiceContainer } from '../../../ioc/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -38,7 +32,6 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
         @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
@@ -56,10 +49,9 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         }
 
         const pythonConfig = this.workspaceService.getConfiguration('python', workspacePath.folderUri)!;
-        const pythonPathInConfig = this.experiments.inExperiment(DeprecatePythonPath.experiment)
+        const pythonPathInConfig = this.experimentService.inExperimentSync(DeprecatePythonPath.experiment)
             ? this.interpreterPathService.inspect(workspacePath.folderUri)
             : pythonConfig.inspect<string>('pythonPath')!;
-        this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         // If user has defined custom values in settings for this workspace folder, then use that.
         if (pythonPathInConfig.workspaceFolderValue || pythonPathInConfig.workspaceValue) {
             return NextAction.runNextRule;
