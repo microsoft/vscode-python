@@ -158,9 +158,6 @@ export class PytestRunner implements ITestsRunner {
                     token: options.token,
                     workspaceFolder: options.workspaceFolder,
                 };
-                runInstance.appendOutput(`Running test with arguments: ${runOptions.args.join(' ')}\r\n`);
-                runInstance.appendOutput(`Current working directory: ${runOptions.cwd}\r\n`);
-                runInstance.appendOutput(`Workspace directory: ${runOptions.workspaceFolder.fsPath}\r\n`);
                 await this.runner.run(PYTEST_PROVIDER, runOptions);
             }
 

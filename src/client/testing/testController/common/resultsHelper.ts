@@ -88,24 +88,6 @@ function getSafeInt(value: string, defaultValue = 0): number {
     return num;
 }
 
-async function getTestCaseNodes(
-    testNode: TestItem<PythonTestData>,
-    collection: TestItem<TestCase>[] = [],
-): Promise<TestItem<TestCase>[]> {
-    if (testNode.data instanceof TestCase) {
-        collection.push(testNode as TestItem<TestCase>);
-    }
-    const nodes = Array.from(testNode.children.values());
-    for (const node of nodes) {
-        if (node.data instanceof TestCase) {
-            collection.push(node);
-        } else {
-            await getTestCaseNodes(node, collection);
-        }
-    }
-    return Promise.resolve(collection);
-}
-
 export async function updateResultFromJunitXml(
     outputXmlFile: string,
     testNode: TestItem<SupportedTestItemType>,
