@@ -14,6 +14,7 @@ import { TestCase } from '../common/testCase';
 import { TestCollection } from '../common/testCollection';
 import { TestFile } from '../common/testFile';
 import { TestFolder } from '../common/testFolder';
+import { getTestCaseNodes } from '../common/testItemUtilities';
 import { ITestsRunner, PythonRunnableTestData, PythonTestData, TestRunOptions } from '../common/types';
 import { WorkspaceTestRoot } from '../common/workspaceTestRoot';
 import { removePositionalFoldersAndFiles } from './arguments';
@@ -106,8 +107,14 @@ export class PytestRunner implements ITestsRunner {
         options: PytestRunInstanceOptions,
     ): Promise<void> {
         runInstance.appendOutput(`Running tests: ${testNode.label}\r\n`);
-        runInstance.setState(testNode, TestResultState.Running);
 
+        // VS Code API requires that we set the run state on the leaf nodes. The state of the
+        // parent nodes are computed based on the state of child nodes.
+        const testCaseNodes = await getTestCaseNodes(testNode);
+        testCaseNodes.forEach((node) => runInstance.setState(node, TestResultState.Running));
+
+        // For pytest we currently use JUnit XML to get the results. We create a temporary file here
+        // to ensure that the file is removed when we are done reading the result.
         const disposables: Disposable[] = [];
         const junitFilePath = await getPytestJunitXmlTempFile(options.args, disposables);
 
@@ -119,11 +126,18 @@ export class PytestRunner implements ITestsRunner {
             testArgs = filterArguments(testArgs, [JunitXmlArg, JunitXmlArgOld]);
             testArgs.splice(0, 0, `${JunitXmlArg}=${junitFilePath}`);
 
-            testArgs.splice(0, 0, '--rootdir', options.workspaceFolder.fsPath);
+            // Ensure that we use the xunit1 format.
             testArgs.splice(0, 0, '--override-ini', 'junit_family=xunit1');
+
+            // Make sure root dir is set so pytest can find the relative paths
+            testArgs.splice(0, 0, '--rootdir', options.workspaceFolder.fsPath);
 
             // Positional arguments control the tests to be run.
             testArgs.push(testNode.data.raw.id);
+
+            runInstance.appendOutput(`Running test with arguments: ${testArgs.join(' ')}\r\n`);
+            runInstance.appendOutput(`Current working directory: ${options.cwd}\r\n`);
+            runInstance.appendOutput(`Workspace directory: ${options.workspaceFolder.fsPath}\r\n`);
 
             if (options.debug) {
                 const debuggerArgs = [options.cwd, 'pytest'].concat(testArgs);
@@ -143,12 +157,10 @@ export class PytestRunner implements ITestsRunner {
                     token: options.token,
                     workspaceFolder: options.workspaceFolder,
                 };
-                runInstance.appendOutput(`Running test with arguments: ${runOptions.args.join(' ')}\r\n`);
-                runInstance.appendOutput(`Current working directory: ${runOptions.cwd}\r\n`);
-                runInstance.appendOutput(`Workspace directory: ${runOptions.workspaceFolder.fsPath}\r\n`);
                 await this.runner.run(PYTEST_PROVIDER, runOptions);
             }
 
+            // At this point pytest has finished running, we now have to parse the output
             runInstance.appendOutput(`Run completed, parsing output\r\n`);
             await updateResultFromJunitXml(junitFilePath, testNode, runInstance);
         } catch (ex) {

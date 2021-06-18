@@ -90,3 +90,21 @@ export function getUri(node: TestItem<PythonTestData>): Uri | undefined {
     }
     return node.uri;
 }
+
+export async function getTestCaseNodes(
+    testNode: TestItem<PythonTestData>,
+    collection: TestItem<TestCase>[] = [],
+): Promise<TestItem<TestCase>[]> {
+    if (testNode.data instanceof TestCase) {
+        collection.push(testNode as TestItem<TestCase>);
+    }
+    const nodes = Array.from(testNode.children.values());
+    for (const node of nodes) {
+        if (node.data instanceof TestCase) {
+            collection.push(node);
+        } else {
+            await getTestCaseNodes(node, collection);
+        }
+    }
+    return Promise.resolve(collection);
+}
