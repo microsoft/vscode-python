@@ -534,14 +534,6 @@ export interface IArgumentsHelper {
     ): string[];
 }
 
-export const ITestResultDisplay = Symbol('ITestResultDisplay');
-export interface ITestResultDisplay extends Disposable {
-    enabled: boolean;
-    readonly onDidChange: Event<void>;
-    displayProgressStatus(testRunResult: Promise<Tests>, debug?: boolean): void;
-    displayDiscoverStatus(testDiscovery: Promise<Tests>, quietMode?: boolean): Promise<Tests>;
-}
-
 export const ITestDisplay = Symbol('ITestDisplay');
 export interface ITestDisplay {
     displayStopTestUI(workspace: Uri, message: string): void;
