@@ -2,7 +2,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -29,10 +29,13 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
 
     private readonly workspaceService: IWorkspaceService;
 
+    private readonly commandManager: ICommandManager;
+
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
     }
 
     public async displayTestFrameworkError(wkspace: Uri): Promise<void> {
@@ -151,6 +154,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
                 traceError('Python Extension: applying unit test config updates', exc);
                 telemetryProps.failed = true;
             }
+            await this.commandManager.executeCommand('testing.refreshTests');
         } finally {
             sendTelemetryEvent(EventName.UNITTEST_CONFIGURING, undefined, telemetryProps);
         }
