@@ -178,7 +178,7 @@ suite('Activation Manager', () => {
             });
             documentManager
                 .setup((w) => w.onDidOpenTextDocument(typemoq.It.isAny(), typemoq.It.isAny()))
-                .callback(function (cb) {
+                .callback((cb) => {
                     fileOpenedHandler = cb;
                 })
                 .returns(() => disposable2.object)
@@ -348,7 +348,7 @@ suite('Activation Manager', () => {
             });
             documentManager
                 .setup((w) => w.onDidOpenTextDocument(typemoq.It.isAny(), typemoq.It.isAny()))
-                .callback(function (cb) {
+                .callback((cb) => {
                     docOpenedHandler = cb;
                 })
                 .returns(() => disposable2.object)
