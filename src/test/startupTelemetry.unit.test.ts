@@ -8,25 +8,22 @@ import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../client/common/application/types';
 import { DeprecatePythonPath } from '../client/common/experiments/groups';
-import { IExperimentsManager, IInterpreterPathService } from '../client/common/types';
+import { IExperimentService, IInterpreterPathService } from '../client/common/types';
 import { IServiceContainer } from '../client/ioc/types';
 import { hasUserDefinedPythonPath } from '../client/startupTelemetry';
 
 suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
     const resource = Uri.parse('a');
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-    let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
+    let experimentsManager: TypeMoq.IMock<IExperimentService>;
     let interpreterPathService: TypeMoq.IMock<IInterpreterPathService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
+        experimentsManager = TypeMoq.Mock.ofType<IExperimentService>();
         interpreterPathService = TypeMoq.Mock.ofType<IInterpreterPathService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        experimentsManager
-            .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-            .returns(() => undefined);
-        serviceContainer.setup((s) => s.get(IExperimentsManager)).returns(() => experimentsManager.object);
+        serviceContainer.setup((s) => s.get(IExperimentService)).returns(() => experimentsManager.object);
         serviceContainer.setup((s) => s.get(IWorkspaceService)).returns(() => workspaceService.object);
         serviceContainer.setup((s) => s.get(IInterpreterPathService)).returns(() => interpreterPathService.object);
     });
@@ -44,7 +41,7 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
             [undefined, 'python'].forEach((workspaceFolderValue) => {
                 test(`Return false if using settings equals {globalValue: ${globalValue}, workspaceValue: ${workspaceValue}, workspaceFolderValue: ${workspaceFolderValue}}`, () => {
                     experimentsManager
-                        .setup((e) => e.inExperiment(DeprecatePythonPath.experiment))
+                        .setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment))
                         .returns(() => false);
                     const workspaceConfig = setupConfigProvider();
 
@@ -60,7 +57,7 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
     });
 
     test('Return true if using setting value equals something else', () => {
-        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+        experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
 
         workspaceConfig.setup((w) => w.inspect('pythonPath')).returns(() => ({ globalValue: 'something else' } as any));
@@ -69,7 +66,7 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
     });
 
     test('If in Deprecate PythonPath experiment, use the new API to inspect settings', () => {
-        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
+        experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
         interpreterPathService
             .setup((i) => i.inspect(resource))
             .returns(() => ({}))

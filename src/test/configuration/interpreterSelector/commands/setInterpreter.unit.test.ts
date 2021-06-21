@@ -102,6 +102,13 @@ suite('Set Interpreter Command', () => {
             path: 'This is the selected Python path',
             interpreter: {} as PythonEnvironment,
         };
+        const defaultInterpreterPath = 'defaultInterpreterPath';
+        const defaultInterpreterPathSuggestion = {
+            label: InterpreterQuickPickList.defaultInterpreterPath.label(),
+            detail: defaultInterpreterPath,
+            path: defaultInterpreterPath,
+            alwaysShow: true,
+        };
 
         const refreshedItem: IInterpreterQuickPickItem = {
             description: '',
@@ -143,6 +150,7 @@ suite('Set Interpreter Command', () => {
                 .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), true))
                 .returns(() => Promise.resolve([refreshedItem]));
             pythonSettings.setup((p) => p.pythonPath).returns(() => currentPythonPath);
+            pythonSettings.setup((p) => p.defaultInterpreterPath).returns(() => defaultInterpreterPath);
             setInterpreterCommand = new SetInterpreterCommand(
                 appShell.object,
                 new PathUtils(false),
@@ -177,7 +185,7 @@ suite('Set Interpreter Command', () => {
         test('Picker should be displayed with expected items: Not in find path experiment', async () => {
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
-            const suggestions = [expectedEnterInterpreterPathSuggestion, item];
+            const suggestions = [expectedEnterInterpreterPathSuggestion, item, defaultInterpreterPathSuggestion];
             const expectedParameters = {
                 placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
                 items: suggestions,
@@ -209,7 +217,7 @@ suite('Set Interpreter Command', () => {
             await refreshButtonCallback!(quickPick as any); // Invoke callback, meaning that the refresh button is clicked.
             assert.deepStrictEqual(
                 quickPick.items,
-                [expectedEnterInterpreterPathSuggestion, refreshedItem],
+                [expectedEnterInterpreterPathSuggestion, refreshedItem, defaultInterpreterPathSuggestion],
                 'Quickpick not updated correctly',
             );
         });
@@ -234,7 +242,7 @@ suite('Set Interpreter Command', () => {
             );
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
-            const suggestions = [expectedFindInterpreterPathSuggestion, item];
+            const suggestions = [expectedFindInterpreterPathSuggestion, item, defaultInterpreterPathSuggestion];
             const expectedParameters = {
                 placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
                 items: suggestions,
@@ -266,7 +274,7 @@ suite('Set Interpreter Command', () => {
             await refreshButtonCallback!(quickPick as any); // Invoke callback, meaning that the refresh button is clicked.
             assert.deepStrictEqual(
                 quickPick.items,
-                [expectedFindInterpreterPathSuggestion, refreshedItem],
+                [expectedFindInterpreterPathSuggestion, refreshedItem, defaultInterpreterPathSuggestion],
                 'Quickpick not updated correctly',
             );
         });

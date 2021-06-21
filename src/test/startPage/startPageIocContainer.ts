@@ -43,7 +43,6 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { ExperimentsManager } from '../../client/common/experiments/manager';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { IInstallationChannelManager } from '../../client/common/installer/types';
@@ -280,8 +279,8 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, mockExtensionContext.object);
 
         // Turn off experiments.
-        const experimentManager = mock(ExperimentsManager);
-        when(experimentManager.inExperiment(anything())).thenCall((exp) => {
+        const experimentManager = mock(ExperimentService);
+        when(experimentManager.inExperimentSync(anything())).thenCall((exp) => {
             const setState = this.experimentState.get(exp);
             if (setState === undefined) {
                 // All experiments to true by default if not mocking jupyter

@@ -50,6 +50,8 @@ import { ModuleInstallFlags } from '../common/installer/types';
 enum Messages {
     JumpToSource = 'jump_to_source',
 }
+const TensorBoardSemVerRequirement = '>= 2.4.1';
+const TorchProfilerSemVerRequirement = '>= 0.2.0';
 
 /**
  * Manages the lifecycle of a TensorBoard session.
@@ -143,7 +145,7 @@ export class TensorBoardSession {
 
     private async promptToInstall(
         tensorBoardInstallStatus: ProductInstallStatus,
-        shouldInstallProfilerPlugin: boolean,
+        profilerPluginInstallStatus: ProductInstallStatus,
     ) {
         sendTelemetryEvent(EventName.TENSORBOARD_INSTALL_PROMPT_SHOWN);
         const yes = Common.bannerLabelYes();
@@ -151,10 +153,13 @@ export class TensorBoardSession {
         const isUpgrade = tensorBoardInstallStatus === ProductInstallStatus.NeedsUpgrade;
         let message;
 
-        if (tensorBoardInstallStatus === ProductInstallStatus.Installed && shouldInstallProfilerPlugin) {
+        if (
+            tensorBoardInstallStatus === ProductInstallStatus.Installed &&
+            profilerPluginInstallStatus !== ProductInstallStatus.Installed
+        ) {
             // PyTorch user already has TensorBoard, just ask if they want the profiler plugin
             message = TensorBoard.installProfilerPluginPrompt();
-        } else if (shouldInstallProfilerPlugin) {
+        } else if (profilerPluginInstallStatus !== ProductInstallStatus.Installed) {
             // PyTorch user doesn't have compatible TensorBoard or the profiler plugin
             message = TensorBoard.installTensorBoardAndProfilerPluginPrompt();
         } else if (isUpgrade) {
@@ -193,15 +198,19 @@ export class TensorBoardSession {
 
         // First see what dependencies we're missing
         let [tensorboardInstallStatus, profilerPluginInstallStatus] = await Promise.all([
-            this.installer.isProductVersionCompatible(Product.tensorboard, '>= 2.4.1', interpreter),
-            this.installer.isInstalled(Product.torchProfilerImportName, interpreter),
+            this.installer.isProductVersionCompatible(Product.tensorboard, TensorBoardSemVerRequirement, interpreter),
+            this.installer.isProductVersionCompatible(
+                Product.torchProfilerImportName,
+                TorchProfilerSemVerRequirement,
+                interpreter,
+            ),
         ]);
         const isTorchUserAndInExperiment = ImportTracker.hasModuleImport('torch') && this.isInTorchProfilerExperiment;
         const needsTensorBoardInstall = tensorboardInstallStatus !== ProductInstallStatus.Installed;
-        const needsProfilerPluginInstall = isTorchUserAndInExperiment && profilerPluginInstallStatus !== true;
+        const needsProfilerPluginInstall = profilerPluginInstallStatus !== ProductInstallStatus.Installed;
         if (
             // PyTorch user, in profiler install experiment, TensorBoard and profiler plugin already installed
-            (isTorchUserAndInExperiment && !needsTensorBoardInstall && profilerPluginInstallStatus === true) ||
+            (isTorchUserAndInExperiment && !needsTensorBoardInstall && !needsProfilerPluginInstall) ||
             // Not PyTorch user or not in profiler install experiment, so no need for profiler plugin,
             // and TensorBoard is already installed
             (!isTorchUserAndInExperiment && tensorboardInstallStatus === ProductInstallStatus.Installed)
@@ -212,7 +221,7 @@ export class TensorBoardSession {
         // Ask the user if they want to install packages to start a TensorBoard session
         const selection = await this.promptToInstall(
             tensorboardInstallStatus,
-            isTorchUserAndInExperiment && !profilerPluginInstallStatus,
+            isTorchUserAndInExperiment ? profilerPluginInstallStatus : ProductInstallStatus.Installed,
         );
         if (selection !== Common.bannerLabelYes() && !needsTensorBoardInstall) {
             return true;
@@ -243,26 +252,39 @@ export class TensorBoardSession {
                 ),
             );
         }
-        if (needsProfilerPluginInstall) {
-            installPromises.push(this.installer.install(Product.torchProfilerInstallName, interpreter, installerToken));
+        if (isTorchUserAndInExperiment && needsProfilerPluginInstall) {
+            installPromises.push(
+                this.installer.install(
+                    Product.torchProfilerInstallName,
+                    interpreter,
+                    installerToken,
+                    profilerPluginInstallStatus === ProductInstallStatus.NeedsUpgrade
+                        ? ModuleInstallFlags.upgrade
+                        : undefined,
+                ),
+            );
         }
         await Promise.race([...installPromises, cancellationPromise]);
 
         // Check install status again after installing
         [tensorboardInstallStatus, profilerPluginInstallStatus] = await Promise.all([
-            this.installer.isProductVersionCompatible(Product.tensorboard, '>= 2.4.1', interpreter),
-            this.installer.isInstalled(Product.torchProfilerImportName, interpreter),
+            this.installer.isProductVersionCompatible(Product.tensorboard, TensorBoardSemVerRequirement, interpreter),
+            this.installer.isProductVersionCompatible(
+                Product.torchProfilerImportName,
+                TorchProfilerSemVerRequirement,
+                interpreter,
+            ),
         ]);
         // Send telemetry regarding results of install
         sendTelemetryEvent(EventName.TENSORBOARD_PACKAGE_INSTALL_RESULT, undefined, {
             wasTensorBoardAttempted: needsTensorBoardInstall,
             wasProfilerPluginAttempted: needsProfilerPluginInstall,
             wasTensorBoardInstalled: tensorboardInstallStatus === ProductInstallStatus.Installed,
-            wasProfilerPluginInstalled: profilerPluginInstallStatus,
+            wasProfilerPluginInstalled: profilerPluginInstallStatus === ProductInstallStatus.Installed,
         });
         // Profiler plugin is not required to start TensorBoard. If it failed, note that it failed
         // in the log, but report success only based on TensorBoard package install status.
-        if (isTorchUserAndInExperiment && profilerPluginInstallStatus === false) {
+        if (isTorchUserAndInExperiment && profilerPluginInstallStatus !== ProductInstallStatus.Installed) {
             traceError(`Failed to install torch-tb-plugin. Profiler plugin will not appear in TensorBoard session.`);
         }
         return tensorboardInstallStatus === ProductInstallStatus.Installed;

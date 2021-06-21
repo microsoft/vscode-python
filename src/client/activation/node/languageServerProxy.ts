@@ -13,13 +13,7 @@ import {
 
 import { DeprecatePythonPath } from '../../common/experiments/groups';
 import { traceDecorators, traceError } from '../../common/logger';
-import {
-    IConfigurationService,
-    IExperimentService,
-    IExperimentsManager,
-    IInterpreterPathService,
-    Resource,
-} from '../../common/types';
+import { IConfigurationService, IExperimentService, IInterpreterPathService, Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
@@ -71,7 +65,6 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         @inject(ITestingService) private readonly testManager: ITestingService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
-        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
         @inject(IEnvironmentVariablesProvider) private readonly environmentService: IEnvironmentVariablesProvider,
@@ -188,7 +181,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         const progressReporting = new ProgressReporting(this.languageClient!);
         this.disposables.push(progressReporting);
 
-        if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
+        if (this.experimentService.inExperimentSync(DeprecatePythonPath.experiment)) {
             this.disposables.push(
                 this.interpreterPathService.onDidChange(() => {
                     // Manually send didChangeConfiguration in order to get the server to requery

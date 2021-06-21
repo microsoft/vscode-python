@@ -10,24 +10,19 @@ import { IWorkspaceService } from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { DeprecatePythonPath } from '../../../client/common/experiments/groups';
-import { IExperimentsManager, IInterpreterPathService } from '../../../client/common/types';
-import {
-    IInterpreterAutoSelectionService,
-    IInterpreterSecurityService,
-} from '../../../client/interpreter/autoSelection/types';
+import { IExperimentService, IInterpreterPathService } from '../../../client/common/types';
+import { IInterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Configuration Service', () => {
     const resource = Uri.parse('a');
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let interpreterPathService: TypeMoq.IMock<IInterpreterPathService>;
-    let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
+    let experimentsManager: TypeMoq.IMock<IExperimentService>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-    let interpreterSecurityService: TypeMoq.IMock<IInterpreterSecurityService>;
     let configService: ConfigurationService;
     setup(() => {
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        interpreterSecurityService = TypeMoq.Mock.ofType<IInterpreterSecurityService>();
         workspaceService
             .setup((w) => w.getWorkspaceFolder(resource))
             .returns(() => ({
@@ -37,13 +32,10 @@ suite('Configuration Service', () => {
             }));
         interpreterPathService = TypeMoq.Mock.ofType<IInterpreterPathService>();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
-        experimentsManager
-            .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-            .returns(() => undefined);
+        experimentsManager = TypeMoq.Mock.ofType<IExperimentService>();
         serviceContainer.setup((s) => s.get(IWorkspaceService)).returns(() => workspaceService.object);
         serviceContainer.setup((s) => s.get(IInterpreterPathService)).returns(() => interpreterPathService.object);
-        serviceContainer.setup((s) => s.get(IExperimentsManager)).returns(() => experimentsManager.object);
+        serviceContainer.setup((s) => s.get(IExperimentService)).returns(() => experimentsManager.object);
         configService = new ConfigurationService(serviceContainer.object);
     });
 
@@ -58,10 +50,6 @@ suite('Configuration Service', () => {
     test('Fetching settings goes as expected', () => {
         const interpreterAutoSelectionProxyService = TypeMoq.Mock.ofType<IInterpreterAutoSelectionService>();
         serviceContainer
-            .setup((s) => s.get(IInterpreterSecurityService))
-            .returns(() => interpreterSecurityService.object)
-            .verifiable(TypeMoq.Times.once());
-        serviceContainer
             .setup((s) => s.get(IInterpreterAutoSelectionService))
             .returns(() => interpreterAutoSelectionProxyService.object)
             .verifiable(TypeMoq.Times.once());
@@ -70,7 +58,7 @@ suite('Configuration Service', () => {
     });
 
     test('Do not update global settings if global value is already equal to the new value', async () => {
-        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+        experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
 
         workspaceConfig
@@ -87,7 +75,7 @@ suite('Configuration Service', () => {
     });
 
     test('Update global settings if global value is not equal to the new value', async () => {
-        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+        experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
 
         workspaceConfig
@@ -104,7 +92,7 @@ suite('Configuration Service', () => {
     });
 
     test('Do not update workspace settings if workspace value is already equal to the new value', async () => {
-        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+        experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
 
         workspaceConfig
@@ -121,7 +109,7 @@ suite('Configuration Service', () => {
     });
 
     test('Update workspace settings if workspace value is not equal to the new value', async () => {
-        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+        experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
 
         workspaceConfig
@@ -138,7 +126,7 @@ suite('Configuration Service', () => {
     });
 
     test('Do not update workspace folder settings if workspace folder value is already equal to the new value', async () => {
-        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+        experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
         workspaceConfig
             .setup((w) => w.inspect('setting'))
@@ -160,7 +148,7 @@ suite('Configuration Service', () => {
     });
 
     test('Update workspace folder settings if workspace folder value is not equal to the new value', async () => {
-        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+        experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
         workspaceConfig
             .setup((w) => w.inspect('setting'))
@@ -182,7 +170,7 @@ suite('Configuration Service', () => {
     });
 
     test('If in Deprecate PythonPath experiment & setting to update is `python.pythonPath`, update settings using new API if stored value is not equal to the new value', async () => {
-        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
+        experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
         interpreterPathService
             .setup((w) => w.inspect(resource))
 

@@ -11,7 +11,7 @@ import { IPlatformService } from '../../../common/platform/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentsManager,
+    IExperimentService,
     IInterpreterPathService,
     InterpreterConfigurationScope,
     Resource,
@@ -148,11 +148,10 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
+        const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
+        if (experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             disposables.push(interpreterPathService.onDidChange((i) => this.onDidChangeConfiguration(undefined, i)));
         }
-        experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         disposables.push(workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
     }
 

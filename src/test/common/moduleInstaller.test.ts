@@ -34,7 +34,6 @@ import { ConfigurationService } from '../../client/common/configuration/service'
 import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
 import { DiscoveryVariants } from '../../client/common/experiments/groups';
-import { ExperimentsManager } from '../../client/common/experiments/manager';
 import { ExperimentService } from '../../client/common/experiments/service';
 import {
     ExtensionInsidersDailyChannelRule,
@@ -99,7 +98,6 @@ import {
     ICurrentProcess,
     IEditorUtils,
     IExperimentService,
-    IExperimentsManager,
     IExtensions,
     IFileDownloader,
     IHttpClient,
@@ -129,7 +127,6 @@ import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironme
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
 import { getExtensionSettings, PYTHON_PATH, rootWorkspaceUri } from '../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
@@ -138,8 +135,6 @@ import { JupyterNotInstalledNotificationHelper } from '../../client/jupyter/jupy
 import { IJupyterNotInstalledNotificationHelper } from '../../client/jupyter/types';
 
 chaiUse(chaiAsPromised);
-
-const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
 
 const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
@@ -262,7 +257,6 @@ suite('Module Installer', () => {
                 PowershellTerminalActivationFailedHandler,
             );
             ioc.serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
-            ioc.serviceManager.addSingleton<IExperimentsManager>(IExperimentsManager, ExperimentsManager);
             ioc.serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
 
             ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
@@ -569,7 +563,7 @@ suite('Module Installer', () => {
 
             mockTerminalFactory.verifyAll();
             expect(argsSent.join(' ')).equal(
-                `${isolated} pip install -U ${moduleName} --user`,
+                `-m pip install -U ${moduleName} --user`,
                 'Invalid command sent to terminal for installation.',
             );
         });
@@ -610,7 +604,7 @@ suite('Module Installer', () => {
 
             mockTerminalFactory.verifyAll();
             expect(argsSent.join(' ')).equal(
-                `${isolated} pip install -U ${moduleName}`,
+                `-m pip install -U ${moduleName}`,
                 'Invalid command sent to terminal for installation.',
             );
         });
