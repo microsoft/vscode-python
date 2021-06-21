@@ -64,6 +64,7 @@ suite('Activation of Environments in Terminal', () => {
         defaultShell.Linux = terminalSettings.inspect('integrated.shell.linux').globalValue;
         await terminalSettings.update('integrated.shell.linux', '/bin/bash', vscode.ConfigurationTarget.Global);
 
+        // Opt into all experiments.
         const experiments = (await initialize()).serviceContainer.get<IExperimentService>(IExperimentService);
         sandbox.stub(experiments, 'inExperiment').resolves(true);
         sandbox.stub(experiments, 'inExperimentSync').returns(true);
