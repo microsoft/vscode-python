@@ -24,8 +24,6 @@ suite('Smoke Test: Datascience', () => {
         await verifyExtensionIsAvailable(JUPYTER_EXTENSION_ID);
         await initialize();
         await setAutoSaveDelayInWorkspaceRoot(1);
-        const jupyterConfig = vscode.workspace.getConfiguration('jupyter', null);
-        await jupyterConfig.update('alwaysTrustNotebooks', true, true);
 
         return undefined;
     });
