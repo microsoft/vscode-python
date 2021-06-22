@@ -24,7 +24,6 @@ import {
 import { EXTENSION_ROOT_DIR_FOR_TESTS, TEST_TIMEOUT } from '../../../constants';
 import { sleep } from '../../../core';
 import { initialize, initializeTest } from '../../../initialize';
-import * as ExperimentHelpers from '../../../../client/common/experiments/helpers';
 
 suite.skip('Activation of Environments in Terminal', () => {
     const file = path.join(
@@ -61,7 +60,6 @@ suite.skip('Activation of Environments in Terminal', () => {
     let experiments: IExperimentService;
     const sandbox = sinon.createSandbox();
     suiteSetup(async () => {
-        sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(false);
         envPaths = await fs.readJson(envsLocation);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders![0].uri);
         pythonSettings = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders![0].uri);
@@ -161,6 +159,7 @@ suite.skip('Activation of Environments in Terminal', () => {
         } else {
             await setPythonPathInWorkspaceRoot(envPath);
         }
+        await sleep(5000);
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
     }

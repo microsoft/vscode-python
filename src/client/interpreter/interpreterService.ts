@@ -117,7 +117,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this._pythonPathSetting = pySettings.pythonPath;
         if (this.experimentsManager.inExperimentSync(DeprecatePythonPath.experiment)) {
             disposables.push(
-                this.interpreterPathService.onDidChange((i) => {
+                this.interpreterPathService.onDidChange(async (i) => {
+                    await sleep(1000);
                     this._onConfigChanged(i.uri);
                 }),
             );
@@ -125,11 +126,12 @@ export class InterpreterService implements Disposable, IInterpreterService {
             const workspacesUris: (Uri | undefined)[] = workspaceService.hasWorkspaceFolders
                 ? workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
                 : [undefined];
-            const disposable = workspaceService.onDidChangeConfiguration((e) => {
+            const disposable = workspaceService.onDidChangeConfiguration(async (e) => {
                 const workspaceUriIndex = workspacesUris.findIndex((uri) =>
                     e.affectsConfiguration('python.pythonPath', uri),
                 );
                 const workspaceUri = workspaceUriIndex === -1 ? undefined : workspacesUris[workspaceUriIndex];
+                await sleep(1000);
                 this._onConfigChanged(workspaceUri);
             });
             disposables.push(disposable);
@@ -325,6 +327,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.didChangeInterpreterConfigurationEmitter.fire(resource);
         // Check if we actually changed our python path
         const pySettings = this.configService.getSettings(resource);
+        console.log('Interpreter', pySettings.pythonPath, this._pythonPathSetting);
         if (this._pythonPathSetting === '' || this._pythonPathSetting !== pySettings.pythonPath) {
             this._pythonPathSetting = pySettings.pythonPath;
             this.didChangeInterpreterEmitter.fire();

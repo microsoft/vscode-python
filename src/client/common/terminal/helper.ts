@@ -130,6 +130,7 @@ export class TerminalHelper implements ITerminalHelper {
         providers: ITerminalActivationCommandProvider[],
     ): Promise<string[] | undefined> {
         const settings = this.configurationService.getSettings(resource);
+        console.log('Do we have the right python?', settings.pythonPath);
 
         const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
         const condaService = (await inDiscoveryExperiment(experimentService))
@@ -156,7 +157,7 @@ export class TerminalHelper implements ITerminalHelper {
             const activationCommands = interpreter
                 ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
                 : await provider.getActivationCommands(resource, terminalShellType);
-
+            console.log('Activation commands found', JSON.stringify(activationCommands));
             if (Array.isArray(activationCommands) && activationCommands.length > 0) {
                 return activationCommands;
             }

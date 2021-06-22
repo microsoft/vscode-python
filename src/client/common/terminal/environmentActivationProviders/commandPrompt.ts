@@ -60,6 +60,7 @@ export class CommandPromptAndPowerShell extends VenvBaseActivationCommandProvide
         pythonPath: string,
         targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
+        console.log('Finding the script file');
         const scriptFile = await this.findScriptFile(pythonPath, targetShell);
         if (!scriptFile) {
             return;
