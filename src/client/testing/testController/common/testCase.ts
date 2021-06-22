@@ -24,11 +24,12 @@ export class TestCase {
         });
 
         // This is the id that will be used to compare with the results from JUnit file.
-        const runId = rawData.id
+        let runId = rawData.id
             .replace(/[\\\:\/]/g, '.')
             .replace(/\:\:/g, '.')
             .replace(/\.\./g, '.')
             .replace(/\.py/g, '');
+        runId = runId.startsWith('.') ? runId.substr(1) : runId;
 
         item.debuggable = true;
         item.data = new TestCase(item, rawData, runId);

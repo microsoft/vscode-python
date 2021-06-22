@@ -78,3 +78,17 @@ export function unittestGetTestPattern(args:string[]): string {
     }
     return 'test*.py';
 }
+
+
+export function getTestRunArgs(args: string[]): string[] {
+    const startTestDiscoveryDirectory = unittestGetTestFolders(args)[0];
+    const pattern = unittestGetTestPattern(args);
+
+    const failFast = args.some((arg) => arg.trim() === '-f' || arg.trim() === '--failfast');
+    const verbosity = args.some((arg) => arg.trim().indexOf('-v') === 0) ? 2 : 1;
+    const testArgs = [`--us=${startTestDiscoveryDirectory}`, `--up=${pattern}`, `--uvInt=${verbosity}`];
+    if (failFast) {
+        testArgs.push('--uf');
+    }
+    return testArgs;
+}

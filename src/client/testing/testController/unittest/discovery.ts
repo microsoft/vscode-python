@@ -138,8 +138,8 @@ for suite in suites._tests:
             for m in cls._tests:
                 tm = getattr(m, m._testMethodName)
                 print(m.id().replace('.',':') + ":" + get_sourceline(tm))
-        except Exception as ex:
-            print(ex)
+        except:
+            pass
 `;
 
         const runOptions: Options = {

@@ -10,25 +10,11 @@ import { TEST_OUTPUT_CHANNEL } from '../../constants';
 import { filterArguments, getOptionValues } from '../common/argumentsHelper';
 import { createTemporaryFile } from '../common/externalDependencies';
 import { updateResultFromJunitXml } from '../common/resultsHelper';
-import { TestCase } from '../common/testCase';
-import { TestCollection } from '../common/testCollection';
-import { TestFile } from '../common/testFile';
-import { TestFolder } from '../common/testFolder';
+import { processTestNode, TestRunInstanceOptions } from '../common/runHelper';
 import { getTestCaseNodes } from '../common/testItemUtilities';
 import { ITestsRunner, PythonRunnableTestData, PythonTestData, TestRunOptions } from '../common/types';
-import { WorkspaceTestRoot } from '../common/workspaceTestRoot';
 import { removePositionalFoldersAndFiles } from './arguments';
 
-type PytestRunInstanceOptions = TestRunOptions & {
-    exclude?: TestItem<PythonTestData>[];
-    debug: boolean;
-};
-
-type PytestRunTestFunction = (
-    testNode: TestItem<PythonRunnableTestData>,
-    runInstance: TestRun<TestFolder>,
-    options: PytestRunInstanceOptions,
-) => Promise<void>;
 
 const JunitXmlArgOld = '--junitxml';
 const JunitXmlArg = '--junit-xml';
@@ -43,34 +29,6 @@ async function getPytestJunitXmlTempFile(args: string[], disposables: Disposable
     return tempFile.filePath;
 }
 
-export async function processTestNode(
-    testNode: TestItem<PythonTestData>,
-    runInstance: TestRun<PythonTestData>,
-    options: PytestRunInstanceOptions,
-    runTest: PytestRunTestFunction,
-): Promise<void> {
-    if (!options.exclude?.includes(testNode)) {
-        if (testNode.data instanceof WorkspaceTestRoot) {
-            const testSubNodes = Array.from(testNode.children.values());
-            await Promise.all(testSubNodes.map((subNode) => processTestNode(subNode, runInstance, options, runTest)));
-        }
-        if (testNode.data instanceof TestFolder) {
-            return runTest(testNode as TestItem<TestFolder>, runInstance, options);
-        }
-        if (testNode.data instanceof TestFile) {
-            return runTest(testNode as TestItem<TestFile>, runInstance, options);
-        }
-        if (testNode.data instanceof TestCollection) {
-            return runTest(testNode as TestItem<TestCollection>, runInstance, options);
-        }
-        if (testNode.data instanceof TestCase) {
-            return runTest(testNode as TestItem<TestCase>, runInstance, options);
-        }
-    } else {
-        runInstance.appendOutput(`Excluded: ${testNode.label}\r\n`);
-    }
-    return Promise.resolve();
-}
 
 @injectable()
 export class PytestRunner implements ITestsRunner {
@@ -81,7 +39,7 @@ export class PytestRunner implements ITestsRunner {
     ) {}
 
     public async runTests(request: TestRunRequest<PythonTestData>, options: TestRunOptions): Promise<void> {
-        const runOptions: PytestRunInstanceOptions = {
+        const runOptions: TestRunInstanceOptions = {
             ...options,
             exclude: request.exclude,
             debug: request.debug,
@@ -102,9 +60,9 @@ export class PytestRunner implements ITestsRunner {
     }
 
     private async runTest(
-        testNode: TestItem<TestFolder | TestFile | TestCollection | TestCase>,
+        testNode: TestItem<PythonRunnableTestData>,
         runInstance: TestRun<PythonTestData>,
-        options: PytestRunInstanceOptions,
+        options: TestRunInstanceOptions,
     ): Promise<void> {
         runInstance.appendOutput(`Running tests: ${testNode.label}\r\n`);
 

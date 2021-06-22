@@ -2,23 +2,26 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, TestItem, TestRunRequest, TextDocument, WorkspaceFolder } from 'vscode';
+import { CancellationToken, TestItem, TestRunRequest, Uri, WorkspaceFolder } from 'vscode';
+import { IWorkspaceService } from '../../../common/application/types';
 import { IConfigurationService } from '../../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
-import { ITestController, ITestDiscovery, PythonTestData } from '../common/types';
-
+import { getUri } from '../common/testItemUtilities';
+import { ITestController, ITestDiscovery, ITestsRunner, PythonTestData } from '../common/types';
 
 @injectable()
 export class UnittestController implements ITestController {
     constructor(
         @inject(ITestDiscovery) @named(UNITTEST_PROVIDER) private readonly discovery: ITestDiscovery,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService
+        @inject(ITestsRunner) @named(UNITTEST_PROVIDER) private readonly runner: ITestsRunner,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
     ) {}
 
-    createWorkspaceTests(
+    public createWorkspaceTests(
         workspace: WorkspaceFolder,
         token: CancellationToken,
-    ): Promise<TestItem<PythonTestData> | undefined>{
+    ): Promise<TestItem<PythonTestData> | undefined> {
         const settings = this.configService.getSettings(workspace.uri);
         const options = {
             workspaceFolder: workspace.uri,
@@ -30,16 +33,15 @@ export class UnittestController implements ITestController {
         return this.discovery.discoverWorkspaceTests(options);
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    createOrUpdateDocumentTests(
-        _document: TextDocument,
-        _token: CancellationToken,
-    ): Promise<TestItem<PythonTestData> | undefined>{
-        throw new Error();
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    runTests(_options: TestRunRequest<PythonTestData>, _token: CancellationToken): Promise<void>{
-        throw new Error();
+    public runTests(options: TestRunRequest<PythonTestData>, token: CancellationToken): Promise<void> {
+        const workspaceFolder = this.workspaceService.getWorkspaceFolder(getUri(options.tests[0]));
+        const settings = this.configService.getSettings(workspaceFolder?.uri);
+        const cwd = workspaceFolder?.uri.fsPath ?? process.cwd();
+        return this.runner.runTests(options, {
+            workspaceFolder: workspaceFolder?.uri ?? Uri.file(cwd),
+            cwd: settings.testing.cwd ?? cwd,
+            token,
+            args: settings.testing.unittestArgs,
+        });
     }
 }
