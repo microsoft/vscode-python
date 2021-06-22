@@ -146,12 +146,15 @@ export class TerminalHelper implements ITerminalHelper {
                 : await this.conda.getActivationCommands(resource, terminalShellType);
 
             if (Array.isArray(activationCommands)) {
+                console.log('Should not be here');
                 return activationCommands;
             }
         }
+        console.log('Now let us check the supported providers for', terminalShellType);
 
         // Search from the list of providers.
         const supportedProviders = providers.filter((provider) => provider.isShellSupported(terminalShellType));
+        console.log('Log it', supportedProviders);
 
         for (const provider of supportedProviders) {
             const activationCommands = interpreter
@@ -162,5 +165,7 @@ export class TerminalHelper implements ITerminalHelper {
                 return activationCommands;
             }
         }
+
+        console.log('Could not find anything');
     }
 }
