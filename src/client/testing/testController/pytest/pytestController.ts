@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { WorkspaceFolder, CancellationToken, TestItem, TextDocument, TestRunRequest, Uri } from 'vscode';
+import { WorkspaceFolder, CancellationToken, TestItem, TestRunRequest, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { IConfigurationService } from '../../../common/types';
 import { PYTEST_PROVIDER } from '../../common/constants';
@@ -26,23 +26,6 @@ export class PytestController implements ITestController {
         const options = {
             workspaceFolder: workspace.uri,
             cwd: settings.testing.cwd ?? workspace.uri.fsPath,
-            args: settings.testing.pytestArgs,
-            token,
-            ignoreCache: true,
-        };
-        return this.discovery.discoverWorkspaceTests(options);
-    }
-
-    public createOrUpdateDocumentTests(
-        document: TextDocument,
-        token: CancellationToken,
-    ): Promise<TestItem<PythonTestData> | undefined> {
-        const settings = this.configService.getSettings(document.uri);
-        const workspaceFolder = this.workspaceService.getWorkspaceFolder(document.uri);
-        const cwd = workspaceFolder?.uri.fsPath ?? process.cwd();
-        const options = {
-            workspaceFolder: document.uri,
-            cwd: settings.testing.cwd ?? cwd,
             args: settings.testing.pytestArgs,
             token,
             ignoreCache: true,

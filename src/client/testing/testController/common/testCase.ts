@@ -37,7 +37,7 @@ export class TestCase {
         // saves us from running symbol script or querying language server for this info.
         try {
             const sourceLine = rawData.source.substr(rawData.source.indexOf(':') + 1);
-            const line = parseInt(sourceLine, 10);
+            const line = Number.parseInt(sourceLine, 10);
             // Lines in raw data start at 1, vscode lines start at 0
             item.range = new Range(new Position(line - 1, 0), new Position(line, 0));
         } catch (ex) {

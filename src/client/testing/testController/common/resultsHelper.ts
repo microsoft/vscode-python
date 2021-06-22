@@ -80,9 +80,9 @@ function getJunitResults(parserResult: unknown): TestSuiteResult | undefined {
 }
 
 function getSafeInt(value: string, defaultValue = 0): number {
-    const num = parseInt(value, 10);
+    const num = Number.parseInt(value, 10);
     // eslint-disable-next-line no-restricted-globals
-    if (isNaN(num)) {
+    if (Number.isNaN(num)) {
         return defaultValue;
     }
     return num;
@@ -96,7 +96,7 @@ export async function updateResultFromJunitXml(
     const data = await fsapi.readFile(outputXmlFile);
     const parserResult = await parseXML(data.toString('utf8'));
     const junitSuite = getJunitResults(parserResult);
-    const testCaseNodes = await getTestCaseNodes(testNode);
+    const testCaseNodes = getTestCaseNodes(testNode);
 
     if (junitSuite && junitSuite.testcase.length > 0 && testCaseNodes.length > 0) {
         const totalTests = getSafeInt(junitSuite.$.tests);

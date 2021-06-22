@@ -110,7 +110,7 @@ export class PytestRunner implements ITestsRunner {
 
         // VS Code API requires that we set the run state on the leaf nodes. The state of the
         // parent nodes are computed based on the state of child nodes.
-        const testCaseNodes = await getTestCaseNodes(testNode);
+        const testCaseNodes = getTestCaseNodes(testNode);
         testCaseNodes.forEach((node) => runInstance.setState(node, TestResultState.Running));
 
         // For pytest we currently use JUnit XML to get the results. We create a temporary file here
