@@ -59,6 +59,8 @@ export class NotebookConverter implements Disposable {
 
     private onDidChangeCellsEmitter = new EventEmitter<TextDocumentChangeEvent>();
 
+    private mapOfConcatDocumentsWithCellUris = new Map<string, string[]>();
+
     constructor(
         private api: IVSCodeNotebook,
         private fs: IFileSystem,
@@ -127,9 +129,18 @@ export class NotebookConverter implements Disposable {
         if (wrapper) {
             // Diagnostics are supposed to be per file and are updated each time
             // Make sure to clear out old ones first
+            const cellUris: string[] = [];
+            const oldCellUris = this.mapOfConcatDocumentsWithCellUris.get(uri.toString()) || [];
             wrapper.notebook.getCells().forEach((c: NotebookCell) => {
                 result.set(c.document.uri, []);
+                cellUris.push(c.document.uri.toString());
             });
+            // Possible some cells were deleted, we need to clear the diagnostics of those cells as well.
+            const currentCellUris = new Set(cellUris);
+            oldCellUris
+                .filter((cellUri) => !currentCellUris.has(cellUri))
+                .forEach((cellUri) => result.set(Uri.parse(cellUri), []));
+            this.mapOfConcatDocumentsWithCellUris.set(uri.toString(), cellUris);
 
             // Then for all the new ones, set their values.
             diagnostics.forEach((d) => {
@@ -141,6 +152,11 @@ export class NotebookConverter implements Disposable {
                 }
                 list.push(this.toIncomingDiagnostic(location.uri, d));
             });
+        } else if (this.mapOfConcatDocumentsWithCellUris.has(uri.toString())) {
+            (this.mapOfConcatDocumentsWithCellUris.get(uri.toString()) || [])
+                .map((cellUri) => Uri.parse(cellUri))
+                .forEach((cellUri) => result.set(cellUri, []));
+            this.mapOfConcatDocumentsWithCellUris.delete(uri.toString());
         } else {
             result.set(uri, diagnostics);
         }

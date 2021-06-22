@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.6.0-rc (9 June 2021)
+## 2021.6.0 (16 June 2021)
 
 ### Enhancements
 
@@ -20,7 +20,7 @@
    ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
 1. Show `python.pythonPath` deprecation prompt when in `pythonDeprecatePythonPath` experiment.
    ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
-1. Do not show safety prompt before autoselecting a workspace interpreter.
+1. Do not show safety prompt before auto-selecting a workspace interpreter.
    ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
 1. Assume workspace interpreters are safe to execute for discovery.
    ([#16485](https://github.com/Microsoft/vscode-python/issues/16485))
