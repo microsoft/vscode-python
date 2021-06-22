@@ -20,7 +20,7 @@ import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { EventName } from '../telemetry/constants';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry/index';
-import { CANCELLATION_REASON, PYTEST_PROVIDER } from './common/constants';
+import { CANCELLATION_REASON, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './common/constants';
 import { selectTestWorkspace } from './common/testUtils';
 import { TestSettingsPropertyNames } from './configuration/types';
 import {
@@ -110,6 +110,7 @@ export class UnitTestManagementService implements ITestManagementService, IExten
             const controller = new PythonTestController(
                 this.serviceContainer.get<IConfigurationService>(IConfigurationService),
                 this.serviceContainer.get<ITestController>(ITestController, PYTEST_PROVIDER),
+                this.serviceContainer.get<ITestController>(ITestController, UNITTEST_PROVIDER)
             );
             this.disposableRegistry.push(test.registerTestController(controller));
         }

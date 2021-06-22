@@ -134,7 +134,7 @@ const OptionsWithoutArguments = [
     '-d',
 ];
 
-export function getTestFolders(args: string[]): string[] {
+export function pytestGetTestFolders(args: string[]): string[] {
     const testDirs = getOptionValues(args, '--rootdir');
     if (testDirs.length > 0) {
         return testDirs;

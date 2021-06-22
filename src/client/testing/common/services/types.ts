@@ -13,7 +13,7 @@ type RawTestNode = {
     name: string;
     parentid: string;
 };
-type RawTestParent = RawTestNode & {
+export type RawTestParent = RawTestNode & {
     kind: 'folder' | 'file' | 'suite' | 'function';
 };
 type RawTestFSNode = RawTestParent & {

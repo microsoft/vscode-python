@@ -10,7 +10,7 @@ import { TestDiscoveryOptions } from '../../common/types';
 import { updateTestRoot } from '../common/testItemUtilities';
 import { ITestDiscovery, ITestDiscoveryHelper, PythonTestData } from '../common/types';
 import { WorkspaceTestRoot } from '../common/workspaceTestRoot';
-import { getTestFolders, preparePytestArgumentsForDiscovery } from './arguments';
+import { pytestGetTestFolders, preparePytestArgumentsForDiscovery } from './arguments';
 
 @injectable()
 export class PytestDiscoveryService implements ITestDiscovery {
@@ -18,7 +18,7 @@ export class PytestDiscoveryService implements ITestDiscovery {
 
     public async discoverWorkspaceTests(options: TestDiscoveryOptions): Promise<TestItem<PythonTestData> | undefined> {
         // Get individual test directories selected by the user.
-        const testDirectories = getTestFolders(options.args);
+        const testDirectories = pytestGetTestFolders(options.args);
 
         // Set arguments to use with pytest discovery script.
         const args = runAdapter(['discover', 'pytest', '--', ...preparePytestArgumentsForDiscovery(options)]);
