@@ -29,12 +29,17 @@ function getTestIds(content: string): string[] {
         .filter((line) => line.length > 0);
 }
 
-function testDiscoveryParser(cwd:string, testDir:string, testIds:string[], token:CancellationToken|undefined): Promise<RawDiscoveredTests>{
+function testDiscoveryParser(
+    cwd: string,
+    testDir: string,
+    testIds: string[],
+    token: CancellationToken | undefined,
+): Promise<RawDiscoveredTests> {
     const parents: RawTestParent[] = [];
     const tests: RawTest[] = [];
 
-    for(const testId of testIds){
-        if(token?.isCancellationRequested){
+    for (const testId of testIds) {
+        if (token?.isCancellationRequested) {
             break;
         }
 
@@ -44,7 +49,7 @@ function testDiscoveryParser(cwd:string, testDir:string, testIds:string[], token
         // E.g:
         // test_math.TestMathMethods.test_numbers:5
         // test_math.TestMathMethods.test_numbers2:9
-        if(parts.length > 3){
+        if (parts.length > 3) {
             const lineNo = parts.pop();
             const functionName = parts.pop();
             const className = parts.pop();
@@ -53,45 +58,45 @@ function testDiscoveryParser(cwd:string, testDir:string, testIds:string[], token
             const pyFileName = `${fileName}.py`;
             const relPath = `./${[...folders, pyFileName].join('/')}`;
 
-            if(functionName && className && fileName && lineNo){
+            if (functionName && className && fileName && lineNo) {
                 const collectionId = `${relPath}::${className}`;
                 const fileId = relPath;
                 tests.push({
                     id: `${relPath}::${className}::${functionName}`,
                     name: functionName,
                     parentid: collectionId,
-                    source: `${relPath}:${lineNo}`
+                    source: `${relPath}:${lineNo}`,
                 });
 
-                const rawCollection = parents.find((c)=> c.id === collectionId);
-                if(!rawCollection){
-                    parents.push( {
+                const rawCollection = parents.find((c) => c.id === collectionId);
+                if (!rawCollection) {
+                    parents.push({
                         id: collectionId,
                         name: className,
                         parentid: fileId,
-                        kind: 'suite'
+                        kind: 'suite',
                     });
                 }
 
-                const rawFile = parents.find((f)=> f.id === fileId);
-                if(!rawFile){
-                    parents.push( {
+                const rawFile = parents.find((f) => f.id === fileId);
+                if (!rawFile) {
+                    parents.push({
                         id: fileId,
                         name: pyFileName,
-                        parentid: folders.length ===0 ? testDir:`./${folders.join('/')}`,
+                        parentid: folders.length === 0 ? testDir : `./${folders.join('/')}`,
                         kind: 'file',
                         relpath: relPath,
                     } as RawTestParent);
                 }
 
                 const folderParts = [];
-                for(const folder of folders){
-                    const parentId = folderParts.length ===0 ? testDir:`${folderParts.join('/')}`;
+                for (const folder of folders) {
+                    const parentId = folderParts.length === 0 ? testDir : `${folderParts.join('/')}`;
                     folderParts.push(folder);
                     const pathId = `${folderParts.join('/')}`;
-                    const rawFolder = parents.find((f)=> f.id === pathId);
-                    if(!rawFolder){
-                        parents.push( {
+                    const rawFolder = parents.find((f) => f.id === pathId);
+                    if (!rawFolder) {
+                        parents.push({
                             id: pathId,
                             name: folder,
                             parentid: parentId,
@@ -101,21 +106,20 @@ function testDiscoveryParser(cwd:string, testDir:string, testIds:string[], token
                     }
                 }
             }
-
         }
     }
 
     return Promise.resolve({
         rootid: testDir,
-        root: path.isAbsolute(testDir)?testDir:path.resolve(cwd, testDir),
+        root: path.isAbsolute(testDir) ? testDir : path.resolve(cwd, testDir),
         parents,
-        tests
+        tests,
     });
 }
 
 @injectable()
 export class UnittestDiscoveryService implements ITestDiscovery {
-    constructor(@inject(ITestRunner) private readonly runner:ITestRunner){}
+    constructor(@inject(ITestRunner) private readonly runner: ITestRunner) {}
 
     public async discoverWorkspaceTests(options: TestDiscoveryOptions): Promise<TestItem<PythonTestData> | undefined> {
         const startDir = unittestGetTestFolders(options.args)[0];
@@ -155,9 +159,9 @@ for suite in suites._tests:
         const content = await this.runner.run(UNITTEST_PROVIDER, runOptions);
         const rawTestData = await testDiscoveryParser(
             options.cwd,
-            path.isAbsolute(startDir)?path.relative(options.cwd, startDir):startDir,
+            path.isAbsolute(startDir) ? path.relative(options.cwd, startDir) : startDir,
             getTestIds(content),
-            options.token
+            options.token,
         );
 
         const testRoot = WorkspaceTestRoot.create({

@@ -22,7 +22,6 @@ const OptionsWithoutArguments = [
     '--verbose',
 ];
 
-
 export function unittestFilterArguments(args: string[], argumentToRemoveOrFilter: string[] | TestFilter): string[] {
     const optionsWithoutArgsToRemove: string[] = [];
     const optionsWithArgsToRemove: string[] = [];
@@ -44,16 +43,11 @@ export function unittestFilterArguments(args: string[], argumentToRemoveOrFilter
 
     let filteredArgs = args.slice();
     if (removePositionalArgs) {
-        const positionalArgs = getPositionalArguments(
-            filteredArgs,
-            OptionsWithArguments,
-            OptionsWithoutArguments,
-        );
+        const positionalArgs = getPositionalArguments(filteredArgs, OptionsWithArguments, OptionsWithoutArguments);
         filteredArgs = filteredArgs.filter((item) => positionalArgs.indexOf(item) === -1);
     }
     return filterArguments(filteredArgs, optionsWithArgsToRemove, optionsWithoutArgsToRemove);
 }
-
 
 export function unittestGetTestFolders(args: string[]): string[] {
     const shortValue = getOptionValues(args, '-s');
@@ -67,7 +61,7 @@ export function unittestGetTestFolders(args: string[]): string[] {
     return ['.'];
 }
 
-export function unittestGetTestPattern(args:string[]): string {
+export function unittestGetTestPattern(args: string[]): string {
     const shortValue = getOptionValues(args, '-p');
     if (shortValue.length === 1) {
         return shortValue[0];
@@ -78,7 +72,6 @@ export function unittestGetTestPattern(args:string[]): string {
     }
     return 'test*.py';
 }
-
 
 export function getTestRunArgs(args: string[]): string[] {
     const startTestDiscoveryDirectory = unittestGetTestFolders(args)[0];

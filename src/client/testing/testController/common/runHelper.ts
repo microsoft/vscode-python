@@ -6,8 +6,6 @@ import { TestFolder } from './testFolder';
 import { TestRunOptions, PythonTestData, PythonRunnableTestData } from './types';
 import { WorkspaceTestRoot } from './workspaceTestRoot';
 
-
-
 export type TestRunInstanceOptions = TestRunOptions & {
     exclude?: TestItem<PythonTestData>[];
     debug: boolean;
