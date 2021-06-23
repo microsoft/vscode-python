@@ -19,6 +19,7 @@ export class PyEnvActivationCommandProvider implements ITerminalActivationComman
     }
 
     public async getActivationCommands(resource: Uri | undefined, _: TerminalShellType): Promise<string[] | undefined> {
+        console.log('Should not be here3');
         const interpreter = await this.serviceContainer
             .get<IInterpreterService>(IInterpreterService)
             .getActiveInterpreter(resource);

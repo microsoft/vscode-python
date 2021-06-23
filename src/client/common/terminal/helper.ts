@@ -150,14 +150,24 @@ export class TerminalHelper implements ITerminalHelper {
                 return activationCommands;
             }
         }
-        console.log('Now let us check the supported providers for', terminalShellType);
+        console.log('Now let us check the supported providers for', terminalShellType, 'haaaa', settings.pythonPath);
 
         // Search from the list of providers.
         const supportedProviders = providers.filter((provider) => provider.isShellSupported(terminalShellType));
         console.log('Log it', supportedProviders);
 
+        const provider = supportedProviders[0];
+        console.log('Check the provider', provider, interpreter, 'haaaa', settings.pythonPath);
+        const activationCommands = interpreter
+            ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
+            : await provider.getActivationCommands(resource, terminalShellType);
+        console.log('Activation commands found', JSON.stringify(activationCommands));
+        if (Array.isArray(activationCommands) && activationCommands.length > 0) {
+            return activationCommands;
+        }
+
         for (const provider of supportedProviders) {
-            console.log('Check the provider', provider);
+            console.log('Check the provider', provider, interpreter, 'haaaa', settings.pythonPath);
             const activationCommands = interpreter
                 ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
                 : await provider.getActivationCommands(resource, terminalShellType);
