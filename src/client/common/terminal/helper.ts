@@ -73,7 +73,7 @@ export class TerminalHelper implements ITerminalHelper {
         resource?: Uri,
         interpreter?: PythonEnvironment,
     ): Promise<string[] | undefined> {
-        const providers = [this.pipenv, this.pyenv, this.bashCShellFish, this.commandPromptAndPowerShell];
+        const providers = [this.commandPromptAndPowerShell, this.pipenv, this.pyenv, this.bashCShellFish];
         const promise = this.getActivationCommands(resource || undefined, interpreter, terminalShellType, providers);
         this.sendTelemetry(
             terminalShellType,
