@@ -22,7 +22,6 @@ import {
     IPythonSettings,
     Resource,
 } from './types';
-import { sleep } from './utils/async';
 
 export const workspaceKeysForWhichTheCopyIsDone_Key = 'workspaceKeysForWhichTheCopyIsDone_Key';
 export const workspaceFolderKeysForWhichTheCopyIsDone_Key = 'workspaceFolderKeysForWhichTheCopyIsDone_Key';
@@ -54,11 +53,6 @@ export class InterpreterPathService implements IInterpreterPathService {
 
     public async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         if (event.affectsConfiguration(`python.${defaultInterpreterPathSetting}`)) {
-            await sleep(1000);
-            const x = this.workspaceService
-                .getConfiguration('python', this.workspaceService.workspaceFolders![0].uri)
-                .inspect<string>('defaultInterpreterPath')!;
-            console.log(x.globalValue);
             this._didChangeInterpreterEmitter.fire({ uri: undefined, configTarget: ConfigurationTarget.Global });
         }
     }
@@ -78,7 +72,7 @@ export class InterpreterPathService implements IInterpreterPathService {
             );
         }
         const defaultInterpreterPath = this.workspaceService
-            .getConfiguration('python', this.workspaceService.workspaceFolders![0].uri)!
+            .getConfiguration('python', resource)!
             .inspect<string>('defaultInterpreterPath')!;
         return {
             globalValue: defaultInterpreterPath.globalValue,

@@ -44,14 +44,12 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
     }
 
     private async activateTerminal(terminal: Terminal): Promise<void> {
-        console.log('Terminal has opened');
         if (this.terminalsNotToAutoActivate.has(terminal)) {
             return;
         }
         if ('hideFromUser' in terminal.creationOptions && terminal.creationOptions.hideFromUser) {
             return;
         }
-        console.log('Attempt to activate terminal');
         // If we have just one workspace, then pass that as the resource.
         // Until upstream VSC issue is resolved https://github.com/Microsoft/vscode/issues/63052.
         await this.activator.activateEnvironmentInTerminal(terminal, {

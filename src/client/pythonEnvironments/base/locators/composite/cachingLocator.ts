@@ -40,13 +40,10 @@ export class CachingLocator extends LazyResourceBasedLocator {
     }
 
     protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        console.log('Imma resolve');
         let matchingEnvs = this.filterMatchingEnvsFromCache(env);
         if (matchingEnvs.length > 0) {
-            console.log('Imma cache');
             return pickBestEnv(matchingEnvs);
         }
-        console.log('Imma fallback');
         // Fall back to the underlying locator.
         const resolved = await this.locator.resolveEnv(env);
         if (resolved !== undefined) {

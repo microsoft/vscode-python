@@ -50,7 +50,6 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         resource: Uri | undefined,
         targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
-        console.log('Should not be here1');
         const { pythonPath } = this.configService.getSettings(resource);
         return this.getActivationCommandsForInterpreter(pythonPath, targetShell);
     }

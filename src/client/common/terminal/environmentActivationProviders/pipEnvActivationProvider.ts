@@ -33,7 +33,6 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
     }
 
     public async getActivationCommands(resource: Uri | undefined): Promise<string[] | undefined> {
-        console.log('Should not be here2');
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
         if (!interpreter || interpreter.envType !== EnvironmentType.Pipenv) {
             return undefined;

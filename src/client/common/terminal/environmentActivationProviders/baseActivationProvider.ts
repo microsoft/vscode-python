@@ -19,10 +19,8 @@ abstract class BaseActivationCommandProvider implements ITerminalActivationComma
         resource: Uri | undefined,
         targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
-        console.log('Log everywhere1');
         const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource)
             .pythonPath;
-        console.log('Log everywhere2');
         return this.getActivationCommandsForInterpreter(pythonPath, targetShell);
     }
     public abstract getActivationCommandsForInterpreter(
