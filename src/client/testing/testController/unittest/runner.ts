@@ -3,9 +3,11 @@
 
 import { injectable, inject, named } from 'inversify';
 import { test, TestItem, TestMessage, TestMessageSeverity, TestResultState, TestRun, TestRunRequest } from 'vscode';
-import { traceError } from '../../../common/logger';
+import { traceError, traceInfo } from '../../../common/logger';
 import * as internalScripts from '../../../common/process/internal/scripts';
 import { IOutputChannel } from '../../../common/types';
+import { createDeferred, Deferred } from '../../../common/utils/async';
+import { noop } from '../../../common/utils/misc';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import { ITestRunner, ITestDebugLauncher, IUnitTestSocketServer, LaunchOptions, Options } from '../../common/types';
 import { TEST_OUTPUT_CHANNEL } from '../../constants';
@@ -36,7 +38,11 @@ export class UnittestRunner implements ITestsRunner {
             exclude: request.exclude,
             debug: request.debug,
         };
+
         const runInstance = test.createTestRun(request);
+        const dispose = options.token.onCancellationRequested(() => {
+            runInstance.end();
+        });
         try {
             await Promise.all(
                 request.tests.map((testNode) =>
@@ -48,6 +54,7 @@ export class UnittestRunner implements ITestsRunner {
         } finally {
             runInstance.appendOutput(`Finished running tests!\r\n`);
             runInstance.end();
+            dispose.dispose();
         }
     }
 
@@ -70,19 +77,18 @@ export class UnittestRunner implements ITestsRunner {
 
         let failFast = false;
         let stopTesting = false;
+        let testCasePromise: Deferred<void>;
         this.server.on('error', (message: string, ...data: string[]) => {
             traceError(`${message} ${data.join(' ')}`);
+            testCasePromise.reject();
         });
         this.server.on('log', (message: string, ...data: string[]) => {
-            traceError(`${message} ${data.join(' ')}`);
+            traceInfo(`${message} ${data.join(' ')}`);
         });
-        this.server.on('connect', (message: string, ...data: string[]) => {
-            traceError(`${message} ${data.join(' ')}`);
-        });
-        this.server.on('start', (message: string, ...data: string[]) => {
-            traceError(`${message} ${data.join(' ')}`);
-        });
+        this.server.on('connect', noop);
+        this.server.on('start', noop);
         this.server.on('result', (data: ITestData) => {
+            testCasePromise.resolve();
             const testCase = testCaseNodes.find((node) => node.data.runId === data.test);
             if (testCase) {
                 tested.push(testCase.data.runId);
@@ -93,7 +99,8 @@ export class UnittestRunner implements ITestsRunner {
                     runInstance.appendOutput(text);
                     counts.passed += 1;
                 } else if (data.outcome === 'failed') {
-                    const text = `${testCase.data.raw.id} Failed: ${data.message}\r\n${data.traceback}\r\n`;
+                    const traceback = data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n');
+                    const text = `${testCase.data.raw.id} Failed: ${data.message}\r\n${traceback}\r\n`;
                     const message = new TestMessage(text);
                     message.severity = TestMessageSeverity.Information;
 
@@ -105,7 +112,8 @@ export class UnittestRunner implements ITestsRunner {
                         stopTesting = true;
                     }
                 } else if (data.outcome === 'error') {
-                    const text = `${testCase.data.raw.id} Failed with Error: ${data.message}\r\n${data.traceback}\r\n`;
+                    const traceback = data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n');
+                    const text = `${testCase.data.raw.id} Failed with Error: ${data.message}\r\n${traceback}\r\n`;
                     const message = new TestMessage(text);
                     message.severity = TestMessageSeverity.Error;
 
@@ -117,7 +125,8 @@ export class UnittestRunner implements ITestsRunner {
                         stopTesting = true;
                     }
                 } else if (data.outcome === 'skipped') {
-                    const text = `${testCase.data.raw.id} Skipped: ${data.message}\r\n${data.traceback}\r\n`;
+                    const traceback = data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n');
+                    const text = `${testCase.data.raw.id} Skipped: ${data.message}\r\n${traceback}\r\n`;
                     runInstance.setState(testCase, TestResultState.Skipped);
                     runInstance.appendOutput(text);
                     counts.skipped += 1;
@@ -160,15 +169,17 @@ export class UnittestRunner implements ITestsRunner {
                 token: options.token,
                 workspaceFolder: options.workspaceFolder,
             };
+            testCasePromise = createDeferred();
             await this.runner.run(UNITTEST_PROVIDER, runOptions);
-            return Promise.resolve();
+            return testCasePromise.promise;
         };
 
         try {
             for (const testCaseNode of testCaseNodes) {
-                if (stopTesting) {
+                if (stopTesting || options.token.isCancellationRequested) {
                     break;
                 }
+
                 // VS Code API requires that we set the run state on the leaf nodes. The state of the
                 // parent nodes are computed based on the state of child nodes.
                 runInstance.setState(testCaseNode, TestResultState.Running);
