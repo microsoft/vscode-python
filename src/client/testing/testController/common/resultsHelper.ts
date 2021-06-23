@@ -81,7 +81,6 @@ function getJunitResults(parserResult: unknown): TestSuiteResult | undefined {
 
 function getSafeInt(value: string, defaultValue = 0): number {
     const num = Number.parseInt(value, 10);
-    // eslint-disable-next-line no-restricted-globals
     if (Number.isNaN(num)) {
         return defaultValue;
     }
