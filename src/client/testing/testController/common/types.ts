@@ -33,7 +33,7 @@ export interface ITestController {
         workspace: WorkspaceFolder,
         token: CancellationToken,
     ): Promise<TestItem<PythonTestData> | undefined>;
-    runTests(options: TestRunRequest<PythonTestData>, token: CancellationToken): Promise<void>;
+    runTests(request: TestRunRequest<PythonTestData>, token: CancellationToken): Promise<void>;
 }
 
 export const ITestsRunner = Symbol('ITestsRunner');

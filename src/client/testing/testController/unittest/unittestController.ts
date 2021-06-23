@@ -33,11 +33,11 @@ export class UnittestController implements ITestController {
         return this.discovery.discoverWorkspaceTests(options);
     }
 
-    public runTests(options: TestRunRequest<PythonTestData>, token: CancellationToken): Promise<void> {
-        const workspaceFolder = this.workspaceService.getWorkspaceFolder(getUri(options.tests[0]));
+    public runTests(request: TestRunRequest<PythonTestData>, token: CancellationToken): Promise<void> {
+        const workspaceFolder = this.workspaceService.getWorkspaceFolder(getUri(request.tests[0]));
         const settings = this.configService.getSettings(workspaceFolder?.uri);
         const cwd = workspaceFolder?.uri.fsPath ?? process.cwd();
-        return this.runner.runTests(options, {
+        return this.runner.runTests(request, {
             workspaceFolder: workspaceFolder?.uri ?? Uri.file(cwd),
             cwd: settings.testing.cwd ?? cwd,
             token,
