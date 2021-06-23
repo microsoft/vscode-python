@@ -30,10 +30,9 @@ import { InterpreterSelector } from './configuration/interpreterSelector/interpr
 import { PythonPathUpdaterService } from './configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from './configuration/pythonPathUpdaterServiceFactory';
 import {
-    DEFAULT_COMPARISON,
-    ENV_TYPE_COMPARISON,
     IInterpreterComparer,
     IInterpreterSelector,
+    InterpreterComparisonType,
     IPythonPathUpdaterServiceFactory,
     IPythonPathUpdaterServiceManager,
 } from './configuration/types';
@@ -94,11 +93,15 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
     serviceManager.addSingleton<IShebangCodeLensProvider>(IShebangCodeLensProvider, ShebangCodeLensProvider);
     serviceManager.addSingleton<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
 
-    serviceManager.addSingleton<IInterpreterComparer>(IInterpreterComparer, InterpreterComparer, DEFAULT_COMPARISON);
+    serviceManager.addSingleton<IInterpreterComparer>(
+        IInterpreterComparer,
+        InterpreterComparer,
+        InterpreterComparisonType.Default,
+    );
     serviceManager.addSingleton<IInterpreterComparer>(
         IInterpreterComparer,
         EnvironmentTypeComparer,
-        ENV_TYPE_COMPARISON,
+        InterpreterComparisonType.EnvType,
     );
 
     serviceManager.addSingleton<IExtensionSingleActivationService>(

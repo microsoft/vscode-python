@@ -45,8 +45,10 @@ export interface IFindInterpreterQuickPickItem {
     alwaysShow: boolean;
 }
 
-export const DEFAULT_COMPARISON = Symbol('DefaultEnvironmentComparison');
-export const ENV_TYPE_COMPARISON = Symbol('EnvironmentTypeComparison');
+export enum InterpreterComparisonType {
+    Default = 'defaultComparison',
+    EnvType = 'environmentTypeComparison',
+}
 
 export const IInterpreterComparer = Symbol('IInterpreterComparer');
 export interface IInterpreterComparer {

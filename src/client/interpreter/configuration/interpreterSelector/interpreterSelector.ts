@@ -10,11 +10,10 @@ import { IExperimentService, IPathUtils, Resource } from '../../../common/types'
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { IInterpreterService } from '../../contracts';
 import {
-    DEFAULT_COMPARISON,
-    ENV_TYPE_COMPARISON,
     IInterpreterComparer,
     IInterpreterQuickPickItem,
     IInterpreterSelector,
+    InterpreterComparisonType,
 } from '../types';
 
 @injectable()
@@ -24,10 +23,10 @@ export class InterpreterSelector implements IInterpreterSelector {
     constructor(
         @inject(IInterpreterService) private readonly interpreterManager: IInterpreterService,
         @inject(IInterpreterComparer)
-        @named(DEFAULT_COMPARISON)
+        @named(InterpreterComparisonType.Default)
         private readonly interpreterComparer: IInterpreterComparer,
         @inject(IInterpreterComparer)
-        @named(ENV_TYPE_COMPARISON)
+        @named(InterpreterComparisonType.EnvType)
         private readonly envTypeComparer: IInterpreterComparer,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
