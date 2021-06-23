@@ -2,13 +2,50 @@
 // Licensed under the MIT License.
 
 import { cloneDeep } from 'lodash';
-import { Event, EventEmitter } from 'vscode';
+import * as path from 'path';
+import { Event, EventEmitter, Uri } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
+import { getEnvironmentDirFromPath } from '../../../common/commonUtils';
+import { identifyEnvironment } from '../../../common/environmentIdentifier';
+import { getFileInfo } from '../../../common/externalDependencies';
 import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
-import { PythonEnvInfo } from '../../info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../info';
+import { buildEnvInfo } from '../../info/env';
 import { InterpreterInformation } from '../../info/interpreter';
+import { getPythonVersionFromPath } from '../../info/pythonVersion';
 import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
+
+async function buildSimpleVirtualEnvInfo(
+    executablePath: string,
+    kind: PythonEnvKind,
+    source?: PythonEnvSource[],
+): Promise<PythonEnvInfo> {
+    const envInfo = buildEnvInfo({
+        kind,
+        version: await getPythonVersionFromPath(executablePath),
+        executable: executablePath,
+        source: source ?? [PythonEnvSource.Other],
+    });
+    const location = getEnvironmentDirFromPath(executablePath);
+    envInfo.location = location;
+    envInfo.name = path.basename(location);
+    // Search location particularly for virtual environments is intended as the
+    // directory in which the environment was found in. For eg. the default search location
+    // for an env containing 'bin' or 'Scripts' directory is:
+    //
+    // searchLocation <--- Default search location directory
+    // |__ env
+    //    |__ bin or Scripts
+    //        |__ python  <--- executable
+    envInfo.searchLocation = Uri.file(path.dirname(location));
+
+    // TODO: Call a general display name provider here to build display name.
+    const fileData = await getFileInfo(executablePath);
+    envInfo.executable.ctime = fileData.ctime;
+    envInfo.executable.mtime = fileData.mtime;
+    return envInfo;
+}
 
 /**
  * Calls environment info service which runs `interpreterInfo.py` script on environments received
@@ -25,8 +62,10 @@ export class PythonEnvsResolver implements ILocator {
     ) {}
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        const ipath = typeof env === 'string' ? env : env.executable.filename;
         console.log('Imma sss resolver');
-        const environment = await this.parentLocator.resolveEnv(env);
+        const kind = await identifyEnvironment(ipath);
+        const environment = await buildSimpleVirtualEnvInfo(ipath, kind);
         console.log('Imma sss resolver 2', environment);
         if (!environment) {
             return undefined;
