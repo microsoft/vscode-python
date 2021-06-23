@@ -13,8 +13,6 @@ import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IExperimentService } from '../../../../client/common/types';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import {
-    isOs,
-    OSType,
     PYTHON_PATH,
     resetGlobalInterpreterPathSetting,
     restorePythonPathInWorkspaceRoot,
@@ -63,9 +61,7 @@ suite('Activation of Environments in Terminal', () => {
     let experiments: IExperimentService;
     const sandbox = sinon.createSandbox();
     suiteSetup(async function () {
-        if (isOs(OSType.Windows)) {
-            return this.skip();
-        }
+        return this.skip();
 
         sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(false);
         envPaths = await fs.readJson(envsLocation);
