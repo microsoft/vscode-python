@@ -73,7 +73,7 @@ export class TerminalHelper implements ITerminalHelper {
         resource?: Uri,
         interpreter?: PythonEnvironment,
     ): Promise<string[] | undefined> {
-        const providers = [this.commandPromptAndPowerShell, this.pipenv, this.pyenv, this.bashCShellFish];
+        const providers = [this.pipenv, this.pyenv, this.bashCShellFish, this.commandPromptAndPowerShell];
         const promise = this.getActivationCommands(resource || undefined, interpreter, terminalShellType, providers);
         this.sendTelemetry(
             terminalShellType,
@@ -154,17 +154,17 @@ export class TerminalHelper implements ITerminalHelper {
 
         // Search from the list of providers.
         const supportedProviders = providers.filter((provider) => provider.isShellSupported(terminalShellType));
-        console.log('Log it', supportedProviders);
+        console.log('Log it', supportedProviders, supportedProviders.length, providers.length);
 
-        const provider = supportedProviders[0];
-        console.log('Check the provider', provider, interpreter, 'haaaa', settings.pythonPath);
-        const activationCommands = interpreter
-            ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
-            : await provider.getActivationCommands(resource, terminalShellType);
-        console.log('Activation commands found', JSON.stringify(activationCommands));
-        if (Array.isArray(activationCommands) && activationCommands.length > 0) {
-            return activationCommands;
-        }
+        // const provider = supportedProviders[0];
+        // console.log('Check the provider', provider, interpreter, 'haaaa', settings.pythonPath);
+        // const activationCommands = interpreter
+        //     ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
+        //     : await provider.getActivationCommands(resource, terminalShellType);
+        // console.log('Activation commands found', JSON.stringify(activationCommands));
+        // if (Array.isArray(activationCommands) && activationCommands.length > 0) {
+        //     return activationCommands;
+        // }
 
         for (const provider of supportedProviders) {
             console.log('Check the provider', provider, interpreter, 'haaaa', settings.pythonPath);
