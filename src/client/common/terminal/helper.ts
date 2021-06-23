@@ -157,6 +157,7 @@ export class TerminalHelper implements ITerminalHelper {
         console.log('Log it', supportedProviders);
 
         for (const provider of supportedProviders) {
+            console.log('Check the provider', provider);
             const activationCommands = interpreter
                 ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
                 : await provider.getActivationCommands(resource, terminalShellType);

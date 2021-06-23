@@ -23,7 +23,7 @@ import {
 } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, TEST_TIMEOUT } from '../../../constants';
 import { sleep } from '../../../core';
-import { initialize, initializeTest } from '../../../initialize';
+import { initialize } from '../../../initialize';
 
 suite.skip('Activation of Environments in Terminal', () => {
     const file = path.join(
@@ -70,7 +70,7 @@ suite.skip('Activation of Environments in Terminal', () => {
     });
 
     setup(async () => {
-        await initializeTest();
+        // await initializeTest();
         outputFile = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
