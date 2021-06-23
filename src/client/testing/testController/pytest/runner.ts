@@ -87,7 +87,6 @@ export class PytestRunner implements ITestsRunner {
 
             // Make sure root dir is set so pytest can find the relative paths
             testArgs.splice(0, 0, '--rootdir', options.workspaceFolder.fsPath);
-            testArgs.splice(0, 0, '--override-ini', 'junit_family=xunit1');
 
             // Positional arguments control the tests to be run.
             testArgs.push(testNode.data.raw.id);

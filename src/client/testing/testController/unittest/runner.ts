@@ -189,6 +189,7 @@ export class UnittestRunner implements ITestsRunner {
             traceError(ex);
         } finally {
             this.server.removeAllListeners();
+            this.server.stop();
         }
 
         runInstance.appendOutput(`Total number of tests passed: ${counts.passed}\r\n`);
