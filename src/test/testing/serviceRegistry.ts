@@ -117,8 +117,9 @@ export class UnitTestIocContainer extends IocContainer {
     }
 
     public registerTestManagers(): void {
-        this.serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
-            return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {
+        this.serviceManager.addFactory<ITestManager>(
+            ITestManagerFactory,
+            (context) => (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {
                 const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
 
                 switch (testProvider) {
@@ -135,8 +136,8 @@ export class UnitTestIocContainer extends IocContainer {
                         throw new Error(`Unrecognized test provider '${testProvider}'`);
                     }
                 }
-            };
-        });
+            },
+        );
     }
 
     public registerInterpreterStorageTypes(): void {
@@ -144,13 +145,14 @@ export class UnitTestIocContainer extends IocContainer {
     }
 
     public registerTestManagerService(): void {
-        this.serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, (context) => {
-            return (workspaceFolder: Uri) => {
+        this.serviceManager.addFactory<ITestManagerService>(
+            ITestManagerServiceFactory,
+            (context) => (workspaceFolder: Uri) => {
                 const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
                 const testsHelper = context.container.get<ITestsHelper>(ITestsHelper);
                 return new TestManagerService(workspaceFolder, testsHelper, serviceContainer);
-            };
-        });
+            },
+        );
     }
 
     public registerMockUnitTestSocketServer(): void {

@@ -436,7 +436,6 @@ src/client/testing/display/main.ts
 src/client/testing/display/picker.ts
 src/client/testing/configuration.ts
 
-src/client/common/serviceRegistry.ts
 src/client/common/helpers.ts
 src/client/common/net/browser.ts
 src/client/common/net/fileDownloader.ts
@@ -517,8 +516,6 @@ src/client/common/application/clipboard.ts
 src/client/common/application/workspace.ts
 src/client/common/application/debugSessionTelemetry.ts
 src/client/common/application/extensions.ts
-src/client/common/application/types.ts
-src/client/common/application/commandManager.ts
 src/client/common/application/documentManager.ts
 src/client/common/application/webPanels/webPanelProvider.ts
 src/client/common/application/webPanels/webPanel.ts
@@ -646,7 +643,6 @@ src/startPage-ui/react-common/locReactSide.ts
 src/startPage-ui/react-common/logger.ts
 src/startPage-ui/react-common/postOffice.ts
 src/startPage-ui/startPage/index.tsx
-src/startPage-ui/startPage/startPage.tsx
 src/test/startPage/mockCommandManager.ts
 src/test/startPage/mockDocument.ts
 src/test/startPage/mockDocumentManager.ts

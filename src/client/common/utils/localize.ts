@@ -654,9 +654,7 @@ export function getCollectionJSON(): string {
 
 export function localize(key: string, defValue?: string) {
     // Return a pointer to function so that we refetch it on each call.
-    return (): string => {
-        return getString(key, defValue);
-    };
+    return (): string => getString(key, defValue);
 }
 
 function parseLocale(): string {

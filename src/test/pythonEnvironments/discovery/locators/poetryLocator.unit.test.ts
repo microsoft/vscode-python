@@ -88,7 +88,7 @@ suite('Poetry Locator', () => {
             });
         });
 
-        test('iterEnvs()', async function () {
+        test('iterEnvs()', async () => {
             // Act
             const iterator = locator.iterEnvs();
             const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
@@ -220,7 +220,7 @@ suite('Poetry Locator', () => {
             });
         });
 
-        test('iterEnvs()', async function () {
+        test('iterEnvs()', async () => {
             // Act
             const iterator = locator.iterEnvs();
             const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>

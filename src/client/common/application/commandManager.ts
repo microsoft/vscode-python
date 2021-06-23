@@ -8,8 +8,6 @@ import { ICommandManager } from './types';
 
 @injectable()
 export class CommandManager implements ICommandManager {
-    constructor() {}
-
     /**
      * Registers a command that can be invoked via a keyboard shortcut,
      * a menu item, an action, or directly.
@@ -22,10 +20,13 @@ export class CommandManager implements ICommandManager {
      * @param thisArg The `this` context used when invoking the handler function.
      * @return Disposable which unregisters this command on disposal.
      */
+    // eslint-disable-next-line class-methods-use-this
     public registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
+        // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
     >(command: E, callback: (...args: U) => any, thisArg?: any): Disposable {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return commands.registerCommand(command, callback as any, thisArg);
     }
 
@@ -43,9 +44,12 @@ export class CommandManager implements ICommandManager {
      * @param thisArg The `this` context used when invoking the handler function.
      * @return Disposable which unregisters this command on disposal.
      */
+    // eslint-disable-next-line class-methods-use-this
     public registerTextEditorCommand(
         command: string,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void,
+        // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
         thisArg?: any,
     ): Disposable {
         return commands.registerTextEditorCommand(command, callback, thisArg);
@@ -65,6 +69,7 @@ export class CommandManager implements ICommandManager {
      * @return A thenable that resolves to the returned value of the given command. `undefined` when
      * the command handler function doesn't return anything.
      */
+    // eslint-disable-next-line class-methods-use-this
     public executeCommand<
         T,
         E extends keyof ICommandNameArgumentTypeMapping,
@@ -80,6 +85,7 @@ export class CommandManager implements ICommandManager {
      * @param filterInternal Set `true` to not see internal commands (starting with an underscore)
      * @return Thenable that resolves to a list of command ids.
      */
+    // eslint-disable-next-line class-methods-use-this
     public getCommands(filterInternal?: boolean): Thenable<string[]> {
         return commands.getCommands(filterInternal);
     }

@@ -165,9 +165,7 @@ function getExpectedSummaryCount(testDetails: ITestDetails[], failedRun: boolean
  * @param fileName The name of the file to find test details for.
  */
 function getRelevantTestDetailsForFile(testDetails: ITestDetails[], fileName: string): ITestDetails[] {
-    return testDetails.filter((td) => {
-        return td.fileName === fileName;
-    });
+    return testDetails.filter((td) => td.fileName === fileName);
 }
 
 /**
@@ -188,9 +186,9 @@ function getIssueCountFromRelevantTestDetails(
     skippedTestDetails: ITestDetails[],
     failedRun = false,
 ): number {
-    const relevantIssueDetails = testDetails.filter((td) => {
-        return td.status !== TestStatus.Pass && !(failedRun && td.passOnFailedRun);
-    });
+    const relevantIssueDetails = testDetails.filter(
+        (td) => td.status !== TestStatus.Pass && !(failedRun && td.passOnFailedRun),
+    );
     // If it's a failed run, the skipped tests won't be included in testDetails, but should still be included as they still aren't passing.
     return relevantIssueDetails.length + (failedRun ? skippedTestDetails.length : 0);
 }
@@ -205,9 +203,7 @@ function getDiagnosticForTestFunc(
     diagnostics: readonly vscode.Diagnostic[],
     testFunc: FlattenedTestFunction,
 ): vscode.Diagnostic {
-    return diagnostics.find((diag) => {
-        return testFunc.testFunction.nameToRun === diag.code;
-    })!;
+    return diagnostics.find((diag) => testFunc.testFunction.nameToRun === diag.code)!;
 }
 
 /**
@@ -231,9 +227,7 @@ function getUniqueIssueFilesFromTestDetails(testDetails: ITestDetails[]): string
  * @param fileName The location of a file that had tests run.
  */
 function getRelevantSkippedIssuesFromTestDetailsForFile(testDetails: ITestDetails[], fileName: string): ITestDetails[] {
-    return testDetails.filter((td) => {
-        return td.fileName === fileName && td.status === TestStatus.Skipped;
-    });
+    return testDetails.filter((td) => td.fileName === fileName && td.status === TestStatus.Skipped);
 }
 
 /**
@@ -251,12 +245,11 @@ function getTestFuncFromResultsByTestFileAndName(
     testDetails: ITestDetails,
 ): FlattenedTestFunction {
     const fileSystem = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
-    return results.testFunctions.find((test) => {
-        return (
+    return results.testFunctions.find(
+        (test) =>
             fileSystem.arePathsSame(vscode.Uri.file(test.parentTestFile.fullPath).fsPath, testFileUri.fsPath) &&
-            test.testFunction.name === testDetails.testName
-        );
-    })!;
+            test.testFunction.name === testDetails.testName,
+    )!;
 }
 
 /**
@@ -498,9 +491,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
     }
     function getScenarioTestDetails(scenario: ITestScenarioDetails, failedRun: boolean): ITestDetails[] {
         if (scenario.shouldRunFailed && failedRun) {
-            return scenario.testDetails!.filter((td) => {
-                return td.status === TestStatus.Fail;
-            })!;
+            return scenario.testDetails!.filter((td) => td.status === TestStatus.Fail)!;
         }
         return scenario.testDetails!;
     }

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
+
 import {
     Breakpoint,
     BreakpointsChangeEvent,
@@ -318,6 +320,7 @@ export interface IApplicationShell {
      * @param hideWhenDone Thenable on which completion (resolve or reject) the message will be disposed.
      * @return A disposable which hides the status bar message.
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setStatusBarMessage(text: string, hideWhenDone: Thenable<any>): Disposable;
 
     /**
@@ -433,7 +436,9 @@ export interface ICommandManager {
      */
     registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
         command: E,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         callback: (...args: U) => any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         thisArg?: any,
     ): Disposable;
 
@@ -453,7 +458,9 @@ export interface ICommandManager {
      */
     registerTextEditorCommand(
         command: string,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         thisArg?: any,
     ): Disposable;
 
@@ -987,6 +994,7 @@ export interface IApplicationEnvironment {
      * @type {any}
      * @memberof IApplicationEnvironment
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     readonly packageJson: any;
     /**
      * Gets the full path to the user settings file. (may or may not exist).
@@ -1036,6 +1044,7 @@ export interface IWebviewMessageListener {
      * @param message: the message being sent
      * @param payload: extra data that came with the message
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onMessage(message: string, payload: any): void;
 }
 
@@ -1056,6 +1065,7 @@ export type WebviewMessage = {
     /**
      * Payload
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     payload?: any;
 };
 
@@ -1129,7 +1139,7 @@ export interface IWebviewPanelOptions extends IWebviewOptions {
      * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
      */
     additionalPaths?: string[];
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     settings?: any;
     // Web panel to use if supplied by VS code instead
     webViewPanel?: WebviewPanel;
@@ -1174,7 +1184,7 @@ export interface IActiveResourceService {
 
 // Temporary hack to get the nyc compiler to find these types. vscode.proposed.d.ts doesn't work for some reason.
 
-//#region Custom editor https://github.com/microsoft/vscode/issues/77131
+// #region Custom editor https://github.com/microsoft/vscode/issues/77131
 
 /**
  * Represents a custom document used by a [`CustomEditorProvider`](#CustomEditorProvider).

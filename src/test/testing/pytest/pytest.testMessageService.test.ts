@@ -49,9 +49,7 @@ const PYTEST_RESULTS_PATH = path.join(
     'results',
 );
 
-const filterdTestScenarios = testScenarios.filter((ts) => {
-    return !ts.shouldRunFailed;
-});
+const filterdTestScenarios = testScenarios.filter((ts) => !ts.shouldRunFailed);
 
 async function testMessageProperties(
     message: IPythonTestMessage,

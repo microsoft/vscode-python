@@ -33,17 +33,18 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
 
     constructor() {
         const dirLocators: (ILocator & IDisposable)[] = getSearchPathEntries()
-            .filter((dirname) => {
-                // Filter out following directories:
-                // 1. Windows Store app directories: We have a store app locator that handles this. The
-                //    python.exe available in these directories might not be python. It can be a store
-                //    install shortcut that takes you to windows store.
-                //
-                // 2. Filter out pyenv shims: They are not actual python binaries, they are used to launch
-                //    the binaries specified in .python-version file in the cwd. We should not be reporting
-                //    those binaries as environments.
-                return !isWindowsStoreDir(dirname) && !isPyenvShimDir(dirname);
-            })
+            .filter(
+                (dirname) =>
+                    // Filter out following directories:
+                    // 1. Windows Store app directories: We have a store app locator that handles this. The
+                    //    python.exe available in these directories might not be python. It can be a store
+                    //    install shortcut that takes you to windows store.
+                    //
+                    // 2. Filter out pyenv shims: They are not actual python binaries, they are used to launch
+                    //    the binaries specified in .python-version file in the cwd. We should not be reporting
+                    //    those binaries as environments.
+                    !isWindowsStoreDir(dirname) && !isPyenvShimDir(dirname),
+            )
             // Build a locator for each directory.
             .map((dirname) => getDirFilesLocator(dirname, PythonEnvKind.System));
         this.disposables.push(...dirLocators);

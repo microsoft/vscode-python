@@ -91,9 +91,7 @@ suite('Interpreters - selector', () => {
                 { displayName: '2 (virtualenv)', path: 'c:/path2/path2', envType: EnvironmentType.VirtualEnv },
                 { displayName: '3', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
                 { displayName: '4', path: 'c:/path4/path4', envType: EnvironmentType.Conda },
-            ].map((item) => {
-                return { ...info, ...item };
-            });
+            ].map((item) => ({ ...info, ...item }));
             interpreterService
                 .setup((x) => x.getInterpreters(TypeMoq.It.isAny(), { onSuggestion: true, ignoreCache }))
                 .returns(() => new Promise((resolve) => resolve(initial)));

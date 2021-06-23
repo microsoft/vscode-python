@@ -550,7 +550,7 @@ suite('Set Interpreter Command', () => {
                     testValue.discovered
                 } if the interpreter had ${
                     testValue.discovered ? 'already' : 'not'
-                } been discovered, with an interpreter path path that is ${testValue.pathType})`, async function () {
+                } been discovered, with an interpreter path path that is ${testValue.pathType})`, async () => {
                     const telemetryResult = await testDiscovered(testValue.discovered, testValue.pathType);
 
                     expect(telemetryResult.properties).to.deep.equal({ discovered: testValue.discovered });

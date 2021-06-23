@@ -53,9 +53,9 @@ function filterByFileType(
     if (fileType === FileType.Unknown) {
         // FileType.Unknown == 0 so we can't just use bitwise
         // operations blindly here.
-        return files.filter(([_file, ft]) => {
-            return ft === FileType.Unknown || ft === (FileType.SymbolicLink & FileType.Unknown);
-        });
+        return files.filter(
+            ([_file, ft]) => ft === FileType.Unknown || ft === (FileType.SymbolicLink & FileType.Unknown),
+        );
     }
     return files.filter(([_file, ft]) => (ft & fileType) > 0);
 }

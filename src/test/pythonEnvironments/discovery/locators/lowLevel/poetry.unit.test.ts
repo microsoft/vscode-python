@@ -103,9 +103,9 @@ suite('Poetry binary is located correctly', async () => {
 
     test("Return undefined if pyproject.toml doesn't exist in cwd", async () => {
         getPythonSetting.returns('poetryPath');
-        shellExecute.callsFake((_command: string, _options: ShellOptions) => {
-            return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
-        });
+        shellExecute.callsFake((_command: string, _options: ShellOptions) =>
+            Promise.resolve<ExecutionResult<string>>({ stdout: '' }),
+        );
 
         const poetry = await Poetry.getPoetry(testPoetryDir);
 
@@ -114,9 +114,9 @@ suite('Poetry binary is located correctly', async () => {
 
     test('Return undefined if cwd contains pyproject.toml which does not contain a poetry section', async () => {
         getPythonSetting.returns('poetryPath');
-        shellExecute.callsFake((_command: string, _options: ShellOptions) => {
-            return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
-        });
+        shellExecute.callsFake((_command: string, _options: ShellOptions) =>
+            Promise.resolve<ExecutionResult<string>>({ stdout: '' }),
+        );
 
         const poetry = await Poetry.getPoetry(project3);
 
@@ -188,9 +188,9 @@ suite('Poetry binary is located correctly', async () => {
 
     test('Return undefined otherwise', async () => {
         getPythonSetting.returns('poetry');
-        shellExecute.callsFake((_command: string, _options: ShellOptions) => {
-            return Promise.reject(new Error('Command failed'));
-        });
+        shellExecute.callsFake((_command: string, _options: ShellOptions) =>
+            Promise.reject(new Error('Command failed')),
+        );
 
         const poetry = await Poetry.getPoetry(project1);
 

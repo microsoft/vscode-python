@@ -361,7 +361,7 @@ export class PythonSettings implements IPythonSettings {
                   ignorePatterns: [],
                   flake8Args: [],
                   flake8Enabled: false,
-                  flake8Path: 'flake',
+                  flake8Path: 'flake8',
                   lintOnSave: false,
                   maxNumberOfProblems: 100,
                   mypyArgs: [],
