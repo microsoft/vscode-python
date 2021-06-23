@@ -186,13 +186,16 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         // During shutdown we might not be able to get items out of the service container.
+        console.log('Interpreter service enter');
         const pythonExecutionFactory = this.serviceContainer.tryGet<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecutionService = pythonExecutionFactory
             ? await pythonExecutionFactory.create({ resource })
             : undefined;
+        console.log('Interpreter service pythonexec', pythonExecutionService);
         const fullyQualifiedPath = pythonExecutionService
             ? await pythonExecutionService.getExecutablePath().catch(() => undefined)
             : undefined;
+        console.log('Interpreter service fullpath', fullyQualifiedPath);
         // Python path is invalid or python isn't installed.
         if (!fullyQualifiedPath) {
             return undefined;
@@ -205,14 +208,18 @@ export class InterpreterService implements Disposable, IInterpreterService {
         pythonPath: string,
         resource?: Uri,
     ): Promise<StoredPythonEnvironment | undefined> {
+        console.log('I am here to get details');
         if (await inDiscoveryExperiment(this.experimentService)) {
+            console.log('I chose discovery experiment');
             const info = await this.pyenvs.getInterpreterDetails(pythonPath);
+            console.log('Got the info!', JSON.stringify(info));
             if (!info.displayName) {
                 // Set display name for the environment returned by component if it's not set (this should eventually go away)
                 info.displayName = await this.getDisplayName(info, resource);
             }
             return info;
         }
+        console.log('I did not choose discovery experiment');
 
         // If we don't have the fully qualified path, then get it.
         if (path.basename(pythonPath) === pythonPath) {

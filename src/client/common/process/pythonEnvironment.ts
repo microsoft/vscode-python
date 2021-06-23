@@ -47,6 +47,7 @@ class PythonEnvironment {
     public async getExecutablePath(): Promise<string> {
         // If we've passed the python file, then return the file.
         // This is because on mac if using the interpreter /usr/bin/python2.7 we can get a different value for the path
+        console.log('Getting exec path...');
         if (await this.deps.isValidExecutable(this.pythonPath)) {
             return this.pythonPath;
         }

@@ -25,11 +25,15 @@ export class PythonEnvsResolver implements ILocator {
     ) {}
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        console.log('Imma sss resolver');
         const environment = await this.parentLocator.resolveEnv(env);
+        console.log('Imma sss resolver 2', environment);
         if (!environment) {
             return undefined;
         }
+        console.log('Imma sss resolver 3', environment);
         const info = await this.environmentInfoService.getEnvironmentInfo(environment.executable.filename);
+        console.log('Imma sss resolver 4', environment);
         if (!info) {
             return undefined;
         }

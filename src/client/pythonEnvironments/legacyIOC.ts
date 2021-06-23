@@ -200,7 +200,9 @@ class ComponentAdapter implements IComponentAdapter {
             }
         }
 
+        console.log('Resolve env');
         const env = (await this.api.resolveEnv(envInfo)) ?? envInfo;
+        console.log('Resolve env out');
         if (env.executable.sysPrefix) {
             const execInfoService = getEnvironmentInfoService();
             const info = await execInfoService.getEnvironmentInfo(pythonPath, EnvironmentInfoServiceQueuePriority.High);
