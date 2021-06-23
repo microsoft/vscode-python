@@ -110,7 +110,7 @@ export class UnitTestManagementService implements ITestManagementService, IExten
             const controller = new PythonTestController(
                 this.serviceContainer.get<IConfigurationService>(IConfigurationService),
                 this.serviceContainer.get<ITestController>(ITestController, PYTEST_PROVIDER),
-                this.serviceContainer.get<ITestController>(ITestController, UNITTEST_PROVIDER)
+                this.serviceContainer.get<ITestController>(ITestController, UNITTEST_PROVIDER),
             );
             this.disposableRegistry.push(test.registerTestController(controller));
         }
