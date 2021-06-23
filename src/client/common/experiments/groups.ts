@@ -43,3 +43,8 @@ export enum FindInterpreterVariants {
 export enum TorchProfiler {
     experiment = 'PythonPyTorchProfiler',
 }
+
+// Experiment to use the new environment sorting algorithm in the interpreter quickpick.
+export enum EnvironmentSorting {
+    experiment = 'pythonSortEnvs',
+}
