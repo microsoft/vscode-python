@@ -26,7 +26,7 @@ import { sleep } from '../../../core';
 import { initialize, initializeTest } from '../../../initialize';
 import * as ExperimentHelpers from '../../../../client/common/experiments/helpers';
 
-suite('Activation of Environments in Terminal', () => {
+suite.skip('Activation of Environments in Terminal', () => {
     const file = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',
@@ -60,9 +60,7 @@ suite('Activation of Environments in Terminal', () => {
     let pythonSettings: any;
     let experiments: IExperimentService;
     const sandbox = sinon.createSandbox();
-    suiteSetup(async function () {
-        return this.skip();
-
+    suiteSetup(async () => {
         sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(false);
         envPaths = await fs.readJson(envsLocation);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders![0].uri);
