@@ -170,7 +170,7 @@ function getEnvTypeHeuristic(environment: PythonEnvironment, workspacePath: stri
 
     switch (envType) {
         case EnvironmentType.Venv: {
-            if (workspacePath.length > 0 && environment.path.startsWith(workspacePath)) {
+            if (workspacePath.length > 0 && environment.envPath?.startsWith(workspacePath)) {
                 return EnvTypeHeuristic.Local;
             }
             return EnvTypeHeuristic.Global;
