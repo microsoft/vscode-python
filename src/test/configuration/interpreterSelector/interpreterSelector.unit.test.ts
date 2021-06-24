@@ -3,6 +3,7 @@
 
 // eslint-disable-next-line max-classes-per-file
 import * as assert from 'assert';
+import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
@@ -11,10 +12,12 @@ import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IExperimentService } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
+import { EnvironmentTypeComparer } from '../../../client/interpreter/configuration/environmentTypeComparer';
 import { InterpreterSelector } from '../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { IInterpreterComparer, IInterpreterQuickPickItem } from '../../../client/interpreter/configuration/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { IInterpreterHelper, IInterpreterService, WorkspacePythonPath } from '../../../client/interpreter/contracts';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { getOSType, OSType } from '../../common';
 
 const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
@@ -182,5 +185,87 @@ suite('Interpreters - selector', () => {
 
         oldComparer.verify((c) => c.compare(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
         newComparer.verify((c) => c.compare(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.atLeastOnce());
+    });
+
+    test('Should sort environments with local ones first when in the EnvironmentSorting experiment', async () => {
+        const workspacePath = path.join('path', 'to', 'workspace');
+
+        const environments: PythonEnvironment[] = [
+            {
+                displayName: 'one',
+                envPath: path.join('path', 'to', 'another', 'workspace', '.venv'),
+                path: path.join('path', 'to', 'another', 'workspace', '.venv', 'bin', 'python'),
+                envType: EnvironmentType.Venv,
+            },
+            {
+                displayName: 'two',
+                envPath: path.join(workspacePath, '.venv'),
+                path: path.join(workspacePath, '.venv', 'bin', 'python'),
+                envType: EnvironmentType.Venv,
+            },
+            {
+                displayName: 'three',
+                path: path.join('a', 'global', 'env', 'python'),
+                envPath: path.join('a', 'global', 'env'),
+                envType: EnvironmentType.Global,
+            },
+            {
+                displayName: 'four',
+                envPath: path.join('a', 'conda', 'environment'),
+                path: path.join('a', 'conda', 'environment'),
+                envName: 'conda-env',
+                envType: EnvironmentType.Conda,
+            },
+        ].map((item) => ({ ...info, ...item }));
+
+        interpreterService
+            .setup((x) => x.getInterpreters(TypeMoq.It.isAny(), { onSuggestion: true, ignoreCache }))
+            .returns(() => new Promise((resolve) => resolve(environments)));
+
+        experimentsManager
+            .setup((e) => e.inExperiment(EnvironmentSorting.experiment))
+            .returns(() => Promise.resolve(true));
+
+        const interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
+        interpreterHelper
+            .setup((i) => i.getActiveWorkspaceUri(TypeMoq.It.isAny()))
+            .returns(() => ({ folderUri: { fsPath: workspacePath } } as WorkspacePythonPath));
+
+        const environmentTypeComparer = new EnvironmentTypeComparer(interpreterHelper.object);
+
+        selector = new TestInterpreterSelector(
+            interpreterService.object,
+            oldComparer.object,
+            environmentTypeComparer,
+            new PathUtils(getOSType() === OSType.Windows),
+            experimentsManager.object,
+        );
+
+        const result = await selector.getSuggestions(undefined, ignoreCache);
+
+        const expected: InterpreterQuickPickItem[] = [
+            new InterpreterQuickPickItem('two', path.join(workspacePath, '.venv', 'bin', 'python')),
+            new InterpreterQuickPickItem(
+                'one',
+                path.join('path', 'to', 'another', 'workspace', '.venv', 'bin', 'python'),
+            ),
+            new InterpreterQuickPickItem('four', path.join('a', 'conda', 'environment')),
+            new InterpreterQuickPickItem('three', path.join('a', 'global', 'env', 'python')),
+        ];
+
+        assert.strictEqual(result.length, expected.length, 'Suggestion lengths are different.');
+
+        for (let i = 0; i < expected.length; i += 1) {
+            assert.strictEqual(
+                result[i].label,
+                expected[i].label,
+                `Suggestion label is different at ${i}: exected '${expected[i].label}', found '${result[i].label}'.`,
+            );
+            assert.strictEqual(
+                result[i].path,
+                expected[i].path,
+                `Suggestion path is different at ${i}: exected '${expected[i].path}', found '${result[i].path}'.`,
+            );
+        }
     });
 });
