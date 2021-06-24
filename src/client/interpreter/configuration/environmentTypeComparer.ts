@@ -47,7 +47,7 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
         }
 
         // Check Python version.
-        const versionComparison = comparePythonVersion(a.version, b.version);
+        const versionComparison = comparePythonVersionDescending(a.version, b.version);
         if (versionComparison !== 0) {
             return versionComparison;
         }
@@ -67,49 +67,51 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
         }
 
         // Check alphabetical order (same way as the InterpreterComparer class).
-        const nameA = this.getSortName(a);
-        const nameB = this.getSortName(b);
+        const nameA = getSortName(a, this.interpreterHelper);
+        const nameB = getSortName(b, this.interpreterHelper);
         if (nameA === nameB) {
             return 0;
         }
 
         return nameA > nameB ? 1 : -1;
     }
+}
 
-    private getSortName(info: PythonEnvironment): string {
-        const sortNameParts: string[] = [];
-        const envSuffixParts: string[] = [];
+// This function is exported because the InterpreterComparer class uses the same logic.
+// Once it gets removed as we ramp up #16520, we can restrict this function to this file.
+export function getSortName(info: PythonEnvironment, interpreterHelper: IInterpreterHelper): string {
+    const sortNameParts: string[] = [];
+    const envSuffixParts: string[] = [];
 
-        // Sort order for interpreters is:
-        // * Version
-        // * Architecture
-        // * Interpreter Type
-        // * Environment name
-        if (info.version) {
-            sortNameParts.push(info.version.raw);
-        }
-        if (info.architecture) {
-            sortNameParts.push(getArchitectureDisplayName(info.architecture));
-        }
-        if (info.companyDisplayName && info.companyDisplayName.length > 0) {
-            sortNameParts.push(info.companyDisplayName.trim());
-        } else {
-            sortNameParts.push('Python');
-        }
-
-        if (info.envType) {
-            const name = this.interpreterHelper.getInterpreterTypeDisplayName(info.envType);
-            if (name) {
-                envSuffixParts.push(name);
-            }
-        }
-        if (info.envName && info.envName.length > 0) {
-            envSuffixParts.push(info.envName);
-        }
-
-        const envSuffix = envSuffixParts.length === 0 ? '' : `(${envSuffixParts.join(': ')})`;
-        return `${sortNameParts.join(' ')} ${envSuffix}`.trim();
+    // Sort order for interpreters is:
+    // * Version
+    // * Architecture
+    // * Interpreter Type
+    // * Environment name
+    if (info.version) {
+        sortNameParts.push(info.version.raw);
     }
+    if (info.architecture) {
+        sortNameParts.push(getArchitectureDisplayName(info.architecture));
+    }
+    if (info.companyDisplayName && info.companyDisplayName.length > 0) {
+        sortNameParts.push(info.companyDisplayName.trim());
+    } else {
+        sortNameParts.push('Python');
+    }
+
+    if (info.envType) {
+        const name = interpreterHelper.getInterpreterTypeDisplayName(info.envType);
+        if (name) {
+            envSuffixParts.push(name);
+        }
+    }
+    if (info.envName && info.envName.length > 0) {
+        envSuffixParts.push(info.envName);
+    }
+
+    const envSuffix = envSuffixParts.length === 0 ? '' : `(${envSuffixParts.join(': ')})`;
+    return `${sortNameParts.join(' ')} ${envSuffix}`.trim();
 }
 
 function isCondaEnvironment(environment: PythonEnvironment): boolean {
@@ -123,7 +125,7 @@ function isBaseCondaEnvironment(environment: PythonEnvironment): boolean {
 /**
  * Compare 2 Python versions in decending order, most recent one comes first.
  */
-function comparePythonVersion(a: PythonVersion | undefined, b: PythonVersion | undefined): number {
+function comparePythonVersionDescending(a: PythonVersion | undefined, b: PythonVersion | undefined): number {
     if (!a) {
         return 1;
     }
