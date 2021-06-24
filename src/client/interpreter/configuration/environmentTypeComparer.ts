@@ -9,10 +9,10 @@ import { IInterpreterHelper } from '../contracts';
 import { IInterpreterComparer } from './types';
 
 /*
- * Order:
- * - Local environments (i.e `.venv`);
- * - Global environments (pipenv, conda), with conda environments at a lower priority, and "base" being last;
- * - Globally-installed interpreters (`/usr/bin/python3`).
+ * Enum description:
+ * - Local environments (.venv);
+ * - Global environments (pipenv, conda);
+ * - Globally-installed interpreters (/usr/bin/python3, Windows Store).
  */
 enum EnvTypeHeuristic {
     Local = 1,
@@ -33,9 +33,9 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
      * Return 0 if both environments are equal, -1 if a should be closer to the beginning of the list, or 1 if a comes after b.
      *
      * The comparison guidelines are:
-     * 1. Local environments first (i.e `.venv`);
-     * 2. Global environments next (conda);
-     * 3. Globally-installed interpreters (`/usr/bin/python3`).
+     * 1. Local environments first (.venv);
+     * 2. Global environments next (pipenv, conda), with conda environments at a lower priority, and "base" being last;
+     * 3. Globally-installed interpreters (/usr/bin/python3, Windows Store).
      *
      * Always sort with newest version of Python first within each subgroup.
      */
@@ -150,7 +150,7 @@ function comparePythonVersion(a: PythonVersion | undefined, b: PythonVersion | u
 }
 
 /**
- * Compare 2 environment types, return 0 if they are the same, -1 if a comes before b, 1 otherwise.
+ * Compare 2 environment types: return 0 if they are the same, -1 if a comes before b, 1 otherwise.
  */
 function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment, workspacePath: string): number {
     const aHeuristic = getEnvTypeHeuristic(a, workspacePath);
@@ -160,10 +160,7 @@ function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment, work
 }
 
 /**
- * Returns a heuristic value depending on the environment type:
- * - 1: Local environments
- * - 2: Global environments
- * - 3: Global interpreters
+ * Return a heuristic value depending on the environment type.
  */
 function getEnvTypeHeuristic(environment: PythonEnvironment, workspacePath: string): EnvTypeHeuristic {
     const { envType } = environment;
@@ -182,7 +179,7 @@ function getEnvTypeHeuristic(environment: PythonEnvironment, workspacePath: stri
         case EnvironmentType.Poetry:
             return EnvTypeHeuristic.Global;
         // The default case covers global environments.
-        // For now this includes: pyenv, Windows Store and everything under "Global", "System" and "Unknown".
+        // For now this includes: pyenv, Windows Store, Global, System and Unknown environment types.
         default:
             return EnvTypeHeuristic.GlobalInterpreters;
     }
