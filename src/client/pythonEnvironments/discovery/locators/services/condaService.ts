@@ -78,18 +78,23 @@ export class CondaService implements ICondaService {
      */
     @cache(120_000)
     public async getCondaVersion(): Promise<SemVer | undefined> {
+        console.time('First part');
         const processService = await this.processServiceFactory.create();
         const info = await this._getCondaInfo().catch<CondaInfo | undefined>(() => undefined);
+        console.timeEnd('First part');
         let versionString: string | undefined;
+        console.log('conda info --json', JSON.stringify(info));
         if (info && info.conda_version) {
             versionString = info.conda_version;
         } else {
+            console.time('Second part');
             const stdOut = await this.getCondaFile()
                 .then((condaFile) => processService.exec(condaFile, ['--version'], {}))
                 .then((result) => result.stdout.trim())
                 .catch<string | undefined>(() => undefined);
 
             versionString = stdOut && stdOut.startsWith('conda ') ? stdOut.substring('conda '.length).trim() : stdOut;
+            console.timeEnd('Second part');
         }
         if (!versionString) {
             return undefined;
@@ -160,8 +165,14 @@ export class CondaService implements ICondaService {
         if (!(await inDiscoveryExperiment(this.experimentService))) {
             return this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService).getCondaInfo();
         }
+        console.time('Time to get conda');
         const conda = await this.getConda();
-        return conda?.getInfo();
+        console.timeEnd('Time to get conda');
+        console.time('Time to get info');
+        return conda?.getInfo().then((i) => {
+            console.timeEnd('Time to get info');
+            return i;
+        });
     }
 
     /**
