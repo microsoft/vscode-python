@@ -13,6 +13,7 @@ import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IExperimentService } from '../../../../client/common/types';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import {
+    PYTHON_PATH,
     resetGlobalInterpreterPathSetting,
     restorePythonPathInWorkspaceRoot,
     setGlobalInterpreterPath,
@@ -163,29 +164,29 @@ suite('Activation of Environments in Terminal', () => {
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
     }
 
-    // test('Should not activate', async () => {
-    //     await updateSetting(
-    //         'terminal.activateEnvironment',
-    //         false,
-    //         vscode.workspace.workspaceFolders![0].uri,
-    //         vscode.ConfigurationTarget.WorkspaceFolder,
-    //     );
-    //     const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
-    //     expect(fileSystem.arePathsSame(content, PYTHON_PATH)).to.equal(false, 'Environment not activated');
-    // });
+    test('Should not activate', async () => {
+        await updateSetting(
+            'terminal.activateEnvironment',
+            false,
+            vscode.workspace.workspaceFolders![0].uri,
+            vscode.ConfigurationTarget.WorkspaceFolder,
+        );
+        const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
+        expect(fileSystem.arePathsSame(content, PYTHON_PATH)).to.equal(false, 'Environment not activated');
+    });
 
-    // test('Should activate with venv', async function () {
-    //     if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
-    //         this.skip();
-    //     }
-    //     await testActivation(envPaths.venvPath);
-    // });
-    // test('Should activate with pipenv', async () => {
-    //     await testActivation(envPaths.pipenvPath);
-    // });
-    // test('Should activate with virtualenv', async () => {
-    //     await testActivation(envPaths.virtualEnvPath);
-    // });
+    test('Should activate with venv', async function () {
+        if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
+            this.skip();
+        }
+        await testActivation(envPaths.venvPath);
+    });
+    test('Should activate with pipenv', async () => {
+        await testActivation(envPaths.pipenvPath);
+    });
+    test('Should activate with virtualenv', async () => {
+        await testActivation(envPaths.virtualEnvPath);
+    });
     test('Should activate with conda', async () => {
         await terminalSettings.update(
             'integrated.shell.windows',
