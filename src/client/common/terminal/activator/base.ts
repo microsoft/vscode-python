@@ -31,7 +31,10 @@ export class BaseTerminalActivator implements ITerminalActivator {
         if (activationCommands) {
             for (const command of activationCommands) {
                 terminal.show(options?.preserveFocus);
-                console.log(`Sending ${command} to terminal`);
+                if ('shellPath' in terminal.creationOptions && terminal.creationOptions.shellPath) {
+                    console.log('Shell path is', terminal.creationOptions.shellPath);
+                }
+                console.log(`Sending ${command} to terminal`, terminal.creationOptions.name);
                 terminal.sendText(command);
                 await this.waitForCommandToProcess(terminalShellType);
                 activated = true;

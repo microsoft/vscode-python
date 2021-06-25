@@ -131,9 +131,9 @@ suite('Activation of Environments in Terminal', () => {
         logFile: string,
         logFileCreationWaitMs: number,
     ): Promise<string> {
-        const terminal = vscode.window.createTerminal();
+        const terminal = vscode.window.createTerminal('Hello', 'C:\\Windows\\System32\\cmd.exe');
         await sleep(consoleInitWaitMs);
-        console.log('Sending text to terminal');
+        console.log('Sending text to terminal', terminal.creationOptions.name);
         terminal.sendText(`python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`, true);
         await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
 
