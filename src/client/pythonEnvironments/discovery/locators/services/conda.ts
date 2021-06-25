@@ -332,6 +332,7 @@ export class Conda {
      * Retrieves global information about this conda.
      * Corresponds to "conda info --json".
      */
+    @cache(30_000, true, 10_000)
     public async getInfo(): Promise<CondaInfo> {
         const disposables = new Set<IDisposable>();
         const result = await exec(this.command, ['info', '--json'], {}, disposables);
