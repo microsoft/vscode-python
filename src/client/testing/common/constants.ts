@@ -3,6 +3,7 @@ import { TestProvider } from '../types';
 import { UnitTestProduct } from './types';
 
 export const CANCELLATION_REASON = 'cancelled_user_request';
+export const DEBUGGER_STOPPED_REASON = 'debugger_stopped';
 
 export const UNIT_TEST_PRODUCTS: UnitTestProduct[] = [Product.pytest, Product.unittest, Product.nosetest];
 export const NOSETEST_PROVIDER: TestProvider = 'nosetest';

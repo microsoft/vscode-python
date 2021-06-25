@@ -33,7 +33,7 @@ import { TestDiscoveryTelemetry, TestRunTelemetry } from '../../../telemetry/typ
 import { TEST_OUTPUT_CHANNEL } from '../../constants';
 import { TestProvider } from '../../types';
 import { copyDesiredTestResults } from '../testUtils';
-import { CANCELLATION_REASON } from '../constants';
+import { CANCELLATION_REASON, DEBUGGER_STOPPED_REASON } from '../constants';
 import {
     IPythonTestMessage,
     ITestCollectionStorageService,
@@ -376,6 +376,14 @@ export abstract class BaseTestManager implements ITestManager {
             moreInfo.Run_Specific_Class ||
             moreInfo.Run_Specific_Function
         );
+        const emptyTests = {
+            rootTestFolders: [],
+            testFiles: [],
+            testFolders: [],
+            testFunctions: [],
+            testSuites: [],
+            summary: { errors: 0, failures: 0, passed: 0, skipped: 0 },
+        };
         return this.discoverTests(cmdSource, clearDiscoveredTestCache, true, true)
             .catch((reason) => {
                 if (
@@ -386,14 +394,7 @@ export abstract class BaseTestManager implements ITestManager {
                 }
                 const testsHelper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
                 testsHelper.displayTestErrorMessage('Errors in discovering tests, continuing with tests');
-                return {
-                    rootTestFolders: [],
-                    testFiles: [],
-                    testFolders: [],
-                    testFunctions: [],
-                    testSuites: [],
-                    summary: { errors: 0, failures: 0, passed: 0, skipped: 0 },
-                };
+                return emptyTests;
             })
             .then((tests) => {
                 this.updateStatus(TestStatus.Running);
@@ -411,7 +412,10 @@ export abstract class BaseTestManager implements ITestManager {
             .catch((reason) => {
                 this.testsStatusUpdaterService.updateStatusOfRunningTestsAsIdle(this.workspaceFolder, this.tests);
                 this.testsStatusUpdaterService.triggerUpdatesToTests(this.workspaceFolder, this.tests);
-                if (this.testRunnerCancellationToken && this.testRunnerCancellationToken.isCancellationRequested) {
+                if (
+                    (this.testRunnerCancellationToken && this.testRunnerCancellationToken.isCancellationRequested) ||
+                    reason === DEBUGGER_STOPPED_REASON
+                ) {
                     reason = CANCELLATION_REASON;
                     this.updateStatus(TestStatus.Idle);
                 } else {
@@ -420,7 +424,10 @@ export abstract class BaseTestManager implements ITestManager {
                     sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, telementryProperties);
                 }
                 this.disposeCancellationToken(CancellationTokenType.testRunner);
-                return Promise.reject<Tests>(reason);
+                /* if user cancelled tests run, do not trigger an error but instead simply consider no tests ran */
+                return reason === CANCELLATION_REASON
+                    ? Promise.resolve<Tests>(emptyTests)
+                    : Promise.reject<Tests>(reason);
             });
     }
 

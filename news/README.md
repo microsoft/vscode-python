@@ -20,7 +20,7 @@ change corresponds to. External contributors should also make sure to
 thank themselves for taking the time and effort to contribute.
 
 As an example, a change corresponding to a bug reported in issue #42
-would be saved in the `1 Fixes` directory and named `42.md`
+would be saved in the `2 Fixes` directory and named `42.md`
 (or `42-nonce_value.md` if there was a need for multiple entries
 regarding issue #42) and could contain the following:
 

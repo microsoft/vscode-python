@@ -68,141 +68,141 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         const { baseTheme } = this.props;
 
         return (
-            <div className="main-page">
-                <div className="title-row">
-                    <div className="title-icon">
-                        <Image baseTheme={baseTheme} class="image-button-image" image={ImageName.PythonColor} />
-                    </div>
-                    <div className="title">{getLocString('StartPage.pythonExtensionTitle', 'Python Extension')}</div>
+          <div className="main-page">
+            <div className="title-row">
+              <div className="title-icon">
+                <Image baseTheme={baseTheme} class="image-button-image" image={ImageName.PythonColor} />
+              </div>
+              <div className="title">{getLocString('StartPage.pythonExtensionTitle', 'Python Extension')}</div>
+            </div>
+            <div className="row">
+              <div
+                className="icon"
+                onClick={this.openBlankNotebook}
+                onKeyPress={this.openBlankNotebook}
+                role="button"
+                tabIndex={0}
+              >
+                <Image
+                  baseTheme={baseTheme ?? 'vscode-dark'}
+                  class="image-button-image"
+                  image={ImageName.Notebook}
+                />
+              </div>
+              <div className="block">
+                <div
+                  className="text"
+                  onClick={this.openBlankNotebook}
+                  onKeyPress={this.openBlankNotebook}
+                  role="button"
+                  tabIndex={0}
+                >
+                  {getLocString('StartPage.createJupyterNotebook', 'Create a Jupyter Notebook')}
                 </div>
-                <div className="row">
-                    <div
-                        className="icon"
-                        onClick={this.openBlankNotebook}
-                        onKeyPress={this.openBlankNotebook}
-                        role="button"
-                        tabIndex={0}
-                    >
-                        <Image
-                            baseTheme={baseTheme ?? 'vscode-dark'}
-                            class="image-button-image"
-                            image={ImageName.Notebook}
-                        />
-                    </div>
-                    <div className="block">
-                        <div
-                            className="text"
-                            onClick={this.openBlankNotebook}
-                            onKeyPress={this.openBlankNotebook}
-                            role="button"
-                            tabIndex={0}
-                        >
-                            {getLocString('StartPage.createJupyterNotebook', 'Create a Jupyter Notebook')}
-                        </div>
-                        {this.renderNotebookDescription()}
-                    </div>
+                {this.renderNotebookDescription()}
+              </div>
+            </div>
+            <div className="row">
+              <div
+                className="icon"
+                role="button"
+                onClick={this.createPythonFile}
+                onKeyPress={this.createPythonFile}
+                tabIndex={0}
+              >
+                <Image
+                  baseTheme={baseTheme ?? 'vscode-dark'}
+                  class="image-button-image"
+                  image={ImageName.Python}
+                />
+              </div>
+              <div className="block">
+                <div
+                  className="text"
+                  role="button"
+                  onClick={this.createPythonFile}
+                  onKeyPress={this.createPythonFile}
+                  tabIndex={0}
+                >
+                  {getLocString('StartPage.createAPythonFile', 'Create a Python File')}
                 </div>
-                <div className="row">
-                    <div
-                        className="icon"
-                        role="button"
-                        onClick={this.createPythonFile}
-                        onKeyPress={this.createPythonFile}
-                        tabIndex={0}
-                    >
-                        <Image
-                            baseTheme={baseTheme ?? 'vscode-dark'}
-                            class="image-button-image"
-                            image={ImageName.Python}
-                        />
-                    </div>
-                    <div className="block">
-                        <div
-                            className="text"
-                            role="button"
-                            onClick={this.createPythonFile}
-                            onKeyPress={this.createPythonFile}
-                            tabIndex={0}
-                        >
-                            {getLocString('StartPage.createAPythonFile', 'Create a Python File')}
-                        </div>
-                        {this.renderPythonFileDescription()}
-                    </div>
+                {this.renderPythonFileDescription()}
+              </div>
+            </div>
+            <div className="row">
+              <div
+                className="icon"
+                role="button"
+                onClick={this.openFolder}
+                onKeyPress={this.openFolder}
+                tabIndex={0}
+              >
+                <Image
+                  baseTheme={baseTheme ?? 'vscode-dark'}
+                  class="image-button-image"
+                  image={ImageName.OpenFolder}
+                />
+              </div>
+              <div className="block">
+                <div
+                  className="text"
+                  role="button"
+                  onClick={this.openFolder}
+                  onKeyPress={this.openFolder}
+                  tabIndex={0}
+                >
+                  {getLocString('StartPage.openFolder', 'Open a Folder or Workspace')}
                 </div>
-                <div className="row">
-                    <div
-                        className="icon"
-                        role="button"
-                        onClick={this.openFolder}
-                        onKeyPress={this.openFolder}
-                        tabIndex={0}
-                    >
-                        <Image
-                            baseTheme={baseTheme ?? 'vscode-dark'}
-                            class="image-button-image"
-                            image={ImageName.OpenFolder}
-                        />
-                    </div>
-                    <div className="block">
-                        <div
-                            className="text"
-                            role="button"
-                            onClick={this.openFolder}
-                            onKeyPress={this.openFolder}
-                            tabIndex={0}
-                        >
-                            {getLocString('StartPage.openFolder', 'Open a Folder or Workspace')}
-                        </div>
-                        {this.renderFolderDescription()}
-                    </div>
-                </div>
-                <div className="row">
-                    <div
-                        className="icon"
-                        role="button"
-                        onClick={this.openInteractiveWindow}
-                        onKeyPress={this.openInteractiveWindow}
-                        tabIndex={0}
-                    >
-                        <Image
-                            baseTheme={baseTheme ?? 'vscode-dark'}
-                            class="image-button-image"
-                            image={ImageName.Interactive}
-                        />
-                    </div>
-                    <div className="block">
-                        <div
-                            className="text"
-                            role="button"
-                            onClick={this.openInteractiveWindow}
-                            onKeyPress={this.openInteractiveWindow}
-                            tabIndex={0}
-                        >
-                            {getLocString(
+                {this.renderFolderDescription()}
+              </div>
+            </div>
+            <div className="row">
+              <div
+                className="icon"
+                role="button"
+                onClick={this.openInteractiveWindow}
+                onKeyPress={this.openInteractiveWindow}
+                tabIndex={0}
+              >
+                <Image
+                  baseTheme={baseTheme ?? 'vscode-dark'}
+                  class="image-button-image"
+                  image={ImageName.Interactive}
+                />
+              </div>
+              <div className="block">
+                <div
+                  className="text"
+                  role="button"
+                  onClick={this.openInteractiveWindow}
+                  onKeyPress={this.openInteractiveWindow}
+                  tabIndex={0}
+                >
+                  {getLocString(
                                 'StartPage.openInteractiveWindow',
                                 'Use the Interactive Window to develop Python Scripts',
                             )}
-                        </div>
-                        {this.renderInteractiveWindowDescription()}
-                    </div>
                 </div>
-                <div className="releaseNotesRow">
-                    {this.renderReleaseNotesLink()}
-                    {this.renderTutorialAndDoc()}
-                    {this.renderMailingList()}
-                </div>
-                <div className="block">
-                    <input
-                        type="checkbox"
-                        aria-checked={!this.releaseNotes.showAgainSetting}
-                        className="checkbox"
-                        onClick={this.updateSettings}
-                    />
-                </div>
-                <div className="block">
-                    <p>{getLocString('StartPage.dontShowAgain', "Don't show this page again")}</p>
-                </div>
+                {this.renderInteractiveWindowDescription()}
+              </div>
             </div>
+            <div className="releaseNotesRow">
+              {this.renderReleaseNotesLink()}
+              {this.renderTutorialAndDoc()}
+              {this.renderMailingList()}
+            </div>
+            <div className="block">
+              <input
+                type="checkbox"
+                aria-checked={!this.releaseNotes.showAgainSetting}
+                className="checkbox"
+                onClick={this.updateSettings}
+              />
+            </div>
+            <div className="block">
+              <p>{getLocString('StartPage.dontShowAgain', "Don't show this page again")}</p>
+            </div>
+          </div>
         );
     }
 
@@ -244,112 +244,112 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     // eslint-disable-next-line class-methods-use-this
     private renderNotebookDescription(): JSX.Element {
         return (
-            <div
-                className="paragraph list"
+          <div
+            className="paragraph list"
                 // eslint-disable-next-line react/no-danger
-                dangerouslySetInnerHTML={{
+            dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.notebookDescription',
                         '- Run "<div class="link italics" role="button" onclick={0}>Create New Blank Notebook</div>" in the Command Palette (<div class="italics">Shift + Command + P</div>)<br />- Explore our <div class="link" role="button" onclick={1}>sample notebook</div> to learn about notebook features',
                     ).format('openCommandPaletteWithSelection()', 'openSampleNotebook()'),
                 }}
-            />
+          />
         );
     }
 
     // eslint-disable-next-line class-methods-use-this
     private renderPythonFileDescription(): JSX.Element {
         return (
-            <div
-                className="paragraph list"
+          <div
+            className="paragraph list"
                 // eslint-disable-next-line react/no-danger
-                dangerouslySetInnerHTML={{
+            dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.pythonFileDescription',
                         '- Create a <div class="link" role="button" onclick={0}>new file</div> with a .py extension',
                     ).format('createPythonFile()'),
                 }}
-            />
+          />
         );
     }
 
     // eslint-disable-next-line class-methods-use-this
     private renderInteractiveWindowDescription(): JSX.Element {
         return (
-            <div
-                className="paragraph list"
+          <div
+            className="paragraph list"
                 // eslint-disable-next-line react/no-danger
-                dangerouslySetInnerHTML={{
+            dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.interactiveWindowDesc',
                         '- You can create cells on a Python file by typing "#%%". Make sure you have the Jupyter extension installed. <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window',
                     ),
                 }}
-            />
+          />
         );
     }
 
     // eslint-disable-next-line class-methods-use-this
     private renderFolderDescription(): JSX.Element {
         return (
-            <div
-                className="paragraph list"
+          <div
+            className="paragraph list"
                 // eslint-disable-next-line react/no-danger
-                dangerouslySetInnerHTML={{
+            dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.folderDesc',
                         '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a <div class="link" role="button" onclick={1}>Workspace</div>',
                     ).format('openFolder()', 'openWorkspace()'),
                 }}
-            />
+          />
         );
     }
 
     // eslint-disable-next-line class-methods-use-this
     private renderReleaseNotesLink(): JSX.Element {
         return (
-            <div
-                className="paragraph"
+          <div
+            className="paragraph"
                 // eslint-disable-next-line react/no-danger
-                dangerouslySetInnerHTML={{
+            dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.releaseNotes',
                         'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features.',
                     ).format('https://aka.ms/AA8dxtb'),
                 }}
-            />
+          />
         );
     }
 
     // eslint-disable-next-line class-methods-use-this
     private renderTutorialAndDoc(): JSX.Element {
         return (
-            <div
-                className="paragraph"
+          <div
+            className="paragraph"
                 // eslint-disable-next-line react/no-danger
-                dangerouslySetInnerHTML={{
+            dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.tutorialAndDoc',
                         'Explore more features in our <a class="link" href={0}>Tutorials</a> or check <a class="link" href={1}>Documentation</a> for tips and troubleshooting.',
                     ).format('https://aka.ms/AA8dqti', 'https://aka.ms/AA8dxwy'),
                 }}
-            />
+          />
         );
     }
 
     // eslint-disable-next-line class-methods-use-this
     private renderMailingList(): JSX.Element {
         return (
-            <div
-                className="paragraph"
+          <div
+            className="paragraph"
                 // eslint-disable-next-line react/no-danger
-                dangerouslySetInnerHTML={{
+            dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.mailingList',
                         '<a class="link" href={0}>Sign up</a> for tips and tutorials through our mailing list.',
                     ).format('https://aka.ms/AAbopxr'),
                 }}
-            />
+          />
         );
     }
 

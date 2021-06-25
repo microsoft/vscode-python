@@ -88,6 +88,8 @@ export class TestResultDisplay implements ITestResultDisplay {
         const statusText: string[] = [];
         const toolTip: string[] = [];
 
+        if (!tests) return tests;
+
         if (tests.summary.passed > 0) {
             statusText.push(`${constants.Octicons.Test_Pass} ${tests.summary.passed}`);
             toolTip.push(`${tests.summary.passed} Passed`);

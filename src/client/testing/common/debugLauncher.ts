@@ -13,6 +13,7 @@ import { IDebugConfigurationResolver } from '../../debugger/extension/configurat
 import { LaunchRequestArguments } from '../../debugger/types';
 import { IServiceContainer } from '../../ioc/types';
 import { TestProvider } from '../types';
+import { DEBUGGER_STOPPED_REASON } from './constants';
 import { ITestDebugConfig, ITestDebugLauncher, LaunchOptions } from './types';
 
 @injectable()
@@ -46,9 +47,16 @@ export class DebugLauncher implements ITestDebugLauncher {
         return debugManager.startDebugging(workspaceFolder, launchArgs).then(
             // Wait for debug session to be complete.
             () => {
-                return new Promise<void>((resolve) => {
+                var debuggerStopped = false;
+                return new Promise<void>((resolve, reject) => {
+                    debugManager.onDidReceiveDebugSessionCustomEvent((event) => {
+                        if (event.body.exitCode == 247) {
+                            debuggerStopped = true;
+                            reject(DEBUGGER_STOPPED_REASON);
+                        }
+                    });
                     debugManager.onDidTerminateDebugSession(() => {
-                        resolve();
+                        if (!debuggerStopped) resolve();
                     });
                 });
             },
