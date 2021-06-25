@@ -130,6 +130,7 @@ export class TerminalHelper implements ITerminalHelper {
         providers: ITerminalActivationCommandProvider[],
     ): Promise<string[] | undefined> {
         const settings = this.configurationService.getSettings(resource);
+        console.log('Do we have the right python?', settings.pythonPath);
 
         const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
         const condaService = (await inDiscoveryExperiment(experimentService))
@@ -145,21 +146,37 @@ export class TerminalHelper implements ITerminalHelper {
                 : await this.conda.getActivationCommands(resource, terminalShellType);
 
             if (Array.isArray(activationCommands)) {
+                console.log('Should not be here');
                 return activationCommands;
             }
         }
+        console.log('Now let us check the supported providers for', terminalShellType, 'haaaa', settings.pythonPath);
 
         // Search from the list of providers.
         const supportedProviders = providers.filter((provider) => provider.isShellSupported(terminalShellType));
+        console.log('Log it', supportedProviders, supportedProviders.length, providers.length);
+
+        // const provider = supportedProviders[0];
+        // console.log('Check the provider', provider, interpreter, 'haaaa', settings.pythonPath);
+        // const activationCommands = interpreter
+        //     ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
+        //     : await provider.getActivationCommands(resource, terminalShellType);
+        // console.log('Activation commands found', JSON.stringify(activationCommands));
+        // if (Array.isArray(activationCommands) && activationCommands.length > 0) {
+        //     return activationCommands;
+        // }
 
         for (const provider of supportedProviders) {
+            console.log('Check the provider', provider, interpreter, 'haaaa', settings.pythonPath);
             const activationCommands = interpreter
                 ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
                 : await provider.getActivationCommands(resource, terminalShellType);
-
+            console.log('Activation commands found', JSON.stringify(activationCommands));
             if (Array.isArray(activationCommands) && activationCommands.length > 0) {
                 return activationCommands;
             }
         }
+
+        console.log('Could not find anything');
     }
 }
