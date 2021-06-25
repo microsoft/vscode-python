@@ -133,6 +133,7 @@ suite('Activation of Environments in Terminal', () => {
     ): Promise<string> {
         const terminal = vscode.window.createTerminal();
         await sleep(consoleInitWaitMs);
+        console.log('Sending text to terminal');
         terminal.sendText(`python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`, true);
         await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
 
@@ -161,6 +162,7 @@ suite('Activation of Environments in Terminal', () => {
         }
         await sleep(5000);
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
+        console.log('Log file content', content);
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
     }
 

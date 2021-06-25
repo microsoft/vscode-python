@@ -146,7 +146,7 @@ export class TerminalHelper implements ITerminalHelper {
                 : await this.conda.getActivationCommands(resource, terminalShellType);
 
             if (Array.isArray(activationCommands)) {
-                console.log('Should not be here');
+                console.log('Should not be here', JSON.stringify(activationCommands));
                 return activationCommands;
             }
         }
