@@ -195,6 +195,6 @@ suite('Activation of Environments in Terminal', () => {
             vscode.ConfigurationTarget.Global,
         );
         await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
-        await testActivation(envPaths.condaPath, defaultWaitTimeForActivation * 2); // Conda may send two activation commands, hence double the wait time.
-    }).timeout(TEST_TIMEOUT * 2);
+        await testActivation(envPaths.condaPath, defaultWaitTimeForActivation * 9); // Conda may send two activation commands, hence double the wait time.
+    }).timeout(TEST_TIMEOUT * 3);
 });

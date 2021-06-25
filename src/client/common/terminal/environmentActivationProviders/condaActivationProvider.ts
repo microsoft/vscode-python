@@ -63,23 +63,29 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         pythonPath: string,
         targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
+        console.time('Time to get codna env info');
         const condaLocatorService = (await inDiscoveryExperiment(this.experimentService))
             ? this.pyenvs
             : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
         const envInfo = await condaLocatorService.getCondaEnvironment(pythonPath);
+        console.timeEnd('Time to get codna env info');
         if (!envInfo) {
             return undefined;
         }
 
         const condaEnv = envInfo.name.length > 0 ? envInfo.name : envInfo.path;
 
+        console.time('Time to get codna version');
         // Algorithm differs based on version
         // Old version, just call activate directly.
         // New version, call activate from the same path as our python path, then call it again to activate our environment.
         // -- note that the 'default' conda location won't allow activate to work for the environment sometimes.
         const versionInfo = await this.condaService.getCondaVersion();
+        console.timeEnd('Time to get codna version');
+        console.log('Conda version', JSON.stringify(versionInfo));
         if (versionInfo && versionInfo.major >= CondaRequiredMajor) {
             // Conda added support for powershell in 4.6.
+            console.time('Time to get commands');
             if (
                 versionInfo.minor >= CondaRequiredMinorForPowerShell &&
                 (targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore)
@@ -92,6 +98,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                 if (interpreterPath) {
                     const activatePath = path.join(path.dirname(interpreterPath), 'activate').fileToCommandArgument();
                     const firstActivate = this.platform.isWindows ? activatePath : `source ${activatePath}`;
+                    console.timeEnd('Time to get commands');
                     return [firstActivate, `conda activate ${condaEnv.toCommandArgument()}`];
                 }
             }
@@ -107,6 +114,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                 return getFishCommands(condaEnv, await this.condaService.getCondaFile());
 
             default:
+                console.log('Naruto boi get lost');
                 if (this.platform.isWindows) {
                     return this.getWindowsCommands(condaEnv);
                 }

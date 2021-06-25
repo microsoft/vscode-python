@@ -141,9 +141,12 @@ export class TerminalHelper implements ITerminalHelper {
             ? interpreter.envType === EnvironmentType.Conda
             : await condaService.isCondaEnvironment(settings.pythonPath);
         if (isCondaEnvironment) {
+            console.log('I am a conda environment', interpreter);
+            console.time('Time taken to get activation commands for conda');
             const activationCommands = interpreter
                 ? await this.conda.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
                 : await this.conda.getActivationCommands(resource, terminalShellType);
+            console.timeEnd('Time taken to get activation commands for conda');
 
             if (Array.isArray(activationCommands)) {
                 console.log('Should not be here', JSON.stringify(activationCommands));
