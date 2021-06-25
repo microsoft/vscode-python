@@ -195,7 +195,7 @@ jobs:
       - name: Run venv tests
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
-          VSC_PYTHON_CI_TEST_GREP: 'Should activate with conda'
+          VSC_PYTHON_CI_TEST_GREP: 'Activation of Environments in Terminal'
           CI_PYTHON_VERSION: ${{matrix.python}}
         uses: GabrielBB/xvfb-action@v1.5
         with:
