@@ -25,7 +25,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, TEST_TIMEOUT } from '../../../constants';
 import { sleep } from '../../../core';
 import { initialize } from '../../../initialize';
 
-suite.skip('Activation of Environments in Terminal', () => {
+suite('Activation of Environments in Terminal', () => {
     const file = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',
