@@ -45,6 +45,7 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
 
     private async activateTerminal(terminal: Terminal): Promise<void> {
         console.log('Terminal has opened');
+        console.time('Time taken to send command');
         if (this.terminalsNotToAutoActivate.has(terminal)) {
             return;
         }

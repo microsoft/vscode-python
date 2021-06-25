@@ -39,6 +39,7 @@ export class BaseTerminalActivator implements ITerminalActivator {
         }
         console.log('Activation complete', activated);
         deferred.resolve(activated);
+        console.timeEnd('Time taken to send command');
         return activated;
     }
     protected async waitForCommandToProcess(_shell: TerminalShellType) {

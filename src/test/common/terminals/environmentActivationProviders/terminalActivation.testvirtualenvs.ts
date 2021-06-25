@@ -41,7 +41,7 @@ suite('Activation of Environments in Terminal', () => {
         PYTHON_VIRTUAL_ENVS_LOCATION !== undefined
             ? path.join(EXTENSION_ROOT_DIR_FOR_TESTS, PYTHON_VIRTUAL_ENVS_LOCATION)
             : path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'tmp', 'envPaths.json');
-    const waitTimeForActivation = 5000;
+    const defaultWaitTimeForActivation = 5000;
     type EnvPath = {
         condaExecPath: string;
         condaPath: string;
@@ -148,7 +148,7 @@ suite('Activation of Environments in Terminal', () => {
      *
      * @param envPath Python environment path to activate in the terminal (via vscode config)
      */
-    async function testActivation(envPath: string) {
+    async function testActivation(envPath: string, waitTimeForActivation = defaultWaitTimeForActivation) {
         await updateSetting(
             'terminal.activateEnvironment',
             true,
@@ -160,7 +160,6 @@ suite('Activation of Environments in Terminal', () => {
         } else {
             await setPythonPathInWorkspaceRoot(envPath);
         }
-        await sleep(5000);
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         console.log('Log file content', content);
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
@@ -173,7 +172,7 @@ suite('Activation of Environments in Terminal', () => {
             vscode.workspace.workspaceFolders![0].uri,
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
-        const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
+        const content = await openTerminalAndAwaitCommandContent(defaultWaitTimeForActivation, file, outputFile, 5_000);
         expect(fileSystem.arePathsSame(content, PYTHON_PATH)).to.equal(false, 'Environment not activated');
     });
 
@@ -196,6 +195,6 @@ suite('Activation of Environments in Terminal', () => {
             vscode.ConfigurationTarget.Global,
         );
         await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
-        await testActivation(envPaths.condaPath);
+        await testActivation(envPaths.condaPath, defaultWaitTimeForActivation * 2); // Conda may send two activation commands, hence double the wait time.
     }).timeout(TEST_TIMEOUT * 2);
 });
