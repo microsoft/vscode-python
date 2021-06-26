@@ -131,7 +131,7 @@ suite('Activation of Environments in Terminal', () => {
         logFile: string,
         logFileCreationWaitMs: number,
     ): Promise<string> {
-        const terminal = vscode.window.createTerminal('Hello', 'C:\\Windows\\Sysnative\\cmd.exe');
+        const terminal = vscode.window.createTerminal('Hello', 'C:\\Windows\\System32\\cmd.exe');
         await sleep(consoleInitWaitMs);
         console.log('Sending text to terminal', terminal.creationOptions.name);
         terminal.sendText(`python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`, true);
@@ -189,11 +189,11 @@ suite('Activation of Environments in Terminal', () => {
         await testActivation(envPaths.virtualEnvPath);
     });
     test('Should activate with conda', async () => {
-        // await terminalSettings.update(
-        //     'integrated.defaultProfile.windows',
-        //     'Command Prompt',
-        //     vscode.ConfigurationTarget.Global,
-        // );
+        await terminalSettings.update(
+            'integrated.defaultProfile.windows',
+            'Command Prompt',
+            vscode.ConfigurationTarget.Global,
+        );
         await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
         await testActivation(envPaths.condaPath, defaultWaitTimeForActivation * 9); // Conda may send two activation commands, hence double the wait time.
     }).timeout(TEST_TIMEOUT * 3);
