@@ -34,7 +34,6 @@ import { NotebookCell, NotebookConcatTextDocument, NotebookDocument } from 'vsco
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { NotebookConcatDocument } from './notebookConcatDocument';
-import { SafeNotebookDocument } from './safeNotebookDocument';
 
 /* Used by code actions. Disabled for now.
 function toRange(rangeLike: Range): Range {
@@ -649,17 +648,15 @@ export class NotebookConverter implements Disposable {
     }
 
     private onDidOpenNotebook(doc: NotebookDocument) {
-        const safeDoc = new SafeNotebookDocument(doc);
-        if (this.notebookFilter.test(safeDoc.fileName)) {
-            this.getTextDocumentWrapper(safeDoc.uri);
+        if (this.notebookFilter.test(doc.uri.fsPath)) {
+            this.getTextDocumentWrapper(doc.uri);
         }
     }
 
     private onDidCloseNotebook(doc: NotebookDocument) {
-        const safeDoc = new SafeNotebookDocument(doc);
-        if (this.notebookFilter.test(safeDoc.fileName)) {
-            const key = NotebookConverter.getDocumentKey(safeDoc.uri);
-            const wrapper = this.getTextDocumentWrapper(safeDoc.uri);
+        if (this.notebookFilter.test(doc.uri.fsPath)) {
+            const key = NotebookConverter.getDocumentKey(doc.uri);
+            const wrapper = this.getTextDocumentWrapper(doc.uri);
             this.activeDocuments.delete(key);
             this.activeDocumentsOutgoingMap.delete(NotebookConverter.getDocumentKey(wrapper.uri));
         }
