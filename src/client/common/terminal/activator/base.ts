@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { Terminal } from 'vscode';
+import { env, Terminal } from 'vscode';
 import { createDeferred, sleep } from '../../utils/async';
 import { ITerminalActivator, ITerminalHelper, TerminalActivationOptions, TerminalShellType } from '../types';
 
@@ -34,6 +34,7 @@ export class BaseTerminalActivator implements ITerminalActivator {
                 if ('shellPath' in terminal.creationOptions && terminal.creationOptions.shellPath) {
                     console.log('Shell path is', terminal.creationOptions.shellPath);
                 }
+                console.log(`Shell path returned by vscode API`, env.shell);
                 console.log(`Sending ${command} to terminal`, terminal.creationOptions.name);
                 terminal.sendText(command);
                 await this.waitForCommandToProcess(terminalShellType);

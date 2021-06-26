@@ -168,6 +168,8 @@ jobs:
           & $condaExecPath create -p "./test_env2" -y python
           & $condaExecPath create -p "~/test_env3" -y python
 
+          & $condaExecPath init --all
+
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
           echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
