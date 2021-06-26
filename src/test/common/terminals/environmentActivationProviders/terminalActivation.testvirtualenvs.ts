@@ -63,7 +63,7 @@ suite('Activation of Environments in Terminal', () => {
         envPaths = await fs.readJson(envsLocation);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders![0].uri);
         pythonSettings = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders![0].uri);
-        defaultShell.Windows = terminalSettings.inspect('integrated.shell.windows').globalValue;
+        defaultShell.Windows = terminalSettings.inspect('integrated.defaultProfile.windows').globalValue;
         defaultShell.Linux = terminalSettings.inspect('integrated.shell.linux').globalValue;
         await terminalSettings.update('integrated.shell.linux', '/bin/bash', vscode.ConfigurationTarget.Global);
         experiments = (await initialize()).serviceContainer.get<IExperimentService>(IExperimentService);
@@ -103,7 +103,7 @@ suite('Activation of Environments in Terminal', () => {
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
         await terminalSettings.update(
-            'integrated.shell.windows',
+            'integrated.defaultProfile.windows',
             defaultShell.Windows,
             vscode.ConfigurationTarget.Global,
         );
@@ -190,8 +190,8 @@ suite('Activation of Environments in Terminal', () => {
     });
     test('Should activate with conda', async () => {
         await terminalSettings.update(
-            'integrated.shell.windows',
-            'C:\\Windows\\System32\\cmd.exe',
+            'integrated.defaultProfile.windows',
+            'Command Prompt',
             vscode.ConfigurationTarget.Global,
         );
         await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
