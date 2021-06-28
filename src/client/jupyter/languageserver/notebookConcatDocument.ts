@@ -139,7 +139,7 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
         } else {
             this.concatDocument = new EnhancedNotebookConcatTextDocument(notebook, selector, notebookApi);
         }
-        
+
         this.onDidChangeSubscription = this.concatDocument.onDidChange(this.onDidChange, this);
         this.updateCellTracking();
     }

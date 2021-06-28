@@ -1,14 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    Position,
-    Range,
-    Uri,
-    Event,
-    Location,
-    TextLine,
-} from 'vscode';
+import { Position, Range, Uri, Event, Location, TextLine } from 'vscode';
 
 export interface IConcatTextDocument {
     onDidChange: Event<void>;

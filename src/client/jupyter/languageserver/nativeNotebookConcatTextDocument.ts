@@ -16,8 +16,10 @@ import { NotebookConcatTextDocument } from 'vscode-proposed';
 
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IConcatTextDocument } from './concatTextDocument';
+
 export class EnhancedNotebookConcatTextDocument implements IConcatTextDocument {
     private _concatTextDocument: NotebookConcatTextDocument;
+
     private _onDidChange = new EventEmitter<void>();
 
     onDidChange: Event<void> = this._onDidChange.event;
@@ -33,9 +35,9 @@ export class EnhancedNotebookConcatTextDocument implements IConcatTextDocument {
     getText(range?: Range | undefined): string {
         if (range) {
             return this._concatTextDocument.getText(range);
-        } else {
-            return this._concatTextDocument.getText();
         }
+
+        return this._concatTextDocument.getText();
     }
 
     contains(uri: Uri): boolean {
@@ -50,6 +52,7 @@ export class EnhancedNotebookConcatTextDocument implements IConcatTextDocument {
         if (typeof locationOrOffset === 'number') {
             return this._concatTextDocument.positionAt(locationOrOffset);
         }
+
         return this._concatTextDocument.positionAt(locationOrOffset);
     }
 

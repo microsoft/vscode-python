@@ -19,11 +19,16 @@ import { NotebookConcatTextDocument } from 'vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { InteractiveInputScheme, PYTHON_LANGUAGE } from '../../common/constants';
 import { IConcatTextDocument } from './concatTextDocument';
+
 export class InteractiveConcatTextDocument implements IConcatTextDocument {
     private _input: TextDocument | undefined = undefined;
+
     private _concatTextDocument: NotebookConcatTextDocument;
+
     private _lineCounts: [number, number] = [0, 0];
+
     private _textLen: [number, number] = [0, 0];
+
     private _onDidChange = new EventEmitter<void>();
 
     onDidChange: Event<void> = this._onDidChange.event;
@@ -106,7 +111,7 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
     getText(range?: Range) {
         if (!range) {
             let result = '';
-            result += this._concatTextDocument.getText() + '\n' + (this._input?.getText() ?? '');
+            result += `${this._concatTextDocument.getText()}\n${this._input?.getText() ?? ''}`;
             return result;
         }
 
@@ -124,25 +129,25 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
 
         if (!startDocument || !endDocument) {
             return '';
-        } else if (startDocument === endDocument) {
-            return startDocument.getText(start.range);
-        } else {
-            const a = startDocument.getText(new Range(start.range.start, new Position(startDocument.lineCount, 0)));
-            const b = endDocument.getText(new Range(new Position(0, 0), end.range.end));
-            return a + '\n' + b;
         }
+        if (startDocument === endDocument) {
+            return startDocument.getText(start.range);
+        }
+
+        const a = startDocument.getText(new Range(start.range.start, new Position(startDocument.lineCount, 0)));
+        const b = endDocument.getText(new Range(new Position(0, 0), end.range.end));
+        return `${a}\n${b}`;
     }
 
     offsetAt(position: Position): number {
-        const line = position.line;
+        const { line } = position;
         if (line >= this._lineCounts[0]) {
             // input box
             const lineOffset = Math.max(0, line - this._lineCounts[0] - 1);
             return this._input?.offsetAt(new Position(lineOffset, position.character)) ?? 0;
-        } else {
-            // concat
-            return this._concatTextDocument.offsetAt(position);
         }
+        // concat
+        return this._concatTextDocument.offsetAt(position);
     }
 
     // turning an offset on the final concatenatd document to position
@@ -154,10 +159,9 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
                 // in the input box
                 const offset = Math.max(0, locationOrOffset - concatTextLen - 1);
                 return this._input?.positionAt(offset) ?? new Position(0, 0);
-            } else {
-                const position = this._concatTextDocument.positionAt(locationOrOffset);
-                return new Position(this._lineCounts[0] + position.line, position.character);
             }
+            const position = this._concatTextDocument.positionAt(locationOrOffset);
+            return new Position(this._lineCounts[0] + position.line, position.character);
         }
 
         if (locationOrOffset.uri.toString() === this._input?.uri.toString()) {
@@ -166,9 +170,8 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
                 this._lineCounts[0] + locationOrOffset.range.start.line,
                 locationOrOffset.range.start.character,
             );
-        } else {
-            return this._concatTextDocument.positionAt(locationOrOffset);
         }
+        return this._concatTextDocument.positionAt(locationOrOffset);
     }
 
     locationAt(positionOrRange: Range | Position): Location {
@@ -186,10 +189,10 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
 
             // TODO@rebornix !
             return new Location(this._input!.uri, new Range(startPosition, endPosition));
-        } else {
-            // this is the NotebookConcatTextDocument
-            return this._concatTextDocument.locationAt(positionOrRange);
         }
+
+        // this is the NotebookConcatTextDocument
+        return this._concatTextDocument.locationAt(positionOrRange);
     }
 
     contains(uri: Uri): boolean {
