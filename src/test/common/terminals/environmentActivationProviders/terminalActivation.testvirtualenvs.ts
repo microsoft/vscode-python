@@ -26,7 +26,7 @@ import { sleep } from '../../../core';
 import { initialize, initializeTest } from '../../../initialize';
 import * as ExperimentHelpers from '../../../../client/common/experiments/helpers';
 
-suite('Activation of Environments in Terminal', () => {
+suite.skip('Activation of Environments in Terminal', () => {
     const file = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',
