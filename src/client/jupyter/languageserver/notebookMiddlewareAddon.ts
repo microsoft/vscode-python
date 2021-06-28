@@ -66,7 +66,6 @@ import { IFileSystem } from '../../common/platform/types';
 import { isThenable } from '../../common/utils/async';
 import { isNotebookCell } from '../../common/utils/misc';
 import { NotebookConverter } from './notebookConverter';
-import { InteractiveScheme } from '../../common/constants';
 
 /**
  * This class is a temporary solution to handling intellisense and diagnostics in python based notebooks.
@@ -483,11 +482,6 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         // Remap any wrapped documents so that diagnostics appear in the cells. Note that if we
         // get a diagnostics list for our concated document, we have to tell VS code about EVERY cell.
         // Otherwise old messages for cells that didn't change this time won't go away.
-        
-        if (uri.scheme === InteractiveScheme) {
-            // hide diagnostics for Interactive notebook cells
-            return;
-        }
         const newDiagMapping = this.converter.toIncomingDiagnosticsMap(uri, diagnostics);
         [...newDiagMapping.keys()].forEach((k) => next(k, newDiagMapping.get(k)!));
     }
