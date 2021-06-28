@@ -12,7 +12,6 @@ export const PYTHON = [
     { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
     { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE },
     { scheme: InteractiveInputScheme, language: PYTHON_LANGUAGE },
-
 ];
 
 export const PVSC_EXTENSION_ID = 'ms-python.python';
