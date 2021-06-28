@@ -4,28 +4,18 @@
 #
 #    pip-compile --generate-hashes jedils_requirements.in
 #
-dataclasses==0.8 ; python_version <= "3.6" \
-    --hash=sha256:0201d89fa866f68c8ebd9d08ee6ff50c0b255f8ec63a71c16fda7af82bb887bf \
-    --hash=sha256:8479067f342acf957dc82ec415d355ab5edb7e7646b90dc6e2fd1d96ad084c97
-    # via
-    #   -r jedils_requirements.in
-    #   pydantic
 docstring-to-markdown==0.9 \
     --hash=sha256:0b810e6e16737d2d0ede6182f66f513f814a11fad1222e645fbc14acde78e171 \
     --hash=sha256:488b9f26339651edc7fc9386caeffd3924569072a8b67b727e253f83d5b18c59
     # via jedi-language-server
-importlib-metadata==3.10.1 \
-    --hash=sha256:2ec0faae539743ae6aaa84b49a169670a465f7f5d64e6add98388cc29fd1f2f6 \
-    --hash=sha256:c9356b657de65c53744046fa8f7358afe0714a1af7d570c00c3835c2d724a7c1
-    # via jedi-language-server
-jedi-language-server==0.31.1 \
-    --hash=sha256:bc2312b0dda9007f739859ef33c2e4fd56540f09e296a6f49a3dc0864aca947d \
-    --hash=sha256:d8536df29df8bf08c48214801f27f9e0d3f602a00cac8573adffc349f614a824
-    # via -r jedils_requirements.in
 jedi==0.18.0 \
     --hash=sha256:18456d83f65f400ab0c2d3319e48520420ef43b23a086fdc05dff34132f0fb93 \
     --hash=sha256:92550a404bad8afed881a137ec9a461fed49eca661414be45059329614ed0707
     # via jedi-language-server
+jedi-language-server==0.33.0 \
+    --hash=sha256:3197a2ada9ffa5bc1872b4f04f351ee3b051947f4f40c1d03548520799a7e48f \
+    --hash=sha256:3cd87da16b28ce3d326a70eac09f4e80ce3e153562c19941627b9e795426e3e9
+    # via -r jedils_requirements.in
 parso==0.8.2 \
     --hash=sha256:12b83492c6239ce32ff5eed6d3639d6a536170723c6f3f1506869f1ace413398 \
     --hash=sha256:a8c4922db71e4fdb90e0d0bc6e50f9b273d3397925e5e60a717e719201778d22
@@ -56,9 +46,9 @@ pydantic==1.8.2 \
     # via
     #   jedi-language-server
     #   pygls
-pygls==0.10.3 \
-    --hash=sha256:055281413d303a816374a51956d94c8554c32f8a499265aac41b0bd5c124bb68 \
-    --hash=sha256:522c1068dd38c4945925ca742daba6aff5621168e0e5ddd954813e8b957ca831
+pygls==0.11.1 \
+    --hash=sha256:392a080ef02290a9b672faa1cedeb9962f7ae74e40434148867a5eef2515b6ad \
+    --hash=sha256:cb30ccf1eee14760ce1b7167a9d39df9e72368ec7a61accdd6bf0b9c73ea0319
     # via
     #   -r jedils_requirements.in
     #   jedi-language-server
@@ -70,10 +60,4 @@ typing-extensions==3.10.0.0 \
     --hash=sha256:0ac0f89795dd19de6b97debb0c6af1c70987fd80a2d62d1958f7e56fcc31b497 \
     --hash=sha256:50b6f157849174217d0656f99dc82fe932884fb250826c18350e159ec6cdf342 \
     --hash=sha256:779383f6086d90c99ae41cf0ff39aac8a7937a9283ce0a414e5dd782f4c94a84
-    # via
-    #   importlib-metadata
-    #   pydantic
-zipp==3.4.1 \
-    --hash=sha256:3607921face881ba3e026887d8150cca609d517579abe052ac81fc5aeffdbd76 \
-    --hash=sha256:51cb66cc54621609dd593d1787f286ee42a5c0adbb4b29abea5a63edc3e03098
-    # via importlib-metadata
+    # via pydantic
