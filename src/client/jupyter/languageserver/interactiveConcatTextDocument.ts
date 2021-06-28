@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+/* eslint-disable class-methods-use-this */
 
 import {
     NotebookDocument,
@@ -101,7 +102,7 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
         this._textLen = [this._textLen[0], this._getDocumentTextLen(this._input)];
     }
 
-    private _getDocumentTextLen(textDocument?: TextDocument) {
+    private _getDocumentTextLen(textDocument?: TextDocument): number {
         if (!textDocument) {
             return 0;
         }
