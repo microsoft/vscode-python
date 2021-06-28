@@ -1,4 +1,3 @@
-
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -22,7 +21,6 @@ export class EnhancedNotebookConcatTextDocument implements IConcatTextDocument {
     private _onDidChange = new EventEmitter<void>();
 
     onDidChange: Event<void> = this._onDidChange.event;
-
 
     constructor(private _notebook: NotebookDocument, selector: DocumentSelector, notebookApi: IVSCodeNotebook) {
         this._concatTextDocument = notebookApi.createConcatTextDocument(_notebook, selector);
@@ -51,9 +49,8 @@ export class EnhancedNotebookConcatTextDocument implements IConcatTextDocument {
     positionAt(locationOrOffset: Location | number): Position {
         if (typeof locationOrOffset === 'number') {
             return this._concatTextDocument.positionAt(locationOrOffset);
-        } else {
-            return this._concatTextDocument.positionAt(locationOrOffset);
         }
+        return this._concatTextDocument.positionAt(locationOrOffset);
     }
 
     validateRange(range: Range): Range {
