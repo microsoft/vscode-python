@@ -79,7 +79,7 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
     private _updateConcat() {
         let concatLineCnt = 0;
         let concatTextLen = 0;
-        for (let i = 0; i < this._notebook.cellCount; i++) {
+        for (let i = 0; i < this._notebook.cellCount; i += 1) {
             const cell = this._notebook.cellAt(i);
             if (cell.document.languageId === PYTHON_LANGUAGE) {
                 concatLineCnt += cell.document.lineCount + 1;
