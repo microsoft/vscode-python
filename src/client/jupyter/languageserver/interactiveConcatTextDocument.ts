@@ -20,17 +20,18 @@ import { IVSCodeNotebook } from '../../common/application/types';
 import { InteractiveInputScheme, PYTHON_LANGUAGE } from '../../common/constants';
 import { IConcatTextDocument } from './concatTextDocument';
 export class InteractiveConcatTextDocument implements IConcatTextDocument {
-    private _onDidChange = new EventEmitter<void>();
-    onDidChange: Event<void> = this._onDidChange.event;
     private _input: TextDocument | undefined = undefined;
-
     private _concatTextDocument: NotebookConcatTextDocument;
     private _lineCounts: [number, number] = [0, 0];
     private _textLen: [number, number] = [0, 0];
+    private _onDidChange = new EventEmitter<void>();
+
+    onDidChange: Event<void> = this._onDidChange.event;
 
     get isClosed(): boolean {
         return this._concatTextDocument.isClosed || !!this._input?.isClosed;
     }
+
     constructor(
         private _notebook: NotebookDocument,
         private _selector: DocumentSelector,

@@ -18,9 +18,11 @@ import { NotebookConcatTextDocument } from 'vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IConcatTextDocument } from './concatTextDocument';
 export class EnhancedNotebookConcatTextDocument implements IConcatTextDocument {
-    private _onDidChange = new EventEmitter<void>();
-    onDidChange: Event<void> = this._onDidChange.event;
     private _concatTextDocument: NotebookConcatTextDocument;
+    private _onDidChange = new EventEmitter<void>();
+
+    onDidChange: Event<void> = this._onDidChange.event;
+
 
     constructor(private _notebook: NotebookDocument, selector: DocumentSelector, notebookApi: IVSCodeNotebook) {
         this._concatTextDocument = notebookApi.createConcatTextDocument(_notebook, selector);
@@ -57,6 +59,7 @@ export class EnhancedNotebookConcatTextDocument implements IConcatTextDocument {
     validateRange(range: Range): Range {
         return this._concatTextDocument.validateRange(range);
     }
+
     validatePosition(position: Position): Position {
         return this._concatTextDocument.validatePosition(position);
     }
