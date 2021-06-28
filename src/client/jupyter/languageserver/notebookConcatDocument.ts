@@ -22,7 +22,9 @@ import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
 import { InteractiveScheme, PYTHON_LANGUAGE } from '../../common/constants';
 import { SafeNotebookDocument } from './safeNotebookDocument';
-import { EnhancedNotebookConcatTextDocument, IConcatTextDocument, InteractiveConcatTextDocument } from './concatTextDocument';
+import { IConcatTextDocument } from './concatTextDocument';
+import { InteractiveConcatTextDocument } from './interactiveConcatTextDocument';
+import { EnhancedNotebookConcatTextDocument } from './nativeNotebookConcatTextDocument';
 
 const NotebookConcatPrefix = '_NotebookConcat_';
 
