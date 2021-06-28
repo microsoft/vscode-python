@@ -109,7 +109,7 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
         return textDocument.offsetAt(textDocument.lineAt(textDocument.lineCount - 1).range.end) + 1;
     }
 
-    getText(range?: Range) {
+    getText(range?: Range): string {
         if (!range) {
             let result = '';
             result += `${this._concatTextDocument.getText()}\n${this._input?.getText() ?? ''}`;
