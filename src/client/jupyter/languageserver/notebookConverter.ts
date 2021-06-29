@@ -31,7 +31,7 @@ import {
 } from 'vscode';
 import { NotebookDocument } from 'vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
-import { InteractiveInputScheme, InteractiveScheme, NotebookCellScheme, PYTHON_LANGUAGE } from '../../common/constants';
+import { InteractiveInputScheme, InteractiveScheme, NotebookCellScheme } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IConcatTextDocument } from './concatTextDocument';
 import { NotebookConcatDocument } from './notebookConcatDocument';
@@ -52,6 +52,7 @@ export class NotebookConverter implements Disposable {
     }
 
     private activeDocuments: Map<string, NotebookConcatDocument> = new Map<string, NotebookConcatDocument>();
+    private pendingCloseDocuments: Map<string, NotebookConcatDocument> = new Map<string, NotebookConcatDocument>();
 
     private activeDocumentsOutgoingMap: Map<string, NotebookConcatDocument> = new Map<string, NotebookConcatDocument>();
 
@@ -118,19 +119,19 @@ export class NotebookConverter implements Disposable {
         }
     }
 
-    public hasFiredClose(cell: TextDocument): boolean | undefined {
-        const wrapper = this.getTextDocumentWrapper(cell);
-        if (wrapper) {
-            return wrapper.firedClose;
+    public firedClose(document: TextDocument): TextDocument | undefined {
+        const key = NotebookConverter.getDocumentKey(document.uri);
+        let concatDocument = this.activeDocuments.get(key);
+        if (concatDocument && !concatDocument.firedClose) {
+            return concatDocument;
         }
-        return undefined;
-    }
 
-    public firedClose(cell: TextDocument): void {
-        const wrapper = this.getTextDocumentWrapper(cell);
-        if (wrapper) {
-            wrapper.firedClose = true;
-            wrapper.firedOpen = false;
+        concatDocument = this.pendingCloseDocuments.get(key);
+
+        if (concatDocument) {
+            // the document will not be closed, remove it from cache
+            this.pendingCloseDocuments.delete(key);
+            return concatDocument;
         }
     }
 
@@ -144,10 +145,8 @@ export class NotebookConverter implements Disposable {
             const cellUris: string[] = [];
             const oldCellUris = this.mapOfConcatDocumentsWithCellUris.get(uri.toString()) || [];
             wrapper.concatDocument.getComposeDocuments().forEach((document: TextDocument) => {
-                if (document.languageId === PYTHON_LANGUAGE) {
-                    result.set(document.uri, []);
-                    cellUris.push(document.uri.toString());
-                }
+                result.set(document.uri, []);
+                cellUris.push(document.uri.toString());
             });
             // Possible some cells were deleted, we need to clear the diagnostics of those cells as well.
             const currentCellUris = new Set(cellUris);
@@ -663,6 +662,8 @@ export class NotebookConverter implements Disposable {
     private onDidOpenNotebook(doc: NotebookDocument) {
         if (this.notebookFilter.test(doc.uri.fsPath)) {
             this.getTextDocumentWrapper(doc.uri);
+            const key = NotebookConverter.getDocumentKey(doc.uri);
+            this.pendingCloseDocuments.delete(key);
         }
     }
 
@@ -672,6 +673,7 @@ export class NotebookConverter implements Disposable {
             const wrapper = this.getTextDocumentWrapper(doc.uri);
             this.activeDocuments.delete(key);
             this.activeDocumentsOutgoingMap.delete(NotebookConverter.getDocumentKey(wrapper.uri));
+            this.pendingCloseDocuments.set(key, wrapper);
             wrapper.dispose();
         }
     }
