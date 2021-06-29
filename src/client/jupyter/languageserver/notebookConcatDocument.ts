@@ -195,7 +195,7 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
     }
 
     private getPythonCells() {
-        return this.notebook.getCells().filter(c => c.document.languageId.toLowerCase() === PYTHON_LANGUAGE);
+        return this.notebook.getCells().filter((c) => c.document.languageId.toLowerCase() === PYTHON_LANGUAGE);
     }
 
     private updateCellTracking() {
