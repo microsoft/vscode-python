@@ -6,7 +6,6 @@ import {
     Position,
     Range,
     Uri,
-    DocumentSelector,
     Event,
     EventEmitter,
     Location,
@@ -15,7 +14,8 @@ import {
 import { NotebookConcatTextDocument } from 'vscode-proposed';
 
 import { IVSCodeNotebook } from '../../common/application/types';
-import { IConcatTextDocument } from './concatTextDocument';
+import { PYTHON_LANGUAGE } from '../../common/constants';
+import { IConcatTextDocument, score } from './concatTextDocument';
 
 export class EnhancedNotebookConcatTextDocument implements IConcatTextDocument {
     private _concatTextDocument: NotebookConcatTextDocument;
@@ -24,12 +24,39 @@ export class EnhancedNotebookConcatTextDocument implements IConcatTextDocument {
 
     onDidChange: Event<void> = this._onDidChange.event;
 
-    constructor(private _notebook: NotebookDocument, selector: DocumentSelector, notebookApi: IVSCodeNotebook) {
-        this._concatTextDocument = notebookApi.createConcatTextDocument(_notebook, selector);
+    constructor(private _notebook: NotebookDocument, private _selector: string, notebookApi: IVSCodeNotebook) {
+        this._concatTextDocument = notebookApi.createConcatTextDocument(_notebook, _selector);
     }
 
     get isClosed(): boolean {
         return this._concatTextDocument.isClosed;
+    }
+
+    get lineCount(): number {
+        return this._notebook.getCells().filter(c => score(c.document, this._selector) > 0)
+            .map((c) => c.document.lineCount)
+            .reduce((p, c) => p + c);
+    }
+
+    get languageId(): string {
+        // eslint-disable-next-line global-require
+        const { NotebookCellKind } = require('vscode');
+        // Return Python if we have python cells.
+        if (
+            this.getCellsInConcatDocument().length > 0
+        ) {
+            return PYTHON_LANGUAGE;
+        }
+        // Return the language of the first available cell, else assume its a Python notebook.
+        // The latter is not possible, except for the case where we have all markdown cells,
+        // in which case the language server will never kick in.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (
+            this.getCellsInConcatDocument().find(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (item) => ((item as any).cellKind || item.kind) === NotebookCellKind.Code,
+            )?.document?.languageId || PYTHON_LANGUAGE
+        );
     }
 
     getText(range?: Range | undefined): string {
@@ -88,5 +115,9 @@ export class EnhancedNotebookConcatTextDocument implements IConcatTextDocument {
         // Get the cell at this location
         const cell = this._notebook.getCells().find((c) => c.document.uri.toString() === location.uri.toString());
         return cell!.document.getWordRangeAtPosition(location.range.start, regexp);
+    }
+
+    getCellsInConcatDocument() {
+        return this._notebook.getCells().filter(c => score(c.document, this._selector) > 0);
     }
 }

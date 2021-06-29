@@ -9,7 +9,6 @@ import {
     TextDocument,
     Uri,
     workspace,
-    DocumentSelector,
     Event,
     EventEmitter,
     Location,
@@ -18,8 +17,8 @@ import {
 import { NotebookConcatTextDocument } from 'vscode-proposed';
 
 import { IVSCodeNotebook } from '../../common/application/types';
-import { InteractiveInputScheme, PYTHON_LANGUAGE } from '../../common/constants';
-import { IConcatTextDocument } from './concatTextDocument';
+import { InteractiveInputScheme } from '../../common/constants';
+import { IConcatTextDocument, score } from './concatTextDocument';
 
 export class InteractiveConcatTextDocument implements IConcatTextDocument {
     private _input: TextDocument | undefined = undefined;
@@ -38,9 +37,17 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
         return this._concatTextDocument.isClosed || !!this._input?.isClosed;
     }
 
+    get lineCount(): number {
+        return this._lineCounts[0] + 1 + this._lineCounts[1];
+    }
+
+    get languageId(): string {
+        return this._input?.languageId ?? 'plaintext';
+    }
+
     constructor(
         private _notebook: NotebookDocument,
-        private _selector: DocumentSelector,
+        private _selector: string,
         notebookApi: IVSCodeNotebook,
     ) {
         this._concatTextDocument = notebookApi.createConcatTextDocument(_notebook, this._selector);
@@ -88,7 +95,7 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
         let concatTextLen = 0;
         for (let i = 0; i < this._notebook.cellCount; i += 1) {
             const cell = this._notebook.cellAt(i);
-            if (cell.document.languageId === PYTHON_LANGUAGE) {
+            if (score(cell.document, this._selector)) {
                 concatLineCnt += cell.document.lineCount + 1;
                 concatTextLen += this._getDocumentTextLen(cell.document) + 1;
             }

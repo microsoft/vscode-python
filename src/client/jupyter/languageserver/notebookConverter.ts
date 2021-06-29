@@ -13,7 +13,6 @@ import {
     Disposable,
     DocumentHighlight,
     DocumentLink,
-    DocumentSelector,
     DocumentSymbol,
     Event,
     EventEmitter,
@@ -65,7 +64,7 @@ export class NotebookConverter implements Disposable {
     constructor(
         private api: IVSCodeNotebook,
         private fs: IFileSystem,
-        private cellSelector: DocumentSelector,
+        private cellSelector: string,
         private notebookFilter: RegExp,
     ) {
         this.disposables.push(api.onDidOpenNotebookDocument(this.onDidOpenNotebook.bind(this)));
@@ -144,7 +143,7 @@ export class NotebookConverter implements Disposable {
             // Make sure to clear out old ones first
             const cellUris: string[] = [];
             const oldCellUris = this.mapOfConcatDocumentsWithCellUris.get(uri.toString()) || [];
-            wrapper.notebook.getCells().forEach((c: NotebookCell) => {
+            wrapper.getCellsInConcatDocument().forEach((c: NotebookCell) => {
                 if (c.document.languageId === PYTHON_LANGUAGE) {
                     result.set(c.document.uri, []);
                     cellUris.push(c.document.uri.toString());
