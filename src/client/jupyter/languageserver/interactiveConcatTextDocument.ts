@@ -61,9 +61,14 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
         this._updateConcat();
         this._updateInput();
 
+        const counter = /Interactive-(\d+)\.interactive/.exec(this._notebook.uri.path);
+        if (counter) {
+            this._input = workspace.textDocuments.find(document => document.uri.path.indexOf(`InteractiveInput-${counter[1]}`) >= 0);
+        }
+
+        if (this._input) {
         const once = workspace.onDidOpenTextDocument((e) => {
             if (e.uri.scheme === InteractiveInputScheme) {
-                const counter = /Interactive-(\d+)\.interactive/.exec(this._notebook.uri.path);
                 if (!counter || !counter[1]) {
                     return;
                 }
@@ -75,6 +80,7 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
                 }
             }
         });
+        }
     }
 
     private _updateConcat() {
