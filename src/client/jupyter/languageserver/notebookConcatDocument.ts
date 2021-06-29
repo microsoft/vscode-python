@@ -16,11 +16,11 @@ import {
     Uri,
 } from 'vscode';
 import { isEqual } from 'lodash';
-import { NotebookCell, NotebookDocument } from 'vscode-proposed';
+import { NotebookDocument } from 'vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
 import { InteractiveScheme } from '../../common/constants';
-import { IConcatTextDocument, score } from './concatTextDocument';
+import { IConcatTextDocument } from './concatTextDocument';
 import { InteractiveConcatTextDocument } from './interactiveConcatTextDocument';
 import { EnhancedNotebookConcatTextDocument } from './nativeNotebookConcatTextDocument';
 
@@ -91,7 +91,7 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
 
     private _notebook: NotebookDocument;
 
-    constructor(notebook: NotebookDocument, notebookApi: IVSCodeNotebook, private readonly _selector: string) {
+    constructor(notebook: NotebookDocument, notebookApi: IVSCodeNotebook, selector: string) {
         const dir = path.dirname(notebook.uri.fsPath);
         // Create a safe notebook document so that we can handle both >= 1.56 vscode API and < 1.56
         // when vscode stable is 1.56 and both Python release and insiders can update to that engine version we
@@ -103,9 +103,9 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
         this.dummyUri = Uri.file(this.dummyFilePath);
 
         if (notebook.uri.scheme === InteractiveScheme) {
-            this.concatDocument = new InteractiveConcatTextDocument(notebook, _selector, notebookApi);
+            this.concatDocument = new InteractiveConcatTextDocument(notebook, selector, notebookApi);
         } else {
-            this.concatDocument = new EnhancedNotebookConcatTextDocument(notebook, _selector, notebookApi);
+            this.concatDocument = new EnhancedNotebookConcatTextDocument(notebook, selector, notebookApi);
         }
 
         this.onDidChangeSubscription = this.concatDocument.onDidChange(this.onDidChange, this);
@@ -158,24 +158,20 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
         return this.concatDocument.locationAt(range);
     }
 
-    public getCellAtPosition(position: Position): NotebookCell | undefined {
+    public getTextDocumentAtPosition(position: Position): TextDocument | undefined {
         const location = this.concatDocument.locationAt(position);
-        return this.getCellsInConcatDocument().find((c) => c.document.uri === location.uri);
-    }
-
-    public getCellsInConcatDocument() {
-        return this._notebook.getCells().filter(c => score(c.document, this._selector) > 0);
+        return this.concatDocument.getComposeDocuments().find((c) => c.uri === location.uri);
     }
 
     private updateCellTracking() {
         this.cellTracking = [];
-        this.getCellsInConcatDocument().forEach((c) => {
+        this.concatDocument.getComposeDocuments().forEach((document) => {
             // Compute end position from number of lines in a cell
-            const cellText = c.document.getText();
+            const cellText = document.getText();
             const lines = cellText.splitLines({ trim: false });
 
             this.cellTracking.push({
-                uri: c.document.uri,
+                uri: document.uri,
                 length: cellText.length + 1, // \n is included concat length
                 lineCount: lines.length,
             });
@@ -184,7 +180,7 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
 
     private onDidChange() {
         this._version += 1;
-        const newUris = this.getCellsInConcatDocument().map((c) => c.document.uri.toString());
+        const newUris = this.concatDocument.getComposeDocuments().map((document) => document.uri.toString());
         const oldUris = this.cellTracking.map((c) => c.uri.toString());
 
         // See if number of cells or cell positions changed
@@ -214,16 +210,16 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
 
     private raiseCellInsertions(oldUris: string[]) {
         // One or more cells were added. Add a change event for each
-        const insertions = this.getCellsInConcatDocument().filter((c) => !oldUris.includes(c.document.uri.toString()));
+        const insertions = this.concatDocument.getComposeDocuments().filter((document) => !oldUris.includes(document.uri.toString()));
 
         const changes = insertions.map((insertion) => {
             // Figure out the position of the item. This is where we're inserting the cell
             // Note: The first insertion will line up with the old cell at this position
             // The second or other insertions will line up with their new positions.
-            const position = this.getPositionOfCell(insertion.document.uri);
+            const position = this.getPositionOfCell(insertion.uri);
 
             // Text should be the contents of the new cell plus the '\n'
-            const text = `${insertion.document.getText()}\n`;
+            const text = `${insertion.getText()}\n`;
 
             return {
                 text,

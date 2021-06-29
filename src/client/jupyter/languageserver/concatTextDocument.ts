@@ -17,6 +17,7 @@ export interface IConcatTextDocument {
     locationAt(positionOrRange: Position | Range): Location;
     lineAt(posOrNumber: Position | number): TextLine;
     getWordRangeAtPosition(position: Position, regexp?: RegExp | undefined): Range | undefined;
+    getComposeDocuments(): TextDocument[];
 }
 
 export function score(document: TextDocument, selector: string) {

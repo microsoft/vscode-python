@@ -120,4 +120,8 @@ export class EnhancedNotebookConcatTextDocument implements IConcatTextDocument {
     getCellsInConcatDocument() {
         return this._notebook.getCells().filter(c => score(c.document, this._selector) > 0);
     }
+
+    getComposeDocuments() {
+        return this.getCellsInConcatDocument().map(c => c.document);
+    }
 }

@@ -29,7 +29,7 @@ import {
     Uri,
     WorkspaceEdit,
 } from 'vscode';
-import { NotebookCell, NotebookDocument } from 'vscode-proposed';
+import { NotebookDocument } from 'vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { InteractiveInputScheme, InteractiveScheme, NotebookCellScheme, PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
@@ -143,10 +143,10 @@ export class NotebookConverter implements Disposable {
             // Make sure to clear out old ones first
             const cellUris: string[] = [];
             const oldCellUris = this.mapOfConcatDocumentsWithCellUris.get(uri.toString()) || [];
-            wrapper.getCellsInConcatDocument().forEach((c: NotebookCell) => {
-                if (c.document.languageId === PYTHON_LANGUAGE) {
-                    result.set(c.document.uri, []);
-                    cellUris.push(c.document.uri.toString());
+            wrapper.concatDocument.getComposeDocuments().forEach((document: TextDocument) => {
+                if (document.languageId === PYTHON_LANGUAGE) {
+                    result.set(document.uri, []);
+                    cellUris.push(document.uri.toString());
                 }
             });
             // Possible some cells were deleted, we need to clear the diagnostics of those cells as well.
@@ -438,20 +438,20 @@ export class NotebookConverter implements Disposable {
         return this.toIncomingLocationFromRange(cell, new Range(position, position)).range.start;
     }
 
-    private getCellAtLocation(location: Location): NotebookCell | undefined {
+    private getTextDocumentAtLocation(location: Location): TextDocument | undefined {
         const key = NotebookConverter.getDocumentKey(location.uri);
         const wrapper = this.activeDocuments.get(key);
         if (wrapper) {
-            return wrapper.getCellAtPosition(location.range.start);
+            return wrapper.getTextDocumentAtPosition(location.range.start);
         }
         return undefined;
     }
 
     private toIncomingWorkspaceSymbol(symbol: SymbolInformation): SymbolInformation {
         // Figure out what cell if any the symbol is for
-        const cell = this.getCellAtLocation(symbol.location);
-        if (cell) {
-            return this.toIncomingSymbolFromSymbolInformation(cell.document, symbol);
+        const document = this.getTextDocumentAtLocation(symbol.location);
+        if (document) {
+            return this.toIncomingSymbolFromSymbolInformation(document, symbol);
         }
         return symbol;
     }

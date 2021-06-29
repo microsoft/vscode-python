@@ -254,4 +254,8 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
         const cell = this._notebook.getCells().find((c) => c.document.uri.toString() === location.uri.toString());
         return cell!.document.getWordRangeAtPosition(location.range.start, regexp);
     }
+
+    getComposeDocuments() {
+        return [...this._notebook.getCells().filter(c => score(c.document, this._selector) > 0).map(c => c.document), this._input!];
+    }
 }
