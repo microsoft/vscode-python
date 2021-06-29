@@ -194,9 +194,13 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
         return this.notebook.getCells().find((c) => c.document.uri === location.uri);
     }
 
+    private getPythonCells() {
+        return this.notebook.getCells().filter(c => c.document.languageId.toLowerCase() === PYTHON_LANGUAGE);
+    }
+
     private updateCellTracking() {
         this.cellTracking = [];
-        this.notebook.getCells().forEach((c) => {
+        this.getPythonCells().forEach((c) => {
             // Compute end position from number of lines in a cell
             const cellText = c.document.getText();
             const lines = cellText.splitLines({ trim: false });
@@ -211,7 +215,7 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
 
     private onDidChange() {
         this._version += 1;
-        const newUris = this.notebook.getCells().map((c) => c.document.uri.toString());
+        const newUris = this.getPythonCells().map((c) => c.document.uri.toString());
         const oldUris = this.cellTracking.map((c) => c.uri.toString());
 
         // See if number of cells or cell positions changed
@@ -241,7 +245,7 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
 
     private raiseCellInsertions(oldUris: string[]) {
         // One or more cells were added. Add a change event for each
-        const insertions = this.notebook.getCells().filter((c) => !oldUris.includes(c.document.uri.toString()));
+        const insertions = this.getPythonCells().filter((c) => !oldUris.includes(c.document.uri.toString()));
 
         const changes = insertions.map((insertion) => {
             // Figure out the position of the item. This is where we're inserting the cell
