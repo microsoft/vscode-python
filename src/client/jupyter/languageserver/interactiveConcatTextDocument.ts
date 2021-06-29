@@ -63,7 +63,9 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
 
         const counter = /Interactive-(\d+)\.interactive/.exec(this._notebook.uri.path);
         if (counter) {
-            this._input = workspace.textDocuments.find(document => document.uri.path.indexOf(`InteractiveInput-${counter[1]}`) >= 0);
+            this._input = workspace.textDocuments.find(
+                (document) => document.uri.path.indexOf(`InteractiveInput-${counter[1]}`) >= 0,
+            );
         }
 
         if (!this._input) {
