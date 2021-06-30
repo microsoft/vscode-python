@@ -256,6 +256,10 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
     }
 
     getComposeDocuments() {
-        return [...this._notebook.getCells().filter(c => score(c.document, this._selector) > 0).map(c => c.document), this._input!];
+        if (this._input) {
+            return [...this._notebook.getCells().filter(c => score(c.document, this._selector) > 0).map(c => c.document), this._input];
+        } else {
+            return [...this._notebook.getCells().filter(c => score(c.document, this._selector) > 0).map(c => c.document)];
+        }
     }
 }
