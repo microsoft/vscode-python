@@ -45,11 +45,7 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
         return this._input?.languageId ?? 'plaintext';
     }
 
-    constructor(
-        private _notebook: NotebookDocument,
-        private _selector: string,
-        notebookApi: IVSCodeNotebook,
-    ) {
+    constructor(private _notebook: NotebookDocument, private _selector: string, notebookApi: IVSCodeNotebook) {
         this._concatTextDocument = notebookApi.createConcatTextDocument(_notebook, this._selector);
 
         this._concatTextDocument.onDidChange(() => {
@@ -70,7 +66,9 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
 
         const counter = /Interactive-(\d+)\.interactive/.exec(this._notebook.uri.path);
         if (counter) {
-            this._input = workspace.textDocuments.find(document => document.uri.path.indexOf(`InteractiveInput-${counter[1]}`) >= 0);
+            this._input = workspace.textDocuments.find(
+                (document) => document.uri.path.indexOf(`InteractiveInput-${counter[1]}`) >= 0,
+            );
         }
 
         if (!this._input) {
@@ -255,11 +253,21 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
         return cell!.document.getWordRangeAtPosition(location.range.start, regexp);
     }
 
-    getComposeDocuments() {
+    getComposeDocuments(): TextDocument[] {
         if (this._input) {
-            return [...this._notebook.getCells().filter(c => score(c.document, this._selector) > 0).map(c => c.document), this._input];
-        } else {
-            return [...this._notebook.getCells().filter(c => score(c.document, this._selector) > 0).map(c => c.document)];
+            return [
+                ...this._notebook
+                    .getCells()
+                    .filter((c) => score(c.document, this._selector) > 0)
+                    .map((c) => c.document),
+                this._input,
+            ];
         }
+        return [
+            ...this._notebook
+                .getCells()
+                .filter((c) => score(c.document, this._selector) > 0)
+                .map((c) => c.document),
+        ];
     }
 }

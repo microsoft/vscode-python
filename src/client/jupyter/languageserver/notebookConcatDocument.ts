@@ -210,7 +210,9 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
 
     private raiseCellInsertions(oldUris: string[]) {
         // One or more cells were added. Add a change event for each
-        const insertions = this.concatDocument.getComposeDocuments().filter((document) => !oldUris.includes(document.uri.toString()));
+        const insertions = this.concatDocument
+            .getComposeDocuments()
+            .filter((document) => !oldUris.includes(document.uri.toString()));
 
         const changes = insertions.map((insertion) => {
             // Figure out the position of the item. This is where we're inserting the cell

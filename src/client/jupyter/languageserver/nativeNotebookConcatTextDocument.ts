@@ -10,6 +10,8 @@ import {
     EventEmitter,
     Location,
     TextLine,
+    NotebookCell,
+    TextDocument,
 } from 'vscode';
 import { NotebookConcatTextDocument } from 'vscode-proposed';
 
@@ -33,7 +35,9 @@ export class EnhancedNotebookConcatTextDocument implements IConcatTextDocument {
     }
 
     get lineCount(): number {
-        return this._notebook.getCells().filter(c => score(c.document, this._selector) > 0)
+        return this._notebook
+            .getCells()
+            .filter((c) => score(c.document, this._selector) > 0)
             .map((c) => c.document.lineCount)
             .reduce((p, c) => p + c);
     }
@@ -42,9 +46,7 @@ export class EnhancedNotebookConcatTextDocument implements IConcatTextDocument {
         // eslint-disable-next-line global-require
         const { NotebookCellKind } = require('vscode');
         // Return Python if we have python cells.
-        if (
-            this.getCellsInConcatDocument().length > 0
-        ) {
+        if (this.getCellsInConcatDocument().length > 0) {
             return PYTHON_LANGUAGE;
         }
         // Return the language of the first available cell, else assume its a Python notebook.
@@ -117,11 +119,11 @@ export class EnhancedNotebookConcatTextDocument implements IConcatTextDocument {
         return cell!.document.getWordRangeAtPosition(location.range.start, regexp);
     }
 
-    getCellsInConcatDocument() {
-        return this._notebook.getCells().filter(c => score(c.document, this._selector) > 0);
+    getComposeDocuments(): TextDocument[] {
+        return this.getCellsInConcatDocument().map((c) => c.document);
     }
 
-    getComposeDocuments() {
-        return this.getCellsInConcatDocument().map(c => c.document);
+    private getCellsInConcatDocument(): NotebookCell[] {
+        return this._notebook.getCells().filter((c) => score(c.document, this._selector) > 0);
     }
 }

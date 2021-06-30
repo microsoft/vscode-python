@@ -52,6 +52,7 @@ export class NotebookConverter implements Disposable {
     }
 
     private activeDocuments: Map<string, NotebookConcatDocument> = new Map<string, NotebookConcatDocument>();
+
     private pendingCloseDocuments: Map<string, NotebookConcatDocument> = new Map<string, NotebookConcatDocument>();
 
     private activeDocumentsOutgoingMap: Map<string, NotebookConcatDocument> = new Map<string, NotebookConcatDocument>();
@@ -133,6 +134,8 @@ export class NotebookConverter implements Disposable {
             this.pendingCloseDocuments.delete(key);
             return concatDocument;
         }
+
+        return undefined;
     }
 
     public toIncomingDiagnosticsMap(uri: Uri, diagnostics: Diagnostic[]): Map<Uri, Diagnostic[]> {

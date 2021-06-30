@@ -20,12 +20,12 @@ export interface IConcatTextDocument {
     getComposeDocuments(): TextDocument[];
 }
 
-export function score(document: TextDocument, selector: string) {
-	if (selector === '*') {
+export function score(document: TextDocument, selector: string): number {
+    if (selector === '*') {
         return 5;
-    } else if (selector === document.languageId) {
-        return 10;
-    } else {
-        return 0;
     }
+    if (selector === document.languageId) {
+        return 10;
+    }
+    return 0;
 }
