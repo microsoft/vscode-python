@@ -56,16 +56,16 @@ export class TestDiscoveryService implements ITestDiscoveryService {
         const unitTestOptions = this.translateOptions(options);
         return `
 import unittest
+def generate_test_cases(suite):
+    for test in suite:
+        if isinstance(test, unittest.TestCase):
+            yield test
+        else:
+            yield from generate_test_cases(test)
 loader = unittest.TestLoader()
-suites = loader.discover("${unitTestOptions.startDirectory}", pattern="${unitTestOptions.pattern}")
+suite = loader.discover("${unitTestOptions.startDirectory}", pattern="${unitTestOptions.pattern}")
 print("start") #Don't remove this line
-for suite in suites._tests:
-    for cls in suite._tests:
-        try:
-            for m in cls._tests:
-                print(m.id())
-        except:
-            pass`;
+print("\n".join(s.id() for s in gnerate_test_cases(suite)))`;
     }
     public translateOptions(options: TestDiscoveryOptions): UnitTestDiscoveryOptions {
         return {
