@@ -65,7 +65,7 @@ def generate_test_cases(suite):
 loader = unittest.TestLoader()
 suite = loader.discover("${unitTestOptions.startDirectory}", pattern="${unitTestOptions.pattern}")
 print("start") #Don't remove this line
-print("\n".join(s.id() for s in gnerate_test_cases(suite)))`;
+print("\n".join(s.id() for s in generate_test_cases(suite)))`;
     }
     public translateOptions(options: TestDiscoveryOptions): UnitTestDiscoveryOptions {
         return {
