@@ -147,7 +147,9 @@ export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChan
      * @returns - the fast async iterator of Python envs, which may have incomplete info
      */
     iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator;
+}
 
+interface IResolver {
     /**
      * Find the given Python environment and fill in as much missing info as possible.
      *
@@ -165,23 +167,7 @@ export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChan
     resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
 }
 
-export interface IResolver {
-    /**
-     * Find the given Python environment and fill in as much missing info as possible.
-     *
-     * If the locator can find the environment then the result is as
-     * much info about that env as the locator has.  At the least this
-     * will include all the `PythonEnvBaseInfo` data.  If a `PythonEnvInfo`
-     * was provided then the result will be a copy with any updates or
-     * extra info applied.
-     *
-     * If the locator could not find the environment then `undefined`
-     * is returned.
-     *
-     * @param env - the Python executable path or partial env info to find and update
-     */
-    resolveEnv(env: string): Promise<PythonEnvInfo | undefined>;
-}
+export interface IResolvingLocator extends IResolver, ILocator {}
 
 interface IEmitter<E extends PythonEnvsChangedEvent> {
     fire(e: E): void;
@@ -211,11 +197,6 @@ abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsCha
 
     // eslint-disable-next-line class-methods-use-this
     public abstract iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator;
-
-    // eslint-disable-next-line class-methods-use-this
-    public async resolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        return undefined;
-    }
 }
 
 /**

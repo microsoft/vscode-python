@@ -7,7 +7,6 @@ import { traceVerbose } from '../../../../common/logger';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { areSameEnv, mergeEnvironments } from '../../info/env';
 import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
-import { getEnvs } from '../../locatorUtils';
 import { PythonEnvsChangedEvent } from '../../watcher';
 
 /**
@@ -19,17 +18,6 @@ export class PythonEnvsReducer implements ILocator {
     }
 
     constructor(private readonly parentLocator: ILocator) {}
-
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const environments = await getEnvs(this.iterEnvs());
-        let environment: string | PythonEnvInfo | undefined = environments.find((e) => areSameEnv(e, env));
-        if (!environment) {
-            // It isn't one we've reduced, but fall back
-            // to the wrapped locator anyway.
-            environment = env;
-        }
-        return this.parentLocator.resolveEnv(environment);
-    }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();

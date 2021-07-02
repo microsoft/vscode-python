@@ -3,7 +3,6 @@
 
 import { chain } from '../../common/utils/async';
 import { Disposables } from '../../common/utils/resourceLifecycle';
-import { PythonEnvInfo } from './info';
 import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from './locator';
 import { PythonEnvsWatchers } from './watchers';
 
@@ -58,15 +57,5 @@ export class Locators extends PythonEnvsWatchers implements ILocator {
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const iterators = this.locators.map((loc) => loc.iterEnvs(query));
         return combineIterators(iterators);
-    }
-
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        for (const locator of this.locators) {
-            const resolved = await locator.resolveEnv(env);
-            if (resolved !== undefined) {
-                return resolved;
-            }
-        }
-        return undefined;
     }
 }

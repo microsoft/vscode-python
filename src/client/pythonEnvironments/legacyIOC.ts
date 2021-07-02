@@ -36,7 +36,7 @@ import { IVirtualEnvironmentManager } from '../interpreter/virtualEnvs/types';
 import { IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from './base/info';
 import { buildEnvInfo } from './base/info/env';
-import { ILocator, PythonLocatorQuery } from './base/locator';
+import { IResolvingLocator, PythonLocatorQuery } from './base/locator';
 import { isMacDefaultPythonPath } from './base/locators/lowLevel/macDefaultLocator';
 import { getEnvs } from './base/locatorUtils';
 import { inExperiment, isParentPath } from './common/externalDependencies';
@@ -133,7 +133,7 @@ export async function isComponentEnabled(): Promise<boolean> {
     return results.includes(true);
 }
 
-interface IPythonEnvironments extends ILocator {}
+interface IPythonEnvironments extends IResolvingLocator {}
 
 @injectable()
 class ComponentAdapter implements IComponentAdapter {

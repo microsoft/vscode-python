@@ -24,7 +24,6 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { PythonEnvInfo } from '../../base/info';
 import { ILocator, IPythonEnvsIterator, NOOP_ITERATOR, PythonLocatorQuery } from '../../base/locator';
 import { combineIterators, Locators } from '../../base/locators';
 import { LazyResourceBasedLocator } from '../../base/locators/common/resourceBasedLocator';
@@ -99,28 +98,6 @@ export class WorkspaceLocators extends LazyResourceBasedLocator {
             return locator.iterEnvs(query);
         });
         return combineIterators(iterators);
-    }
-
-    protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        if (typeof env !== 'string' && env.searchLocation) {
-            const found = this.locators[env.searchLocation.toString()];
-            if (found !== undefined) {
-                const [rootLocator] = found;
-                return rootLocator.resolveEnv(env);
-            }
-        }
-        // Fall back to checking all the roots.
-        // The eslint disable below should be removed after we have a
-        // better solution for these. We need asyncFind for this.
-        for (const key of Object.keys(this.locators)) {
-            const [locator] = this.locators[key];
-            // eslint-disable-next-line no-await-in-loop
-            const resolved = await locator.resolveEnv(env);
-            if (resolved !== undefined) {
-                return resolved;
-            }
-        }
-        return undefined;
     }
 
     protected async initResources(): Promise<void> {

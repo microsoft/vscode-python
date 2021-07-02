@@ -7,7 +7,13 @@ import { traceVerbose } from '../../../../common/logger';
 import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
 import { InterpreterInformation } from '../../info/interpreter';
-import { ILocator, IPythonEnvsIterator, IResolver, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
+import {
+    ILocator,
+    IPythonEnvsIterator,
+    IResolvingLocator,
+    PythonEnvUpdatedEvent,
+    PythonLocatorQuery,
+} from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
 import { resolveEnv } from './resolverUtils';
 
@@ -15,7 +21,7 @@ import { resolveEnv } from './resolverUtils';
  * Calls environment info service which runs `interpreterInfo.py` script on environments received
  * from the parent locator. Uses information received to populate environments further and pass it on.
  */
-export class PythonEnvsResolver implements ILocator, IResolver {
+export class PythonEnvsResolver implements IResolvingLocator {
     public get onChanged(): Event<PythonEnvsChangedEvent> {
         return this.parentLocator.onChanged;
     }
