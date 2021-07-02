@@ -165,21 +165,4 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
 
         return iterator();
     }
-
-    // eslint-disable-next-line class-methods-use-this
-    protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const executablePath = typeof env === 'string' ? env : env.executable.filename;
-        if (await pathExists(executablePath)) {
-            // We should extract the kind here to avoid doing is*Environment()
-            // check multiple times. Those checks are file system heavy and
-            // we can use the kind to determine this anyway.
-            const kind = await getVirtualEnvKind(executablePath);
-            if (kind === PythonEnvKind.Unknown) {
-                // We don't know the environment type so skip this one.
-                return undefined;
-            }
-            return buildSimpleVirtualEnvInfo(executablePath, kind);
-        }
-        return undefined;
-    }
 }
