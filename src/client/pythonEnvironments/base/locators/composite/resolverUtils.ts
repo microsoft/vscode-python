@@ -14,14 +14,11 @@ import {
 import { identifyEnvironment } from '../../../common/environmentIdentifier';
 import { getFileInfo, getWorkspaceFolders, isParentPath } from '../../../common/externalDependencies';
 import { AnacondaCompanyName, Conda } from '../../../discovery/locators/services/conda';
+import { parsePyenvVersion } from '../../../discovery/locators/services/pyenvLocator';
+import { Architecture } from '../../../../common/utils/platform';
 
 export async function resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
-    const kind = await identifyEnvironment(executablePath);
-    const resolved =
-        kind === PythonEnvKind.Conda
-            ? await resolveCondaEnv(executablePath)
-            : await resolveSimpleEnv(executablePath, kind);
-
+    const resolved = await doResolveEnv(executablePath);
     if (resolved) {
         const folders = getWorkspaceFolders();
         const isRootedEnv = folders.some((f) => isParentPath(executablePath, f));
@@ -39,6 +36,20 @@ export async function resolveEnv(executablePath: string): Promise<PythonEnvInfo 
         }
     }
     return resolved;
+}
+
+async function doResolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
+    const kind = await identifyEnvironment(executablePath);
+    switch (kind) {
+        case PythonEnvKind.Conda:
+            return resolveCondaEnv(executablePath);
+        case PythonEnvKind.Pyenv:
+            return _resolvePyenvEnv(executablePath);
+        case PythonEnvKind.WindowsStore:
+            return resolveWindowsStoreEnv(executablePath);
+        default:
+            return resolveSimpleEnv(executablePath, kind);
+    }
 }
 
 async function resolveSimpleEnv(executablePath: string, kind: PythonEnvKind): Promise<PythonEnvInfo> {
@@ -87,4 +98,37 @@ async function resolveCondaEnv(env: string): Promise<PythonEnvInfo | undefined> 
         }
     }
     return undefined;
+}
+
+export async function _resolvePyenvEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
+    const location = getEnvironmentDirFromPath(executablePath);
+    const name = path.basename(location);
+
+    const versionStrings = await parsePyenvVersion(name);
+
+    const envInfo = buildEnvInfo({
+        kind: PythonEnvKind.Pyenv,
+        executable: executablePath,
+        source: [PythonEnvSource.Pyenv],
+        location,
+        display: `${name}:pyenv`,
+        version: await getPythonVersionFromPath(executablePath, versionStrings?.pythonVer),
+        org: versionStrings && versionStrings.distro ? versionStrings.distro : '',
+        fileInfo: await getFileInfo(executablePath),
+    });
+
+    envInfo.name = name;
+    return envInfo;
+}
+
+async function resolveWindowsStoreEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
+    return buildEnvInfo({
+        kind: PythonEnvKind.WindowsStore,
+        executable: executablePath,
+        version: await getPythonVersionFromPath(executablePath),
+        org: 'Microsoft',
+        arch: Architecture.x64,
+        fileInfo: await getFileInfo(executablePath),
+        source: [PythonEnvSource.PathEnvVar],
+    });
 }
