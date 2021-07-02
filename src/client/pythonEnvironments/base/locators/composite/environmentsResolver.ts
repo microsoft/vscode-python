@@ -7,14 +7,15 @@ import { traceVerbose } from '../../../../common/logger';
 import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
 import { InterpreterInformation } from '../../info/interpreter';
-import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
+import { ILocator, IPythonEnvsIterator, IResolver, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
+import { resolveEnv } from './resolverUtils';
 
 /**
  * Calls environment info service which runs `interpreterInfo.py` script on environments received
  * from the parent locator. Uses information received to populate environments further and pass it on.
  */
-export class PythonEnvsResolver implements ILocator {
+export class PythonEnvsResolver implements ILocator, IResolver {
     public get onChanged(): Event<PythonEnvsChangedEvent> {
         return this.parentLocator.onChanged;
     }
@@ -25,7 +26,8 @@ export class PythonEnvsResolver implements ILocator {
     ) {}
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const environment = await this.parentLocator.resolveEnv(env);
+        const executablePath = typeof env === 'string' ? env : env.executable.filename;
+        const environment = await resolveEnv(executablePath);
         if (!environment) {
             return undefined;
         }
