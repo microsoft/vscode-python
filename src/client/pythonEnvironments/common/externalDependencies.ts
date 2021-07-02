@@ -106,6 +106,10 @@ export function arePathsSame(path1: string, path2: string): boolean {
     return normCasePath(path1) === normCasePath(path2);
 }
 
+export function getWorkspaceFolders(): string[] {
+    return vscode.workspace.workspaceFolders?.map((w) => w.uri.fsPath) ?? [];
+}
+
 export async function getFileInfo(filePath: string): Promise<{ ctime: number; mtime: number }> {
     try {
         const data = await fsapi.lstat(filePath);

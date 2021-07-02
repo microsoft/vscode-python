@@ -269,14 +269,15 @@ export async function getMaxDerivedEnvInfo(minimal: PythonEnvInfo): Promise<Pyth
  *
  * The returned function is compatible with `Array.filter()`.
  */
-export function getEnvMatcher(query: string | Partial<PythonEnvInfo>): (env: PythonEnvInfo) => boolean {
+export function getEnvMatcher(query: string | Partial<PythonEnvInfo>): (env: string | PythonEnvInfo) => boolean {
     const executable = getEnvExecutable(query);
     if (executable === '') {
         // We could throw an exception error, but skipping it is fine.
         return () => false;
     }
-    function matchEnv(candidate: PythonEnvInfo): boolean {
-        return arePathsSame(executable, candidate.executable.filename);
+    function matchEnv(candidate: string | PythonEnvInfo): boolean {
+        const candidateExecutable = typeof candidate === 'string' ? candidate : candidate.executable.filename;
+        return arePathsSame(executable, candidateExecutable);
     }
     return matchEnv;
 }

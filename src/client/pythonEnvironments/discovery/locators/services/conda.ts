@@ -207,6 +207,12 @@ export async function getPythonVersionFromConda(interpreterPath: string): Promis
 /** Wraps the "conda" utility, and exposes its functionality.
  */
 export class Conda {
+    // Locating conda binary is expensive, since it potentially involves spawning or
+    // trying to spawn processes; so it's done lazily and asynchronously. Methods that
+    // need a Conda instance should use getConda() to obtain it, and should never access
+    // this property directly.
+    private static condaPromise: Promise<Conda | undefined> | undefined;
+
     /**
      * Creates a Conda service corresponding to the corresponding "conda" command.
      *
@@ -214,6 +220,14 @@ export class Conda {
      * first argument of spawn() - i.e. it can be a full path, or just a binary name.
      */
     constructor(readonly command: string) {}
+
+    public static async getConda(): Promise<Conda | undefined> {
+        traceVerbose(`Searching for conda.`);
+        if (this.condaPromise === undefined) {
+            this.condaPromise = Conda.locate();
+        }
+        return this.condaPromise;
+    }
 
     /**
      * Locates the preferred "conda" utility on this system by considering user settings,
