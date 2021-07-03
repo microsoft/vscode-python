@@ -18,7 +18,7 @@ import {
 import { WorkspaceVirtualEnvironmentLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/workspaceVirtualEnvLocator';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
-import { assertEnvEqual, assertEnvsEqual } from '../../../discovery/locators/envTestUtils';
+import { assertEnvsEqual } from '../../../discovery/locators/envTestUtils';
 
 suite('WorkspaceVirtualEnvironment Locator', () => {
     const testWorkspaceFolder = path.join(TEST_LAYOUT_ROOT, 'workspace', 'folder1');
@@ -138,68 +138,5 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
 
         comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);
-    });
-
-    test('resolveEnv(string)', async () => {
-        const interpreterPath = path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv', 'bin', 'python');
-        const expected = createExpectedEnvInfo(
-            path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv', 'bin', 'python'),
-            PythonEnvKind.VirtualEnv,
-            { major: 3, minor: 8, micro: -1 },
-            'posix1virtualenv',
-            path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv'),
-        );
-
-        const actual = await locator.resolveEnv(interpreterPath);
-
-        assertEnvEqual(actual, expected);
-    });
-
-    test('resolveEnv(PythonEnvInfo)', async () => {
-        const interpreterPath = path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv', 'bin', 'python');
-        const expected = createExpectedEnvInfo(
-            path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv', 'bin', 'python'),
-            PythonEnvKind.VirtualEnv,
-            { major: 3, minor: 8, micro: -1 },
-            'posix1virtualenv',
-            path.join(testWorkspaceFolder, '.direnv', 'posix1virtualenv'),
-        );
-
-        // Partially filled in env info object
-        const input: PythonEnvInfo = {
-            name: '',
-            location: '',
-            kind: PythonEnvKind.Unknown,
-            distro: { org: '' },
-            arch: platformUtils.Architecture.Unknown,
-            executable: {
-                filename: interpreterPath,
-                sysPrefix: '',
-                ctime: -1,
-                mtime: -1,
-            },
-            version: UNKNOWN_PYTHON_VERSION,
-            source: [],
-        };
-
-        const actual = await locator.resolveEnv(input);
-
-        assertEnvEqual(actual, expected);
-    });
-
-    test('resolveEnv(string): existing environment outside the root', async () => {
-        const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project1', '.venv', 'Scripts', 'python.exe');
-
-        const actual = await locator.resolveEnv(interpreterPath);
-
-        assert.deepStrictEqual(actual, undefined);
-    });
-
-    test('resolveEnv(string): non existent path', async () => {
-        const interpreterPath = path.join(testWorkspaceFolder, 'some', 'random', 'nonvenv', 'python');
-
-        const actual = await locator.resolveEnv(interpreterPath);
-
-        assert.deepStrictEqual(actual, undefined);
     });
 });

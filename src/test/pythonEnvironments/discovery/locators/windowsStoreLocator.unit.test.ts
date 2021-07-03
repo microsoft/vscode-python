@@ -11,7 +11,6 @@ import {
     PythonEnvInfo,
     PythonEnvKind,
     PythonEnvSource,
-    PythonReleaseLevel,
     PythonVersion,
     UNKNOWN_PYTHON_VERSION,
 } from '../../../../client/pythonEnvironments/base/info';
@@ -25,7 +24,7 @@ import {
 } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
 import { getEnvs } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
+import { assertEnvsEqual } from './envTestUtils';
 
 suite('Windows Store', () => {
     suite('Utils', () => {

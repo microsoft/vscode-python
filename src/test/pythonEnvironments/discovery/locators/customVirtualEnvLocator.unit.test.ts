@@ -23,7 +23,7 @@ import {
     VENVPATH_SETTING_KEY,
 } from '../../../../client/pythonEnvironments/discovery/locators/services/customVirtualEnvLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
+import { assertEnvsEqual } from './envTestUtils';
 
 suite('CustomVirtualEnvironment Locator', () => {
     const testVirtualHomeDir = path.join(TEST_LAYOUT_ROOT, 'virtualhome');
@@ -373,61 +373,6 @@ suite('CustomVirtualEnvironment Locator', () => {
 
         comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);
-    });
-
-    test('resolveEnv(string)', async () => {
-        const interpreterPath = path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python');
-        const expected = createExpectedEnvInfo(
-            path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python'),
-            PythonEnvKind.Venv,
-            undefined,
-            'posix1',
-            path.join(testVirtualHomeDir, '.venvs', 'posix1'),
-        );
-
-        const actual = await locator.resolveEnv(interpreterPath);
-
-        assertEnvEqual(actual, expected);
-    });
-
-    test('resolveEnv(PythonEnvInfo)', async () => {
-        const interpreterPath = path.join(testVirtualHomeDir, 'customfolder', 'posix1', 'python');
-        const expected = createExpectedEnvInfo(
-            path.join(testVirtualHomeDir, 'customfolder', 'posix1', 'python'),
-            PythonEnvKind.VirtualEnv,
-            { major: 3, minor: 5, micro: -1 },
-            'posix1',
-            path.join(testVirtualHomeDir, 'customfolder', 'posix1'),
-        );
-
-        // Partially filled in env info object
-        const input: PythonEnvInfo = {
-            name: '',
-            location: '',
-            kind: PythonEnvKind.Unknown,
-            distro: { org: '' },
-            arch: platformUtils.Architecture.Unknown,
-            executable: {
-                filename: interpreterPath,
-                sysPrefix: '',
-                ctime: -1,
-                mtime: -1,
-            },
-            version: UNKNOWN_PYTHON_VERSION,
-            source: [],
-        };
-
-        const actual = await locator.resolveEnv(input);
-
-        assertEnvEqual(actual, expected);
-    });
-
-    test('resolveEnv(string): non existent path', async () => {
-        const interpreterPath = path.join('some', 'random', 'nonvenv', 'python');
-
-        const actual = await locator.resolveEnv(interpreterPath);
-
-        assert.deepStrictEqual(actual, undefined);
     });
 
     test('onChanged fires if venvPath setting changes', async () => {

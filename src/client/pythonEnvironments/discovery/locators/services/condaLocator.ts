@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import '../../../../common/extensions';
-import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../../base/info';
+import { PythonEnvKind, PythonEnvSource } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getInterpreterPathFromDir, getPythonVersionFromPath } from '../../../common/commonUtils';
 import { AnacondaCompanyName, Conda } from './conda';
-import { resolveEnvFromIterator } from '../../../base/locatorUtils';
 import { traceError, traceVerbose } from '../../../../common/logger';
 
 export class CondaEnvironmentLocator extends Locator {
