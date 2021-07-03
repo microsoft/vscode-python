@@ -63,16 +63,4 @@ export class CondaEnvironmentLocator extends Locator {
             }
         }
     }
-
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        if (typeof env !== 'string') {
-            if (env.kind !== PythonEnvKind.Conda && env.kind !== PythonEnvKind.Unknown) {
-                return undefined;
-            }
-        }
-
-        // There's no performance difference between getting all known environments, or just one -
-        // we have to spawn conda either way - so use the naive implementation.
-        return resolveEnvFromIterator(env, this.iterEnvs());
-    }
 }
