@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { Architecture } from '../../../../../client/common/utils/platform';
+import * as sinon from 'sinon';
+import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import {
     PythonEnvInfo,
     PythonEnvKind,
@@ -14,11 +15,17 @@ import { buildEnvInfo } from '../../../../../client/pythonEnvironments/base/info
 import { InterpreterInformation } from '../../../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
 import {
+    _resolveCondaEnv,
     _resolvePyenvEnv,
     _resolveWindowsStoreEnv,
 } from '../../../../../client/pythonEnvironments/base/locators/composite/resolverUtils';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertEnvEqual } from '../../../discovery/locators/envTestUtils';
+import { Architecture } from '../../../../../client/common/utils/platform';
+import {
+    AnacondaCompanyName,
+    CondaInfo,
+} from '../../../../../client/pythonEnvironments/discovery/locators/services/conda';
 
 suite('Resolver Utils', () => {
     suite('Pyenv', () => {
@@ -115,6 +122,52 @@ suite('Resolver Utils', () => {
             const actual = await _resolveWindowsStoreEnv(python38path);
 
             assertEnvEqual(actual, expected);
+        });
+    });
+
+    suite('Conda', () => {
+        const condaPrefix = path.join(TEST_LAYOUT_ROOT, 'conda1');
+        function condaInfo(): CondaInfo {
+            return {
+                conda_version: '4.8.0',
+                python_version: '3.9.0',
+                'sys.version': '3.9.0',
+                'sys.prefix': '/some/env',
+                root_prefix: condaPrefix,
+                envs: [condaPrefix],
+            };
+        }
+
+        function expectedEnvInfo() {
+            const info = buildEnvInfo({
+                executable: path.join(condaPrefix, 'python.exe'),
+                kind: PythonEnvKind.Conda,
+                org: AnacondaCompanyName,
+                location: condaPrefix,
+                source: [PythonEnvSource.Conda],
+                version: UNKNOWN_PYTHON_VERSION,
+                fileInfo: undefined,
+                name: 'base',
+            });
+            return info;
+        }
+
+        setup(() => {
+            sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
+                if (command === 'conda' && args[0] === 'info' && args[1] === '--json') {
+                    return { stdout: JSON.stringify(condaInfo()) };
+                }
+                throw new Error(`${command} is missing or is not executable`);
+            });
+        });
+
+        teardown(() => {
+            sinon.restore();
+        });
+
+        test('resolveEnv', async () => {
+            const actual = await _resolveCondaEnv(path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'));
+            assertEnvEqual(actual, expectedEnvInfo());
         });
     });
 });
