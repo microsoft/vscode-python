@@ -16,6 +16,7 @@ import { getFileInfo, getWorkspaceFolders, isParentPath } from '../../../common/
 import { AnacondaCompanyName, Conda } from '../../../discovery/locators/services/conda';
 import { parsePyenvVersion } from '../../../discovery/locators/services/pyenvLocator';
 import { Architecture } from '../../../../common/utils/platform';
+import { getPythonVersionFromPath as parsePythonVersionFromPath } from '../../info/pythonVersion';
 
 export async function resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
     const resolved = await doResolveEnv(executablePath);
@@ -46,7 +47,7 @@ async function doResolveEnv(executablePath: string): Promise<PythonEnvInfo | und
         case PythonEnvKind.Pyenv:
             return _resolvePyenvEnv(executablePath);
         case PythonEnvKind.WindowsStore:
-            return resolveWindowsStoreEnv(executablePath);
+            return _resolveWindowsStoreEnv(executablePath);
         default:
             return resolveSimpleEnv(executablePath, kind);
     }
@@ -121,11 +122,11 @@ export async function _resolvePyenvEnv(executablePath: string): Promise<PythonEn
     return envInfo;
 }
 
-async function resolveWindowsStoreEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
+export async function _resolveWindowsStoreEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
     return buildEnvInfo({
         kind: PythonEnvKind.WindowsStore,
         executable: executablePath,
-        version: await getPythonVersionFromPath(executablePath),
+        version: parsePythonVersionFromPath(executablePath),
         org: 'Microsoft',
         arch: Architecture.x64,
         fileInfo: await getFileInfo(executablePath),
