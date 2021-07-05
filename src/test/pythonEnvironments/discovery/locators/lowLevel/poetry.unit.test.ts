@@ -52,7 +52,7 @@ suite('isPoetryEnvironment Tests', () => {
     suite('Local poetry environment', async () => {
         setup(() => {
             shellExecute = sinon.stub(externalDependencies, 'shellExecute');
-            getPythonSetting = sinon.stub(externalDependencies, 'getPythonSetting');
+            getPythonSetting = sinon.stub(externalDependencies, 'getPythonSettingWithSystemVariables');
             getPythonSetting.returns('poetry');
             shellExecute.callsFake((command: string, _options: ShellOptions) => {
                 if (command === 'poetry env list --full-path') {
@@ -92,7 +92,7 @@ suite('Poetry binary is located correctly', async () => {
     });
 
     setup(() => {
-        getPythonSetting = sinon.stub(externalDependencies, 'getPythonSetting');
+        getPythonSetting = sinon.stub(externalDependencies, 'getPythonSettingWithSystemVariables');
         shellExecute = sinon.stub(externalDependencies, 'shellExecute');
     });
 

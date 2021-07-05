@@ -12,6 +12,7 @@ import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 import { plainExec, shellExec } from '../../common/process/rawProcessApis';
 import { BufferDecoder } from '../../common/process/decoder';
+import { SystemVariables } from '../../common/variables/systemVariables';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
@@ -174,6 +175,15 @@ export async function* getSubDirs(
  */
 export function getPythonSetting<T>(name: string): T | undefined {
     return vscode.workspace.getConfiguration('python').get(name);
+}
+
+/**
+ * Returns the value for setting `python.<name>` with system variables substituted.
+ * @param name The name of the setting.
+ */
+export function getPythonSettingWithSystemVariables<T>(name: string): T | undefined {
+    const systemVariables = new SystemVariables(undefined, undefined);
+    return systemVariables.resolveAny(vscode.workspace.getConfiguration('python').get(name));
 }
 
 /**
