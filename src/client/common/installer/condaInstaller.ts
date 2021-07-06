@@ -5,6 +5,7 @@
 import { inject, injectable } from 'inversify';
 import { ICondaService, ICondaLocatorService, IComponentAdapter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { ModuleInstallerType } from '../../pythonEnvironments/info';
 import { inDiscoveryExperiment } from '../experiments/helpers';
 import { ExecutionInfo, IConfigurationService, IExperimentService } from '../types';
 import { isResource } from '../utils/misc';
@@ -31,6 +32,10 @@ export class CondaInstaller extends ModuleInstaller {
 
     public get displayName(): string {
         return 'Conda';
+    }
+
+    public get type(): ModuleInstallerType {
+        return ModuleInstallerType.Conda;
     }
 
     public get priority(): number {

@@ -8,7 +8,7 @@ import '../extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { LinterId } from '../../linters/types';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
+import { EnvironmentType, ModuleInstallerType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
@@ -40,8 +40,6 @@ import {
     IProductService,
     ModuleInstallFlags,
 } from './types';
-import { pipenvName } from './pipEnvInstaller';
-import { poetryName } from './poetryInstaller';
 
 export { Product } from '../types';
 
@@ -470,34 +468,30 @@ export class DataScienceInstaller extends BaseInstaller {
 
         // Pick an installerModule based on whether the interpreter is conda or not. Default is pip.
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
-        let installerModule: IModuleInstaller | undefined;
+
         const isAvailableThroughConda = !UnsupportedChannelsForProduct.get(product)?.has(EnvironmentType.Conda);
-        let requiredInstaller = 'unknown';
+        let requiredInstaller = ModuleInstallerType.Unknown;
         if (interpreter.envType === EnvironmentType.Conda && isAvailableThroughConda) {
-            installerModule = channels.find((v) => v.name === EnvironmentType.Conda);
-            requiredInstaller = EnvironmentType.Conda;
+            requiredInstaller = ModuleInstallerType.Conda;
         } else if (interpreter.envType === EnvironmentType.Conda && !isAvailableThroughConda) {
             // This case is temporary and can be removed when https://github.com/microsoft/vscode-jupyter/issues/5034 is unblocked
             traceInfo(
                 `Interpreter type is conda but package ${moduleName} is not available through conda, using pip instead.`,
             );
-            installerModule = channels.find((v) => v.name === 'Pip');
-            requiredInstaller = 'pip';
+            requiredInstaller = ModuleInstallerType.Pip;
         } else {
             switch (interpreter.envType) {
                 case EnvironmentType.Pipenv:
-                    installerModule = channels.find((v) => v.name === pipenvName);
-                    requiredInstaller = pipenvName;
+                    requiredInstaller = ModuleInstallerType.Pipenv;
                     break;
                 case EnvironmentType.Poetry:
-                    installerModule = channels.find((v) => v.name === poetryName);
-                    requiredInstaller = poetryName;
+                    requiredInstaller = ModuleInstallerType.Poetry;
                     break;
                 default:
-                    installerModule = channels.find((v) => v.name === 'Pip');
-                    requiredInstaller = 'pip';
+                    requiredInstaller = ModuleInstallerType.Pip;
             }
         }
+        const installerModule: IModuleInstaller | undefined = channels.find((v) => v.type === requiredInstaller);
 
         const version = `${interpreter.version?.major || ''}.${interpreter.version?.minor || ''}.${
             interpreter.version?.patch || ''
