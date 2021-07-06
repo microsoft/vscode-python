@@ -40,6 +40,8 @@ import {
     IProductService,
     ModuleInstallFlags,
 } from './types';
+import { pipenvName } from './pipEnvInstaller';
+import { poetryName } from './poetryInstaller';
 
 export { Product } from '../types';
 
@@ -482,8 +484,19 @@ class DataScienceInstaller extends BaseInstaller {
             installerModule = channels.find((v) => v.name === 'Pip');
             requiredInstaller = 'pip';
         } else {
-            installerModule = channels.find((v) => v.name === 'Pip');
-            requiredInstaller = 'pip';
+            switch (interpreter.envType) {
+                case EnvironmentType.Pipenv:
+                    installerModule = channels.find((v) => v.name === pipenvName);
+                    requiredInstaller = pipenvName;
+                    break;
+                case EnvironmentType.Poetry:
+                    installerModule = channels.find((v) => v.name === poetryName);
+                    requiredInstaller = poetryName;
+                    break;
+                default:
+                    installerModule = channels.find((v) => v.name === 'Pip');
+                    requiredInstaller = 'pip';
+            }
         }
 
         const version = `${interpreter.version?.major || ''}.${interpreter.version?.minor || ''}.${
