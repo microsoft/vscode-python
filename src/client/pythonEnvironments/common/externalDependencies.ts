@@ -174,7 +174,9 @@ export async function* getSubDirs(
  * @param name The name of the setting.
  */
 export function getPythonSetting<T>(name: string): T | undefined {
-    return vscode.workspace.getConfiguration('python').get(name);
+    const settings = internalServiceContainer.get<IConfigurationService>(IConfigurationService).getSettings();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (settings as any)[name];
 }
 
 /**
