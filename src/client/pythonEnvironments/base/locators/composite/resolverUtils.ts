@@ -43,11 +43,11 @@ async function doResolveEnv(executablePath: string): Promise<PythonEnvInfo | und
     const kind = await identifyEnvironment(executablePath);
     switch (kind) {
         case PythonEnvKind.Conda:
-            return _resolveCondaEnv(executablePath);
+            return resolveCondaEnv(executablePath);
         case PythonEnvKind.Pyenv:
-            return _resolvePyenvEnv(executablePath);
+            return resolvePyenvEnv(executablePath);
         case PythonEnvKind.WindowsStore:
-            return _resolveWindowsStoreEnv(executablePath);
+            return resolveWindowsStoreEnv(executablePath);
         default:
             return resolveSimpleEnv(executablePath, kind);
     }
@@ -71,7 +71,7 @@ async function resolveSimpleEnv(executablePath: string, kind: PythonEnvKind): Pr
     return envInfo;
 }
 
-export async function _resolveCondaEnv(env: string): Promise<PythonEnvInfo | undefined> {
+async function resolveCondaEnv(env: string): Promise<PythonEnvInfo | undefined> {
     const conda = await Conda.getConda();
     if (conda === undefined) {
         traceVerbose(`Couldn't locate the conda binary in resolver`);
@@ -101,7 +101,7 @@ export async function _resolveCondaEnv(env: string): Promise<PythonEnvInfo | und
     return undefined;
 }
 
-export async function _resolvePyenvEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
+async function resolvePyenvEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
     const location = getEnvironmentDirFromPath(executablePath);
     const name = path.basename(location);
 
@@ -122,7 +122,7 @@ export async function _resolvePyenvEnv(executablePath: string): Promise<PythonEn
     return envInfo;
 }
 
-export async function _resolveWindowsStoreEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
+async function resolveWindowsStoreEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
     return buildEnvInfo({
         kind: PythonEnvKind.WindowsStore,
         executable: executablePath,

@@ -3,7 +3,9 @@
 
 import * as path from 'path';
 import * as sinon from 'sinon';
+import { Uri } from 'vscode';
 import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
+import * as platformApis from '../../../../../client/common/utils/platform';
 import {
     PythonEnvInfo,
     PythonEnvKind,
@@ -14,11 +16,7 @@ import {
 import { buildEnvInfo } from '../../../../../client/pythonEnvironments/base/info/env';
 import { InterpreterInformation } from '../../../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
-import {
-    _resolveCondaEnv,
-    _resolvePyenvEnv,
-    _resolveWindowsStoreEnv,
-} from '../../../../../client/pythonEnvironments/base/locators/composite/resolverUtils';
+import { resolveEnv } from '../../../../../client/pythonEnvironments/base/locators/composite/resolverUtils';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertEnvEqual } from '../../../discovery/locators/envTestUtils';
 import { Architecture } from '../../../../../client/common/utils/platform';
@@ -31,6 +29,14 @@ suite('Resolver Utils', () => {
     suite('Pyenv', () => {
         const testPyenvRoot = path.join(TEST_LAYOUT_ROOT, 'pyenvhome', '.pyenv');
         const testPyenvVersionsDir = path.join(testPyenvRoot, 'versions');
+        setup(() => {
+            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
+            sinon.stub(platformApis, 'getEnvironmentVariable').withArgs('PYENV_ROOT').returns(testPyenvRoot);
+        });
+
+        teardown(() => {
+            sinon.restore();
+        });
         function getExpectedPyenvInfo(): PythonEnvInfo | undefined {
             const envInfo = buildEnvInfo({
                 kind: PythonEnvKind.Pyenv,
@@ -52,7 +58,7 @@ suite('Resolver Utils', () => {
             const pythonPath = path.join(testPyenvVersionsDir, '3.9.0', 'bin', 'python');
             const expected = getExpectedPyenvInfo();
 
-            const actual = await _resolvePyenvEnv(pythonPath);
+            const actual = await resolveEnv(pythonPath);
             assertEnvEqual(actual, expected);
         });
     });
@@ -60,6 +66,15 @@ suite('Resolver Utils', () => {
     suite('Windows store', () => {
         const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
         const testStoreAppRoot = path.join(testLocalAppData, 'Microsoft', 'WindowsApps');
+
+        setup(() => {
+            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
+            sinon.stub(platformApis, 'getEnvironmentVariable').withArgs('LOCALAPPDATA').returns(testLocalAppData);
+        });
+
+        teardown(() => {
+            sinon.restore();
+        });
 
         function createExpectedInterpreterInfo(
             executable: string,
@@ -101,7 +116,7 @@ suite('Resolver Utils', () => {
                 ...createExpectedInterpreterInfo(python38path),
             };
 
-            const actual = await _resolveWindowsStoreEnv(python38path);
+            const actual = await resolveEnv(python38path);
 
             assertEnvEqual(actual, expected);
         });
@@ -119,7 +134,7 @@ suite('Resolver Utils', () => {
                 ...createExpectedInterpreterInfo(python38path),
             };
 
-            const actual = await _resolveWindowsStoreEnv(python38path);
+            const actual = await resolveEnv(python38path);
 
             assertEnvEqual(actual, expected);
         });
@@ -152,6 +167,14 @@ suite('Resolver Utils', () => {
             return info;
         }
 
+        suiteSetup(() => {
+            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
+        });
+
+        suiteTeardown(() => {
+            sinon.restore();
+        });
+
         setup(() => {
             sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
                 if (command === 'conda' && args[0] === 'info' && args[1] === '--json') {
@@ -166,8 +189,57 @@ suite('Resolver Utils', () => {
         });
 
         test('resolveEnv', async () => {
-            const actual = await _resolveCondaEnv(path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'));
+            const actual = await resolveEnv(path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'));
             assertEnvEqual(actual, expectedEnvInfo());
+        });
+    });
+
+    suite('Simple envs', () => {
+        const testVirtualHomeDir = path.join(TEST_LAYOUT_ROOT, 'virtualhome');
+        suiteSetup(() => {
+            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([testVirtualHomeDir]);
+        });
+
+        suiteTeardown(() => {
+            sinon.restore();
+        });
+
+        function createExpectedEnvInfo(
+            interpreterPath: string,
+            kind: PythonEnvKind,
+            version: PythonVersion = UNKNOWN_PYTHON_VERSION,
+            name = '',
+            location = '',
+        ): PythonEnvInfo {
+            return {
+                name,
+                location,
+                kind,
+                executable: {
+                    filename: interpreterPath,
+                    sysPrefix: '',
+                    ctime: -1,
+                    mtime: -1,
+                },
+                display: undefined,
+                version,
+                arch: Architecture.Unknown,
+                distro: { org: '' },
+                searchLocation: Uri.file(path.dirname(location)),
+                source: [PythonEnvSource.Other],
+            };
+        }
+
+        test('resolveEnv', async () => {
+            const expected = createExpectedEnvInfo(
+                path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
+                PythonEnvKind.Venv,
+                undefined,
+                'win1',
+                path.join(testVirtualHomeDir, '.venvs', 'win1'),
+            );
+            const actual = await resolveEnv(path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'));
+            assertEnvEqual(actual, expected);
         });
     });
 });
