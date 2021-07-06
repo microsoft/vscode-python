@@ -447,7 +447,7 @@ class RefactoringLibraryInstaller extends BaseInstaller {
     }
 }
 
-class DataScienceInstaller extends BaseInstaller {
+export class DataScienceInstaller extends BaseInstaller {
     // Override base installer to support a more DS-friendly streamlined installation.
     public async install(
         product: Product,
