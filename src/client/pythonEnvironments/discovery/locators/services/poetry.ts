@@ -7,7 +7,7 @@ import * as path from 'path';
 import { traceError, traceVerbose } from '../../../../common/logger';
 import { getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
 import {
-    getPythonSettingWithSystemVariables,
+    getPythonSetting,
     isParentPath,
     pathExistsSync,
     readFileSync,
@@ -138,7 +138,7 @@ export class Poetry {
 
         // Produce a list of candidate binaries to be probed by exec'ing them.
         function* getCandidates() {
-            const customPoetryPath = getPythonSettingWithSystemVariables<string>('poetryPath');
+            const customPoetryPath = getPythonSetting<string>('poetryPath');
             if (customPoetryPath && customPoetryPath !== 'poetry') {
                 // If user has specified a custom poetry path, use it first.
                 yield customPoetryPath;

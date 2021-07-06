@@ -61,7 +61,7 @@ suite('Poetry Locator', () => {
     }
 
     suiteSetup(() => {
-        getPythonSetting = sinon.stub(externalDependencies, 'getPythonSettingWithSystemVariables');
+        getPythonSetting = sinon.stub(externalDependencies, 'getPythonSetting');
         getPythonSetting.returns('poetry');
         getOSTypeStub = sinon.stub(platformUtils, 'getOSType');
         shellExecute = sinon.stub(externalDependencies, 'shellExecute');

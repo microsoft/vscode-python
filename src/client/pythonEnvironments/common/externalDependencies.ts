@@ -5,14 +5,13 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ExecutionResult, ShellOptions, SpawnOptions } from '../../common/process/types';
-import { IExperimentService, IDisposable } from '../../common/types';
+import { IExperimentService, IDisposable, IConfigurationService } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { normalizeFilename } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 import { plainExec, shellExec } from '../../common/process/rawProcessApis';
 import { BufferDecoder } from '../../common/process/decoder';
-import { SystemVariables } from '../../common/variables/systemVariables';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
@@ -177,15 +176,6 @@ export function getPythonSetting<T>(name: string): T | undefined {
     const settings = internalServiceContainer.get<IConfigurationService>(IConfigurationService).getSettings();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (settings as any)[name];
-}
-
-/**
- * Returns the value for setting `python.<name>` with system variables substituted.
- * @param name The name of the setting.
- */
-export function getPythonSettingWithSystemVariables<T>(name: string): T | undefined {
-    const systemVariables = new SystemVariables(undefined, undefined);
-    return systemVariables.resolveAny(vscode.workspace.getConfiguration('python').get(name));
 }
 
 /**
