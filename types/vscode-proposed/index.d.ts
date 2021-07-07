@@ -134,7 +134,7 @@ export interface NotebookDocument {
     readonly metadata: NotebookDocumentMetadata;
 
     // todo@API should we really expose this?
-    readonly viewType: string;
+    readonly notebookType: string;
 
     /**
      * The number of cells in the notebook document.

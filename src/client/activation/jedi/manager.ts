@@ -36,6 +36,8 @@ export class JediLanguageServerManager implements ILanguageServerManager {
 
     private disposables: IDisposable[] = [];
 
+    private static commandDispose: IDisposable;
+
     private connected = false;
 
     private lsVersion: string | undefined;
@@ -47,11 +49,12 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(ICommandManager) commandManager: ICommandManager,
     ) {
-        this.disposables.push(
-            commandManager.registerCommand(Commands.RestartLS, () => {
-                this.restartLanguageServer().ignoreErrors();
-            }),
-        );
+        if (JediLanguageServerManager.commandDispose) {
+            JediLanguageServerManager.commandDispose.dispose();
+        }
+        JediLanguageServerManager.commandDispose = commandManager.registerCommand(Commands.RestartLS, () => {
+            this.restartLanguageServer().ignoreErrors();
+        });
     }
 
     private static versionTelemetryProps(instance: JediLanguageServerManager) {
@@ -64,6 +67,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         if (this.languageProxy) {
             this.languageProxy.dispose();
         }
+        JediLanguageServerManager.commandDispose.dispose();
         this.disposables.forEach((d) => d.dispose());
     }
 

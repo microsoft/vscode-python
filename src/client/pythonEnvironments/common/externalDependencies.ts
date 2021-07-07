@@ -5,7 +5,7 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ExecutionResult, ShellOptions, SpawnOptions } from '../../common/process/types';
-import { IExperimentService, IDisposable } from '../../common/types';
+import { IExperimentService, IDisposable, IConfigurationService } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { normalizeFilename } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
@@ -173,7 +173,9 @@ export async function* getSubDirs(
  * @param name The name of the setting.
  */
 export function getPythonSetting<T>(name: string): T | undefined {
-    return vscode.workspace.getConfiguration('python').get(name);
+    const settings = internalServiceContainer.get<IConfigurationService>(IConfigurationService).getSettings();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (settings as any)[name];
 }
 
 /**

@@ -15,7 +15,6 @@ import {
     Disposable,
     DocumentHighlight,
     DocumentLink,
-    DocumentSelector,
     DocumentSymbol,
     FormattingOptions,
     Location,
@@ -82,7 +81,7 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
         notebookApi: IVSCodeNotebook,
         private readonly getClient: () => LanguageClient | undefined,
         fs: IFileSystem,
-        cellSelector: DocumentSelector,
+        cellSelector: string,
         notebookFileRegex: RegExp,
     ) {
         this.converter = new NotebookConverter(notebookApi, fs, cellSelector, notebookFileRegex);
@@ -131,11 +130,10 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
     public didClose(document: TextDocument, next: (ev: TextDocument) => void): () => void {
         // If this is a notebook cell, change this into a concat document if this is the first time.
         if (isNotebookCell(document.uri)) {
-            // Cell delete causes this callback, but won't fire the close event because it's not
-            // in the document anymore.
-            if (this.converter.hasCell(document) && !this.converter.hasFiredClose(document)) {
-                this.converter.firedClose(document);
-                const newDoc = this.converter.toOutgoingDocument(document);
+            const newDoc = this.converter.firedClose(document);
+            if (newDoc) {
+                // Cell delete causes this callback, but won't fire the close event because it's not
+                // in the document anymore.
                 next(newDoc);
             }
         } else {

@@ -102,11 +102,16 @@ export class ExperimentService implements IExperimentService {
             // Check if the user was already in the experiment server-side. We need to do
             // this to ensure the experiment service is ready and internal states are fully
             // synced with the experiment server.
-            await this.experimentationService.isCachedFlightEnabled(experiment);
+            await this.experimentationService.getTreatmentVariableAsync(EXP_CONFIG_ID, experiment, true);
             return true;
         }
 
-        return this.experimentationService.isCachedFlightEnabled(experiment);
+        const treatmentVariable = await this.experimentationService.getTreatmentVariableAsync(
+            EXP_CONFIG_ID,
+            experiment,
+            true,
+        );
+        return treatmentVariable !== undefined;
     }
 
     public inExperimentSync(experiment: string): boolean {
@@ -140,7 +145,7 @@ export class ExperimentService implements IExperimentService {
             return undefined;
         }
 
-        return this.experimentationService.getTreatmentVariableAsync('vscode', experiment, true);
+        return this.experimentationService.getTreatmentVariableAsync(EXP_CONFIG_ID, experiment, true);
     }
 
     private logExperiments() {

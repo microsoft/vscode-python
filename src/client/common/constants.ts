@@ -4,11 +4,14 @@ export const PYTHON_LANGUAGE = 'python';
 export const PYTHON_WARNINGS = 'PYTHONWARNINGS';
 
 export const NotebookCellScheme = 'vscode-notebook-cell';
+export const InteractiveInputScheme = 'vscode-interactive-input';
+export const InteractiveScheme = 'vscode-interactive';
 export const PYTHON = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
     { scheme: 'untitled', language: PYTHON_LANGUAGE },
     { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
     { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE },
+    { scheme: InteractiveInputScheme, language: PYTHON_LANGUAGE },
 ];
 
 export const PVSC_EXTENSION_ID = 'ms-python.python';
