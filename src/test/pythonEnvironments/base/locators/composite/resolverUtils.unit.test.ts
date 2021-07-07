@@ -4,6 +4,7 @@
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
+import { assert } from 'chai';
 import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import * as platformApis from '../../../../../client/common/utils/platform';
 import {
@@ -205,6 +206,15 @@ suite('Resolver Utils', () => {
                 actual,
                 expectedEnvInfo(path.join(condaPrefixNonWindows, 'bin', 'python'), condaPrefixNonWindows),
             );
+        });
+
+        test('resolveEnv: No conda binary found', async () => {
+            sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
+            sinon.stub(externalDependencies, 'exec').callsFake(async (command: string) => {
+                throw new Error(`${command} is missing or is not executable`);
+            });
+            const actual = await resolveEnv(path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'));
+            assert.equal(actual, undefined);
         });
     });
 

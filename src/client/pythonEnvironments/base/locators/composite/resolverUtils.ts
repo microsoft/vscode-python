@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { traceVerbose } from '../../../../common/logger';
+import { traceError, traceVerbose } from '../../../../common/logger';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../info';
 import { buildEnvInfo, getEnvMatcher } from '../../info/env';
 import {
@@ -98,6 +98,7 @@ async function resolveCondaEnv(env: string): Promise<PythonEnvInfo | undefined> 
             return info;
         }
     }
+    traceError(`${env} identified as a Conda environment but is not returned via '${conda.command} info' command`);
     return undefined;
 }
 
