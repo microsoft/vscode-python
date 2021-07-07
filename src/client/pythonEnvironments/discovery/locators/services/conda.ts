@@ -11,6 +11,7 @@ import { getRegistryInterpreters } from '../../../common/windowsUtils';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { IDisposable } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
+import { isTestExecution } from '../../../../common/constants';
 
 export const AnacondaCompanyNames = ['Anaconda, Inc.', 'Continuum Analytics, Inc.'];
 
@@ -223,7 +224,7 @@ export class Conda {
 
     public static async getConda(): Promise<Conda | undefined> {
         traceVerbose(`Searching for conda.`);
-        if (this.condaPromise === undefined) {
+        if (this.condaPromise === undefined || isTestExecution()) {
             this.condaPromise = Conda.locate();
         }
         return this.condaPromise;
