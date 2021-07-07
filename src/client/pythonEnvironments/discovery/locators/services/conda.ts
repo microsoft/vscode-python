@@ -208,10 +208,12 @@ export async function getPythonVersionFromConda(interpreterPath: string): Promis
 /** Wraps the "conda" utility, and exposes its functionality.
  */
 export class Conda {
-    // Locating conda binary is expensive, since it potentially involves spawning or
-    // trying to spawn processes; so it's done lazily and asynchronously. Methods that
-    // need a Conda instance should use getConda() to obtain it, and should never access
-    // this property directly.
+    /**
+     * Locating conda binary is expensive, since it potentially involves spawning or
+     * trying to spawn processes; so it's done lazily and asynchronously. Methods that
+     * need a Conda instance should use getConda() to obtain it, and should never access
+     * this property directly.
+     */
     private static condaPromise: Promise<Conda | undefined> | undefined;
 
     /**
@@ -236,7 +238,7 @@ export class Conda {
      *
      * @return A Conda instance corresponding to the binary, if successful; otherwise, undefined.
      */
-    public static async locate(): Promise<Conda | undefined> {
+    private static async locate(): Promise<Conda | undefined> {
         const home = getUserHomeDir();
         const suffix = getOSType() === OSType.Windows ? 'Scripts\\conda.exe' : 'bin/conda';
 
