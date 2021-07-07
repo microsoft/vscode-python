@@ -11,7 +11,7 @@ import { IInstallationChannelManager, IModuleInstaller, InterpreterUri } from '.
 import { InstallerResponse, IOutputChannel, Product } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, ModuleInstallerType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 class AlwaysInstalledDataScienceInstaller extends DataScienceInstaller {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
@@ -84,7 +84,7 @@ suite('DataScienceInstaller install', async () => {
             sysPrefix: '',
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
-        testInstaller.setup((c) => c.name).returns(() => EnvironmentType.Conda);
+        testInstaller.setup((c) => c.type).returns(() => ModuleInstallerType.Conda);
         testInstaller
             .setup((c) =>
                 c.installModule(
@@ -115,7 +115,7 @@ suite('DataScienceInstaller install', async () => {
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
 
-        testInstaller.setup((c) => c.name).returns(() => 'Pip');
+        testInstaller.setup((c) => c.type).returns(() => ModuleInstallerType.Pip);
         testInstaller
             .setup((c) =>
                 c.installModule(
@@ -146,7 +146,7 @@ suite('DataScienceInstaller install', async () => {
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
 
-        testInstaller.setup((c) => c.name).returns(() => 'poetry');
+        testInstaller.setup((c) => c.type).returns(() => ModuleInstallerType.Poetry);
         testInstaller
             .setup((c) =>
                 c.installModule(
@@ -177,7 +177,7 @@ suite('DataScienceInstaller install', async () => {
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
 
-        testInstaller.setup((c) => c.name).returns(() => 'pipenv');
+        testInstaller.setup((c) => c.type).returns(() => ModuleInstallerType.Pipenv);
         testInstaller
             .setup((c) =>
                 c.installModule(
@@ -209,7 +209,7 @@ suite('DataScienceInstaller install', async () => {
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
 
-        testInstaller.setup((c) => c.name).returns(() => 'Pip');
+        testInstaller.setup((c) => c.type).returns(() => ModuleInstallerType.Pip);
         testInstaller
             .setup((c) =>
                 c.installModule(
