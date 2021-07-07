@@ -3,6 +3,7 @@
 
 import { injectable, inject } from 'inversify';
 import { getArchitectureDisplayName } from '../../common/platform/registry';
+import { isParentPath } from '../../pythonEnvironments/common/externalDependencies';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { PythonVersion } from '../../pythonEnvironments/info/pythonVersion';
 import { IInterpreterHelper } from '../contracts';
@@ -167,13 +168,17 @@ function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment, work
 function getEnvTypeHeuristic(environment: PythonEnvironment, workspacePath: string): EnvTypeHeuristic {
     const { envType } = environment;
 
+    if (
+        envType !== EnvironmentType.Unknown &&
+        workspacePath.length > 0 &&
+        environment.envPath &&
+        isParentPath(environment.envPath, workspacePath)
+    ) {
+        return EnvTypeHeuristic.Local;
+    }
+
     switch (envType) {
-        case EnvironmentType.Venv: {
-            if (workspacePath.length > 0 && environment.envPath?.startsWith(workspacePath)) {
-                return EnvTypeHeuristic.Local;
-            }
-            return EnvTypeHeuristic.Global;
-        }
+        case EnvironmentType.Venv:
         case EnvironmentType.Conda:
         case EnvironmentType.VirtualEnv:
         case EnvironmentType.VirtualEnvWrapper:
