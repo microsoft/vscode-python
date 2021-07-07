@@ -39,7 +39,8 @@ export class CachingLocator extends LazyResourceBasedLocator implements IResolvi
         yield* this.iterFromCache(query);
     }
 
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+    public async resolveEnv(env: string): Promise<PythonEnvInfo | undefined> {
+        await this.ensureResourcesReady();
         let matchingEnvs = this.filterMatchingEnvsFromCache(env);
         if (matchingEnvs.length > 0) {
             return pickBestEnv(matchingEnvs);

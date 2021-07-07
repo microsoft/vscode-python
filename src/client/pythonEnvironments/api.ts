@@ -41,7 +41,7 @@ export class PythonEnvironments implements IResolvingLocator, IDisposable {
         return this.locators.iterEnvs(query);
     }
 
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+    public async resolveEnv(env: string): Promise<PythonEnvInfo | undefined> {
         return this.locators.resolveEnv(env);
     }
 }

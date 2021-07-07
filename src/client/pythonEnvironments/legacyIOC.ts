@@ -35,7 +35,6 @@ import { VirtualEnvironmentManager } from '../interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../interpreter/virtualEnvs/types';
 import { IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from './base/info';
-import { buildEnvInfo } from './base/info/env';
 import { IResolvingLocator, PythonLocatorQuery } from './base/locator';
 import { isMacDefaultPythonPath } from './base/locators/lowLevel/macDefaultLocator';
 import { getEnvs } from './base/locatorUtils';
@@ -191,17 +190,12 @@ class ComponentAdapter implements IComponentAdapter {
     // Implements IInterpreterService
 
     // We use the same getInterpreters() here as for IInterpreterLocatorService.
-    public async getInterpreterDetails(pythonPath: string, resource?: vscode.Uri): Promise<PythonEnvironment> {
-        const envInfo = buildEnvInfo({ executable: pythonPath });
-        if (resource !== undefined) {
-            const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
-            if (wsFolder !== undefined) {
-                envInfo.searchLocation = wsFolder.uri;
-            }
+    public async getInterpreterDetails(pythonPath: string): Promise<PythonEnvironment | undefined> {
+        const env = await this.api.resolveEnv(pythonPath);
+        if (!env) {
+            return undefined;
         }
-
-        const env = (await this.api.resolveEnv(envInfo)) ?? envInfo;
-        if (env.executable.sysPrefix) {
+        if (env?.executable.sysPrefix) {
             const execInfoService = getEnvironmentInfoService();
             const info = await execInfoService.getEnvironmentInfo(pythonPath, EnvironmentInfoServiceQueuePriority.High);
             if (info) {
@@ -209,7 +203,7 @@ class ComponentAdapter implements IComponentAdapter {
                 env.version = info.version;
             }
         }
-        return convertEnvInfo(env ?? buildEnvInfo({ executable: pythonPath }));
+        return convertEnvInfo(env);
     }
 
     // Implements ICondaService

@@ -79,7 +79,7 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
         // No watchers!
     }
 
-    private async ensureResourcesReady(): Promise<void> {
+    protected async ensureResourcesReady(): Promise<void> {
         if (this.resourcesReady !== undefined) {
             await this.resourcesReady.promise;
             return;

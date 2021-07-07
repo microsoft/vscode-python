@@ -164,7 +164,7 @@ interface IResolver {
      *
      * @param env - the Python executable path or partial env info to find and update
      */
-    resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
+    resolveEnv(env: string): Promise<PythonEnvInfo | undefined>;
 }
 
 export interface IResolvingLocator extends IResolver, ILocator {}
