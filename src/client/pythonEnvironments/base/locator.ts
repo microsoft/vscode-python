@@ -151,18 +151,10 @@ export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChan
 
 interface IResolver {
     /**
-     * Find the given Python environment and fill in as much missing info as possible.
+     * Find as much info about the given Python environment as possible.
+     * If executable passed is invalid, then `undefined` is returned.
      *
-     * If the locator can find the environment then the result is as
-     * much info about that env as the locator has.  At the least this
-     * will include all the `PythonEnvBaseInfo` data.  If a `PythonEnvInfo`
-     * was provided then the result will be a copy with any updates or
-     * extra info applied.
-     *
-     * If the locator could not find the environment then `undefined`
-     * is returned.
-     *
-     * @param env - the Python executable path or partial env info to find and update
+     * @param env - the Python executable path to resolve more information about
      */
     resolveEnv(env: string): Promise<PythonEnvInfo | undefined>;
 }
