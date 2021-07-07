@@ -1129,6 +1129,7 @@
                             "pythonDiscoveryModuleWithoutWatcher",
                             "pythonJediLSP",
                             "pythonSurveyNotification",
+                            "pythonSortEnvs",
                             "All"
                         ]
                     },
@@ -1146,6 +1147,7 @@
                             "pythonDiscoveryModuleWithoutWatcher",
                             "pythonJediLSP",
                             "pythonSurveyNotification",
+                            "pythonSortEnvs",
                             "All"
                         ]
                     },
