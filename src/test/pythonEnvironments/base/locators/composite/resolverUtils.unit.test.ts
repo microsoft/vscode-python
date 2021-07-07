@@ -141,8 +141,9 @@ suite('Resolver Utils', () => {
     });
 
     suite('Conda', () => {
-        const condaPrefix = path.join(TEST_LAYOUT_ROOT, 'conda1');
-        function condaInfo(): CondaInfo {
+        const condaPrefixNonWindows = path.join(TEST_LAYOUT_ROOT, 'conda2');
+        const condaPrefixWindows = path.join(TEST_LAYOUT_ROOT, 'conda1');
+        function condaInfo(condaPrefix: string): CondaInfo {
             return {
                 conda_version: '4.8.0',
                 python_version: '3.9.0',
@@ -153,12 +154,12 @@ suite('Resolver Utils', () => {
             };
         }
 
-        function expectedEnvInfo() {
+        function expectedEnvInfo(executable: string, location: string) {
             const info = buildEnvInfo({
-                executable: path.join(condaPrefix, 'python.exe'),
+                executable,
                 kind: PythonEnvKind.Conda,
                 org: AnacondaCompanyName,
-                location: condaPrefix,
+                location,
                 source: [PythonEnvSource.Conda],
                 version: UNKNOWN_PYTHON_VERSION,
                 fileInfo: undefined,
@@ -167,7 +168,7 @@ suite('Resolver Utils', () => {
             return info;
         }
 
-        suiteSetup(() => {
+        setup(() => {
             sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
         });
 
@@ -175,22 +176,35 @@ suite('Resolver Utils', () => {
             sinon.restore();
         });
 
-        setup(() => {
-            sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
-                if (command === 'conda' && args[0] === 'info' && args[1] === '--json') {
-                    return { stdout: JSON.stringify(condaInfo()) };
-                }
-                throw new Error(`${command} is missing or is not executable`);
-            });
-        });
-
         teardown(() => {
             sinon.restore();
         });
 
-        test('resolveEnv', async () => {
+        test('resolveEnv (Windows)', async () => {
+            sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
+            sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
+                if (command === 'conda' && args[0] === 'info' && args[1] === '--json') {
+                    return { stdout: JSON.stringify(condaInfo(condaPrefixWindows)) };
+                }
+                throw new Error(`${command} is missing or is not executable`);
+            });
             const actual = await resolveEnv(path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'));
-            assertEnvEqual(actual, expectedEnvInfo());
+            assertEnvEqual(actual, expectedEnvInfo(path.join(condaPrefixWindows, 'python.exe'), condaPrefixWindows));
+        });
+
+        test('resolveEnv (non-Windows)', async () => {
+            sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Linux);
+            sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
+                if (command === 'conda' && args[0] === 'info' && args[1] === '--json') {
+                    return { stdout: JSON.stringify(condaInfo(condaPrefixNonWindows)) };
+                }
+                throw new Error(`${command} is missing or is not executable`);
+            });
+            const actual = await resolveEnv(path.join(TEST_LAYOUT_ROOT, 'conda2', 'bin', 'python'));
+            assertEnvEqual(
+                actual,
+                expectedEnvInfo(path.join(condaPrefixNonWindows, 'bin', 'python'), condaPrefixNonWindows),
+            );
         });
     });
 
