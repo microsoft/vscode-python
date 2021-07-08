@@ -5,9 +5,8 @@ import { Uri } from 'vscode';
 import { traceVerbose } from '../../common/logger';
 import { createDeferred } from '../../common/utils/async';
 import { getURIFilter } from '../../common/utils/misc';
-import { IDisposable } from '../../common/utils/resourceLifecycle';
 import { PythonEnvInfo } from './info';
-import { getEnvMatcher, getMaxDerivedEnvInfo } from './info/env';
+import { getMaxDerivedEnvInfo } from './info/env';
 import { IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from './locator';
 
 /**
