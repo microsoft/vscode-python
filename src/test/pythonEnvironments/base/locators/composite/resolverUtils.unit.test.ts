@@ -4,7 +4,6 @@
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
-import { assert } from 'chai';
 import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import * as platformApis from '../../../../../client/common/utils/platform';
 import {
@@ -168,6 +167,31 @@ suite('Resolver Utils', () => {
             });
             return info;
         }
+        function createSimpleEnvInfo(
+            interpreterPath: string,
+            kind: PythonEnvKind,
+            version: PythonVersion = UNKNOWN_PYTHON_VERSION,
+            name = '',
+            location = '',
+        ): PythonEnvInfo {
+            return {
+                name,
+                location,
+                kind,
+                executable: {
+                    filename: interpreterPath,
+                    sysPrefix: '',
+                    ctime: -1,
+                    mtime: -1,
+                },
+                display: undefined,
+                version,
+                arch: Architecture.Unknown,
+                distro: { org: '' },
+                searchLocation: undefined,
+                source: [PythonEnvSource.Other],
+            };
+        }
 
         setup(() => {
             sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
@@ -208,13 +232,22 @@ suite('Resolver Utils', () => {
             );
         });
 
-        test('resolveEnv: No conda binary found', async () => {
+        test('resolveEnv: If no conda binary found, resolve as a simple environment', async () => {
             sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
             sinon.stub(externalDependencies, 'exec').callsFake(async (command: string) => {
                 throw new Error(`${command} is missing or is not executable`);
             });
             const actual = await resolveEnv(path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'));
-            assert.equal(actual, undefined);
+            assertEnvEqual(
+                actual,
+                createSimpleEnvInfo(
+                    path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
+                    PythonEnvKind.Conda,
+                    undefined,
+                    'conda1',
+                    path.join(TEST_LAYOUT_ROOT, 'conda1'),
+                ),
+            );
         });
     });
 

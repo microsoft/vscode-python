@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { traceError, traceVerbose } from '../../../../common/logger';
+import { traceError, traceWarning } from '../../../../common/logger';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../info';
 import { buildEnvInfo, getEnvMatcher } from '../../info/env';
 import {
@@ -18,7 +18,12 @@ import { parsePyenvVersion } from '../../../discovery/locators/services/pyenvLoc
 import { Architecture } from '../../../../common/utils/platform';
 import { getPythonVersionFromPath as parsePythonVersionFromPath } from '../../info/pythonVersion';
 
-export async function resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
+/**
+ * Find as much info about the given Python environment as possible without running the
+ * Python executable and returns it. Notice `undefined` is never returned, so environment
+ * returned could still be invalid.
+ */
+export async function resolveEnv(executablePath: string): Promise<PythonEnvInfo> {
     const resolved = await doResolveEnv(executablePath);
     if (resolved) {
         const folders = getWorkspaceFolders();
@@ -39,7 +44,7 @@ export async function resolveEnv(executablePath: string): Promise<PythonEnvInfo 
     return resolved;
 }
 
-async function doResolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
+async function doResolveEnv(executablePath: string): Promise<PythonEnvInfo> {
     const kind = await identifyEnvironment(executablePath);
     switch (kind) {
         case PythonEnvKind.Conda:
@@ -63,23 +68,19 @@ async function resolveSimpleEnv(executablePath: string, kind: PythonEnvKind): Pr
     const location = getEnvironmentDirFromPath(executablePath);
     envInfo.location = location;
     envInfo.name = path.basename(location);
-
-    // TODO: Call a general display name provider here to build display name.
     const fileData = await getFileInfo(executablePath);
     envInfo.executable.ctime = fileData.ctime;
     envInfo.executable.mtime = fileData.mtime;
     return envInfo;
 }
 
-async function resolveCondaEnv(env: string): Promise<PythonEnvInfo | undefined> {
+async function resolveCondaEnv(executablePath: string): Promise<PythonEnvInfo> {
     const conda = await Conda.getConda();
     if (conda === undefined) {
-        traceVerbose(`Couldn't locate the conda binary in resolver`);
-        return undefined;
+        traceWarning(`${executablePath} identified as Conda environment even though Conda is not installed`);
     }
-    traceVerbose(`Searching for conda environments using ${conda.command} in resolver`);
-    const envs = await conda.getEnvList();
-    const matchEnv = getEnvMatcher(env);
+    const envs = (await conda?.getEnvList()) ?? [];
+    const matchEnv = getEnvMatcher(executablePath);
     for (const { name, prefix } of envs) {
         const executable = await getInterpreterPathFromDir(prefix);
         if (executable && matchEnv(executable)) {
@@ -98,11 +99,14 @@ async function resolveCondaEnv(env: string): Promise<PythonEnvInfo | undefined> 
             return info;
         }
     }
-    traceError(`${env} identified as a Conda environment but is not returned via '${conda.command} info' command`);
-    return undefined;
+    traceError(
+        `${executablePath} identified as a Conda environment but is not returned via '${conda?.command} info' command`,
+    );
+    // Environment could still be valid, resolve as a simple env.
+    return resolveSimpleEnv(executablePath, PythonEnvKind.Conda);
 }
 
-async function resolvePyenvEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
+async function resolvePyenvEnv(executablePath: string): Promise<PythonEnvInfo> {
     const location = getEnvironmentDirFromPath(executablePath);
     const name = path.basename(location);
 
@@ -123,7 +127,7 @@ async function resolvePyenvEnv(executablePath: string): Promise<PythonEnvInfo | 
     return envInfo;
 }
 
-async function resolveWindowsStoreEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
+async function resolveWindowsStoreEnv(executablePath: string): Promise<PythonEnvInfo> {
     return buildEnvInfo({
         kind: PythonEnvKind.WindowsStore,
         executable: executablePath,

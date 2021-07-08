@@ -257,8 +257,8 @@ suite('Python envs locator - Environments Resolver', () => {
             stubShellExec.restore();
         });
 
-        test('Calls into parent locator to get resolved environment, then calls environnment service to resolve environment further and return it', async () => {
-            const resolvedEnvReturnedByResolver = createExpectedResolvedEnvInfo(
+        test('Calls into basic resolver to get environment info, then calls environnment service to resolve environment further and return it', async () => {
+            const resolvedEnvReturnedByBasicResolver = createExpectedResolvedEnvInfo(
                 path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
                 PythonEnvKind.Venv,
                 undefined,
@@ -270,10 +270,10 @@ suite('Python envs locator - Environments Resolver', () => {
 
             const expected = await resolver.resolveEnv(path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'));
 
-            assertEnvEqual(expected, createExpectedEnvInfo(resolvedEnvReturnedByResolver));
+            assertEnvEqual(expected, createExpectedEnvInfo(resolvedEnvReturnedByBasicResolver));
         });
 
-        test('If the parent locator resolves environment, but running interpreter info throws error, return undefined', async () => {
+        test('If running interpreter info throws error, return undefined', async () => {
             stubShellExec.returns(
                 new Promise<ExecutionResult<string>>((_resolve, reject) => {
                     reject();
@@ -300,18 +300,6 @@ suite('Python envs locator - Environments Resolver', () => {
             const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
 
             const expected = await resolver.resolveEnv(path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'));
-
-            assert.deepEqual(expected, undefined);
-        });
-
-        test("If the parent locator isn't able to resolve environment, return undefined", async () => {
-            sinon.stub(ExternalDep, 'exec').callsFake(async (command: string) => {
-                throw new Error(`Conda binary command ${command} is missing or is not executable`);
-            });
-            const parentLocator = new SimpleLocator([]);
-            const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
-
-            const expected = await resolver.resolveEnv(path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'));
 
             assert.deepEqual(expected, undefined);
         });
