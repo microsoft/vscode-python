@@ -197,10 +197,6 @@ suite('Resolver Utils', () => {
             sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
         });
 
-        suiteTeardown(() => {
-            sinon.restore();
-        });
-
         teardown(() => {
             sinon.restore();
         });
@@ -253,11 +249,11 @@ suite('Resolver Utils', () => {
 
     suite('Simple envs', () => {
         const testVirtualHomeDir = path.join(TEST_LAYOUT_ROOT, 'virtualhome');
-        suiteSetup(() => {
+        setup(() => {
             sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([testVirtualHomeDir]);
         });
 
-        suiteTeardown(() => {
+        teardown(() => {
             sinon.restore();
         });
 

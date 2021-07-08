@@ -239,7 +239,7 @@ suite('Python envs locator - Environments Resolver', () => {
             };
         }
         setup(() => {
-            sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Linux);
+            sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
             stubShellExec = ImportMock.mockFunction(
                 ExternalDep,
                 'shellExecute',
