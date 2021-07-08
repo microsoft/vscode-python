@@ -276,7 +276,6 @@ src/test/workspaceSymbols/common.ts
 src/test/workspaceSymbols/main.unit.test.ts
 src/test/workspaceSymbols/generator.unit.test.ts
 
-src/client/interpreter/configuration/interpreterComparer.ts
 src/client/interpreter/configuration/interpreterSelector/commands/base.ts
 src/client/interpreter/configuration/interpreterSelector/commands/resetInterpreter.ts
 src/client/interpreter/configuration/interpreterSelector/commands/setShebangInterpreter.ts
