@@ -18,13 +18,28 @@ import { parsePyenvVersion } from '../../../discovery/locators/services/pyenvLoc
 import { Architecture } from '../../../../common/utils/platform';
 import { getPythonVersionFromPath as parsePythonVersionFromPath } from '../../info/pythonVersion';
 
+function getResolvers(): Map<PythonEnvKind, (executablePath: string) => Promise<PythonEnvInfo>> {
+    const resolvers = new Map<PythonEnvKind, (_: string) => Promise<PythonEnvInfo>>();
+    const defaultResolver = (k: PythonEnvKind) => (e: string) => resolveSimpleEnv(e, k);
+    Object.values(PythonEnvKind).forEach((k) => {
+        resolvers.set(k, defaultResolver(k));
+    });
+    resolvers.set(PythonEnvKind.Conda, resolveCondaEnv);
+    resolvers.set(PythonEnvKind.WindowsStore, resolveWindowsStoreEnv);
+    resolvers.set(PythonEnvKind.Pyenv, resolvePyenvEnv);
+    return resolvers;
+}
+
 /**
  * Find as much info about the given Python environment as possible without running the
  * Python executable and returns it. Notice `undefined` is never returned, so environment
  * returned could still be invalid.
  */
 export async function resolveEnv(executablePath: string): Promise<PythonEnvInfo> {
-    const resolved = await doResolveEnv(executablePath);
+    const kind = await identifyEnvironment(executablePath);
+    const resolvers = getResolvers();
+    const resolverForKind = resolvers.get(kind)!;
+    const resolvedEnv = await resolverForKind(executablePath);
     const folders = getWorkspaceFolders();
     const isRootedEnv = folders.some((f) => isParentPath(executablePath, f));
     if (isRootedEnv) {
@@ -37,23 +52,9 @@ export async function resolveEnv(executablePath: string): Promise<PythonEnvInfo>
         // |__ env
         //    |__ bin or Scripts
         //        |__ python  <--- executable
-        resolved.searchLocation = Uri.file(path.dirname(resolved.location));
+        resolvedEnv.searchLocation = Uri.file(path.dirname(resolvedEnv.location));
     }
-    return resolved;
-}
-
-async function doResolveEnv(executablePath: string): Promise<PythonEnvInfo> {
-    const kind = await identifyEnvironment(executablePath);
-    switch (kind) {
-        case PythonEnvKind.Conda:
-            return resolveCondaEnv(executablePath);
-        case PythonEnvKind.Pyenv:
-            return resolvePyenvEnv(executablePath);
-        case PythonEnvKind.WindowsStore:
-            return resolveWindowsStoreEnv(executablePath);
-        default:
-            return resolveSimpleEnv(executablePath, kind);
-    }
+    return resolvedEnv;
 }
 
 async function resolveSimpleEnv(executablePath: string, kind: PythonEnvKind): Promise<PythonEnvInfo> {
