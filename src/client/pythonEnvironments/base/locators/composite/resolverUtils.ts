@@ -25,21 +25,19 @@ import { getPythonVersionFromPath as parsePythonVersionFromPath } from '../../in
  */
 export async function resolveEnv(executablePath: string): Promise<PythonEnvInfo> {
     const resolved = await doResolveEnv(executablePath);
-    if (resolved) {
-        const folders = getWorkspaceFolders();
-        const isRootedEnv = folders.some((f) => isParentPath(executablePath, f));
-        if (isRootedEnv) {
-            // For environments inside roots, we need to set search location so they can be queried accordingly.
-            // Search location particularly for virtual environments is intended as the directory in which the
-            // environment was found in.
-            // For eg.the default search location for an env containing 'bin' or 'Scripts' directory is:
-            //
-            // searchLocation <--- Default search location directory
-            // |__ env
-            //    |__ bin or Scripts
-            //        |__ python  <--- executable
-            resolved.searchLocation = Uri.file(path.dirname(resolved.location));
-        }
+    const folders = getWorkspaceFolders();
+    const isRootedEnv = folders.some((f) => isParentPath(executablePath, f));
+    if (isRootedEnv) {
+        // For environments inside roots, we need to set search location so they can be queried accordingly.
+        // Search location particularly for virtual environments is intended as the directory in which the
+        // environment was found in.
+        // For eg.the default search location for an env containing 'bin' or 'Scripts' directory is:
+        //
+        // searchLocation <--- Default search location directory
+        // |__ env
+        //    |__ bin or Scripts
+        //        |__ python  <--- executable
+        resolved.searchLocation = Uri.file(path.dirname(resolved.location));
     }
     return resolved;
 }
