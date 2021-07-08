@@ -1,19 +1,10 @@
 {
     "name": "python",
     "displayName": "Python",
-    "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2021.7.0-dev",
+    "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, snippets, and more.",
+    "version": "2020.12.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
-    },
-    "capabilities": {
-        "untrustedWorkspaces": {
-            "supported": false
-        },
-        "virtualWorkspaces": {
-            "supported": false,
-            "description": "Python only works with local file paths."
-        }
     },
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
@@ -37,7 +28,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.57.0"
+        "vscode": "^1.49.0"
     },
     "keywords": [
         "python",
@@ -49,8 +40,10 @@
         "Programming Languages",
         "Debuggers",
         "Linters",
+        "Snippets",
         "Formatters",
         "Other",
+        "Extension Packs",
         "Data Science",
         "Machine Learning",
         "Notebooks"
@@ -78,7 +71,6 @@
         "onCommand:python.buildWorkspaceSymbols",
         "onCommand:python.startREPL",
         "onCommand:python.goToPythonObject",
-        "onCommand:python.reportIssue",
         "onCommand:python.setLinter",
         "onCommand:python.enableLinting",
         "onCommand:python.createTerminal",
@@ -88,46 +80,188 @@
         "onCommand:python.switchToDailyChannel",
         "onCommand:python.switchToWeeklyChannel",
         "onCommand:python.clearWorkspaceInterpreter",
+        "onCommand:python.resetInterpreterSecurityStorage",
         "onCommand:python.startPage.open",
         "onCommand:python.enableSourceMapSupport",
         "onCommand:python.launchTensorBoard",
-        "onCommand:python.clearPersistentStorage",
         "workspaceContains:mspythonconfig.json",
-        "workspaceContains:pyproject.toml",
-        "workspaceContains:Pipfile",
-        "workspaceContains:setup.py",
-        "workspaceContains:requirements.txt",
-        "workspaceContains:manage.py",
-        "workspaceContains:app.py"
+        "workspaceContains:pyproject.toml"
     ],
     "main": "./out/client/extension",
     "contributes": {
+        "walkthroughs": [
+            {
+                "id": "pythonWelcome",
+                "title": "Get started with Python development",
+                "description": "Your first steps to set up a Python project with all the powerful tools and features that the Python extension has to offer!",
+                "steps": [
+                    {
+                        "id": "python.installPython",
+                        "title": "Install Python",
+                        "description": "The Python Extension requires Python to be installed. Install Python from [python.org](https://www.python.org) to use the Python extension.\n \n[Install Python](command:workbench.action.reloadWindow)",
+                        "media": {
+                            "path": "images/OpenOrCreateNotebook.gif",
+                            "altText": "open a folder or create a python project"
+                        },
+                        "when": ""
+                    },
+                    {
+                        "id": "python.openFolderMac",
+                        "title": "Open or Create a new Python project",
+                        "description": "If you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFileFolder)\n \nIf you want to create a new Python project from scratch:\n[Create new Project](command:python.createProject)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
+                        "media": {
+                            "path": "images/OpenOrCreateNotebook.gif",
+                            "altText": "open a folder or create a python project"
+                        },
+                        "doneOn": {"command": "workbench.action.files.openFileFolder"},
+                        "when": "isMac && workspaceFolderCount == 0"
+                    },
+                    {
+                        "id": "python.openFolder",
+                        "title": "Open or create a new Python project",
+                        "description": "To start, open a Python folder/project.\nIf you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFolder)\n \nIf you want to create a new Python project from scratch:\n[Create new Project](command:python.createProject)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
+                        "media": {
+                            "path": "images/OpenOrCreateNotebook.gif",
+                            "altText": "open a folder or create a python project"
+                        },
+                        "doneOn": {"command": "workbench.action.files.openFolder"},
+                        "when": "!isMac && workspaceFolderCount == 0"
+                    },
+                    {
+                        "id": "python.selectInterpreter",
+                        "title": "Select a Python Interpreter",
+                        "description": "Choose which Python interpreter/environment you want to use for your Python project.\n[Select Python Interpreter](command:python.setInterpreter)",
+                        "media": {
+                            "path": "images/OpenOrCreateNotebook.gif",
+                            "altText": "selecting a python interpreter"
+                        },
+                        "doneOn": {"command": "python.setInterpreter" },
+                        "when": ""
+                    },
+                    {
+                        "id": "python.createNewPythonFile",
+                        "title": "Create a new Python file",
+                        "description": "To create a new Python file, you can right click in the file explorer and create a new file with a .py extension anytime.\n[Create new Python file](command:toSide:python.createFile)",
+                        "media": {
+                            "path": "images/OpenOrCreateNotebook.gif",
+                            "altText": "creating a new python file"
+                        },
+                        "doneOn": {"command": "python.createFile" }
+                    },
+                    {
+                        "id": "python.createNewNotebook",
+                        "title": "Create a new Jupyter Notebook",
+                        "description": "To create a new Jupyter Notebook, you can right click in the file explorer and create a new file with an .ipynb extension anytime.\n \nAlternatively, you can open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create New Blank Notebook``.\n[Create new Jupyter Notebook](command:toSide:jupyter.createnewnotebook)",
+                        "media": {
+                            "path": "images/OpenOrCreateNotebook.gif",
+                            "altText": "creating a new jupyter notebook"
+                        },
+                        "doneOn": {"command": "jupyter.createnewnotebook" }
+                    },
+                    {
+                        "id": "python.openInteractiveWindow",
+                        "title": "Open the Python Interactive Window",
+                        "description": "The Python Interactive Window is a Python shell where you can execute and view the results of your Python code. You can create cells on a Python file by typing ``#%%``.\n \nTo open the interactive window anytime, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create Interactive Window``.\n[Open Interactive Window](command:toSide:jupyter.createnewinteractive)",
+                        "media": {
+                            "path": "images/OpenOrCreateNotebook.gif",
+                            "altText": "opening python interactive window"
+                        },
+                        "doneOn": {"command": "jupyter.createnewinteractive" }
+                    },
+                    {
+                        "id": "python.learnMore",
+                        "title": "Learn more",
+                        "description": "• [Explore](command:pythonCommands) all the features the Python extension has to offer.\n• [Signup](https://aka.ms/AAAbopxr) for tips and tutorials through our mailing list.\n• Explore more features in our [Tutorials](https://aka.ms/AA8dqti) or check [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n• Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
+                        "media": {
+                            "path": "images/OpenOrCreateNotebook.gif",
+                            "altText": "opening the command palette to look at python commands"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "pythonDataScienceWelcome",
+                "title": "Get started with Python Data Science",
+                "description": "Your first steps to getting started with a Python Data Science project!",
+                "steps": [
+                    {
+                        "id": "python.installPython",
+                        "title": "Install Python",
+                        "description": "The Python Extension requires Python to be installed. Install Python from [Anaconda](https://www.anaconda.com) to use the Python extension.\n \n[Install Python with Anaconda](command:workbench.action.reloadWindow)",
+                        "media": {
+                            "path": "images/OpenOrCreateNotebook.gif",
+                            "altText": "open a folder or create a python project"
+                        },
+                        "when": ""
+                    },
+                    {
+                        "id": "python.openFolderMac",
+                        "title": "Open or Create a new Python project",
+                        "description": "If you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFileFolder)\n \nIf you want to create a new Python project from scratch:\n[Create new Project](command:python.createProject)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
+                        "media": {
+                            "path": "images/OpenOrCreateNotebook.gif",
+                            "altText": "open a folder or create a python project"
+                        },
+                        "doneOn": {"command": "workbench.action.files.openFileFolder"},
+                        "when": "isMac && workspaceFolderCount == 0"
+                    },
+                    {
+                        "id": "python.openFolder",
+                        "title": "Open or create a new Python project",
+                        "description": "To start, open a Python folder/project.\nIf you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFolder)\n \nIf you want to create a new Python project from scratch:\n[Create new Project](command:python.createProject)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
+                        "media": {
+                            "path": "images/OpenOrCreateNotebook.gif",
+                            "altText": "open a folder or create a python project"
+                        },
+                        "doneOn": {"command": "workbench.action.files.openFolder"},
+                        "when": "!isMac && workspaceFolderCount == 0"
+                    },
+                    {
+                        "id": "python.createNewNotebook",
+                        "title": "Create a new Jupyter Notebook",
+                        "description": "To create a new Jupyter Notebook, you can right click in the file explorer and create a new file with an .ipynb extension anytime.\n \nAlternatively, you can open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create New Blank Notebook``.\n[Create new Jupyter Notebook](command:toSide:jupyter.createnewnotebook)",
+                        "media": {
+                            "path": "images/OpenOrCreateNotebook.gif",
+                            "altText": "creating a new jupyter notebook"
+                        },
+                        "doneOn": {"command": "jupyter.createnewnotebook" }
+                    },
+                    {
+                        "id": "python.openInteractiveWindow",
+                        "title": "Open the Python Interactive Window",
+                        "description": "The Python Interactive Window is a Python shell where you can execute and view the results of your Python code. You can create cells on a Python file by typing ``#%%``.\n \nTo open the interactive window anytime, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create Interactive Window``.\n[Open Interactive Window](command:toSide:jupyter.createnewinteractive)",
+                        "media": {
+                            "path": "images/OpenOrCreateNotebook.gif",
+                            "altText": "opening python interactive window"
+                        },
+                        "doneOn": {"command": "jupyter.createnewinteractive" }
+                    },
+                    {
+                        "id": "python.learnMore",
+                        "title": "Learn more",
+                        "description": "• [Explore](command:pythonCommands) all the features the Python extension has to offer.\n• [Signup](https://aka.ms/AAAbopxr) for tips and tutorials through our mailing list.\n• Explore more features in our [Tutorials](https://aka.ms/AA8dqti) or check [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n• Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
+                        "media": {
+                            "path": "images/OpenOrCreateNotebook.gif",
+                            "altText": "opening the command palette to look at python commands"
+                        }
+                    }
+                ]
+            }              
+        ],
+        "snippets": [
+            {
+                "language": "python",
+                "path": "./snippets/python.json"
+            }
+        ],
         "keybindings": [
             {
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
                 "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused"
-            },
-            {
-                "command": "python.refreshTensorBoard",
-                "key": "ctrl+r",
-                "mac": "cmd+r",
-                "when": "python.hasActiveTensorBoardSession"
             }
         ],
         "commands": [
-            {
-                "command": "python.refreshTensorBoard",
-                "title": "%python.command.python.refreshTensorBoard.title%",
-                "category": "Python",
-                "enablement": "python.hasActiveTensorBoardSession",
-                "icon": "$(refresh)"
-            },
-            {
-                "command": "python.clearPersistentStorage",
-                "title": "%python.command.python.clearPersistentStorage.title%",
-                "category": "Python"
-            },
             {
                 "command": "python.enableSourceMapSupport",
                 "title": "%python.command.python.enableSourceMapSupport.title%",
@@ -232,6 +366,11 @@
             {
                 "command": "python.clearWorkspaceInterpreter",
                 "title": "%python.command.python.clearWorkspaceInterpreter.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.resetInterpreterSecurityStorage",
+                "title": "%python.command.python.resetInterpreterSecurityStorage.title%",
                 "category": "Python"
             },
             {
@@ -345,11 +484,6 @@
                 "category": "Python"
             },
             {
-                "command": "python.reportIssue",
-                "title": "%python.command.python.reportIssue.title%",
-                "category": "Python"
-            },
-            {
                 "command": "python.setLinter",
                 "title": "%python.command.python.setLinter.title%",
                 "category": "Python"
@@ -426,19 +560,12 @@
                     "group": "Python"
                 }
             ],
-            "editor/title/run": [
+            "editor/title": [
                 {
                     "command": "python.execInTerminal-icon",
                     "title": "%python.command.python.execInTerminal.title%",
                     "group": "navigation",
-                    "when": "resourceLangId == python && !isInDiffEditor"
-                }
-            ],
-            "editor/title": [
-                {
-                    "command": "python.refreshTensorBoard",
-                    "group": "navigation@0",
-                    "when": "python.hasActiveTensorBoardSession"
+                    "when": "resourceLangId == python && python.showPlayIcon && !isInDiffEditor"
                 }
             ],
             "explorer/context": [
@@ -483,6 +610,11 @@
                     "category": "Python"
                 },
                 {
+                    "command": "python.resetInterpreterSecurityStorage",
+                    "title": "%python.command.python.resetInterpreterSecurityStorage.title%",
+                    "category": "Python"
+                },
+                {
                     "command": "python.viewOutput",
                     "title": "%python.command.python.viewOutput.title%",
                     "category": "Python"
@@ -522,7 +654,8 @@
                 },
                 {
                     "command": "python.launchTensorBoard",
-                    "category": "Python"
+                    "category": "Python",
+                    "when": "python.isInNativeTensorBoardExperiment"
                 }
             ],
             "view/title": [
@@ -621,16 +754,6 @@
                 {
                     "command": "python.runTestNode",
                     "when": "view == python_tests && viewItem == suite && !busyTests",
-                    "group": "inline@0"
-                },
-                {
-                    "command": "python.debugTestNode",
-                    "when": "view == python_tests && viewItem == folder && !busyTests",
-                    "group": "inline@1"
-                },
-                {
-                    "command": "python.runTestNode",
-                    "when": "view == python_tests && viewItem == folder && !busyTests",
                     "group": "inline@0"
                 }
             ]
@@ -778,10 +901,6 @@
                                 "description": "Debug only user-written code.",
                                 "default": true
                             },
-                            "debugAdapterPath": {
-                                "type": "string",
-                                "description": "Path (fully qualified) to the python debug adapter executable."
-                            },
                             "gevent": {
                                 "type": "boolean",
                                 "description": "Enable debugging of gevent monkey-patched code.",
@@ -815,43 +934,6 @@
                                 "type": "boolean",
                                 "description": "Whether to enable Sub Process debugging",
                                 "default": false
-                            },
-                            "autoReload": {
-                                "type": "object",
-                                "description": "Configures automatic reload of code on edit.",
-                                "default": {},
-                                "properties": {
-                                    "enable": {
-                                        "type": "boolean",
-                                        "description": "Automatically reload code on edit.",
-                                        "default": false
-                                    },
-                                    "exclude": {
-                                        "type": "array",
-                                        "description": "Glob patterns of paths to exclude from auto reload.",
-                                        "default": [
-                                            "**/.git/**",
-                                            "**/__pycache__/**",
-                                            "**/node_modules/**",
-                                            "**/.metadata/**",
-                                            "**/site-packages/**"
-                                        ],
-                                        "items": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "include": {
-                                        "type": "array",
-                                        "description": "Glob patterns of paths to include in auto reload.",
-                                        "default": [
-                                            "**/*.py",
-                                            "**/*.pyw"
-                                        ],
-                                        "items": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
                             }
                         }
                     },
@@ -908,10 +990,6 @@
                                 "type": "boolean",
                                 "description": "Debug only user-written code.",
                                 "default": true
-                            },
-                            "debugAdapterPath": {
-                                "type": "string",
-                                "description": "Path (fully qualified) to the python debug adapter executable."
                             }
                         }
                     },
@@ -1001,10 +1079,6 @@
                                 "type": "boolean",
                                 "description": "Debug only user-written code.",
                                 "default": true
-                            },
-                            "debugAdapterPath": {
-                                "type": "string",
-                                "description": "Path (fully qualified) to the python debug adapter executable."
                             },
                             "django": {
                                 "type": "boolean",
@@ -1115,20 +1189,31 @@
                 "python.defaultInterpreterPath": {
                     "type": "string",
                     "default": "python",
-                    "description": "Path to Python, you can use a custom version of Python by modifying this setting to include the full path. This default setting is used as a fallback if no interpreter is selected for the workspace. The extension will also not set nor change the value of this setting, it will only read from it.",
-                    "scope": "resource"
+                    "description": "Path to Python, you can use a custom version of Python by modifying this setting to include the full path.",
+                    "scope": "machine"
                 },
                 "python.experiments.optInto": {
                     "type": "array",
                     "default": [],
                     "items": {
                         "enum": [
-                            "pythonDeprecatePythonPath",
-                            "pythonTensorboardExperiment",
-                            "pythonDiscoveryModule",
-                            "pythonDiscoveryModuleWithoutWatcher",
-                            "pythonJediLSP",
-                            "pythonSurveyNotification",
+                            "AlwaysDisplayTestExplorer - experiment",
+                            "ShowExtensionSurveyPrompt - enabled",
+                            "Reload - experiment",
+                            "AA_testing - experiment",
+                            "LocalZMQKernel - experiment",
+                            "NativeNotebook - experiment",
+                            "CustomEditorSupport - experiment",
+                            "UseTerminalToGetActivatedEnvVars - experiment",
+                            "CollectLSRequestTiming - experiment",
+                            "CollectNodeLSRequestTiming - experiment",
+                            "DeprecatePythonPath - experiment",
+                            "RunByLine - experiment",
+                            "tryPylance",
+                            "jediLSP",
+                            "debuggerDataViewer",
+                            "pythonSendEntireLineToREPL",
+                            "nativeTensorBoard",
                             "All"
                         ]
                     },
@@ -1140,12 +1225,23 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "pythonDeprecatePythonPath",
-                            "pythonTensorboardExperiment",
-                            "pythonDiscoveryModule",
-                            "pythonDiscoveryModuleWithoutWatcher",
-                            "pythonJediLSP",
-                            "pythonSurveyNotification",
+                            "AlwaysDisplayTestExplorer - experiment",
+                            "ShowExtensionSurveyPrompt - enabled",
+                            "Reload - experiment",
+                            "AA_testing - experiment",
+                            "LocalZMQKernel - experiment",
+                            "NativeNotebook - experiment",
+                            "CustomEditorSupport - experiment",
+                            "UseTerminalToGetActivatedEnvVars - experiment",
+                            "CollectLSRequestTiming - experiment",
+                            "CollectNodeLSRequestTiming - experiment",
+                            "DeprecatePythonPath - experiment",
+                            "RunByLine - experiment",
+                            "tryPylance",
+                            "jediLSP",
+                            "debuggerDataViewer",
+                            "pythonSendEntireLineToREPL",
+                            "nativeTensorBoard",
                             "All"
                         ]
                     },
@@ -1230,34 +1326,24 @@
                 "python.jediMemoryLimit": {
                     "type": "number",
                     "default": 0,
-                    "description": "Memory limit for the Jedi completion engine in megabytes. Zero (default) means 3072 MB. -1 means unlimited (disable memory limit check)",
+                    "description": "Memory limit for the Jedi completion engine in megabytes. Zero (default) means 1024 MB. -1 means unlimited (disable memory limit check)",
                     "scope": "resource"
                 },
                 "python.jediPath": {
                     "type": "string",
                     "default": "",
-                    "description": "Path to directory containing the Jedi library (this path will contain the 'Jedi' sub directory). Note: since Jedi depends on Parso, if using this setting you will need to ensure a suitable version of Parso is available. This setting only works with \"languageServer=Jedi\" and not JediLSP.",
+                    "description": "Path to directory containing the Jedi library (this path will contain the 'Jedi' sub directory). Note: since Jedi depends on Parso, if using this setting you will need to ensure a suitable version of Parso is available.",
                     "scope": "resource"
                 },
                 "python.languageServer": {
                     "type": "string",
                     "enum": [
-                        "Default",
                         "Jedi",
-                        "JediLSP",
                         "Pylance",
                         "Microsoft",
                         "None"
                     ],
-                    "enumDescriptions": [
-                        "Automatically select a language server: Pylance if installed and available, otherwise fallback to Jedi.",
-                        "Use Jedi as a language server.",
-                        "Use Jedi behind the Language Server Protocol (LSP) as a language server.",
-                        "Use Pylance as a language server.",
-                        "Use the Microsoft Python Language Server (MPLS) as a language server. (legacy)",
-                        "Disable language server capabilities."
-                    ],
-                    "default": "Default",
+                    "default": "Jedi",
                     "description": "Defines type of the language server.",
                     "scope": "window"
                 },
@@ -1345,12 +1431,6 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Whether to lint Python files.",
-                    "scope": "resource"
-                },
-                "python.linting.cwd": {
-                    "type": "string",
-                    "default": null,
-                    "description": "Optional working directory for linters.",
                     "scope": "resource"
                 },
                 "python.linting.flake8Args": {
@@ -1702,7 +1782,7 @@
                 "python.pythonPath": {
                     "type": "string",
                     "default": "python",
-                    "description": "(DEPRECATED: Note this setting is not used when in pythonDeprecatePythonPath experiment) Path to Python, you can use a custom version of Python by modifying this setting to include the full path.",
+                    "description": "Path to Python, you can use a custom version of Python by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
                 "python.condaPath": {
@@ -1737,11 +1817,6 @@
                     "description": "Path to isort script, default using inner version",
                     "default": "",
                     "scope": "resource"
-                },
-                "python.tensorBoard.logDirectory": {
-                    "type": "string",
-                    "description": "Set this setting to your preferred TensorBoard log directory to skip log directory prompt when starting TensorBoard.",
-                    "scope": "application"
                 },
                 "python.terminal.activateEnvironment": {
                     "type": "boolean",
@@ -1858,7 +1933,7 @@
                     "type": "array",
                     "default": [],
                     "description": "Folders in your home directory to look into for virtual environments (supports pyenv, direnv and virtualenvwrapper by default).",
-                    "scope": "machine",
+                    "scope": "resource",
                     "items": {
                         "type": "string"
                     }
@@ -1867,7 +1942,7 @@
                     "type": "string",
                     "default": "",
                     "description": "Path to folder with a list of Virtual Environments (e.g. ~/.pyenv, ~/Envs, ~/.virtualenvs).",
-                    "scope": "machine"
+                    "scope": "resource"
                 },
                 "python.workspaceSymbols.ctagsPath": {
                     "type": "string",
@@ -1973,10 +2048,7 @@
             {
                 "id": "ini",
                 "filenames": [
-                    ".flake8",
-                    ".pep8",
-                    ".pylintrc",
-                    ".pypirc"
+                    ".flake8"
                 ]
             },
             {
@@ -2046,17 +2118,15 @@
         "kill-compile-webviews-watchd": "deemon --kill npm run compile-webviews-watch",
         "checkDependencies": "gulp checkDependencies",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
-        "test:unittests": "mocha --config ./build/.mocha.unittests.json",
-        "test:unittests:cover": "nyc --no-clean --nycrc-path ./build/.nycrc mocha --config ./build/.mocha.unittests.json",
+        "test:unittests": "mocha --config ./build/.mocha.unittests.js.json",
+        "test:unittests:cover": "nyc --no-clean --nycrc-path build/.nycrc mocha --config ./build/.mocha.unittests.ts.json",
         "test:functional": "mocha --require source-map-support/register --config ./build/.mocha.functional.json",
         "test:functional:perf": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --config ./build/.mocha.functional.perf.json",
         "test:functional:memleak": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --config ./build/.mocha.functional.json",
-        "test:functional:cover": "nyc --no-clean --nycrc-path ./build/.nycrc mocha --require source-map-support/register --config ./build/.mocha.functional.json",
-        "test:cover:report": "nyc --nycrc-path ./build/.nycrc  report --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
+        "test:functional:cover": "npm run test:functional",
+        "test:cover:report": "nyc --nycrc-path build/.nycrc  report --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
         "testDebugger": "node ./out/test/testBootstrap.js ./out/test/debuggerTest.js",
-        "testDebugger:cover": "nyc --no-clean --use-spawn-wrap --nycrc-path ./build/.nycrc --require source-map-support/register node ./out/test/debuggerTest.js",
         "testSingleWorkspace": "node ./out/test/testBootstrap.js ./out/test/standardTest.js",
-        "testSingleWorkspace:cover": "nyc --no-clean --use-spawn-wrap --nycrc-path ./build/.nycrc --require source-map-support/register node ./out/test/standardTest.js",
         "preTestJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js",
         "testJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js && cross-env CODE_TESTS_WORKSPACE=src/test VSC_PYTHON_CI_TEST_GREP='Language Server:' node ./out/test/testBootstrap.js ./out/test/standardTest.js && node ./out/test/languageServers/jedi/lspTeardown.js",
         "testMultiWorkspace": "node ./out/test/testBootstrap.js ./out/test/multiRootTest.js",
@@ -2064,37 +2134,43 @@
         "testSmoke": "cross-env INSTALL_JUPYTER_EXTENSION=true \"node ./out/test/smokeTest.js\"",
         "testInsiders": "cross-env VSC_PYTHON_CI_TEST_VSC_CHANNEL=insiders INSTALL_PYLANCE_EXTENSION=true TEST_FILES_SUFFIX=insiders.test CODE_TESTS_WORKSPACE=src/testMultiRootWkspc/smokeTests \"node ./out/test/standardTest.js\"",
         "lint-staged": "node gulpfile.js",
-        "lint": "eslint --ext .ts,.tsx,.js src build",
-        "lint-fix": "eslint --fix --ext .ts,.tsx,.js src build gulpfile.js",
-        "format-check": "prettier --check 'src/**/*.ts' 'src/**/*.tsx' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
-        "format-fix": "prettier --write 'src/**/*.ts' 'src/**/*.tsx' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
+        "lint": "tslint src/**/*.ts -t verbose",
+        "prettier-fix": "prettier 'src/**/*.ts*' --write && prettier 'build/**/*.js' --write",
         "clean": "gulp clean",
-        "addExtensionPackDependencies": "gulp addExtensionPackDependencies",
+        "addExtensionDependencies": "gulp addExtensionDependencies",
         "updateBuildNumber": "gulp updateBuildNumber",
         "verifyBundle": "gulp verifyBundle",
         "webpack": "webpack"
     },
     "dependencies": {
+        "@fortawesome/fontawesome-svg-core": "^1.2.32",
+        "@fortawesome/free-brands-svg-icons": "^5.15.1",
+        "@fortawesome/free-regular-svg-icons": "^5.15.1",
+        "@fortawesome/free-solid-svg-icons": "^5.15.1",
+        "@fortawesome/react-fontawesome": "^0.1.13",
+        "@material-ui/core": "^4.11.1",
+        "@material-ui/lab": "^4.0.0-alpha.57",
         "arch": "^2.1.0",
-        "azure-storage": "^2.10.4",
+        "azure-storage": "^2.10.3",
         "chokidar": "^3.4.3",
         "diff-match-patch": "^1.0.0",
-        "fs-extra": "^9.1.0",
+        "fs-extra": "^4.0.3",
         "fuzzy": "^0.1.3",
         "get-port": "^3.2.0",
         "glob": "^7.1.2",
         "hash.js": "^1.1.7",
         "iconv-lite": "^0.4.21",
-        "inversify": "^5.0.4",
+        "inversify": "^4.11.1",
         "jsonc-parser": "^2.0.3",
         "line-by-line": "^0.1.6",
-        "lodash": "^4.17.21",
+        "lodash": "^4.17.19",
         "log4js": "^6.1.2",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
         "named-js-regexp": "^1.3.3",
         "node-fetch": "^2.6.1",
         "node-stream-zip": "^1.6.0",
+        "pidusage": "^1.2.0",
         "portfinder": "^1.0.25",
         "reflect-metadata": "^0.1.12",
         "request": "^2.87.0",
@@ -2115,11 +2191,11 @@
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.1.4",
-        "vscode-jsonrpc": "6.0.0",
-        "vscode-languageclient": "7.0.0",
-        "vscode-languageserver": "7.0.0",
-        "vscode-languageserver-protocol": "3.16.0",
-        "vscode-tas-client": "^0.1.22",
+        "vscode-jsonrpc": "6.0.0-next.7",
+        "vscode-languageclient": "7.0.0-next.14",
+        "vscode-languageserver": "7.0.0-next.11",
+        "vscode-languageserver-protocol": "3.16.0-next.11",
+        "vscode-tas-client": "^0.1.15",
         "winreg": "^1.2.4",
         "winston": "^3.2.1",
         "xml2js": "^0.4.19"
@@ -2153,7 +2229,7 @@
         "@types/memoize-one": "^4.1.1",
         "@types/mocha": "^5.2.7",
         "@types/nock": "^10.0.3",
-        "@types/node": "^12.19.12",
+        "@types/node": "^10.14.18",
         "@types/promisify-node": "^0.4.0",
         "@types/react": "^16.4.14",
         "@types/react-dom": "^16.0.8",
@@ -2169,7 +2245,7 @@
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
-        "@types/vscode": "~1.53.0",
+        "@types/vscode": "^1.47.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",
@@ -2182,11 +2258,14 @@
         "babel-plugin-transform-runtime": "^6.23.0",
         "babel-polyfill": "^6.26.0",
         "cache-loader": "^4.1.0",
+        "canvas": "^2.6.0",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
         "chai-http": "^4.3.0",
-        "copy-webpack-plugin": "^5.1.2",
+        "codecov": "^3.7.1",
+        "colors": "^1.2.1",
+        "copy-webpack-plugin": "^5.1.1",
         "cors": "^2.8.5",
         "cross-env": "^6.0.3",
         "cross-spawn": "^6.0.5",
@@ -2199,11 +2278,13 @@
         "enzyme-adapter-react-16": "^1.6.0",
         "eslint": "^7.2.0",
         "eslint-config-airbnb": "^18.2.0",
-        "eslint-config-prettier": "^8.3.0",
+        "eslint-config-prettier": "^6.9.0",
         "eslint-plugin-import": "^2.22.0",
         "eslint-plugin-jsx-a11y": "^6.3.1",
+        "eslint-plugin-prettier": "^3.1.2",
         "eslint-plugin-react": "^7.20.3",
         "eslint-plugin-react-hooks": "^4.0.0",
+        "event-stream": "3.3.4",
         "expose-loader": "^0.7.5",
         "express": "^4.17.1",
         "extract-zip": "^1.6.7",
@@ -2215,6 +2296,7 @@
         "gulp": "^4.0.0",
         "gulp-azure-storage": "^0.11.1",
         "gulp-chmod": "^2.0.0",
+        "gulp-filter": "^5.1.0",
         "gulp-gunzip": "^1.1.0",
         "gulp-rename": "^1.4.0",
         "gulp-sourcemaps": "^2.6.4",
@@ -2245,7 +2327,7 @@
         "node-html-parser": "^1.1.13",
         "node-loader": "^1.0.2",
         "nyc": "^15.0.0",
-        "postcss": "^8.2.10",
+        "postcss": "^7.0.27",
         "postcss-cssnext": "^3.1.0",
         "postcss-import": "^12.0.1",
         "postcss-loader": "^3.0.0",
@@ -2253,9 +2335,10 @@
         "range-inclusive": "^1.0.2",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
-        "react-dev-utils": "^11.0.4",
+        "react-dev-utils": "^5.0.2",
         "react-dom": "^16.5.2",
         "react-svgmt": "^1.1.8",
+        "relative": "^3.0.2",
         "remove-files-webpack-plugin": "^1.4.0",
         "requirejs": "^2.3.6",
         "rewiremock": "^3.13.0",
@@ -2263,7 +2346,7 @@
         "serialize-javascript": "^3.1.0",
         "shortid": "^2.2.8",
         "sinon": "^8.0.1",
-        "socket.io": "^2.4.0",
+        "socket.io": "^2.3.0",
         "source-map-support": "^0.5.12",
         "style-loader": "^0.23.1",
         "styled-jsx": "^3.1.0",
@@ -2277,9 +2360,14 @@
         "ts-mockito": "^2.5.0",
         "ts-node": "^8.3.0",
         "tsconfig-paths-webpack-plugin": "^3.2.0",
+        "tslint": "^5.20.1",
+        "tslint-config-prettier": "^1.18.0",
+        "tslint-eslint-rules": "^5.1.0",
+        "tslint-microsoft-contrib": "^5.0.3",
+        "tslint-plugin-prettier": "^2.1.0",
         "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
-        "typescript": "4.1.5",
+        "typescript": "^4.0.2",
         "typescript-formatter": "^7.1.0",
         "unicode-properties": "^1.3.1",
         "url-loader": "^1.1.2",
@@ -2303,8 +2391,5 @@
         "id": "f1f59ae4-9318-4f3c-a9b5-81b2eaa5f8a5",
         "publisherDisplayName": "Microsoft",
         "publisherId": "998b010b-e2af-44a5-a6cd-0b5fd3b9b6f8"
-    },
-    "optionalDependencies": {
-        "canvas": "^2.7.0"
     }
 }
