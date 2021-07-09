@@ -43,9 +43,7 @@ export async function resolveEnv(executablePath: string): Promise<PythonEnvInfo>
     const resolverForKind = resolvers.get(kind)!;
     const resolvedEnv = await resolverForKind(executablePath);
     resolvedEnv.searchLocation = getSearchLocation(resolvedEnv);
-    console.log('Try to resolve');
     if (getOSType() === OSType.Windows) {
-        console.log('Try to resolve2');
         // We can update env further using information we can get from the Windows registry.
         await updateEnvUsingRegistry(resolvedEnv);
     }
@@ -72,10 +70,7 @@ function getSearchLocation(env: PythonEnvInfo): Uri | undefined {
 
 async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
     const interpreters = await getRegistryInterpreters();
-    console.log('Executable to possibly update', env.executable.filename);
-    console.log('Interpreters from register are:', JSON.stringify(interpreters.map((i) => i.interpreterPath)));
     const data = interpreters.find((i) => i.interpreterPath.toUpperCase() === env.executable.filename.toUpperCase());
-    console.log('Data', JSON.stringify(data));
     if (data) {
         const versionStr = data.versionStr ?? data.sysVersionStr ?? data.interpreterPath;
         let version;
@@ -91,7 +86,6 @@ async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
         env.distro.org = data.distroOrgName ?? env.distro.org;
         env.distro.defaultDisplayName = data.companyDisplayName;
         env.source = uniq(env.source.concat(PythonEnvSource.WindowsRegistry));
-        console.log('final env', JSON.stringify(env));
     }
 }
 

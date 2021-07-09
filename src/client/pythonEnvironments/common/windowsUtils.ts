@@ -3,6 +3,7 @@
 
 import { uniqBy } from 'lodash';
 import * as path from 'path';
+import { isTestExecution } from '../../common/constants';
 import { traceError, traceVerbose } from '../../common/logger';
 import {
     HKCU,
@@ -112,7 +113,7 @@ export async function getInterpreterDataFromRegistry(
 let registryInterpreters: IRegistryInterpreterData[] | undefined;
 
 export async function getRegistryInterpreters(ignoreCache = false): Promise<IRegistryInterpreterData[]> {
-    if (!ignoreCache && registryInterpreters !== undefined) {
+    if (!isTestExecution() && !ignoreCache && registryInterpreters !== undefined) {
         return registryInterpreters;
     }
 
