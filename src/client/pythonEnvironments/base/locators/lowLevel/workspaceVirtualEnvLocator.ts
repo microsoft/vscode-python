@@ -2,22 +2,16 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { Uri } from 'vscode';
-import { traceError, traceVerbose } from '../../../../common/logger';
+import { traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
-import {
-    findInterpretersInDir,
-    getEnvironmentDirFromPath,
-    getPythonVersionFromPath,
-    looksLikeBasicVirtualPython,
-} from '../../../common/commonUtils';
-import { getFileInfo, pathExists } from '../../../common/externalDependencies';
+import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
+import { pathExists } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from '../../../discovery/locators/services/pipEnvHelper';
 import {
     isVenvEnvironment,
     isVirtualenvEnvironment,
 } from '../../../discovery/locators/services/virtualEnvironmentIdentifier';
-import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../info';
+import { PythonEnvKind } from '../../info';
 import { buildEnvInfo } from '../../info/env';
 import { IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
@@ -57,38 +51,6 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
 
     return PythonEnvKind.Unknown;
 }
-
-async function buildSimpleVirtualEnvInfo(
-    executablePath: string,
-    kind: PythonEnvKind,
-    source?: PythonEnvSource[],
-): Promise<PythonEnvInfo> {
-    const envInfo = buildEnvInfo({
-        kind,
-        version: await getPythonVersionFromPath(executablePath),
-        executable: executablePath,
-        source: source ?? [PythonEnvSource.Other],
-    });
-    const location = getEnvironmentDirFromPath(executablePath);
-    envInfo.location = location;
-    envInfo.name = path.basename(location);
-    // Search location particularly for virtual environments is intended as the
-    // directory in which the environment was found in. For eg. the default search location
-    // for an env containing 'bin' or 'Scripts' directory is:
-    //
-    // searchLocation <--- Default search location directory
-    // |__ env
-    //    |__ bin or Scripts
-    //        |__ python  <--- executable
-    envInfo.searchLocation = Uri.file(path.dirname(location));
-
-    // TODO: Call a general display name provider here to build display name.
-    const fileData = await getFileInfo(executablePath);
-    envInfo.executable.ctime = fileData.ctime;
-    envInfo.executable.mtime = fileData.mtime;
-    return envInfo;
-}
-
 /**
  * Finds and resolves virtual environments created in workspace roots.
  */
@@ -121,18 +83,8 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
                             // check multiple times. Those checks are file system heavy and
                             // we can use the kind to determine this anyway.
                             const kind = await getVirtualEnvKind(filename);
-
-                            if (kind === PythonEnvKind.Unknown) {
-                                // We don't know the environment type so skip this one.
-                                traceVerbose(`Workspace Virtual Environment: [skipped] ${filename}`);
-                            } else {
-                                try {
-                                    yield buildSimpleVirtualEnvInfo(filename, kind);
-                                    traceVerbose(`Workspace Virtual Environment: [added] ${filename}`);
-                                } catch (ex) {
-                                    traceError(`Failed to process environment: ${filename}`, ex);
-                                }
-                            }
+                            yield buildEnvInfo({ kind, executable: filename });
+                            traceVerbose(`Workspace Virtual Environment: [added] ${filename}`);
                         } else {
                             traceVerbose(`Workspace Virtual Environment: [skipped] ${filename}`);
                         }

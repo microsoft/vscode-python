@@ -4,14 +4,13 @@
 // tslint:disable-next-line:no-single-line-block-comment
 /* eslint-disable max-classes-per-file */
 
-import { uniq } from 'lodash';
 import { Event } from 'vscode';
 import { getSearchPathEntries } from '../../../../common/utils/exec';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { iterPythonExecutablesInDir, looksLikeBasicGlobalPython } from '../../../common/commonUtils';
 import { isPyenvShimDir } from '../../../discovery/locators/services/pyenvLocator';
 import { isWindowsStoreDir } from '../../../discovery/locators/services/windowsStoreLocator';
-import { PythonEnvKind, PythonEnvSource } from '../../info';
+import { PythonEnvKind } from '../../info';
 import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { Locators } from '../../locators';
 import { getEnvs } from '../../locatorUtils';
@@ -90,11 +89,7 @@ function getDirFilesLocator(
     // rather than in each low-level locator.  In the meantime we
     // take a naive approach.
     async function* iterEnvs(query: PythonLocatorQuery): IPythonEnvsIterator {
-        const envs = await getEnvs(locator.iterEnvs(query));
-        for (const env of envs) {
-            env.source = env.source ? uniq([...env.source, PythonEnvSource.PathEnvVar]) : [PythonEnvSource.PathEnvVar];
-            yield env;
-        }
+        yield* await getEnvs(locator.iterEnvs(query));
     }
     return {
         iterEnvs,
