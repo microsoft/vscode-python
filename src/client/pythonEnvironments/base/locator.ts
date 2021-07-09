@@ -11,7 +11,7 @@ import { BasicPythonEnvsChangedEvent, IPythonEnvsWatcher, PythonEnvsChangedEvent
 /**
  * A single update to a previously provided Python env object.
  */
-export type PythonEnvUpdatedEvent = {
+export type PythonEnvUpdatedEvent<I = PythonEnvInfo> = {
     /**
      * The iteration index of The env info that was previously provided.
      */
@@ -19,12 +19,12 @@ export type PythonEnvUpdatedEvent = {
     /**
      * The env info that was previously provided.
      */
-    old?: PythonEnvInfo;
+    old?: I;
     /**
      * The env info that replaces the old info.
      * Update is sent as `undefined` if we find out that the environment is no longer valid.
      */
-    update: PythonEnvInfo | undefined;
+    update: I | undefined;
 };
 
 /**
@@ -58,7 +58,7 @@ export interface IPythonEnvsIterator<I = PythonEnvInfo> extends IAsyncIterableIt
      * If this property is not provided then it means the iterator does
      * not support updates.
      */
-    onUpdated?: Event<PythonEnvUpdatedEvent | null>;
+    onUpdated?: Event<PythonEnvUpdatedEvent<I> | null>;
 }
 
 /**

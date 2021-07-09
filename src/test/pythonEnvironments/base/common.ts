@@ -153,7 +153,7 @@ export class SimpleLocator extends Locator {
     }
 }
 
-export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvInfo[]> {
+export async function getEnvs<I = PythonEnvInfo>(iterator: IPythonEnvsIterator<I>): Promise<I[]> {
     return flattenIterator(iterator);
 }
 

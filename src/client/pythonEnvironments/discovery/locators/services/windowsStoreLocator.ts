@@ -7,8 +7,7 @@ import * as path from 'path';
 import { traceWarning } from '../../../../common/logger';
 import { getEnvironmentVariable } from '../../../../common/utils/platform';
 import { PythonEnvKind } from '../../../base/info';
-import { buildEnvInfo } from '../../../base/info/env';
-import { IPythonEnvsIterator } from '../../../base/locator';
+import { IPythonEnvsIterator, BasicEnvInfo } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { pathExists } from '../../../common/externalDependencies';
 import { PythonEnvStructure } from '../../../common/pythonBinariesWatcher';
@@ -194,7 +193,7 @@ export async function getWindowsStorePythonExes(): Promise<string[]> {
     return [];
 }
 
-export class WindowsStoreLocator extends FSWatchingLocator {
+export class WindowsStoreLocator extends FSWatchingLocator<BasicEnvInfo> {
     private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
 
     constructor() {
@@ -211,15 +210,13 @@ export class WindowsStoreLocator extends FSWatchingLocator {
         });
     }
 
-    protected doIterEnvs(): IPythonEnvsIterator {
+    protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const iterator = async function* (kind: PythonEnvKind) {
             const exes = await getWindowsStorePythonExes();
-            yield* exes.map(async (executable: string) =>
-                buildEnvInfo({
-                    kind,
-                    executable,
-                }),
-            );
+            yield* exes.map(async (executable: string) => ({
+                kind,
+                executable,
+            }));
         };
         return iterator(this.kind);
     }

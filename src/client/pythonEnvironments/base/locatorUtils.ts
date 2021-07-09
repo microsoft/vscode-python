@@ -74,14 +74,14 @@ function getSearchLocationFilters(query: PythonLocatorQuery): ((u: Uri) => boole
  *
  * This includes applying any received updates.
  */
-export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvInfo[]> {
-    const envs: (PythonEnvInfo | undefined)[] = [];
+export async function getEnvs<I = PythonEnvInfo>(iterator: IPythonEnvsIterator<I>): Promise<I[]> {
+    const envs: (I | undefined)[] = [];
 
     const updatesDone = createDeferred<void>();
     if (iterator.onUpdated === undefined) {
         updatesDone.resolve();
     } else {
-        const listener = iterator.onUpdated((event: PythonEnvUpdatedEvent | null) => {
+        const listener = iterator.onUpdated((event: PythonEnvUpdatedEvent<I> | null) => {
             if (event === null) {
                 updatesDone.resolve();
                 listener.dispose();
