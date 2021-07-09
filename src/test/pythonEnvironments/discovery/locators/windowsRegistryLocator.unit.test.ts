@@ -9,7 +9,6 @@ import {
     PythonEnvInfo,
     PythonEnvKind,
     PythonEnvSource,
-    PythonReleaseLevel,
     PythonVersion,
     UNKNOWN_PYTHON_VERSION,
 } from '../../../../client/pythonEnvironments/base/info';
@@ -20,7 +19,7 @@ import * as winreg from '../../../../client/pythonEnvironments/common/windowsReg
 import * as winutils from '../../../../client/pythonEnvironments/common/windowsUtils';
 import { WindowsRegistryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
+import { assertEnvsEqual } from './envTestUtils';
 
 suite('Windows Registry', () => {
     let stubReadRegistryValues: sinon.SinonStub;
@@ -338,59 +337,5 @@ suite('Windows Registry', () => {
         );
 
         assertEnvsEqual(actualEnvs, expectedEnvs);
-    });
-
-    test('resolveEnv(string)', async () => {
-        const expected: PythonEnvInfo = await getExpectedDataFromKey(
-            { arch: 'x64', hive: winreg.HKLM, key: '\\SOFTWARE\\Python\\PythonCore\\3.9' },
-            'PythonCore',
-        );
-        const interpreterPath = path.join(regTestRoot, 'py39', 'python.exe');
-
-        const actual = await locator.resolveEnv(interpreterPath);
-
-        assertEnvEqual(actual, expected);
-    });
-
-    test('resolveEnv(PythonEnvInfo)', async () => {
-        const expected: PythonEnvInfo = await getExpectedDataFromKey(
-            { arch: 'x64', hive: winreg.HKLM, key: '\\SOFTWARE\\Python\\PythonCore\\3.9' },
-            'PythonCore',
-        );
-        const interpreterPath = path.join(regTestRoot, 'py39', 'python.exe');
-
-        // Partially filled in env info object
-        const input: PythonEnvInfo = {
-            name: '',
-            location: '',
-            kind: PythonEnvKind.Unknown,
-            distro: { org: '' },
-            arch: Architecture.x64,
-            executable: {
-                filename: interpreterPath,
-                sysPrefix: '',
-                ctime: -1,
-                mtime: -1,
-            },
-            version: {
-                major: -1,
-                minor: -1,
-                micro: -1,
-                release: { level: PythonReleaseLevel.Final, serial: -1 },
-            },
-            source: [],
-        };
-
-        const actual = await locator.resolveEnv(input);
-
-        assertEnvEqual(actual, expected);
-    });
-
-    test('resolveEnv(string): unknown interpreter', async () => {
-        const interpreterPath = path.join(regTestRoot, 'unknown_python.exe');
-
-        const actual = await locator.resolveEnv(interpreterPath);
-
-        assert.deepStrictEqual(actual, undefined);
     });
 });
