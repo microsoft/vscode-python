@@ -449,6 +449,7 @@ suite('Resolver Utils', () => {
             sinon.stub(winreg, 'readRegistryValues').callsFake(fakeRegistryValues);
             sinon.stub(winreg, 'readRegistryKeys').callsFake(fakeRegistryKeys);
             sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
+            sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
         });
 
         teardown(() => {
