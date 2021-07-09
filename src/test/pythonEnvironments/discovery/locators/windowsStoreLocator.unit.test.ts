@@ -91,7 +91,7 @@ suite('Windows Store', () => {
 
         function createExpectedInfo(executable: string): BasicEnvInfo {
             return {
-                executable,
+                executablePath: executable,
                 kind: PythonEnvKind.WindowsStore,
             };
         }
@@ -133,7 +133,9 @@ suite('Windows Store', () => {
             ];
 
             const iterator = locator.iterEnvs();
-            const actualEnvs = (await getEnvs(iterator)).sort((a, b) => a.executable.localeCompare(b.executable));
+            const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
+                a.executablePath.localeCompare(b.executablePath),
+            );
 
             assertBasicEnvsEqual(actualEnvs, expectedEnvs);
         });

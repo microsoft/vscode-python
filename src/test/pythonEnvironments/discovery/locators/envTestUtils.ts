@@ -74,8 +74,8 @@ export function assertEnvsEqual(
 }
 
 export function assertBasicEnvsEqual(actualEnvs: BasicEnvInfo[], expectedEnvs: BasicEnvInfo[]): void {
-    actualEnvs = actualEnvs.sort((a, b) => a.executable.localeCompare(b.executable));
-    expectedEnvs = expectedEnvs.sort((a, b) => a.executable.localeCompare(b.executable));
+    actualEnvs = actualEnvs.sort((a, b) => a.executablePath.localeCompare(b.executablePath));
+    expectedEnvs = expectedEnvs.sort((a, b) => a.executablePath.localeCompare(b.executablePath));
     assert.deepStrictEqual(actualEnvs.length, expectedEnvs.length, 'Number of envs');
     zip(actualEnvs, expectedEnvs).forEach((value) => {
         const [actual, expected] = value;

@@ -213,9 +213,9 @@ export class WindowsStoreLocator extends FSWatchingLocator<BasicEnvInfo> {
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const iterator = async function* (kind: PythonEnvKind) {
             const exes = await getWindowsStorePythonExes();
-            yield* exes.map(async (executable: string) => ({
+            yield* exes.map(async (executablePath: string) => ({
                 kind,
-                executable,
+                executablePath,
             }));
         };
         return iterator(this.kind);
