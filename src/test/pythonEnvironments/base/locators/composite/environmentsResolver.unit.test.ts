@@ -14,7 +14,6 @@ import * as platformApis from '../../../../../client/common/utils/platform';
 import {
     PythonEnvInfo,
     PythonEnvKind,
-    PythonEnvSource,
     PythonVersion,
     UNKNOWN_PYTHON_VERSION,
 } from '../../../../../client/pythonEnvironments/base/info';
@@ -235,7 +234,7 @@ suite('Python envs locator - Environments Resolver', () => {
                 arch: Architecture.Unknown,
                 distro: { org: '' },
                 searchLocation: Uri.file(path.dirname(location)),
-                source: [PythonEnvSource.Other],
+                source: [],
             };
         }
         setup(() => {
