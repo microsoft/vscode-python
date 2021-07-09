@@ -15,7 +15,7 @@ import {
     resolvePythonExeGlobs,
     watchLocationForPythonBinaries,
 } from '../../../common/pythonBinariesWatcher';
-import { PythonEnvKind } from '../../info';
+import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
 
 export enum FSWatcherKind {
@@ -53,7 +53,7 @@ function checkDirWatchable(dirname: string): DirUnwatchableReason {
  *
  * Subclasses can call `this.emitter.fire()` * to emit events.
  */
-export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
+export abstract class FSWatchingLocator<I = PythonEnvInfo> extends LazyResourceBasedLocator<I> {
     constructor(
         /**
          * Location(s) to watch for python binaries.

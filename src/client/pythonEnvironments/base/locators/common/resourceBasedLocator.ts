@@ -3,6 +3,7 @@
 
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
+import { PythonEnvInfo } from '../../info';
 import { IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator';
 
 /**
@@ -17,7 +18,7 @@ import { IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator'
  *
  * Otherwise it will leak (and we have no leak detection).
  */
-export abstract class LazyResourceBasedLocator extends Locator implements IDisposable {
+export abstract class LazyResourceBasedLocator<I = PythonEnvInfo> extends Locator<I> implements IDisposable {
     protected readonly disposables = new Disposables();
 
     // This will be set only once we have to create necessary resources
@@ -30,7 +31,7 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
         await this.disposables.dispose();
     }
 
-    public async *iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+    public async *iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<I> {
         await this.ensureResourcesReady();
         yield* this.doIterEnvs(query);
         // There is not need to wait for the watchers to get started.
@@ -40,7 +41,7 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
     /**
      * The subclass implementation of iterEnvs().
      */
-    protected abstract doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator;
+    protected abstract doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<I>;
 
     /**
      * This is where subclasses get their resources ready.
