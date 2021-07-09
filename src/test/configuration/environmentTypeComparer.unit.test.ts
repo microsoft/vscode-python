@@ -233,12 +233,6 @@ suite('Environment sorting', () => {
 suite('getEnvTypeHeuristic tests', () => {
     const workspacePath = path.join('path', 'to', 'workspace');
 
-    // case EnvironmentType.Conda:
-    //     case EnvironmentType.VirtualEnv:
-    //     case EnvironmentType.VirtualEnvWrapper:
-    //     case EnvironmentType.Pipenv:
-    //     case EnvironmentType.Poetry:
-
     const localGlobalEnvTypes = [
         EnvironmentType.Venv,
         EnvironmentType.Conda,

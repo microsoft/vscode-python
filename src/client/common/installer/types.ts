@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, Uri } from 'vscode';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { ModuleInstallerType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { Product, ProductType, Resource } from '../types';
 
 export type InterpreterUri = Resource | PythonEnvironment;
@@ -12,6 +12,7 @@ export interface IModuleInstaller {
     readonly name: string;
     readonly displayName: string;
     readonly priority: number;
+    readonly type: ModuleInstallerType;
     /**
      * Installs a module
      * If a cancellation token is provided, then a cancellable progress message is dispalyed.

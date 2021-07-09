@@ -17,7 +17,7 @@ import { MockProcessService } from '../../mocks/proc';
 import { registerForIOC } from '../../pythonEnvironments/legacyIOC';
 import { lookForTestFile } from '../helper';
 import { UnitTestIocContainer } from '../serviceRegistry';
-import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
+import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
 
 const PYTHON_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles');
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'noseFiles');

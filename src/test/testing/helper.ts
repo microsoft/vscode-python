@@ -11,18 +11,20 @@ export const RESOURCE = Uri.file(__filename);
 
 export function lookForTestFile(tests: Tests, testFile: string) {
     let found: boolean;
+    const pathTokens = testFile.split(sep);
+    const fileName = pathTokens[pathTokens.length - 1];
     // Perform case insensitive search on windows.
     if (IS_WINDOWS) {
         // In the mock output, we'd have paths separated using '/' (but on windows, path separators are '\')
-        const testFileToSearch = testFile.split(sep).join('/');
+        const testFileToSearch = pathTokens.join('/');
         found = tests.testFiles.some(
             (t) =>
-                (t.name.toUpperCase() === testFile.toUpperCase() ||
-                    t.name.toUpperCase() === testFileToSearch.toUpperCase()) &&
-                t.nameToRun.toUpperCase() === t.name.toUpperCase(),
+                (t.name === fileName && t.nameToRun === testFile) ||
+                (t.name.toUpperCase() === fileName.toUpperCase() &&
+                    t.nameToRun.toUpperCase() === testFileToSearch.toUpperCase()),
         );
     } else {
-        found = tests.testFiles.some((t) => t.name === testFile && t.nameToRun === t.name);
+        found = tests.testFiles.some((t) => t.name === fileName && t.nameToRun === testFile);
     }
     assert.equal(found, true, `Test File not found '${testFile}'`);
 }

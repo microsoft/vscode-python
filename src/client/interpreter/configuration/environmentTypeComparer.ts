@@ -3,6 +3,7 @@
 
 import { injectable, inject } from 'inversify';
 import { getArchitectureDisplayName } from '../../common/platform/registry';
+import { isParentPath } from '../../pythonEnvironments/common/externalDependencies';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { PythonVersion } from '../../pythonEnvironments/info/pythonVersion';
 import { IInterpreterHelper } from '../contracts';
@@ -33,8 +34,8 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
      * Return 0 if both environments are equal, -1 if a should be closer to the beginning of the list, or 1 if a comes after b.
      *
      * The comparison guidelines are:
-     * 1. Local environments first (.venv);
-     * 2. Global environments next (pipenv, conda), with conda environments at a lower priority, and "base" being last;
+     * 1. Local environments first (same path as the workspace root);
+     * 2. Global environments next (anything not local), with conda environments at a lower priority, and "base" being last;
      * 3. Globally-installed interpreters (/usr/bin/python3, Windows Store).
      *
      * Always sort with newest version of Python first within each subgroup.
@@ -167,13 +168,12 @@ function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment, work
 export function getEnvTypeHeuristic(environment: PythonEnvironment, workspacePath: string): EnvTypeHeuristic {
     const { envType } = environment;
 
+    if (workspacePath.length > 0 && environment.envPath && isParentPath(environment.envPath, workspacePath)) {
+        return EnvTypeHeuristic.Local;
+    }
+
     switch (envType) {
-        case EnvironmentType.Venv: {
-            if (workspacePath.length > 0 && environment.envPath?.startsWith(workspacePath)) {
-                return EnvTypeHeuristic.Local;
-            }
-            return EnvTypeHeuristic.Global;
-        }
+        case EnvironmentType.Venv:
         case EnvironmentType.Conda:
         case EnvironmentType.VirtualEnv:
         case EnvironmentType.VirtualEnvWrapper:

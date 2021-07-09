@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import type { TextDocument, Uri } from 'vscode';
-import { NotebookCellScheme } from '../constants';
+import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
 import { InterpreterUri } from '../installer/types';
 import { Resource } from '../types';
 import { isPromise } from './async';
@@ -145,5 +145,5 @@ export function getURIFilter(
 
 export function isNotebookCell(documentOrUri: TextDocument | Uri): boolean {
     const uri = isUri(documentOrUri) ? documentOrUri : documentOrUri.uri;
-    return uri.scheme.includes(NotebookCellScheme);
+    return uri.scheme.includes(NotebookCellScheme) || uri.scheme.includes(InteractiveInputScheme);
 }

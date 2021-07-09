@@ -452,7 +452,20 @@ suite('Unit Tests - Unittest - Discovery', () => {
                 );
             }
         });
+
+        // Check that the visible folder name is just the last item in the path, not the whole path
+        tests.testFolders.forEach((folder) => {
+            const pathItems = folder.nameToRun.split(path.sep);
+            expect(pathItems[pathItems.length - 1]).to.equal(folder.name);
+        });
+
+        // Check that the visible file name is just the last item in the path, not the whole path
+        tests.testFiles.forEach((file) => {
+            const pathItems = file.nameToRun.split('.');
+            expect(pathItems[pathItems.length - 1] + '.py').to.equal(file.name);
+        });
     });
+
     test('Ensure discovery resolves test suites in n-depth directories when no start directory is given', async () => {
         const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor(), serviceContainer.object);
 
