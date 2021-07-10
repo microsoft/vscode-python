@@ -124,6 +124,9 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
             const deferred = createDeferred<void>();
             this.autoSelectedWorkspacePromises.set(key, deferred);
 
+            await this.initializeStore(resource);
+            await this.clearWorkspaceStoreIfInvalid(resource);
+
             if (await this.experimentService.inExperiment(EnvironmentSorting.experiment)) {
                 await this.autoselectInterpreterWithLocators(resource);
             } else {
@@ -239,8 +242,6 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
     }
 
     private async autoselectInterpreterWithRules(resource: Resource): Promise<void> {
-        await this.initializeStore(resource);
-        await this.clearWorkspaceStoreIfInvalid(resource);
         await this.userDefinedInterpreter.autoSelectInterpreter(resource, this);
 
         this.didAutoSelectedInterpreterEmitter.fire();
