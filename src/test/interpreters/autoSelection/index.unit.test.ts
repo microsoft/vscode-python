@@ -4,11 +4,13 @@
 'use strict';
 
 import { expect } from 'chai';
+import * as path from 'path';
 import { SemVer } from 'semver';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
+import { EnvironmentSorting } from '../../../client/common/experiments/groups';
 import { ExperimentService } from '../../../client/common/experiments/service';
 import { PersistentState, PersistentStateFactory } from '../../../client/common/persistentState';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
@@ -27,9 +29,11 @@ import {
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionProxyService,
 } from '../../../client/interpreter/autoSelection/types';
-import { IInterpreterHelper } from '../../../client/interpreter/contracts';
+import { EnvironmentTypeComparer } from '../../../client/interpreter/configuration/environmentTypeComparer';
+import { IInterpreterHelper, IInterpreterService, WorkspacePythonPath } from '../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -50,6 +54,7 @@ suite('Interpreters - Auto Selection', () => {
     let helper: IInterpreterHelper;
     let proxy: IInterpreterAutoSelectionProxyService;
     let experiments: IExperimentService;
+    let interpreterService: IInterpreterService;
     class InterpreterAutoSelectionServiceTest extends InterpreterAutoSelectionService {
         public initializeStore(resource: Resource): Promise<void> {
             return super.initializeStore(resource);
@@ -77,12 +82,19 @@ suite('Interpreters - Auto Selection', () => {
         helper = mock(InterpreterHelper);
         proxy = mock(InterpreterAutoSelectionProxyService);
         experiments = mock(ExperimentService);
+        interpreterService = mock(InterpreterService);
+
+        const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
+
         when(experiments.inExperimentSync(anything())).thenReturn(false);
 
         autoSelectionService = new InterpreterAutoSelectionServiceTest(
             instance(workspaceService),
             instance(stateFactory),
             instance(fs),
+            instance(experiments),
+            instance(interpreterService),
+            interpreterComparer,
             instance(systemInterpreter),
             instance(currentPathInterpreter),
             instance(winRegInterpreter),
@@ -105,44 +117,143 @@ suite('Interpreters - Auto Selection', () => {
         verify(winRegInterpreter.setNextRule(instance(systemInterpreter))).once();
         verify(systemInterpreter.setNextRule(anything())).never();
     });
-    test('Run rules in background', async () => {
-        let eventFired = false;
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
-            eventFired = true;
+
+    suite('When using rule-based auto-selection', () => {
+        setup(() => {
+            when(experiments.inExperiment(EnvironmentSorting.experiment)).thenResolve(false);
         });
-        autoSelectionService.initializeStore = () => Promise.resolve();
-        await autoSelectionService.autoSelectInterpreter(undefined);
 
-        expect(eventFired).to.deep.equal(true, 'event not fired');
+        test('Run rules in background', async () => {
+            let eventFired = false;
+            autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
+                eventFired = true;
+            });
+            autoSelectionService.initializeStore = () => Promise.resolve();
+            await autoSelectionService.autoSelectInterpreter(undefined);
 
-        const allRules = [
-            userDefinedInterpreter,
-            winRegInterpreter,
-            currentPathInterpreter,
-            systemInterpreter,
-            workspaceInterpreter,
-            cachedPaths,
-        ];
-        for (const service of allRules) {
-            verify(service.autoSelectInterpreter(undefined)).once();
-            if (service !== userDefinedInterpreter) {
-                verify(service.autoSelectInterpreter(anything(), autoSelectionService)).never();
+            expect(eventFired).to.deep.equal(true, 'event not fired');
+
+            const allRules = [
+                userDefinedInterpreter,
+                winRegInterpreter,
+                currentPathInterpreter,
+                systemInterpreter,
+                workspaceInterpreter,
+                cachedPaths,
+            ];
+            for (const service of allRules) {
+                verify(service.autoSelectInterpreter(undefined)).once();
+                if (service !== userDefinedInterpreter) {
+                    verify(service.autoSelectInterpreter(anything(), autoSelectionService)).never();
+                }
             }
-        }
-        verify(userDefinedInterpreter.autoSelectInterpreter(anything(), autoSelectionService)).once();
-    });
-    test('Run userDefineInterpreter as the first rule', async () => {
-        let eventFired = false;
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
-            eventFired = true;
+            verify(userDefinedInterpreter.autoSelectInterpreter(anything(), autoSelectionService)).once();
         });
-        autoSelectionService.initializeStore = () => Promise.resolve();
 
-        await autoSelectionService.autoSelectInterpreter(undefined);
+        test('Run userDefineInterpreter as the first rule', async () => {
+            let eventFired = false;
+            autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
+                eventFired = true;
+            });
+            autoSelectionService.initializeStore = () => Promise.resolve();
 
-        expect(eventFired).to.deep.equal(true, 'event not fired');
-        verify(userDefinedInterpreter.autoSelectInterpreter(undefined, autoSelectionService)).once();
+            await autoSelectionService.autoSelectInterpreter(undefined);
+
+            expect(eventFired).to.deep.equal(true, 'event not fired');
+            verify(userDefinedInterpreter.autoSelectInterpreter(undefined, autoSelectionService)).once();
+        });
     });
+
+    suite('When using locator-based auto-selection', () => {
+        let workspacePath: string;
+        let resource: Uri;
+        let eventFired: boolean;
+
+        setup(() => {
+            workspacePath = path.join('path', 'to', 'workspace');
+            resource = Uri.parse('resource');
+            eventFired = false;
+
+            const folderUri = { fsPath: workspacePath };
+
+            when(helper.getActiveWorkspaceUri(anything())).thenReturn({
+                folderUri,
+            } as WorkspacePythonPath);
+            when(
+                stateFactory.createWorkspacePersistentState<PythonEnvironment | undefined>(anyString(), undefined),
+            ).thenReturn(instance(state));
+            when(
+                stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
+                    preferredGlobalInterpreter,
+                    undefined,
+                ),
+            ).thenReturn(instance(state));
+            when(workspaceService.getWorkspaceFolderIdentifier(anything(), '')).thenReturn('workspaceIdentifier');
+            when(experiments.inExperiment(EnvironmentSorting.experiment)).thenResolve(true);
+
+            autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
+                eventFired = true;
+            });
+            autoSelectionService.initializeStore = () => Promise.resolve();
+        });
+
+        test('If there is a local environment select it', async () => {
+            const localEnv = {
+                envType: EnvironmentType.Venv,
+                envPath: path.join(workspacePath, '.venv'),
+                version: { major: 3, minor: 10, patch: 0 },
+            } as PythonEnvironment;
+
+            when(interpreterService.getInterpreters(resource)).thenResolve([
+                {
+                    envType: EnvironmentType.Conda,
+                    envPath: path.join('some', 'conda', 'env'),
+                    version: { major: 3, minor: 7, patch: 2 },
+                } as PythonEnvironment,
+                {
+                    envType: EnvironmentType.System,
+                    envPath: path.join('/', 'usr', 'bin'),
+                    version: { major: 3, minor: 9, patch: 1 },
+                } as PythonEnvironment,
+                localEnv,
+            ]);
+
+            await autoSelectionService.autoSelectInterpreter(resource);
+
+            expect(eventFired).to.deep.equal(true, 'event not fired');
+            verify(interpreterService.getInterpreters(resource)).once();
+            verify(state.updateValue(localEnv)).once();
+        });
+
+        test('If there are no local environments, return a globally-installed interpreter', async () => {
+            const systemEnv = {
+                envType: EnvironmentType.System,
+                envPath: path.join('/', 'usr', 'bin'),
+                version: { major: 3, minor: 9, patch: 1 },
+            } as PythonEnvironment;
+
+            when(interpreterService.getInterpreters(resource)).thenResolve([
+                {
+                    envType: EnvironmentType.Conda,
+                    envPath: path.join('some', 'conda', 'env'),
+                    version: { major: 3, minor: 7, patch: 2 },
+                } as PythonEnvironment,
+                systemEnv,
+                {
+                    envType: EnvironmentType.Pipenv,
+                    envPath: path.join('some', 'pipenv', 'env'),
+                    version: { major: 3, minor: 10, patch: 0 },
+                } as PythonEnvironment,
+            ]);
+
+            await autoSelectionService.autoSelectInterpreter(resource);
+
+            expect(eventFired).to.deep.equal(true, 'event not fired');
+            verify(interpreterService.getInterpreters(resource)).once();
+            verify(state.updateValue(systemEnv)).once();
+        });
+    });
+
     test('Initialize the store', async () => {
         let initialize = false;
         let eventFired = false;
@@ -194,6 +305,12 @@ suite('Interpreters - Auto Selection', () => {
     test('Should not clear file stored in cache if it does exist', async () => {
         const pythonPath = 'Hello World';
         const interpreterInfo = { path: pythonPath } as any;
+        when(
+            stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
+                preferredGlobalInterpreter,
+                undefined,
+            ),
+        ).thenReturn(instance(state));
         when(
             stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
                 preferredGlobalInterpreter,
