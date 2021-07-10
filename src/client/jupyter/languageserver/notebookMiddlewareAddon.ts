@@ -136,11 +136,9 @@ export class NotebookMiddlewareAddon implements Middleware, Disposable {
                 // in the document anymore.
                 next(newDoc);
             }
-
-            next(document);
-        } else {
-            next(document);
         }
+
+        next(document);
 
         return () => {
             // Do nothing
