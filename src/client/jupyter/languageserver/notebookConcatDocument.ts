@@ -71,9 +71,11 @@ export class NotebookConcatDocument implements TextDocument, IDisposable {
         return this.onCellsChangedEmitter.event;
     }
 
-    public firedOpen = false;
+    public get isComposeDocumentsAllClosed(): boolean {
+        return this.concatDocument.isComposeDocumentsAllClosed;
+    }
 
-    public firedClose = false;
+    public firedOpen = false;
 
     public concatDocument: IConcatTextDocument;
 

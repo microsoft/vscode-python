@@ -8,6 +8,7 @@ export interface IConcatTextDocument {
     isClosed: boolean;
     lineCount: number;
     languageId: string;
+    isComposeDocumentsAllClosed: boolean;
     getText(range?: Range): string;
     contains(uri: Uri): boolean;
     offsetAt(position: Position): number;
