@@ -18,8 +18,8 @@ function getIdentifiers(): Map<PythonEnvKind, (path: string) => Promise<boolean>
     const notImplemented = () => Promise.resolve(false);
     const defaultTrue = () => Promise.resolve(true);
     const identifier: Map<PythonEnvKind, (path: string) => Promise<boolean>> = new Map();
-    Object.keys(PythonEnvKind).forEach((k: string) => {
-        identifier.set(k as PythonEnvKind, notImplemented);
+    Object.values(PythonEnvKind).forEach((k) => {
+        identifier.set(k, notImplemented);
     });
 
     identifier.set(PythonEnvKind.Conda, isCondaEnvironment);

@@ -11,7 +11,7 @@ import { Disposables, IDisposable } from '../../../../common/utils/resourceLifec
 import { iterPythonExecutablesInDir, looksLikeBasicGlobalPython } from '../../../common/commonUtils';
 import { isPyenvShimDir } from '../../../discovery/locators/services/pyenvLocator';
 import { isWindowsStoreDir } from '../../../discovery/locators/services/windowsStoreLocator';
-import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../info';
+import { PythonEnvKind, PythonEnvSource } from '../../info';
 import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { Locators } from '../../locators';
 import { getEnvs } from '../../locatorUtils';
@@ -63,10 +63,6 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
         // locators).
         return this.locators.iterEnvs(query);
     }
-
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        return this.locators.resolveEnv(env);
-    }
 }
 
 async function* getExecutables(dirname: string): AsyncIterableIterator<string> {
@@ -100,25 +96,8 @@ function getDirFilesLocator(
             yield env;
         }
     }
-    async function resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const executable = typeof env === 'string' ? env : env.executable?.filename || '';
-
-        if (!(await looksLikeBasicGlobalPython(executable))) {
-            return undefined;
-        }
-        const resolved = await locator.resolveEnv(env);
-        if (resolved) {
-            const source =
-                typeof env === 'string'
-                    ? [PythonEnvSource.PathEnvVar]
-                    : uniq([...env.source, PythonEnvSource.PathEnvVar]);
-            resolved.source = source;
-        }
-        return resolved;
-    }
     return {
         iterEnvs,
-        resolveEnv,
         dispose,
         onChanged: locator.onChanged,
     };

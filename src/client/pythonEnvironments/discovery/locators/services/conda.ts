@@ -11,6 +11,7 @@ import { getRegistryInterpreters } from '../../../common/windowsUtils';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { IDisposable } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
+import { isTestExecution } from '../../../../common/constants';
 
 export const AnacondaCompanyNames = ['Anaconda, Inc.', 'Continuum Analytics, Inc.'];
 
@@ -208,6 +209,14 @@ export async function getPythonVersionFromConda(interpreterPath: string): Promis
  */
 export class Conda {
     /**
+     * Locating conda binary is expensive, since it potentially involves spawning or
+     * trying to spawn processes; so it's done lazily and asynchronously. Methods that
+     * need a Conda instance should use getConda() to obtain it, and should never access
+     * this property directly.
+     */
+    private static condaPromise: Promise<Conda | undefined> | undefined;
+
+    /**
      * Creates a Conda service corresponding to the corresponding "conda" command.
      *
      * @param command - Command used to spawn conda. This has the same meaning as the
@@ -215,13 +224,21 @@ export class Conda {
      */
     constructor(readonly command: string) {}
 
+    public static async getConda(): Promise<Conda | undefined> {
+        traceVerbose(`Searching for conda.`);
+        if (this.condaPromise === undefined || isTestExecution()) {
+            this.condaPromise = Conda.locate();
+        }
+        return this.condaPromise;
+    }
+
     /**
      * Locates the preferred "conda" utility on this system by considering user settings,
      * binaries on PATH, Python interpreters in the registry, and known install locations.
      *
      * @return A Conda instance corresponding to the binary, if successful; otherwise, undefined.
      */
-    public static async locate(): Promise<Conda | undefined> {
+    private static async locate(): Promise<Conda | undefined> {
         const home = getUserHomeDir();
         const suffix = getOSType() === OSType.Windows ? 'Scripts\\conda.exe' : 'bin/conda';
 

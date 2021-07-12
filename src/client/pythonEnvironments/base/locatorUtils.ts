@@ -5,9 +5,8 @@ import { Uri } from 'vscode';
 import { traceVerbose } from '../../common/logger';
 import { createDeferred } from '../../common/utils/async';
 import { getURIFilter } from '../../common/utils/misc';
-import { IDisposable } from '../../common/utils/resourceLifecycle';
 import { PythonEnvInfo } from './info';
-import { getEnvMatcher, getMaxDerivedEnvInfo } from './info/env';
+import { getMaxDerivedEnvInfo } from './info/env';
 import { IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from './locator';
 
 /**
@@ -164,42 +163,4 @@ export async function* iterAndUpdateEnvs(
         // emitted yet (because `done` wasn't `true` yet).
         notify(null);
     }
-}
-
-/**
- * Naively implement `ILocator.resolveEnv()` by searching through an iterator.
- */
-export async function resolveEnvFromIterator(
-    env: string | Partial<PythonEnvInfo>,
-    iterator: IPythonEnvsIterator,
-): Promise<PythonEnvInfo | undefined> {
-    let resolved: PythonEnvInfo | undefined;
-
-    const matchEnv = getEnvMatcher(env);
-
-    let listener: IDisposable | undefined;
-    const done = createDeferred<void>();
-    if (iterator.onUpdated !== undefined) {
-        listener = iterator.onUpdated((event: PythonEnvUpdatedEvent | null) => {
-            if (event === null) {
-                done.resolve();
-            } else if (!event.update || matchEnv(event.update)) {
-                resolved = event.update;
-            }
-        });
-    } else {
-        done.resolve();
-    }
-    for await (const iterated of iterator) {
-        if (matchEnv(iterated)) {
-            resolved = iterated;
-        }
-    }
-    await done.promise;
-
-    if (listener !== undefined) {
-        listener.dispose();
-    }
-
-    return resolved;
 }

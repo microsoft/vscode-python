@@ -17,7 +17,7 @@ import { parseVersion } from '../../../../client/pythonEnvironments/base/info/py
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PosixKnownPathsLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/posixKnownPathsLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
+import { assertEnvsEqual } from './envTestUtils';
 
 suite('Posix Known Path Locator', () => {
     let getPathEnvVar: sinon.SinonStub;
@@ -87,44 +87,5 @@ suite('Posix Known Path Locator', () => {
             .filter((e) => e.executable.filename.indexOf('posixroot') > 0)
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
         assertEnvsEqual(actualEnvs, expectedEnvs);
-    });
-
-    test('resolveEnv(string)', async () => {
-        const pythonPath = path.join(testLocation1, 'python');
-        const expected = createExpectedEnvInfo(pythonPath);
-
-        const actual = await locator.resolveEnv(pythonPath);
-        assertEnvEqual(actual, expected);
-    });
-
-    test('resolveEnv(PythonEnvInfo)', async () => {
-        const pythonPath = path.join(testLocation1, 'python');
-        const expected = createExpectedEnvInfo(pythonPath);
-
-        // Partially filled in env info object
-        const input: PythonEnvInfo = {
-            name: '',
-            location: '',
-            kind: PythonEnvKind.Unknown,
-            distro: { org: '' },
-            arch: Architecture.Unknown,
-            executable: {
-                filename: pythonPath,
-                sysPrefix: '',
-                ctime: -1,
-                mtime: -1,
-            },
-            version: {
-                major: -1,
-                minor: -1,
-                micro: -1,
-                release: { level: PythonReleaseLevel.Final, serial: -1 },
-            },
-            source: [],
-        };
-
-        const actual = await locator.resolveEnv(input);
-
-        assertEnvEqual(actual, expected);
     });
 });

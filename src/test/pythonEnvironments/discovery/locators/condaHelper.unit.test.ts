@@ -169,7 +169,7 @@ suite('Conda and its environments are located correctly', () => {
     async function expectConda(expectedPath: string) {
         const expectedInfo = JSON.parse(getFile(expectedPath) as string);
 
-        const conda = await Conda.locate();
+        const conda = await Conda.getConda();
         expect(conda).to.not.equal(undefined, 'conda should not be missing');
 
         const info = await conda!.getInfo();
@@ -287,7 +287,7 @@ suite('Conda and its environments are located correctly', () => {
 
     suite('Conda binary is located correctly', () => {
         test('Must not find conda if it is missing', async () => {
-            const conda = await Conda.locate();
+            const conda = await Conda.getConda();
             expect(conda).to.equal(undefined, 'conda should be missing');
         });
 
