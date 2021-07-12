@@ -19,6 +19,7 @@ import { parsePyenvVersion } from '../../../discovery/locators/services/pyenvLoc
 import { Architecture, getOSType, OSType } from '../../../../common/utils/platform';
 import { getPythonVersionFromPath as parsePythonVersionFromPath, parseVersion } from '../../info/pythonVersion';
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
+import { BasicEnvInfo } from '../../locator';
 
 function getResolvers(): Map<PythonEnvKind, (executablePath: string) => Promise<PythonEnvInfo>> {
     const resolvers = new Map<PythonEnvKind, (_: string) => Promise<PythonEnvInfo>>();
@@ -39,6 +40,10 @@ function getResolvers(): Map<PythonEnvKind, (executablePath: string) => Promise<
  */
 export async function resolveEnv(executablePath: string): Promise<PythonEnvInfo> {
     const kind = await identifyEnvironment(executablePath);
+    return resolveEnvFromKind({ kind, executablePath });
+}
+
+export async function resolveEnvFromKind({ kind, executablePath }: BasicEnvInfo): Promise<PythonEnvInfo> {
     const resolvers = getResolvers();
     const resolverForKind = resolvers.get(kind)!;
     const resolvedEnv = await resolverForKind(executablePath);
