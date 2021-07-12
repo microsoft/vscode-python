@@ -72,19 +72,19 @@ export function createNamedEnv(
     return env;
 }
 
-export class SimpleLocator extends Locator {
+export class SimpleLocator<I = PythonEnvInfo> extends Locator<I> {
     private deferred = createDeferred<void>();
 
     constructor(
-        private envs: PythonEnvInfo[],
+        private envs: I[],
         public callbacks: {
             resolve?: null | ((env: PythonEnvInfo) => Promise<PythonEnvInfo | undefined>);
             before?: Promise<void>;
             after?: Promise<void>;
-            onUpdated?: Event<PythonEnvUpdatedEvent | null>;
-            beforeEach?(e: PythonEnvInfo): Promise<void>;
-            afterEach?(e: PythonEnvInfo): Promise<void>;
-            onQuery?(query: PythonLocatorQuery | undefined, envs: PythonEnvInfo[]): Promise<PythonEnvInfo[]>;
+            onUpdated?: Event<PythonEnvUpdatedEvent<I> | null>;
+            beforeEach?(e: I): Promise<void>;
+            afterEach?(e: I): Promise<void>;
+            onQuery?(query: PythonLocatorQuery | undefined, envs: I[]): Promise<I[]>;
         } = {},
     ) {
         super();
@@ -98,11 +98,11 @@ export class SimpleLocator extends Locator {
         this.emitter.fire(event);
     }
 
-    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<I> {
         const { deferred } = this;
         const { callbacks } = this;
         let { envs } = this;
-        const iterator: IPythonEnvsIterator = (async function* () {
+        const iterator: IPythonEnvsIterator<I> = (async function* () {
             if (callbacks?.onQuery !== undefined) {
                 envs = await callbacks.onQuery(query, envs);
             }
@@ -138,11 +138,8 @@ export class SimpleLocator extends Locator {
         return iterator;
     }
 
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const envInfo: PythonEnvInfo =
-            typeof env === 'string'
-                ? createLocatedEnv('', '', undefined, env) // an executable
-                : env;
+    public async resolveEnv(env: string): Promise<PythonEnvInfo | undefined> {
+        const envInfo: PythonEnvInfo = createLocatedEnv('', '', undefined, env);
         if (this.callbacks.resolve === undefined) {
             return envInfo;
         }

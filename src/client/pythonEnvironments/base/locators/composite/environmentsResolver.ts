@@ -63,9 +63,9 @@ export class PythonEnvsResolver implements IResolvingLocator {
 
         if (iterator.onUpdated !== undefined) {
             const listener = iterator.onUpdated(async (event) => {
+                state.pending += 1;
                 if (event === null) {
                     state.done = true;
-                    checkIfFinishedAndNotify(state, didUpdate);
                     listener.dispose();
                 } else if (event.update === undefined) {
                     throw new Error(
@@ -78,6 +78,8 @@ export class PythonEnvsResolver implements IResolvingLocator {
                     // This implies a problem in a downstream locator
                     traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
                 }
+                state.pending -= 1;
+                checkIfFinishedAndNotify(state, didUpdate);
             });
         }
 
