@@ -1,5 +1,33 @@
 # Changelog
 
+## 2021.7.0-rc (12 July 2021)
+
+### Enhancements
+
+1. Sort environments in the selection quickpick by assumed usefulness.
+   ([#16520](https://github.com/Microsoft/vscode-python/issues/16520))
+
+### Fixes
+
+1. Add link to docs page on how to install the Python extension to README. (thanks [KamalSinghKhanna](https://github.com/KamalSinghKhanna))
+   ([#15199](https://github.com/Microsoft/vscode-python/issues/15199))
+1. Make test explorer only show file/folder names on nodes.
+   (thanks [bobwalker99](https://github.com/bobwalker99))
+   ([#16368](https://github.com/Microsoft/vscode-python/issues/16368))
+1. Ensure we dispose restart command registration before we create a new instance of Jedi LS.
+   ([#16441](https://github.com/Microsoft/vscode-python/issues/16441))
+1. Ensure `shellIdentificationSource` is set correctly. (thanks [intrigus-lgtm](https://github.com/intrigus-lgtm))
+   ([#16517](https://github.com/Microsoft/vscode-python/issues/16517))
+1. Clear Notebook Cell diagnostics when deleting a cell or closing a notebook.
+   ([#16528](https://github.com/Microsoft/vscode-python/issues/16528))
+1. The `poetryPath` setting will correctly apply system variable substitutions. (thanks [Anthony Shaw](https://github.com/tonybaloney))
+   ([#16607](https://github.com/Microsoft/vscode-python/issues/16607))
+1. The Jupyter Notebook extension will install any missing dependencies using Poetry or Pipenv if those are the selected environments. (thanks [Anthony Shaw](https://github.com/tonybaloney))
+   ([#16615](https://github.com/Microsoft/vscode-python/issues/16615))
+
+### Code Health
+
+
 ## 2021.6.0 (16 June 2021)
 
 ### Enhancements
