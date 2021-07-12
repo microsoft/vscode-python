@@ -22,9 +22,9 @@ jedi==0.18.0 \
     --hash=sha256:18456d83f65f400ab0c2d3319e48520420ef43b23a086fdc05dff34132f0fb93 \
     --hash=sha256:92550a404bad8afed881a137ec9a461fed49eca661414be45059329614ed0707
     # via jedi-language-server
-jedi-language-server==0.33.1 \
-    --hash=sha256:58eb076394aa7dbd627e85d80becb1e1a1d7498f549557921ecd14ee49115167 \
-    --hash=sha256:9dafb1de8159b774982622e7a80feedc16fe1f36fb6a1eefe405dd1978c93e78
+jedi-language-server==0.34.1 \
+    --hash=sha256:5368bebeddddeaa1dda622d6eed09ac88b2460f41d7e92ba735f494044621c2d \
+    --hash=sha256:8a1b79de1408b28343b424e0697a22fdfe06b0ae5ce273f7f788cc0057014d11
     # via -r jedils_requirements.in
 parso==0.8.2 \
     --hash=sha256:12b83492c6239ce32ff5eed6d3639d6a536170723c6f3f1506869f1ace413398 \
