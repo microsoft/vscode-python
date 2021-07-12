@@ -106,6 +106,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
 
     @captureTelemetry(EventName.PYTHON_INTERPRETER_AUTO_SELECTION, { rule: AutoSelectionRule.all }, true)
     public async autoSelectInterpreter(resource: Resource): Promise<void> {
+        console.warn('hello');
         const key = this.getWorkspacePathKey(resource);
         if (!this.autoSelectedWorkspacePromises.has(key)) {
             const deferred = createDeferred<void>();
