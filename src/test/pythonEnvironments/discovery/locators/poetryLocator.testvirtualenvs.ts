@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { ExecutionResult, ShellOptions } from '../../../../client/common/process/types';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { ILocator } from '../../../../client/pythonEnvironments/base/locator';
+import { BasicEnvInfo, ILocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { PoetryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/poetryLocator';
@@ -44,7 +44,7 @@ suite('Poetry Watcher', async () => {
 });
 
 suite('Poetry Locator', async () => {
-    let locator: ILocator;
+    let locator: ILocator<BasicEnvInfo>;
     suiteSetup(async function () {
         if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
             // Poetry is soon to be deprecated for Python2.7, and tests do not pass
@@ -57,7 +57,7 @@ suite('Poetry Locator', async () => {
     test('Discovers existing poetry environments', async () => {
         const items = await getEnvs(locator.iterEnvs());
         const isLocated = items.some(
-            (item) => item.kind === PythonEnvKind.Poetry && item.name.startsWith('poetry-tutorial-project'),
+            (item) => item.kind === PythonEnvKind.Poetry && item.executablePath.includes('poetry-tutorial-project'),
         );
         expect(isLocated).to.equal(true);
     });
