@@ -4,7 +4,6 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import { Event } from 'vscode';
-import { traceVerbose } from '../../../client/common/logger';
 import { createDeferred, flattenIterator, iterable, mapToIterator } from '../../../client/common/utils/async';
 import { getArchitecture } from '../../../client/common/utils/platform';
 import { getVersionString } from '../../../client/common/utils/version';

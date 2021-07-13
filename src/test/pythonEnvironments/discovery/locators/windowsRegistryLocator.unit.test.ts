@@ -4,22 +4,13 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { Architecture } from '../../../../client/common/utils/platform';
-import {
-    PythonEnvInfo,
-    PythonEnvKind,
-    PythonEnvSource,
-    PythonVersion,
-    UNKNOWN_PYTHON_VERSION,
-} from '../../../../client/pythonEnvironments/base/info';
-import { buildEnvInfo } from '../../../../client/pythonEnvironments/base/info/env';
-import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
+import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as winreg from '../../../../client/pythonEnvironments/common/windowsRegistry';
-import * as winutils from '../../../../client/pythonEnvironments/common/windowsUtils';
 import { WindowsRegistryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryLocator';
+import { createBasicEnv } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { assertEnvsEqual } from './envTestUtils';
+import { assertBasicEnvsEqual } from './envTestUtils';
 
 suite('Windows Registry', () => {
     let stubReadRegistryValues: sinon.SinonStub;
@@ -208,52 +199,6 @@ suite('Windows Registry', () => {
         return Promise.resolve([]);
     }
 
-    async function getDataFromKey(
-        { arch, hive, key }: winreg.Options,
-        org: string,
-    ): Promise<winutils.IRegistryInterpreterData> {
-        const data = await fakeRegistryValues({ arch, hive, key });
-        const subKey = (await fakeRegistryKeys({ arch, hive, key }))[0];
-        const subKeyData = (await fakeRegistryValues({ arch, hive, key: subKey.key })).find(
-            (x) => x.name === 'ExecutablePath',
-        );
-
-        return Promise.resolve({
-            interpreterPath: subKeyData?.value ?? '',
-            versionStr: data.find((x) => x.name === 'Version')?.value,
-            sysVersionStr: data.find((x) => x.name === 'SysVersion')?.value,
-            bitnessStr: data.find((x) => x.name === 'SysArchitecture')?.value,
-            companyDisplayName: data.find((x) => x.name === 'DisplayName')?.value,
-            distroOrgName: org,
-        });
-    }
-
-    async function createExpectedEnv(data: winutils.IRegistryInterpreterData): Promise<PythonEnvInfo> {
-        const versionStr = data.versionStr ?? data.sysVersionStr ?? data.interpreterPath;
-        let version: PythonVersion;
-        try {
-            version = parseVersion(versionStr);
-        } catch (ex) {
-            version = UNKNOWN_PYTHON_VERSION;
-        }
-
-        const env = buildEnvInfo({
-            location: '',
-            kind: PythonEnvKind.OtherGlobal,
-            executable: data.interpreterPath,
-            version,
-            arch: data.bitnessStr === '32bit' ? Architecture.x86 : Architecture.x64,
-            org: data.distroOrgName ?? '',
-            source: [PythonEnvSource.WindowsRegistry],
-        });
-        env.distro.defaultDisplayName = data.companyDisplayName;
-        return env;
-    }
-
-    async function getExpectedDataFromKey({ arch, hive, key }: winreg.Options, org: string): Promise<PythonEnvInfo> {
-        return createExpectedEnv(await getDataFromKey({ arch, hive, key }, org));
-    }
-
     setup(async () => {
         stubReadRegistryValues = sinon.stub(winreg, 'readRegistryValues');
         stubReadRegistryKeys = sinon.stub(winreg, 'readRegistryKeys');
@@ -268,33 +213,17 @@ suite('Windows Registry', () => {
     });
 
     test('iterEnvs()', async () => {
-        const expectedEnvs: PythonEnvInfo[] = (
-            await Promise.all([
-                getExpectedDataFromKey(
-                    { arch: 'x64', hive: winreg.HKLM, key: '\\SOFTWARE\\Python\\PythonCore\\3.9' },
-                    'PythonCore',
-                ),
-                getExpectedDataFromKey(
-                    { arch: 'x64', hive: winreg.HKLM, key: '\\SOFTWARE\\Python\\ContinuumAnalytics\\Anaconda38-64' },
-                    'ContinuumAnalytics',
-                ),
-                getExpectedDataFromKey(
-                    { arch: 'x64', hive: winreg.HKCU, key: '\\SOFTWARE\\Python\\PythonCore\\3.7' },
-                    'PythonCore',
-                ),
-                getExpectedDataFromKey(
-                    { arch: 'x86', hive: winreg.HKCU, key: '\\SOFTWARE\\Python\\PythonCodingPack\\3.8' },
-                    'PythonCodingPack',
-                ),
-            ])
-        ).sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        const expectedEnvs = [
+            createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'py39', 'python.exe')),
+            createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'conda3', 'python.exe')),
+            createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'python37', 'python.exe')),
+            createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'python38', 'python.exe')),
+        ];
 
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
-            a.executable.filename.localeCompare(b.executable.filename),
-        );
+        const actualEnvs = await getEnvs(iterator);
 
-        assertEnvsEqual(actualEnvs, expectedEnvs);
+        assertBasicEnvsEqual(actualEnvs, expectedEnvs);
     });
 
     test('iterEnvs(): no registry permission', async () => {
@@ -303,9 +232,7 @@ suite('Windows Registry', () => {
         });
 
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
-            a.executable.filename.localeCompare(b.executable.filename),
-        );
+        const actualEnvs = await getEnvs(iterator);
 
         assert.deepStrictEqual(actualEnvs, []);
     });
@@ -318,24 +245,14 @@ suite('Windows Registry', () => {
             return fakeRegistryKeys({ arch, hive, key });
         });
 
-        const expectedEnvs: PythonEnvInfo[] = (
-            await Promise.all([
-                getExpectedDataFromKey(
-                    { arch: 'x64', hive: winreg.HKCU, key: '\\SOFTWARE\\Python\\PythonCore\\3.7' },
-                    'PythonCore',
-                ),
-                getExpectedDataFromKey(
-                    { arch: 'x86', hive: winreg.HKCU, key: '\\SOFTWARE\\Python\\PythonCodingPack\\3.8' },
-                    'PythonCodingPack',
-                ),
-            ])
-        ).sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        const expectedEnvs = [
+            createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'python37', 'python.exe')),
+            createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'python38', 'python.exe')),
+        ];
 
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
-            a.executable.filename.localeCompare(b.executable.filename),
-        );
+        const actualEnvs = await getEnvs(iterator);
 
-        assertEnvsEqual(actualEnvs, expectedEnvs);
+        assertBasicEnvsEqual(actualEnvs, expectedEnvs);
     });
 });

@@ -3,21 +3,20 @@
 
 import { traceError } from '../../../../common/logger';
 import { PythonEnvKind } from '../../../base/info';
-import { buildEnvInfo } from '../../../base/info/env';
-import { IPythonEnvsIterator, Locator } from '../../../base/locator';
+import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
 
-export class WindowsRegistryLocator extends Locator {
+export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
     // eslint-disable-next-line class-methods-use-this
-    public iterEnvs(): IPythonEnvsIterator {
+    public iterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const iterator = async function* () {
             const interpreters = await getRegistryInterpreters(true);
             for (const interpreter of interpreters) {
                 try {
-                    const env = buildEnvInfo({
+                    const env: BasicEnvInfo = {
                         kind: PythonEnvKind.OtherGlobal,
-                        executable: interpreter.interpreterPath,
-                    });
+                        executablePath: interpreter.interpreterPath,
+                    };
                     yield env;
                 } catch (ex) {
                     traceError(`Failed to process environment: ${interpreter}`, ex);
