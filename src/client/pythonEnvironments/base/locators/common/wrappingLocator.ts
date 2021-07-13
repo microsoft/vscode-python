@@ -32,6 +32,7 @@ export class LazyWrappingLocator extends LazyResourceBasedLocator {
     }
 
     public async resolveEnv(env: string): Promise<PythonEnvInfo | undefined> {
+        await this.ensureResourcesReady();
         return this.wrapped!.resolveEnv(env);
     }
 
