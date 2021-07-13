@@ -4,20 +4,13 @@
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as executablesAPI from '../../../../client/common/utils/exec';
-import { Architecture } from '../../../../client/common/utils/platform';
-import {
-    PythonEnvInfo,
-    PythonEnvKind,
-    PythonEnvSource,
-    PythonReleaseLevel,
-    PythonVersion,
-} from '../../../../client/pythonEnvironments/base/info';
-import { buildEnvInfo } from '../../../../client/pythonEnvironments/base/info/env';
-import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
+import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
+import { BasicEnvInfo } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PosixKnownPathsLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/posixKnownPathsLocator';
+import { createBasicEnv } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { assertEnvsEqual } from './envTestUtils';
+import { assertBasicEnvsEqual } from './envTestUtils';
 
 suite('Posix Known Path Locator', () => {
     let getPathEnvVar: sinon.SinonStub;
@@ -35,31 +28,6 @@ suite('Posix Known Path Locator', () => {
     testFileData.set(testLocation2, ['python', 'python37', 'python38']);
     testFileData.set(testLocation3, ['python3.7', 'python3.8']);
 
-    function createExpectedEnvInfo(executable: string, sysVersion?: string, versionStr?: string): PythonEnvInfo {
-        let version: PythonVersion;
-        try {
-            version = parseVersion(versionStr ?? path.basename(executable));
-            if (sysVersion) {
-                version.sysVersion = sysVersion;
-            }
-        } catch (e) {
-            version = {
-                major: -1,
-                minor: -1,
-                micro: -1,
-                release: { level: PythonReleaseLevel.Final, serial: -1 },
-                sysVersion,
-            };
-        }
-        return buildEnvInfo({
-            version,
-            kind: PythonEnvKind.OtherGlobal,
-            arch: Architecture.Unknown,
-            executable,
-            source: [PythonEnvSource.PathEnvVar],
-        });
-    }
-
     setup(async () => {
         getPathEnvVar = sinon.stub(executablesAPI, 'getSearchPathEntries');
         locator = new PosixKnownPathsLocator();
@@ -72,20 +40,17 @@ suite('Posix Known Path Locator', () => {
         const testLocations = [testLocation1, testLocation2, testLocation3];
         getPathEnvVar.returns(testLocations);
 
-        const envs: PythonEnvInfo[] = [];
+        const expectedEnvs: BasicEnvInfo[] = [];
         testLocations.forEach((location) => {
             const binaries = testFileData.get(location);
             if (binaries) {
                 binaries.forEach((binary) => {
-                    envs.push(createExpectedEnvInfo(path.join(location, binary)));
+                    expectedEnvs.push(createBasicEnv(PythonEnvKind.OtherGlobal, path.join(location, binary)));
                 });
             }
         });
-        const expectedEnvs = envs.sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        const actualEnvs = (await getEnvs(locator.iterEnvs()))
-            .filter((e) => e.executable.filename.indexOf('posixroot') > 0)
-            .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
-        assertEnvsEqual(actualEnvs, expectedEnvs);
+        const actualEnvs = (await getEnvs(locator.iterEnvs())).filter((e) => e.executablePath.indexOf('posixroot') > 0);
+        assertBasicEnvsEqual(actualEnvs, expectedEnvs);
     });
 });

@@ -6,12 +6,11 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as util from 'util';
 import * as platform from '../../../../client/common/utils/platform';
-import { PythonEnvKind, PythonEnvSource } from '../../../../client/pythonEnvironments/base/info';
+import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import * as windowsUtils from '../../../../client/pythonEnvironments/common/windowsUtils';
 import {
-    AnacondaCompanyName,
     AnacondaDisplayName,
     Conda,
     CondaInfo,
