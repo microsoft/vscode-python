@@ -4,9 +4,8 @@
 import * as path from 'path';
 import { traceError } from '../../../../common/logger';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
-import { buildEnvInfo } from '../../../base/info/env';
-import { IPythonEnvsIterator } from '../../../base/locator';
+import { PythonEnvKind } from '../../../base/info';
+import { BasicEnvInfo, IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { getInterpreterPathFromDir } from '../../../common/commonUtils';
 import { arePathsSame, getSubDirs, pathExists } from '../../../common/externalDependencies';
@@ -256,22 +255,19 @@ export function parsePyenvVersion(str: string): Promise<IPyenvVersionStrings | u
  * Remarks: This function looks at the <pyenv dir>/versions directory and gets
  * all the environments (global or virtual) in that directory.
  */
-async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
+async function* getPyenvEnvironments(): AsyncIterableIterator<BasicEnvInfo> {
     const pyenvVersionDir = getPyenvVersionsDir();
 
     const subDirs = getSubDirs(pyenvVersionDir, { resolveSymlinks: true });
     for await (const subDirPath of subDirs) {
-        const envDirName = path.basename(subDirPath);
         const interpreterPath = await getInterpreterPathFromDir(subDirPath);
 
         if (interpreterPath) {
             try {
-                const envInfo = buildEnvInfo({
+                yield {
                     kind: PythonEnvKind.Pyenv,
-                    executable: interpreterPath,
-                });
-                envInfo.name = envDirName;
-                yield envInfo;
+                    executablePath: interpreterPath,
+                };
             } catch (ex) {
                 traceError(`Failed to process environment: ${interpreterPath}`, ex);
             }
@@ -279,13 +275,13 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
     }
 }
 
-export class PyenvLocator extends FSWatchingLocator {
+export class PyenvLocator extends FSWatchingLocator<BasicEnvInfo> {
     constructor() {
         super(getPyenvVersionsDir, async () => PythonEnvKind.Pyenv);
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public doIterEnvs(): IPythonEnvsIterator {
+    public doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         return getPyenvEnvironments();
     }
 }

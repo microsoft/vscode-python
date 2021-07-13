@@ -9,7 +9,7 @@ import { ActivationResult, ExtensionState } from '../components';
 import { PythonEnvironments } from './api';
 import { getPersistentCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
-import { ILocator, IResolvingLocator } from './base/locator';
+import { BasicEnvInfo, ILocator, IResolvingLocator } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsReducer } from './base/locators/composite/environmentsReducer';
 import { PythonEnvsResolver } from './base/locators/composite/environmentsResolver';
@@ -110,7 +110,7 @@ async function createLocators(
 }
 
 function createNonWorkspaceLocators(ext: ExtensionState): ILocator[] {
-    const locators: (ILocator & Partial<IDisposable>)[] = [];
+    const locators: (ILocator<BasicEnvInfo> & Partial<IDisposable>)[] = [];
     locators.push(
         // OS-independent locators go here.
         new PyenvLocator(),
