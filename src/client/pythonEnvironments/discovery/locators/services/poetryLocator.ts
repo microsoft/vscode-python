@@ -4,19 +4,13 @@
 'use strict';
 
 import * as path from 'path';
-import { Uri } from 'vscode';
 import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
-import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../../base/info';
-import { buildEnvInfo } from '../../../base/info/env';
-import { IPythonEnvsIterator } from '../../../base/locator';
+import { PythonEnvKind } from '../../../base/info';
+import { BasicEnvInfo, IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
-import {
-    getEnvironmentDirFromPath,
-    getInterpreterPathFromDir,
-    getPythonVersionFromPath,
-} from '../../../common/commonUtils';
-import { getFileInfo, isParentPath, pathExists } from '../../../common/externalDependencies';
+import { getInterpreterPathFromDir } from '../../../common/commonUtils';
+import { pathExists } from '../../../common/externalDependencies';
 import { isPoetryEnvironment, localPoetryEnvDirName, Poetry } from './poetry';
 import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
@@ -55,45 +49,18 @@ async function getRootVirtualEnvDir(root: string): Promise<string[]> {
     return rootDirs;
 }
 
-async function buildVirtualEnvInfo(
-    executablePath: string,
-    kind: PythonEnvKind,
-    source?: PythonEnvSource[],
-    rootedEnv = false,
-): Promise<PythonEnvInfo> {
-    const envInfo = buildEnvInfo({
-        kind,
-        version: await getPythonVersionFromPath(executablePath),
-        executable: executablePath,
-        source: source ?? [PythonEnvSource.Other],
-    });
-    const location = getEnvironmentDirFromPath(executablePath);
-    envInfo.location = location;
-    envInfo.name = path.basename(location);
-    if (rootedEnv) {
-        // For environments inside roots, we need to set search location so they can be queried accordingly.
-        // Search location particularly for virtual environments is intended as the directory in which the
-        // environment was found in.
-        // For eg.the default search location for an env containing 'bin' or 'Scripts' directory is:
-        //
-        // searchLocation <--- Default search location directory
-        // |__ env
-        //    |__ bin or Scripts
-        //        |__ python  <--- executable
-        envInfo.searchLocation = Uri.file(path.dirname(location));
+async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind> {
+    if (await isPoetryEnvironment(interpreterPath)) {
+        return PythonEnvKind.Poetry;
     }
 
-    // TODO: Call a general display name provider here to build display name.
-    const fileData = await getFileInfo(executablePath);
-    envInfo.executable.ctime = fileData.ctime;
-    envInfo.executable.mtime = fileData.mtime;
-    return envInfo;
+    return PythonEnvKind.Unknown;
 }
 
 /**
  * Finds and resolves virtual environments created using poetry.
  */
-export class PoetryLocator extends FSWatchingLocator {
+export class PoetryLocator extends FSWatchingLocator<BasicEnvInfo> {
     public constructor(private readonly root: string) {
         super(
             () => getRootVirtualEnvDir(root),
@@ -101,32 +68,23 @@ export class PoetryLocator extends FSWatchingLocator {
         );
     }
 
-    protected doIterEnvs(): IPythonEnvsIterator {
+    protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         async function* iterator(root: string) {
             const envDirs = await getVirtualEnvDirs(root);
             const envGenerators = envDirs.map((envDir) => {
                 async function* generator() {
                     traceVerbose(`Searching for poetry virtual envs in: ${envDir}`);
-
-                    const isLocal = isParentPath(envDir, root);
                     const filename = await getInterpreterPathFromDir(envDir);
                     if (filename !== undefined) {
-                        const kind = PythonEnvKind.Poetry;
-                        if (isLocal && !(await isPoetryEnvironment(filename))) {
-                            // This is not a poetry env.
-                            traceVerbose(
-                                `Poetry Virtual Environment: [skipped] ${filename} (reason: Not poetry environment)`,
-                            );
-                        } else {
-                            try {
-                                // We should extract the kind here to avoid doing is*Environment()
-                                // check multiple times. Those checks are file system heavy and
-                                // we can use the kind to determine this anyway.
-                                yield buildVirtualEnvInfo(filename, kind, undefined, isLocal);
-                                traceVerbose(`Poetry Virtual Environment: [added] ${filename}`);
-                            } catch (ex) {
-                                traceError(`Failed to process environment: ${filename}`, ex);
-                            }
+                        const kind = await getVirtualEnvKind(filename);
+                        try {
+                            // We should extract the kind here to avoid doing is*Environment()
+                            // check multiple times. Those checks are file system heavy and
+                            // we can use the kind to determine this anyway.
+                            yield { executablePath: filename, kind };
+                            traceVerbose(`Poetry Virtual Environment: [added] ${filename}`);
+                        } catch (ex) {
+                            traceError(`Failed to process environment: ${filename}`, ex);
                         }
                     }
                 }

@@ -3,23 +3,16 @@
 
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { Uri } from 'vscode';
-import {
-    PythonEnvInfo,
-    PythonEnvKind,
-    PythonEnvSource,
-    PythonReleaseLevel,
-    PythonVersion,
-    UNKNOWN_PYTHON_VERSION,
-} from '../../../../client/pythonEnvironments/base/info';
+import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import * as platformUtils from '../../../../client/common/utils/platform';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PoetryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/poetryLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { assertEnvsEqual } from './envTestUtils';
+import { assertBasicEnvsEqual } from './envTestUtils';
 import { ExecutionResult, ShellOptions } from '../../../../client/common/process/types';
 import { Poetry } from '../../../../client/pythonEnvironments/discovery/locators/services/poetry';
+import { createBasicEnv } from '../../base/common';
 
 suite('Poetry Locator', () => {
     let shellExecute: sinon.SinonStub;
@@ -31,33 +24,6 @@ suite('Poetry Locator', () => {
     suiteTeardown(() => {
         Poetry._poetryPromise = new Map();
     });
-
-    function createExpectedEnvInfo(
-        interpreterPath: string,
-        kind: PythonEnvKind,
-        version: PythonVersion = UNKNOWN_PYTHON_VERSION,
-        name = '',
-        location = path.join(testPoetryDir, name),
-        searchLocation: Uri | undefined = undefined,
-    ): PythonEnvInfo {
-        return {
-            name,
-            location,
-            kind,
-            executable: {
-                filename: interpreterPath,
-                sysPrefix: '',
-                ctime: -1,
-                mtime: -1,
-            },
-            display: undefined,
-            version,
-            arch: platformUtils.Architecture.Unknown,
-            distro: { org: '' },
-            searchLocation,
-            source: [PythonEnvSource.Other],
-        };
-    }
 
     suiteSetup(() => {
         getPythonSetting = sinon.stub(externalDependencies, 'getPythonSetting');
@@ -90,46 +56,21 @@ suite('Poetry Locator', () => {
         test('iterEnvs()', async () => {
             // Act
             const iterator = locator.iterEnvs();
-            const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
-                a.executable.filename.localeCompare(b.executable.filename),
-            );
+            const actualEnvs = await getEnvs(iterator);
 
             // Assert
             const expectedEnvs = [
-                createExpectedEnvInfo(
+                createBasicEnv(
+                    PythonEnvKind.Poetry,
                     path.join(testPoetryDir, 'poetry-tutorial-project-6hnqYwvD-py3.8', 'Scripts', 'python.exe'),
-                    PythonEnvKind.Poetry,
-                    {
-                        major: 3,
-                        minor: 9,
-                        micro: 0,
-                        release: { level: PythonReleaseLevel.Alpha, serial: 1 },
-                        sysVersion: undefined,
-                    },
-                    'poetry-tutorial-project-6hnqYwvD-py3.8',
                 ),
-                createExpectedEnvInfo(
+                createBasicEnv(
+                    PythonEnvKind.Poetry,
                     path.join(testPoetryDir, 'globalwinproject-9hvDnqYw-py3.11', 'Scripts', 'python.exe'),
-                    PythonEnvKind.Poetry,
-                    { major: 3, minor: 6, micro: 1 },
-                    'globalwinproject-9hvDnqYw-py3.11',
                 ),
-                createExpectedEnvInfo(
-                    path.join(project1, '.venv', 'Scripts', 'python.exe'),
-                    PythonEnvKind.Poetry,
-                    {
-                        major: 3,
-                        minor: 8,
-                        micro: 2,
-                        release: { level: PythonReleaseLevel.Final, serial: 0 },
-                        sysVersion: undefined,
-                    },
-                    '.venv',
-                    path.join(project1, '.venv'),
-                    Uri.file(project1),
-                ),
-            ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
-            assertEnvsEqual(actualEnvs, expectedEnvs);
+                createBasicEnv(PythonEnvKind.Poetry, path.join(project1, '.venv', 'Scripts', 'python.exe')),
+            ];
+            assertBasicEnvsEqual(actualEnvs, expectedEnvs);
         });
     });
 
@@ -154,34 +95,21 @@ suite('Poetry Locator', () => {
         test('iterEnvs()', async () => {
             // Act
             const iterator = locator.iterEnvs();
-            const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
-                a.executable.filename.localeCompare(b.executable.filename),
-            );
+            const actualEnvs = await getEnvs(iterator);
 
             // Assert
             const expectedEnvs = [
-                createExpectedEnvInfo(
+                createBasicEnv(
+                    PythonEnvKind.Poetry,
                     path.join(testPoetryDir, 'posix1project-9hvDnqYw-py3.4', 'python'),
-                    PythonEnvKind.Poetry,
-                    undefined,
-                    'posix1project-9hvDnqYw-py3.4',
                 ),
-                createExpectedEnvInfo(
+                createBasicEnv(
+                    PythonEnvKind.Poetry,
                     path.join(testPoetryDir, 'posix2project-6hnqYwvD-py3.7', 'bin', 'python'),
-                    PythonEnvKind.Poetry,
-                    undefined,
-                    'posix2project-6hnqYwvD-py3.7',
                 ),
-                createExpectedEnvInfo(
-                    path.join(project2, '.venv', 'bin', 'python'),
-                    PythonEnvKind.Poetry,
-                    { major: 3, minor: 6, micro: 1 },
-                    '.venv',
-                    path.join(project2, '.venv'),
-                    Uri.file(project2),
-                ),
-            ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
-            assertEnvsEqual(actualEnvs, expectedEnvs);
+                createBasicEnv(PythonEnvKind.Poetry, path.join(project2, '.venv', 'bin', 'python')),
+            ];
+            assertBasicEnvsEqual(actualEnvs, expectedEnvs);
         });
     });
 });
