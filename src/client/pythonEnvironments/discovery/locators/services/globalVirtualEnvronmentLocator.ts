@@ -7,8 +7,7 @@ import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
 import { PythonEnvKind } from '../../../base/info';
-import { buildEnvInfo } from '../../../base/info/env';
-import { IPythonEnvsIterator } from '../../../base/locator';
+import { BasicEnvInfo, IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
 import { pathExists, untildify } from '../../../common/externalDependencies';
@@ -83,7 +82,7 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
 /**
  * Finds and resolves virtual environments created in known global locations.
  */
-export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
+export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator<BasicEnvInfo> {
     constructor(private readonly searchDepth?: number) {
         super(getGlobalVirtualEnvDirs, getVirtualEnvKind, {
             // Note detecting kind of virtual env depends on the file structure around the
@@ -94,7 +93,7 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
         });
     }
 
-    protected doIterEnvs(): IPythonEnvsIterator {
+    protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         // Number of levels of sub-directories to recurse when looking for
         // interpreters
         const searchDepth = this.searchDepth ?? DEFAULT_SEARCH_DEPTH;
@@ -119,7 +118,7 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
                             // we can use the kind to determine this anyway.
                             const kind = await getVirtualEnvKind(filename);
                             try {
-                                yield buildEnvInfo({ kind, executable: filename });
+                                yield { kind, executablePath: filename };
                                 traceVerbose(`Global Virtual Environment: [added] ${filename}`);
                             } catch (ex) {
                                 traceError(`Failed to process environment: ${filename}`, ex);
