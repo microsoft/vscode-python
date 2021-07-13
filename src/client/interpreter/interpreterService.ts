@@ -33,7 +33,7 @@ import {
 } from './contracts';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 import { getInterpreterHash } from '../pythonEnvironments/discovery/locators/services/hashProvider';
-import { inDiscoveryExperiment } from '../common/experiments/helpers';
+import { inDiscoveryExperiment, inDiscoveryExperimentSync } from '../common/experiments/helpers';
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
 
@@ -139,7 +139,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
     public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
         let environments: PythonEnvironment[] = [];
         const stopWatch = new StopWatch();
-        if (await inDiscoveryExperiment(this.experimentService)) {
+        if (inDiscoveryExperimentSync(this.experimentService)) {
             environments = await this.pyenvs.getInterpreters(resource, options);
         } else {
             const locator = this.serviceContainer.get<IInterpreterLocatorService>(

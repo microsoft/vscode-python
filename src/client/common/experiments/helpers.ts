@@ -13,3 +13,10 @@ export async function inDiscoveryExperiment(experimentService: IExperimentServic
     ]);
     return results.includes(true);
 }
+
+export function inDiscoveryExperimentSync(experimentService: IExperimentService): boolean {
+    return (
+        experimentService.inExperimentSync(DiscoveryVariants.discoverWithFileWatching) ||
+        experimentService.inExperimentSync(DiscoveryVariants.discoveryWithoutFileWatching)
+    );
+}
