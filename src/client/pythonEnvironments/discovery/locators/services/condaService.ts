@@ -4,7 +4,7 @@ import { parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import { inDiscoveryExperiment } from '../../../../common/experiments/helpers';
-import { traceDecorators, traceWarning } from '../../../../common/logger';
+import { traceDecorators, traceVerbose, traceWarning } from '../../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../../common/process/types';
 import { IExperimentService, IConfigurationService, IDisposableRegistry } from '../../../../common/types';
@@ -21,6 +21,14 @@ export class CondaService implements ICondaService {
     private isAvailable: boolean | undefined;
 
     private condaFile: Promise<string> | undefined;
+
+    /**
+     * Locating conda binary is expensive, since it potentially involves spawning or
+     * trying to spawn processes; so it's done lazily and asynchronously. Methods that
+     * need a Conda instance should use getConda() to obtain it, and should never access
+     * this property directly.
+     */
+    private condaPromise: Promise<Conda | undefined> | undefined;
 
     constructor(
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
@@ -152,7 +160,7 @@ export class CondaService implements ICondaService {
         if (!(await inDiscoveryExperiment(this.experimentService))) {
             return this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService).getCondaInfo();
         }
-        const conda = await Conda.getConda();
+        const conda = await this.getConda();
         return conda?.getInfo();
     }
 
@@ -165,8 +173,16 @@ export class CondaService implements ICondaService {
         if (setting && setting !== '') {
             return setting;
         }
-        const conda = await Conda.getConda();
+        const conda = await this.getConda();
         return conda?.command ?? 'conda';
+    }
+
+    private async getConda(): Promise<Conda | undefined> {
+        traceVerbose(`Searching for conda.`);
+        if (this.condaPromise === undefined) {
+            this.condaPromise = Conda.locate();
+        }
+        return this.condaPromise;
     }
 
     private addCondaPathChangedHandler() {

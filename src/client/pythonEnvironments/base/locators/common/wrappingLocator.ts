@@ -4,11 +4,11 @@
 import { Event } from 'vscode';
 import { IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { PythonEnvInfo } from '../../info';
-import { IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from '../../locator';
+import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { LazyResourceBasedLocator } from './resourceBasedLocator';
 
-export type GetLocatorFunc = () => Promise<IResolvingLocator & Partial<IDisposable>>;
+export type GetLocatorFunc = () => Promise<ILocator & Partial<IDisposable>>;
 
 /**
  * A locator that wraps another.
@@ -20,7 +20,7 @@ export class LazyWrappingLocator extends LazyResourceBasedLocator {
 
     private readonly watcher = new PythonEnvsWatcher();
 
-    private wrapped?: IResolvingLocator;
+    private wrapped?: ILocator;
 
     constructor(private readonly getLocator: GetLocatorFunc) {
         super();
@@ -31,7 +31,7 @@ export class LazyWrappingLocator extends LazyResourceBasedLocator {
         yield* this.wrapped!.iterEnvs(query);
     }
 
-    public async resolveEnv(env: string): Promise<PythonEnvInfo | undefined> {
+    protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         return this.wrapped!.resolveEnv(env);
     }
 
