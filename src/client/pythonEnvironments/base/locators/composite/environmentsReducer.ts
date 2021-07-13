@@ -40,30 +40,32 @@ async function* iterEnvsIterator(
 
     if (iterator.onUpdated !== undefined) {
         const listener = iterator.onUpdated((event) => {
+            state.pending += 1;
             if (event === null) {
                 state.done = true;
-                checkIfFinishedAndNotify(state, didUpdate);
                 listener.dispose();
             } else if (event.update === undefined) {
                 throw new Error(
                     'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in reducer',
                 );
             } else if (seen[event.index] !== undefined) {
-                state.pending += 1;
-                resolveDifferencesInBackground(event.index, event.update, state, didUpdate, seen).ignoreErrors();
+                const oldEnv = seen[event.index];
+                seen[event.index] = event.update;
+                didUpdate.fire({ index: event.index, old: oldEnv, update: event.update });
             } else {
                 // This implies a problem in a downstream locator
                 traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
             }
+            state.pending -= 1;
+            checkIfFinishedAndNotify(state, didUpdate);
         });
     }
 
     let result = await iterator.next();
     while (!result.done) {
         const currEnv = result.value;
-        const oldIndex = seen.findIndex((s) => areSameEnv(s, currEnv));
+        const oldIndex = seen.findIndex((s) => areSameEnv(s.executablePath, currEnv.executablePath));
         if (oldIndex !== -1) {
-            state.pending += 1;
             resolveDifferencesInBackground(oldIndex, currEnv, state, didUpdate, seen).ignoreErrors();
         } else {
             // We haven't yielded a matching env so yield this one as-is.
@@ -85,6 +87,9 @@ async function resolveDifferencesInBackground(
     didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | null>,
     seen: BasicEnvInfo[],
 ) {
+    state.pending += 1;
+    // It's essential we increment the pending call count before any asynchronus calls in this method.
+    // We want this to be run even when `resolveInBackground` is called in background.
     const oldEnv = seen[oldIndex];
     const merged = resolveEnvCollision(oldEnv, newEnv);
     if (!isEqual(oldEnv, merged)) {

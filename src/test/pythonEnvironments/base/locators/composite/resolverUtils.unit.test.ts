@@ -32,6 +32,8 @@ suite('Resolver Utils', () => {
         const testPyenvVersionsDir = path.join(testPyenvRoot, 'versions');
         setup(() => {
             sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
+            sinon.stub(winreg, 'readRegistryValues').resolves([]);
+            sinon.stub(winreg, 'readRegistryKeys').resolves([]);
             sinon.stub(platformApis, 'getEnvironmentVariable').withArgs('PYENV_ROOT').returns(testPyenvRoot);
         });
 
@@ -70,6 +72,8 @@ suite('Resolver Utils', () => {
 
         setup(() => {
             sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
+            sinon.stub(winreg, 'readRegistryValues').resolves([]);
+            sinon.stub(winreg, 'readRegistryKeys').resolves([]);
             sinon.stub(platformApis, 'getEnvironmentVariable').withArgs('LOCALAPPDATA').returns(testLocalAppData);
         });
 
@@ -196,6 +200,8 @@ suite('Resolver Utils', () => {
 
         setup(() => {
             sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
+            sinon.stub(winreg, 'readRegistryValues').resolves([]);
+            sinon.stub(winreg, 'readRegistryKeys').resolves([]);
         });
 
         teardown(() => {
@@ -252,6 +258,8 @@ suite('Resolver Utils', () => {
         const testVirtualHomeDir = path.join(TEST_LAYOUT_ROOT, 'virtualhome');
         setup(() => {
             sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([testVirtualHomeDir]);
+            sinon.stub(winreg, 'readRegistryValues').resolves([]);
+            sinon.stub(winreg, 'readRegistryKeys').resolves([]);
         });
 
         teardown(() => {

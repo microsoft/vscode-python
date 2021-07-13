@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { ImportMock } from 'ts-mock-imports';
 import { EventEmitter, Uri } from 'vscode';
+import * as winreg from '../../../../../client/pythonEnvironments/common/windowsRegistry';
 import { ExecutionResult } from '../../../../../client/common/process/types';
 import { IDisposableRegistry } from '../../../../../client/common/types';
 import { Architecture } from '../../../../../client/common/utils/platform';
@@ -17,7 +18,6 @@ import {
     PythonVersion,
     UNKNOWN_PYTHON_VERSION,
 } from '../../../../../client/pythonEnvironments/base/info';
-import { getEnvs as getEnvsWithUpdates } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
 import { BasicEnvInfo, PythonEnvUpdatedEvent } from '../../../../../client/pythonEnvironments/base/locator';
 import { PythonEnvsResolver } from '../../../../../client/pythonEnvironments/base/locators/composite/environmentsResolver';
@@ -29,11 +29,7 @@ import {
 } from '../../../../../client/pythonEnvironments/info/environmentInfoService';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from '../../../discovery/locators/envTestUtils';
-import { getEnvs, SimpleLocator } from '../../common';
-
-export function createBasicEnv(kind: PythonEnvKind, executablePath: string): BasicEnvInfo {
-    return { executablePath, kind };
-}
+import { createBasicEnv, getEnvs, getEnvsWithUpdates, SimpleLocator } from '../../common';
 
 suite('Python envs locator - Environments Resolver', () => {
     let envInfoService: IEnvironmentInfoService;
@@ -43,6 +39,8 @@ suite('Python envs locator - Environments Resolver', () => {
     setup(() => {
         disposables = [];
         envInfoService = getEnvironmentInfoService(disposables);
+        sinon.stub(winreg, 'readRegistryValues').resolves([]);
+        sinon.stub(winreg, 'readRegistryKeys').resolves([]);
     });
     teardown(() => {
         sinon.restore();
@@ -208,11 +206,11 @@ suite('Python envs locator - Environments Resolver', () => {
 
             // Act
             const iterator = resolver.iterEnvs();
-            await getEnvs(iterator);
-            didUpdate.fire({ index: 0, old: env, update: updatedEnv });
-            didUpdate.fire(null); // It is essential for the incoming iterator to fire "null" event signifying it's done
-
-            const envs = await getEnvsWithUpdates(iterator);
+            const iteratorUpdateCallback = () => {
+                didUpdate.fire({ index: 0, old: env, update: updatedEnv });
+                didUpdate.fire(null); // It is essential for the incoming iterator to fire "null" event signifying it's done
+            };
+            const envs = await getEnvsWithUpdates(iterator, iteratorUpdateCallback);
 
             // Assert
             assertEnvsEqual(envs, [createExpectedEnvInfo(resolvedUpdatedEnvReturnedByBasicResolver)]);
@@ -254,7 +252,7 @@ suite('Python envs locator - Environments Resolver', () => {
         });
 
         teardown(() => {
-            stubShellExec.restore();
+            sinon.restore();
         });
 
         test('Calls into basic resolver to get environment info, then calls environnment service to resolve environment further and return it', async () => {

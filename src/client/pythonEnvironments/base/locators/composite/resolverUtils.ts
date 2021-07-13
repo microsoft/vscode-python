@@ -74,7 +74,9 @@ function getSearchLocation(env: PythonEnvInfo): Uri | undefined {
 }
 
 async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
+    console.time('Time takenz');
     const interpreters = await getRegistryInterpreters();
+    console.timeEnd('Time takenz');
     const data = interpreters.find((i) => i.interpreterPath.toUpperCase() === env.executable.filename.toUpperCase());
     if (data) {
         const versionStr = data.versionStr ?? data.sysVersionStr ?? data.interpreterPath;
