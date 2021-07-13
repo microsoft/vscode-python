@@ -12,8 +12,7 @@ import {
     isVirtualenvEnvironment,
 } from '../../../discovery/locators/services/virtualEnvironmentIdentifier';
 import { PythonEnvKind } from '../../info';
-import { buildEnvInfo } from '../../info/env';
-import { IPythonEnvsIterator } from '../../locator';
+import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
 import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
@@ -54,7 +53,7 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
 /**
  * Finds and resolves virtual environments created in workspace roots.
  */
-export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
+export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator<BasicEnvInfo> {
     public constructor(private readonly root: string) {
         super(() => getWorkspaceVirtualEnvDirs(this.root), getVirtualEnvKind, {
             // Note detecting kind of virtual env depends on the file structure around the
@@ -63,7 +62,7 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
         });
     }
 
-    protected doIterEnvs(): IPythonEnvsIterator {
+    protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         async function* iterator(root: string) {
             const envRootDirs = await getWorkspaceVirtualEnvDirs(root);
             const envGenerators = envRootDirs.map((envRootDir) => {
@@ -83,7 +82,7 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
                             // check multiple times. Those checks are file system heavy and
                             // we can use the kind to determine this anyway.
                             const kind = await getVirtualEnvKind(filename);
-                            yield buildEnvInfo({ kind, executable: filename });
+                            yield { kind, executablePath: filename };
                             traceVerbose(`Workspace Virtual Environment: [added] ${filename}`);
                         } else {
                             traceVerbose(`Workspace Virtual Environment: [skipped] ${filename}`);
