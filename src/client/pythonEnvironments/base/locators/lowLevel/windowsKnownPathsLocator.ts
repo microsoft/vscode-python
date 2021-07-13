@@ -11,7 +11,7 @@ import { iterPythonExecutablesInDir, looksLikeBasicGlobalPython } from '../../..
 import { isPyenvShimDir } from '../../../discovery/locators/services/pyenvLocator';
 import { isWindowsStoreDir } from '../../../discovery/locators/services/windowsStoreLocator';
 import { PythonEnvKind } from '../../info';
-import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
+import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { Locators } from '../../locators';
 import { getEnvs } from '../../locatorUtils';
 import { PythonEnvsChangedEvent } from '../../watcher';
@@ -23,15 +23,15 @@ import { DirFilesLocator } from './filesLocator';
  * Note that we assume $PATH won't change, so we don't need to watch
  * it for changes.
  */
-export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
+export class WindowsPathEnvVarLocator implements ILocator<BasicEnvInfo>, IDisposable {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
-    private readonly locators: Locators;
+    private readonly locators: Locators<BasicEnvInfo>;
 
     private readonly disposables = new Disposables();
 
     constructor() {
-        const dirLocators: (ILocator & IDisposable)[] = getSearchPathEntries()
+        const dirLocators: (ILocator<BasicEnvInfo> & IDisposable)[] = getSearchPathEntries()
             .filter(
                 (dirname) =>
                     // Filter out following directories:
@@ -56,7 +56,7 @@ export class WindowsPathEnvVarLocator implements ILocator, IDisposable {
         await this.disposables.dispose();
     }
 
-    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
         // Note that we do no filtering here, including to check if files
         // are valid executables.  That is left to callers (e.g. composite
         // locators).
@@ -76,7 +76,7 @@ function getDirFilesLocator(
     // These are passed through to DirFilesLocator.
     dirname: string,
     kind: PythonEnvKind,
-): ILocator & IDisposable {
+): ILocator<BasicEnvInfo> & IDisposable {
     // For now we do not bother using a locator that watches for changes
     // in the directory.  If we did then we would use
     // `DirFilesWatchingLocator`, but only if not \\windows\system32 and
@@ -88,7 +88,7 @@ function getDirFilesLocator(
     // sophisticated.  Also, this should be done in ReducingLocator
     // rather than in each low-level locator.  In the meantime we
     // take a naive approach.
-    async function* iterEnvs(query: PythonLocatorQuery): IPythonEnvsIterator {
+    async function* iterEnvs(query: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
         yield* await getEnvs(locator.iterEnvs(query));
     }
     return {

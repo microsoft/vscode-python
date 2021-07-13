@@ -7,8 +7,7 @@
 import { Event } from 'vscode';
 import { iterPythonExecutablesInDir } from '../../../common/commonUtils';
 import { PythonEnvKind } from '../../info';
-import { buildEnvInfo } from '../../info/env';
-import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
+import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
 
 type GetExecutablesFunc = () => AsyncIterableIterator<string>;
@@ -16,7 +15,7 @@ type GetExecutablesFunc = () => AsyncIterableIterator<string>;
 /**
  * A naive locator the wraps a function that finds Python executables.
  */
-class FoundFilesLocator implements ILocator {
+class FoundFilesLocator implements ILocator<BasicEnvInfo> {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     protected readonly watcher = new PythonEnvsWatcher();
@@ -25,11 +24,11 @@ class FoundFilesLocator implements ILocator {
         this.onChanged = this.watcher.onChanged;
     }
 
-    public iterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator {
+    public iterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
         const executables = this.getExecutables();
-        async function* generator(kind: PythonEnvKind): IPythonEnvsIterator {
-            for await (const executable of executables) {
-                yield buildEnvInfo({ executable, kind });
+        async function* generator(kind: PythonEnvKind): IPythonEnvsIterator<BasicEnvInfo> {
+            for await (const executablePath of executables) {
+                yield { executablePath, kind };
             }
         }
         const iterator = generator(this.kind);

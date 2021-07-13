@@ -3,26 +3,15 @@
 
 import { assert } from 'chai';
 import * as path from 'path';
-import { Architecture, getOSType, OSType } from '../../../../../client/common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../../../../client/pythonEnvironments/base/info';
-import { PythonLocatorQuery } from '../../../../../client/pythonEnvironments/base/locator';
+import { getOSType, OSType } from '../../../../../client/common/utils/platform';
+import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { BasicEnvInfo, PythonLocatorQuery } from '../../../../../client/pythonEnvironments/base/locator';
 import { WindowsPathEnvVarLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsKnownPathsLocator';
 import { ensureFSTree } from '../../../../utils/fs';
-import { createNamedEnv, getEnvs, sortedEnvs } from '../../common';
+import { assertBasicEnvsEqual } from '../../../discovery/locators/envTestUtils';
+import { createBasicEnv, getEnvs } from '../../common';
 
 const IS_WINDOWS = getOSType() === OSType.Windows;
-
-function getEnv(
-    // These will all be provided.
-    name: string,
-    version: string,
-    executable: string,
-): PythonEnvInfo {
-    const env = createNamedEnv(name, version, PythonEnvKind.System, executable);
-    env.arch = Architecture.Unknown;
-    env.source = [PythonEnvSource.PathEnvVar];
-    return env;
-}
 
 suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
     let cleanUps: (() => void)[];
@@ -123,7 +112,7 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
 
     suite('iterEnvs()', () => {
         test('no executables found', async () => {
-            const expected: PythonEnvInfo[] = [];
+            const expected: BasicEnvInfo[] = [];
             const locator = getActiveLocator(ROOT3, ROOT4, DOES_NOT_EXIST, ROOT5);
             const query: PythonLocatorQuery | undefined = undefined;
 
@@ -134,7 +123,7 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
         });
 
         test('no executables match', async () => {
-            const expected: PythonEnvInfo[] = [];
+            const expected: BasicEnvInfo[] = [];
             const locator = getActiveLocator(ROOT6, DOES_NOT_EXIST);
             const query: PythonLocatorQuery | undefined = undefined;
 
@@ -145,8 +134,8 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
         });
 
         test('some executables match', async () => {
-            const expected: PythonEnvInfo[] = [
-                getEnv('', '', path.join(ROOT1, 'python.exe')),
+            const expected: BasicEnvInfo[] = [
+                createBasicEnv(PythonEnvKind.System, path.join(ROOT1, 'python.exe')),
 
                 // We will expect the following once we switch
                 // to a better filter than isStandardPythonBinary().
@@ -166,7 +155,7 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
             const iterator = locator.iterEnvs(query);
             const envs = await getEnvs(iterator);
 
-            assert.deepEqual(sortedEnvs(envs), sortedEnvs(expected));
+            assertBasicEnvsEqual(envs, expected);
         });
     });
 });
