@@ -6,14 +6,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as fsWatcher from '../../../../client/common/platform/fileSystemWatcher';
 import * as platformUtils from '../../../../client/common/utils/platform';
-import {
-    PythonEnvInfo,
-    PythonEnvKind,
-    PythonEnvSource,
-    PythonReleaseLevel,
-    PythonVersion,
-    UNKNOWN_PYTHON_VERSION,
-} from '../../../../client/pythonEnvironments/base/info';
+import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
@@ -22,8 +15,9 @@ import {
     VENVFOLDERS_SETTING_KEY,
     VENVPATH_SETTING_KEY,
 } from '../../../../client/pythonEnvironments/discovery/locators/services/customVirtualEnvLocator';
+import { createBasicEnv } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { assertEnvsEqual } from './envTestUtils';
+import { assertBasicEnvsEqual } from './envTestUtils';
 
 suite('CustomVirtualEnvironment Locator', () => {
     const testVirtualHomeDir = path.join(TEST_LAYOUT_ROOT, 'virtualhome');
@@ -36,38 +30,6 @@ suite('CustomVirtualEnvironment Locator', () => {
     let getPythonSettingStub: sinon.SinonStub;
     let onDidChangePythonSettingStub: sinon.SinonStub;
     let untildify: sinon.SinonStub;
-
-    function createExpectedEnvInfo(
-        interpreterPath: string,
-        kind: PythonEnvKind,
-        version: PythonVersion = UNKNOWN_PYTHON_VERSION,
-        name = '',
-        location = '',
-    ): PythonEnvInfo {
-        return {
-            name,
-            location,
-            kind,
-            executable: {
-                filename: interpreterPath,
-                sysPrefix: '',
-                ctime: -1,
-                mtime: -1,
-            },
-            display: undefined,
-            version,
-            arch: platformUtils.Architecture.Unknown,
-            distro: { org: '' },
-            searchLocation: undefined,
-            source: [PythonEnvSource.Other],
-        };
-    }
-
-    function comparePaths(actual: PythonEnvInfo[], expected: PythonEnvInfo[]) {
-        const actualPaths = actual.map((a) => a.executable.filename);
-        const expectedPaths = expected.map((a) => a.executable.filename);
-        assert.deepStrictEqual(actualPaths, expectedPaths);
-    }
 
     setup(async () => {
         untildify = sinon.stub(externalDependencies, 'untildify');
@@ -117,77 +79,38 @@ suite('CustomVirtualEnvironment Locator', () => {
         getPythonSettingStub.withArgs('venvFolders').returns(['.venvs', '.virtualenvs', 'Envs']);
         getOSTypeStub.returns(platformUtils.OSType.Windows);
         const expectedEnvs = [
-            createExpectedEnvInfo(
-                path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
-                PythonEnvKind.Venv,
-                undefined,
-                'win1',
-                path.join(testVirtualHomeDir, '.venvs', 'win1'),
-            ),
-            createExpectedEnvInfo(
-                path.join(testVirtualHomeDir, '.venvs', 'win2', 'bin', 'python.exe'),
-                PythonEnvKind.Venv,
-                {
-                    major: 3,
-                    minor: 9,
-                    micro: 0,
-                    release: { level: PythonReleaseLevel.Alpha, serial: 1 },
-                    sysVersion: undefined,
-                },
-                'win2',
-                path.join(testVirtualHomeDir, '.venvs', 'win2'),
-            ),
-            createExpectedEnvInfo(
+            createBasicEnv(PythonEnvKind.Venv, path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe')),
+            createBasicEnv(PythonEnvKind.Venv, path.join(testVirtualHomeDir, '.venvs', 'win2', 'bin', 'python.exe')),
+            createBasicEnv(
+                PythonEnvKind.VirtualEnv,
                 path.join(testVirtualHomeDir, '.virtualenvs', 'win1', 'python.exe'),
-                PythonEnvKind.VirtualEnv,
-                undefined,
-                'win1',
-                path.join(testVirtualHomeDir, '.virtualenvs', 'win1'),
             ),
-            createExpectedEnvInfo(
+            createBasicEnv(
+                PythonEnvKind.VirtualEnv,
                 path.join(testVirtualHomeDir, '.virtualenvs', 'win2', 'bin', 'python.exe'),
-                PythonEnvKind.VirtualEnv,
-                undefined,
-                'win2',
-                path.join(testVirtualHomeDir, '.virtualenvs', 'win2'),
             ),
-            createExpectedEnvInfo(
+            createBasicEnv(
+                PythonEnvKind.VirtualEnvWrapper,
                 path.join(testVirtualHomeDir, 'Envs', 'wrapper_win1', 'python.exe'),
-                PythonEnvKind.VirtualEnvWrapper,
-                undefined,
-                'wrapper_win1',
-                path.join(testVirtualHomeDir, 'Envs', 'wrapper_win1'),
             ),
-            createExpectedEnvInfo(
+            createBasicEnv(
+                PythonEnvKind.VirtualEnvWrapper,
                 path.join(testVirtualHomeDir, 'Envs', 'wrapper_win2', 'bin', 'python.exe'),
-                PythonEnvKind.VirtualEnvWrapper,
-                undefined,
-                'wrapper_win2',
-                path.join(testVirtualHomeDir, 'Envs', 'wrapper_win2'),
             ),
-            createExpectedEnvInfo(
+            createBasicEnv(
+                PythonEnvKind.VirtualEnv,
                 path.join(testVirtualHomeDir, 'customfolder', 'win1', 'python.exe'),
-                PythonEnvKind.VirtualEnv,
-                undefined,
-                'win1',
-                path.join(testVirtualHomeDir, 'customfolder', 'win1'),
             ),
-            createExpectedEnvInfo(
+            createBasicEnv(
+                PythonEnvKind.VirtualEnv,
                 path.join(testVirtualHomeDir, 'customfolder', 'win2', 'bin', 'python.exe'),
-                PythonEnvKind.VirtualEnv,
-                undefined,
-                'win2',
-                path.join(testVirtualHomeDir, 'customfolder', 'win2'),
             ),
-        ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        ];
 
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
-            a.executable.filename.localeCompare(b.executable.filename),
-        );
+        const actualEnvs = await getEnvs(iterator);
 
-        comparePaths(actualEnvs, expectedEnvs);
-        assertEnvsEqual(actualEnvs, expectedEnvs);
+        assertBasicEnvsEqual(actualEnvs, expectedEnvs);
     });
 
     test('iterEnvs(): Non-Windows with both settings set', async () => {
@@ -198,63 +121,27 @@ suite('CustomVirtualEnvironment Locator', () => {
             .withArgs('venvFolders')
             .returns(['.venvs', '.virtualenvs', 'envs', path.join('.local', 'share', 'virtualenvs')]);
         const expectedEnvs = [
-            createExpectedEnvInfo(
-                path.join(testWorkspaceFolder, 'posix2conda', 'python'),
-                PythonEnvKind.Unknown,
-                { major: 3, minor: 8, micro: 5 },
-                'posix2conda',
-                path.join(testWorkspaceFolder, 'posix2conda'),
-            ),
-            createExpectedEnvInfo(
-                path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python'),
-                PythonEnvKind.Venv,
-                undefined,
-                'posix1',
-                path.join(testVirtualHomeDir, '.venvs', 'posix1'),
-            ),
-            createExpectedEnvInfo(
-                path.join(testVirtualHomeDir, '.venvs', 'posix2', 'bin', 'python'),
-                PythonEnvKind.Venv,
-                undefined,
-                'posix2',
-                path.join(testVirtualHomeDir, '.venvs', 'posix2'),
-            ),
-            createExpectedEnvInfo(
+            createBasicEnv(PythonEnvKind.Unknown, path.join(testWorkspaceFolder, 'posix2conda', 'python')),
+            createBasicEnv(PythonEnvKind.Venv, path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python')),
+            createBasicEnv(PythonEnvKind.Venv, path.join(testVirtualHomeDir, '.venvs', 'posix2', 'bin', 'python')),
+            createBasicEnv(
+                PythonEnvKind.VirtualEnvWrapper,
                 path.join(testVirtualHomeDir, '.virtualenvs', 'posix1', 'python'),
-                PythonEnvKind.VirtualEnvWrapper,
-                { major: 3, minor: 8, micro: -1 },
-                'posix1',
-                path.join(testVirtualHomeDir, '.virtualenvs', 'posix1'),
             ),
-            createExpectedEnvInfo(
+            createBasicEnv(
+                PythonEnvKind.VirtualEnvWrapper,
                 path.join(testVirtualHomeDir, '.virtualenvs', 'posix2', 'bin', 'python'),
-                PythonEnvKind.VirtualEnvWrapper,
-                undefined,
-                'posix2',
-                path.join(testVirtualHomeDir, '.virtualenvs', 'posix2'),
             ),
-            createExpectedEnvInfo(
-                path.join(testVirtualHomeDir, '.local', 'share', 'virtualenvs', 'project2-vnNIWe9P', 'bin', 'python'),
+            createBasicEnv(
                 PythonEnvKind.Pipenv,
-                {
-                    major: 3,
-                    minor: 8,
-                    micro: 2,
-                    release: { level: PythonReleaseLevel.Final, serial: 0 },
-                    sysVersion: undefined,
-                },
-                'project2-vnNIWe9P',
-                path.join(testVirtualHomeDir, '.local', 'share', 'virtualenvs', 'project2-vnNIWe9P'),
+                path.join(testVirtualHomeDir, '.local', 'share', 'virtualenvs', 'project2-vnNIWe9P', 'bin', 'python'),
             ),
-        ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        ];
 
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
-            a.executable.filename.localeCompare(b.executable.filename),
-        );
+        const actualEnvs = await getEnvs(iterator);
 
-        comparePaths(actualEnvs, expectedEnvs);
-        assertEnvsEqual(actualEnvs, expectedEnvs);
+        assertBasicEnvsEqual(actualEnvs, expectedEnvs);
     });
 
     test('iterEnvs(): No User home dir set', async () => {
@@ -264,92 +151,50 @@ suite('CustomVirtualEnvironment Locator', () => {
         getPythonSettingStub.withArgs('venvFolders').returns(['.venvs', '.virtualenvs', 'Envs']);
         getOSTypeStub.returns(platformUtils.OSType.Windows);
         const expectedEnvs = [
-            createExpectedEnvInfo(
+            createBasicEnv(
+                PythonEnvKind.VirtualEnv,
                 path.join(testVirtualHomeDir, 'customfolder', 'win1', 'python.exe'),
-                PythonEnvKind.VirtualEnv,
-                undefined,
-                'win1',
-                path.join(testVirtualHomeDir, 'customfolder', 'win1'),
             ),
-            createExpectedEnvInfo(
+            createBasicEnv(
+                PythonEnvKind.VirtualEnv,
                 path.join(testVirtualHomeDir, 'customfolder', 'win2', 'bin', 'python.exe'),
-                PythonEnvKind.VirtualEnv,
-                undefined,
-                'win2',
-                path.join(testVirtualHomeDir, 'customfolder', 'win2'),
             ),
-        ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        ];
 
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
-            a.executable.filename.localeCompare(b.executable.filename),
-        );
+        const actualEnvs = await getEnvs(iterator);
 
-        comparePaths(actualEnvs, expectedEnvs);
-        assertEnvsEqual(actualEnvs, expectedEnvs);
+        assertBasicEnvsEqual(actualEnvs, expectedEnvs);
     });
 
     test('iterEnvs(): with only venvFolders set', async () => {
         getPythonSettingStub.withArgs('venvFolders').returns(['.venvs', '.virtualenvs', 'Envs']);
         getOSTypeStub.returns(platformUtils.OSType.Windows);
         const expectedEnvs = [
-            createExpectedEnvInfo(
-                path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
-                PythonEnvKind.Venv,
-                undefined,
-                'win1',
-                path.join(testVirtualHomeDir, '.venvs', 'win1'),
-            ),
-            createExpectedEnvInfo(
-                path.join(testVirtualHomeDir, '.venvs', 'win2', 'bin', 'python.exe'),
-                PythonEnvKind.Venv,
-                {
-                    major: 3,
-                    minor: 9,
-                    micro: 0,
-                    release: { level: PythonReleaseLevel.Alpha, serial: 1 },
-                    sysVersion: undefined,
-                },
-                'win2',
-                path.join(testVirtualHomeDir, '.venvs', 'win2'),
-            ),
-            createExpectedEnvInfo(
+            createBasicEnv(PythonEnvKind.Venv, path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe')),
+            createBasicEnv(PythonEnvKind.Venv, path.join(testVirtualHomeDir, '.venvs', 'win2', 'bin', 'python.exe')),
+            createBasicEnv(
+                PythonEnvKind.VirtualEnv,
                 path.join(testVirtualHomeDir, '.virtualenvs', 'win1', 'python.exe'),
-                PythonEnvKind.VirtualEnv,
-                undefined,
-                'win1',
-                path.join(testVirtualHomeDir, '.virtualenvs', 'win1'),
             ),
-            createExpectedEnvInfo(
+            createBasicEnv(
+                PythonEnvKind.VirtualEnv,
                 path.join(testVirtualHomeDir, '.virtualenvs', 'win2', 'bin', 'python.exe'),
-                PythonEnvKind.VirtualEnv,
-                undefined,
-                'win2',
-                path.join(testVirtualHomeDir, '.virtualenvs', 'win2'),
             ),
-            createExpectedEnvInfo(
+            createBasicEnv(
+                PythonEnvKind.VirtualEnvWrapper,
                 path.join(testVirtualHomeDir, 'Envs', 'wrapper_win1', 'python.exe'),
-                PythonEnvKind.VirtualEnvWrapper,
-                undefined,
-                'wrapper_win1',
-                path.join(testVirtualHomeDir, 'Envs', 'wrapper_win1'),
             ),
-            createExpectedEnvInfo(
+            createBasicEnv(
+                PythonEnvKind.VirtualEnvWrapper,
                 path.join(testVirtualHomeDir, 'Envs', 'wrapper_win2', 'bin', 'python.exe'),
-                PythonEnvKind.VirtualEnvWrapper,
-                undefined,
-                'wrapper_win2',
-                path.join(testVirtualHomeDir, 'Envs', 'wrapper_win2'),
             ),
-        ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+        ];
 
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
-            a.executable.filename.localeCompare(b.executable.filename),
-        );
+        const actualEnvs = await getEnvs(iterator);
 
-        comparePaths(actualEnvs, expectedEnvs);
-        assertEnvsEqual(actualEnvs, expectedEnvs);
+        assertBasicEnvsEqual(actualEnvs, expectedEnvs);
     });
 
     test('iterEnvs(): with only venvPath set', async () => {
@@ -357,22 +202,13 @@ suite('CustomVirtualEnvironment Locator', () => {
 
         getPythonSettingStub.withArgs('venvPath').returns(path.join(testWorkspaceFolder, 'posix2conda'));
         const expectedEnvs = [
-            createExpectedEnvInfo(
-                path.join(testWorkspaceFolder, 'posix2conda', 'python'),
-                PythonEnvKind.Unknown,
-                { major: 3, minor: 8, micro: 5 },
-                'posix2conda',
-                path.join(testWorkspaceFolder, 'posix2conda'),
-            ),
-        ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
+            createBasicEnv(PythonEnvKind.Unknown, path.join(testWorkspaceFolder, 'posix2conda', 'python')),
+        ];
 
         const iterator = locator.iterEnvs();
-        const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
-            a.executable.filename.localeCompare(b.executable.filename),
-        );
+        const actualEnvs = await getEnvs(iterator);
 
-        comparePaths(actualEnvs, expectedEnvs);
-        assertEnvsEqual(actualEnvs, expectedEnvs);
+        assertBasicEnvsEqual(actualEnvs, expectedEnvs);
     });
 
     test('onChanged fires if venvPath setting changes', async () => {

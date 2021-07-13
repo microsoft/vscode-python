@@ -7,8 +7,7 @@ import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { getUserHomeDir } from '../../../../common/utils/platform';
 import { PythonEnvKind } from '../../../base/info';
-import { buildEnvInfo } from '../../../base/info/env';
-import { IPythonEnvsIterator } from '../../../base/locator';
+import { BasicEnvInfo, IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
 import {
@@ -79,7 +78,7 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
 /**
  * Finds and resolves custom virtual environments that users have provided.
  */
-export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
+export class CustomVirtualEnvironmentLocator extends FSWatchingLocator<BasicEnvInfo> {
     constructor() {
         super(getCustomVirtualEnvDirs, getVirtualEnvKind, {
             // Note detecting kind of virtual env depends on the file structure around the
@@ -96,7 +95,7 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    protected doIterEnvs(): IPythonEnvsIterator {
+    protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         async function* iterator() {
             const envRootDirs = await getCustomVirtualEnvDirs();
             const envGenerators = envRootDirs.map((envRootDir) => {
@@ -117,7 +116,7 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
                                 // check multiple times. Those checks are file system heavy and
                                 // we can use the kind to determine this anyway.
                                 const kind = await getVirtualEnvKind(filename);
-                                yield buildEnvInfo({ kind, executable: filename });
+                                yield { kind, executablePath: filename };
                                 traceVerbose(`Custom Virtual Environment: [added] ${filename}`);
                             } catch (ex) {
                                 traceError(`Failed to process environment: ${filename}`, ex);
