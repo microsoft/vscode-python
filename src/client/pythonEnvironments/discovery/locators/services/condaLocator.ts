@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 import '../../../../common/extensions';
 import { PythonEnvKind } from '../../../base/info';
-import { buildEnvInfo } from '../../../base/info/env';
-import { IPythonEnvsIterator, Locator } from '../../../base/locator';
+import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getInterpreterPathFromDir } from '../../../common/commonUtils';
 import { Conda } from './conda';
 import { traceError, traceVerbose } from '../../../../common/logger';
 
-export class CondaEnvironmentLocator extends Locator {
+export class CondaEnvironmentLocator extends Locator<BasicEnvInfo> {
     public constructor() {
         super();
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public async *iterEnvs(): IPythonEnvsIterator {
+    public async *iterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const conda = await Conda.getConda();
         if (conda === undefined) {
             traceVerbose(`Couldn't locate the conda binary.`);
@@ -24,13 +23,13 @@ export class CondaEnvironmentLocator extends Locator {
 
         const envs = await conda.getEnvList();
         for (const { prefix } of envs) {
-            const executable = await getInterpreterPathFromDir(prefix);
-            if (executable !== undefined) {
-                traceVerbose(`Found conda environment: ${executable}`);
+            const executablePath = await getInterpreterPathFromDir(prefix);
+            if (executablePath !== undefined) {
+                traceVerbose(`Found conda environment: ${executablePath}`);
                 try {
-                    yield buildEnvInfo({ kind: PythonEnvKind.Conda, executable });
+                    yield { kind: PythonEnvKind.Conda, executablePath };
                 } catch (ex) {
-                    traceError(`Failed to process environment: ${executable}`, ex);
+                    traceError(`Failed to process environment: ${executablePath}`, ex);
                 }
             }
         }
