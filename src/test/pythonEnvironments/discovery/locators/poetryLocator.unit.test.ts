@@ -4,7 +4,6 @@
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
-import { assert } from 'chai';
 import {
     PythonEnvInfo,
     PythonEnvKind,
@@ -18,7 +17,7 @@ import * as platformUtils from '../../../../client/common/utils/platform';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PoetryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/poetryLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
+import { assertEnvsEqual } from './envTestUtils';
 import { ExecutionResult, ShellOptions } from '../../../../client/common/process/types';
 import { Poetry } from '../../../../client/pythonEnvironments/discovery/locators/services/poetry';
 
@@ -131,74 +130,6 @@ suite('Poetry Locator', () => {
                 ),
             ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
             assertEnvsEqual(actualEnvs, expectedEnvs);
-        });
-
-        test('resolveEnv(string)', async () => {
-            const interpreterPath = path.join(project1, '.venv', 'Scripts', 'python.exe');
-            const expected = createExpectedEnvInfo(
-                path.join(project1, '.venv', 'Scripts', 'python.exe'),
-                PythonEnvKind.Poetry,
-                {
-                    major: 3,
-                    minor: 8,
-                    micro: 2,
-                    release: { level: PythonReleaseLevel.Final, serial: 0 },
-                    sysVersion: undefined,
-                },
-                '.venv',
-                path.join(project1, '.venv'),
-                Uri.file(project1),
-            );
-
-            const actual = await locator.resolveEnv(interpreterPath);
-
-            assertEnvEqual(actual, expected);
-        });
-
-        test('resolveEnv(PythonEnvInfo)', async () => {
-            const interpreterPath = path.join(project1, '.venv', 'Scripts', 'python.exe');
-            // Partially filled in env info object
-            const input: PythonEnvInfo = {
-                name: '',
-                location: '',
-                kind: PythonEnvKind.Unknown,
-                distro: { org: '' },
-                arch: platformUtils.Architecture.Unknown,
-                executable: {
-                    filename: interpreterPath,
-                    sysPrefix: '',
-                    ctime: -1,
-                    mtime: -1,
-                },
-                version: UNKNOWN_PYTHON_VERSION,
-                source: [],
-            };
-
-            const actual = await locator.resolveEnv(input);
-
-            const expected = createExpectedEnvInfo(
-                path.join(project1, '.venv', 'Scripts', 'python.exe'),
-                PythonEnvKind.Poetry,
-                {
-                    major: 3,
-                    minor: 8,
-                    micro: 2,
-                    release: { level: PythonReleaseLevel.Final, serial: 0 },
-                    sysVersion: undefined,
-                },
-                '.venv',
-                path.join(project1, '.venv'),
-                Uri.file(project1),
-            );
-            assertEnvEqual(actual, expected);
-        });
-
-        test('resolveEnv(string): non existent path', async () => {
-            const interpreterPath = path.join('some', 'random', 'nonvenv', 'python');
-
-            const actual = await locator.resolveEnv(interpreterPath);
-
-            assert.deepStrictEqual(actual, undefined);
         });
     });
 

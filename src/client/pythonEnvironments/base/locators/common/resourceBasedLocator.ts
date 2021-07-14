@@ -3,7 +3,6 @@
 
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
-import { PythonEnvInfo } from '../../info';
 import { IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator';
 
 /**
@@ -38,20 +37,10 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
         this.ensureWatchersReady().ignoreErrors();
     }
 
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        await this.ensureResourcesReady();
-        return this.doResolveEnv(env);
-    }
-
     /**
      * The subclass implementation of iterEnvs().
      */
     protected abstract doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator;
-
-    /**
-     * The subclass implementation of resolveEnv().
-     */
-    protected abstract doResolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
 
     /**
      * This is where subclasses get their resources ready.
@@ -90,7 +79,7 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
         // No watchers!
     }
 
-    private async ensureResourcesReady(): Promise<void> {
+    protected async ensureResourcesReady(): Promise<void> {
         if (this.resourcesReady !== undefined) {
             await this.resourcesReady.promise;
             return;

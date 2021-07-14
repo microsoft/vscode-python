@@ -35,11 +35,6 @@ export class PosixKnownPathsLocator extends Locator {
         return iterator();
     }
 
-    public resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const executablePath = typeof env === 'string' ? env : env.executable.filename;
-        return this.buildPathEnvInfo(executablePath);
-    }
-
     private async buildPathEnvInfo(bin: string): Promise<PythonEnvInfo> {
         let version: PythonVersion;
         try {

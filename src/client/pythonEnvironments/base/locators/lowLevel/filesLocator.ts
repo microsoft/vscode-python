@@ -12,7 +12,7 @@ import { resolvePath } from '../../../common/externalDependencies';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { getFastEnvInfo } from '../../info/env';
 import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
-import { iterAndUpdateEnvs, resolveEnvFromIterator } from '../../locatorUtils';
+import { iterAndUpdateEnvs } from '../../locatorUtils';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
 
 type Executable = string | DirEntry;
@@ -48,11 +48,6 @@ class FoundFilesLocator implements ILocator {
         const iterator = generator(this.defaultKind);
         iterator.onUpdated = emitter.event;
         return iterator;
-    }
-
-    public async resolveEnv(env: string | Partial<PythonEnvInfo>): Promise<PythonEnvInfo | undefined> {
-        const iterator = this.iterEnvs();
-        return resolveEnvFromIterator(env, iterator);
     }
 }
 

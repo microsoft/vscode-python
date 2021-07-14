@@ -4,7 +4,11 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { EnvironmentTypeComparer } from '../../client/interpreter/configuration/environmentTypeComparer';
+import {
+    EnvironmentTypeComparer,
+    EnvTypeHeuristic,
+    getEnvTypeHeuristic,
+} from '../../client/interpreter/configuration/environmentTypeComparer';
 import { IInterpreterHelper } from '../../client/interpreter/contracts';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 
@@ -222,6 +226,67 @@ suite('Environment sorting', () => {
             const result = envTypeComparer.compare(envA, envB);
 
             assert.strictEqual(result, expected);
+        });
+    });
+});
+
+suite('getEnvTypeHeuristic tests', () => {
+    const workspacePath = path.join('path', 'to', 'workspace');
+
+    const localGlobalEnvTypes = [
+        EnvironmentType.Venv,
+        EnvironmentType.Conda,
+        EnvironmentType.VirtualEnv,
+        EnvironmentType.VirtualEnvWrapper,
+        EnvironmentType.Pipenv,
+        EnvironmentType.Poetry,
+    ];
+
+    localGlobalEnvTypes.forEach((envType) => {
+        test('If the path to an environment starts with the workspace path it should be marked as local', () => {
+            const environment = {
+                envType,
+                envPath: path.join(workspacePath, 'my-environment'),
+                version: { major: 3, minor: 10, patch: 2 },
+            } as PythonEnvironment;
+
+            const envTypeHeuristic = getEnvTypeHeuristic(environment, workspacePath);
+
+            assert.strictEqual(envTypeHeuristic, EnvTypeHeuristic.Local);
+        });
+
+        test('If the path to an environment does not start with the workspace path it should be marked as global', () => {
+            const environment = {
+                envType,
+                envPath: path.join('path', 'to', 'my-environment'),
+                version: { major: 3, minor: 10, patch: 2 },
+            } as PythonEnvironment;
+
+            const envTypeHeuristic = getEnvTypeHeuristic(environment, workspacePath);
+
+            assert.strictEqual(envTypeHeuristic, EnvTypeHeuristic.Global);
+        });
+    });
+
+    const globalInterpretersEnvTypes = [
+        EnvironmentType.System,
+        EnvironmentType.WindowsStore,
+        EnvironmentType.Global,
+        EnvironmentType.Unknown,
+        EnvironmentType.Pyenv,
+    ];
+
+    globalInterpretersEnvTypes.forEach((envType) => {
+        test(`If the environment type is ${envType} and the environment path does not start with the workspace path it should be marked as a global interpreter`, () => {
+            const environment = {
+                envType,
+                envPath: path.join('path', 'to', 'a', 'global', 'interpreter'),
+                version: { major: 3, minor: 10, patch: 2 },
+            } as PythonEnvironment;
+
+            const envTypeHeuristic = getEnvTypeHeuristic(environment, workspacePath);
+
+            assert.strictEqual(envTypeHeuristic, EnvTypeHeuristic.GlobalInterpreters);
         });
     });
 });

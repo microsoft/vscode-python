@@ -7,14 +7,21 @@ import { traceVerbose } from '../../../../common/logger';
 import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
 import { InterpreterInformation } from '../../info/interpreter';
-import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
+import {
+    ILocator,
+    IPythonEnvsIterator,
+    IResolvingLocator,
+    PythonEnvUpdatedEvent,
+    PythonLocatorQuery,
+} from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
+import { resolveEnv } from './resolverUtils';
 
 /**
  * Calls environment info service which runs `interpreterInfo.py` script on environments received
  * from the parent locator. Uses information received to populate environments further and pass it on.
  */
-export class PythonEnvsResolver implements ILocator {
+export class PythonEnvsResolver implements IResolvingLocator {
     public get onChanged(): Event<PythonEnvsChangedEvent> {
         return this.parentLocator.onChanged;
     }
@@ -24,11 +31,8 @@ export class PythonEnvsResolver implements ILocator {
         private readonly environmentInfoService: IEnvironmentInfoService,
     ) {}
 
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const environment = await this.parentLocator.resolveEnv(env);
-        if (!environment) {
-            return undefined;
-        }
+    public async resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
+        const environment = await resolveEnv(executablePath);
         const info = await this.environmentInfoService.getEnvironmentInfo(environment.executable.filename);
         if (!info) {
             return undefined;

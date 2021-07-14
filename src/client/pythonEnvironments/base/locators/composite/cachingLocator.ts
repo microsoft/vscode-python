@@ -8,7 +8,7 @@ import { logWarning } from '../../../../logging';
 import { IEnvsCache } from '../../envsCache';
 import { PythonEnvInfo } from '../../info';
 import { getMinimalPartialInfo } from '../../info/env';
-import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
+import { IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from '../../locator';
 import { getEnvs, getQueryFilter } from '../../locatorUtils';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
@@ -17,7 +17,7 @@ import { pickBestEnv } from './reducingLocator';
 /**
  * A locator that stores the known environments in the given cache.
  */
-export class CachingLocator extends LazyResourceBasedLocator {
+export class CachingLocator extends LazyResourceBasedLocator implements IResolvingLocator {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     private readonly watcher = new PythonEnvsWatcher();
@@ -26,7 +26,7 @@ export class CachingLocator extends LazyResourceBasedLocator {
 
     private refreshCache?: () => Promise<void>;
 
-    constructor(private readonly cache: IEnvsCache, private readonly locator: ILocator) {
+    constructor(private readonly cache: IEnvsCache, private readonly locator: IResolvingLocator) {
         super();
         this.onChanged = this.watcher.onChanged;
     }
@@ -39,7 +39,8 @@ export class CachingLocator extends LazyResourceBasedLocator {
         yield* this.iterFromCache(query);
     }
 
-    protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+    public async resolveEnv(env: string): Promise<PythonEnvInfo | undefined> {
+        await this.ensureResourcesReady();
         let matchingEnvs = this.filterMatchingEnvsFromCache(env);
         if (matchingEnvs.length > 0) {
             return pickBestEnv(matchingEnvs);

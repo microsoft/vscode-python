@@ -200,15 +200,6 @@ suite('Python envs locator - CachingLocator', () => {
     });
 
     suite('resolveEnv()', () => {
-        test('full match in cache', async () => {
-            const expected = env5;
-            const [, locator] = await getInitializedLocator(envs);
-
-            const resolved = await locator.resolveEnv(env5);
-
-            assert.deepEqual(resolved, expected);
-        });
-
         test('executable match in cache', async () => {
             const expected = env5;
             const [, locator] = await getInitializedLocator(envs);
@@ -225,7 +216,7 @@ suite('Python envs locator - CachingLocator', () => {
 
             const iterator1 = locator.iterEnvs();
             const discoveredBefore = await getEnvs(iterator1);
-            const resolved = await locator.resolveEnv(env5);
+            const resolved = await locator.resolveEnv(env5.executable.filename);
             const iterator2 = locator.iterEnvs();
             const discoveredAfter = await getEnvs(iterator2);
 
@@ -244,7 +235,7 @@ suite('Python envs locator - CachingLocator', () => {
 
             const iterator1 = locator.iterEnvs();
             const discoveredBefore = await getEnvs(iterator1);
-            const resolved = await locator.resolveEnv(env5);
+            const resolved = await locator.resolveEnv(env5.executable.filename);
             const iterator2 = locator.iterEnvs();
             const discoveredAfter = await getEnvs(iterator2);
 
@@ -257,7 +248,7 @@ suite('Python envs locator - CachingLocator', () => {
         test('not in cache nor downstream', async () => {
             const [, locator] = await getInitializedLocator([]);
 
-            const resolved = await locator.resolveEnv(env5);
+            const resolved = await locator.resolveEnv(env5.executable.filename);
 
             assert.equal(resolved, undefined);
         });

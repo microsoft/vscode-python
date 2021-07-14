@@ -251,5 +251,7 @@
     "TensorBoard.installProfilerPluginPrompt": "We recommend installing the PyTorch Profiler TensorBoard plugin. Would you like to install the package?",
     "TensorBoard.upgradePrompt": "Integrated TensorBoard support is only available for TensorBoard >= 2.4.1. Would you like to upgrade your copy of TensorBoard?",
     "TensorBoard.launchNativeTensorBoardSessionCodeAction": "Launch TensorBoard session",
-    "TensorBoard.launchNativeTensorBoardSessionCodeLens": "▶ Launch TensorBoard Session"
+    "TensorBoard.launchNativeTensorBoardSessionCodeLens": "▶ Launch TensorBoard Session",
+    "TensorBoard.enterRemoteUrl": "Enter remote URL",
+    "TensorBoard.enterRemoteUrlDetail": "Enter a URL pointing to a remote directory containing your TensorBoard log files"
 }

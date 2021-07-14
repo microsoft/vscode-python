@@ -10,7 +10,7 @@ import { buildEnvInfo } from '../../../../client/pythonEnvironments/base/info/en
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PyenvLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/pyenvLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
+import { assertEnvsEqual } from './envTestUtils';
 
 suite('Pyenv Locator Tests', () => {
     let getEnvVariableStub: sinon.SinonStub;
@@ -135,42 +135,5 @@ suite('Pyenv Locator Tests', () => {
             // We sort for a stable comparison.
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
         assertEnvsEqual(actualEnvs, expectedEnvs);
-    });
-
-    test('resolveEnv(string)', async () => {
-        const pythonPath = path.join(testPyenvVersionsDir, '3.9.0', 'bin', 'python');
-        const expected = getExpectedPyenvInfo('3.9.0');
-
-        const actual = await locator.resolveEnv(pythonPath);
-        assertEnvEqual(actual, expected);
-    });
-    test('resolveEnv(PythonEnvInfo)', async () => {
-        const pythonPath = path.join(testPyenvVersionsDir, '3.9.0', 'bin', 'python');
-        const expected = getExpectedPyenvInfo('3.9.0');
-
-        // Partially filled in env info object
-        const input: PythonEnvInfo = {
-            name: '',
-            location: '',
-            kind: PythonEnvKind.Unknown,
-            distro: { org: '' },
-            arch: platformUtils.Architecture.Unknown,
-            executable: {
-                filename: pythonPath,
-                sysPrefix: '',
-                ctime: -1,
-                mtime: -1,
-            },
-            version: {
-                major: -1,
-                minor: -1,
-                micro: -1,
-            },
-            source: [],
-        };
-
-        const actual = await locator.resolveEnv(input);
-
-        assertEnvEqual(actual, expected);
     });
 });
