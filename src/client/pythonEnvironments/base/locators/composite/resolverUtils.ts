@@ -91,7 +91,6 @@ async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
         env.distro.defaultDisplayName = data.companyDisplayName;
         env.arch = data.bitnessStr === '32bit' ? Architecture.x86 : Architecture.x64;
         env.distro.org = data.distroOrgName ?? env.distro.org;
-        env.distro.defaultDisplayName = data.companyDisplayName;
         env.source = uniq(env.source.concat(PythonEnvSource.WindowsRegistry));
     }
 }
