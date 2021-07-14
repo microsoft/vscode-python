@@ -79,6 +79,14 @@ export function assertBasicEnvsEqual(actualEnvs: BasicEnvInfo[], expectedEnvs: B
     assert.deepStrictEqual(actualEnvs.length, expectedEnvs.length, 'Number of envs');
     zip(actualEnvs, expectedEnvs).forEach((value) => {
         const [actual, expected] = value;
+        if (actual) {
+            actual.source = actual.source ?? [];
+            actual.source.sort();
+        }
+        if (expected) {
+            expected.source = expected.source ?? [];
+            expected.source.sort();
+        }
         assert.deepStrictEqual(actual, expected);
     });
 }

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { traceError } from '../../../../common/logger';
-import { PythonEnvKind } from '../../../base/info';
+import { PythonEnvKind, PythonEnvSource } from '../../../base/info';
 import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
 
@@ -16,6 +16,7 @@ export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
                     const env: BasicEnvInfo = {
                         kind: PythonEnvKind.OtherGlobal,
                         executablePath: interpreter.interpreterPath,
+                        source: [PythonEnvSource.WindowsRegistry],
                     };
                     yield env;
                 } catch (ex) {

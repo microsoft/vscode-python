@@ -49,7 +49,7 @@ suite('Resolver Utils', () => {
                     minor: 9,
                     micro: 0,
                 },
-                source: [PythonEnvSource.Pyenv],
+                source: [],
             });
             envInfo.display = '3.9.0:pyenv';
             envInfo.location = path.join(testPyenvVersionsDir, '3.9.0');
@@ -171,7 +171,7 @@ suite('Resolver Utils', () => {
                 kind: PythonEnvKind.Conda,
                 org: AnacondaCompanyName,
                 location,
-                source: [PythonEnvSource.Conda],
+                source: [],
                 version: UNKNOWN_PYTHON_VERSION,
                 fileInfo: undefined,
                 name: 'base',

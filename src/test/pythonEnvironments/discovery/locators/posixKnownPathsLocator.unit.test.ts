@@ -4,7 +4,7 @@
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as executablesAPI from '../../../../client/common/utils/exec';
-import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
+import { PythonEnvKind, PythonEnvSource } from '../../../../client/pythonEnvironments/base/info';
 import { BasicEnvInfo } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PosixKnownPathsLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/posixKnownPathsLocator';
@@ -45,7 +45,10 @@ suite('Posix Known Path Locator', () => {
             const binaries = testFileData.get(location);
             if (binaries) {
                 binaries.forEach((binary) => {
-                    expectedEnvs.push(createBasicEnv(PythonEnvKind.OtherGlobal, path.join(location, binary)));
+                    expectedEnvs.push({
+                        source: [PythonEnvSource.PathEnvVar],
+                        ...createBasicEnv(PythonEnvKind.OtherGlobal, path.join(location, binary)),
+                    });
                 });
             }
         });

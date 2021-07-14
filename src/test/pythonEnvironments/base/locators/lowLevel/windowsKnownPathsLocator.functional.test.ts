@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import { getOSType, OSType } from '../../../../../client/common/utils/platform';
-import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { PythonEnvKind, PythonEnvSource } from '../../../../../client/pythonEnvironments/base/info';
 import { BasicEnvInfo, PythonLocatorQuery } from '../../../../../client/pythonEnvironments/base/locator';
 import { WindowsPathEnvVarLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsKnownPathsLocator';
 import { ensureFSTree } from '../../../../utils/fs';
@@ -135,7 +135,7 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
 
         test('some executables match', async () => {
             const expected: BasicEnvInfo[] = [
-                createBasicEnv(PythonEnvKind.System, path.join(ROOT1, 'python.exe')),
+                createBasicEnv(PythonEnvKind.System, path.join(ROOT1, 'python.exe'), [PythonEnvSource.PathEnvVar]),
 
                 // We will expect the following once we switch
                 // to a better filter than isStandardPythonBinary().

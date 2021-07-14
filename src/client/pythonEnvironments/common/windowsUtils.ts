@@ -126,7 +126,11 @@ export async function getRegistryInterpreters(): Promise<IRegistryInterpreterDat
     if (!isTestExecution() && registryInterpretersPromise !== undefined) {
         return registryInterpretersPromise;
     }
+    registryInterpretersPromise = getRegistryInterpretersImpl();
+    return registryInterpretersPromise;
+}
 
+async function getRegistryInterpretersImpl(): Promise<IRegistryInterpreterData[]> {
     let registryData: IRegistryInterpreterData[] = [];
 
     for (const arch of ['x64', 'x86']) {

@@ -10,7 +10,7 @@ import { Disposables, IDisposable } from '../../../../common/utils/resourceLifec
 import { iterPythonExecutablesInDir, looksLikeBasicGlobalPython } from '../../../common/commonUtils';
 import { isPyenvShimDir } from '../../../discovery/locators/services/pyenvLocator';
 import { isWindowsStoreDir } from '../../../discovery/locators/services/windowsStoreLocator';
-import { PythonEnvKind } from '../../info';
+import { PythonEnvKind, PythonEnvSource } from '../../info';
 import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { Locators } from '../../locators';
 import { getEnvs } from '../../locatorUtils';
@@ -45,7 +45,7 @@ export class WindowsPathEnvVarLocator implements ILocator<BasicEnvInfo>, IDispos
                     !isWindowsStoreDir(dirname) && !isPyenvShimDir(dirname),
             )
             // Build a locator for each directory.
-            .map((dirname) => getDirFilesLocator(dirname, PythonEnvKind.System));
+            .map((dirname) => getDirFilesLocator(dirname, PythonEnvKind.System, [PythonEnvSource.PathEnvVar]));
         this.disposables.push(...dirLocators);
         this.locators = new Locators(dirLocators);
         this.onChanged = this.locators.onChanged;
@@ -76,12 +76,13 @@ function getDirFilesLocator(
     // These are passed through to DirFilesLocator.
     dirname: string,
     kind: PythonEnvKind,
+    source?: PythonEnvSource[],
 ): ILocator<BasicEnvInfo> & IDisposable {
     // For now we do not bother using a locator that watches for changes
     // in the directory.  If we did then we would use
     // `DirFilesWatchingLocator`, but only if not \\windows\system32 and
     // the `isDirWatchable()` (from fsWatchingLocator.ts) returns true.
-    const locator = new DirFilesLocator(dirname, kind, getExecutables);
+    const locator = new DirFilesLocator(dirname, kind, getExecutables, source);
     const dispose = async () => undefined;
 
     // Really we should be checking for symlinks or something more

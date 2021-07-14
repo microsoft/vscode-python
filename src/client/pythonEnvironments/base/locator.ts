@@ -5,7 +5,7 @@
 
 import { Event, Uri } from 'vscode';
 import { IAsyncIterableIterator, iterEmpty } from '../../common/utils/async';
-import { PythonEnvInfo, PythonEnvKind } from './info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from './info';
 import { BasicPythonEnvsChangedEvent, IPythonEnvsWatcher, PythonEnvsChangedEvent, PythonEnvsWatcher } from './watcher';
 
 /**
@@ -114,7 +114,7 @@ export type PythonLocatorQuery = BasicPythonLocatorQuery & {
 
 type QueryForEvent<E> = E extends PythonEnvsChangedEvent ? PythonLocatorQuery : BasicPythonLocatorQuery;
 
-export type BasicEnvInfo = { kind: PythonEnvKind; executablePath: string };
+export type BasicEnvInfo = { kind: PythonEnvKind; executablePath: string; source?: PythonEnvSource[] };
 
 /**
  * A single Python environment locator.

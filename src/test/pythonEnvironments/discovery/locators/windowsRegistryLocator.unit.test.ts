@@ -4,7 +4,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
+import { PythonEnvKind, PythonEnvSource } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as winreg from '../../../../client/pythonEnvironments/common/windowsRegistry';
 import { WindowsRegistryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryLocator';
@@ -218,7 +218,7 @@ suite('Windows Registry', () => {
             createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'conda3', 'python.exe')),
             createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'python37', 'python.exe')),
             createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'python38', 'python.exe')),
-        ];
+        ].map((e) => ({ ...e, source: [PythonEnvSource.WindowsRegistry] }));
 
         const iterator = locator.iterEnvs();
         const actualEnvs = await getEnvs(iterator);
@@ -248,7 +248,7 @@ suite('Windows Registry', () => {
         const expectedEnvs = [
             createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'python37', 'python.exe')),
             createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'python38', 'python.exe')),
-        ];
+        ].map((e) => ({ ...e, source: [PythonEnvSource.WindowsRegistry] }));
 
         const iterator = locator.iterEnvs();
         const actualEnvs = await getEnvs(iterator);

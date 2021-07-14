@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { isEqual } from 'lodash';
+import { cloneDeep, isEqual, uniq } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
 import { PythonEnvKind } from '../../info';
@@ -117,7 +117,9 @@ function checkIfFinishedAndNotify(
 
 function resolveEnvCollision(oldEnv: BasicEnvInfo, newEnv: BasicEnvInfo): BasicEnvInfo {
     const [env] = sortEnvInfoByPriority(oldEnv, newEnv);
-    return env;
+    const merged = cloneDeep(env);
+    merged.source = uniq([...(oldEnv.source ?? []), ...(newEnv.source ?? [])]);
+    return merged;
 }
 
 /**

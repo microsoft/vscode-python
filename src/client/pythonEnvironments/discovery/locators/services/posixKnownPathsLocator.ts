@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { traceError } from '../../../../common/logger';
-import { PythonEnvKind } from '../../../base/info';
+import { PythonEnvKind, PythonEnvSource } from '../../../base/info';
 import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { commonPosixBinPaths, getPythonBinFromPosixPaths } from '../../../common/posixUtils';
 import { isPyenvShimDir } from './pyenvLocator';
@@ -19,7 +19,7 @@ export class PosixKnownPathsLocator extends Locator<BasicEnvInfo> {
             const pythonBinaries = await getPythonBinFromPosixPaths(knownDirs);
             for (const bin of pythonBinaries) {
                 try {
-                    yield { executablePath: bin, kind };
+                    yield { executablePath: bin, kind, source: [PythonEnvSource.PathEnvVar] };
                 } catch (ex) {
                     traceError(`Failed to process environment: ${bin}`, ex);
                 }

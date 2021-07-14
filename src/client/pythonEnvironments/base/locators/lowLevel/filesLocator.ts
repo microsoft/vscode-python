@@ -6,7 +6,7 @@
 
 import { Event } from 'vscode';
 import { iterPythonExecutablesInDir } from '../../../common/commonUtils';
-import { PythonEnvKind } from '../../info';
+import { PythonEnvKind, PythonEnvSource } from '../../info';
 import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
 
@@ -20,18 +20,22 @@ class FoundFilesLocator implements ILocator<BasicEnvInfo> {
 
     protected readonly watcher = new PythonEnvsWatcher();
 
-    constructor(private readonly kind: PythonEnvKind, private readonly getExecutables: GetExecutablesFunc) {
+    constructor(
+        private readonly kind: PythonEnvKind,
+        private readonly getExecutables: GetExecutablesFunc,
+        private readonly source?: PythonEnvSource[],
+    ) {
         this.onChanged = this.watcher.onChanged;
     }
 
     public iterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
         const executables = this.getExecutables();
-        async function* generator(kind: PythonEnvKind): IPythonEnvsIterator<BasicEnvInfo> {
+        async function* generator(kind: PythonEnvKind, source?: PythonEnvSource[]): IPythonEnvsIterator<BasicEnvInfo> {
             for await (const executablePath of executables) {
-                yield { executablePath, kind };
+                yield { executablePath, kind, source };
             }
         }
-        const iterator = generator(this.kind);
+        const iterator = generator(this.kind, this.source);
         return iterator;
     }
 }
@@ -47,8 +51,9 @@ export class DirFilesLocator extends FoundFilesLocator {
         defaultKind: PythonEnvKind,
         // This is put in a closure and otherwise passed through as-is.
         getExecutables: GetDirExecutablesFunc = getExecutablesDefault,
+        source?: PythonEnvSource[],
     ) {
-        super(defaultKind, () => getExecutables(dirname));
+        super(defaultKind, () => getExecutables(dirname), source);
     }
 }
 

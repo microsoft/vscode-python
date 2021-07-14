@@ -139,7 +139,7 @@ async function resolveCondaEnv(executablePath: string): Promise<PythonEnvInfo> {
                 kind: PythonEnvKind.Conda,
                 org: AnacondaCompanyName,
                 location: prefix,
-                source: [PythonEnvSource.Conda],
+                source: [],
                 version: await getPythonVersionFromPath(executable),
                 fileInfo: await getFileInfo(executable),
             });
@@ -167,7 +167,7 @@ async function resolvePyenvEnv(executablePath: string): Promise<PythonEnvInfo> {
     const envInfo = buildEnvInfo({
         kind: PythonEnvKind.Pyenv,
         executable: executablePath,
-        source: [PythonEnvSource.Pyenv],
+        source: [],
         location,
         // Pyenv environments can fall in to these three categories:
         // 1. Global Installs : These are environments that are created when you install

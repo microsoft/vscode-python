@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import { EventEmitter } from 'vscode';
-import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { PythonEnvKind, PythonEnvSource } from '../../../../../client/pythonEnvironments/base/info';
 import { PythonEnvsReducer } from '../../../../../client/pythonEnvironments/base/locators/composite/environmentsReducer';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import { assertBasicEnvsEqual } from '../../../discovery/locators/envTestUtils';
@@ -32,8 +32,12 @@ suite('Python envs locator - Environments Reducer', () => {
 
         test('Updates are applied correctly', async () => {
             const env1 = createBasicEnv(PythonEnvKind.Venv, path.join('path', 'to', 'exec1'));
-            const env2 = createBasicEnv(PythonEnvKind.System, path.join('path', 'to', 'exec2'));
-            const env3 = createBasicEnv(PythonEnvKind.Conda, path.join('path', 'to', 'exec2')); // Same as env2
+            const env2 = createBasicEnv(PythonEnvKind.System, path.join('path', 'to', 'exec2'), [
+                PythonEnvSource.PathEnvVar,
+            ]);
+            const env3 = createBasicEnv(PythonEnvKind.Conda, path.join('path', 'to', 'exec2'), [
+                PythonEnvSource.WindowsRegistry,
+            ]); // Same as env2
             const env4 = createBasicEnv(PythonEnvKind.Unknown, path.join('path', 'to', 'exec2')); // Same as env2
             const env5 = createBasicEnv(PythonEnvKind.Poetry, path.join('path', 'to', 'exec1')); // Same as env1
             const env6 = createBasicEnv(PythonEnvKind.VirtualEnv, path.join('path', 'to', 'exec1')); // Same as env1
@@ -44,7 +48,13 @@ suite('Python envs locator - Environments Reducer', () => {
             const iterator = reducer.iterEnvs();
             const envs = await getEnvsWithUpdates(iterator);
 
-            const expected = [env5, env3];
+            const expected = [
+                createBasicEnv(PythonEnvKind.Poetry, path.join('path', 'to', 'exec1')),
+                createBasicEnv(PythonEnvKind.Conda, path.join('path', 'to', 'exec2'), [
+                    PythonEnvSource.PathEnvVar,
+                    PythonEnvSource.WindowsRegistry,
+                ]),
+            ];
             assertBasicEnvsEqual(envs, expected);
         });
 

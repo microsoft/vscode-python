@@ -11,6 +11,7 @@ import {
     PythonDistroInfo,
     PythonEnvInfo,
     PythonEnvKind,
+    PythonEnvSource,
     PythonExecutableInfo,
 } from '../../../client/pythonEnvironments/base/info';
 import { buildEnvInfo } from '../../../client/pythonEnvironments/base/info/env';
@@ -62,8 +63,8 @@ export function createLocatedEnv(
     return env;
 }
 
-export function createBasicEnv(kind: PythonEnvKind, executablePath: string): BasicEnvInfo {
-    return { executablePath, kind };
+export function createBasicEnv(kind: PythonEnvKind, executablePath: string, source?: PythonEnvSource[]): BasicEnvInfo {
+    return source ? { executablePath, kind, source } : { executablePath, kind };
 }
 
 export function createNamedEnv(
