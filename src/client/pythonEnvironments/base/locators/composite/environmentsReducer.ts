@@ -118,7 +118,7 @@ function checkIfFinishedAndNotify(
 function resolveEnvCollision(oldEnv: BasicEnvInfo, newEnv: BasicEnvInfo): BasicEnvInfo {
     const [env] = sortEnvInfoByPriority(oldEnv, newEnv);
     const merged = cloneDeep(env);
-    merged.source = uniq([...(oldEnv.source ?? []), ...(newEnv.source ?? [])]);
+    merged.source = uniq((oldEnv.source ?? []).concat(newEnv.source ?? []));
     return merged;
 }
 

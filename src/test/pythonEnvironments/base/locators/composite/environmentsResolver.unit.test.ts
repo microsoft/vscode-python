@@ -7,7 +7,6 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { ImportMock } from 'ts-mock-imports';
 import { EventEmitter, Uri } from 'vscode';
-import * as winreg from '../../../../../client/pythonEnvironments/common/windowsRegistry';
 import { ExecutionResult } from '../../../../../client/common/process/types';
 import { IDisposableRegistry } from '../../../../../client/common/types';
 import { Architecture } from '../../../../../client/common/utils/platform';
@@ -39,8 +38,6 @@ suite('Python envs locator - Environments Resolver', () => {
     setup(() => {
         disposables = [];
         envInfoService = getEnvironmentInfoService(disposables);
-        sinon.stub(winreg, 'readRegistryValues').resolves([]);
-        sinon.stub(winreg, 'readRegistryKeys').resolves([]);
     });
     teardown(() => {
         sinon.restore();
