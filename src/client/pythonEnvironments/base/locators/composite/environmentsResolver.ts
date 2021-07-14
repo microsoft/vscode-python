@@ -35,9 +35,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
 
     public async resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
         const kind = await identifyEnvironment(executablePath);
-        console.time('Time taken');
         const environment = await resolveEnvFromKind({ kind, executablePath });
-        console.timeEnd('Time taken');
         const info = await this.environmentInfoService.getEnvironmentInfo(environment.executable.filename);
         if (!info) {
             return undefined;
