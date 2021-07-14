@@ -12,7 +12,6 @@ import {
     getInterpreterPathFromDir,
     getPythonVersionFromPath,
 } from '../../../common/commonUtils';
-import { identifyEnvironment } from '../../../common/environmentIdentifier';
 import { getFileInfo, getWorkspaceFolders, isParentPath } from '../../../common/externalDependencies';
 import { AnacondaCompanyName, Conda } from '../../../discovery/locators/services/conda';
 import { parsePyenvVersion } from '../../../discovery/locators/services/pyenvLocator';
@@ -34,16 +33,11 @@ function getResolvers(): Map<PythonEnvKind, (executablePath: string) => Promise<
 }
 
 /**
- * Find as much info about the given Python environment as possible without running the
- * Python executable and returns it. Notice `undefined` is never returned, so environment
+ * Find as much info about the given Python executable as possible using env kind without running the
+ * executable and returns it. Notice `undefined` is never returned, so environment
  * returned could still be invalid.
  */
-export async function resolveEnv(executablePath: string): Promise<PythonEnvInfo> {
-    const kind = await identifyEnvironment(executablePath);
-    return resolveEnvFromKind({ kind, executablePath });
-}
-
-export async function resolveEnvFromKind({ kind, executablePath }: BasicEnvInfo): Promise<PythonEnvInfo> {
+export async function resolveEnvUsingKind({ kind, executablePath }: BasicEnvInfo): Promise<PythonEnvInfo> {
     const resolvers = getResolvers();
     const resolverForKind = resolvers.get(kind)!;
     const resolvedEnv = await resolverForKind(executablePath);

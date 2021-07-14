@@ -17,7 +17,6 @@ import {
 import { buildEnvInfo } from '../../../../../client/pythonEnvironments/base/info/env';
 import { InterpreterInformation } from '../../../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
-import { resolveEnv } from '../../../../../client/pythonEnvironments/base/locators/composite/resolverUtils';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertEnvEqual } from '../../../discovery/locators/envTestUtils';
 import { Architecture } from '../../../../../client/common/utils/platform';
@@ -25,6 +24,7 @@ import {
     AnacondaCompanyName,
     CondaInfo,
 } from '../../../../../client/pythonEnvironments/discovery/locators/services/conda';
+import { resolveEnvUsingKind } from '../../../../../client/pythonEnvironments/base/locators/composite/resolverUtils';
 
 suite('Resolver Utils', () => {
     suite('Pyenv', () => {
@@ -58,10 +58,10 @@ suite('Resolver Utils', () => {
         }
 
         test('resolveEnv', async () => {
-            const pythonPath = path.join(testPyenvVersionsDir, '3.9.0', 'bin', 'python');
+            const executablePath = path.join(testPyenvVersionsDir, '3.9.0', 'bin', 'python');
             const expected = getExpectedPyenvInfo();
 
-            const actual = await resolveEnv(pythonPath);
+            const actual = await resolveEnvUsingKind({ executablePath, kind: PythonEnvKind.Pyenv });
             assertEnvEqual(actual, expected);
         });
     });
@@ -121,7 +121,10 @@ suite('Resolver Utils', () => {
                 ...createExpectedInterpreterInfo(python38path),
             };
 
-            const actual = await resolveEnv(python38path);
+            const actual = await resolveEnvUsingKind({
+                executablePath: python38path,
+                kind: PythonEnvKind.WindowsStore,
+            });
 
             assertEnvEqual(actual, expected);
         });
@@ -139,7 +142,10 @@ suite('Resolver Utils', () => {
                 ...createExpectedInterpreterInfo(python38path),
             };
 
-            const actual = await resolveEnv(python38path);
+            const actual = await resolveEnvUsingKind({
+                executablePath: python38path,
+                kind: PythonEnvKind.WindowsStore,
+            });
 
             assertEnvEqual(actual, expected);
         });
@@ -216,7 +222,10 @@ suite('Resolver Utils', () => {
                 }
                 throw new Error(`${command} is missing or is not executable`);
             });
-            const actual = await resolveEnv(path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'));
+            const actual = await resolveEnvUsingKind({
+                executablePath: path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
+                kind: PythonEnvKind.Conda,
+            });
             assertEnvEqual(actual, expectedEnvInfo(path.join(condaPrefixWindows, 'python.exe'), condaPrefixWindows));
         });
 
@@ -228,7 +237,10 @@ suite('Resolver Utils', () => {
                 }
                 throw new Error(`${command} is missing or is not executable`);
             });
-            const actual = await resolveEnv(path.join(TEST_LAYOUT_ROOT, 'conda2', 'bin', 'python'));
+            const actual = await resolveEnvUsingKind({
+                executablePath: path.join(TEST_LAYOUT_ROOT, 'conda2', 'bin', 'python'),
+                kind: PythonEnvKind.Conda,
+            });
             assertEnvEqual(
                 actual,
                 expectedEnvInfo(path.join(condaPrefixNonWindows, 'bin', 'python'), condaPrefixNonWindows),
@@ -240,7 +252,10 @@ suite('Resolver Utils', () => {
             sinon.stub(externalDependencies, 'exec').callsFake(async (command: string) => {
                 throw new Error(`${command} is missing or is not executable`);
             });
-            const actual = await resolveEnv(path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'));
+            const actual = await resolveEnvUsingKind({
+                executablePath: path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
+                kind: PythonEnvKind.Conda,
+            });
             assertEnvEqual(
                 actual,
                 createSimpleEnvInfo(
@@ -300,7 +315,10 @@ suite('Resolver Utils', () => {
                 'win1',
                 path.join(testVirtualHomeDir, '.venvs', 'win1'),
             );
-            const actual = await resolveEnv(path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'));
+            const actual = await resolveEnvUsingKind({
+                executablePath: path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
+                kind: PythonEnvKind.Venv,
+            });
             assertEnvEqual(actual, expected);
         });
     });
@@ -466,7 +484,10 @@ suite('Resolver Utils', () => {
 
         test('If data provided by registry is more informative than kind resolvers, use it to update environment (64bit)', async () => {
             const interpreterPath = path.join(regTestRoot, 'py39', 'python.exe');
-            const actual = await resolveEnv(interpreterPath);
+            const actual = await resolveEnvUsingKind({
+                executablePath: interpreterPath,
+                kind: PythonEnvKind.Unknown,
+            });
             const expected = buildEnvInfo({
                 location: path.join(regTestRoot, 'py39'),
                 kind: PythonEnvKind.OtherGlobal, // Environment should be marked as "Global" instead of "Unknown".
@@ -483,7 +504,10 @@ suite('Resolver Utils', () => {
 
         test('If data provided by registry is more informative than kind resolvers, use it to update environment (32bit)', async () => {
             const interpreterPath = path.join(regTestRoot, 'python38', 'python.exe');
-            const actual = await resolveEnv(interpreterPath);
+            const actual = await resolveEnvUsingKind({
+                executablePath: interpreterPath,
+                kind: PythonEnvKind.Unknown,
+            });
             const expected = buildEnvInfo({
                 location: path.join(regTestRoot, 'python38'),
                 kind: PythonEnvKind.OtherGlobal, // Environment should be marked as "Global" instead of "Unknown".
@@ -499,8 +523,14 @@ suite('Resolver Utils', () => {
         });
 
         test('If data provided by registry is less informative than kind resolvers, do not use it to update environment', async () => {
+            sinon.stub(externalDependencies, 'exec').callsFake(async (command: string) => {
+                throw new Error(`${command} is missing or is not executable`);
+            });
             const interpreterPath = path.join(regTestRoot, 'conda3', 'python.exe');
-            const actual = await resolveEnv(interpreterPath);
+            const actual = await resolveEnvUsingKind({
+                executablePath: interpreterPath,
+                kind: PythonEnvKind.Conda,
+            });
             const expected = buildEnvInfo({
                 location: path.join(regTestRoot, 'conda3'),
                 // Environment should already be marked as Conda. No need to update it to Global.
