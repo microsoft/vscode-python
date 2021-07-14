@@ -69,6 +69,8 @@ export function assertEnvsEqual(
     assert.deepStrictEqual(actualEnvs.length, expectedEnvs.length, 'Number of envs');
     zip(actualEnvs, expectedEnvs).forEach((value) => {
         const [actual, expected] = value;
+        actual?.source.sort();
+        expected?.source.sort();
         assertEnvEqual(actual, expected);
     });
 }

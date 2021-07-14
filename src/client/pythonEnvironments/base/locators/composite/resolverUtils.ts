@@ -17,7 +17,7 @@ import { AnacondaCompanyName, Conda } from '../../../discovery/locators/services
 import { parsePyenvVersion } from '../../../discovery/locators/services/pyenvLocator';
 import { Architecture, getOSType, OSType } from '../../../../common/utils/platform';
 import { getPythonVersionFromPath as parsePythonVersionFromPath, parseVersion } from '../../info/pythonVersion';
-import { getRegistryInterpreters } from '../../../common/windowsUtils';
+import { getRegistryInterpreters, getRegistryInterpretersSync } from '../../../common/windowsUtils';
 import { BasicEnvInfo } from '../../locator';
 
 function getResolvers(): Map<PythonEnvKind, (executablePath: string) => Promise<PythonEnvInfo>> {
@@ -73,7 +73,13 @@ function getSearchLocation(env: PythonEnvInfo): Uri | undefined {
 }
 
 async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
-    const interpreters = await getRegistryInterpreters();
+    // Environment source has already been identified as windows registry, so we expect windows registry
+    // cache to already be populated. Call sync function which relies on cache.
+    let interpreters = getRegistryInterpretersSync();
+    if (!interpreters) {
+        traceError('Expected registry interpreter cache to be initialized already');
+        interpreters = await getRegistryInterpreters();
+    }
     const data = interpreters.find((i) => i.interpreterPath.toUpperCase() === env.executable.filename.toUpperCase());
     if (data) {
         const versionStr = data.versionStr ?? data.sysVersionStr ?? data.interpreterPath;
@@ -89,6 +95,8 @@ async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
         env.arch = data.bitnessStr === '32bit' ? Architecture.x86 : Architecture.x64;
         env.distro.org = data.distroOrgName ?? env.distro.org;
         env.source = uniq(env.source.concat(PythonEnvSource.WindowsRegistry));
+    } else {
+        traceWarning('Expected registry to find the interpreter as source was set');
     }
 }
 

@@ -547,7 +547,7 @@ suite('Resolver Utils', () => {
             const actual = await resolveBasicEnv({
                 executablePath: interpreterPath,
                 kind: PythonEnvKind.Unknown,
-                source: [PythonEnvSource.WindowsRegistry],
+                source: [PythonEnvSource.WindowsRegistry, PythonEnvSource.PathEnvVar],
             });
             const expected = buildEnvInfo({
                 kind: PythonEnvKind.OtherGlobal, // Environment should be marked as "Global" instead of "Unknown".
@@ -555,7 +555,7 @@ suite('Resolver Utils', () => {
                 version: parseVersion('3.8.5'), // Registry provides more complete version info.
                 arch: Architecture.x86, // Provided by registry
                 org: 'PythonCodingPack', // Provided by registry
-                source: [PythonEnvSource.WindowsRegistry],
+                source: [PythonEnvSource.WindowsRegistry, PythonEnvSource.PathEnvVar],
             });
             expected.distro.defaultDisplayName = 'Python 3.8 (32-bit)';
             assertEnvEqual(actual, expected);
