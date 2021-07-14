@@ -49,6 +49,7 @@ suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
+
         public async onAutoSelectInterpreter(
             resource: Resource,
             manager?: IInterpreterAutoSelectionService,
@@ -97,6 +98,8 @@ suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
 
             verify(platform.osType).once();
             expect(nextAction).to.be.equal(NextAction.runNextRule);
+
+            return undefined;
         });
     });
     test('Invoke next rule if there are no interpreters in the registry', async () => {
@@ -106,9 +109,9 @@ suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
         when(platform.osType).thenReturn(OSType.Windows);
         when(locator.getInterpreters(resource)).thenResolve([]);
         when(helper.getBestInterpreter(deepEqual([]))).thenReturn(undefined);
-        rule.setGlobalInterpreter = async (res: any) => {
+        rule.setGlobalInterpreter = async (res: PythonEnvironment | undefined) => {
             setGlobalInterpreterInvoked = true;
-            assert.equal(res, undefined);
+            assert.strictEqual(res, undefined);
             return Promise.resolve(false);
         };
 
@@ -124,11 +127,11 @@ suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
         const manager = mock(InterpreterAutoSelectionService);
         const resource = Uri.file('x');
         let setGlobalInterpreterInvoked = false;
-        const interpreterInfo = { path: '1', version: new SemVer('1.0.0') } as any;
+        const interpreterInfo = ({ path: '1', version: new SemVer('1.0.0') } as unknown) as PythonEnvironment;
         when(platform.osType).thenReturn(OSType.Windows);
         when(locator.getInterpreters(resource)).thenResolve([interpreterInfo]);
         when(helper.getBestInterpreter(deepEqual([interpreterInfo]))).thenReturn(interpreterInfo);
-        rule.setGlobalInterpreter = async (res: any) => {
+        rule.setGlobalInterpreter = async (res: PythonEnvironment | undefined) => {
             setGlobalInterpreterInvoked = true;
             expect(res).to.deep.equal(interpreterInfo);
             return Promise.resolve(false);
@@ -146,11 +149,11 @@ suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
         const manager = mock(InterpreterAutoSelectionService);
         const resource = Uri.file('x');
         let setGlobalInterpreterInvoked = false;
-        const interpreterInfo = { path: '1', version: new SemVer('1.0.0') } as any;
+        const interpreterInfo = ({ path: '1', version: new SemVer('1.0.0') } as unknown) as PythonEnvironment;
         when(platform.osType).thenReturn(OSType.Windows);
         when(locator.getInterpreters(resource)).thenResolve([interpreterInfo]);
         when(helper.getBestInterpreter(deepEqual([interpreterInfo]))).thenReturn(interpreterInfo);
-        rule.setGlobalInterpreter = async (res: any) => {
+        rule.setGlobalInterpreter = async (res: PythonEnvironment | undefined) => {
             setGlobalInterpreterInvoked = true;
             expect(res).to.deep.equal(interpreterInfo);
             return Promise.resolve(true);

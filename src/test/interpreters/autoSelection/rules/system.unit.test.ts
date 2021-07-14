@@ -35,6 +35,7 @@ suite('Interpreters - Auto Selection - System Interpreters Rule', () => {
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
+
         public async onAutoSelectInterpreter(
             resource: Resource,
             manager?: IInterpreterAutoSelectionService,
@@ -66,9 +67,9 @@ suite('Interpreters - Auto Selection - System Interpreters Rule', () => {
         let setGlobalInterpreterInvoked = false;
         when(interpreterService.getInterpreters(resource)).thenResolve([]);
         when(helper.getBestInterpreter(deepEqual([]))).thenReturn(undefined);
-        rule.setGlobalInterpreter = async (res: any) => {
+        rule.setGlobalInterpreter = async (res: PythonEnvironment | undefined) => {
             setGlobalInterpreterInvoked = true;
-            assert.equal(res, undefined);
+            assert.strictEqual(res, undefined);
             return Promise.resolve(false);
         };
 
@@ -82,10 +83,10 @@ suite('Interpreters - Auto Selection - System Interpreters Rule', () => {
         const manager = mock(InterpreterAutoSelectionService);
         const resource = Uri.file('x');
         let setGlobalInterpreterInvoked = false;
-        const interpreterInfo = { path: '1', version: new SemVer('1.0.0') } as any;
+        const interpreterInfo = ({ path: '1', version: new SemVer('1.0.0') } as unknown) as PythonEnvironment;
         when(interpreterService.getInterpreters(resource)).thenResolve([interpreterInfo]);
         when(helper.getBestInterpreter(deepEqual([interpreterInfo]))).thenReturn(interpreterInfo);
-        rule.setGlobalInterpreter = async (res: any) => {
+        rule.setGlobalInterpreter = async (res: PythonEnvironment | undefined) => {
             setGlobalInterpreterInvoked = true;
             expect(res).deep.equal(interpreterInfo);
             return Promise.resolve(false);
@@ -101,10 +102,10 @@ suite('Interpreters - Auto Selection - System Interpreters Rule', () => {
         const manager = mock(InterpreterAutoSelectionService);
         const resource = Uri.file('x');
         let setGlobalInterpreterInvoked = false;
-        const interpreterInfo = { path: '1', version: new SemVer('1.0.0') } as any;
+        const interpreterInfo = ({ path: '1', version: new SemVer('1.0.0') } as unknown) as PythonEnvironment;
         when(interpreterService.getInterpreters(resource)).thenResolve([interpreterInfo]);
         when(helper.getBestInterpreter(deepEqual([interpreterInfo]))).thenReturn(interpreterInfo);
-        rule.setGlobalInterpreter = async (res: any) => {
+        rule.setGlobalInterpreter = async (res: PythonEnvironment | undefined) => {
             setGlobalInterpreterInvoked = true;
             expect(res).deep.equal(interpreterInfo);
             return Promise.resolve(true);

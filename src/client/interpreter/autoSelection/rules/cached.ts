@@ -14,6 +14,7 @@ import { BaseRuleService, NextAction } from './baseRule';
 @injectable()
 export class CachedInterpretersAutoSelectionRule extends BaseRuleService {
     protected readonly rules: IInterpreterAutoSelectionRule[];
+
     constructor(
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper,
@@ -31,6 +32,7 @@ export class CachedInterpretersAutoSelectionRule extends BaseRuleService {
         super(AutoSelectionRule.cachedInterpreters, fs, stateFactory);
         this.rules = [systemInterpreter, currentPathInterpreter, winRegInterpreter];
     }
+
     protected async onAutoSelectInterpreter(
         resource: Resource,
         manager?: IInterpreterAutoSelectionService,

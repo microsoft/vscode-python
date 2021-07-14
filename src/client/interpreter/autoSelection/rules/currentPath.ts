@@ -31,11 +31,12 @@ export class CurrentPathInterpretersAutoSelectionRule extends BaseRuleService {
     ) {
         super(AutoSelectionRule.currentPath, fs, stateFactory);
     }
+
     protected async onAutoSelectInterpreter(
         resource: Resource,
         manager?: IInterpreterAutoSelectionService,
     ): Promise<NextAction> {
-        let interpreters = (await inDiscoveryExperiment(this.experimentService))
+        const interpreters = (await inDiscoveryExperiment(this.experimentService))
             ? await this.pyenvs.getInterpreters(resource, undefined, [PythonEnvSource.PathEnvVar])
             : await this.serviceContainer
                   .get<IInterpreterLocatorService>(IInterpreterLocatorService, CURRENT_PATH_SERVICE)
