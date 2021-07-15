@@ -4,6 +4,7 @@
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
+import * as winreg from '../../../../../client/pythonEnvironments/common/windowsRegistry';
 import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import * as platformApis from '../../../../../client/common/utils/platform';
 import {
@@ -189,7 +190,7 @@ suite('Resolver Utils', () => {
                 arch: Architecture.Unknown,
                 distro: { org: '' },
                 searchLocation: undefined,
-                source: [PythonEnvSource.Other],
+                source: [],
             };
         }
 
@@ -279,7 +280,7 @@ suite('Resolver Utils', () => {
                 arch: Architecture.Unknown,
                 distro: { org: '' },
                 searchLocation: Uri.file(path.dirname(location)),
-                source: [PythonEnvSource.Other],
+                source: [],
             };
         }
 
@@ -292,6 +293,219 @@ suite('Resolver Utils', () => {
                 path.join(testVirtualHomeDir, '.venvs', 'win1'),
             );
             const actual = await resolveEnv(path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'));
+            assertEnvEqual(actual, expected);
+        });
+    });
+
+    suite('Windows registry', () => {
+        const regTestRoot = path.join(TEST_LAYOUT_ROOT, 'winreg');
+
+        const registryData = {
+            x64: {
+                HKLM: [
+                    {
+                        key: '\\SOFTWARE\\Python',
+                        values: { '': '' },
+                        subKeys: ['\\SOFTWARE\\Python\\PythonCore', '\\SOFTWARE\\Python\\ContinuumAnalytics'],
+                    },
+                    {
+                        key: '\\SOFTWARE\\Python\\PythonCore',
+                        values: {
+                            '': '',
+                            DisplayName: 'Python Software Foundation',
+                            SupportUrl: 'www.python.org',
+                        },
+                        subKeys: ['\\SOFTWARE\\Python\\PythonCore\\3.9'],
+                    },
+                    {
+                        key: '\\SOFTWARE\\Python\\PythonCore\\3.9',
+                        values: {
+                            '': '',
+                            DisplayName: 'Python 3.9 (64-bit)',
+                            SupportUrl: 'www.python.org',
+                            SysArchitecture: '64bit',
+                            SysVersion: '3.9',
+                            Version: '3.9.0rc2',
+                        },
+                        subKeys: ['\\SOFTWARE\\Python\\PythonCore\\3.9\\InstallPath'],
+                    },
+                    {
+                        key: '\\SOFTWARE\\Python\\PythonCore\\3.9\\InstallPath',
+                        values: {
+                            '': '',
+                            ExecutablePath: path.join(regTestRoot, 'py39', 'python.exe'),
+                        },
+                        subKeys: [] as string[],
+                    },
+                    {
+                        key: '\\SOFTWARE\\Python\\ContinuumAnalytics',
+                        values: {
+                            '': '',
+                        },
+                        subKeys: ['\\SOFTWARE\\Python\\ContinuumAnalytics\\Anaconda38-64'],
+                    },
+                    {
+                        key: '\\SOFTWARE\\Python\\ContinuumAnalytics\\Anaconda38-64',
+                        values: {
+                            '': '',
+                            DisplayName: 'Anaconda py38_4.8.3',
+                            SupportUrl: 'github.com/continuumio/anaconda-issues',
+                            SysArchitecture: '64bit',
+                            SysVersion: '3.8',
+                            Version: 'py38_4.8.3',
+                        },
+                        subKeys: ['\\SOFTWARE\\Python\\PythonCore\\Anaconda38-64\\InstallPath'],
+                    },
+                    {
+                        key: '\\SOFTWARE\\Python\\PythonCore\\Anaconda38-64\\InstallPath',
+                        values: {
+                            '': '',
+                            ExecutablePath: path.join(regTestRoot, 'conda3', 'python.exe'),
+                        },
+                        subKeys: [] as string[],
+                    },
+                ],
+                HKCU: [],
+            },
+            x86: {
+                HKLM: [],
+                HKCU: [
+                    {
+                        key: '\\SOFTWARE\\Python',
+                        values: { '': '' },
+                        subKeys: ['\\SOFTWARE\\Python\\PythonCodingPack'],
+                    },
+                    {
+                        key: '\\SOFTWARE\\Python\\PythonCodingPack',
+                        values: {
+                            '': '',
+                            DisplayName: 'Python Software Foundation',
+                            SupportUrl: 'www.python.org',
+                        },
+                        subKeys: ['\\SOFTWARE\\Python\\PythonCodingPack\\3.8'],
+                    },
+                    {
+                        key: '\\SOFTWARE\\Python\\PythonCodingPack\\3.8',
+                        values: {
+                            '': '',
+                            DisplayName: 'Python 3.8 (32-bit)',
+                            SupportUrl: 'www.python.org',
+                            SysArchitecture: '32bit',
+                            SysVersion: '3.8.5',
+                        },
+                        subKeys: ['\\SOFTWARE\\Python\\PythonCodingPack\\3.8\\InstallPath'],
+                    },
+                    {
+                        key: '\\SOFTWARE\\Python\\PythonCodingPack\\3.8\\InstallPath',
+                        values: {
+                            '': '',
+                            ExecutablePath: path.join(regTestRoot, 'python38', 'python.exe'),
+                        },
+                        subKeys: [] as string[],
+                    },
+                ],
+            },
+        };
+
+        function fakeRegistryValues({ arch, hive, key }: winreg.Options): Promise<winreg.IRegistryValue[]> {
+            const regArch = arch === 'x86' ? registryData.x86 : registryData.x64;
+            const regHive = hive === winreg.HKCU ? regArch.HKCU : regArch.HKLM;
+            for (const k of regHive) {
+                if (k.key === key) {
+                    const values: winreg.IRegistryValue[] = [];
+                    for (const [name, value] of Object.entries(k.values)) {
+                        values.push({
+                            arch: arch ?? 'x64',
+                            hive: hive ?? winreg.HKLM,
+                            key: k.key,
+                            name,
+                            type: winreg.REG_SZ,
+                            value: value ?? '',
+                        });
+                    }
+                    return Promise.resolve(values);
+                }
+            }
+            return Promise.resolve([]);
+        }
+
+        function fakeRegistryKeys({ arch, hive, key }: winreg.Options): Promise<winreg.IRegistryKey[]> {
+            const regArch = arch === 'x86' ? registryData.x86 : registryData.x64;
+            const regHive = hive === winreg.HKCU ? regArch.HKCU : regArch.HKLM;
+            for (const k of regHive) {
+                if (k.key === key) {
+                    const keys = k.subKeys.map((s) => ({
+                        arch: arch ?? 'x64',
+                        hive: hive ?? winreg.HKLM,
+                        key: s,
+                    }));
+                    return Promise.resolve(keys);
+                }
+            }
+            return Promise.resolve([]);
+        }
+
+        setup(async () => {
+            sinon.stub(winreg, 'readRegistryValues').callsFake(fakeRegistryValues);
+            sinon.stub(winreg, 'readRegistryKeys').callsFake(fakeRegistryKeys);
+            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
+            sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
+        });
+
+        teardown(() => {
+            sinon.restore();
+        });
+
+        test('If data provided by registry is more informative than kind resolvers, use it to update environment (64bit)', async () => {
+            const interpreterPath = path.join(regTestRoot, 'py39', 'python.exe');
+            const actual = await resolveEnv(interpreterPath);
+            const expected = buildEnvInfo({
+                location: path.join(regTestRoot, 'py39'),
+                kind: PythonEnvKind.OtherGlobal, // Environment should be marked as "Global" instead of "Unknown".
+                executable: interpreterPath,
+                version: parseVersion('3.9.0rc2'), // Registry provides more complete version info.
+                arch: Architecture.x64,
+                org: 'PythonCore',
+                name: 'py39',
+                source: [PythonEnvSource.WindowsRegistry],
+            });
+            expected.distro.defaultDisplayName = 'Python 3.9 (64-bit)';
+            assertEnvEqual(actual, expected);
+        });
+
+        test('If data provided by registry is more informative than kind resolvers, use it to update environment (32bit)', async () => {
+            const interpreterPath = path.join(regTestRoot, 'python38', 'python.exe');
+            const actual = await resolveEnv(interpreterPath);
+            const expected = buildEnvInfo({
+                location: path.join(regTestRoot, 'python38'),
+                kind: PythonEnvKind.OtherGlobal, // Environment should be marked as "Global" instead of "Unknown".
+                executable: interpreterPath,
+                version: parseVersion('3.8.5'), // Registry provides more complete version info.
+                arch: Architecture.x86, // Provided by registry
+                org: 'PythonCodingPack', // Provided by registry
+                name: 'python38',
+                source: [PythonEnvSource.WindowsRegistry],
+            });
+            expected.distro.defaultDisplayName = 'Python 3.8 (32-bit)';
+            assertEnvEqual(actual, expected);
+        });
+
+        test('If data provided by registry is less informative than kind resolvers, do not use it to update environment', async () => {
+            const interpreterPath = path.join(regTestRoot, 'conda3', 'python.exe');
+            const actual = await resolveEnv(interpreterPath);
+            const expected = buildEnvInfo({
+                location: path.join(regTestRoot, 'conda3'),
+                // Environment should already be marked as Conda. No need to update it to Global.
+                kind: PythonEnvKind.Conda,
+                executable: interpreterPath,
+                // Registry does not provide the minor version, so keep version provided by Conda resolver instead.
+                version: parseVersion('3.8.5'),
+                arch: Architecture.x64, // Provided by registry
+                org: 'ContinuumAnalytics', // Provided by registry
+                name: 'conda3',
+                source: [PythonEnvSource.WindowsRegistry],
+            });
+            expected.distro.defaultDisplayName = 'Anaconda py38_4.8.3';
             assertEnvEqual(actual, expected);
         });
     });

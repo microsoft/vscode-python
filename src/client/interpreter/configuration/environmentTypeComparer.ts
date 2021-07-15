@@ -15,7 +15,7 @@ import { IInterpreterComparer } from './types';
  * - Global environments (pipenv, conda);
  * - Globally-installed interpreters (/usr/bin/python3, Windows Store).
  */
-enum EnvTypeHeuristic {
+export enum EnvTypeHeuristic {
     Local = 1,
     Global = 2,
     GlobalInterpreters = 3,
@@ -165,7 +165,7 @@ function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment, work
 /**
  * Return a heuristic value depending on the environment type.
  */
-function getEnvTypeHeuristic(environment: PythonEnvironment, workspacePath: string): EnvTypeHeuristic {
+export function getEnvTypeHeuristic(environment: PythonEnvironment, workspacePath: string): EnvTypeHeuristic {
     const { envType } = environment;
 
     if (workspacePath.length > 0 && environment.envPath && isParentPath(environment.envPath, workspacePath)) {

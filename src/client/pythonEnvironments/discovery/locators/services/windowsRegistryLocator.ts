@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { uniq } from 'lodash';
 import { traceError, traceVerbose } from '../../../../common/logger';
 import { Architecture } from '../../../../common/utils/platform';
 import {
@@ -31,7 +30,7 @@ export class WindowsRegistryLocator extends Locator {
     public iterEnvs(): IPythonEnvsIterator {
         const buildRegistryEnvInfo = (data: IRegistryInterpreterData) => this.buildRegistryEnvInfo(data);
         const iterator = async function* () {
-            const interpreters = await getRegistryInterpreters();
+            const interpreters = await getRegistryInterpreters(true);
             for (const interpreter of interpreters) {
                 try {
                     const env = await buildRegistryEnvInfo(interpreter);
@@ -42,19 +41,6 @@ export class WindowsRegistryLocator extends Locator {
             }
         };
         return iterator();
-    }
-
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const executablePath = typeof env === 'string' ? env : env.executable.filename;
-        const interpreters = await getRegistryInterpreters();
-        const selected = interpreters.find((i) => i.interpreterPath.toUpperCase() === executablePath.toUpperCase());
-        if (selected) {
-            const regEnv = await this.buildRegistryEnvInfo(selected);
-            regEnv.source = typeof env === 'string' ? regEnv.source : uniq(regEnv.source.concat(env.source));
-            return regEnv;
-        }
-
-        return undefined;
     }
 
     private async buildRegistryEnvInfo(data: IRegistryInterpreterData): Promise<PythonEnvInfo> {

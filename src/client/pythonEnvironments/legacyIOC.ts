@@ -71,6 +71,7 @@ import { EnvironmentInfoServiceQueuePriority, getEnvironmentInfoService } from '
 
 const convertedKinds = new Map(
     Object.entries({
+        [PythonEnvKind.OtherGlobal]: EnvironmentType.Global,
         [PythonEnvKind.System]: EnvironmentType.System,
         [PythonEnvKind.MacDefault]: EnvironmentType.System,
         [PythonEnvKind.WindowsStore]: EnvironmentType.WindowsStore,
