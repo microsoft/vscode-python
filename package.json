@@ -115,21 +115,6 @@
             ],
             "commands": [
                 {
-                    "category": "Python Refactor",
-                    "command": "python.refactorExtractMethod",
-                    "title": "%python.command.python.refactorExtractMethod.title%"
-                },
-                {
-                    "category": "Python Refactor",
-                    "command": "python.refactorExtractVariable",
-                    "title": "%python.command.python.refactorExtractVariable.title%"
-                },
-                {
-                    "category": "Python Refactor",
-                    "command": "python.sortImports",
-                    "title": "%python.command.python.sortImports.title%"
-                },
-                {
                     "category": "Python",
                     "command": "python.analysis.clearCache",
                     "title": "%python.command.python.analysis.clearCache.title%"
@@ -163,6 +148,14 @@
                     "category": "Python",
                     "command": "python.createTerminal",
                     "title": "%python.command.python.createTerminal.title%"
+                },
+                {
+                    "command": "python.debugTestNode",
+                    "icon": {
+                        "dark": "resources/dark/debug.svg",
+                        "light": "resources/light/debug.svg"
+                    },
+                    "title": "Debug"
                 },
                 {
                     "category": "Python",
@@ -236,6 +229,24 @@
                     "title": "%python.command.python.launchTensorBoard.title%"
                 },
                 {
+                    "command": "python.openTestNodeInEditor",
+                    "icon": {
+                        "dark": "resources/dark/open-file.svg",
+                        "light": "resources/light/open-file.svg"
+                    },
+                    "title": "Open"
+                },
+                {
+                    "category": "Python Refactor",
+                    "command": "python.refactorExtractMethod",
+                    "title": "%python.command.python.refactorExtractMethod.title%"
+                },
+                {
+                    "category": "Python Refactor",
+                    "command": "python.refactorExtractVariable",
+                    "title": "%python.command.python.refactorExtractVariable.title%"
+                },
+                {
                     "category": "Python",
                     "command": "python.refreshTensorBoard",
                     "enablement": "python.hasActiveTensorBoardSession",
@@ -265,6 +276,14 @@
                     "category": "Python",
                     "command": "python.runLinting",
                     "title": "%python.command.python.runLinting.title%"
+                },
+                {
+                    "command": "python.runTestNode",
+                    "icon": {
+                        "dark": "resources/dark/start.svg",
+                        "light": "resources/light/start.svg"
+                    },
+                    "title": "Run"
                 },
                 {
                     "category": "Python",
@@ -299,6 +318,11 @@
                     "category": "Python",
                     "command": "python.setLinter",
                     "title": "%python.command.python.setLinter.title%"
+                },
+                {
+                    "category": "Python Refactor",
+                    "command": "python.sortImports",
+                    "title": "%python.command.python.sortImports.title%"
                 },
                 {
                     "category": "Python",
@@ -357,30 +381,6 @@
                         "light": "resources/light/repl.svg"
                     },
                     "title": "%python.command.python.viewTestOutput.title%"
-                },
-                {
-                    "command": "python.debugTestNode",
-                    "icon": {
-                        "dark": "resources/dark/debug.svg",
-                        "light": "resources/light/debug.svg"
-                    },
-                    "title": "Debug"
-                },
-                {
-                    "command": "python.openTestNodeInEditor",
-                    "icon": {
-                        "dark": "resources/dark/open-file.svg",
-                        "light": "resources/light/open-file.svg"
-                    },
-                    "title": "Open"
-                },
-                {
-                    "command": "python.runTestNode",
-                    "icon": {
-                        "dark": "resources/dark/start.svg",
-                        "light": "resources/light/start.svg"
-                    },
-                    "title": "Run"
                 }
             ],
             "configuration": {
