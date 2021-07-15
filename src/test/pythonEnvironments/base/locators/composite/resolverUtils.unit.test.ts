@@ -328,6 +328,7 @@ suite('Resolver Utils', () => {
         const testLocation3 = path.join(testPosixKnownPathsRoot, 'location3');
         setup(() => {
             sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
+            sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Linux);
         });
 
         teardown(() => {
@@ -560,7 +561,6 @@ suite('Resolver Utils', () => {
                 version: parseVersion('3.8.5'), // Registry provides more complete version info.
                 arch: Architecture.x86, // Provided by registry
                 org: 'PythonCodingPack', // Provided by registry
-                name: 'python38',
                 source: [PythonEnvSource.WindowsRegistry],
             });
             expected.distro.defaultDisplayName = 'Python 3.8 (32-bit)';

@@ -92,9 +92,15 @@ async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
 }
 
 async function resolveGloballyInstalledEnv(executablePath: string, kind: PythonEnvKind): Promise<PythonEnvInfo> {
+    let version;
+    try {
+        version = parseVersion(path.basename(executablePath));
+    } catch {
+        version = UNKNOWN_PYTHON_VERSION;
+    }
     const envInfo = buildEnvInfo({
         kind,
-        version: await getPythonVersionFromPath(executablePath),
+        version,
         executable: executablePath,
     });
     const fileData = await getFileInfo(executablePath);
