@@ -195,5 +195,17 @@ suite('Unit Tests - nose - Discovery', () => {
                 `${suite.testSuite.name} has no runnable tests`,
             );
         });
+
+        // Check that the visible folder name is just the last item in the path, not the whole path
+        tests.testFolders.forEach((folder) => {
+            const pathItems = folder.nameToRun.split(path.sep);
+            expect(pathItems[pathItems.length - 1]).to.equal(folder.name);
+        });
+
+        // Check that the visible file name is just the last item in the path, not the whole path
+        tests.testFiles.forEach((file) => {
+            const pathItems = file.nameToRun.split('/'); // Not path.sep because test input is from posix discovery
+            expect(pathItems[pathItems.length - 1]).to.equal(file.name);
+        });
     });
 });

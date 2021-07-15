@@ -19,6 +19,7 @@ import {
     IMemento,
     InstallerResponse,
     Product,
+    ProductInstallStatus,
     Resource,
 } from '../common/types';
 import { isResource } from '../common/utils/misc';
@@ -99,6 +100,14 @@ type PythonApiForJupyterExtension = {
         resource?: InterpreterUri,
         cancel?: CancellationToken,
     ): Promise<InstallerResponse>;
+    /**
+     * IInstaller
+     */
+    isProductVersionCompatible(
+        product: Product,
+        semVerRequirement: string,
+        resource?: InterpreterUri,
+    ): Promise<ProductInstallStatus>;
     /**
      * Returns path to where `debugpy` is. In python extension this is `/pythonFiles/lib/python`.
      */
@@ -189,6 +198,12 @@ export class JupyterExtensionIntegration {
                         ? ModuleInstallFlags.updateDependencies | ModuleInstallFlags.reInstall
                         : undefined,
                 ),
+            isProductVersionCompatible: async (
+                product: Product,
+                semVerRequirement: string,
+                resource?: InterpreterUri,
+            ): Promise<ProductInstallStatus> =>
+                this.installer.isProductVersionCompatible(product, semVerRequirement, resource),
             getDebuggerPath: async () => dirname(getDebugpyPackagePath()),
             getInterpreterPathSelectedForJupyterServer: () =>
                 this.globalState.get<string | undefined>('INTERPRETER_PATH_SELECTED_FOR_JUPYTER_SERVER'),

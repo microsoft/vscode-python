@@ -13,7 +13,6 @@ import {
     Disposable,
     DocumentHighlight,
     DocumentLink,
-    DocumentSelector,
     DocumentSymbol,
     Event,
     EventEmitter,
@@ -30,11 +29,12 @@ import {
     Uri,
     WorkspaceEdit,
 } from 'vscode';
-import { NotebookCell, NotebookConcatTextDocument, NotebookDocument } from 'vscode-proposed';
+import { NotebookDocument } from 'vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
+import { InteractiveInputScheme, InteractiveScheme, NotebookCellScheme } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
+import { IConcatTextDocument } from './concatTextDocument';
 import { NotebookConcatDocument } from './notebookConcatDocument';
-import { SafeNotebookDocument } from './safeNotebookDocument';
 
 /* Used by code actions. Disabled for now.
 function toRange(rangeLike: Range): Range {
@@ -53,6 +53,8 @@ export class NotebookConverter implements Disposable {
 
     private activeDocuments: Map<string, NotebookConcatDocument> = new Map<string, NotebookConcatDocument>();
 
+    private pendingCloseDocuments: Map<string, NotebookConcatDocument> = new Map<string, NotebookConcatDocument>();
+
     private activeDocumentsOutgoingMap: Map<string, NotebookConcatDocument> = new Map<string, NotebookConcatDocument>();
 
     private disposables: Disposable[] = [];
@@ -64,7 +66,7 @@ export class NotebookConverter implements Disposable {
     constructor(
         private api: IVSCodeNotebook,
         private fs: IFileSystem,
-        private cellSelector: DocumentSelector,
+        private cellSelector: string,
         private notebookFilter: RegExp,
     ) {
         this.disposables.push(api.onDidOpenNotebookDocument(this.onDidOpenNotebook.bind(this)));
@@ -75,6 +77,18 @@ export class NotebookConverter implements Disposable {
     }
 
     private static getDocumentKey(uri: Uri): string {
+        if (uri.scheme === InteractiveInputScheme) {
+            // input
+            const counter = /InteractiveInput-(\d+)/.exec(uri.path);
+            if (counter && counter[1]) {
+                return `Interactive-${counter[1]}.interactive`;
+            }
+        }
+
+        if (uri.scheme === InteractiveScheme) {
+            return uri.path;
+        }
+
         // Use the path of the doc uri. It should be the same for all cells
         if (os.platform() === 'win32') {
             return uri.fsPath.toLowerCase();
@@ -106,20 +120,26 @@ export class NotebookConverter implements Disposable {
         }
     }
 
-    public hasFiredClose(cell: TextDocument): boolean | undefined {
-        const wrapper = this.getTextDocumentWrapper(cell);
-        if (wrapper) {
-            return wrapper.firedClose;
-        }
-        return undefined;
-    }
+    public firedClose(document: TextDocument): TextDocument | undefined {
+        const key = NotebookConverter.getDocumentKey(document.uri);
+        let concatDocument = this.activeDocuments.get(key);
 
-    public firedClose(cell: TextDocument): void {
-        const wrapper = this.getTextDocumentWrapper(cell);
-        if (wrapper) {
-            wrapper.firedClose = true;
-            wrapper.firedOpen = false;
+        // concat document not closed yet
+        // mark the cell is closed (which contains `document`)
+        // when all cells are closed, we should return the concatDocument, so the language server will close it and clear diagnostics
+        if (concatDocument && concatDocument.isComposeDocumentsAllClosed) {
+            return concatDocument;
         }
+
+        concatDocument = this.pendingCloseDocuments.get(key);
+
+        if (concatDocument) {
+            // the document will not be closed, remove it from cache
+            this.pendingCloseDocuments.delete(key);
+            return concatDocument;
+        }
+
+        return undefined;
     }
 
     public toIncomingDiagnosticsMap(uri: Uri, diagnostics: Diagnostic[]): Map<Uri, Diagnostic[]> {
@@ -131,9 +151,9 @@ export class NotebookConverter implements Disposable {
             // Make sure to clear out old ones first
             const cellUris: string[] = [];
             const oldCellUris = this.mapOfConcatDocumentsWithCellUris.get(uri.toString()) || [];
-            wrapper.notebook.getCells().forEach((c: NotebookCell) => {
-                result.set(c.document.uri, []);
-                cellUris.push(c.document.uri.toString());
+            wrapper.concatDocument.getComposeDocuments().forEach((document: TextDocument) => {
+                result.set(document.uri, []);
+                cellUris.push(document.uri.toString());
             });
             // Possible some cells were deleted, we need to clear the diagnostics of those cells as well.
             const currentCellUris = new Set(cellUris);
@@ -424,20 +444,20 @@ export class NotebookConverter implements Disposable {
         return this.toIncomingLocationFromRange(cell, new Range(position, position)).range.start;
     }
 
-    private getCellAtLocation(location: Location): NotebookCell | undefined {
+    private getTextDocumentAtLocation(location: Location): TextDocument | undefined {
         const key = NotebookConverter.getDocumentKey(location.uri);
         const wrapper = this.activeDocuments.get(key);
         if (wrapper) {
-            return wrapper.getCellAtPosition(location.range.start);
+            return wrapper.getTextDocumentAtPosition(location.range.start);
         }
         return undefined;
     }
 
     private toIncomingWorkspaceSymbol(symbol: SymbolInformation): SymbolInformation {
         // Figure out what cell if any the symbol is for
-        const cell = this.getCellAtLocation(symbol.location);
-        if (cell) {
-            return this.toIncomingSymbolFromSymbolInformation(cell.document, symbol);
+        const document = this.getTextDocumentAtLocation(symbol.location);
+        if (document) {
+            return this.toIncomingSymbolFromSymbolInformation(document, symbol);
         }
         return symbol;
     }
@@ -589,15 +609,13 @@ export class NotebookConverter implements Disposable {
     // Returns true if the given location needs conversion
     // Should be if it's in a notebook cell or if it's in a notebook concat document
     private locationNeedsConversion(locationUri: Uri): boolean {
-        return (
-            locationUri.scheme === 'vscode-notebook-cell' || this.getWrapperFromOutgoingUri(locationUri) !== undefined
-        );
+        return locationUri.scheme === NotebookCellScheme || this.getWrapperFromOutgoingUri(locationUri) !== undefined;
     }
 
     private toIncomingUri(outgoingUri: Uri, range: Range) {
         const wrapper = this.getWrapperFromOutgoingUri(outgoingUri);
         if (wrapper) {
-            const location = wrapper.concatDocument.locationAt(range);
+            const location = wrapper.locationAt(range);
             return location.uri;
         }
         return outgoingUri;
@@ -649,19 +667,21 @@ export class NotebookConverter implements Disposable {
     }
 
     private onDidOpenNotebook(doc: NotebookDocument) {
-        const safeDoc = new SafeNotebookDocument(doc);
-        if (this.notebookFilter.test(safeDoc.fileName)) {
-            this.getTextDocumentWrapper(safeDoc.uri);
+        if (this.notebookFilter.test(doc.uri.fsPath)) {
+            this.getTextDocumentWrapper(doc.uri);
+            const key = NotebookConverter.getDocumentKey(doc.uri);
+            this.pendingCloseDocuments.delete(key);
         }
     }
 
     private onDidCloseNotebook(doc: NotebookDocument) {
-        const safeDoc = new SafeNotebookDocument(doc);
-        if (this.notebookFilter.test(safeDoc.fileName)) {
-            const key = NotebookConverter.getDocumentKey(safeDoc.uri);
-            const wrapper = this.getTextDocumentWrapper(safeDoc.uri);
+        if (this.notebookFilter.test(doc.uri.fsPath)) {
+            const key = NotebookConverter.getDocumentKey(doc.uri);
+            const wrapper = this.getTextDocumentWrapper(doc.uri);
             this.activeDocuments.delete(key);
             this.activeDocumentsOutgoingMap.delete(NotebookConverter.getDocumentKey(wrapper.uri));
+            this.pendingCloseDocuments.set(key, wrapper);
+            wrapper.dispose();
         }
     }
 
@@ -679,6 +699,7 @@ export class NotebookConverter implements Disposable {
                 throw new Error(`Invalid uri, not a notebook: ${uri.fsPath}`);
             }
             result = new NotebookConcatDocument(doc, this.api, this.cellSelector);
+            this.disposables.push(result);
             result.onCellsChanged((e) => this.onDidChangeCellsEmitter.fire(e), undefined, this.disposables);
             this.activeDocuments.set(key, result);
             this.activeDocumentsOutgoingMap.set(NotebookConverter.getDocumentKey(result.uri), result);
@@ -686,7 +707,7 @@ export class NotebookConverter implements Disposable {
         return result;
     }
 
-    private getConcatDocument(cell: TextDocument | Uri): NotebookConcatTextDocument | undefined {
+    private getConcatDocument(cell: TextDocument | Uri): IConcatTextDocument | undefined {
         return this.getTextDocumentWrapper(cell)?.concatDocument;
     }
 }

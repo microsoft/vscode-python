@@ -59,8 +59,9 @@ export class SettingsShellDetector extends BaseShellDetector {
 
         if (shell !== TerminalShellType.other) {
             telemetryProperties.shellIdentificationSource = 'environment';
+        } else {
+            telemetryProperties.shellIdentificationSource = 'settings';
         }
-        telemetryProperties.shellIdentificationSource = 'settings';
         traceVerbose(`Shell path from user settings '${shellPath}'`);
         return shell;
     }

@@ -141,7 +141,6 @@ suite('TensorBoard session creation', async () => {
             assert.ok(daemon?.killed, 'TensorBoard session process not killed after webview closed');
         });
         test('When user selects file picker, display file picker', async () => {
-            errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
             // Stub user selections
             sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.selectAnotherFolder() });
             const filePickerStub = sandbox.stub(applicationShell, 'showOpenDialog');
@@ -154,6 +153,22 @@ suite('TensorBoard session creation', async () => {
             );
 
             assert.ok(filePickerStub.called, 'User requests to select another folder and file picker was not shown');
+        });
+        test('When user selects remote URL, display input box', async () => {
+            sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.enterRemoteUrl() });
+            const inputBoxStub = sandbox.stub(applicationShell, 'showInputBox');
+
+            // Create session
+            await commandManager.executeCommand(
+                'python.launchTensorBoard',
+                TensorBoardEntrypoint.palette,
+                TensorBoardEntrypointTrigger.palette,
+            );
+
+            assert.ok(
+                inputBoxStub.called,
+                'User requested to enter remote URL and input box to enter URL was not shown',
+            );
         });
     });
     suite('Installation prompt message', async () => {

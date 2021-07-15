@@ -184,7 +184,7 @@ export class Poetry {
     }
 
     /**
-     * Method created to faciliate caching. The caching decorator uses function arguments as cache key,
+     * Method created to facilitate caching. The caching decorator uses function arguments as cache key,
      * so pass in cwd on which we need to cache.
      */
     @cache(30_000, true, 10_000)
@@ -220,7 +220,7 @@ export class Poetry {
     }
 
     /**
-     * Method created to faciliate caching. The caching decorator uses function arguments as cache key,
+     * Method created to facilitate caching. The caching decorator uses function arguments as cache key,
      * so pass in cwd on which we need to cache.
      */
     @cache(20_000, true, 10_000)

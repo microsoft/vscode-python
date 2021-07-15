@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { uniq } from 'lodash';
 import * as path from 'path';
 import { traceError } from '../../../../common/logger';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
@@ -9,11 +8,7 @@ import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../../base/inf
 import { buildEnvInfo } from '../../../base/info/env';
 import { IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
-import {
-    getEnvironmentDirFromPath,
-    getInterpreterPathFromDir,
-    getPythonVersionFromPath,
-} from '../../../common/commonUtils';
+import { getInterpreterPathFromDir, getPythonVersionFromPath } from '../../../common/commonUtils';
 import { arePathsSame, getFileInfo, getSubDirs, pathExists } from '../../../common/externalDependencies';
 
 function getPyenvDir(): string {
@@ -330,34 +325,5 @@ export class PyenvLocator extends FSWatchingLocator {
     // eslint-disable-next-line class-methods-use-this
     public doIterEnvs(): IPythonEnvsIterator {
         return getPyenvEnvironments();
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    public async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const executablePath = typeof env === 'string' ? env : env.executable.filename;
-        const source =
-            typeof env === 'string' ? [PythonEnvSource.Pyenv] : uniq([PythonEnvSource.Pyenv].concat(env.source));
-
-        if (await isPyenvEnvironment(executablePath)) {
-            const location = getEnvironmentDirFromPath(executablePath);
-            const name = path.basename(location);
-
-            const versionStrings = await parsePyenvVersion(name);
-
-            const envInfo = buildEnvInfo({
-                kind: PythonEnvKind.Pyenv,
-                executable: executablePath,
-                source,
-                location,
-                display: `${name}:pyenv`,
-                version: await getPythonVersionFromPath(executablePath, versionStrings?.pythonVer),
-                org: versionStrings && versionStrings.distro ? versionStrings.distro : '',
-                fileInfo: await getFileInfo(executablePath),
-            });
-
-            envInfo.name = name;
-            return envInfo;
-        }
-        return undefined;
     }
 }

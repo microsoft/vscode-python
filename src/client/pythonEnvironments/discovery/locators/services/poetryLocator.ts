@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { uniq } from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError, traceVerbose } from '../../../../common/logger';
@@ -138,16 +137,5 @@ export class PoetryLocator extends FSWatchingLocator {
         }
 
         return iterator(this.root);
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const executablePath = typeof env === 'string' ? env : env.executable.filename;
-        const source = typeof env === 'string' ? [PythonEnvSource.Other] : uniq([PythonEnvSource.Other, ...env.source]);
-        if (await isPoetryEnvironment(executablePath)) {
-            const isLocal = isParentPath(executablePath, this.root);
-            return buildVirtualEnvInfo(executablePath, PythonEnvKind.Poetry, source, isLocal);
-        }
-        return undefined;
     }
 }

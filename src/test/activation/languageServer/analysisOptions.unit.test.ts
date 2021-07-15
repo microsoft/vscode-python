@@ -211,6 +211,7 @@ suite('Language Server - Analysis Options', () => {
             { scheme: 'untitled', language: PYTHON_LANGUAGE },
             { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
             { scheme: 'vscode-notebook-cell', language: PYTHON_LANGUAGE },
+            { scheme: 'vscode-interactive-input', language: PYTHON_LANGUAGE },
         ];
 
         const selector = analysisOptions.getDocumentFilters();
@@ -226,6 +227,7 @@ suite('Language Server - Analysis Options', () => {
             { scheme: 'untitled', language: PYTHON_LANGUAGE },
             { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
             { scheme: 'vscode-notebook-cell', language: PYTHON_LANGUAGE },
+            { scheme: 'vscode-interactive-input', language: PYTHON_LANGUAGE },
         ];
 
         const selector = analysisOptions.getDocumentFilters(workspaceFolder);
@@ -242,6 +244,7 @@ suite('Language Server - Analysis Options', () => {
             { scheme: 'untitled', language: PYTHON_LANGUAGE },
             { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
             { scheme: 'vscode-notebook-cell', language: PYTHON_LANGUAGE },
+            { scheme: 'vscode-interactive-input', language: PYTHON_LANGUAGE },
         ];
 
         const selector = analysisOptions.getDocumentFilters(workspaceFolder1);

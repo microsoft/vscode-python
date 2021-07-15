@@ -9,7 +9,7 @@ import { ActivationResult, ExtensionState } from '../components';
 import { PythonEnvironments } from './api';
 import { getPersistentCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
-import { ILocator } from './base/locator';
+import { ILocator, IResolvingLocator } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsReducer } from './base/locators/composite/environmentsReducer';
 import { PythonEnvsResolver } from './base/locators/composite/environmentsResolver';
@@ -81,7 +81,7 @@ export async function activate(api: PythonEnvironments): Promise<ActivationResul
 async function createLocators(
     ext: ExtensionState,
     // This is shared.
-): Promise<ILocator> {
+): Promise<IResolvingLocator> {
     // Create the low-level locators.
     let locators: ILocator = new ExtensionLocators(
         // Here we pull the locators together.
@@ -94,7 +94,7 @@ async function createLocators(
 
     // Build the stack of composite locators.
     locators = new PythonEnvsReducer(locators);
-    locators = new PythonEnvsResolver(
+    const resolvingLocator = new PythonEnvsResolver(
         locators,
         // These are shared.
         envInfoService,
@@ -102,12 +102,11 @@ async function createLocators(
     const caching = await createCachingLocator(
         ext,
         // This is shared.
-        locators,
+        resolvingLocator,
     );
     ext.disposables.push(caching);
-    locators = caching;
 
-    return locators;
+    return caching;
 }
 
 function createNonWorkspaceLocators(ext: ExtensionState): ILocator[] {
@@ -166,7 +165,7 @@ function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators {
     return locators;
 }
 
-async function createCachingLocator(ext: ExtensionState, locators: ILocator): Promise<CachingLocator> {
+async function createCachingLocator(ext: ExtensionState, locators: IResolvingLocator): Promise<CachingLocator> {
     const storage = getGlobalStorage<PythonEnvInfo[]>(ext.context, 'PYTHON_ENV_INFO_CACHE');
     const cache = await getPersistentCache(
         {

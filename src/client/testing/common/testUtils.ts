@@ -152,7 +152,7 @@ export class TestsHelper implements ITestsHelper {
                 if (!folderMap.has(newPath)) {
                     const testFolder: TestFolder = {
                         resource,
-                        name: newPath,
+                        name: currentName,
                         testFiles: [],
                         folders: [],
                         nameToRun: newPath,

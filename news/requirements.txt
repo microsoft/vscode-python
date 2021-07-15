@@ -7,10 +7,10 @@
 attrs==19.3.0
     # via pytest
 docopt==0.6.2
-    # via -r requirements.in
+    # via -r news/requirements.in
 iniconfig==1.0.1
     # via pytest
-packaging==20.9
+packaging==21.0
     # via pytest
 pluggy==0.13.1
     # via pytest
@@ -19,6 +19,6 @@ py==1.10.0
 pyparsing==2.4.5
     # via packaging
 pytest==6.1.2
-    # via -r requirements.in
+    # via -r news/requirements.in
 toml==0.10.1
     # via pytest

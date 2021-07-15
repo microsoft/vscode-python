@@ -5,7 +5,7 @@ import { assert, expect } from 'chai';
 import { isEqual } from 'lodash';
 import * as path from 'path';
 import { EventEmitter } from 'vscode';
-import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
 import { PythonEnvUpdatedEvent } from '../../../../../client/pythonEnvironments/base/locator';
 import { PythonEnvsReducer } from '../../../../../client/pythonEnvironments/base/locators/composite/environmentsReducer';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
@@ -218,63 +218,5 @@ suite('Python envs locator - Environments Reducer', () => {
         parentLocator.fire(event2);
 
         assert.deepEqual(events, expected);
-    });
-
-    suite('resolveEnv()', () => {
-        test('Iterates environments from the reducer to get resolved environment, then calls into locator manager to resolve environment further and return it', async () => {
-            const env1 = createNamedEnv('env', '3.8', PythonEnvKind.Conda, path.join('path', 'to', 'exec'));
-            const env2 = createNamedEnv('env2', '2.7', PythonEnvKind.System, path.join('path', 'to', 'exec3'));
-            const env3 = createNamedEnv('env', '3.8.1b1', PythonEnvKind.System, path.join('path', 'to', 'exec'));
-            const env4 = createNamedEnv('env4', '3.8.1', PythonEnvKind.Conda, path.join('path', 'to', 'exec2'));
-            const env5 = createNamedEnv('env5', '3.5.12b1', PythonEnvKind.Venv, path.join('path', 'to', 'exec1'));
-            const env6 = createNamedEnv('env', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
-            const environmentsToBeIterated = [env1, env2, env3, env4, env5, env6]; // env1 env3 env6 are same
-
-            const env136 = createNamedEnv('env', '3.8.1b1', PythonEnvKind.Conda, path.join('path', 'to', 'exec'));
-            const expected = createNamedEnv('resolvedEnv', '3.8.1', PythonEnvKind.Conda, 'resolved/path/to/exec');
-            const parentLocator = new SimpleLocator(environmentsToBeIterated, {
-                resolve: async (e: PythonEnvInfo) => {
-                    if (isEqual(e, env136)) {
-                        return expected;
-                    }
-                    throw new Error('Incorrect environment sent to the resolve');
-                },
-            });
-            const reducer = new PythonEnvsReducer(parentLocator);
-
-            // Trying to resolve the environment corresponding to env1 env3 env6
-            const resolved = await reducer.resolveEnv(path.join('path', 'to', 'exec'));
-
-            assert.deepEqual(resolved, expected);
-        });
-
-        test("If the reducer isn't able to resolve environment, fall back to the wrapped locator", async () => {
-            const env1 = createNamedEnv('env', '3.8', PythonEnvKind.Conda, path.join('path', 'to', 'exec'));
-            const env2 = createNamedEnv('env2', '2.7', PythonEnvKind.System, path.join('path', 'to', 'exec3'));
-            const env3 = createNamedEnv('env', '3.8.1b1', PythonEnvKind.System, path.join('path', 'to', 'exec'));
-            const env4 = createNamedEnv('env4', '3.8.1', PythonEnvKind.Conda, path.join('path', 'to', 'exec2'));
-            const env5 = createNamedEnv('env5', '3.5.12b1', PythonEnvKind.Venv, path.join('path', 'to', 'exec1'));
-            const env6 = createNamedEnv('env', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
-            const environmentsToBeIterated = [env1, env2, env3, env4, env5, env6]; // env1 env3 env6 are same
-
-            const filename1 = path.join('resolved', 'path', 'to', 'execNeverSeenBefore');
-            const filename2 = path.join('resolved', 'path', 'to', 'execAlsoNeverSeenBefore');
-            const expected = createNamedEnv('resolvedEnv', '3.8.1', PythonEnvKind.Conda, filename1);
-            const parentLocator = new SimpleLocator(environmentsToBeIterated, {
-                resolve: async (e: PythonEnvInfo) => {
-                    if (e.executable.filename === expected.executable.filename) {
-                        return expected;
-                    }
-                    return undefined;
-                },
-            });
-            const reducer = new PythonEnvsReducer(parentLocator);
-
-            const resolved1 = await reducer.resolveEnv(filename1);
-            const resolved2 = await reducer.resolveEnv(filename2);
-
-            assert.deepEqual(resolved1, expected);
-            assert.equal(resolved2, undefined);
-        });
     });
 });

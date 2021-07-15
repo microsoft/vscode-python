@@ -9,7 +9,7 @@ import { Uri } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { isPoetryEnvironmentRelatedToFolder } from '../../pythonEnvironments/discovery/locators/services/poetry';
-import { EnvironmentType } from '../../pythonEnvironments/info';
+import { EnvironmentType, ModuleInstallerType } from '../../pythonEnvironments/info';
 import { IWorkspaceService } from '../application/types';
 import { inDiscoveryExperiment } from '../experiments/helpers';
 import { traceError } from '../logger';
@@ -28,6 +28,11 @@ export class PoetryInstaller extends ModuleInstaller {
     // eslint-disable-next-line class-methods-use-this
     public get name(): string {
         return 'poetry';
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    public get type(): ModuleInstallerType {
+        return ModuleInstallerType.Poetry;
     }
 
     // eslint-disable-next-line class-methods-use-this

@@ -54,7 +54,7 @@ import {
     IInterpreterService,
 } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, ModuleInstallerType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 /* Complex test to ensure we cover all combinations:
 We could have written separate tests for each installer, but we'd be replicate code.
@@ -81,6 +81,10 @@ suite('Module Installer', () => {
 
         public get displayName(): string {
             return '';
+        }
+
+        public get type(): ModuleInstallerType {
+            return ModuleInstallerType.Unknown;
         }
 
         public isSupported(): Promise<boolean> {

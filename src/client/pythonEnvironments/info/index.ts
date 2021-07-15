@@ -24,6 +24,17 @@ export enum EnvironmentType {
 }
 
 /**
+ * The IModuleInstaller implementations.
+ */
+export enum ModuleInstallerType {
+    Unknown = 'Unknown',
+    Conda = 'Conda',
+    Pip = 'Pip',
+    Poetry = 'Poetry',
+    Pipenv = 'Pipenv',
+}
+
+/**
  * Details about a Python runtime.
  *
  * @prop path - the location of the executable file

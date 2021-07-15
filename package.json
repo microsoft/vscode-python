@@ -1,8 +1,8 @@
 {
     "name": "python",
     "displayName": "Python",
-    "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2020.12.0-dev",
+    "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
+    "version": "2021.8.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -129,8 +129,12 @@
                         "title": "Select a Python Interpreter",
                         "description": "Choose which Python interpreter/environment you want to use for your Python project.\n[Select Python Interpreter](command:python.setInterpreter)\nTip: Reload the window (Ctrl + R) if you installed Python but don't see it in the interpreters list.",
                         "media": {
-                            "image": "resources/walkthrough/change-python-interpreter-dark.gif",
-                            "altText": "selecting a python interpreter from the status bar"
+                            "altText": "selecting a python interpreter from the status bar",
+                            "image": {
+                                "dark":"resources/walkthrough/change-python-interpreter-dark.gif",
+                                "light": "resources/walkthrough/change-python-interpreter-light.gif",
+                                "hc": "resources/walkthrough/change-python-interpreter-hc.gif"
+                            }
                         },
                         "when": ""
                     },
@@ -146,10 +150,9 @@
                     {
                         "id": "python.learnMore",
                         "title": "Learn more",
-                        "description": "• [Explore](command:pythonCommands) all the features the Python extension has to offer.\n• [Signup](https://aka.ms/AAAbopxr) for tips and tutorials through our mailing list.\n• Explore more features in our [Tutorials](https://aka.ms/AA8dqti) or check [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n• Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
+                        "description": "• [Explore](command:pythonCommands) all the features the Python extension has to offer.\n",
                         "media": {
-                            "path": "images/OpenOrCreateNotebook.gif",
-                            "altText": "opening the command palette to look at python commands"
+                            "markdown": "resources/walkthrough/learn-more.md"
                         }
                     }
                 ]
@@ -164,35 +167,31 @@
                         "title": "Install Python",
                         "description": "The Python Extension requires Python to be installed. Install Python from [Anaconda](https://www.anaconda.com) to use the Python extension.\n \n[Install Python with Anaconda](command:workbench.action.reloadWindow)",
                         "media": {
-                            "path": "images/OpenOrCreateNotebook.gif",
-                            "altText": "open a folder or create a python project"
+                            "image": "resources/walkthrough/anaconda_install.gif",
+                            "altText": "Screenshot of anaconda webpage"
                         },
                         "when": ""
                     },
                     {
                         "id": "python.openFolderMac",
-                        "title": "Open or Create a new Python project",
-                        "description": "If you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFileFolder)\n \nIf you want to create a new Python project from scratch:\n[Create new Project](command:python.createProject)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
+                        "title": "Open an existing Python project",
+                        "description": "If you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFileFolder)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
                         "media": {
-                            "path": "images/OpenOrCreateNotebook.gif",
-                            "altText": "open a folder or create a python project"
+                            "image": "images/OpenOrCreateNotebook.gif",
+                            "altText": "Open a folder"
                         },
-                        "doneOn": {
-                            "command": "workbench.action.files.openFileFolder"
-                        },
+                        "completionEvents": ["workbench.action.files.openFileFolder"],
                         "when": "isMac && workspaceFolderCount == 0"
                     },
                     {
                         "id": "python.openFolder",
-                        "title": "Open or create a new Python project",
-                        "description": "To start, open a Python folder/project.\nIf you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFolder)\n \nIf you want to create a new Python project from scratch:\n[Create new Project](command:python.createProject)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
+                        "title": "Open an existing Python project",
+                        "description": "To start, open a Python folder/project.\nIf you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFolder)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
                         "media": {
-                            "path": "images/OpenOrCreateNotebook.gif",
-                            "altText": "open a folder or create a python project"
+                            "image": "images/OpenOrCreateNotebook.gif",
+                            "altText": "Open a folder"
                         },
-                        "doneOn": {
-                            "command": "workbench.action.files.openFolder"
-                        },
+                        "completionEvents": ["workbench.action.files.openFolder"],
                         "when": "!isMac && workspaceFolderCount == 0"
                     },
                     {
@@ -200,37 +199,33 @@
                         "title": "Create a new Jupyter Notebook",
                         "description": "To create a new Jupyter Notebook, you can right click in the file explorer and create a new file with an .ipynb extension anytime.\n \nAlternatively, you can open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create New Blank Notebook``.\n[Create new Jupyter Notebook](command:toSide:jupyter.createnewnotebook)",
                         "media": {
-                            "path": "images/OpenOrCreateNotebook.gif",
-                            "altText": "creating a new jupyter notebook"
+                            "image": "resources/walkthrough/new_notebook.gif",
+                            "altText": "Creating a new Jupyter notebook"
                         },
-                        "doneOn": {
-                            "command": "jupyter.createnewnotebook"
-                        }
+                        "completionEvents": ["jupyter.createnewnotebook"]
                     },
                     {
                         "id": "python.openInteractiveWindow",
                         "title": "Open the Python Interactive Window",
                         "description": "The Python Interactive Window is a Python shell where you can execute and view the results of your Python code. You can create cells on a Python file by typing ``#%%``.\n \nTo open the interactive window anytime, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create Interactive Window``.\n[Open Interactive Window](command:toSide:jupyter.createnewinteractive)",
                         "media": {
-                            "path": "images/OpenOrCreateNotebook.gif",
-                            "altText": "opening python interactive window"
+                            "image": "resources/walkthrough/interactive_window.gif",
+                            "altText": "Opening python interactive window"
                         },
-                        "doneOn": {
-                            "command": "jupyter.createnewinteractive"
-                        }
+                        "completionEvents": ["jupyter.createnewinteractive"]
                     },
                     {
                         "id": "python.learnMore",
                         "title": "Learn more",
                         "description": "• [Explore](command:pythonCommands) all the features the Python extension has to offer.\n• [Signup](https://aka.ms/AAAbopxr) for tips and tutorials through our mailing list.\n• Explore more features in our [Tutorials](https://aka.ms/AA8dqti) or check [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n• Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
                         "media": {
-                            "path": "images/OpenOrCreateNotebook.gif",
-                            "altText": "opening the command palette to look at python commands"
+                            "image": "resources/walkthrough/learn_more.gif",
+                            "altText": "Learning more from python visual studio code documentation"
                         }
                     }
                 ]
             }
-        ],
+    ],
         "snippets": [
             {
                 "language": "python",
@@ -1180,23 +1175,13 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "AlwaysDisplayTestExplorer - experiment",
-                            "ShowExtensionSurveyPrompt - enabled",
-                            "Reload - experiment",
-                            "AA_testing - experiment",
-                            "LocalZMQKernel - experiment",
-                            "NativeNotebook - experiment",
-                            "CustomEditorSupport - experiment",
-                            "UseTerminalToGetActivatedEnvVars - experiment",
-                            "CollectLSRequestTiming - experiment",
-                            "CollectNodeLSRequestTiming - experiment",
-                            "DeprecatePythonPath - experiment",
-                            "RunByLine - experiment",
-                            "tryPylance",
-                            "jediLSP",
-                            "debuggerDataViewer",
-                            "pythonSendEntireLineToREPL",
-                            "nativeTensorBoard",
+                            "pythonDeprecatePythonPath",
+                            "pythonTensorboardExperiment",
+                            "pythonDiscoveryModule",
+                            "pythonDiscoveryModuleWithoutWatcher",
+                            "pythonJediLSP",
+                            "pythonSurveyNotification",
+                            "pythonSortEnvs",
                             "All"
                         ]
                     },
@@ -1208,23 +1193,13 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "AlwaysDisplayTestExplorer - experiment",
-                            "ShowExtensionSurveyPrompt - enabled",
-                            "Reload - experiment",
-                            "AA_testing - experiment",
-                            "LocalZMQKernel - experiment",
-                            "NativeNotebook - experiment",
-                            "CustomEditorSupport - experiment",
-                            "UseTerminalToGetActivatedEnvVars - experiment",
-                            "CollectLSRequestTiming - experiment",
-                            "CollectNodeLSRequestTiming - experiment",
-                            "DeprecatePythonPath - experiment",
-                            "RunByLine - experiment",
-                            "tryPylance",
-                            "jediLSP",
-                            "debuggerDataViewer",
-                            "pythonSendEntireLineToREPL",
-                            "nativeTensorBoard",
+                            "pythonDeprecatePythonPath",
+                            "pythonTensorboardExperiment",
+                            "pythonDiscoveryModule",
+                            "pythonDiscoveryModuleWithoutWatcher",
+                            "pythonJediLSP",
+                            "pythonSurveyNotification",
+                            "pythonSortEnvs",
                             "All"
                         ]
                     },

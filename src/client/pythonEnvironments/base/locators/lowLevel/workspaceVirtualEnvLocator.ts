@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { uniq } from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError, traceVerbose } from '../../../../common/logger';
@@ -12,7 +11,7 @@ import {
     getPythonVersionFromPath,
     looksLikeBasicVirtualPython,
 } from '../../../common/commonUtils';
-import { getFileInfo, isParentPath, pathExists } from '../../../common/externalDependencies';
+import { getFileInfo, pathExists } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from '../../../discovery/locators/services/pipEnvHelper';
 import {
     isVenvEnvironment,
@@ -146,22 +145,5 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
         }
 
         return iterator(this.root);
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    protected async doResolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const executablePath = typeof env === 'string' ? env : env.executable.filename;
-        const source = typeof env === 'string' ? [PythonEnvSource.Other] : uniq([PythonEnvSource.Other, ...env.source]);
-        if (isParentPath(executablePath, this.root) && (await pathExists(executablePath))) {
-            // We should extract the kind here to avoid doing is*Environment()
-            // check multiple times. Those checks are file system heavy and
-            // we can use the kind to determine this anyway.
-            const kind = await getVirtualEnvKind(executablePath);
-            if (kind === PythonEnvKind.Unknown) {
-                return undefined;
-            }
-            return buildSimpleVirtualEnvInfo(executablePath, kind, source);
-        }
-        return undefined;
     }
 }

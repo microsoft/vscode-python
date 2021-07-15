@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
+import { ModuleInstallerType } from '../../pythonEnvironments/info';
 import { IWorkspaceService } from '../application/types';
 import { IPythonExecutionFactory } from '../process/types';
 import { ExecutionInfo } from '../types';
@@ -14,6 +15,10 @@ import { InterpreterUri, ModuleInstallFlags } from './types';
 export class PipInstaller extends ModuleInstaller {
     public get name(): string {
         return 'Pip';
+    }
+
+    public get type(): ModuleInstallerType {
+        return ModuleInstallerType.Pip;
     }
 
     public get displayName() {

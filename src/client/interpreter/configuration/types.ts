@@ -45,6 +45,11 @@ export interface IFindInterpreterQuickPickItem {
     alwaysShow: boolean;
 }
 
+export enum InterpreterComparisonType {
+    Default = 'defaultComparison',
+    EnvType = 'environmentTypeComparison',
+}
+
 export const IInterpreterComparer = Symbol('IInterpreterComparer');
 export interface IInterpreterComparer {
     compare(a: PythonEnvironment, b: PythonEnvironment): number;
