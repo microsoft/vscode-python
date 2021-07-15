@@ -41,7 +41,7 @@ function getResolvers(): Map<PythonEnvKind, (executablePath: string) => Promise<
  * executable and returns it. Notice `undefined` is never returned, so environment
  * returned could still be invalid.
  */
-export async function resolveEnvUsingKind({ kind, executablePath }: BasicEnvInfo): Promise<PythonEnvInfo> {
+export async function resolveBasicEnv({ kind, executablePath }: BasicEnvInfo): Promise<PythonEnvInfo> {
     const resolvers = getResolvers();
     const resolverForKind = resolvers.get(kind)!;
     const resolvedEnv = await resolverForKind(executablePath);

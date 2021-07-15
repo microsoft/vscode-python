@@ -24,7 +24,7 @@ import {
     AnacondaCompanyName,
     CondaInfo,
 } from '../../../../../client/pythonEnvironments/discovery/locators/services/conda';
-import { resolveEnvUsingKind } from '../../../../../client/pythonEnvironments/base/locators/composite/resolverUtils';
+import { resolveBasicEnv } from '../../../../../client/pythonEnvironments/base/locators/composite/resolverUtils';
 
 suite('Resolver Utils', () => {
     suite('Pyenv', () => {
@@ -61,7 +61,7 @@ suite('Resolver Utils', () => {
             const executablePath = path.join(testPyenvVersionsDir, '3.9.0', 'bin', 'python');
             const expected = getExpectedPyenvInfo();
 
-            const actual = await resolveEnvUsingKind({ executablePath, kind: PythonEnvKind.Pyenv });
+            const actual = await resolveBasicEnv({ executablePath, kind: PythonEnvKind.Pyenv });
             assertEnvEqual(actual, expected);
         });
     });
@@ -121,7 +121,7 @@ suite('Resolver Utils', () => {
                 ...createExpectedInterpreterInfo(python38path),
             };
 
-            const actual = await resolveEnvUsingKind({
+            const actual = await resolveBasicEnv({
                 executablePath: python38path,
                 kind: PythonEnvKind.WindowsStore,
             });
@@ -142,7 +142,7 @@ suite('Resolver Utils', () => {
                 ...createExpectedInterpreterInfo(python38path),
             };
 
-            const actual = await resolveEnvUsingKind({
+            const actual = await resolveBasicEnv({
                 executablePath: python38path,
                 kind: PythonEnvKind.WindowsStore,
             });
@@ -222,7 +222,7 @@ suite('Resolver Utils', () => {
                 }
                 throw new Error(`${command} is missing or is not executable`);
             });
-            const actual = await resolveEnvUsingKind({
+            const actual = await resolveBasicEnv({
                 executablePath: path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
                 kind: PythonEnvKind.Conda,
             });
@@ -237,7 +237,7 @@ suite('Resolver Utils', () => {
                 }
                 throw new Error(`${command} is missing or is not executable`);
             });
-            const actual = await resolveEnvUsingKind({
+            const actual = await resolveBasicEnv({
                 executablePath: path.join(TEST_LAYOUT_ROOT, 'conda2', 'bin', 'python'),
                 kind: PythonEnvKind.Conda,
             });
@@ -252,7 +252,7 @@ suite('Resolver Utils', () => {
             sinon.stub(externalDependencies, 'exec').callsFake(async (command: string) => {
                 throw new Error(`${command} is missing or is not executable`);
             });
-            const actual = await resolveEnvUsingKind({
+            const actual = await resolveBasicEnv({
                 executablePath: path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
                 kind: PythonEnvKind.Conda,
             });
@@ -315,7 +315,7 @@ suite('Resolver Utils', () => {
                 'win1',
                 path.join(testVirtualHomeDir, '.venvs', 'win1'),
             );
-            const actual = await resolveEnvUsingKind({
+            const actual = await resolveBasicEnv({
                 executablePath: path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
                 kind: PythonEnvKind.Venv,
             });
@@ -532,7 +532,7 @@ suite('Resolver Utils', () => {
 
         test('If data provided by registry is more informative than kind resolvers, use it to update environment (64bit)', async () => {
             const interpreterPath = path.join(regTestRoot, 'py39', 'python.exe');
-            const actual = await resolveEnvUsingKind({
+            const actual = await resolveBasicEnv({
                 executablePath: interpreterPath,
                 kind: PythonEnvKind.Unknown,
             });
@@ -550,7 +550,7 @@ suite('Resolver Utils', () => {
 
         test('If data provided by registry is more informative than kind resolvers, use it to update environment (32bit)', async () => {
             const interpreterPath = path.join(regTestRoot, 'python38', 'python.exe');
-            const actual = await resolveEnvUsingKind({
+            const actual = await resolveBasicEnv({
                 executablePath: interpreterPath,
                 kind: PythonEnvKind.Unknown,
             });
@@ -572,7 +572,7 @@ suite('Resolver Utils', () => {
                 throw new Error(`${command} is missing or is not executable`);
             });
             const interpreterPath = path.join(regTestRoot, 'conda3', 'python.exe');
-            const actual = await resolveEnvUsingKind({
+            const actual = await resolveBasicEnv({
                 executablePath: interpreterPath,
                 kind: PythonEnvKind.Conda,
             });

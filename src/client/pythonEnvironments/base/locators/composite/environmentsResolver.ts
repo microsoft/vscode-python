@@ -17,7 +17,7 @@ import {
     PythonLocatorQuery,
 } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
-import { resolveEnvUsingKind } from './resolverUtils';
+import { resolveBasicEnv } from './resolverUtils';
 
 /**
  * Calls environment info service which runs `interpreterInfo.py` script on environments received
@@ -35,7 +35,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
 
     public async resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
         const kind = await identifyEnvironment(executablePath);
-        const environment = await resolveEnvUsingKind({ kind, executablePath });
+        const environment = await resolveBasicEnv({ kind, executablePath });
         const info = await this.environmentInfoService.getEnvironmentInfo(environment.executable.filename);
         if (!info) {
             return undefined;
@@ -72,7 +72,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
                         'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in resolver',
                     );
                 } else if (seen[event.index] !== undefined) {
-                    seen[event.index] = await resolveEnvUsingKind(event.update);
+                    seen[event.index] = await resolveBasicEnv(event.update);
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
                 } else {
                     // This implies a problem in a downstream locator
@@ -85,7 +85,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
 
         let result = await iterator.next();
         while (!result.done) {
-            const currEnv = await resolveEnvUsingKind(result.value);
+            const currEnv = await resolveBasicEnv(result.value);
             seen.push(currEnv);
             yield currEnv;
             this.resolveInBackground(seen.indexOf(currEnv), state, didUpdate, seen).ignoreErrors();
