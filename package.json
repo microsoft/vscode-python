@@ -131,7 +131,7 @@
                         "media": {
                             "altText": "selecting a python interpreter from the status bar",
                             "image": {
-                                "dark":"resources/walkthrough/change-python-interpreter-dark.gif",
+                                "dark": "resources/walkthrough/change-python-interpreter-dark.gif",
                                 "light": "resources/walkthrough/change-python-interpreter-light.gif",
                                 "hc": "resources/walkthrough/change-python-interpreter-hc.gif"
                             }
@@ -150,9 +150,10 @@
                     {
                         "id": "python.learnMore",
                         "title": "Learn more",
-                        "description": "• [Explore](command:pythonCommands) all the features the Python extension has to offer.\n",
+                        "description": "• [Explore](command:pythonCommands) all the features the Python extension has to offer.\n• [Signup](https://aka.ms/AAAbopxr) for tips and tutorials through our mailing list.\n• Explore more features in our [Tutorials](https://aka.ms/AA8dqti) or check [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n• Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
                         "media": {
-                            "markdown": "resources/walkthrough/learn-more.md"
+                            "image": "resources/walkthrough/python-docs-learn-more.gif",
+                            "altText": "Documentation pages for Python in VS Code"
                         }
                     }
                 ]
@@ -180,7 +181,9 @@
                             "image": "images/OpenOrCreateNotebook.gif",
                             "altText": "Open a folder"
                         },
-                        "completionEvents": ["workbench.action.files.openFileFolder"],
+                        "completionEvents": [
+                            "workbench.action.files.openFileFolder"
+                        ],
                         "when": "isMac && workspaceFolderCount == 0"
                     },
                     {
@@ -191,7 +194,9 @@
                             "image": "images/OpenOrCreateNotebook.gif",
                             "altText": "Open a folder"
                         },
-                        "completionEvents": ["workbench.action.files.openFolder"],
+                        "completionEvents": [
+                            "workbench.action.files.openFolder"
+                        ],
                         "when": "!isMac && workspaceFolderCount == 0"
                     },
                     {
@@ -202,7 +207,9 @@
                             "image": "resources/walkthrough/new_notebook.gif",
                             "altText": "Creating a new Jupyter notebook"
                         },
-                        "completionEvents": ["jupyter.createnewnotebook"]
+                        "completionEvents": [
+                            "jupyter.createnewnotebook"
+                        ]
                     },
                     {
                         "id": "python.openInteractiveWindow",
@@ -212,20 +219,22 @@
                             "image": "resources/walkthrough/interactive_window.gif",
                             "altText": "Opening python interactive window"
                         },
-                        "completionEvents": ["jupyter.createnewinteractive"]
+                        "completionEvents": [
+                            "jupyter.createnewinteractive"
+                        ]
                     },
                     {
-                        "id": "python.learnMore",
+                        "id": "python.dataScienceLearnMore",
                         "title": "Learn more",
                         "description": "• [Explore](command:pythonCommands) all the features the Python extension has to offer.\n• [Signup](https://aka.ms/AAAbopxr) for tips and tutorials through our mailing list.\n• Explore more features in our [Tutorials](https://aka.ms/AA8dqti) or check [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n• Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
                         "media": {
-                            "image": "resources/walkthrough/learn_more.gif",
+                            "image": "resources/walkthrough/datascience-learn-more.gif",
                             "altText": "Learning more from python visual studio code documentation"
                         }
                     }
                 ]
             }
-    ],
+        ],
         "snippets": [
             {
                 "language": "python",
