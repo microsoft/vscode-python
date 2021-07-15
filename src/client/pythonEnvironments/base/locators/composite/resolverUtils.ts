@@ -5,7 +5,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { uniq } from 'lodash';
 import { traceError, traceWarning } from '../../../../common/logger';
-import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, UNKNOWN_PYTHON_VERSION } from '../../info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, UNKNOWN_PYTHON_VERSION, virtualEnvKinds } from '../../info';
 import { buildEnvInfo, comparePythonVersionSpecificity, getEnvMatcher } from '../../info/env';
 import {
     getEnvironmentDirFromPath,
@@ -22,9 +22,13 @@ import { BasicEnvInfo } from '../../locator';
 
 function getResolvers(): Map<PythonEnvKind, (executablePath: string) => Promise<PythonEnvInfo>> {
     const resolvers = new Map<PythonEnvKind, (_: string) => Promise<PythonEnvInfo>>();
-    const defaultResolver = (k: PythonEnvKind) => (e: string) => resolveSimpleEnv(e, k);
+    const defaultResolver = (k: PythonEnvKind) => (e: string) => resolveGloballyInstalledEnv(e, k);
+    const defaultVirtualEnvResolver = (k: PythonEnvKind) => (e: string) => resolveSimpleEnv(e, k);
     Object.values(PythonEnvKind).forEach((k) => {
         resolvers.set(k, defaultResolver(k));
+    });
+    virtualEnvKinds.forEach((k) => {
+        resolvers.set(k, defaultVirtualEnvResolver(k));
     });
     resolvers.set(PythonEnvKind.Conda, resolveCondaEnv);
     resolvers.set(PythonEnvKind.WindowsStore, resolveWindowsStoreEnv);
@@ -33,7 +37,7 @@ function getResolvers(): Map<PythonEnvKind, (executablePath: string) => Promise<
 }
 
 /**
- * Find as much info about the given Python executable as possible using env kind without running the
+ * Find as much info about the given Basic Python env as possible without running the
  * executable and returns it. Notice `undefined` is never returned, so environment
  * returned could still be invalid.
  */
@@ -85,6 +89,18 @@ async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
         env.distro.org = data.distroOrgName ?? env.distro.org;
         env.source = uniq(env.source.concat(PythonEnvSource.WindowsRegistry));
     }
+}
+
+async function resolveGloballyInstalledEnv(executablePath: string, kind: PythonEnvKind): Promise<PythonEnvInfo> {
+    const envInfo = buildEnvInfo({
+        kind,
+        version: await getPythonVersionFromPath(executablePath),
+        executable: executablePath,
+    });
+    const fileData = await getFileInfo(executablePath);
+    envInfo.executable.ctime = fileData.ctime;
+    envInfo.executable.mtime = fileData.mtime;
+    return envInfo;
 }
 
 async function resolveSimpleEnv(executablePath: string, kind: PythonEnvKind): Promise<PythonEnvInfo> {

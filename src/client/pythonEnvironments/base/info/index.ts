@@ -28,6 +28,14 @@ export enum PythonEnvKind {
     OtherVirtual = 'virt-other',
 }
 
+export const virtualEnvKinds = [
+    PythonEnvKind.Poetry,
+    PythonEnvKind.Pipenv,
+    PythonEnvKind.Venv,
+    PythonEnvKind.VirtualEnvWrapper,
+    PythonEnvKind.Conda,
+    PythonEnvKind.VirtualEnv,
+];
 /**
  * Information about a file.
  */

@@ -323,6 +323,54 @@ suite('Resolver Utils', () => {
         });
     });
 
+    suite('Globally-installed envs', () => {
+        const testPosixKnownPathsRoot = path.join(TEST_LAYOUT_ROOT, 'posixroot');
+        const testLocation3 = path.join(testPosixKnownPathsRoot, 'location3');
+        setup(() => {
+            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
+        });
+
+        teardown(() => {
+            sinon.restore();
+        });
+
+        function createExpectedEnvInfo(
+            interpreterPath: string,
+            kind: PythonEnvKind,
+            version: PythonVersion = UNKNOWN_PYTHON_VERSION,
+            name = '',
+            location = '',
+        ): PythonEnvInfo {
+            return {
+                name,
+                location,
+                kind,
+                executable: {
+                    filename: interpreterPath,
+                    sysPrefix: '',
+                    ctime: -1,
+                    mtime: -1,
+                },
+                display: undefined,
+                version,
+                arch: Architecture.Unknown,
+                distro: { org: '' },
+                searchLocation: undefined,
+                source: [],
+            };
+        }
+
+        test('resolveEnv', async () => {
+            const executable = path.join(testLocation3, 'python3.8');
+            const expected = createExpectedEnvInfo(executable, PythonEnvKind.OtherGlobal, parseVersion('3.8'));
+            const actual = await resolveBasicEnv({
+                executablePath: executable,
+                kind: PythonEnvKind.OtherGlobal,
+            });
+            assertEnvEqual(actual, expected);
+        });
+    });
+
     suite('Windows registry', () => {
         const regTestRoot = path.join(TEST_LAYOUT_ROOT, 'winreg');
 
@@ -489,13 +537,11 @@ suite('Resolver Utils', () => {
                 kind: PythonEnvKind.Unknown,
             });
             const expected = buildEnvInfo({
-                location: path.join(regTestRoot, 'py39'),
                 kind: PythonEnvKind.OtherGlobal, // Environment should be marked as "Global" instead of "Unknown".
                 executable: interpreterPath,
                 version: parseVersion('3.9.0rc2'), // Registry provides more complete version info.
                 arch: Architecture.x64,
                 org: 'PythonCore',
-                name: 'py39',
                 source: [PythonEnvSource.WindowsRegistry],
             });
             expected.distro.defaultDisplayName = 'Python 3.9 (64-bit)';
@@ -509,7 +555,6 @@ suite('Resolver Utils', () => {
                 kind: PythonEnvKind.Unknown,
             });
             const expected = buildEnvInfo({
-                location: path.join(regTestRoot, 'python38'),
                 kind: PythonEnvKind.OtherGlobal, // Environment should be marked as "Global" instead of "Unknown".
                 executable: interpreterPath,
                 version: parseVersion('3.8.5'), // Registry provides more complete version info.
