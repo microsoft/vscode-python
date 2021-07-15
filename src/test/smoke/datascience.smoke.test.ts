@@ -7,25 +7,24 @@ import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { JUPYTER_EXTENSION_ID } from '../../client/common/constants';
-import { openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
+import { openFile, waitForCondition } from '../common';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { sleep } from '../core';
-import { closeActiveWindows, initialize, initializeTest } from '../initialize';
-import { verifyExtensionIsAvailable } from './common';
+import { closeActiveWindows, initializeTest } from '../initialize';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
 
 suite('Smoke Test: Datascience', () => {
     suiteSetup(async function () {
-        if (!IS_SMOKE_TEST) {
-            return this.skip();
-        }
-        await verifyExtensionIsAvailable(JUPYTER_EXTENSION_ID);
-        await initialize();
-        await setAutoSaveDelayInWorkspaceRoot(1);
+        return this.skip();
+        // if (!IS_SMOKE_TEST) {
+        //     return this.skip();
+        // }
+        // await verifyExtensionIsAvailable(JUPYTER_EXTENSION_ID);
+        // await initialize();
+        // await setAutoSaveDelayInWorkspaceRoot(1);
 
-        return undefined;
+        // return undefined;
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
