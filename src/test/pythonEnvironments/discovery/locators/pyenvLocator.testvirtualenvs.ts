@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { PyenvLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/pyenvLocator';
+import { PyenvLocator } from '../../../../client/pythonEnvironments/base/locators/lowLevel/pyenvLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { testLocatorWatcher } from './watcherTestUtils';
 

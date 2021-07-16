@@ -3,9 +3,9 @@
 
 import * as path from 'path';
 import { traceError } from '../../../../common/logger';
-import { PythonEnvKind } from '../../../base/info';
-import { BasicEnvInfo, IPythonEnvsIterator } from '../../../base/locator';
-import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
+import { PythonEnvKind } from '../../info';
+import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
+import { FSWatchingLocator } from './fsWatchingLocator';
 import { getInterpreterPathFromDir } from '../../../common/commonUtils';
 import { getSubDirs } from '../../../common/externalDependencies';
 import { getPyenvDir } from '../../../common/environmentManagers/pyenv';
