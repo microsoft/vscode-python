@@ -49,7 +49,6 @@ suite('Resolver Utils', () => {
                 },
                 source: [],
             });
-            envInfo.display = '3.9.0:pyenv';
             envInfo.location = path.join(testPyenvVersionsDir, '3.9.0');
             envInfo.name = '3.9.0';
             return envInfo;

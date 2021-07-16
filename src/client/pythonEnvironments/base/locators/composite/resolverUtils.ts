@@ -19,6 +19,7 @@ import { Architecture, getOSType, OSType } from '../../../../common/utils/platfo
 import { getPythonVersionFromPath as parsePythonVersionFromPath, parseVersion } from '../../info/pythonVersion';
 import { getRegistryInterpreters, getRegistryInterpretersSync } from '../../../common/windowsUtils';
 import { BasicEnvInfo } from '../../locator';
+import { parseVersionFromExecutable } from '../../info/executable';
 
 function getResolvers(): Map<PythonEnvKind, (executablePath: string) => Promise<PythonEnvInfo>> {
     const resolvers = new Map<PythonEnvKind, (_: string) => Promise<PythonEnvInfo>>();
@@ -51,6 +52,7 @@ export async function resolveBasicEnv({ kind, executablePath, source }: BasicEnv
         // We can update env further using information we can get from the Windows registry.
         await updateEnvUsingRegistry(resolvedEnv);
     }
+    // Display name is not set here as we need version, arch etc. to build it.
     return resolvedEnv;
 }
 
@@ -103,7 +105,7 @@ async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
 async function resolveGloballyInstalledEnv(executablePath: string, kind: PythonEnvKind): Promise<PythonEnvInfo> {
     let version;
     try {
-        version = parseVersion(path.basename(executablePath));
+        version = parseVersionFromExecutable(executablePath);
     } catch {
         version = UNKNOWN_PYTHON_VERSION;
     }
@@ -111,10 +113,8 @@ async function resolveGloballyInstalledEnv(executablePath: string, kind: PythonE
         kind,
         version,
         executable: executablePath,
+        fileInfo: await getFileInfo(executablePath),
     });
-    const fileData = await getFileInfo(executablePath);
-    envInfo.executable.ctime = fileData.ctime;
-    envInfo.executable.mtime = fileData.mtime;
     return envInfo;
 }
 
@@ -123,13 +123,11 @@ async function resolveSimpleEnv(executablePath: string, kind: PythonEnvKind): Pr
         kind,
         version: await getPythonVersionFromPath(executablePath),
         executable: executablePath,
+        fileInfo: await getFileInfo(executablePath),
     });
     const location = getEnvironmentDirFromPath(executablePath);
     envInfo.location = location;
     envInfo.name = path.basename(location);
-    const fileData = await getFileInfo(executablePath);
-    envInfo.executable.ctime = fileData.ctime;
-    envInfo.executable.mtime = fileData.mtime;
     return envInfo;
 }
 
@@ -194,8 +192,6 @@ async function resolvePyenvEnv(executablePath: string): Promise<PythonEnvInfo> {
         // All these environments are fully handled by `pyenv` and should be activated using
         // `pyenv local|global <env-name>` or `pyenv shell <env-name>`
         //
-        // For the display name we are going to treat these as `pyenv` environments.
-        display: `${name}:pyenv`,
         // Here we look for near by files, or config files to see if we can get python version info
         // without running python itself.
         version: await getPythonVersionFromPath(executablePath, versionStrings?.pythonVer),

@@ -223,7 +223,6 @@ async function getPythonVersionFromNearByFiles(interpreterPath: string): Promise
 export async function getPythonVersionFromPath(interpreterPath: string, hint?: string): Promise<PythonVersion> {
     let versionA;
     try {
-        hint = hint ?? path.basename(interpreterPath);
         versionA = hint ? parseVersion(hint) : UNKNOWN_PYTHON_VERSION;
     } catch (ex) {
         versionA = UNKNOWN_PYTHON_VERSION;

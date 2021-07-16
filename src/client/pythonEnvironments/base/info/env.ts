@@ -1,25 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { cloneDeep, uniq } from 'lodash';
+import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { getArchitectureDisplayName } from '../../../common/platform/registry';
 import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
 import { getKindDisplayName } from './envKind';
-import { parseVersionFromExecutable } from './executable';
 import { areIdenticalVersion, areSimilarVersions, getVersionDisplayString, isVersionEmpty } from './pythonVersion';
 
-import {
-    FileInfo,
-    PythonDistroInfo,
-    PythonEnvInfo,
-    PythonEnvKind,
-    PythonEnvSource,
-    PythonReleaseLevel,
-    PythonVersion,
-} from '.';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, PythonReleaseLevel, PythonVersion } from '.';
 
 /**
  * Create a new info object with all values empty.
@@ -37,6 +28,7 @@ export function buildEnvInfo(init?: {
     fileInfo?: { ctime: number; mtime: number };
     source?: PythonEnvSource[];
     display?: string;
+    sysPrefix?: string;
 }): PythonEnvInfo {
     const env = {
         name: init?.name ?? '',
@@ -196,75 +188,6 @@ export function getMinimalPartialInfo(env: string | Partial<PythonEnvInfo>): Par
 }
 
 /**
- * Build an object with at least the minimal info about a Python env.
- *
- * This is meant to be as fast an operation as possible.
- *
- * Note that passing `PythonEnvKind.Unknown` for `kind` is okay,
- * though not ideal.
- */
-export function getFastEnvInfo(kind: PythonEnvKind, executable: string): PythonEnvInfo {
-    const env = buildEnvInfo({ kind, executable });
-
-    try {
-        env.version = parseVersionFromExecutable(env.executable.filename);
-    } catch {
-        // It didn't have version info in it.
-        // We could probably walk up the directory tree trying dirnames
-        // too, but we'll skip that for now.  Windows gives us a few
-        // other options which we will also skip for now.
-    }
-
-    return env;
-}
-
-/**
- * Build a new object with at much info as possible about a Python env.
- *
- * This does as much as possible without distro-specific or other
- * special knowledge.
- *
- * @param minimal - the minimal info (e.g. from `getFastEnvInfo()`)
- *                  on which to base the "full" object; this may include
- *                  extra info beyond the "minimal", but at the very
- *                  least it will include the minimum info necessary
- *                  to be useful
- */
-export async function getMaxDerivedEnvInfo(minimal: PythonEnvInfo): Promise<PythonEnvInfo> {
-    const env = cloneDeep(minimal);
-
-    // For now we do not worry about adding anything more to env.executable.
-    // `ctime` and `mtime` would require a stat call,  `sysPrefix` would
-    // require guessing.
-
-    // For now we do not fill anything in for `name` or `location`.  If
-    // we had `env.executable.sysPrefix` we could set a meaningful
-    // `location`, but we don't.
-
-    if (isVersionEmpty(env.version)) {
-        try {
-            env.version = parseVersionFromExecutable(env.executable.filename);
-        } catch {
-            // It didn't have version info in it.
-            // We could probably walk up the directory tree trying dirnames
-            // too, but we'll skip that for now.  Windows gives us a few
-            // other options which we will also skip for now.
-        }
-    }
-
-    // Note that we do not set `env.arch` to the host's native
-    // architecture.  Nearly all Python builds will match the host
-    // architecture, with the notable exception being older PSF builds
-    // for Windows,  There is enough uncertainty that we play it safe
-    // by not setting `env.arch` here.
-
-    // We could probably make a decent guess at the distro, but that
-    // is best left to distro-specific locators.
-
-    return env;
-}
-
-/**
  * Create a function that decides if the given "query" matches some env info.
  *
  * The returned function is compatible with `Array.filter()`.
@@ -380,101 +303,4 @@ function getPythonVersionSpecificity(version: PythonVersion): number {
  */
 export function comparePythonVersionSpecificity(versionA: PythonVersion, versionB: PythonVersion): number {
     return Math.sign(getPythonVersionSpecificity(versionA) - getPythonVersionSpecificity(versionB));
-}
-
-/**
- * Returns a heuristic value on how much information is available in the given executable object.
- * @param {FileInfo} executable executable object to generate heuristic from.
- * @returns A heuristic value indicating the amount of info available in the object
- * weighted by most important to least important fields.
- * Wn > Wn-1 + Wn-2 + ... W0
- */
-function getFileInfoHeuristic(file: FileInfo): number {
-    let infoLevel = 0;
-    if (file.filename.length > 0) {
-        infoLevel += 5; // W2
-    }
-
-    if (file.mtime) {
-        infoLevel += 2; // W1
-    }
-
-    if (file.ctime) {
-        infoLevel += 1; // W0
-    }
-
-    return infoLevel;
-}
-
-/**
- * Returns a heuristic value on how much information is available in the given distro object.
- * @param {PythonDistroInfo} distro distro object to generate heuristic from.
- * @returns A heuristic value indicating the amount of info available in the object
- * weighted by most important to least important fields.
- * Wn > Wn-1 + Wn-2 + ... W0
- */
-function getDistroInfoHeuristic(distro: PythonDistroInfo): number {
-    let infoLevel = 0;
-    if (distro.org.length > 0) {
-        infoLevel += 20; // W3
-    }
-
-    if (distro.defaultDisplayName) {
-        infoLevel += 10; // W2
-    }
-
-    if (distro.binDir) {
-        infoLevel += 5; // W1
-    }
-
-    if (distro.version) {
-        infoLevel += 2;
-    }
-
-    return infoLevel;
-}
-
-/**
- * Merges properties of the `target` environment and `other` environment and returns the merged environment.
- * if the value in the `target` environment is not defined or has less information. This does not mutate
- * the `target` instead it returns a new object that contains the merged results.
- * @param {PythonEnvInfo} target : Properties of this object are favored.
- * @param {PythonEnvInfo} other : Properties of this object are used to fill the gaps in the merged result.
- */
-export function mergeEnvironments(target: PythonEnvInfo, other: PythonEnvInfo): PythonEnvInfo {
-    const merged = cloneDeep(target);
-
-    const version = cloneDeep(
-        getPythonVersionSpecificity(target.version) > getPythonVersionSpecificity(other.version)
-            ? target.version
-            : other.version,
-    );
-
-    const executable = cloneDeep(
-        getFileInfoHeuristic(target.executable) > getFileInfoHeuristic(other.executable)
-            ? target.executable
-            : other.executable,
-    );
-    executable.sysPrefix = target.executable.sysPrefix ?? other.executable.sysPrefix;
-
-    const distro = cloneDeep(
-        getDistroInfoHeuristic(target.distro) > getDistroInfoHeuristic(other.distro) ? target.distro : other.distro,
-    );
-
-    merged.arch = merged.arch === Architecture.Unknown ? other.arch : target.arch;
-    merged.display = merged.display ?? other.display;
-    merged.distro = distro;
-    merged.executable = executable;
-
-    // No need to check this just use preferred kind. Since the first thing we do is figure out the
-    // preferred env based on kind.
-    merged.kind = target.kind;
-
-    merged.location = merged.location.length ? merged.location : other.location;
-    merged.name = merged.name.length ? merged.name : other.name;
-    merged.searchLocation = merged.searchLocation ?? other.searchLocation;
-    merged.version = version;
-    merged.source = uniq([...target.source, ...other.source]);
-
-    return merged;
 }

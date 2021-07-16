@@ -119,8 +119,8 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     if (distro !== undefined && distro.org !== '') {
         env.companyDisplayName = distro.org;
     }
-    // We do not worry about using distro.defaultDisplayName
-    // or info.defaultDisplayName.
+    env.displayName = info.display;
+    // We do not worry about using distro.defaultDisplayName.
 
     return env;
 }

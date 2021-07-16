@@ -5,12 +5,7 @@ import * as assert from 'assert';
 
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import {
-    getKind,
-    getKindDisplayName,
-    getKindName,
-    getPrioritizedEnvKinds,
-} from '../../../../client/pythonEnvironments/base/info/envKind';
+import { getKindDisplayName, getPrioritizedEnvKinds } from '../../../../client/pythonEnvironments/base/info/envKind';
 
 const KIND_NAMES: [PythonEnvKind, string][] = [
     // We handle PythonEnvKind.Unknown separately.
@@ -37,53 +32,6 @@ suite('pyenvs info - PyEnvKind', () => {
             // We ignore PythonEnvKind.Unknown.
             getNamesAndValues(PythonEnvKind).length - 1,
         );
-    });
-
-    suite('getKindName()', () => {
-        suite('known', () => {
-            KIND_NAMES.forEach(([kind, expected]) => {
-                test(`check ${kind}`, () => {
-                    const name = getKindName(kind);
-
-                    assert.equal(name, expected);
-                });
-            });
-        });
-
-        test('not known', () => {
-            const kind = PythonEnvKind.Unknown;
-
-            const name = getKindName(kind);
-
-            assert.equal(name, '');
-        });
-    });
-
-    suite('getKind()', () => {
-        suite('known', () => {
-            KIND_NAMES.forEach(([expected, name]) => {
-                test(`check ${name}`, () => {
-                    const kind = getKind(name);
-
-                    assert.equal(kind, expected);
-                });
-            });
-        });
-
-        suite('not known', () => {
-            [
-                '',
-                'unknown',
-                'spam',
-                // Any other unsupported value goes here.
-            ].forEach((name) => {
-                test(`check ${name}`, () => {
-                    const kind = getKind(name);
-
-                    assert.equal(kind, PythonEnvKind.Unknown);
-                });
-            });
-        });
     });
 
     suite('getKindDisplayName()', () => {

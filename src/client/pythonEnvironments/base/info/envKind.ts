@@ -3,51 +3,6 @@
 
 import { PythonEnvKind } from '.';
 
-const kindsByName: Record<string, PythonEnvKind> = {
-    // Note that PythonEnvKind.Unknown does not have an entry here.
-    system: PythonEnvKind.System,
-    macDefault: PythonEnvKind.MacDefault,
-    winStore: PythonEnvKind.WindowsStore,
-    pyenv: PythonEnvKind.Pyenv,
-    condaBase: PythonEnvKind.CondaBase,
-    poetry: PythonEnvKind.Poetry,
-    customGlobal: PythonEnvKind.Custom,
-    otherGlobal: PythonEnvKind.OtherGlobal,
-    venv: PythonEnvKind.Venv,
-    virtualenv: PythonEnvKind.VirtualEnv,
-    virtualenvWrapper: PythonEnvKind.VirtualEnvWrapper,
-    pipenv: PythonEnvKind.Pipenv,
-    conda: PythonEnvKind.Conda,
-    otherVirtual: PythonEnvKind.OtherVirtual,
-};
-
-/**
- * Return the given (Python environment) kind's name.
- *
- * If the kind (e.g. Unknown) does not have a name
- * then we return an empty string.
- */
-export function getKindName(kind: PythonEnvKind): string {
-    if (kind === PythonEnvKind.Unknown) {
-        return '';
-    }
-    for (const name of Object.keys(kindsByName)) {
-        if (kind === kindsByName[name]) {
-            return name;
-        }
-    }
-    return '';
-}
-
-/**
- * Return the (Python environment) kind corresponding to the given name.
- *
- * If there is no match then return undefined.
- */
-export function getKind(name: string): PythonEnvKind {
-    return kindsByName[name] || PythonEnvKind.Unknown;
-}
-
 /**
  * Get the given kind's user-facing representation.
  *

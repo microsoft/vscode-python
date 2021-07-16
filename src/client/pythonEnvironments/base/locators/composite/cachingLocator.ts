@@ -12,7 +12,6 @@ import { IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from '../.
 import { getEnvs, getQueryFilter } from '../../locatorUtils';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
-import { pickBestEnv } from './reducingLocator';
 
 /**
  * A locator that stores the known environments in the given cache.
@@ -43,7 +42,7 @@ export class CachingLocator extends LazyResourceBasedLocator implements IResolvi
         await this.ensureResourcesReady();
         let matchingEnvs = this.filterMatchingEnvsFromCache(env);
         if (matchingEnvs.length > 0) {
-            return pickBestEnv(matchingEnvs);
+            return matchingEnvs[0];
         }
         // Fall back to the underlying locator.
         const resolved = await this.locator.resolveEnv(env);
