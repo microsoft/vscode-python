@@ -14,7 +14,7 @@ import {
     getWindowsStorePythonExes,
     isWindowsStoreDir,
     WindowsStoreLocator,
-} from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
+} from '../../../../client/pythonEnvironments/base/locators/lowLevel/windowsStoreLocator';
 import { getEnvs } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertBasicEnvsEqual } from './envTestUtils';

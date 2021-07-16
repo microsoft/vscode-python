@@ -24,7 +24,7 @@ import { GlobalVirtualEnvironmentLocator } from './base/locators/lowLevel/global
 import { PosixKnownPathsLocator } from './base/locators/lowLevel/posixKnownPathsLocator';
 import { PyenvLocator } from './base/locators/lowLevel/pyenvLocator';
 import { WindowsRegistryLocator } from './base/locators/lowLevel/windowsRegistryLocator';
-import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreLocator';
+import { WindowsStoreLocator } from './base/locators/lowLevel/windowsStoreLocator';
 import { getEnvironmentInfoService } from './info/environmentInfoService';
 import { isComponentEnabled, registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
 import { PoetryLocator } from './base/locators/lowLevel/poetryLocator';

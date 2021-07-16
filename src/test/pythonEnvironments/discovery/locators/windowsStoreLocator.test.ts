@@ -14,7 +14,7 @@ import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
 import * as externalDeps from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { WindowsStoreLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
+import { WindowsStoreLocator } from '../../../../client/pythonEnvironments/base/locators/lowLevel/windowsStoreLocator';
 import { TEST_TIMEOUT } from '../../../constants';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 

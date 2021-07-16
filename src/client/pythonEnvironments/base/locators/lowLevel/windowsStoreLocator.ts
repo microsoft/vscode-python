@@ -6,9 +6,9 @@ import * as minimatch from 'minimatch';
 import * as path from 'path';
 import { traceWarning } from '../../../../common/logger';
 import { getEnvironmentVariable } from '../../../../common/utils/platform';
-import { PythonEnvKind } from '../../../base/info';
-import { IPythonEnvsIterator, BasicEnvInfo } from '../../../base/locator';
-import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
+import { PythonEnvKind } from '../../info';
+import { IPythonEnvsIterator, BasicEnvInfo } from '../../locator';
+import { FSWatchingLocator } from './fsWatchingLocator';
 import { pathExists } from '../../../common/externalDependencies';
 import { PythonEnvStructure } from '../../../common/pythonBinariesWatcher';
 
