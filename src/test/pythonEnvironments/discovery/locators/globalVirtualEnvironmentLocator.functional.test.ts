@@ -8,7 +8,7 @@ import * as platformUtils from '../../../../client/common/utils/platform';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { GlobalVirtualEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvronmentLocator';
+import { GlobalVirtualEnvironmentLocator } from '../../../../client/pythonEnvironments/base/locators/lowLevel/globalVirtualEnvronmentLocator';
 import { createBasicEnv } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertBasicEnvsEqual } from './envTestUtils';
