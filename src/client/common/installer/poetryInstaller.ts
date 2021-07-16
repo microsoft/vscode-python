@@ -8,7 +8,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { isPoetryEnvironmentRelatedToFolder } from '../../pythonEnvironments/discovery/locators/services/poetry';
+import { isPoetryEnvironmentRelatedToFolder } from '../../pythonEnvironments/common/environmentManagers/poetry';
 import { EnvironmentType, ModuleInstallerType } from '../../pythonEnvironments/info';
 import { IWorkspaceService } from '../application/types';
 import { inDiscoveryExperiment } from '../experiments/helpers';

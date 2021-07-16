@@ -4,19 +4,14 @@
 'use strict';
 
 import * as path from 'path';
-import { traceError, traceVerbose } from '../../../../common/logger';
-import { getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
-import {
-    getPythonSetting,
-    isParentPath,
-    pathExistsSync,
-    readFileSync,
-    shellExecute,
-} from '../../../common/externalDependencies';
-import { getEnvironmentDirFromPath } from '../../../common/commonUtils';
-import { isVirtualenvEnvironment } from './virtualEnvironmentIdentifier';
-import { StopWatch } from '../../../../common/utils/stopWatch';
-import { cache } from '../../../../common/utils/decorators';
+import { traceError, traceVerbose } from '../../../common/logger';
+import { getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
+import { getPythonSetting, isParentPath, pathExistsSync, readFileSync, shellExecute } from '../externalDependencies';
+import { getEnvironmentDirFromPath } from '../commonUtils';
+import { isVirtualenvEnvironment } from '../../discovery/locators/services/virtualEnvironmentIdentifier';
+import { StopWatch } from '../../../common/utils/stopWatch';
+import { cache } from '../../../common/utils/decorators';
+import { isTestExecution } from '../../../common/constants';
 
 /**
  * Global virtual env dir for a project is named as:
@@ -96,7 +91,7 @@ export class Poetry {
      * Locating poetry binary can be expensive, since it potentially involves spawning or
      * trying to spawn processes; so we only do it once per session.
      */
-    public static _poetryPromise: Map<string, Promise<Poetry | undefined>> = new Map<
+    private static poetryPromise: Map<string, Promise<Poetry | undefined>> = new Map<
         string,
         Promise<Poetry | undefined>
     >();
@@ -126,10 +121,10 @@ export class Poetry {
             return undefined;
         }
         traceVerbose(`Getting poetry for cwd ${cwd}`);
-        if (Poetry._poetryPromise.get(cwd) === undefined) {
-            Poetry._poetryPromise.set(cwd, Poetry.locate(cwd));
+        if (Poetry.poetryPromise.get(cwd) === undefined || isTestExecution()) {
+            Poetry.poetryPromise.set(cwd, Poetry.locate(cwd));
         }
-        return Poetry._poetryPromise.get(cwd);
+        return Poetry.poetryPromise.get(cwd);
     }
 
     private static async locate(cwd: string): Promise<Poetry | undefined> {

@@ -11,7 +11,6 @@ import { PoetryLocator } from '../../../../client/pythonEnvironments/discovery/l
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertBasicEnvsEqual } from './envTestUtils';
 import { ExecutionResult, ShellOptions } from '../../../../client/common/process/types';
-import { Poetry } from '../../../../client/pythonEnvironments/discovery/locators/services/poetry';
 import { createBasicEnv } from '../../base/common';
 
 suite('Poetry Locator', () => {
@@ -20,10 +19,6 @@ suite('Poetry Locator', () => {
     let getOSTypeStub: sinon.SinonStub;
     const testPoetryDir = path.join(TEST_LAYOUT_ROOT, 'poetry');
     let locator: PoetryLocator;
-
-    suiteTeardown(() => {
-        Poetry._poetryPromise = new Map();
-    });
 
     suiteSetup(() => {
         getPythonSetting = sinon.stub(externalDependencies, 'getPythonSetting');

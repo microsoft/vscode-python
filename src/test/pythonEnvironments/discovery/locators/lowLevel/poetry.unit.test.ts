@@ -10,7 +10,7 @@ import * as externalDependencies from '../../../../../client/pythonEnvironments/
 import {
     isPoetryEnvironment,
     Poetry,
-} from '../../../../../client/pythonEnvironments/discovery/locators/services/poetry';
+} from '../../../../../client/pythonEnvironments/common/environmentManagers/poetry';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 
 const testPoetryDir = path.join(TEST_LAYOUT_ROOT, 'poetry');
@@ -21,10 +21,6 @@ const project3 = path.join(testPoetryDir, 'project3');
 suite('isPoetryEnvironment Tests', () => {
     let shellExecute: sinon.SinonStub;
     let getPythonSetting: sinon.SinonStub;
-
-    suiteTeardown(() => {
-        Poetry._poetryPromise = new Map();
-    });
 
     suite('Global poetry environment', async () => {
         test('Return true if environment folder name matches global env pattern and environment is of virtual env type', async () => {
@@ -87,17 +83,12 @@ suite('Poetry binary is located correctly', async () => {
     let shellExecute: sinon.SinonStub;
     let getPythonSetting: sinon.SinonStub;
 
-    suiteSetup(() => {
-        Poetry._poetryPromise = new Map();
-    });
-
     setup(() => {
         getPythonSetting = sinon.stub(externalDependencies, 'getPythonSetting');
         shellExecute = sinon.stub(externalDependencies, 'shellExecute');
     });
 
     teardown(() => {
-        Poetry._poetryPromise = new Map();
         sinon.restore();
     });
 
