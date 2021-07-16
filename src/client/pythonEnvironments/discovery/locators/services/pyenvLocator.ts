@@ -8,7 +8,7 @@ import { BasicEnvInfo, IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { getInterpreterPathFromDir } from '../../../common/commonUtils';
 import { getSubDirs } from '../../../common/externalDependencies';
-import { getPyenvDir } from './pyenv';
+import { getPyenvDir } from '../../../common/environmentManagers/pyenv';
 
 function getPyenvVersionsDir(): string {
     return path.join(getPyenvDir(), 'versions');

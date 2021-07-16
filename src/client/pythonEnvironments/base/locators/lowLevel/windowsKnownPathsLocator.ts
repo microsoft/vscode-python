@@ -8,7 +8,7 @@ import { Event } from 'vscode';
 import { getSearchPathEntries } from '../../../../common/utils/exec';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { iterPythonExecutablesInDir, looksLikeBasicGlobalPython } from '../../../common/commonUtils';
-import { isPyenvShimDir } from '../../../discovery/locators/services/pyenv';
+import { isPyenvShimDir } from '../../../common/environmentManagers/pyenv';
 import { isWindowsStoreDir } from '../../../discovery/locators/services/windowsStoreLocator';
 import { PythonEnvKind, PythonEnvSource } from '../../info';
 import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';

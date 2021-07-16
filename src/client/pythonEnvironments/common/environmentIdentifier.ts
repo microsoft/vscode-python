@@ -6,7 +6,7 @@ import { getPrioritizedEnvKinds } from '../base/info/envKind';
 import { isCondaEnvironment } from './environmentManagers/conda';
 import { isPipenvEnvironment } from './environmentManagers/pipenv';
 import { isPoetryEnvironment } from './environmentManagers/poetry';
-import { isPyenvEnvironment } from '../discovery/locators/services/pyenv';
+import { isPyenvEnvironment } from './environmentManagers/pyenv';
 import {
     isVenvEnvironment,
     isVirtualenvEnvironment as isVirtualEnvEnvironment,

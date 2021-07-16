@@ -14,7 +14,7 @@ import {
 } from '../../../common/commonUtils';
 import { getFileInfo, getWorkspaceFolders, isParentPath } from '../../../common/externalDependencies';
 import { AnacondaCompanyName, Conda } from '../../../common/environmentManagers/conda';
-import { parsePyenvVersion } from '../../../discovery/locators/services/pyenv';
+import { parsePyenvVersion } from '../../../common/environmentManagers/pyenv';
 import { Architecture, getOSType, OSType } from '../../../../common/utils/platform';
 import { getPythonVersionFromPath as parsePythonVersionFromPath, parseVersion } from '../../info/pythonVersion';
 import { getRegistryInterpreters, getRegistryInterpretersSync } from '../../../common/windowsUtils';

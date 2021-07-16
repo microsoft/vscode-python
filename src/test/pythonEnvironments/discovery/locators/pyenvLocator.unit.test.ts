@@ -11,7 +11,7 @@ import {
     isPyenvEnvironment,
     isPyenvShimDir,
     parsePyenvVersion,
-} from '../../../../client/pythonEnvironments/discovery/locators/services/pyenv';
+} from '../../../../client/pythonEnvironments/common/environmentManagers/pyenv';
 
 suite('Pyenv Identifier Tests', () => {
     const home = platformUtils.getUserHomeDir() || '';
