@@ -9,7 +9,7 @@ import { ICondaLocatorService, IInterpreterHelper } from '../../../../interprete
 import { IServiceContainer } from '../../../../ioc/types';
 import { PythonEnvironment } from '../../../info';
 import { CacheableLocatorService } from './cacheableLocatorService';
-import { parseCondaInfo } from './conda';
+import { parseCondaInfo } from '../../../common/environmentManagers/conda';
 
 /**
  * Locates conda env interpreters based on the conda service's info.

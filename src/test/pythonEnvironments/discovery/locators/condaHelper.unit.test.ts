@@ -9,7 +9,7 @@ import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import * as windowsUtils from '../../../../client/pythonEnvironments/common/windowsUtils';
-import { Conda, CondaInfo } from '../../../../client/pythonEnvironments/discovery/locators/services/conda';
+import { Conda, CondaInfo } from '../../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { parseCondaEnvFileContents } from '../../../../client/pythonEnvironments/discovery/locators/services/condaHelper';
 import { CondaEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/condaLocator';
 import { createBasicEnv } from '../../base/common';

@@ -13,7 +13,7 @@ import {
     getPythonVersionFromPath,
 } from '../../../common/commonUtils';
 import { getFileInfo, getWorkspaceFolders, isParentPath } from '../../../common/externalDependencies';
-import { AnacondaCompanyName, Conda } from '../../../discovery/locators/services/conda';
+import { AnacondaCompanyName, Conda } from '../../../common/environmentManagers/conda';
 import { parsePyenvVersion } from '../../../discovery/locators/services/pyenvLocator';
 import { Architecture, getOSType, OSType } from '../../../../common/utils/platform';
 import { getPythonVersionFromPath as parsePythonVersionFromPath, parseVersion } from '../../info/pythonVersion';

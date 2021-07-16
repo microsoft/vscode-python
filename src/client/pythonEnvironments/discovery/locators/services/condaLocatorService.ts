@@ -26,7 +26,7 @@ import {
 import { IServiceContainer } from '../../../../ioc/types';
 import { compareSemVerLikeVersions } from '../../../base/info/pythonVersion';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
-import { CondaEnvironmentInfo, CondaInfo } from './conda';
+import { CondaEnvironmentInfo, CondaInfo } from '../../../common/environmentManagers/conda';
 import { parseCondaEnvFileContents } from './condaHelper';
 
 const untildify: (value: string) => string = require('untildify');

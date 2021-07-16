@@ -23,7 +23,7 @@ import { Architecture } from '../../../../../client/common/utils/platform';
 import {
     AnacondaCompanyName,
     CondaInfo,
-} from '../../../../../client/pythonEnvironments/discovery/locators/services/conda';
+} from '../../../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { resolveBasicEnv } from '../../../../../client/pythonEnvironments/base/locators/composite/resolverUtils';
 
 suite('Resolver Utils', () => {

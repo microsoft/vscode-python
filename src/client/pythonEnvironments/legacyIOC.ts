@@ -42,7 +42,7 @@ import { inExperiment, isParentPath } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
-import { CondaEnvironmentInfo, isCondaEnvironment } from './discovery/locators/services/conda';
+import { CondaEnvironmentInfo, isCondaEnvironment } from './common/environmentManagers/conda';
 import { CondaEnvFileService } from './discovery/locators/services/condaEnvFileService';
 import { CondaEnvService } from './discovery/locators/services/condaEnvService';
 import { CondaService } from './discovery/locators/services/condaService';

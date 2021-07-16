@@ -17,7 +17,7 @@ import { ICondaLocatorService, IInterpreterHelper } from '../../../../interprete
 import { IServiceContainer } from '../../../../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { CacheableLocatorService } from './cacheableLocatorService';
-import { AnacondaCompanyName } from './conda';
+import { AnacondaCompanyName } from '../../../common/environmentManagers/conda';
 
 /**
  * Locate conda env interpreters based on the "conda environments file".

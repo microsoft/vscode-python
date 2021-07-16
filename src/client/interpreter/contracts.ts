@@ -3,7 +3,7 @@ import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument,
 import { IExtensionSingleActivationService } from '../activation/types';
 import { Resource } from '../common/types';
 import { PythonEnvSource } from '../pythonEnvironments/base/info';
-import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/discovery/locators/services/conda';
+import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/common/environmentManagers/conda';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 
 export const INTERPRETER_LOCATOR_SERVICE = 'IInterpreterLocatorService';

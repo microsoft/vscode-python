@@ -3,7 +3,7 @@
 
 import { PythonEnvKind } from '../base/info';
 import { getPrioritizedEnvKinds } from '../base/info/envKind';
-import { isCondaEnvironment } from '../discovery/locators/services/conda';
+import { isCondaEnvironment } from './environmentManagers/conda';
 import { isPipenvEnvironment } from '../discovery/locators/services/pipEnvHelper';
 import { isPoetryEnvironment } from '../discovery/locators/services/poetry';
 import { isPyenvEnvironment } from '../discovery/locators/services/pyenvLocator';

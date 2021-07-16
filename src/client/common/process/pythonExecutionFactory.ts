@@ -7,7 +7,7 @@ import { Uri } from 'vscode';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IComponentAdapter, ICondaLocatorService, ICondaService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
+import { CondaEnvironmentInfo } from '../../pythonEnvironments/common/environmentManagers/conda';
 import { inDiscoveryExperiment } from '../experiments/helpers';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';

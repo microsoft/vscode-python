@@ -1,17 +1,17 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { traceVerbose } from '../../../../common/logger';
-import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
-import { exec, pathExists, readFile } from '../../../common/externalDependencies';
+import { traceVerbose } from '../../../common/logger';
+import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
+import { exec, pathExists, readFile } from '../externalDependencies';
 
-import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
-import { parseVersion } from '../../../base/info/pythonVersion';
+import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../base/info';
+import { parseVersion } from '../../base/info/pythonVersion';
 
-import { getRegistryInterpreters } from '../../../common/windowsUtils';
-import { EnvironmentType, PythonEnvironment } from '../../../info';
-import { IDisposable } from '../../../../common/types';
-import { cache } from '../../../../common/utils/decorators';
-import { isTestExecution } from '../../../../common/constants';
+import { getRegistryInterpreters } from '../windowsUtils';
+import { EnvironmentType, PythonEnvironment } from '../../info';
+import { IDisposable } from '../../../common/types';
+import { cache } from '../../../common/utils/decorators';
+import { isTestExecution } from '../../../common/constants';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 

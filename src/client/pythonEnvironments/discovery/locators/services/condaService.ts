@@ -11,7 +11,7 @@ import { IExperimentService, IConfigurationService, IDisposableRegistry } from '
 import { cache } from '../../../../common/utils/decorators';
 import { ICondaService, ICondaLocatorService } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
-import { Conda, CondaInfo } from './conda';
+import { Conda, CondaInfo } from '../../../common/environmentManagers/conda';
 
 /**
  * A wrapper around a conda installation.

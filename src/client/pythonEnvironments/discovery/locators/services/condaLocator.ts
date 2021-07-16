@@ -4,7 +4,7 @@ import '../../../../common/extensions';
 import { PythonEnvKind } from '../../../base/info';
 import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getInterpreterPathFromDir } from '../../../common/commonUtils';
-import { Conda } from './conda';
+import { Conda } from '../../../common/environmentManagers/conda';
 import { traceError, traceVerbose } from '../../../../common/logger';
 
 export class CondaEnvironmentLocator extends Locator<BasicEnvInfo> {

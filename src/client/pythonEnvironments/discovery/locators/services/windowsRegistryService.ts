@@ -9,7 +9,7 @@ import { IServiceContainer } from '../../../../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { parsePythonVersion } from '../../../info/pythonVersion';
 import { CacheableLocatorService } from './cacheableLocatorService';
-import { AnacondaCompanyName } from './conda';
+import { AnacondaCompanyName } from '../../../common/environmentManagers/conda';
 import { isWindowsStoreInterpreter, isRestrictedWindowsStoreInterpreterPath } from './windowsStoreInterpreter';
 
 const flatten = require('lodash/flatten');
