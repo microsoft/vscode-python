@@ -23,7 +23,7 @@ import { CondaEnvironmentLocator } from './base/locators/lowLevel/condaLocator';
 import { GlobalVirtualEnvironmentLocator } from './base/locators/lowLevel/globalVirtualEnvronmentLocator';
 import { PosixKnownPathsLocator } from './base/locators/lowLevel/posixKnownPathsLocator';
 import { PyenvLocator } from './base/locators/lowLevel/pyenvLocator';
-import { WindowsRegistryLocator } from './discovery/locators/services/windowsRegistryLocator';
+import { WindowsRegistryLocator } from './base/locators/lowLevel/windowsRegistryLocator';
 import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreLocator';
 import { getEnvironmentInfoService } from './info/environmentInfoService';
 import { isComponentEnabled, registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';

@@ -7,7 +7,7 @@ import * as sinon from 'sinon';
 import { PythonEnvKind, PythonEnvSource } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as winreg from '../../../../client/pythonEnvironments/common/windowsRegistry';
-import { WindowsRegistryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryLocator';
+import { WindowsRegistryLocator } from '../../../../client/pythonEnvironments/base/locators/lowLevel/windowsRegistryLocator';
 import { createBasicEnv } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertBasicEnvsEqual } from './envTestUtils';
