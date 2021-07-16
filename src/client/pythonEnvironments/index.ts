@@ -18,7 +18,7 @@ import { WorkspaceVirtualEnvironmentLocator } from './base/locators/lowLevel/wor
 import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
 import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './discovery/locators';
-import { CustomVirtualEnvironmentLocator } from './discovery/locators/services/customVirtualEnvLocator';
+import { CustomVirtualEnvironmentLocator } from './base/locators/lowLevel/customVirtualEnvLocator';
 import { CondaEnvironmentLocator } from './base/locators/lowLevel/condaLocator';
 import { GlobalVirtualEnvironmentLocator } from './discovery/locators/services/globalVirtualEnvronmentLocator';
 import { PosixKnownPathsLocator } from './discovery/locators/services/posixKnownPathsLocator';

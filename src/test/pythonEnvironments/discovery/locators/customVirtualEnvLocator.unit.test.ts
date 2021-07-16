@@ -14,7 +14,7 @@ import {
     CustomVirtualEnvironmentLocator,
     VENVFOLDERS_SETTING_KEY,
     VENVPATH_SETTING_KEY,
-} from '../../../../client/pythonEnvironments/discovery/locators/services/customVirtualEnvLocator';
+} from '../../../../client/pythonEnvironments/base/locators/lowLevel/customVirtualEnvLocator';
 import { createBasicEnv } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertBasicEnvsEqual } from './envTestUtils';
