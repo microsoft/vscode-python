@@ -27,7 +27,7 @@ import { WindowsRegistryLocator } from './discovery/locators/services/windowsReg
 import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreLocator';
 import { getEnvironmentInfoService } from './info/environmentInfoService';
 import { isComponentEnabled, registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
-import { PoetryLocator } from './discovery/locators/services/poetryLocator';
+import { PoetryLocator } from './base/locators/lowLevel/poetryLocator';
 
 /**
  * Set up the Python environments component (during extension activation).'

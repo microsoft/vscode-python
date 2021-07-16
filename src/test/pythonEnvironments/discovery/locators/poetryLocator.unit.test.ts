@@ -7,7 +7,7 @@ import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import * as platformUtils from '../../../../client/common/utils/platform';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
-import { PoetryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/poetryLocator';
+import { PoetryLocator } from '../../../../client/pythonEnvironments/base/locators/lowLevel/poetryLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertBasicEnvsEqual } from './envTestUtils';
 import { ExecutionResult, ShellOptions } from '../../../../client/common/process/types';

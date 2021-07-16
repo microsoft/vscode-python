@@ -6,9 +6,9 @@
 import * as path from 'path';
 import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
-import { PythonEnvKind } from '../../../base/info';
-import { BasicEnvInfo, IPythonEnvsIterator } from '../../../base/locator';
-import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
+import { PythonEnvKind } from '../../info';
+import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
+import { FSWatchingLocator } from './fsWatchingLocator';
 import { getInterpreterPathFromDir } from '../../../common/commonUtils';
 import { pathExists } from '../../../common/externalDependencies';
 import { isPoetryEnvironment, localPoetryEnvDirName, Poetry } from '../../../common/environmentManagers/poetry';

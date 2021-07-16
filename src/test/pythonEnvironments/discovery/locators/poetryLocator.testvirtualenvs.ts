@@ -9,7 +9,7 @@ import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { BasicEnvInfo, ILocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { PoetryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/poetryLocator';
+import { PoetryLocator } from '../../../../client/pythonEnvironments/base/locators/lowLevel/poetryLocator';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { testLocatorWatcher } from './watcherTestUtils';
