@@ -11,7 +11,7 @@ import * as externalDependencies from '../../../../client/pythonEnvironments/com
 import * as windowsUtils from '../../../../client/pythonEnvironments/common/windowsUtils';
 import { Conda, CondaInfo } from '../../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { parseCondaEnvFileContents } from '../../../../client/pythonEnvironments/discovery/locators/services/condaHelper';
-import { CondaEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/condaLocator';
+import { CondaEnvironmentLocator } from '../../../../client/pythonEnvironments/base/locators/lowLevel/condaLocator';
 import { createBasicEnv } from '../../base/common';
 import { assertBasicEnvsEqual } from './envTestUtils';
 
