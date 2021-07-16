@@ -47,7 +47,7 @@ suite('Python envs locator - Environments Resolver', () => {
     /**
      * Returns the expected environment to be returned by Environment info service
      */
-    function createExpectedEnvInfo(env: PythonEnvInfo): PythonEnvInfo {
+    function createExpectedEnvInfo(env: PythonEnvInfo, expectedDisplay: string): PythonEnvInfo {
         const updatedEnv = cloneDeep(env);
         updatedEnv.version = {
             ...parseVersion('3.8.3-final'),
@@ -56,6 +56,7 @@ suite('Python envs locator - Environments Resolver', () => {
         updatedEnv.executable.filename = env.executable.filename;
         updatedEnv.executable.sysPrefix = 'path';
         updatedEnv.arch = Architecture.x64;
+        updatedEnv.display = expectedDisplay;
         return updatedEnv;
     }
 
@@ -147,7 +148,9 @@ suite('Python envs locator - Environments Resolver', () => {
             const iterator = resolver.iterEnvs();
             const envs = await getEnvsWithUpdates(iterator);
 
-            assertEnvsEqual(envs, [createExpectedEnvInfo(resolvedEnvReturnedByBasicResolver)]);
+            assertEnvsEqual(envs, [
+                createExpectedEnvInfo(resolvedEnvReturnedByBasicResolver, "Python 3.8.3 64-bit ('win1': venv)"),
+            ]);
         });
 
         test('If fetching interpreter info fails, it is not reported in the final list of envs', async () => {
@@ -210,7 +213,12 @@ suite('Python envs locator - Environments Resolver', () => {
             const envs = await getEnvsWithUpdates(iterator, iteratorUpdateCallback);
 
             // Assert
-            assertEnvsEqual(envs, [createExpectedEnvInfo(resolvedUpdatedEnvReturnedByBasicResolver)]);
+            assertEnvsEqual(envs, [
+                createExpectedEnvInfo(
+                    resolvedUpdatedEnvReturnedByBasicResolver,
+                    "Python 3.8.3 64-bit ('win1': poetry)",
+                ),
+            ]);
             didUpdate.dispose();
         });
     });
@@ -265,7 +273,10 @@ suite('Python envs locator - Environments Resolver', () => {
 
             const expected = await resolver.resolveEnv(path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'));
 
-            assertEnvEqual(expected, createExpectedEnvInfo(resolvedEnvReturnedByBasicResolver));
+            assertEnvEqual(
+                expected,
+                createExpectedEnvInfo(resolvedEnvReturnedByBasicResolver, "Python 3.8.3 64-bit ('win1': venv)"),
+            );
         });
 
         test('If running interpreter info throws error, return undefined', async () => {
