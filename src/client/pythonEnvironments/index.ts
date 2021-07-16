@@ -21,7 +21,7 @@ import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './discover
 import { CustomVirtualEnvironmentLocator } from './base/locators/lowLevel/customVirtualEnvLocator';
 import { CondaEnvironmentLocator } from './base/locators/lowLevel/condaLocator';
 import { GlobalVirtualEnvironmentLocator } from './base/locators/lowLevel/globalVirtualEnvronmentLocator';
-import { PosixKnownPathsLocator } from './discovery/locators/services/posixKnownPathsLocator';
+import { PosixKnownPathsLocator } from './base/locators/lowLevel/posixKnownPathsLocator';
 import { PyenvLocator } from './discovery/locators/services/pyenvLocator';
 import { WindowsRegistryLocator } from './discovery/locators/services/windowsRegistryLocator';
 import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreLocator';

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { traceError } from '../../../../common/logger';
-import { PythonEnvKind, PythonEnvSource } from '../../../base/info';
-import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../../base/locator';
+import { PythonEnvKind, PythonEnvSource } from '../../info';
+import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../locator';
 import { commonPosixBinPaths, getPythonBinFromPosixPaths } from '../../../common/posixUtils';
 import { isPyenvShimDir } from '../../../common/environmentManagers/pyenv';
 
