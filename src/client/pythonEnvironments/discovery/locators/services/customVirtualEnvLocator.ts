@@ -16,7 +16,7 @@ import {
     pathExists,
     untildify,
 } from '../../../common/externalDependencies';
-import { isPipenvEnvironment } from './pipEnvHelper';
+import { isPipenvEnvironment } from './pipenv';
 import {
     isVenvEnvironment,
     isVirtualenvEnvironment,

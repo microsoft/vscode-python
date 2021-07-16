@@ -6,7 +6,7 @@ import { traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
 import { pathExists } from '../../../common/externalDependencies';
-import { isPipenvEnvironment } from '../../../discovery/locators/services/pipEnvHelper';
+import { isPipenvEnvironment } from '../../../discovery/locators/services/pipenv';
 import {
     isVenvEnvironment,
     isVirtualenvEnvironment,

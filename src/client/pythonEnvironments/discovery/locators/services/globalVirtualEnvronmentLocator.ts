@@ -11,7 +11,7 @@ import { BasicEnvInfo, IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
 import { pathExists, untildify } from '../../../common/externalDependencies';
-import { isPipenvEnvironment } from './pipEnvHelper';
+import { isPipenvEnvironment } from './pipenv';
 import {
     isVenvEnvironment,
     isVirtualenvEnvironment,
