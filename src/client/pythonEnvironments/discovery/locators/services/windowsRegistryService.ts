@@ -9,7 +9,7 @@ import { IServiceContainer } from '../../../../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { parsePythonVersion } from '../../../info/pythonVersion';
 import { CacheableLocatorService } from './cacheableLocatorService';
-import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
+import { AnacondaCompanyName } from './conda';
 import { isWindowsStoreInterpreter, isRestrictedWindowsStoreInterpreterPath } from './windowsStoreInterpreter';
 
 const flatten = require('lodash/flatten');
@@ -21,6 +21,8 @@ const CompaniesToIgnore = ['PYLAUNCHER'];
 const PythonCoreCompanyDisplayName = 'Python Software Foundation';
 
 const PythonCoreComany = 'PYTHONCORE';
+
+const AnacondaCompanyNames = ['Anaconda, Inc.', 'Continuum Analytics, Inc.'];
 
 type CompanyInterpreter = {
     companyKey: string;

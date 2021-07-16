@@ -13,13 +13,7 @@ import { IDisposable } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
 import { isTestExecution } from '../../../../common/constants';
 
-export const AnacondaCompanyNames = ['Anaconda, Inc.', 'Continuum Analytics, Inc.'];
-
 export const AnacondaCompanyName = 'Anaconda, Inc.';
-
-export const AnacondaDisplayName = 'Anaconda';
-
-export const AnacondaIdentifiers = ['Anaconda', 'Conda', 'Continuum'];
 
 export type CondaEnvironmentInfo = {
     name: string;

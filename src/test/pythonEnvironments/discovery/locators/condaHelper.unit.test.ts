@@ -1,4 +1,3 @@
-import * as assert from 'assert';
 import { expect } from 'chai';
 import * as fs from 'fs';
 import * as fsapi from 'fs-extra';
@@ -10,56 +9,13 @@ import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import * as windowsUtils from '../../../../client/pythonEnvironments/common/windowsUtils';
-import {
-    AnacondaDisplayName,
-    Conda,
-    CondaInfo,
-} from '../../../../client/pythonEnvironments/discovery/locators/services/conda';
-import {
-    getDisplayName,
-    parseCondaEnvFileContents,
-} from '../../../../client/pythonEnvironments/discovery/locators/services/condaHelper';
+import { Conda, CondaInfo } from '../../../../client/pythonEnvironments/discovery/locators/services/conda';
+import { parseCondaEnvFileContents } from '../../../../client/pythonEnvironments/discovery/locators/services/condaHelper';
 import { CondaEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/condaLocator';
 import { createBasicEnv } from '../../base/common';
 import { assertBasicEnvsEqual } from './envTestUtils';
 
 suite('Interpreters display name from Conda Environments', () => {
-    test('Must return default display name for invalid Conda Info', () => {
-        assert.equal(getDisplayName(), AnacondaDisplayName, 'Incorrect display name');
-        assert.equal(getDisplayName({}), AnacondaDisplayName, 'Incorrect display name');
-    });
-    test('Must return at least Python Version', () => {
-        const info: CondaInfo = {
-            python_version: '3.6.1.final.10',
-        };
-        const displayName = getDisplayName(info);
-        assert.equal(displayName, AnacondaDisplayName, 'Incorrect display name');
-    });
-    test('Must return info without first part if not a python version', () => {
-        const info: CondaInfo = {
-            'sys.version':
-                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
-        };
-        const displayName = getDisplayName(info);
-        assert.equal(displayName, 'Anaconda 4.4.0 (64-bit)', 'Incorrect display name');
-    });
-    test("Must return info without prefixing with word 'Python'", () => {
-        const info: CondaInfo = {
-            python_version: '3.6.1.final.10',
-            'sys.version':
-                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
-        };
-        const displayName = getDisplayName(info);
-        assert.equal(displayName, 'Anaconda 4.4.0 (64-bit)', 'Incorrect display name');
-    });
-    test('Must include Ananconda name if Company name not found', () => {
-        const info: CondaInfo = {
-            python_version: '3.6.1.final.10',
-            'sys.version': '3.6.1 |4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
-        };
-        const displayName = getDisplayName(info);
-        assert.equal(displayName, `4.4.0 (64-bit) : ${AnacondaDisplayName}`, 'Incorrect display name');
-    });
     test('Parse conda environments', () => {
         const environments = `
 # conda environments:
