@@ -57,7 +57,7 @@ import { KnownPathsService, KnownSearchPathsForInterpreters } from './discovery/
 import { PipEnvService } from './discovery/locators/services/pipEnvService';
 import { PipEnvServiceHelper } from './discovery/locators/services/pipEnvServiceHelper';
 import { WindowsRegistryService } from './discovery/locators/services/windowsRegistryService';
-import { isWindowsStoreEnvironment } from './base/locators/lowLevel/windowsStoreLocator';
+import { isWindowsStoreEnvironment } from './common/environmentManagers/windowsStoreEnv';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
     WorkspaceVirtualEnvService,

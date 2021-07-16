@@ -12,9 +12,9 @@ import { BasicEnvInfo } from '../../../../client/pythonEnvironments/base/locator
 import * as externalDep from '../../../../client/pythonEnvironments/common/externalDependencies';
 import {
     getWindowsStorePythonExes,
-    isWindowsStoreDir,
     WindowsStoreLocator,
 } from '../../../../client/pythonEnvironments/base/locators/lowLevel/windowsStoreLocator';
+import { isWindowsStoreDir } from '../../../../client/pythonEnvironments/common/environmentManagers/windowsStoreEnv';
 import { getEnvs } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertBasicEnvsEqual } from './envTestUtils';

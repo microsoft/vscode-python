@@ -11,8 +11,8 @@ import {
     isVenvEnvironment,
     isVirtualenvEnvironment as isVirtualEnvEnvironment,
     isVirtualenvwrapperEnvironment as isVirtualEnvWrapperEnvironment,
-} from './environmentManagers/simplevirtualenvs';
-import { isWindowsStoreEnvironment } from '../base/locators/lowLevel/windowsStoreLocator';
+} from './environmentManagers/simpleVirtualEnvs';
+import { isWindowsStoreEnvironment } from './environmentManagers/windowsStoreEnv';
 
 function getIdentifiers(): Map<PythonEnvKind, (path: string) => Promise<boolean>> {
     const notImplemented = () => Promise.resolve(false);

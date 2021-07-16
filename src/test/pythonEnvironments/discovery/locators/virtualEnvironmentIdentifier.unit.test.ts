@@ -14,7 +14,7 @@ import {
     isVenvEnvironment,
     isVirtualenvEnvironment,
     isVirtualenvwrapperEnvironment,
-} from '../../../../client/pythonEnvironments/common/environmentManagers/simplevirtualenvs';
+} from '../../../../client/pythonEnvironments/common/environmentManagers/simpleVirtualEnvs';
 import { TEST_DATA_ROOT, TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertVersionsEqual } from './envTestUtils';
 
