@@ -7,6 +7,7 @@ import { zip } from 'lodash';
 import { promisify } from 'util';
 import { PythonEnvInfo, PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../../client/pythonEnvironments/base/info';
 import { getEmptyVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
+import { BasicEnvInfo } from '../../../../client/pythonEnvironments/base/locator';
 
 const execAsync = promisify(exec);
 export async function run(argv: string[], options?: { cwd?: string; env?: NodeJS.ProcessEnv }): Promise<void> {
@@ -69,5 +70,15 @@ export function assertEnvsEqual(
     zip(actualEnvs, expectedEnvs).forEach((value) => {
         const [actual, expected] = value;
         assertEnvEqual(actual, expected);
+    });
+}
+
+export function assertBasicEnvsEqual(actualEnvs: BasicEnvInfo[], expectedEnvs: BasicEnvInfo[]): void {
+    actualEnvs = actualEnvs.sort((a, b) => a.executablePath.localeCompare(b.executablePath));
+    expectedEnvs = expectedEnvs.sort((a, b) => a.executablePath.localeCompare(b.executablePath));
+    assert.deepStrictEqual(actualEnvs.length, expectedEnvs.length, 'Number of envs');
+    zip(actualEnvs, expectedEnvs).forEach((value) => {
+        const [actual, expected] = value;
+        assert.deepStrictEqual(actual, expected);
     });
 }

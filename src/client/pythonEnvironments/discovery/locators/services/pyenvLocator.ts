@@ -4,12 +4,11 @@
 import * as path from 'path';
 import { traceError } from '../../../../common/logger';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../../base/info';
-import { buildEnvInfo } from '../../../base/info/env';
-import { IPythonEnvsIterator } from '../../../base/locator';
+import { PythonEnvKind } from '../../../base/info';
+import { BasicEnvInfo, IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
-import { getInterpreterPathFromDir, getPythonVersionFromPath } from '../../../common/commonUtils';
-import { arePathsSame, getFileInfo, getSubDirs, pathExists } from '../../../common/externalDependencies';
+import { getInterpreterPathFromDir } from '../../../common/commonUtils';
+import { arePathsSame, getSubDirs, pathExists } from '../../../common/externalDependencies';
 
 function getPyenvDir(): string {
     // Check if the pyenv environment variables exist: PYENV on Windows, PYENV_ROOT on Unix.
@@ -254,62 +253,21 @@ export function parsePyenvVersion(str: string): Promise<IPyenvVersionStrings | u
  * Gets all the pyenv environments.
  *
  * Remarks: This function looks at the <pyenv dir>/versions directory and gets
- * all the environments (global or virtual) in that directory. It also makes the
- * best effort at identifying the versions and distribution information.
+ * all the environments (global or virtual) in that directory.
  */
-async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
+async function* getPyenvEnvironments(): AsyncIterableIterator<BasicEnvInfo> {
     const pyenvVersionDir = getPyenvVersionsDir();
 
     const subDirs = getSubDirs(pyenvVersionDir, { resolveSymlinks: true });
     for await (const subDirPath of subDirs) {
-        const envDirName = path.basename(subDirPath);
         const interpreterPath = await getInterpreterPathFromDir(subDirPath);
 
         if (interpreterPath) {
             try {
-                // The sub-directory name sometimes can contain distro and python versions.
-                // here we attempt to extract the texts out of the name.
-                const versionStrings = await parsePyenvVersion(envDirName);
-
-                // Here we look for near by files, or config files to see if we can get python version info
-                // without running python itself.
-                const pythonVersion = await getPythonVersionFromPath(interpreterPath, versionStrings?.pythonVer);
-
-                // Pyenv environments can fall in to these three categories:
-                // 1. Global Installs : These are environments that are created when you install
-                //    a supported python distribution using `pyenv install <distro>` command.
-                //    These behave similar to globally installed version of python or distribution.
-                //
-                // 2. Virtual Envs    : These are environments that are created when you use
-                //    `pyenv virtualenv <distro> <env-name>`. These are similar to environments
-                //    created using `python -m venv <env-name>`.
-                //
-                // 3. Conda Envs      : These are environments that are created when you use
-                //    `pyenv virtualenv <miniconda|anaconda> <env-name>`. These are similar to
-                //    environments created using `conda create -n <env-name>.
-                //
-                // All these environments are fully handled by `pyenv` and should be activated using
-                // `pyenv local|global <env-name>` or `pyenv shell <env-name>`
-                //
-                // For the display name we are going to treat these as `pyenv` environments.
-                const display = `${envDirName}:pyenv`;
-
-                const org = versionStrings && versionStrings.distro ? versionStrings.distro : '';
-
-                const fileInfo = await getFileInfo(interpreterPath);
-
-                const envInfo = buildEnvInfo({
+                yield {
                     kind: PythonEnvKind.Pyenv,
-                    executable: interpreterPath,
-                    location: subDirPath,
-                    version: pythonVersion,
-                    source: [PythonEnvSource.Pyenv],
-                    display,
-                    org,
-                    fileInfo,
-                });
-                envInfo.name = envDirName;
-                yield envInfo;
+                    executablePath: interpreterPath,
+                };
             } catch (ex) {
                 traceError(`Failed to process environment: ${interpreterPath}`, ex);
             }
@@ -317,13 +275,13 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
     }
 }
 
-export class PyenvLocator extends FSWatchingLocator {
+export class PyenvLocator extends FSWatchingLocator<BasicEnvInfo> {
     constructor() {
         super(getPyenvVersionsDir, async () => PythonEnvKind.Pyenv);
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public doIterEnvs(): IPythonEnvsIterator {
+    public doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         return getPyenvEnvironments();
     }
 }

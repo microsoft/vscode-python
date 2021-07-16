@@ -6,12 +6,11 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as util from 'util';
 import * as platform from '../../../../client/common/utils/platform';
-import { PythonEnvKind, PythonEnvSource } from '../../../../client/pythonEnvironments/base/info';
+import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import * as windowsUtils from '../../../../client/pythonEnvironments/common/windowsUtils';
 import {
-    AnacondaCompanyName,
     AnacondaDisplayName,
     Conda,
     CondaInfo,
@@ -21,6 +20,8 @@ import {
     parseCondaEnvFileContents,
 } from '../../../../client/pythonEnvironments/discovery/locators/services/condaHelper';
 import { CondaEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/condaLocator';
+import { createBasicEnv } from '../../base/common';
+import { assertBasicEnvsEqual } from './envTestUtils';
 
 suite('Interpreters display name from Conda Environments', () => {
     test('Must return default display name for invalid Conda Info', () => {
@@ -628,43 +629,20 @@ suite('Conda and its environments are located correctly', () => {
 
         test('Must iterate conda environments correctly', async () => {
             const locator = new CondaEnvironmentLocator();
-            const envs = await getEnvs(await locator.iterEnvs());
+            const envs = await getEnvs(locator.iterEnvs());
 
-            function condaEnv(name: string, prefix: string) {
-                return {
-                    name,
-                    kind: PythonEnvKind.Conda,
-                    arch: platform.Architecture.Unknown,
-                    display: undefined,
-                    searchLocation: undefined,
-                    distro: { org: AnacondaCompanyName },
-                    version: {
-                        major: -1,
-                        minor: -1,
-                        micro: -1,
-                        release: { level: 'final', serial: -1 },
-                        sysVersion: undefined,
-                    },
-                    location: prefix,
-                    executable: {
-                        filename: path.join(prefix, 'bin', 'python'),
-                        ctime: -1,
-                        mtime: -1,
-                        sysPrefix: '',
-                    },
-                    source: [PythonEnvSource.Conda],
-                };
-            }
-
-            expect(envs).to.have.deep.members([
-                condaEnv('base', '/home/user/miniconda3'),
-                condaEnv('env1', '/home/user/miniconda3/envs/env1'),
-                // no env2, because there's no bin/python* under it
-                condaEnv('', '/home/user/miniconda3/envs/dir/env3'),
-                condaEnv('env4', '/home/user/.conda/envs/env4'),
-                // no env5, because there's no bin/python* under it
-                condaEnv('', '/env6'),
-            ]);
+            assertBasicEnvsEqual(
+                envs,
+                [
+                    path.join('/home/user/miniconda3', 'bin', 'python'),
+                    path.join('/home/user/miniconda3/envs/env1', 'bin', 'python'),
+                    // no env2, because there's no bin/python* under it
+                    path.join('/home/user/miniconda3/envs/dir/env3', 'bin', 'python'),
+                    path.join('/home/user/.conda/envs/env4', 'bin', 'python'),
+                    // no env5, because there's no bin/python* under it
+                    path.join('/env6', 'bin', 'python'),
+                ].map((executablePath) => createBasicEnv(PythonEnvKind.Conda, executablePath)),
+            );
         });
     });
 });

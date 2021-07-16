@@ -12,7 +12,7 @@ import { createDeferred, Deferred, sleep } from '../../../../client/common/utils
 import { getOSType, OSType } from '../../../../client/common/utils/platform';
 import { IDisposable } from '../../../../client/common/utils/resourceLifecycle';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { ILocator } from '../../../../client/pythonEnvironments/base/locator';
+import { BasicEnvInfo, ILocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
 import { getInterpreterPathFromDir } from '../../../../client/pythonEnvironments/common/commonUtils';
@@ -97,10 +97,10 @@ class Venvs {
     }
 }
 
-type locatorFactoryFuncType1 = () => Promise<ILocator & IDisposable>;
+type locatorFactoryFuncType1 = () => Promise<ILocator<BasicEnvInfo> & IDisposable>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type locatorFactoryFuncType2 = (_: any) => Promise<ILocator & IDisposable>;
+type locatorFactoryFuncType2 = (_: any) => Promise<ILocator<BasicEnvInfo> & IDisposable>;
 
 export type locatorFactoryFuncType = locatorFactoryFuncType1 & locatorFactoryFuncType2;
 
@@ -137,7 +137,7 @@ export function testLocatorWatcher(
         doNotVerifyIfLocated?: boolean;
     },
 ): void {
-    let locator: ILocator & IDisposable;
+    let locator: ILocator<BasicEnvInfo> & IDisposable;
     let inExperimentStub: sinon.SinonStub;
     const venvs = new Venvs(root);
 
@@ -151,7 +151,7 @@ export function testLocatorWatcher(
 
     async function isLocated(executable: string): Promise<boolean> {
         const items = await getEnvs(locator.iterEnvs());
-        return items.some((item) => externalDeps.arePathsSame(item.executable.filename, executable));
+        return items.some((item) => externalDeps.arePathsSame(item.executablePath, executable));
     }
 
     suiteSetup(() => venvs.cleanUp());

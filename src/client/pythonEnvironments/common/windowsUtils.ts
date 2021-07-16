@@ -110,11 +110,21 @@ export async function getInterpreterDataFromRegistry(
     return (allData.filter((data) => data !== undefined) || []) as IRegistryInterpreterData[];
 }
 
-let registryInterpreters: IRegistryInterpreterData[] | undefined;
+let registryInterpretersCache: IRegistryInterpreterData[] | undefined;
 
-export async function getRegistryInterpreters(ignoreCache = false): Promise<IRegistryInterpreterData[]> {
-    if (!isTestExecution() && !ignoreCache && registryInterpreters !== undefined) {
-        return registryInterpreters;
+/**
+ * Returns windows registry interpreters from memory, returns undefined if memory is empty.
+ * getRegistryInterpreters() must be called prior to this to populate memory.
+ */
+export function getRegistryInterpretersSync(): IRegistryInterpreterData[] | undefined {
+    return !isTestExecution() ? registryInterpretersCache : undefined;
+}
+
+let registryInterpretersPromise: Promise<IRegistryInterpreterData[]> | undefined;
+
+export async function getRegistryInterpreters(): Promise<IRegistryInterpreterData[]> {
+    if (!isTestExecution() && registryInterpretersPromise !== undefined) {
+        return registryInterpretersPromise;
     }
 
     let registryData: IRegistryInterpreterData[] = [];
@@ -134,6 +144,6 @@ export async function getRegistryInterpreters(ignoreCache = false): Promise<IReg
             }
         }
     }
-    registryInterpreters = uniqBy(registryData, (r: IRegistryInterpreterData) => r.interpreterPath);
-    return registryInterpreters;
+    registryInterpretersCache = uniqBy(registryData, (r: IRegistryInterpreterData) => r.interpreterPath);
+    return registryInterpretersCache;
 }

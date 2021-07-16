@@ -99,7 +99,7 @@ export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
 
 // iterators
 
-interface IAsyncIterator<T> extends AsyncIterator<T, void>, Partial<AsyncIterable<T>> {}
+interface IAsyncIterator<T> extends AsyncIterator<T, void> {}
 
 export interface IAsyncIterableIterator<T> extends IAsyncIterator<T>, AsyncIterable<T> {}
 

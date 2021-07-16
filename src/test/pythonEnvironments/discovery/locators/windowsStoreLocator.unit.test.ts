@@ -7,15 +7,8 @@ import * as sinon from 'sinon';
 import * as fsWatcher from '../../../../client/common/platform/fileSystemWatcher';
 import { ExecutionResult } from '../../../../client/common/process/types';
 import * as platformApis from '../../../../client/common/utils/platform';
-import {
-    PythonEnvInfo,
-    PythonEnvKind,
-    PythonEnvSource,
-    PythonVersion,
-    UNKNOWN_PYTHON_VERSION,
-} from '../../../../client/pythonEnvironments/base/info';
-import { InterpreterInformation } from '../../../../client/pythonEnvironments/base/info/interpreter';
-import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
+import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
+import { BasicEnvInfo } from '../../../../client/pythonEnvironments/base/locator';
 import * as externalDep from '../../../../client/pythonEnvironments/common/externalDependencies';
 import {
     getWindowsStorePythonExes,
@@ -24,7 +17,7 @@ import {
 } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
 import { getEnvs } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { assertEnvsEqual } from './envTestUtils';
+import { assertBasicEnvsEqual } from './envTestUtils';
 
 suite('Windows Store', () => {
     suite('Utils', () => {
@@ -96,30 +89,10 @@ suite('Windows Store', () => {
         pathToData.set(path.join(testStoreAppRoot, 'python3.8.exe'), python383data);
         pathToData.set(path.join(testStoreAppRoot, 'python3.7.exe'), python379data);
 
-        function createExpectedInterpreterInfo(
-            executable: string,
-            sysVersion?: string,
-            sysPrefix?: string,
-            versionStr?: string,
-        ): InterpreterInformation {
-            let version: PythonVersion;
-            try {
-                version = parseVersion(versionStr ?? path.basename(executable));
-                if (sysVersion) {
-                    version.sysVersion = sysVersion;
-                }
-            } catch (e) {
-                version = UNKNOWN_PYTHON_VERSION;
-            }
+        function createExpectedInfo(executable: string): BasicEnvInfo {
             return {
-                version,
-                arch: platformApis.Architecture.x64,
-                executable: {
-                    filename: executable,
-                    sysPrefix: sysPrefix ?? '',
-                    ctime: -1,
-                    mtime: -1,
-                },
+                executablePath: executable,
+                kind: PythonEnvKind.WindowsStore,
             };
         }
 
@@ -150,37 +123,21 @@ suite('Windows Store', () => {
 
         teardown(async () => {
             await locator.dispose();
-            stubShellExec.restore();
-            getEnvVar.restore();
-            watchLocationForPatternStub.restore();
+            sinon.restore();
         });
 
         test('iterEnvs()', async () => {
-            const expectedEnvs = [...pathToData.keys()]
-                .sort((a: string, b: string) => a.localeCompare(b))
-                .map((k): PythonEnvInfo | undefined => {
-                    const data = pathToData.get(k);
-                    if (data) {
-                        return {
-                            display: undefined,
-                            searchLocation: undefined,
-                            name: '',
-                            location: '',
-                            kind: PythonEnvKind.WindowsStore,
-                            distro: { org: 'Microsoft' },
-                            source: [PythonEnvSource.PathEnvVar],
-                            ...createExpectedInterpreterInfo(k),
-                        };
-                    }
-                    return undefined;
-                });
+            const expectedEnvs = [
+                createExpectedInfo(path.join(testStoreAppRoot, 'python3.7.exe')),
+                createExpectedInfo(path.join(testStoreAppRoot, 'python3.8.exe')),
+            ];
 
             const iterator = locator.iterEnvs();
             const actualEnvs = (await getEnvs(iterator)).sort((a, b) =>
-                a.executable.filename.localeCompare(b.executable.filename),
+                a.executablePath.localeCompare(b.executablePath),
             );
 
-            assertEnvsEqual(actualEnvs, expectedEnvs);
+            assertBasicEnvsEqual(actualEnvs, expectedEnvs);
         });
     });
 });

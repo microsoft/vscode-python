@@ -95,7 +95,7 @@ suite('Windows Store Locator', async () => {
 
     async function isLocated(executable: string): Promise<boolean> {
         const items = await getEnvs(locator.iterEnvs());
-        return items.some((item) => externalDeps.arePathsSame(item.executable.filename, executable));
+        return items.some((item) => externalDeps.arePathsSame(item.executablePath, executable));
     }
 
     suiteSetup(async () => {

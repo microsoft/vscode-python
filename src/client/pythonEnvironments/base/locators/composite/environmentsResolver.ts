@@ -4,10 +4,12 @@
 import { cloneDeep } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
+import { identifyEnvironment } from '../../../common/environmentIdentifier';
 import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
 import { InterpreterInformation } from '../../info/interpreter';
 import {
+    BasicEnvInfo,
     ILocator,
     IPythonEnvsIterator,
     IResolvingLocator,
@@ -15,7 +17,7 @@ import {
     PythonLocatorQuery,
 } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
-import { resolveEnv } from './resolverUtils';
+import { resolveBasicEnv } from './resolverUtils';
 
 /**
  * Calls environment info service which runs `interpreterInfo.py` script on environments received
@@ -27,12 +29,13 @@ export class PythonEnvsResolver implements IResolvingLocator {
     }
 
     constructor(
-        private readonly parentLocator: ILocator,
+        private readonly parentLocator: ILocator<BasicEnvInfo>,
         private readonly environmentInfoService: IEnvironmentInfoService,
     ) {}
 
     public async resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
-        const environment = await resolveEnv(executablePath);
+        const kind = await identifyEnvironment(executablePath);
+        const environment = await resolveBasicEnv({ kind, executablePath });
         const info = await this.environmentInfoService.getEnvironmentInfo(environment.executable.filename);
         if (!info) {
             return undefined;
@@ -49,7 +52,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
     }
 
     private async *iterEnvsIterator(
-        iterator: IPythonEnvsIterator,
+        iterator: IPythonEnvsIterator<BasicEnvInfo>,
         didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
     ): IPythonEnvsIterator {
         const state = {
@@ -59,28 +62,30 @@ export class PythonEnvsResolver implements IResolvingLocator {
         const seen: PythonEnvInfo[] = [];
 
         if (iterator.onUpdated !== undefined) {
-            const listener = iterator.onUpdated((event) => {
+            const listener = iterator.onUpdated(async (event) => {
+                state.pending += 1;
                 if (event === null) {
                     state.done = true;
-                    checkIfFinishedAndNotify(state, didUpdate);
                     listener.dispose();
                 } else if (event.update === undefined) {
                     throw new Error(
                         'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in resolver',
                     );
                 } else if (seen[event.index] !== undefined) {
-                    seen[event.index] = event.update;
+                    seen[event.index] = await resolveBasicEnv(event.update);
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
                 } else {
                     // This implies a problem in a downstream locator
                     traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
                 }
+                state.pending -= 1;
+                checkIfFinishedAndNotify(state, didUpdate);
             });
         }
 
         let result = await iterator.next();
         while (!result.done) {
-            const currEnv = result.value;
+            const currEnv = await resolveBasicEnv(result.value);
             seen.push(currEnv);
             yield currEnv;
             this.resolveInBackground(seen.indexOf(currEnv), state, didUpdate, seen).ignoreErrors();

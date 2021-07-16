@@ -4,23 +4,23 @@
 import { isEqual } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
-import { PythonEnvInfo, PythonEnvKind } from '../../info';
-import { areSameEnv, mergeEnvironments } from '../../info/env';
-import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
+import { PythonEnvKind } from '../../info';
+import { areSameEnv } from '../../info/env';
+import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
 
 /**
  * Combines duplicate environments received from the incoming locator into one and passes on unique environments
  */
-export class PythonEnvsReducer implements ILocator {
+export class PythonEnvsReducer implements ILocator<BasicEnvInfo> {
     public get onChanged(): Event<PythonEnvsChangedEvent> {
         return this.parentLocator.onChanged;
     }
 
-    constructor(private readonly parentLocator: ILocator) {}
+    constructor(private readonly parentLocator: ILocator<BasicEnvInfo>) {}
 
-    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
+        const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | null>();
         const incomingIterator = this.parentLocator.iterEnvs(query);
         const iterator = iterEnvsIterator(incomingIterator, didUpdate);
         iterator.onUpdated = didUpdate.event;
@@ -29,41 +29,43 @@ export class PythonEnvsReducer implements ILocator {
 }
 
 async function* iterEnvsIterator(
-    iterator: IPythonEnvsIterator,
-    didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
-): IPythonEnvsIterator {
+    iterator: IPythonEnvsIterator<BasicEnvInfo>,
+    didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | null>,
+): IPythonEnvsIterator<BasicEnvInfo> {
     const state = {
         done: false,
         pending: 0,
     };
-    const seen: PythonEnvInfo[] = [];
+    const seen: BasicEnvInfo[] = [];
 
     if (iterator.onUpdated !== undefined) {
         const listener = iterator.onUpdated((event) => {
+            state.pending += 1;
             if (event === null) {
                 state.done = true;
-                checkIfFinishedAndNotify(state, didUpdate);
                 listener.dispose();
             } else if (event.update === undefined) {
                 throw new Error(
                     'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in reducer',
                 );
             } else if (seen[event.index] !== undefined) {
-                state.pending += 1;
-                resolveDifferencesInBackground(event.index, event.update, state, didUpdate, seen).ignoreErrors();
+                const oldEnv = seen[event.index];
+                seen[event.index] = event.update;
+                didUpdate.fire({ index: event.index, old: oldEnv, update: event.update });
             } else {
                 // This implies a problem in a downstream locator
                 traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
             }
+            state.pending -= 1;
+            checkIfFinishedAndNotify(state, didUpdate);
         });
     }
 
     let result = await iterator.next();
     while (!result.done) {
         const currEnv = result.value;
-        const oldIndex = seen.findIndex((s) => areSameEnv(s, currEnv));
+        const oldIndex = seen.findIndex((s) => areSameEnv(s.executablePath, currEnv.executablePath));
         if (oldIndex !== -1) {
-            state.pending += 1;
             resolveDifferencesInBackground(oldIndex, currEnv, state, didUpdate, seen).ignoreErrors();
         } else {
             // We haven't yielded a matching env so yield this one as-is.
@@ -80,11 +82,14 @@ async function* iterEnvsIterator(
 
 async function resolveDifferencesInBackground(
     oldIndex: number,
-    newEnv: PythonEnvInfo,
+    newEnv: BasicEnvInfo,
     state: { done: boolean; pending: number },
-    didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
-    seen: PythonEnvInfo[],
+    didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | null>,
+    seen: BasicEnvInfo[],
 ) {
+    state.pending += 1;
+    // It's essential we increment the pending call count before any asynchronus calls in this method.
+    // We want this to be run even when `resolveInBackground` is called in background.
     const oldEnv = seen[oldIndex];
     const merged = resolveEnvCollision(oldEnv, newEnv);
     if (!isEqual(oldEnv, merged)) {
@@ -102,7 +107,7 @@ async function resolveDifferencesInBackground(
  */
 function checkIfFinishedAndNotify(
     state: { done: boolean; pending: number },
-    didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
+    didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | null>,
 ) {
     if (state.done && state.pending === 0) {
         didUpdate.fire(null);
@@ -110,21 +115,21 @@ function checkIfFinishedAndNotify(
     }
 }
 
-function resolveEnvCollision(oldEnv: PythonEnvInfo, newEnv: PythonEnvInfo): PythonEnvInfo {
-    const [env, other] = sortEnvInfoByPriority(oldEnv, newEnv);
-    return mergeEnvironments(env, other);
+function resolveEnvCollision(oldEnv: BasicEnvInfo, newEnv: BasicEnvInfo): BasicEnvInfo {
+    const [env] = sortEnvInfoByPriority(oldEnv, newEnv);
+    return env;
 }
 
 /**
  * Selects an environment based on the environment selection priority. This should
  * match the priority in the environment identifier.
  */
-function sortEnvInfoByPriority(...envs: PythonEnvInfo[]): PythonEnvInfo[] {
+function sortEnvInfoByPriority(...envs: BasicEnvInfo[]): BasicEnvInfo[] {
     // TODO: When we consolidate the PythonEnvKind and EnvironmentType we should have
     // one location where we define priority.
     const envKindByPriority: PythonEnvKind[] = getPrioritizedEnvironmentKind();
     return envs.sort(
-        (a: PythonEnvInfo, b: PythonEnvInfo) => envKindByPriority.indexOf(a.kind) - envKindByPriority.indexOf(b.kind),
+        (a: BasicEnvInfo, b: BasicEnvInfo) => envKindByPriority.indexOf(a.kind) - envKindByPriority.indexOf(b.kind),
     );
 }
 

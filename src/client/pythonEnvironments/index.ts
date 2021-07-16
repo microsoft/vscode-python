@@ -9,7 +9,7 @@ import { ActivationResult, ExtensionState } from '../components';
 import { PythonEnvironments } from './api';
 import { getPersistentCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
-import { ILocator, IResolvingLocator } from './base/locator';
+import { BasicEnvInfo, ILocator, IResolvingLocator } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsReducer } from './base/locators/composite/environmentsReducer';
 import { PythonEnvsResolver } from './base/locators/composite/environmentsResolver';
@@ -83,7 +83,7 @@ async function createLocators(
     // This is shared.
 ): Promise<IResolvingLocator> {
     // Create the low-level locators.
-    let locators: ILocator = new ExtensionLocators(
+    let locators: ILocator<BasicEnvInfo> = new ExtensionLocators<BasicEnvInfo>(
         // Here we pull the locators together.
         createNonWorkspaceLocators(ext),
         createWorkspaceLocator(ext),
@@ -109,8 +109,8 @@ async function createLocators(
     return caching;
 }
 
-function createNonWorkspaceLocators(ext: ExtensionState): ILocator[] {
-    const locators: (ILocator & Partial<IDisposable>)[] = [];
+function createNonWorkspaceLocators(ext: ExtensionState): ILocator<BasicEnvInfo>[] {
+    const locators: (ILocator<BasicEnvInfo> & Partial<IDisposable>)[] = [];
     locators.push(
         // OS-independent locators go here.
         new PyenvLocator(),
@@ -156,8 +156,8 @@ function watchRoots(args: WatchRootsArgs): IDisposable {
     });
 }
 
-function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators {
-    const locators = new WorkspaceLocators(watchRoots, [
+function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators<BasicEnvInfo> {
+    const locators = new WorkspaceLocators<BasicEnvInfo>(watchRoots, [
         (root: vscode.Uri) => [new WorkspaceVirtualEnvironmentLocator(root.fsPath), new PoetryLocator(root.fsPath)],
         // Add an ILocator factory func here for each kind of workspace-rooted locator.
     ]);

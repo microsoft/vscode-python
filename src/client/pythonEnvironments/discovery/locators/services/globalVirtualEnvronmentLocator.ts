@@ -6,17 +6,11 @@ import * as path from 'path';
 import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../../base/info';
-import { buildEnvInfo } from '../../../base/info/env';
-import { IPythonEnvsIterator } from '../../../base/locator';
+import { PythonEnvKind } from '../../../base/info';
+import { BasicEnvInfo, IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
-import {
-    findInterpretersInDir,
-    getEnvironmentDirFromPath,
-    getPythonVersionFromPath,
-    looksLikeBasicVirtualPython,
-} from '../../../common/commonUtils';
-import { getFileInfo, pathExists, untildify } from '../../../common/externalDependencies';
+import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
+import { pathExists, untildify } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from './pipEnvHelper';
 import {
     isVenvEnvironment,
@@ -85,28 +79,10 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
     return PythonEnvKind.Unknown;
 }
 
-async function buildSimpleVirtualEnvInfo(executablePath: string, kind: PythonEnvKind): Promise<PythonEnvInfo> {
-    const envInfo = buildEnvInfo({
-        kind,
-        version: await getPythonVersionFromPath(executablePath),
-        executable: executablePath,
-        source: [PythonEnvSource.Other],
-    });
-    const location = getEnvironmentDirFromPath(executablePath);
-    envInfo.location = location;
-    envInfo.name = path.basename(location);
-
-    // TODO: Call a general display name provider here to build display name.
-    const fileData = await getFileInfo(executablePath);
-    envInfo.executable.ctime = fileData.ctime;
-    envInfo.executable.mtime = fileData.mtime;
-    return envInfo;
-}
-
 /**
  * Finds and resolves virtual environments created in known global locations.
  */
-export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
+export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator<BasicEnvInfo> {
     constructor(private readonly searchDepth?: number) {
         super(getGlobalVirtualEnvDirs, getVirtualEnvKind, {
             // Note detecting kind of virtual env depends on the file structure around the
@@ -117,7 +93,7 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
         });
     }
 
-    protected doIterEnvs(): IPythonEnvsIterator {
+    protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         // Number of levels of sub-directories to recurse when looking for
         // interpreters
         const searchDepth = this.searchDepth ?? DEFAULT_SEARCH_DEPTH;
@@ -141,16 +117,11 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
                             // check multiple times. Those checks are file system heavy and
                             // we can use the kind to determine this anyway.
                             const kind = await getVirtualEnvKind(filename);
-                            if (kind === PythonEnvKind.Unknown) {
-                                // We don't know the environment type so skip this one.
-                                traceVerbose(`Global Virtual Environment: [skipped] ${filename}`);
-                            } else {
-                                try {
-                                    yield buildSimpleVirtualEnvInfo(filename, kind);
-                                    traceVerbose(`Global Virtual Environment: [added] ${filename}`);
-                                } catch (ex) {
-                                    traceError(`Failed to process environment: ${filename}`, ex);
-                                }
+                            try {
+                                yield { kind, executablePath: filename };
+                                traceVerbose(`Global Virtual Environment: [added] ${filename}`);
+                            } catch (ex) {
+                                traceError(`Failed to process environment: ${filename}`, ex);
                             }
                         } else {
                             traceVerbose(`Global Virtual Environment: [skipped] ${filename}`);

@@ -11,7 +11,7 @@ import { BasicPythonEnvsChangedEvent, IPythonEnvsWatcher, PythonEnvsChangedEvent
 /**
  * A single update to a previously provided Python env object.
  */
-export type PythonEnvUpdatedEvent = {
+export type PythonEnvUpdatedEvent<I = PythonEnvInfo> = {
     /**
      * The iteration index of The env info that was previously provided.
      */
@@ -19,12 +19,12 @@ export type PythonEnvUpdatedEvent = {
     /**
      * The env info that was previously provided.
      */
-    old?: PythonEnvInfo;
+    old?: I;
     /**
      * The env info that replaces the old info.
      * Update is sent as `undefined` if we find out that the environment is no longer valid.
      */
-    update: PythonEnvInfo | undefined;
+    update: I | undefined;
 };
 
 /**
@@ -49,7 +49,7 @@ export type PythonEnvUpdatedEvent = {
  * Callers can usually ignore the update event entirely and rely on
  * the locator to provide sufficiently complete information.
  */
-export interface IPythonEnvsIterator extends IAsyncIterableIterator<PythonEnvInfo> {
+export interface IPythonEnvsIterator<I = PythonEnvInfo> extends IAsyncIterableIterator<I> {
     /**
      * Provides possible updates for already-iterated envs.
      *
@@ -58,7 +58,7 @@ export interface IPythonEnvsIterator extends IAsyncIterableIterator<PythonEnvInf
      * If this property is not provided then it means the iterator does
      * not support updates.
      */
-    onUpdated?: Event<PythonEnvUpdatedEvent | null>;
+    onUpdated?: Event<PythonEnvUpdatedEvent<I> | null>;
 }
 
 /**
@@ -114,6 +114,8 @@ export type PythonLocatorQuery = BasicPythonLocatorQuery & {
 
 type QueryForEvent<E> = E extends PythonEnvsChangedEvent ? PythonLocatorQuery : BasicPythonLocatorQuery;
 
+export type BasicEnvInfo = { kind: PythonEnvKind; executablePath: string };
+
 /**
  * A single Python environment locator.
  *
@@ -128,7 +130,7 @@ type QueryForEvent<E> = E extends PythonEnvsChangedEvent ? PythonLocatorQuery : 
  * events emitted via `onChanged` do not need to provide information
  * for the specific environments that changed.
  */
-export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
+export interface ILocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
     extends IPythonEnvsWatcher<E> {
     /**
      * Iterate over the enviroments known tos this locator.
@@ -146,7 +148,7 @@ export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChan
      * @param query - if provided, the locator will limit results to match
      * @returns - the fast async iterator of Python envs, which may have incomplete info
      */
-    iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator;
+    iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator<I>;
 }
 
 interface IResolver {
@@ -159,7 +161,7 @@ interface IResolver {
     resolveEnv(env: string): Promise<PythonEnvInfo | undefined>;
 }
 
-export interface IResolvingLocator extends IResolver, ILocator {}
+export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ILocator<I> {}
 
 interface IEmitter<E extends PythonEnvsChangedEvent> {
     fire(e: E): void;
@@ -177,7 +179,8 @@ interface IEmitter<E extends PythonEnvsChangedEvent> {
  * should be used.  Only in low-level cases should you consider using
  * `BasicPythonEnvsChangedEvent`.
  */
-abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent> implements ILocator<E> {
+abstract class LocatorBase<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
+    implements ILocator<I, E> {
     public readonly onChanged: Event<E>;
 
     protected readonly emitter: IEmitter<E>;
@@ -188,7 +191,7 @@ abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsCha
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public abstract iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator;
+    public abstract iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator<I>;
 }
 
 /**
@@ -203,7 +206,7 @@ abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsCha
  * Only in low-level cases should you consider subclassing `LocatorBase`
  * using `BasicPythonEnvsChangedEvent.
  */
-export abstract class Locator extends LocatorBase {
+export abstract class Locator<I = PythonEnvInfo> extends LocatorBase<I> {
     constructor() {
         super(new PythonEnvsWatcher());
     }

@@ -8,30 +8,31 @@ import { IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from '../.
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { LazyResourceBasedLocator } from './resourceBasedLocator';
 
-export type GetLocatorFunc = () => Promise<IResolvingLocator & Partial<IDisposable>>;
+export type GetLocatorFunc<I = PythonEnvInfo> = () => Promise<IResolvingLocator<I> & Partial<IDisposable>>;
 
 /**
  * A locator that wraps another.
  *
  * This facilitates isolating the wrapped locator.
  */
-export class LazyWrappingLocator extends LazyResourceBasedLocator {
+export class LazyWrappingLocator<I = PythonEnvInfo> extends LazyResourceBasedLocator<I> {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     private readonly watcher = new PythonEnvsWatcher();
 
-    private wrapped?: IResolvingLocator;
+    private wrapped?: IResolvingLocator<I>;
 
-    constructor(private readonly getLocator: GetLocatorFunc) {
+    constructor(private readonly getLocator: GetLocatorFunc<I>) {
         super();
         this.onChanged = this.watcher.onChanged;
     }
 
-    protected async *doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+    protected async *doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<I> {
         yield* this.wrapped!.iterEnvs(query);
     }
 
     public async resolveEnv(env: string): Promise<PythonEnvInfo | undefined> {
+        await this.ensureResourcesReady();
         return this.wrapped!.resolveEnv(env);
     }
 

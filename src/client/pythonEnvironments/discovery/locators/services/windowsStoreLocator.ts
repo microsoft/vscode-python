@@ -5,13 +5,11 @@ import * as fsapi from 'fs-extra';
 import * as minimatch from 'minimatch';
 import * as path from 'path';
 import { traceWarning } from '../../../../common/logger';
-import { Architecture, getEnvironmentVariable } from '../../../../common/utils/platform';
-import { PythonEnvKind, PythonEnvSource } from '../../../base/info';
-import { buildEnvInfo } from '../../../base/info/env';
-import { getPythonVersionFromPath } from '../../../base/info/pythonVersion';
-import { IPythonEnvsIterator } from '../../../base/locator';
+import { getEnvironmentVariable } from '../../../../common/utils/platform';
+import { PythonEnvKind } from '../../../base/info';
+import { IPythonEnvsIterator, BasicEnvInfo } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
-import { getFileInfo, pathExists } from '../../../common/externalDependencies';
+import { pathExists } from '../../../common/externalDependencies';
 import { PythonEnvStructure } from '../../../common/pythonBinariesWatcher';
 
 /**
@@ -195,7 +193,7 @@ export async function getWindowsStorePythonExes(): Promise<string[]> {
     return [];
 }
 
-export class WindowsStoreLocator extends FSWatchingLocator {
+export class WindowsStoreLocator extends FSWatchingLocator<BasicEnvInfo> {
     private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
 
     constructor() {
@@ -212,20 +210,13 @@ export class WindowsStoreLocator extends FSWatchingLocator {
         });
     }
 
-    protected doIterEnvs(): IPythonEnvsIterator {
+    protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const iterator = async function* (kind: PythonEnvKind) {
             const exes = await getWindowsStorePythonExes();
-            yield* exes.map(async (executable: string) =>
-                buildEnvInfo({
-                    kind,
-                    executable,
-                    version: getPythonVersionFromPath(executable),
-                    org: 'Microsoft',
-                    arch: Architecture.x64,
-                    fileInfo: await getFileInfo(executable),
-                    source: [PythonEnvSource.PathEnvVar],
-                }),
-            );
+            yield* exes.map(async (executablePath: string) => ({
+                kind,
+                executablePath,
+            }));
         };
         return iterator(this.kind);
     }

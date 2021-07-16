@@ -6,7 +6,7 @@ import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { traceDecorators } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
 import { IDisposableRegistry } from '../../../common/types';
-import { createDeferred, Deferred } from '../../../common/utils/async';
+import { createDeferred, Deferred, iterEmpty } from '../../../common/utils/async';
 import { getURIFilter } from '../../../common/utils/misc';
 import { OSType } from '../../../common/utils/platform';
 import { Disposables, IDisposable } from '../../../common/utils/resourceLifecycle';
@@ -24,7 +24,8 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { ILocator, IPythonEnvsIterator, NOOP_ITERATOR, PythonLocatorQuery } from '../../base/locator';
+import { PythonEnvInfo } from '../../base/info';
+import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../base/locator';
 import { combineIterators, Locators } from '../../base/locators';
 import { LazyResourceBasedLocator } from '../../base/locators/common/resourceBasedLocator';
 import { PythonEnvironment } from '../../info';
@@ -33,20 +34,20 @@ import { isHiddenInterpreter } from './services/interpreterFilter';
 /**
  * A wrapper around all locators used by the extension.
  */
-export class ExtensionLocators extends Locators {
+export class ExtensionLocators<I = PythonEnvInfo> extends Locators<I> {
     constructor(
         // These are expected to be low-level locators (e.g. system).
-        nonWorkspace: ILocator[],
+        nonWorkspace: ILocator<I>[],
         // This is expected to be a locator wrapping any found in
         // the workspace (i.e. WorkspaceLocators).
-        workspace: ILocator,
+        workspace: ILocator<I>,
     ) {
         super([...nonWorkspace, workspace]);
     }
 }
 
-type WorkspaceLocatorFactoryResult = ILocator & Partial<IDisposable>;
-type WorkspaceLocatorFactory = (root: Uri) => WorkspaceLocatorFactoryResult[];
+type WorkspaceLocatorFactoryResult<I> = ILocator<I> & Partial<IDisposable>;
+type WorkspaceLocatorFactory<I = PythonEnvInfo> = (root: Uri) => WorkspaceLocatorFactoryResult<I>[];
 
 type RootURI = string;
 
@@ -64,12 +65,12 @@ type WatchRootsFunc = (args: WatchRootsArgs) => IDisposable;
  *
  * The factories are used to produce the locators for each workspace folder.
  */
-export class WorkspaceLocators extends LazyResourceBasedLocator {
-    private readonly locators: Record<RootURI, [ILocator, IDisposable]> = {};
+export class WorkspaceLocators<I = PythonEnvInfo> extends LazyResourceBasedLocator<I> {
+    private readonly locators: Record<RootURI, [ILocator<I>, IDisposable]> = {};
 
     private readonly roots: Record<RootURI, Uri> = {};
 
-    constructor(private readonly watchRoots: WatchRootsFunc, private readonly factories: WorkspaceLocatorFactory[]) {
+    constructor(private readonly watchRoots: WatchRootsFunc, private readonly factories: WorkspaceLocatorFactory<I>[]) {
         super();
     }
 
@@ -81,7 +82,7 @@ export class WorkspaceLocators extends LazyResourceBasedLocator {
         roots.forEach((root) => this.removeRoot(root));
     }
 
-    protected doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+    protected doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<I> {
         const iterators = Object.keys(this.locators).map((key) => {
             if (query?.searchLocations !== undefined) {
                 const root = this.roots[key];
@@ -90,7 +91,7 @@ export class WorkspaceLocators extends LazyResourceBasedLocator {
                 // Ignore any requests for global envs.
                 if (!query.searchLocations.roots.some(filter)) {
                     // This workspace folder did not match the query, so skip it!
-                    return NOOP_ITERATOR;
+                    return iterEmpty<I>();
                 }
             }
             // The query matches or was not location-specific.
@@ -119,7 +120,7 @@ export class WorkspaceLocators extends LazyResourceBasedLocator {
 
     private addRoot(root: Uri): void {
         // Create the root's locator, wrapping each factory-generated locator.
-        const locators: ILocator[] = [];
+        const locators: ILocator<I>[] = [];
         const disposables = new Disposables();
         this.factories.forEach((create) => {
             create(root).forEach((loc) => {

@@ -6,18 +6,11 @@ import * as path from 'path';
 import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { getUserHomeDir } from '../../../../common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from '../../../base/info';
-import { buildEnvInfo } from '../../../base/info/env';
-import { IPythonEnvsIterator } from '../../../base/locator';
+import { PythonEnvKind } from '../../../base/info';
+import { BasicEnvInfo, IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
+import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
 import {
-    findInterpretersInDir,
-    getEnvironmentDirFromPath,
-    getPythonVersionFromPath,
-    looksLikeBasicVirtualPython,
-} from '../../../common/commonUtils';
-import {
-    getFileInfo,
     getPythonSetting,
     onDidChangePythonSetting,
     pathExists,
@@ -82,28 +75,10 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
     return PythonEnvKind.Unknown;
 }
 
-async function buildSimpleVirtualEnvInfo(executablePath: string, kind: PythonEnvKind): Promise<PythonEnvInfo> {
-    const envInfo = buildEnvInfo({
-        kind,
-        version: await getPythonVersionFromPath(executablePath),
-        executable: executablePath,
-        source: [PythonEnvSource.Other],
-    });
-    const location = getEnvironmentDirFromPath(executablePath);
-    envInfo.location = location;
-    envInfo.name = path.basename(location);
-
-    // TODO: Call a general display name provider here to build display name.
-    const fileData = await getFileInfo(executablePath);
-    envInfo.executable.ctime = fileData.ctime;
-    envInfo.executable.mtime = fileData.mtime;
-    return envInfo;
-}
-
 /**
  * Finds and resolves custom virtual environments that users have provided.
  */
-export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
+export class CustomVirtualEnvironmentLocator extends FSWatchingLocator<BasicEnvInfo> {
     constructor() {
         super(getCustomVirtualEnvDirs, getVirtualEnvKind, {
             // Note detecting kind of virtual env depends on the file structure around the
@@ -120,7 +95,7 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    protected doIterEnvs(): IPythonEnvsIterator {
+    protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         async function* iterator() {
             const envRootDirs = await getCustomVirtualEnvDirs();
             const envGenerators = envRootDirs.map((envRootDir) => {
@@ -141,7 +116,7 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
                                 // check multiple times. Those checks are file system heavy and
                                 // we can use the kind to determine this anyway.
                                 const kind = await getVirtualEnvKind(filename);
-                                yield buildSimpleVirtualEnvInfo(filename, kind);
+                                yield { kind, executablePath: filename };
                                 traceVerbose(`Custom Virtual Environment: [added] ${filename}`);
                             } catch (ex) {
                                 traceError(`Failed to process environment: ${filename}`, ex);
