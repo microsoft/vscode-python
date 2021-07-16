@@ -7,10 +7,7 @@ import { chain, iterable } from '../../../../common/utils/async';
 import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
 import { pathExists } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from '../../../common/environmentManagers/pipenv';
-import {
-    isVenvEnvironment,
-    isVirtualenvEnvironment,
-} from '../../../discovery/locators/services/virtualEnvironmentIdentifier';
+import { isVenvEnvironment, isVirtualenvEnvironment } from '../../../common/environmentManagers/simplevirtualenvs';
 import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';

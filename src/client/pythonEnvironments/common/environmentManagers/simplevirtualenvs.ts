@@ -3,12 +3,12 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import '../../../../common/extensions';
-import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
-import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
-import { comparePythonVersionSpecificity } from '../../../base/info/env';
-import { parseBasicVersion, parseRelease, parseVersion } from '../../../base/info/pythonVersion';
-import { pathExists, readFile } from '../../../common/externalDependencies';
+import '../../../common/extensions';
+import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
+import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../base/info';
+import { comparePythonVersionSpecificity } from '../../base/info/env';
+import { parseBasicVersion, parseRelease, parseVersion } from '../../base/info/pythonVersion';
+import { pathExists, readFile } from '../externalDependencies';
 
 function getPyvenvConfigPathsFrom(interpreterPath: string): string[] {
     const pyvenvConfigFile = 'pyvenv.cfg';
