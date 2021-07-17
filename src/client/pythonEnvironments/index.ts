@@ -17,7 +17,7 @@ import { WindowsPathEnvVarLocator } from './base/locators/lowLevel/windowsKnownP
 import { WorkspaceVirtualEnvironmentLocator } from './base/locators/lowLevel/workspaceVirtualEnvLocator';
 import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
-import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './discovery/locators';
+import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './base/locators/';
 import { CustomVirtualEnvironmentLocator } from './base/locators/lowLevel/customVirtualEnvLocator';
 import { CondaEnvironmentLocator } from './base/locators/lowLevel/condaLocator';
 import { GlobalVirtualEnvironmentLocator } from './base/locators/lowLevel/globalVirtualEnvronmentLocator';

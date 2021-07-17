@@ -28,11 +28,8 @@ import {
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
-import {
-    PythonInterpreterLocatorService,
-    WatchRootsArgs,
-    WorkspaceLocators,
-} from '../../../../client/pythonEnvironments/discovery/locators';
+import { PythonInterpreterLocatorService } from '../../../../client/pythonEnvironments/discovery/locators';
+import { WatchRootsArgs, WorkspaceLocators } from '../../../../client/pythonEnvironments/base/locators/';
 import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { assertSameEnvs, createLocatedEnv, createNamedEnv, getEnvs, SimpleLocator } from '../../base/common';
 
