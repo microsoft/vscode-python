@@ -15,7 +15,7 @@ import * as ExternalDep from '../../../client/pythonEnvironments/common/external
 import {
     EnvironmentInfoServiceQueuePriority,
     getEnvironmentInfoService,
-} from '../../../client/pythonEnvironments/info/environmentInfoService';
+} from '../../../client/pythonEnvironments/base/info/environmentInfoService';
 
 suite('Environment Info Service', () => {
     let stubShellExec: sinon.SinonStub;

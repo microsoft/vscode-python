@@ -11,7 +11,7 @@ import {
     isVenvEnvironment,
     isVirtualenvEnvironment as isVirtualEnvEnvironment,
     isVirtualenvwrapperEnvironment as isVirtualEnvWrapperEnvironment,
-} from './environmentManagers/simpleVirtualEnvs';
+} from './environmentManagers/simplevirtualenvs';
 import { isWindowsStoreEnvironment } from './environmentManagers/windowsStoreEnv';
 
 function getIdentifiers(): Map<PythonEnvKind, (path: string) => Promise<boolean>> {

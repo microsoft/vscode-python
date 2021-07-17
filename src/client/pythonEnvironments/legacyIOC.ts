@@ -67,7 +67,7 @@ import { EnvironmentType, PythonEnvironment } from './info';
 import { toSemverLikeVersion } from './base/info/pythonVersion';
 import { PythonVersion } from './info/pythonVersion';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { EnvironmentInfoServiceQueuePriority, getEnvironmentInfoService } from './info/environmentInfoService';
+import { EnvironmentInfoServiceQueuePriority, getEnvironmentInfoService } from './base/info/environmentInfoService';
 
 const convertedKinds = new Map(
     Object.entries({

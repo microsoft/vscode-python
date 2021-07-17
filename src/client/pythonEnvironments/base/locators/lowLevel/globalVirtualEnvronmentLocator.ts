@@ -16,7 +16,7 @@ import {
     isVenvEnvironment,
     isVirtualenvEnvironment,
     isVirtualenvwrapperEnvironment,
-} from '../../../common/environmentManagers/simpleVirtualEnvs';
+} from '../../../common/environmentManagers/simplevirtualenvs';
 import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
 

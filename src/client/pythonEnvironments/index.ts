@@ -25,7 +25,7 @@ import { PosixKnownPathsLocator } from './base/locators/lowLevel/posixKnownPaths
 import { PyenvLocator } from './base/locators/lowLevel/pyenvLocator';
 import { WindowsRegistryLocator } from './base/locators/lowLevel/windowsRegistryLocator';
 import { WindowsStoreLocator } from './base/locators/lowLevel/windowsStoreLocator';
-import { getEnvironmentInfoService } from './info/environmentInfoService';
+import { getEnvironmentInfoService } from './base/info/environmentInfoService';
 import { isComponentEnabled, registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
 import { PoetryLocator } from './base/locators/lowLevel/poetryLocator';
 
