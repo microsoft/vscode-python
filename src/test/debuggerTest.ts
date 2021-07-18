@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { runTests } from 'vscode-test';
+import { runTests } from '@vscode/test-electron';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 
 const workspacePath = path.join(__dirname, '..', '..', 'src', 'testMultiRootWkspc', 'multi.code-workspace');

@@ -1,7 +1,7 @@
 import { spawnSync } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from 'vscode-test';
+import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
 import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../client/common/constants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 
