@@ -1,0 +1,6 @@
+{
+    "extends": "./tsconfig.extension.json",
+    "files": [
+        "./src/client/extension.web.ts"
+    ]
+}

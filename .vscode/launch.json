@@ -38,6 +38,20 @@
             "preLaunchTask": "Compile"
         },
         {
+            "name": "Run Web Extension",
+			"type": "pwa-extensionHost",
+			"debugWebWorkerHost": true,
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionDevelopmentKind=web"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/client-web/**/*.js"
+			],
+			"preLaunchTask": "npm: compile-web"
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",

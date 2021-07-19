@@ -101,6 +101,7 @@
         "workspaceContains:app.py"
     ],
     "main": "./out/client/extension",
+    "browser": "./out/client-web/extension",
     "contributes": {
             "breakpoints": [
                 {
@@ -2075,7 +2076,9 @@
         "addExtensionPackDependencies": "gulp addExtensionPackDependencies",
         "updateBuildNumber": "gulp updateBuildNumber",
         "verifyBundle": "gulp verifyBundle",
-        "webpack": "webpack"
+        "webpack": "webpack",
+        "compile-web": "webpack --config ./build/webpack/webpack.extension.web.config.js",
+        "watch-web": "webpack --watch --config ./build/webpack/webpack.extension.web.config.js"
     },
     "dependencies": {
         "arch": "^2.1.0",
