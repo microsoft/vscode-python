@@ -1,9 +1,11 @@
 # Changelog
 
-## 2021.7.0 (19 July 2021)
+## 2021.7.0 (20 July 2021)
 
 ### Enhancements
 
+1. Support starting a TensorBoard session with a remote URL hosting log files.
+   ([#16461](https://github.com/Microsoft/vscode-python/issues/16461))
 1. Sort environments in the selection quickpick by assumed usefulness.
    ([#16520](https://github.com/Microsoft/vscode-python/issues/16520))
 
@@ -24,6 +26,8 @@
    ([#16607](https://github.com/Microsoft/vscode-python/issues/16607))
 1. The Jupyter Notebook extension will install any missing dependencies using Poetry or Pipenv if those are the selected environments. (thanks [Anthony Shaw](https://github.com/tonybaloney))
    ([#16615](https://github.com/Microsoft/vscode-python/issues/16615))
+1. Ensure we block on autoselection when no interpreter is explictly set by user.
+   ([#16723](https://github.com/Microsoft/vscode-python/issues/16723))
 
 ### Thanks
 
