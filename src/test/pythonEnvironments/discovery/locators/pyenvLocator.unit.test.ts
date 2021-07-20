@@ -278,7 +278,7 @@ suite('Pyenv Versions Parser Test', () => {
 
     testData.forEach((data) => {
         test(`Parse pyenv version [${data.input}]`, async () => {
-            assert.deepStrictEqual(await parsePyenvVersion(data.input), data.expectedOutput);
+            assert.deepStrictEqual(parsePyenvVersion(data.input), data.expectedOutput);
         });
     });
 });

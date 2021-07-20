@@ -169,7 +169,7 @@ async function resolvePyenvEnv(executablePath: string): Promise<PythonEnvInfo> {
 
     // The sub-directory name sometimes can contain distro and python versions.
     // here we attempt to extract the texts out of the name.
-    const versionStrings = await parsePyenvVersion(name);
+    const versionStrings = parsePyenvVersion(name);
 
     const envInfo = buildEnvInfo({
         kind: PythonEnvKind.Pyenv,

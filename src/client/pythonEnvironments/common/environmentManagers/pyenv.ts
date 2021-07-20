@@ -68,7 +68,7 @@ export interface IPyenvVersionStrings {
  *
  * The parsers below were written based on the list obtained from pyenv version 1.2.21
  */
-function getKnownPyenvVersionParsers(): Map<string, (path: string) => Promise<IPyenvVersionStrings | undefined>> {
+function getKnownPyenvVersionParsers(): Map<string, (path: string) => IPyenvVersionStrings | undefined> {
     /**
      * This function parses versions that are plain python versions.
      * @param str string to parse
@@ -77,12 +77,12 @@ function getKnownPyenvVersionParsers(): Map<string, (path: string) => Promise<IP
      *   2.7.18
      *   3.9.0
      */
-    function pythonOnly(str: string): Promise<IPyenvVersionStrings> {
-        return Promise.resolve({
+    function pythonOnly(str: string): IPyenvVersionStrings {
+        return {
             pythonVer: str,
             distro: undefined,
             distroVer: undefined,
-        });
+        };
     }
 
     /**
@@ -93,29 +93,29 @@ function getKnownPyenvVersionParsers(): Map<string, (path: string) => Promise<IP
      *   miniconda3-4.7.12
      *   anaconda3-2020.07
      */
-    function distroOnly(str: string): Promise<IPyenvVersionStrings | undefined> {
+    function distroOnly(str: string): IPyenvVersionStrings | undefined {
         const parts = str.split('-');
         if (parts.length === 3) {
-            return Promise.resolve({
+            return {
                 pythonVer: undefined,
                 distroVer: `${parts[1]}-${parts[2]}`,
                 distro: parts[0],
-            });
+            };
         }
 
         if (parts.length === 2) {
-            return Promise.resolve({
+            return {
                 pythonVer: undefined,
                 distroVer: parts[1],
                 distro: parts[0],
-            });
+            };
         }
 
-        return Promise.resolve({
+        return {
             pythonVer: undefined,
             distroVer: undefined,
             distro: str,
-        });
+        };
     }
 
     /**
@@ -135,17 +135,17 @@ function getKnownPyenvVersionParsers(): Map<string, (path: string) => Promise<IP
      *  pypy3.5-5.8.0-src
      *  pypy3.5-5.8.0
      */
-    function pypyParser(str: string): Promise<IPyenvVersionStrings | undefined> {
+    function pypyParser(str: string): IPyenvVersionStrings | undefined {
         const pattern = /[0-9\.]+/;
 
         const parts = str.split('-');
         const pythonVer = parts[0].search(pattern) > 0 ? parts[0].substr('pypy'.length) : undefined;
         if (parts.length === 2) {
-            return Promise.resolve({
+            return {
                 pythonVer,
                 distroVer: parts[1],
                 distro: 'pypy',
-            });
+            };
         }
 
         if (
@@ -156,45 +156,45 @@ function getKnownPyenvVersionParsers(): Map<string, (path: string) => Promise<IP
                 parts[2].startsWith('win64'))
         ) {
             const part1 = parts[1].startsWith('v') ? parts[1].substr(1) : parts[1];
-            return Promise.resolve({
+            return {
                 pythonVer,
                 distroVer: `${part1}-${parts[2]}`,
                 distro: 'pypy',
-            });
+            };
         }
 
         if (parts.length === 3 && parts[1] === 'stm') {
-            return Promise.resolve({
+            return {
                 pythonVer,
                 distroVer: parts[2],
                 distro: `${parts[0]}-${parts[1]}`,
-            });
+            };
         }
 
         if (parts.length === 4 && parts[1] === 'c') {
-            return Promise.resolve({
+            return {
                 pythonVer,
                 distroVer: parts[3],
                 distro: `pypy-${parts[1]}-${parts[2]}`,
-            });
+            };
         }
 
         if (parts.length === 4 && parts[3].startsWith('src')) {
-            return Promise.resolve({
+            return {
                 pythonVer,
                 distroVer: `${parts[1]}-${parts[2]}-${parts[3]}`,
                 distro: 'pypy',
-            });
+            };
         }
 
-        return Promise.resolve({
+        return {
             pythonVer,
             distroVer: undefined,
             distro: 'pypy',
-        });
+        };
     }
 
-    const parsers: Map<string, (path: string) => Promise<IPyenvVersionStrings | undefined>> = new Map();
+    const parsers: Map<string, (path: string) => IPyenvVersionStrings | undefined> = new Map();
     parsers.set('activepython', distroOnly);
     parsers.set('anaconda', distroOnly);
     parsers.set('graalpython', distroOnly);
@@ -220,7 +220,7 @@ function getKnownPyenvVersionParsers(): Map<string, (path: string) => Promise<IP
  * extracts the various strings.
  */
 
-export function parsePyenvVersion(str: string): Promise<IPyenvVersionStrings | undefined> {
+export function parsePyenvVersion(str: string): IPyenvVersionStrings | undefined {
     const allParsers = getKnownPyenvVersionParsers();
     const knownPrefixes = Array.from(allParsers.keys());
 
@@ -233,5 +233,5 @@ export function parsePyenvVersion(str: string): Promise<IPyenvVersionStrings | u
         return parsers[0](str);
     }
 
-    return Promise.resolve(undefined);
+    return undefined;
 }
