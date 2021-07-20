@@ -6,11 +6,11 @@
 import { inject, injectable } from 'inversify';
 import { IWorkspaceService } from './application/types';
 import { DeprecatePythonPath } from './experiments/groups';
-import { IExperimentService, IInterpreterPathExpHelper, IInterpreterPathService, Resource } from './types';
+import { IExperimentService, IInterpreterPathProxyService, IInterpreterPathService, Resource } from './types';
 import { SystemVariables } from './variables/systemVariables';
 
 @injectable()
-export class InterpreterPathExpHelper implements IInterpreterPathExpHelper {
+export class InterpreterPathProxyService implements IInterpreterPathProxyService {
     constructor(
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
         @inject(IExperimentService) private readonly experiment: IExperimentService,
@@ -25,7 +25,7 @@ export class InterpreterPathExpHelper implements IInterpreterPathExpHelper {
         );
         const pythonSettings = this.workspace.getConfiguration('python', resource);
         return systemVariables.resolveAny(
-            this.experiment.inExperimentSync(DeprecatePythonPath.experiment) && this.interpreterPathService
+            this.experiment.inExperimentSync(DeprecatePythonPath.experiment)
                 ? this.interpreterPathService.get(resource)
                 : pythonSettings.get<string>('pythonPath'),
         )!;

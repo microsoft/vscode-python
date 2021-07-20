@@ -20,7 +20,7 @@ import {
     IToolExecutionPath,
     IsWindows,
     ToolExecutionPath,
-    IInterpreterPathExpHelper,
+    IInterpreterPathProxyService,
 } from './types';
 import { IServiceManager } from '../ioc/types';
 import { JupyterExtensionDependencyManager } from '../jupyter/jupyterExtensionDependencyManager';
@@ -119,13 +119,16 @@ import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStep
 import { Random } from './utils/random';
 import { JupyterNotInstalledNotificationHelper } from '../jupyter/jupyterNotInstalledNotificationHelper';
 import { IJupyterNotInstalledNotificationHelper } from '../jupyter/types';
-import { InterpreterPathExpHelper } from './interpreterPathExpHelper';
+import { InterpreterPathProxyService } from './interpreterPathProxyService';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
 
     serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
-    serviceManager.addSingleton<IInterpreterPathExpHelper>(IInterpreterPathExpHelper, InterpreterPathExpHelper);
+    serviceManager.addSingleton<IInterpreterPathProxyService>(
+        IInterpreterPathProxyService,
+        InterpreterPathProxyService,
+    );
     serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<IRandom>(IRandom, Random);

@@ -560,8 +560,8 @@ export interface IInterpreterPathService {
 /**
  * Interface used to access current Interpreter Path
  */
-export const IInterpreterPathExpHelper = Symbol('IInterpreterPathExpHelper');
-export interface IInterpreterPathExpHelper {
+export const IInterpreterPathProxyService = Symbol('IInterpreterPathProxyService');
+export interface IInterpreterPathProxyService {
     get(resource: Resource): string;
 }
 

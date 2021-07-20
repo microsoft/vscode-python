@@ -5,7 +5,7 @@ import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import '../../common/extensions';
 import {
     IDisposableRegistry,
-    IInterpreterPathExpHelper,
+    IInterpreterPathProxyService,
     IOutputChannel,
     IPathUtils,
     Resource,
@@ -28,7 +28,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
     private readonly workspaceService: IWorkspaceService;
     private readonly pathUtils: IPathUtils;
     private readonly interpreterService: IInterpreterService;
-    private readonly interpreterPathExpHelper: IInterpreterPathExpHelper;
+    private readonly interpreterPathExpHelper: IInterpreterPathProxyService;
     private currentlySelectedInterpreterPath?: string;
     private currentlySelectedWorkspaceFolder: Resource;
     private readonly autoSelection: IInterpreterAutoSelectionService;
@@ -45,7 +45,9 @@ export class InterpreterDisplay implements IInterpreterDisplay {
 
         const application = serviceContainer.get<IApplicationShell>(IApplicationShell);
         const disposableRegistry = serviceContainer.get<Disposable[]>(IDisposableRegistry);
-        this.interpreterPathExpHelper = serviceContainer.get<IInterpreterPathExpHelper>(IInterpreterPathExpHelper);
+        this.interpreterPathExpHelper = serviceContainer.get<IInterpreterPathProxyService>(
+            IInterpreterPathProxyService,
+        );
 
         this.statusBar = application.createStatusBarItem(StatusBarAlignment.Left, 100);
         this.statusBar.command = 'python.setInterpreter';
