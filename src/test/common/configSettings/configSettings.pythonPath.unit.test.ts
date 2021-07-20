@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
@@ -118,7 +118,24 @@ suite('Python Settings - pythonPath', () => {
 
         expect(configSettings.pythonPath).to.be.equal('python');
     });
-    test("If we don't have a custom python path and we do have an auto selected interpreter, then use it", () => {
+    test("If a workspace is opened and if we don't have a custom python path but we do have an auto selected interpreter, then use it", () => {
+        const pythonPath = path.join(__dirname, 'this is a python path that was auto selected');
+        const interpreter = { path: pythonPath } as PythonEnvironment;
+        const workspaceFolderUri = Uri.file(__dirname);
+        const selectionService = mock(MockAutoSelectionService);
+        when(selectionService.getAutoSelectedInterpreter(workspaceFolderUri)).thenReturn(interpreter);
+        when(selectionService.setWorkspaceInterpreter(workspaceFolderUri, anything())).thenResolve();
+        configSettings = new CustomPythonSettings(workspaceFolderUri, instance(selectionService));
+        pythonSettings
+            .setup((p) => p.get(typemoq.It.isValue('pythonPath')))
+            .returns(() => 'python')
+            .verifiable(typemoq.Times.atLeast(1));
+        configSettings.update(pythonSettings.object);
+
+        expect(configSettings.pythonPath).to.be.equal(pythonPath);
+        verify(selectionService.setWorkspaceInterpreter(workspaceFolderUri, interpreter)).once(); // Verify we set the autoselected interpreter
+    });
+    test("If no workspace is opened and we don't have a custom python path but we do have an auto selected interpreter, then use it", () => {
         const pythonPath = path.join(__dirname, 'this is a python path that was auto selected');
         const interpreter = { path: pythonPath } as PythonEnvironment;
         const workspaceFolderUri = Uri.file(__dirname);
