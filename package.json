@@ -165,8 +165,8 @@
                         "title": "Learn more",
                         "description": "• [Explore](command:pythonCommands) all the features the Python extension has to offer.\n• [Signup](https://aka.ms/AAAbopxr) for tips and tutorials through our mailing list.\n• Explore more features in our [Tutorials](https://aka.ms/AA8dqti) or check [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n• Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
                         "media": {
-                            "image": "resources/walkthrough/python-docs-learn-more.gif",
-                            "altText": "Documentation pages for Python in VS Code"
+                            "image": "resources/walkthrough/python-docs-learn-more.png",
+                            "altText": "Documentation page for Python in VS Code"
                         }
                     }
                 ]
@@ -181,7 +181,7 @@
                         "title": "Install Python",
                         "description": "The Python Extension requires Python to be installed. Install Python from [Anaconda](https://www.anaconda.com) to use the Python extension.\n \n[Install Python with Anaconda](command:workbench.action.reloadWindow)",
                         "media": {
-                            "image": "resources/walkthrough/anaconda_install.gif",
+                            "image": "resources/walkthrough/anaconda-install.png",
                             "altText": "Screenshot of anaconda webpage"
                         },
                         "when": ""
@@ -217,7 +217,7 @@
                         "title": "Create a new Jupyter Notebook",
                         "description": "To create a new Jupyter Notebook, you can right click in the file explorer and create a new file with an .ipynb extension anytime.\n \nAlternatively, you can open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create New Blank Notebook``.\n[Create new Jupyter Notebook](command:toSide:jupyter.createnewnotebook)",
                         "media": {
-                            "image": "resources/walkthrough/new_notebook.gif",
+                            "image": "resources/walkthrough/new-notebook.png",
                             "altText": "Creating a new Jupyter notebook"
                         },
                         "completionEvents": [
@@ -229,7 +229,7 @@
                         "title": "Open the Python Interactive Window",
                         "description": "The Python Interactive Window is a Python shell where you can execute and view the results of your Python code. You can create cells on a Python file by typing ``#%%``.\n \nTo open the interactive window anytime, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create Interactive Window``.\n[Open Interactive Window](command:toSide:jupyter.createnewinteractive)",
                         "media": {
-                            "image": "resources/walkthrough/interactive_window.gif",
+                            "image": "resources/walkthrough/interactive-window.png",
                             "altText": "Opening python interactive window"
                         },
                         "completionEvents": [
