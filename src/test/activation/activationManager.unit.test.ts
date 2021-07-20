@@ -456,25 +456,16 @@ suite('Activation Manager', () => {
                 .setup((s) => s.activate())
                 .returns(() => Promise.resolve())
                 .verifiable(typemoq.Times.once());
-            autoSelection
-                .setup((a) => a.autoSelectInterpreter(undefined))
-                .returns(() => Promise.resolve())
-                .verifiable(typemoq.Times.once());
             when(activeResourceService.getActiveResource()).thenReturn(resource);
             await managerTest.activate();
             assert.ok(initialize.calledOnce);
             assert.ok(activateWorkspace.calledOnce);
             singleActivationService.verifyAll();
-            autoSelection.verifyAll();
         });
 
         test('Throws error if execution fails', async () => {
             singleActivationService
                 .setup((s) => s.activate())
-                .returns(() => Promise.resolve())
-                .verifiable(typemoq.Times.once());
-            autoSelection
-                .setup((a) => a.autoSelectInterpreter(undefined))
                 .returns(() => Promise.reject(new Error('Kaboom')))
                 .verifiable(typemoq.Times.once());
             when(activeResourceService.getActiveResource()).thenReturn(resource);
