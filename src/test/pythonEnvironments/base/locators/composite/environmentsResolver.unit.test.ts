@@ -27,7 +27,7 @@ import {
     IEnvironmentInfoService,
 } from '../../../../../client/pythonEnvironments/base/info/environmentInfoService';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
-import { assertEnvEqual, assertEnvsEqual } from '../../../discovery/locators/envTestUtils';
+import { assertEnvEqual, assertEnvsEqual } from '../envTestUtils';
 import { createBasicEnv, getEnvs, getEnvsWithUpdates, SimpleLocator } from '../../common';
 
 suite('Python envs locator - Environments Resolver', () => {

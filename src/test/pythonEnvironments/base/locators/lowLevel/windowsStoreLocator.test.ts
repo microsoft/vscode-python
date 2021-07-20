@@ -6,17 +6,17 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
-import { DiscoveryVariants } from '../../../../client/common/experiments/groups';
-import { traceWarning } from '../../../../client/common/logger';
-import { FileChangeType } from '../../../../client/common/platform/fileSystemWatcher';
-import { createDeferred, Deferred, sleep } from '../../../../client/common/utils/async';
-import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
-import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
-import * as externalDeps from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { WindowsStoreLocator } from '../../../../client/pythonEnvironments/base/locators/lowLevel/windowsStoreLocator';
-import { TEST_TIMEOUT } from '../../../constants';
-import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
+import { DiscoveryVariants } from '../../../../../client/common/experiments/groups';
+import { traceWarning } from '../../../../../client/common/logger';
+import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
+import { createDeferred, Deferred, sleep } from '../../../../../client/common/utils/async';
+import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
+import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
+import * as externalDeps from '../../../../../client/pythonEnvironments/common/externalDependencies';
+import { WindowsStoreLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsStoreLocator';
+import { TEST_TIMEOUT } from '../../../../constants';
+import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 
 class WindowsStoreEnvs {
     private executables: string[] = [];

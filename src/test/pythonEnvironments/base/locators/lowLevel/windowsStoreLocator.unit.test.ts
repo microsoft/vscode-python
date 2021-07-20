@@ -4,20 +4,19 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as fsWatcher from '../../../../client/common/platform/fileSystemWatcher';
-import { ExecutionResult } from '../../../../client/common/process/types';
-import * as platformApis from '../../../../client/common/utils/platform';
-import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { BasicEnvInfo } from '../../../../client/pythonEnvironments/base/locator';
-import * as externalDep from '../../../../client/pythonEnvironments/common/externalDependencies';
+import * as fsWatcher from '../../../../../client/common/platform/fileSystemWatcher';
+import { ExecutionResult } from '../../../../../client/common/process/types';
+import * as platformApis from '../../../../../client/common/utils/platform';
+import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { BasicEnvInfo } from '../../../../../client/pythonEnvironments/base/locator';
+import * as externalDep from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import {
     getWindowsStorePythonExes,
     WindowsStoreLocator,
-} from '../../../../client/pythonEnvironments/base/locators/lowLevel/windowsStoreLocator';
-import { isWindowsStoreDir } from '../../../../client/pythonEnvironments/common/environmentManagers/windowsStoreEnv';
-import { getEnvs } from '../../base/common';
-import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { assertBasicEnvsEqual } from './envTestUtils';
+} from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsStoreLocator';
+import { getEnvs } from '../../common';
+import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
+import { assertBasicEnvsEqual } from '../envTestUtils';
 
 suite('Windows Store', () => {
     suite('Utils', () => {
@@ -42,15 +41,6 @@ suite('Windows Store', () => {
 
             const actual = await getWindowsStorePythonExes();
             assert.deepEqual(actual, expected);
-        });
-
-        test('isWindowsStoreDir: valid case', () => {
-            assert.deepStrictEqual(isWindowsStoreDir(testStoreAppRoot), true);
-            assert.deepStrictEqual(isWindowsStoreDir(testStoreAppRoot + path.sep), true);
-        });
-
-        test('isWindowsStoreDir: invalid case', () => {
-            assert.deepStrictEqual(isWindowsStoreDir(__dirname), false);
         });
     });
 

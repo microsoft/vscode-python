@@ -4,20 +4,20 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as fsWatcher from '../../../../client/common/platform/fileSystemWatcher';
-import * as platformUtils from '../../../../client/common/utils/platform';
-import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
-import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
-import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
+import * as fsWatcher from '../../../../../client/common/platform/fileSystemWatcher';
+import * as platformUtils from '../../../../../client/common/utils/platform';
+import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
+import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
+import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import {
     CustomVirtualEnvironmentLocator,
     VENVFOLDERS_SETTING_KEY,
     VENVPATH_SETTING_KEY,
-} from '../../../../client/pythonEnvironments/base/locators/lowLevel/customVirtualEnvLocator';
-import { createBasicEnv } from '../../base/common';
-import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { assertBasicEnvsEqual } from './envTestUtils';
+} from '../../../../../client/pythonEnvironments/base/locators/lowLevel/customVirtualEnvLocator';
+import { createBasicEnv } from '../../common';
+import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
+import { assertBasicEnvsEqual } from '../envTestUtils';
 
 suite('CustomVirtualEnvironment Locator', () => {
     const testVirtualHomeDir = path.join(TEST_LAYOUT_ROOT, 'virtualhome');

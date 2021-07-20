@@ -3,14 +3,14 @@
 
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as executablesAPI from '../../../../client/common/utils/exec';
-import { PythonEnvKind, PythonEnvSource } from '../../../../client/pythonEnvironments/base/info';
-import { BasicEnvInfo } from '../../../../client/pythonEnvironments/base/locator';
-import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
-import { PosixKnownPathsLocator } from '../../../../client/pythonEnvironments/base/locators/lowLevel/posixKnownPathsLocator';
-import { createBasicEnv } from '../../base/common';
-import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { assertBasicEnvsEqual } from './envTestUtils';
+import * as executablesAPI from '../../../../../client/common/utils/exec';
+import { PythonEnvKind, PythonEnvSource } from '../../../../../client/pythonEnvironments/base/info';
+import { BasicEnvInfo } from '../../../../../client/pythonEnvironments/base/locator';
+import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
+import { PosixKnownPathsLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/posixKnownPathsLocator';
+import { createBasicEnv } from '../../common';
+import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
+import { assertBasicEnvsEqual } from '../envTestUtils';
 
 suite('Posix Known Path Locator', () => {
     let getPathEnvVar: sinon.SinonStub;

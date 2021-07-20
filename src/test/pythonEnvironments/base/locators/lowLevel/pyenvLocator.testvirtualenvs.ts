@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { PyenvLocator } from '../../../../client/pythonEnvironments/base/locators/lowLevel/pyenvLocator';
-import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
+import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { PyenvLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/pyenvLocator';
+import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { testLocatorWatcher } from './watcherTestUtils';
 
 suite('Pyenv Locator', async () => {

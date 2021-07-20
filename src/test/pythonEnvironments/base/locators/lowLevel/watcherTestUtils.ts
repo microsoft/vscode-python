@@ -5,21 +5,21 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { DiscoveryVariants } from '../../../../client/common/experiments/groups';
-import { traceWarning } from '../../../../client/common/logger';
-import { FileChangeType } from '../../../../client/common/platform/fileSystemWatcher';
-import { createDeferred, Deferred, sleep } from '../../../../client/common/utils/async';
-import { getOSType, OSType } from '../../../../client/common/utils/platform';
-import { IDisposable } from '../../../../client/common/utils/resourceLifecycle';
-import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { BasicEnvInfo, ILocator } from '../../../../client/pythonEnvironments/base/locator';
-import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
-import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
-import { getInterpreterPathFromDir } from '../../../../client/pythonEnvironments/common/commonUtils';
-import * as externalDeps from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { deleteFiles, PYTHON_PATH } from '../../../common';
-import { TEST_TIMEOUT } from '../../../constants';
-import { run } from './envTestUtils';
+import { DiscoveryVariants } from '../../../../../client/common/experiments/groups';
+import { traceWarning } from '../../../../../client/common/logger';
+import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
+import { createDeferred, Deferred, sleep } from '../../../../../client/common/utils/async';
+import { getOSType, OSType } from '../../../../../client/common/utils/platform';
+import { IDisposable } from '../../../../../client/common/utils/resourceLifecycle';
+import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { BasicEnvInfo, ILocator } from '../../../../../client/pythonEnvironments/base/locator';
+import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
+import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
+import { getInterpreterPathFromDir } from '../../../../../client/pythonEnvironments/common/commonUtils';
+import * as externalDeps from '../../../../../client/pythonEnvironments/common/externalDependencies';
+import { deleteFiles, PYTHON_PATH } from '../../../../common';
+import { TEST_TIMEOUT } from '../../../../constants';
+import { run } from '../envTestUtils';
 
 /**
  * A utility class used to create, delete, or modify environments. Primarily used for watcher

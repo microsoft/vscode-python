@@ -3,13 +3,13 @@
 
 import { assert } from 'chai';
 import * as path from 'path';
-import { getOSType, OSType } from '../../../../../client/common/utils/platform';
-import { PythonEnvKind, PythonEnvSource } from '../../../../../client/pythonEnvironments/base/info';
-import { BasicEnvInfo, PythonLocatorQuery } from '../../../../../client/pythonEnvironments/base/locator';
-import { WindowsPathEnvVarLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsKnownPathsLocator';
-import { ensureFSTree } from '../../../../utils/fs';
-import { assertBasicEnvsEqual } from '../../../discovery/locators/envTestUtils';
-import { createBasicEnv, getEnvs } from '../../common';
+import { getOSType, OSType } from '../../../../client/common/utils/platform';
+import { PythonEnvKind, PythonEnvSource } from '../../../../client/pythonEnvironments/base/info';
+import { BasicEnvInfo, PythonLocatorQuery } from '../../../../client/pythonEnvironments/base/locator';
+import { WindowsPathEnvVarLocator } from '../../../../client/pythonEnvironments/base/locators/lowLevel/windowsKnownPathsLocator';
+import { ensureFSTree } from '../../../utils/fs';
+import { assertBasicEnvsEqual } from '../../base/locators/envTestUtils';
+import { createBasicEnv, getEnvs } from '../../base/common';
 
 const IS_WINDOWS = getOSType() === OSType.Windows;
 

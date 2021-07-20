@@ -3,14 +3,14 @@
 
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as fsWatcher from '../../../../client/common/platform/fileSystemWatcher';
-import * as platformUtils from '../../../../client/common/utils/platform';
-import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
-import { PyenvLocator } from '../../../../client/pythonEnvironments/base/locators/lowLevel/pyenvLocator';
-import { createBasicEnv } from '../../base/common';
-import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
-import { assertBasicEnvsEqual } from './envTestUtils';
+import * as fsWatcher from '../../../../../client/common/platform/fileSystemWatcher';
+import * as platformUtils from '../../../../../client/common/utils/platform';
+import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
+import { PyenvLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/pyenvLocator';
+import { createBasicEnv } from '../../common';
+import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
+import { assertBasicEnvsEqual } from '../envTestUtils';
 
 suite('Pyenv Locator Tests', () => {
     let getEnvVariableStub: sinon.SinonStub;
