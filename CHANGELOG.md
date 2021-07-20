@@ -28,6 +28,8 @@
    ([#16615](https://github.com/Microsoft/vscode-python/issues/16615))
 1. Ensure we block on autoselection when no interpreter is explictly set by user.
    ([#16723](https://github.com/Microsoft/vscode-python/issues/16723))
+1. Fix autoselection when opening a python file directly.
+   ([#16733](https://github.com/Microsoft/vscode-python/issues/16733))
 
 ### Thanks
 
