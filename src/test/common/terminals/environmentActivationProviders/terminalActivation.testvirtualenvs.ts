@@ -63,9 +63,9 @@ suite('Activation of Environments in Terminal', () => {
         envPaths = await fs.readJson(envsLocation);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders![0].uri);
         pythonSettings = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders![0].uri);
-        defaultShell.Windows = terminalSettings.inspect('integrated.shell.windows').globalValue;
-        defaultShell.Linux = terminalSettings.inspect('integrated.shell.linux').globalValue;
-        await terminalSettings.update('integrated.shell.linux', '/bin/bash', vscode.ConfigurationTarget.Global);
+        defaultShell.Windows = terminalSettings.inspect('integrated.defaultProfile.windows').globalValue;
+        defaultShell.Linux = terminalSettings.inspect('integrated.defaultProfile.linux').globalValue;
+        await terminalSettings.update('integrated.defaultProfile.linux', 'bash', vscode.ConfigurationTarget.Global);
         experiments = (await initialize()).serviceContainer.get<IExperimentService>(IExperimentService);
     });
 
@@ -107,7 +107,11 @@ suite('Activation of Environments in Terminal', () => {
             defaultShell.Windows,
             vscode.ConfigurationTarget.Global,
         );
-        await terminalSettings.update('integrated.shell.linux', defaultShell.Linux, vscode.ConfigurationTarget.Global);
+        await terminalSettings.update(
+            'integrated.defaultProfile.linux',
+            defaultShell.Linux,
+            vscode.ConfigurationTarget.Global,
+        );
         await pythonSettings.update('condaPath', undefined, vscode.ConfigurationTarget.Workspace);
         if (experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             await resetGlobalInterpreterPathSetting();
@@ -187,6 +191,7 @@ suite('Activation of Environments in Terminal', () => {
         await testActivation(envPaths.virtualEnvPath);
     });
     test('Should activate with conda', async () => {
+        // Powershell does not work with conda by default, hence use cmd.
         await terminalSettings.update(
             'integrated.defaultProfile.windows',
             'Command Prompt',
