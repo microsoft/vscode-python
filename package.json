@@ -106,6 +106,7 @@
             {
                 "id": "pythonWelcome",
                 "title": "Get started with Python development",
+                "when": "false",
                 "description": "Your first steps to set up a Python project with all the powerful tools and features that the Python extension has to offer!",
                 "steps": [
                     {
@@ -115,7 +116,7 @@
                         "media": {
                             "markdown": "resources/walkthrough/install-python-windows.md"
                         },
-                        "when": "isWindows"
+                        "when": "workspacePlatform == windows"
                     },
                     {
                         "id": "python.installPythonMac",
@@ -124,7 +125,7 @@
                         "media": {
                             "markdown": "resources/walkthrough/install-python-macos.md"
                         },
-                        "when": "isMac",
+                        "when": "workspacePlatform == mac",
                         "command": "workbench.action.terminal.new"
                     },
                     {
@@ -134,7 +135,7 @@
                         "media": {
                             "markdown": "resources/walkthrough/install-python-linux.md"
                         },
-                        "when": "isLinux",
+                        "when": "workspacePlatform == linux",
                         "command": "workbench.action.terminal.new"
                     },
                     {
@@ -197,7 +198,7 @@
                         "completionEvents": [
                             "workbench.action.files.openFileFolder"
                         ],
-                        "when": "isMac && workspaceFolderCount == 0"
+                        "when": "workspacePlatform == mac && workspaceFolderCount == 0"
                     },
                     {
                         "id": "python.openFolder",
@@ -210,7 +211,7 @@
                         "completionEvents": [
                             "workbench.action.files.openFolder"
                         ],
-                        "when": "!isMac && workspaceFolderCount == 0"
+                        "when": "workspacePlatform != mac && workspaceFolderCount == 0"
                     },
                     {
                         "id": "python.createNewNotebook",
