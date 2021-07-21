@@ -103,7 +103,7 @@ suite('Activation of Environments in Terminal', () => {
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
         await terminalSettings.update(
-            'integrated.shell.windows',
+            'integrated.defaultProfile.windows',
             defaultShell.Windows,
             vscode.ConfigurationTarget.Global,
         );
@@ -188,8 +188,8 @@ suite('Activation of Environments in Terminal', () => {
     });
     test('Should activate with conda', async () => {
         await terminalSettings.update(
-            'integrated.shell.windows',
-            'C:\\Windows\\System32\\cmd.exe',
+            'integrated.defaultProfile.windows',
+            'Command Prompt',
             vscode.ConfigurationTarget.Global,
         );
         await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
