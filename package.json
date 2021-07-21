@@ -106,6 +106,7 @@
             {
                 "id": "pythonWelcome",
                 "title": "Get started with Python development",
+                "when": "false",
                 "description": "Your first steps to set up a Python project with all the powerful tools and features that the Python extension has to offer!",
                 "steps": [
                     {
