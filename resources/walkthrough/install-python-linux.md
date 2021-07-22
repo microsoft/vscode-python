@@ -6,7 +6,6 @@ To install the latest version of Python on Debian-based Linux, you can run the f
 ```
 sudo apt-get update
 sudo apt-get install python3 python3-venv python3-pip
-
 ```
 
 To verify if Python was succefully installed, run the following command in the terminal:
