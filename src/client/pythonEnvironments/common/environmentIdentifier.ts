@@ -3,16 +3,16 @@
 
 import { PythonEnvKind } from '../base/info';
 import { getPrioritizedEnvKinds } from '../base/info/envKind';
-import { isCondaEnvironment } from '../discovery/locators/services/conda';
-import { isPipenvEnvironment } from '../discovery/locators/services/pipEnvHelper';
-import { isPoetryEnvironment } from '../discovery/locators/services/poetry';
-import { isPyenvEnvironment } from '../discovery/locators/services/pyenvLocator';
+import { isCondaEnvironment } from './environmentManagers/conda';
+import { isPipenvEnvironment } from './environmentManagers/pipenv';
+import { isPoetryEnvironment } from './environmentManagers/poetry';
+import { isPyenvEnvironment } from './environmentManagers/pyenv';
 import {
     isVenvEnvironment,
     isVirtualenvEnvironment as isVirtualEnvEnvironment,
     isVirtualenvwrapperEnvironment as isVirtualEnvWrapperEnvironment,
-} from '../discovery/locators/services/virtualEnvironmentIdentifier';
-import { isWindowsStoreEnvironment } from '../discovery/locators/services/windowsStoreLocator';
+} from './environmentManagers/simplevirtualenvs';
+import { isWindowsStoreEnvironment } from './environmentManagers/windowsStoreEnv';
 
 function getIdentifiers(): Map<PythonEnvKind, (path: string) => Promise<boolean>> {
     const notImplemented = () => Promise.resolve(false);

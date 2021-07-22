@@ -33,6 +33,7 @@ export class WindowsRegistryInterpretersAutoSelectionRule extends BaseRuleServic
     ) {
         super(AutoSelectionRule.windowsRegistry, fs, stateFactory);
     }
+
     protected async onAutoSelectInterpreter(
         resource: Resource,
         manager?: IInterpreterAutoSelectionService,

@@ -20,7 +20,7 @@ import {
 import { ICondaService, ICondaLocatorService } from '../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { CondaEnvironmentInfo } from '../../../client/pythonEnvironments/discovery/locators/services/conda';
+import { CondaEnvironmentInfo } from '../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 
 suite('Common - Conda Installer', () => {

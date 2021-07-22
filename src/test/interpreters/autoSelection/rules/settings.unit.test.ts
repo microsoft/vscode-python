@@ -5,6 +5,7 @@
 
 import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
+import { WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
@@ -16,6 +17,7 @@ import { IFileSystem } from '../../../../client/common/platform/types';
 import {
     IExperimentService,
     IInterpreterPathService,
+    InspectInterpreterSettingType,
     IPersistentStateFactory,
     Resource,
 } from '../../../../client/common/types';
@@ -66,7 +68,7 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
         const pythonPathInConfig = {};
 
         when(experimentsManager.inExperimentSync(DeprecatePythonPath.experiment)).thenReturn(true);
-        when(interpreterPathService.inspect(undefined)).thenReturn(pythonPathInConfig as any);
+        when(interpreterPathService.inspect(undefined)).thenReturn(pythonPathInConfig as InspectInterpreterSettingType);
 
         const nextAction = await rule.onAutoSelectInterpreter(undefined, manager);
 
@@ -77,7 +79,7 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
         const pythonPathInConfig = { globalValue: 'python' };
 
         when(experimentsManager.inExperimentSync(DeprecatePythonPath.experiment)).thenReturn(true);
-        when(interpreterPathService.inspect(undefined)).thenReturn(pythonPathInConfig as any);
+        when(interpreterPathService.inspect(undefined)).thenReturn(pythonPathInConfig as InspectInterpreterSettingType);
 
         const nextAction = await rule.onAutoSelectInterpreter(undefined, manager);
 
@@ -88,7 +90,7 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
         const pythonPathInConfig = { globalValue: 'something else' };
 
         when(experimentsManager.inExperimentSync(DeprecatePythonPath.experiment)).thenReturn(true);
-        when(interpreterPathService.inspect(undefined)).thenReturn(pythonPathInConfig as any);
+        when(interpreterPathService.inspect(undefined)).thenReturn(pythonPathInConfig as InspectInterpreterSettingType);
 
         const nextAction = await rule.onAutoSelectInterpreter(undefined, manager);
 
@@ -100,7 +102,7 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
         const pythonPathInConfig = {};
         const pythonPath = { inspect: () => pythonPathInConfig };
 
-        when(workspaceService.getConfiguration('python', null as any)).thenReturn(pythonPath as any);
+        when(workspaceService.getConfiguration('python')).thenReturn((pythonPath as unknown) as WorkspaceConfiguration);
 
         const nextAction = await rule.onAutoSelectInterpreter(undefined, manager);
 
@@ -111,7 +113,7 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
         const pythonPathInConfig = { globalValue: 'python' };
         const pythonPath = { inspect: () => pythonPathInConfig };
 
-        when(workspaceService.getConfiguration('python', null as any)).thenReturn(pythonPath as any);
+        when(workspaceService.getConfiguration('python')).thenReturn((pythonPath as unknown) as WorkspaceConfiguration);
 
         const nextAction = await rule.onAutoSelectInterpreter(undefined, manager);
 
@@ -122,7 +124,7 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
         const pythonPathInConfig = { globalValue: 'something else' };
         const pythonPath = { inspect: () => pythonPathInConfig };
 
-        when(workspaceService.getConfiguration('python', null as any)).thenReturn(pythonPath as any);
+        when(workspaceService.getConfiguration('python')).thenReturn((pythonPath as unknown) as WorkspaceConfiguration);
 
         const nextAction = await rule.onAutoSelectInterpreter(undefined, manager);
 

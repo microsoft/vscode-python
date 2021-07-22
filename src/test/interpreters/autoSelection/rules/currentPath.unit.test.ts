@@ -48,6 +48,7 @@ suite('Interpreters - Auto Selection - Current Path Rule', () => {
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
+
         public async onAutoSelectInterpreter(
             resource: Resource,
             manager?: IInterpreterAutoSelectionService,
@@ -95,7 +96,7 @@ suite('Interpreters - Auto Selection - Current Path Rule', () => {
     });
     test('Invoke next rule if fails to update global state', async () => {
         const manager = mock(InterpreterAutoSelectionService);
-        const interpreterInfo = { path: '1', version: new SemVer('1.0.0') } as any;
+        const interpreterInfo = ({ path: '1', version: new SemVer('1.0.0') } as unknown) as PythonEnvironment;
         const resource = Uri.file('x');
 
         when(helper.getBestInterpreter(deepEqual([interpreterInfo]))).thenReturn(interpreterInfo);
@@ -116,7 +117,7 @@ suite('Interpreters - Auto Selection - Current Path Rule', () => {
         reset(experimentService);
         when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(true);
         const manager = mock(InterpreterAutoSelectionService);
-        const interpreterInfo = { path: '1', version: new SemVer('1.0.0') } as any;
+        const interpreterInfo = ({ path: '1', version: new SemVer('1.0.0') } as unknown) as PythonEnvironment;
         const resource = Uri.file('x');
 
         when(helper.getBestInterpreter(deepEqual([interpreterInfo]))).thenReturn(interpreterInfo);
@@ -139,7 +140,7 @@ suite('Interpreters - Auto Selection - Current Path Rule', () => {
     });
     test('Not Invoke next rule if succeeds to update global state', async () => {
         const manager = mock(InterpreterAutoSelectionService);
-        const interpreterInfo = { path: '1', version: new SemVer('1.0.0') } as any;
+        const interpreterInfo = ({ path: '1', version: new SemVer('1.0.0') } as unknown) as PythonEnvironment;
         const resource = Uri.file('x');
 
         when(helper.getBestInterpreter(anything())).thenReturn(interpreterInfo);

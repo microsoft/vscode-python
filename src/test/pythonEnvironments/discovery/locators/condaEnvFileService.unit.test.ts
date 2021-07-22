@@ -10,7 +10,7 @@ import {
     IInterpreterLocatorService,
 } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { AnacondaCompanyName } from '../../../../client/pythonEnvironments/discovery/locators/services/conda';
+import { AnacondaCompanyName } from '../../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { CondaEnvFileService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaEnvFileService';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 import { MockState } from '../../../interpreters/mocks';

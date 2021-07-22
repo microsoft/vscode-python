@@ -30,15 +30,19 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
         public async next(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<void> {
             return super.next(resource, manager);
         }
+
         public async cacheSelectedInterpreter(resource: Resource, interpreter: PythonEnvironment | undefined) {
             return super.cacheSelectedInterpreter(resource, interpreter);
         }
+
         public async setGlobalInterpreter(
             interpreter?: PythonEnvironment,
             manager?: IInterpreterAutoSelectionService,
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
+
+        // eslint-disable-next-line class-methods-use-this
         protected async onAutoSelectInterpreter(
             _resource: Uri,
             _manager?: IInterpreterAutoSelectionService,
@@ -97,7 +101,7 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
     });
     test('State store must be updated', async () => {
         const resource = Uri.parse('x');
-        const interpreterInfo = { x: '1324' } as any;
+        const interpreterInfo = ({ x: '1324' } as unknown) as PythonEnvironment;
         when(state.updateValue(anything())).thenResolve();
 
         await rule.cacheSelectedInterpreter(resource, interpreterInfo);
@@ -106,7 +110,7 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
     });
     test('State store must be cleared when file does not exist', async () => {
         const resource = Uri.parse('x');
-        const interpreterInfo = { path: '1324' } as any;
+        const interpreterInfo = ({ path: '1324' } as unknown) as PythonEnvironment;
         when(state.value).thenReturn(interpreterInfo);
         when(state.updateValue(anything())).thenResolve();
         when(fs.fileExists(interpreterInfo.path)).thenResolve(false);
@@ -119,7 +123,7 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
     });
     test('State store must not be cleared when file exists', async () => {
         const resource = Uri.parse('x');
-        const interpreterInfo = { path: '1324' } as any;
+        const interpreterInfo = ({ path: '1324' } as unknown) as PythonEnvironment;
         when(state.value).thenReturn(interpreterInfo);
         when(state.updateValue(anything())).thenResolve();
         when(fs.fileExists(interpreterInfo.path)).thenResolve(true);
@@ -139,7 +143,7 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
     });
     test('Get value from state store', async () => {
         const stateStoreValue = 'x';
-        when(state.value).thenReturn(stateStoreValue as any);
+        when(state.value).thenReturn((stateStoreValue as unknown) as PythonEnvironment);
 
         expect(rule.getPreviouslyAutoSelectedInterpreter(Uri.parse('x'))).to.be.equal(stateStoreValue);
 
@@ -147,7 +151,7 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
     });
     test('setGlobalInterpreter should do nothing if interpreter is undefined or version is empty', async () => {
         const manager = mock(InterpreterAutoSelectionService);
-        const interpreterInfo = { path: '1324' } as any;
+        const interpreterInfo = ({ path: '1324' } as unknown) as PythonEnvironment;
 
         const result1 = await rule.setGlobalInterpreter(undefined, instance(manager));
         const result2 = await rule.setGlobalInterpreter(interpreterInfo, instance(manager));
@@ -158,8 +162,8 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
     });
     test('setGlobalInterpreter should not update manager if interpreter is not better than one stored in manager', async () => {
         const manager = mock(InterpreterAutoSelectionService);
-        const interpreterInfo = { path: '1324', version: new SemVer('1.0.0') } as any;
-        const interpreterInfoInManager = { path: '2', version: new SemVer('2.0.0') } as any;
+        const interpreterInfo = ({ path: '1324', version: new SemVer('1.0.0') } as unknown) as PythonEnvironment;
+        const interpreterInfoInManager = ({ path: '2', version: new SemVer('2.0.0') } as unknown) as PythonEnvironment;
         when(manager.getAutoSelectedInterpreter(undefined)).thenReturn(interpreterInfoInManager);
 
         const result = await rule.setGlobalInterpreter(interpreterInfo, instance(manager));
@@ -170,8 +174,8 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
     });
     test('setGlobalInterpreter should update manager if interpreter is better than one stored in manager', async () => {
         const manager = mock(InterpreterAutoSelectionService);
-        const interpreterInfo = { path: '1324', version: new SemVer('3.0.0') } as any;
-        const interpreterInfoInManager = { path: '2', version: new SemVer('2.0.0') } as any;
+        const interpreterInfo = ({ path: '1324', version: new SemVer('3.0.0') } as unknown) as PythonEnvironment;
+        const interpreterInfoInManager = ({ path: '2', version: new SemVer('2.0.0') } as unknown) as PythonEnvironment;
         when(manager.getAutoSelectedInterpreter(undefined)).thenReturn(interpreterInfoInManager);
 
         const result = await rule.setGlobalInterpreter(interpreterInfo, instance(manager));

@@ -10,7 +10,7 @@ import {
     AnacondaCompanyName,
     CondaInfo,
     parseCondaInfo,
-} from '../../../../client/pythonEnvironments/discovery/locators/services/conda';
+} from '../../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { CondaEnvService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaEnvService';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 import { MockState } from '../../../interpreters/mocks';

@@ -42,7 +42,7 @@ import { inExperiment, isParentPath } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
-import { CondaEnvironmentInfo, isCondaEnvironment } from './discovery/locators/services/conda';
+import { CondaEnvironmentInfo, isCondaEnvironment } from './common/environmentManagers/conda';
 import { CondaEnvFileService } from './discovery/locators/services/condaEnvFileService';
 import { CondaEnvService } from './discovery/locators/services/condaEnvService';
 import { CondaService } from './discovery/locators/services/condaService';
@@ -57,7 +57,7 @@ import { KnownPathsService, KnownSearchPathsForInterpreters } from './discovery/
 import { PipEnvService } from './discovery/locators/services/pipEnvService';
 import { PipEnvServiceHelper } from './discovery/locators/services/pipEnvServiceHelper';
 import { WindowsRegistryService } from './discovery/locators/services/windowsRegistryService';
-import { isWindowsStoreEnvironment } from './discovery/locators/services/windowsStoreLocator';
+import { isWindowsStoreEnvironment } from './common/environmentManagers/windowsStoreEnv';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
     WorkspaceVirtualEnvService,
@@ -67,7 +67,7 @@ import { EnvironmentType, PythonEnvironment } from './info';
 import { toSemverLikeVersion } from './base/info/pythonVersion';
 import { PythonVersion } from './info/pythonVersion';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { EnvironmentInfoServiceQueuePriority, getEnvironmentInfoService } from './info/environmentInfoService';
+import { EnvironmentInfoServiceQueuePriority, getEnvironmentInfoService } from './base/info/environmentInfoService';
 
 const convertedKinds = new Map(
     Object.entries({

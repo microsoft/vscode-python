@@ -13,7 +13,7 @@ import { PipEnvInstaller } from '../../../client/common/installer/pipEnvInstalle
 import { IExperimentService } from '../../../client/common/types';
 import { IInterpreterLocatorService, IInterpreterService, PIPENV_SERVICE } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import * as pipEnvHelper from '../../../client/pythonEnvironments/discovery/locators/services/pipEnvHelper';
+import * as pipEnvHelper from '../../../client/pythonEnvironments/common/environmentManagers/pipenv';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('PipEnv installer', async () => {

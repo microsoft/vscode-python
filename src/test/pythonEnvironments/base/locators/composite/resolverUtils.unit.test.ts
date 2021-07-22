@@ -18,12 +18,12 @@ import { buildEnvInfo } from '../../../../../client/pythonEnvironments/base/info
 import { InterpreterInformation } from '../../../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
-import { assertEnvEqual } from '../../../discovery/locators/envTestUtils';
+import { assertEnvEqual } from '../envTestUtils';
 import { Architecture } from '../../../../../client/common/utils/platform';
 import {
     AnacondaCompanyName,
     CondaInfo,
-} from '../../../../../client/pythonEnvironments/discovery/locators/services/conda';
+} from '../../../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { resolveBasicEnv } from '../../../../../client/pythonEnvironments/base/locators/composite/resolverUtils';
 
 suite('Resolver Utils', () => {

@@ -9,8 +9,8 @@ import { logError } from '../../logging';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
 import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
-import { getPythonVersionFromConda } from '../discovery/locators/services/conda';
-import { getPythonVersionFromPyvenvCfg } from '../discovery/locators/services/virtualEnvironmentIdentifier';
+import { getPythonVersionFromConda } from './environmentManagers/conda';
+import { getPythonVersionFromPyvenvCfg } from './environmentManagers/simplevirtualenvs';
 import * as posix from './posixUtils';
 import * as windows from './windowsUtils';
 
