@@ -2,7 +2,7 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { traceVerbose } from '../../../common/logger';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
-import { exec, pathExists, readFile } from '../externalDependencies';
+import { exec, getPythonSetting, pathExists, readFile } from '../externalDependencies';
 
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../base/info';
 import { parseVersion } from '../../base/info/pythonVersion';
@@ -238,6 +238,11 @@ export class Conda {
 
         // Produce a list of candidate binaries to be probed by exec'ing them.
         async function* getCandidates() {
+            const customCondaPath = getPythonSetting<string>('condaPath');
+            if (customCondaPath && customCondaPath !== 'conda') {
+                // If user has specified a custom conda path, use it first.
+                yield customCondaPath;
+            }
             // Check unqualified filename first, in case it's on PATH.
             yield 'conda';
             if (getOSType() === OSType.Windows) {
