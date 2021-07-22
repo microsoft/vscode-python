@@ -30,7 +30,12 @@ import {
     IInterpreterAutoSelectionProxyService,
 } from '../../../client/interpreter/autoSelection/types';
 import { EnvironmentTypeComparer } from '../../../client/interpreter/configuration/environmentTypeComparer';
-import { IInterpreterHelper, IInterpreterService, WorkspacePythonPath } from '../../../client/interpreter/contracts';
+import {
+    GetInterpreterOptions,
+    IInterpreterHelper,
+    IInterpreterService,
+    WorkspacePythonPath,
+} from '../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
@@ -203,25 +208,30 @@ suite('Interpreters - Auto Selection', () => {
                 envPath: path.join(workspacePath, '.venv'),
                 version: { major: 3, minor: 10, patch: 0 },
             } as PythonEnvironment;
+            let options: GetInterpreterOptions = {};
 
-            when(interpreterService.getInterpreters(resource)).thenResolve([
-                {
-                    envType: EnvironmentType.Conda,
-                    envPath: path.join('some', 'conda', 'env'),
-                    version: { major: 3, minor: 7, patch: 2 },
-                } as PythonEnvironment,
-                {
-                    envType: EnvironmentType.System,
-                    envPath: path.join('/', 'usr', 'bin'),
-                    version: { major: 3, minor: 9, patch: 1 },
-                } as PythonEnvironment,
-                localEnv,
-            ]);
+            when(interpreterService.getInterpreters(resource, anything())).thenCall((_, opts) => {
+                options = opts;
+                return Promise.resolve([
+                    {
+                        envType: EnvironmentType.Conda,
+                        envPath: path.join('some', 'conda', 'env'),
+                        version: { major: 3, minor: 7, patch: 2 },
+                    } as PythonEnvironment,
+                    {
+                        envType: EnvironmentType.System,
+                        envPath: path.join('/', 'usr', 'bin'),
+                        version: { major: 3, minor: 9, patch: 1 },
+                    } as PythonEnvironment,
+                    localEnv,
+                ]);
+            });
 
             await autoSelectionService.autoSelectInterpreter(resource);
 
             expect(eventFired).to.deep.equal(true, 'event not fired');
-            verify(interpreterService.getInterpreters(resource)).once();
+            expect(options).to.deep.equal({ ignoreCache: true }, 'getInterpreters options are different');
+            verify(interpreterService.getInterpreters(resource, anything())).once();
             verify(state.updateValue(localEnv)).once();
         });
 
@@ -231,25 +241,30 @@ suite('Interpreters - Auto Selection', () => {
                 envPath: path.join('/', 'usr', 'bin'),
                 version: { major: 3, minor: 9, patch: 1 },
             } as PythonEnvironment;
+            let options: GetInterpreterOptions = {};
 
-            when(interpreterService.getInterpreters(resource)).thenResolve([
-                {
-                    envType: EnvironmentType.Conda,
-                    envPath: path.join('some', 'conda', 'env'),
-                    version: { major: 3, minor: 7, patch: 2 },
-                } as PythonEnvironment,
-                systemEnv,
-                {
-                    envType: EnvironmentType.Pipenv,
-                    envPath: path.join('some', 'pipenv', 'env'),
-                    version: { major: 3, minor: 10, patch: 0 },
-                } as PythonEnvironment,
-            ]);
+            when(interpreterService.getInterpreters(resource, anything())).thenCall((_, opts) => {
+                options = opts;
+                return Promise.resolve([
+                    {
+                        envType: EnvironmentType.Conda,
+                        envPath: path.join('some', 'conda', 'env'),
+                        version: { major: 3, minor: 7, patch: 2 },
+                    } as PythonEnvironment,
+                    systemEnv,
+                    {
+                        envType: EnvironmentType.Pipenv,
+                        envPath: path.join('some', 'pipenv', 'env'),
+                        version: { major: 3, minor: 10, patch: 0 },
+                    } as PythonEnvironment,
+                ]);
+            });
 
             await autoSelectionService.autoSelectInterpreter(resource);
 
             expect(eventFired).to.deep.equal(true, 'event not fired');
-            verify(interpreterService.getInterpreters(resource)).once();
+            expect(options).to.deep.equal({ ignoreCache: true }, 'getInterpreters options are different');
+            verify(interpreterService.getInterpreters(resource, anything())).once();
             verify(state.updateValue(systemEnv)).once();
         });
     });

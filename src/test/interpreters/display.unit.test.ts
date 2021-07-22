@@ -16,11 +16,10 @@ import { IApplicationShell, IWorkspaceService } from '../../client/common/applic
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
 import {
-    IConfigurationService,
+    IInterpreterPathProxyService,
     IDisposableRegistry,
     IOutputChannel,
     IPathUtils,
-    IPythonSettings,
     ReadWrite,
 } from '../../client/common/types';
 import { Interpreters } from '../../client/common/utils/localize';
@@ -57,8 +56,7 @@ suite('Interpreters Display', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let disposableRegistry: Disposable[];
     let statusBar: TypeMoq.IMock<StatusBarItem>;
-    let pythonSettings: TypeMoq.IMock<IPythonSettings>;
-    let configurationService: TypeMoq.IMock<IConfigurationService>;
+    let interpreterPathProxyService: TypeMoq.IMock<IInterpreterPathProxyService>;
     let interpreterDisplay: IInterpreterDisplay;
     let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
     let pathUtils: TypeMoq.IMock<IPathUtils>;
@@ -73,8 +71,7 @@ suite('Interpreters Display', () => {
         interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
         disposableRegistry = [];
         statusBar = TypeMoq.Mock.ofType<StatusBarItem>();
-        pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-        configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
+        interpreterPathProxyService = TypeMoq.Mock.ofType<IInterpreterPathProxyService>();
         pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
         output = TypeMoq.Mock.ofType<IOutputChannel>();
         autoSelection = mock(InterpreterAutoSelectionService);
@@ -94,8 +91,8 @@ suite('Interpreters Display', () => {
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => disposableRegistry);
         serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
-            .returns(() => configurationService.object);
+            .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterPathProxyService)))
+            .returns(() => interpreterPathProxyService.object);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterHelper)))
             .returns(() => interpreterHelper.object);
@@ -215,8 +212,7 @@ suite('Interpreters Display', () => {
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
             .returns(() => Promise.resolve(undefined));
-        configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
-        pythonSettings.setup((p) => p.pythonPath).returns(() => pythonPath);
+        interpreterPathProxyService.setup((c) => c.get(TypeMoq.It.isAny())).returns(() => pythonPath);
         fileSystem.setup((f) => f.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
         interpreterHelper
             .setup((v) => v.getInterpreterInformation(TypeMoq.It.isValue(pythonPath)))

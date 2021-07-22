@@ -1,9 +1,72 @@
 # Changelog
 
-## 2021.7.0-rc (12 July 2021)
+## 2021.7.1 (21 July 2021)
 
 ### Enhancements
 
+1. Update `debugpy` to the latest version.
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2021.7.0 (20 July 2021)
+
+### Enhancements
+
+1. Support starting a TensorBoard session with a remote URL hosting log files.
+   ([#16461](https://github.com/Microsoft/vscode-python/issues/16461))
 1. Sort environments in the selection quickpick by assumed usefulness.
    ([#16520](https://github.com/Microsoft/vscode-python/issues/16520))
 
@@ -24,6 +87,10 @@
    ([#16607](https://github.com/Microsoft/vscode-python/issues/16607))
 1. The Jupyter Notebook extension will install any missing dependencies using Poetry or Pipenv if those are the selected environments. (thanks [Anthony Shaw](https://github.com/tonybaloney))
    ([#16615](https://github.com/Microsoft/vscode-python/issues/16615))
+1. Ensure we block on autoselection when no interpreter is explictly set by user.
+   ([#16723](https://github.com/Microsoft/vscode-python/issues/16723))
+1. Fix autoselection when opening a python file directly.
+   ([#16733](https://github.com/Microsoft/vscode-python/issues/16733))
 
 ### Thanks
 

@@ -61,7 +61,6 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             Promise.all(this.singleActivationServices.map((item) => item.activate())),
             this.activateWorkspace(this.activeResourceService.getActiveResource()),
         ]);
-        await this.autoSelection.autoSelectInterpreter(undefined);
     }
 
     @traceDecorators.error('Failed to activate a workspace')
