@@ -13,10 +13,10 @@ import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { UNIT_TEST_PRODUCTS } from '../../../../client/testing/common/constants';
 import {
-    BufferedTestConfigSettingsService,
     TestConfigSettingsService,
-} from '../../../../client/testing/common/services/configSettingService';
+} from '../../../../client/testing/common/configSettingService';
 import { ITestConfigSettingsService, UnitTestProduct } from '../../../../client/testing/common/types';
+import { BufferedTestConfigSettingsService } from '../../../../client/testing/common/bufferedTestConfigSettingService';
 
 use(chaiPromise);
 

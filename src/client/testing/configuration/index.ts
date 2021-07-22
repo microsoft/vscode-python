@@ -9,7 +9,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestConfiguringTelemetry } from '../../telemetry/types';
-import { BufferedTestConfigSettingsService } from '../common/services/configSettingService';
+import { BufferedTestConfigSettingsService } from '../common/bufferedTestConfigSettingService';
 import {
     ITestConfigSettingsService,
     ITestConfigurationManager,

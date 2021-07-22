@@ -1,25 +1,18 @@
 import {
     CancellationToken,
     DebugConfiguration,
-    DiagnosticCollection,
     DiagnosticSeverity,
     Disposable,
-    Event,
     Location,
     OutputChannel,
-    ProviderResult,
-    TextDocument,
-    TreeDataProvider,
-    TreeItem,
     Uri,
     WorkspaceFolder,
 } from 'vscode';
 import { Product } from '../../common/types';
 import { DebuggerTypeName } from '../../debugger/constants';
 import { ConsoleType } from '../../debugger/types';
-import { TestProvider } from '../types';
 import { TestSettingsPropertyNames } from '../configuration/types';
-import { CommandSource } from '../../common/constants';
+import { TestProvider } from '../types';
 
 export type UnitTestProduct = Product.pytest | Product.unittest;
 
@@ -285,42 +278,11 @@ export class TestWorkspaceFolder {
 // ****************
 // interfaces
 
-export const ITestManagementService = Symbol('ITestManagementService');
-export interface ITestManagementService {
-    readonly onDidStatusChange: Event<WorkspaceTestStatus>;
-    getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<ITestManager | undefined | void>;
-    discoverTestsForDocument(doc: TextDocument): Promise<void>;
-    autoDiscoverTests(resource: Uri | undefined): Promise<void>;
-    discoverTests(
-        cmdSource: CommandSource,
-        resource?: Uri,
-        ignoreCache?: boolean,
-        userInitiated?: boolean,
-        quietMode?: boolean,
-    ): Promise<void>;
-    stopTests(resource: Uri): Promise<void>;
-    displayStopUI(message: string): Promise<void>;
-    runTestsImpl(
-        cmdSource: CommandSource,
-        resource?: Uri,
-        testsToRun?: TestsToRun,
-        runFailedTests?: boolean,
-        debug?: boolean,
-    ): Promise<void>;
-    runCurrentTestFile(cmdSource: CommandSource): Promise<void>;
-}
-
-export interface ITestManagerService extends Disposable {
-    getTestManager(): ITestManager | undefined;
-    getTestWorkingDirectory(): string;
-    getPreferredTestManager(): UnitTestProduct | undefined;
-}
-
-export const IWorkspaceTestManagerService = Symbol('IWorkspaceTestManagerService');
-export interface IWorkspaceTestManagerService extends Disposable {
-    getTestManager(resource: Uri): ITestManager | undefined;
-    getTestWorkingDirectory(resource: Uri): string;
-    getPreferredTestManager(resource: Uri): UnitTestProduct | undefined;
+export const ITestsHelper = Symbol('ITestsHelper');
+export interface ITestsHelper {
+    parseProviderName(product: UnitTestProduct): TestProvider;
+    parseProduct(provider: TestProvider): UnitTestProduct;
+    getSettingsPropertyNames(product: Product): TestSettingsPropertyNames;
 }
 
 export const ITestConfigurationService = Symbol('ITestConfigurationService');
@@ -350,105 +312,15 @@ export const ITestConfigurationManagerFactory = Symbol('ITestConfigurationManage
 export interface ITestConfigurationManagerFactory {
     create(wkspace: Uri, product: Product, cfg?: ITestConfigSettingsService): ITestConfigurationManager;
 }
-
-export const ITestManagerRunner = Symbol('ITestManagerRunner');
-export interface ITestManagerRunner {
-    runTest(
-        testResultsService: ITestResultsService,
-        options: TestRunOptions,
-        testManager: ITestManager,
-    ): Promise<Tests>;
-}
-
-export const IUnitTestHelper = Symbol('IUnitTestHelper');
-export interface IUnitTestHelper {
-    getStartDirectory(args: string[]): string;
-    getIdsOfTestsToRun(tests: Tests, testsToRun: TestsToRun): string[];
-}
-
-export const ITestsHelper = Symbol('ITestsHelper');
-export interface ITestsHelper {
-    parseProviderName(product: UnitTestProduct): TestProvider;
-    parseProduct(provider: TestProvider): UnitTestProduct;
-    getSettingsPropertyNames(product: Product): TestSettingsPropertyNames;
-    flattenTestFiles(testFiles: TestFile[], workspaceFolder: string): Tests;
-    placeTestFilesIntoFolders(tests: Tests, workspaceFolder: string): void;
-    shouldRunAllTests(testsToRun?: TestsToRun): boolean;
-    mergeTests(items: Tests[]): Tests;
-}
-
-export const ITestVisitor = Symbol('ITestVisitor');
-export interface ITestVisitor {
-    visitTestFunction(testFunction: TestFunction): void;
-    visitTestSuite(testSuite: TestSuite): void;
-    visitTestFile(testFile: TestFile): void;
-    visitTestFolder(testFile: TestFolder): void;
-}
-
-export const ITestCollectionStorageService = Symbol('ITestCollectionStorageService');
-export interface ITestCollectionStorageService extends Disposable {
-    onDidChange: Event<{ uri: Uri; data?: TestDataItem }>;
-    getTests(wkspace: Uri): Tests | undefined;
-    storeTests(wkspace: Uri, tests: Tests | null | undefined): void;
-    findFlattendTestFunction(resource: Uri, func: TestFunction): FlattenedTestFunction | undefined;
-    findFlattendTestSuite(resource: Uri, suite: TestSuite): FlattenedTestSuite | undefined;
-    update(resource: Uri, item: TestDataItem): void;
-}
-
-export const ITestResultsService = Symbol('ITestResultsService');
-export interface ITestResultsService {
-    resetResults(tests: Tests): void;
-    updateResults(tests: Tests): void;
-}
-
 export const ITestDebugLauncher = Symbol('ITestDebugLauncher');
 export interface ITestDebugLauncher {
     launchDebugger(options: LaunchOptions): Promise<void>;
 }
 
-export const ITestManagerFactory = Symbol('ITestManagerFactory');
-export interface ITestManagerFactory extends Function {
-    (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string): ITestManager;
-}
-
-export const ITestManagerServiceFactory = Symbol('TestManagerServiceFactory');
-export interface ITestManagerServiceFactory extends Function {
-    (workspaceFolder: Uri): ITestManagerService;
-}
-
-export const ITestManager = Symbol('ITestManager');
-export interface ITestManager extends Disposable {
-    readonly status: TestStatus;
-    readonly enabled: boolean;
-    readonly workingDirectory: string;
-    readonly workspaceFolder: Uri;
-    diagnosticCollection: DiagnosticCollection;
-    readonly onDidStatusChange: Event<WorkspaceTestStatus>;
-    stop(): void;
-    resetTestResults(): void;
-    discoverTests(
-        cmdSource: CommandSource,
-        ignoreCache?: boolean,
-        quietMode?: boolean,
-        userInitiated?: boolean,
-        clearTestStatus?: boolean,
-    ): Promise<Tests>;
-    runTest(
-        cmdSource: CommandSource,
-        testsToRun?: TestsToRun,
-        runFailedTests?: boolean,
-        debug?: boolean,
-    ): Promise<Tests>;
-}
 
 export const ITestDiscoveryService = Symbol('ITestDiscoveryService');
 export interface ITestDiscoveryService {
     discoverTests(options: TestDiscoveryOptions): Promise<Tests>;
-}
-
-export const ITestsParser = Symbol('ITestsParser');
-export interface ITestsParser {
-    parse(content: string, options: ParserOptions): Tests;
 }
 
 export const IUnitTestSocketServer = Symbol('IUnitTestSocketServer');
@@ -463,12 +335,6 @@ export interface IUnitTestSocketServer extends Disposable {
 export const ITestRunner = Symbol('ITestRunner');
 export interface ITestRunner {
     run(testProvider: TestProvider, options: Options): Promise<string>;
-}
-
-export const IXUnitParser = Symbol('IXUnitParser');
-export interface IXUnitParser {
-    // Update "tests" with the results parsed from the given file.
-    updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string): Promise<void>;
 }
 
 export const ITestMessageService = Symbol('ITestMessageService');
@@ -495,77 +361,8 @@ export interface ITestDebugConfig extends DebugConfiguration {
     subProcess?: boolean;
 }
 
-export const ITestsStatusUpdaterService = Symbol('ITestsStatusUpdaterService');
-export interface ITestsStatusUpdaterService {
-    updateStatusAsDiscovering(resource: Uri, tests?: Tests): void;
-    updateStatusAsUnknown(resource: Uri, tests?: Tests): void;
-    updateStatusAsRunning(resource: Uri, tests?: Tests): void;
-    updateStatusAsRunningFailedTests(resource: Uri, tests?: Tests): void;
-    updateStatusAsRunningSpecificTests(resource: Uri, testsToRun: TestsToRun, tests?: Tests): void;
-    updateStatusOfRunningTestsAsIdle(resource: Uri, tests?: Tests): void;
-    triggerUpdatesToTests(resource: Uri, tests?: Tests): void;
-}
-
 export const ITestDiagnosticService = Symbol('ITestDiagnosticService');
 export interface ITestDiagnosticService {
     getMessagePrefix(status: TestStatus): string;
     getSeverity(unitTestSeverity: PythonTestMessageSeverity): DiagnosticSeverity;
-}
-
-export const IArgumentsService = Symbol('IArgumentsService');
-export interface IArgumentsService {
-    getKnownOptions(): { withArgs: string[]; withoutArgs: string[] };
-    getOptionValue(args: string[], option: string): string | string[] | undefined;
-    filterArguments(args: string[], argumentToRemove: string[]): string[];
-
-    filterArguments(args: string[], filter: TestFilter): string[];
-    getTestFolders(args: string[]): string[];
-}
-
-export const IArgumentsHelper = Symbol('IArgumentsHelper');
-export interface IArgumentsHelper {
-    getOptionValues(args: string[], option: string): string | string[] | undefined;
-    filterArguments(args: string[], optionsWithArguments?: string[], optionsWithoutArguments?: string[]): string[];
-    getPositionalArguments(
-        args: string[],
-        optionsWithArguments?: string[],
-        optionsWithoutArguments?: string[],
-    ): string[];
-}
-
-export const ITestResultDisplay = Symbol('ITestResultDisplay');
-export interface ITestResultDisplay extends Disposable {
-    enabled: boolean;
-    readonly onDidChange: Event<void>;
-    displayProgressStatus(testRunResult: Promise<Tests>, debug?: boolean): void;
-    displayDiscoverStatus(testDiscovery: Promise<Tests>, quietMode?: boolean): Promise<Tests>;
-}
-
-export const ITestDisplay = Symbol('ITestDisplay');
-export interface ITestDisplay {
-    displayStopTestUI(workspace: Uri, message: string): void;
-    displayTestUI(cmdSource: CommandSource, wkspace: Uri): void;
-    selectTestFunction(rootDirectory: string, tests: Tests): Promise<FlattenedTestFunction>;
-    selectTestFile(rootDirectory: string, tests: Tests): Promise<TestFile>;
-    displayFunctionTestPickerUI(
-        cmdSource: CommandSource,
-        wkspace: Uri,
-        rootDirectory: string,
-        file: Uri,
-        testFunctions: TestFunction[],
-        debug?: boolean,
-    ): void;
-}
-
-export const ITestTreeViewProvider = Symbol('ITestTreeViewProvider');
-export interface ITestTreeViewProvider extends TreeDataProvider<TestDataItem> {
-    onDidChangeTreeData: Event<TestDataItem | undefined>;
-    getTreeItem(element: TestDataItem): Promise<TreeItem>;
-    getChildren(element?: TestDataItem): ProviderResult<TestDataItem[]>;
-    refresh(resource: Uri): void;
-}
-
-export const ITestDataItemResource = Symbol('ITestDataItemResource');
-export interface ITestDataItemResource {
-    getResource(testData: Readonly<TestDataItem>): Uri;
 }

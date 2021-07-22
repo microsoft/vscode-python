@@ -1,11 +1,7 @@
 import { EventEmitter } from 'events';
 import { injectable } from 'inversify';
 import { CancellationToken, Disposable, Uri } from 'vscode';
-import { Product } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
-import { IServiceContainer } from '../../client/ioc/types';
-import { CANCELLATION_REASON } from '../../client/testing/common/constants';
-import { BaseTestManager } from '../../client/testing/common/managers/baseTestManager';
 import {
     ITestDebugLauncher,
     ITestDiscoveryService,
@@ -13,9 +9,7 @@ import {
     LaunchOptions,
     TestDiscoveryOptions,
     Tests,
-    TestsToRun,
 } from '../../client/testing/common/types';
-import { TestProvider } from '../../client/testing/types';
 
 @injectable()
 export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
@@ -58,44 +52,6 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
     }
     public dispose() {
         this._promise = undefined;
-    }
-}
-
-@injectable()
-export class MockTestManagerWithRunningTests extends BaseTestManager {
-    public readonly runnerDeferred = createDeferred<Tests>();
-    public readonly enabled = true;
-
-    public readonly discoveryDeferred = createDeferred<Tests>();
-    constructor(
-        testProvider: TestProvider,
-        product: Product,
-        workspaceFolder: Uri,
-        rootDirectory: string,
-        serviceContainer: IServiceContainer,
-    ) {
-        super(testProvider, product, workspaceFolder, rootDirectory, serviceContainer);
-    }
-    protected getDiscoveryOptions(_ignoreCache: boolean) {
-        return {} as TestDiscoveryOptions;
-    }
-
-    protected async runTestImpl(
-        _tests: Tests,
-        _testsToRun?: TestsToRun,
-        _runFailedTests?: boolean,
-        _debug?: boolean,
-    ): Promise<Tests> {
-        this.testRunnerCancellationToken!.onCancellationRequested(() => {
-            this.runnerDeferred.reject(CANCELLATION_REASON);
-        });
-        return this.runnerDeferred.promise;
-    }
-    protected async discoverTestsImpl(_ignoreCache: boolean, _debug?: boolean): Promise<Tests> {
-        this.testDiscoveryCancellationToken!.onCancellationRequested(() => {
-            this.discoveryDeferred.reject(CANCELLATION_REASON);
-        });
-        return this.discoveryDeferred.promise;
     }
 }
 
