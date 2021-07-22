@@ -252,6 +252,7 @@ jobs:
           }
           & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaExecPath $condaExecPath
           & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaPath
+          & $condaExecPath init --all
 
           # 2. For `interpreterLocatorService.testvirtualenvs.ts`
 
