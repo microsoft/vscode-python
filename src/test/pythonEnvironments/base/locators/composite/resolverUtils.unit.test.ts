@@ -27,11 +27,21 @@ import {
 import { resolveBasicEnv } from '../../../../../client/pythonEnvironments/base/locators/composite/resolverUtils';
 
 suite('Resolver Utils', () => {
+    let getWorkspaceFolders: sinon.SinonStub;
+    setup(() => {
+        sinon.stub(externalDependencies, 'getPythonSetting').withArgs('condaPath').returns('conda');
+        getWorkspaceFolders = sinon.stub(externalDependencies, 'getWorkspaceFolders');
+        getWorkspaceFolders.returns([]);
+    });
+
+    teardown(() => {
+        sinon.restore();
+    });
+
     suite('Pyenv', () => {
         const testPyenvRoot = path.join(TEST_LAYOUT_ROOT, 'pyenvhome', '.pyenv');
         const testPyenvVersionsDir = path.join(testPyenvRoot, 'versions');
         setup(() => {
-            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
             sinon.stub(platformApis, 'getEnvironmentVariable').withArgs('PYENV_ROOT').returns(testPyenvRoot);
         });
 
@@ -68,7 +78,6 @@ suite('Resolver Utils', () => {
         const testStoreAppRoot = path.join(testLocalAppData, 'Microsoft', 'WindowsApps');
 
         setup(() => {
-            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
             sinon.stub(platformApis, 'getEnvironmentVariable').withArgs('LOCALAPPDATA').returns(testLocalAppData);
         });
 
@@ -199,10 +208,6 @@ suite('Resolver Utils', () => {
             };
         }
 
-        setup(() => {
-            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
-        });
-
         teardown(() => {
             sinon.restore();
         });
@@ -265,7 +270,7 @@ suite('Resolver Utils', () => {
     suite('Simple envs', () => {
         const testVirtualHomeDir = path.join(TEST_LAYOUT_ROOT, 'virtualhome');
         setup(() => {
-            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([testVirtualHomeDir]);
+            getWorkspaceFolders.returns([testVirtualHomeDir]);
         });
 
         teardown(() => {
@@ -318,7 +323,6 @@ suite('Resolver Utils', () => {
         const testPosixKnownPathsRoot = path.join(TEST_LAYOUT_ROOT, 'posixroot');
         const testLocation3 = path.join(testPosixKnownPathsRoot, 'location3');
         setup(() => {
-            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
             sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Linux);
         });
 
@@ -514,7 +518,6 @@ suite('Resolver Utils', () => {
         setup(async () => {
             sinon.stub(winreg, 'readRegistryValues').callsFake(fakeRegistryValues);
             sinon.stub(winreg, 'readRegistryKeys').callsFake(fakeRegistryKeys);
-            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([]);
             sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
         });
 

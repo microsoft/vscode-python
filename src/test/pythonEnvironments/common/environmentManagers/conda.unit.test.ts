@@ -85,8 +85,12 @@ suite('Conda and its environments are located correctly', () => {
         };
     }
 
+    let getPythonSetting: sinon.SinonStub;
+
     setup(() => {
         osType = platform.OSType.Unknown;
+        getPythonSetting = sinon.stub(externalDependencies, 'getPythonSetting');
+        getPythonSetting.withArgs('condaPath').returns('conda');
         homeDir = undefined;
         execPath = [];
         files = {};
@@ -187,6 +191,17 @@ suite('Conda and its environments are located correctly', () => {
         test('Must not find conda if it is missing', async () => {
             const conda = await Conda.getConda();
             expect(conda).to.equal(undefined, 'conda should be missing');
+        });
+
+        test('Must find conda using `python.condaPath` setting and prefer it', async () => {
+            getPythonSetting.withArgs('condaPath').returns('condaPath/conda');
+
+            files = {
+                condaPath: {
+                    conda: JSON.stringify(condaInfo('4.8.0')),
+                },
+            };
+            await expectConda('/condaPath/conda');
         });
 
         test('Must find conda on PATH, and prefer it', async () => {
