@@ -1,17 +1,19 @@
 import { inject, injectable } from 'inversify';
 import { Uri, WorkspaceConfiguration } from 'vscode';
-import { IWorkspaceService } from '../../../common/application/types';
-import { Product } from '../../../common/types';
-import { IServiceContainer } from '../../../ioc/types';
-import { ITestConfigSettingsService, UnitTestProduct } from '../types';
+import { IWorkspaceService } from '../../common/application/types';
+import { Product } from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
+import { ITestConfigSettingsService, UnitTestProduct } from './types';
 
 @injectable()
 export class TestConfigSettingsService implements ITestConfigSettingsService {
     private readonly workspaceService: IWorkspaceService;
+
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
-    public async updateTestArgs(testDirectory: string | Uri, product: UnitTestProduct, args: string[]) {
+
+    public async updateTestArgs(testDirectory: string | Uri, product: UnitTestProduct, args: string[]): Promise<void> {
         const setting = this.getTestArgSetting(product);
         return this.updateSetting(testDirectory, setting, args);
     }
@@ -25,7 +27,9 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
         const setting = this.getTestEnablingSetting(product);
         return this.updateSetting(testDirectory, setting, false);
     }
-    public getTestEnablingSetting(product: UnitTestProduct) {
+
+    // eslint-disable-next-line class-methods-use-this
+    public getTestEnablingSetting(product: UnitTestProduct):string {
         switch (product) {
             case Product.unittest:
                 return 'testing.unittestEnabled';
@@ -35,7 +39,9 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
                 throw new Error('Invalid Test Product');
         }
     }
-    private getTestArgSetting(product: UnitTestProduct) {
+
+    // eslint-disable-next-line class-methods-use-this
+    private getTestArgSetting(product: UnitTestProduct):string {
         switch (product) {
             case Product.unittest:
                 return 'testing.unittestArgs';
@@ -46,7 +52,7 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
         }
     }
 
-    private async updateSetting(testDirectory: string | Uri, setting: string, value: any) {
+    private async updateSetting(testDirectory: string | Uri, setting: string, value: unknown) {
         let pythonConfig: WorkspaceConfiguration;
         const resource = typeof testDirectory === 'string' ? Uri.file(testDirectory) : testDirectory;
         if (!this.workspaceService.hasWorkspaceFolders) {
@@ -69,46 +75,3 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
     }
 }
 
-export class BufferedTestConfigSettingsService implements ITestConfigSettingsService {
-    private ops: [string, string | Uri, UnitTestProduct, string[]][];
-    constructor() {
-        this.ops = [];
-    }
-
-    public async updateTestArgs(testDirectory: string | Uri, product: UnitTestProduct, args: string[]) {
-        this.ops.push(['updateTestArgs', testDirectory, product, args]);
-    }
-
-    public async enable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void> {
-        this.ops.push(['enable', testDirectory, product, []]);
-    }
-
-    public async disable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void> {
-        this.ops.push(['disable', testDirectory, product, []]);
-    }
-
-    public async apply(cfg: ITestConfigSettingsService) {
-        const ops = this.ops;
-        this.ops = [];
-        // Note that earlier ops do not get rolled back if a later
-        // one fails.
-        for (const [op, testDir, prod, args] of ops) {
-            switch (op) {
-                case 'updateTestArgs':
-                    await cfg.updateTestArgs(testDir, prod, args);
-                    break;
-                case 'enable':
-                    await cfg.enable(testDir, prod);
-                    break;
-                case 'disable':
-                    await cfg.disable(testDir, prod);
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-    public getTestEnablingSetting(_: UnitTestProduct): string {
-        throw new Error('Method not implemented.');
-    }
-}

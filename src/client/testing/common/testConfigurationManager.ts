@@ -1,14 +1,14 @@
 import * as path from 'path';
 import { OutputChannel, QuickPickItem, Uri } from 'vscode';
-import { IApplicationShell } from '../../../common/application/types';
-import { traceInfo } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
-import { IInstaller, IOutputChannel } from '../../../common/types';
-import { createDeferred } from '../../../common/utils/async';
-import { IServiceContainer } from '../../../ioc/types';
-import { TEST_OUTPUT_CHANNEL } from '../../constants';
-import { UNIT_TEST_PRODUCTS } from '../constants';
-import { ITestConfigSettingsService, ITestConfigurationManager, UnitTestProduct } from '../types';
+import { IApplicationShell } from '../../common/application/types';
+import { traceInfo } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
+import { IInstaller, IOutputChannel } from '../../common/types';
+import { createDeferred } from '../../common/utils/async';
+import { IServiceContainer } from '../../ioc/types';
+import { TEST_OUTPUT_CHANNEL } from '../constants';
+import { UNIT_TEST_PRODUCTS } from './constants';
+import { ITestConfigSettingsService, ITestConfigurationManager, UnitTestProduct } from './types';
 
 function handleCancelled(): void {
     traceInfo('testing configuration (in UI) cancelled');

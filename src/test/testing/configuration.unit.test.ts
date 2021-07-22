@@ -12,7 +12,6 @@ import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IServiceContainer } from '../../client/ioc/types';
 import { UNIT_TEST_PRODUCTS } from '../../client/testing/common/constants';
 import { TestsHelper } from '../../client/testing/common/testUtils';
-import { TestFlatteningVisitor } from '../../client/testing/common/testVisitors/flatteningVisitor';
 import {
     ITestConfigSettingsService,
     ITestConfigurationManager,
@@ -79,10 +78,9 @@ suite('Unit Tests - ConfigurationService', () => {
                 serviceContainer
                     .setup((c) => c.get(typeMoq.It.isValue(ICommandManager)))
                     .returns(() => commands.object);
-                const flattener = typeMoq.Mock.ofType<TestFlatteningVisitor>(undefined, typeMoq.MockBehavior.Strict);
                 serviceContainer
                     .setup((c) => c.get(typeMoq.It.isValue(ITestsHelper)))
-                    .returns(() => new TestsHelper(flattener.object));
+                    .returns(() => new TestsHelper());
                 testConfigService = typeMoq.Mock.ofType(
                     UnitTestConfigurationService,
                     typeMoq.MockBehavior.Loose,

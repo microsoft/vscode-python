@@ -9,7 +9,7 @@ import { IInstaller, IOutputChannel, Product } from '../../../../client/common/t
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { UNIT_TEST_PRODUCTS } from '../../../../client/testing/common/constants';
-import { TestConfigurationManager } from '../../../../client/testing/common/managers/testConfigurationManager';
+import { TestConfigurationManager } from '../../../../client/testing/common/testConfigurationManager';
 import { ITestConfigSettingsService, UnitTestProduct } from '../../../../client/testing/common/types';
 import { TEST_OUTPUT_CHANNEL } from '../../../../client/testing/constants';
 
