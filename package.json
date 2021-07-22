@@ -112,7 +112,7 @@
                     {
                         "id": "python.installPythonWin",
                         "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python from the [Microsoft Store](https://www.microsoft.com/p/python-39/9p7qfqmjrfp7).\n\n[Install Python](https://www.microsoft.com/p/python-39/9p7qfqmjrfp7)\n \nTip: Reload the window after installation (Ctrl + R)",
+                        "description": "The Python Extension requires Python to be installed. Install Python from the [Microsoft Store](https://aka.ms/AAd9rms).\n\n[Install Python](https://aka.ms/AAd9rms)\n \nTip: Reload the window after installation (Ctrl + R)",
                         "media": {
                             "markdown": "resources/walkthrough/install-python-windows.md"
                         },
