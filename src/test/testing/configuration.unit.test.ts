@@ -78,9 +78,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 serviceContainer
                     .setup((c) => c.get(typeMoq.It.isValue(ICommandManager)))
                     .returns(() => commands.object);
-                serviceContainer
-                    .setup((c) => c.get(typeMoq.It.isValue(ITestsHelper)))
-                    .returns(() => new TestsHelper());
+                serviceContainer.setup((c) => c.get(typeMoq.It.isValue(ITestsHelper))).returns(() => new TestsHelper());
                 testConfigService = typeMoq.Mock.ofType(
                     UnitTestConfigurationService,
                     typeMoq.MockBehavior.Loose,

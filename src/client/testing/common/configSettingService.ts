@@ -29,7 +29,7 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public getTestEnablingSetting(product: UnitTestProduct):string {
+    public getTestEnablingSetting(product: UnitTestProduct): string {
         switch (product) {
             case Product.unittest:
                 return 'testing.unittestEnabled';
@@ -41,7 +41,7 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private getTestArgSetting(product: UnitTestProduct):string {
+    private getTestArgSetting(product: UnitTestProduct): string {
         switch (product) {
             case Product.unittest:
                 return 'testing.unittestArgs';
@@ -74,4 +74,3 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
         return pythonConfig.update(setting, value);
     }
 }
-

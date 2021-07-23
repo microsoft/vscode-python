@@ -11,7 +11,7 @@ export class BufferedTestConfigSettingsService implements ITestConfigSettingsSer
         this.ops = [];
     }
 
-    public async updateTestArgs(testDirectory: string | Uri, product: UnitTestProduct, args: string[]):Promise<void> {
+    public async updateTestArgs(testDirectory: string | Uri, product: UnitTestProduct, args: string[]): Promise<void> {
         this.ops.push(['updateTestArgs', testDirectory, product, args]);
         return Promise.resolve();
     }
@@ -27,7 +27,7 @@ export class BufferedTestConfigSettingsService implements ITestConfigSettingsSer
     }
 
     public async apply(cfg: ITestConfigSettingsService): Promise<void> {
-        const {ops} = this;
+        const { ops } = this;
         this.ops = [];
         // Note that earlier ops do not get rolled back if a later
         // one fails.

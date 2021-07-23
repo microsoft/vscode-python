@@ -9,10 +9,7 @@ import { IProcessServiceFactory } from '../../client/common/process/types';
 import { IInterpreterHelper } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { TestsHelper } from '../../client/testing/common/testUtils';
-import {
-    ITestsHelper,
-    IUnitTestSocketServer,
-} from '../../client/testing/common/types';
+import { ITestsHelper, IUnitTestSocketServer } from '../../client/testing/common/types';
 import { getPythonSemVer } from '../common';
 import { IocContainer } from '../serviceRegistry';
 import { MockUnitTestSocketServer } from './mocks';
