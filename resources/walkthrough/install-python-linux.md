@@ -14,7 +14,8 @@ For [Fedora-based Linux distributions](https://getfedora.org/), you can run the 
 sudo dnf install python3
 ```
 
-To verify if Python was succefully installed, run the following command in the terminal:
+To verify if Python was successfully installed, run the following command in the terminal:
+
 
 ```
 python3 --version
