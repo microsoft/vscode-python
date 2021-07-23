@@ -1,7 +1,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Disposable, Uri } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Uri, tests } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import * as constants from '../common/constants';
 import '../common/extensions';
@@ -32,13 +32,15 @@ export class UnitTestManagementService implements IExtensionActivationService, D
     private activatedOnce: boolean = false;
     private readonly disposableRegistry: Disposable[];
     private workspaceService: IWorkspaceService;
-    private testController: ITestController;
+    private testController: ITestController | undefined;
     private configChangedTimer?: NodeJS.Timer | number;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.disposableRegistry = serviceContainer.get<Disposable[]>(IDisposableRegistry);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        this.testController = serviceContainer.get<ITestController>(ITestController);
+        if (tests && !!tests.createTestController) {
+            this.testController = serviceContainer.get<ITestController>(ITestController);
+        }
         this.disposableRegistry.push(this);
     }
     public dispose() {
@@ -64,7 +66,7 @@ export class UnitTestManagementService implements IExtensionActivationService, D
             .filter((w) => eventArgs.affectsConfiguration('python.testing', w.uri))
             .map((w) => w.uri);
 
-        await Promise.all(changedWorkspaces.map((u) => this.testController.refreshTestData(u)));
+        await Promise.all(changedWorkspaces.map((u) => this.testController?.refreshTestData(u)));
     }
 
     @captureTelemetry(EventName.UNITTEST_CONFIGURE, undefined, false)
@@ -96,13 +98,13 @@ export class UnitTestManagementService implements IExtensionActivationService, D
                     // Ignore the exceptions returned.
                     // This command will be invoked from other places of the extension.
                     this.configureTests(resource).ignoreErrors();
-                    this.testController.refreshTestData(resource);
+                    this.testController?.refreshTestData(resource);
                 },
             ),
             commandManager.registerCommand(
                 constants.Commands.Test_Refresh,
                 (_, _cmdSource: constants.CommandSource = constants.CommandSource.commandPalette, resource?: Uri) => {
-                    this.testController.refreshTestData(resource);
+                    this.testController?.refreshTestData(resource);
                 },
             ),
         ];
@@ -122,7 +124,7 @@ export class UnitTestManagementService implements IExtensionActivationService, D
         );
         this.disposableRegistry.push(
             interpreterService.onDidChangeInterpreter(() => {
-                this.testController.refreshTestData();
+                this.testController?.refreshTestData();
             }),
         );
     }
