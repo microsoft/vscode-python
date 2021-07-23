@@ -1,33 +1,42 @@
 'use strict';
+
 import { EventEmitter } from 'events';
 import { injectable } from 'inversify';
 import * as net from 'net';
 import { createDeferred, Deferred } from '../../common/utils/async';
-import { IUnitTestSocketServer } from '../common/types';
+import { IUnitTestSocketServer } from './types';
 
 const MaxConnections = 100;
 
 @injectable()
 export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocketServer {
     private server?: net.Server;
+
     private startedDef?: Deferred<number>;
+
     private sockets: net.Socket[] = [];
-    private ipcBuffer: string = '';
+
+    private ipcBuffer = '';
+
     constructor() {
         super();
     }
+
     public get clientsConnected(): boolean {
         return this.sockets.length > 0;
     }
+
     public dispose() {
         this.stop();
     }
+
     public stop() {
         if (this.server) {
             this.server!.close();
             this.server = undefined;
         }
     }
+
     public start({ port, host }: { port: number; host: string } = { port: 0, host: 'localhost' }): Promise<number> {
         this.ipcBuffer = '';
         this.startedDef = createDeferred<number>();
@@ -97,9 +106,11 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
         });
         this.emit('connect', socket);
     }
+
     private log(message: string, ...data: any[]) {
         this.emit('log', message, ...data);
     }
+
     private onCloseSocket() {
         for (let i = 0, count = this.sockets.length; i < count; i += 1) {
             const socket = this.sockets[i];
