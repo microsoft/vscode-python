@@ -3,7 +3,13 @@ import { Disposable, OutputChannel, StatusBarAlignment, StatusBarItem, Uri } fro
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import '../../common/extensions';
-import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPathUtils, Resource } from '../../common/types';
+import {
+    IDisposableRegistry,
+    IInterpreterPathProxyService,
+    IOutputChannel,
+    IPathUtils,
+    Resource,
+} from '../../common/types';
 import { Interpreters } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -22,7 +28,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
     private readonly workspaceService: IWorkspaceService;
     private readonly pathUtils: IPathUtils;
     private readonly interpreterService: IInterpreterService;
-    private readonly configService: IConfigurationService;
+    private readonly interpreterPathExpHelper: IInterpreterPathProxyService;
     private currentlySelectedInterpreterPath?: string;
     private currentlySelectedWorkspaceFolder: Resource;
     private readonly autoSelection: IInterpreterAutoSelectionService;
@@ -39,7 +45,9 @@ export class InterpreterDisplay implements IInterpreterDisplay {
 
         const application = serviceContainer.get<IApplicationShell>(IApplicationShell);
         const disposableRegistry = serviceContainer.get<Disposable[]>(IDisposableRegistry);
-        this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.interpreterPathExpHelper = serviceContainer.get<IInterpreterPathProxyService>(
+            IInterpreterPathProxyService,
+        );
 
         this.statusBar = application.createStatusBarItem(StatusBarAlignment.Left, 100);
         this.statusBar.command = 'python.setInterpreter';
@@ -75,7 +83,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         }
     }
     private async updateDisplay(workspaceFolder?: Uri) {
-        const interpreterPath = this.configService.getSettings(workspaceFolder)?.pythonPath;
+        const interpreterPath = this.interpreterPathExpHelper.get(workspaceFolder);
         if (!interpreterPath || interpreterPath === 'python') {
             await this.autoSelection.autoSelectInterpreter(workspaceFolder); // Block on this only if no interpreter selected.
         }

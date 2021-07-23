@@ -41,12 +41,6 @@ src/test/interpreters/mocks.ts
 src/test/interpreters/interpreterVersion.unit.test.ts
 src/test/interpreters/virtualEnvs/index.unit.test.ts
 src/test/interpreters/virtualEnvs/condaInheritEnvPrompt.unit.test.ts
-src/test/interpreters/autoSelection/rules/settings.unit.test.ts
-src/test/interpreters/autoSelection/rules/cached.unit.test.ts
-src/test/interpreters/autoSelection/rules/winRegistry.unit.test.ts
-src/test/interpreters/autoSelection/rules/base.unit.test.ts
-src/test/interpreters/autoSelection/rules/currentPath.unit.test.ts
-src/test/interpreters/autoSelection/rules/system.unit.test.ts
 src/test/interpreters/virtualEnvManager.unit.test.ts
 src/test/interpreters/pythonPathUpdaterFactory.unit.test.ts
 src/test/interpreters/activation/service.unit.test.ts
@@ -276,7 +270,6 @@ src/test/workspaceSymbols/common.ts
 src/test/workspaceSymbols/main.unit.test.ts
 src/test/workspaceSymbols/generator.unit.test.ts
 
-src/client/interpreter/configuration/interpreterComparer.ts
 src/client/interpreter/configuration/interpreterSelector/commands/base.ts
 src/client/interpreter/configuration/interpreterSelector/commands/resetInterpreter.ts
 src/client/interpreter/configuration/interpreterSelector/commands/setShebangInterpreter.ts
@@ -288,12 +281,6 @@ src/client/interpreter/helpers.ts
 src/client/interpreter/virtualEnvs/condaInheritEnvPrompt.ts
 src/client/interpreter/virtualEnvs/types.ts
 src/client/interpreter/virtualEnvs/index.ts
-src/client/interpreter/autoSelection/rules/baseRule.ts
-src/client/interpreter/autoSelection/rules/winRegistry.ts
-src/client/interpreter/autoSelection/rules/settings.ts
-src/client/interpreter/autoSelection/rules/currentPath.ts
-src/client/interpreter/autoSelection/rules/cached.ts
-src/client/interpreter/autoSelection/rules/system.ts
 src/client/interpreter/activation/service.ts
 src/client/interpreter/display/shebangCodeLensProvider.ts
 src/client/interpreter/display/index.ts

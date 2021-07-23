@@ -260,7 +260,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
      * As such, we can sort interpreters based on what it returns.
      */
     private async autoselectInterpreterWithLocators(resource: Resource): Promise<void> {
-        const interpreters = await this.interpreterService.getInterpreters(resource);
+        const interpreters = await this.interpreterService.getInterpreters(resource, { ignoreCache: true });
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
 
         // When auto-selecting an intepreter for a workspace, we either want to return a local one

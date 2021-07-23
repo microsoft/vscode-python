@@ -9,7 +9,7 @@ from packaging.version import parse as version_parser
 EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEBUGGER_DEST = os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python")
 DEBUGGER_PACKAGE = "debugpy"
-DEBUGGER_PYTHON_VERSIONS = ("cp38",)
+DEBUGGER_PYTHON_VERSIONS = ("cp39",)
 
 
 def _contains(s, parts=()):

@@ -12,6 +12,7 @@ import { IInterpreterComparer } from './types';
 @injectable()
 export class InterpreterComparer implements IInterpreterComparer {
     constructor(@inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper) {}
+
     public compare(a: PythonEnvironment, b: PythonEnvironment): number {
         const nameA = getSortName(a, this.interpreterHelper);
         const nameB = getSortName(b, this.interpreterHelper);

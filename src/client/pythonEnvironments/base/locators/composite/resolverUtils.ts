@@ -13,8 +13,8 @@ import {
     getPythonVersionFromPath,
 } from '../../../common/commonUtils';
 import { getFileInfo, getWorkspaceFolders, isParentPath } from '../../../common/externalDependencies';
-import { AnacondaCompanyName, Conda } from '../../../discovery/locators/services/conda';
-import { parsePyenvVersion } from '../../../discovery/locators/services/pyenvLocator';
+import { AnacondaCompanyName, Conda } from '../../../common/environmentManagers/conda';
+import { parsePyenvVersion } from '../../../common/environmentManagers/pyenv';
 import { Architecture, getOSType, OSType } from '../../../../common/utils/platform';
 import { getPythonVersionFromPath as parsePythonVersionFromPath, parseVersion } from '../../info/pythonVersion';
 import { getRegistryInterpreters, getRegistryInterpretersSync } from '../../../common/windowsUtils';
@@ -169,7 +169,7 @@ async function resolvePyenvEnv(executablePath: string): Promise<PythonEnvInfo> {
 
     // The sub-directory name sometimes can contain distro and python versions.
     // here we attempt to extract the texts out of the name.
-    const versionStrings = await parsePyenvVersion(name);
+    const versionStrings = parsePyenvVersion(name);
 
     const envInfo = buildEnvInfo({
         kind: PythonEnvKind.Pyenv,

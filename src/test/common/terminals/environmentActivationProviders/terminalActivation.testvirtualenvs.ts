@@ -24,9 +24,8 @@ import {
 import { EXTENSION_ROOT_DIR_FOR_TESTS, TEST_TIMEOUT } from '../../../constants';
 import { sleep } from '../../../core';
 import { initialize, initializeTest } from '../../../initialize';
-import * as ExperimentHelpers from '../../../../client/common/experiments/helpers';
 
-suite.skip('Activation of Environments in Terminal', () => {
+suite('Activation of Environments in Terminal', () => {
     const file = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',
@@ -61,13 +60,12 @@ suite.skip('Activation of Environments in Terminal', () => {
     let experiments: IExperimentService;
     const sandbox = sinon.createSandbox();
     suiteSetup(async () => {
-        sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(false);
         envPaths = await fs.readJson(envsLocation);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders![0].uri);
         pythonSettings = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders![0].uri);
-        defaultShell.Windows = terminalSettings.inspect('integrated.shell.windows').globalValue;
-        defaultShell.Linux = terminalSettings.inspect('integrated.shell.linux').globalValue;
-        await terminalSettings.update('integrated.shell.linux', '/bin/bash', vscode.ConfigurationTarget.Global);
+        defaultShell.Windows = terminalSettings.inspect('integrated.defaultProfile.windows').globalValue;
+        defaultShell.Linux = terminalSettings.inspect('integrated.defaultProfile.linux').globalValue;
+        await terminalSettings.update('integrated.defaultProfile.linux', 'bash', vscode.ConfigurationTarget.Global);
         experiments = (await initialize()).serviceContainer.get<IExperimentService>(IExperimentService);
     });
 
@@ -105,11 +103,15 @@ suite.skip('Activation of Environments in Terminal', () => {
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
         await terminalSettings.update(
-            'integrated.shell.windows',
+            'integrated.defaultProfile.windows',
             defaultShell.Windows,
             vscode.ConfigurationTarget.Global,
         );
-        await terminalSettings.update('integrated.shell.linux', defaultShell.Linux, vscode.ConfigurationTarget.Global);
+        await terminalSettings.update(
+            'integrated.defaultProfile.linux',
+            defaultShell.Linux,
+            vscode.ConfigurationTarget.Global,
+        );
         await pythonSettings.update('condaPath', undefined, vscode.ConfigurationTarget.Workspace);
         if (experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             await resetGlobalInterpreterPathSetting();
@@ -189,9 +191,10 @@ suite.skip('Activation of Environments in Terminal', () => {
         await testActivation(envPaths.virtualEnvPath);
     });
     test('Should activate with conda', async () => {
+        // Powershell does not work with conda by default, hence use cmd.
         await terminalSettings.update(
-            'integrated.shell.windows',
-            'C:\\Windows\\System32\\cmd.exe',
+            'integrated.defaultProfile.windows',
+            'Command Prompt',
             vscode.ConfigurationTarget.Global,
         );
         await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);

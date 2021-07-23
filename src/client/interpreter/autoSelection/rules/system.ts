@@ -22,6 +22,7 @@ export class SystemWideInterpretersAutoSelectionRule extends BaseRuleService {
     ) {
         super(AutoSelectionRule.systemWide, fs, stateFactory);
     }
+
     protected async onAutoSelectInterpreter(
         resource: Resource,
         manager?: IInterpreterAutoSelectionService,

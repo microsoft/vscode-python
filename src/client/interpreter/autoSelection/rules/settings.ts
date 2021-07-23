@@ -22,11 +22,12 @@ export class SettingsInterpretersAutoSelectionRule extends BaseRuleService {
     ) {
         super(AutoSelectionRule.settings, fs, stateFactory);
     }
+
     protected async onAutoSelectInterpreter(
         _resource: Resource,
         _manager?: IInterpreterAutoSelectionService,
     ): Promise<NextAction> {
-        const pythonConfig = this.workspaceService.getConfiguration('python', null as any)!;
+        const pythonConfig = this.workspaceService.getConfiguration('python')!;
         const pythonPathInConfig = this.experiments.inExperimentSync(DeprecatePythonPath.experiment)
             ? this.interpreterPathService.inspect(undefined)
             : pythonConfig.inspect<string>('pythonPath')!;

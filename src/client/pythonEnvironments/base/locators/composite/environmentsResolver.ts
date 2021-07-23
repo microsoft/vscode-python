@@ -5,7 +5,7 @@ import { cloneDeep } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
 import { identifyEnvironment } from '../../../common/environmentIdentifier';
-import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
+import { IEnvironmentInfoService } from '../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
 import { getEnvDisplayString } from '../../info/env';
 import { InterpreterInformation } from '../../info/interpreter';

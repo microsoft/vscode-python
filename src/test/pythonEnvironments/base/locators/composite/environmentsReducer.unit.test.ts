@@ -7,7 +7,7 @@ import { EventEmitter } from 'vscode';
 import { PythonEnvKind, PythonEnvSource } from '../../../../../client/pythonEnvironments/base/info';
 import { PythonEnvsReducer } from '../../../../../client/pythonEnvironments/base/locators/composite/environmentsReducer';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
-import { assertBasicEnvsEqual } from '../../../discovery/locators/envTestUtils';
+import { assertBasicEnvsEqual } from '../envTestUtils';
 import { createBasicEnv, getEnvs, getEnvsWithUpdates, SimpleLocator } from '../../common';
 import { PythonEnvUpdatedEvent, BasicEnvInfo } from '../../../../../client/pythonEnvironments/base/locator';
 

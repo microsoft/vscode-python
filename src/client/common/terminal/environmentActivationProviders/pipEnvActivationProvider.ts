@@ -7,7 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import '../../extensions';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { isPipenvEnvironmentRelatedToFolder } from '../../../pythonEnvironments/discovery/locators/services/pipEnvHelper';
+import { isPipenvEnvironmentRelatedToFolder } from '../../../pythonEnvironments/common/environmentManagers/pipenv';
 import { EnvironmentType } from '../../../pythonEnvironments/info';
 import { IWorkspaceService } from '../../application/types';
 import { inDiscoveryExperiment } from '../../experiments/helpers';

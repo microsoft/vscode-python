@@ -17,17 +17,17 @@ import { WindowsPathEnvVarLocator } from './base/locators/lowLevel/windowsKnownP
 import { WorkspaceVirtualEnvironmentLocator } from './base/locators/lowLevel/workspaceVirtualEnvLocator';
 import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
-import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './discovery/locators';
-import { CustomVirtualEnvironmentLocator } from './discovery/locators/services/customVirtualEnvLocator';
-import { CondaEnvironmentLocator } from './discovery/locators/services/condaLocator';
-import { GlobalVirtualEnvironmentLocator } from './discovery/locators/services/globalVirtualEnvronmentLocator';
-import { PosixKnownPathsLocator } from './discovery/locators/services/posixKnownPathsLocator';
-import { PyenvLocator } from './discovery/locators/services/pyenvLocator';
-import { WindowsRegistryLocator } from './discovery/locators/services/windowsRegistryLocator';
-import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreLocator';
-import { getEnvironmentInfoService } from './info/environmentInfoService';
+import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './base/locators/';
+import { CustomVirtualEnvironmentLocator } from './base/locators/lowLevel/customVirtualEnvLocator';
+import { CondaEnvironmentLocator } from './base/locators/lowLevel/condaLocator';
+import { GlobalVirtualEnvironmentLocator } from './base/locators/lowLevel/globalVirtualEnvronmentLocator';
+import { PosixKnownPathsLocator } from './base/locators/lowLevel/posixKnownPathsLocator';
+import { PyenvLocator } from './base/locators/lowLevel/pyenvLocator';
+import { WindowsRegistryLocator } from './base/locators/lowLevel/windowsRegistryLocator';
+import { WindowsStoreLocator } from './base/locators/lowLevel/windowsStoreLocator';
+import { getEnvironmentInfoService } from './base/info/environmentInfoService';
 import { isComponentEnabled, registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
-import { PoetryLocator } from './discovery/locators/services/poetryLocator';
+import { PoetryLocator } from './base/locators/lowLevel/poetryLocator';
 
 /**
  * Set up the Python environments component (during extension activation).'

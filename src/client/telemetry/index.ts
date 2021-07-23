@@ -609,9 +609,6 @@ export interface IEventNamePropertyMapping {
          */
         manuallyEnteredAValue?: boolean;
     };
-    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST]: never | undefined;
-    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR]: never | undefined;
-    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS]: never | undefined;
     /**
      * Telemetry event sent when providing completion provider in launch.json. It is sent just *after* inserting the completion.
      */
@@ -1112,19 +1109,6 @@ export interface IEventNamePropertyMapping {
         selection: 'Yes' | 'No' | 'More Info' | undefined;
     };
     /**
-     * Telemetry event sent with details when user clicks the prompt with the following message
-     * `Prompt message` :- 'We found a Python environment in this workspace. Do you want to select it to start up the features in the Python extension? Only accept if you trust this environment.'
-     */
-    [EventName.UNSAFE_INTERPRETER_PROMPT]: {
-        /**
-         * `Yes` When 'Yes' option is selected
-         * `No` When 'No' option is selected
-         * `Learn more` When 'More Info' option is selected
-         * `Do not show again` When 'Do not show again' option is selected
-         */
-        selection: 'Yes' | 'No' | 'Learn more' | 'Do not show again' | undefined;
-    };
-    /**
      * Telemetry event sent with details when user clicks a button in the virtual environment prompt.
      * `Prompt message` :- 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?'
      */
@@ -1304,35 +1288,6 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
-     * Telemetry event sent with details when inExperiment() API is called
-     */
-    [EventName.PYTHON_EXPERIMENTS]: {
-        /**
-         * Name of the experiment group the user is in
-         * @type {string}
-         */
-        expName?: string;
-    };
-    /**
-     * Telemetry event sent when Experiments have been disabled.
-     */
-    [EventName.PYTHON_EXPERIMENTS_DISABLED]: never | undefined;
-    /**
-     * Telemetry event sent with details when doing best effort to download the experiments within timeout and using it in the current session only
-     */
-    [EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE]: {
-        /**
-         * Carries `true` if downloading experiments successfully finishes within timeout, `false` otherwise
-         * @type {boolean}
-         */
-        success?: boolean;
-        /**
-         * Carries an error string if downloading experiments fails with error
-         * @type {string}
-         */
-        error?: string;
-    };
-    /**
      * Telemetry event sent once on session start with details on which experiments are opted into and opted out from.
      */
     [EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS]: {
@@ -1376,16 +1331,6 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.LANGUAGE_SERVER_REQUEST]: unknown;
     /**
-     * Telemetry sent on user response to 'Try Pylance' prompt.
-     */
-    [EventName.LANGUAGE_SERVER_TRY_PYLANCE]: {
-        /**
-         * User response to the prompt.
-         * @type {string}
-         */
-        userAction: string;
-    };
-    /**
      * Telemetry event sent when we fallback from JediLSP to Jedi in cases where JediLSP is
      * not supported.
      */
@@ -1409,32 +1354,11 @@ export interface IEventNamePropertyMapping {
         lsVersion?: string;
     };
     /**
-     * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
-     */
-    [EventName.JEDI_LANGUAGE_SERVER_TELEMETRY]: unknown;
-    /**
      * Telemetry sent when the client makes a request to the Node.js server
      *
      * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.JEDI_LANGUAGE_SERVER_REQUEST]: unknown;
-    /**
-     * Telemetry captured for enabling reload.
-     */
-    [EventName.PYTHON_WEB_APP_RELOAD]: {
-        /**
-         * Carries value indicating if the experiment modified `subProcess` field in debug config:
-         * - `true` if reload experiment modified the `subProcess` field.
-         * - `false` if user provided debug configuration was not changed (already setup for reload)
-         */
-        subProcessModified?: boolean;
-        /**
-         * Carries value indicating if the experiment modified `args` field in debug config:
-         * - `true` if reload experiment modified the `args` field.
-         * - `false` if user provided debug configuration was not changed (already setup for reload)
-         */
-        argsModified?: boolean;
-    };
     /**
      * When user clicks a button in the python extension survey prompt, this telemetry event is sent with details
      */
@@ -1444,14 +1368,6 @@ export interface IEventNamePropertyMapping {
          */
         selection: 'Yes' | 'Maybe later' | 'Do not show again' | undefined;
     };
-    /**
-     * Telemetry event sent when the Python interpreter tip is shown on activation for new users.
-     */
-    [EventName.ACTIVATION_TIP_PROMPT]: never | undefined;
-    /**
-     * Telemetry event sent when the feedback survey prompt is shown on activation for new users, and they click on the survey link.
-     */
-    [EventName.ACTIVATION_SURVEY_PROMPT]: never | undefined;
     /**
      * Telemetry sent back when join mailing list prompt is shown.
      */
@@ -1706,14 +1622,6 @@ export interface IEventNamePropertyMapping {
      * Telemetry sent when providing workspace symbols doing Project-wide search for a symbol matching the given query string
      */
     [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
-    /*
-    Telemetry event sent with details of Jedi Memory usage.
-    memUse - Memory usage of Process in kb.
-    limit - Upper bound for memory usage of Jedi process.
-    isUserDefinedLimit - Whether the user has configfured the upper bound limit.
-    restart - Whether to restart the Jedi Process (i.e. memory > limit).
-    */
-    [EventName.JEDI_MEMORY]: { memUse: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
     /*
     Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
     This information is useful in determining how well we identify shells on users machines.

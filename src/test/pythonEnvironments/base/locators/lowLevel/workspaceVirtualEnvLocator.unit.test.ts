@@ -9,7 +9,7 @@ import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/inf
 import { WorkspaceVirtualEnvironmentLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/workspaceVirtualEnvLocator';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
-import { assertBasicEnvsEqual } from '../../../discovery/locators/envTestUtils';
+import { assertBasicEnvsEqual } from '../envTestUtils';
 import { createBasicEnv } from '../../common';
 
 suite('WorkspaceVirtualEnvironment Locator', () => {

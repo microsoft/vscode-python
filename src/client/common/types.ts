@@ -557,6 +557,14 @@ export interface IInterpreterPathService {
     copyOldInterpreterStorageValuesToNew(resource: Uri | undefined): Promise<void>;
 }
 
+/**
+ * Interface used to access current Interpreter Path
+ */
+export const IInterpreterPathProxyService = Symbol('IInterpreterPathProxyService');
+export interface IInterpreterPathProxyService {
+    get(resource: Resource): string;
+}
+
 export type DefaultLSType = LanguageServerType.Jedi | LanguageServerType.JediLSP | LanguageServerType.Node;
 
 /**

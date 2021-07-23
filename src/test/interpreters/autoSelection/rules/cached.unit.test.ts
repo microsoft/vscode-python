@@ -35,12 +35,14 @@ suite('Interpreters - Auto Selection - Cached Rule', () => {
     let helper: IInterpreterHelper;
     class CachedInterpretersAutoSelectionRuleTest extends CachedInterpretersAutoSelectionRule {
         public readonly rules!: IInterpreterAutoSelectionRule[];
+
         public async setGlobalInterpreter(
             interpreter?: PythonEnvironment,
             manager?: IInterpreterAutoSelectionService,
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
+
         public async onAutoSelectInterpreter(
             resource: Resource,
             manager?: IInterpreterAutoSelectionService,
@@ -87,7 +89,7 @@ suite('Interpreters - Auto Selection - Cached Rule', () => {
     });
     test('Invoke next rule if fails to update global state', async () => {
         const manager = mock(InterpreterAutoSelectionService);
-        const winRegInterpreterInfo = { path: '1', version: new SemVer('1.0.0') } as any;
+        const winRegInterpreterInfo = ({ path: '1', version: new SemVer('1.0.0') } as unknown) as PythonEnvironment;
         const resource = Uri.file('x');
 
         when(helper.getBestInterpreter(deepEqual(anything()))).thenReturn(winRegInterpreterInfo);
@@ -111,7 +113,7 @@ suite('Interpreters - Auto Selection - Cached Rule', () => {
     });
     test('Must not Invoke next rule if updating global state is successful', async () => {
         const manager = mock(InterpreterAutoSelectionService);
-        const winRegInterpreterInfo = { path: '1', version: new SemVer('1.0.0') } as any;
+        const winRegInterpreterInfo = ({ path: '1', version: new SemVer('1.0.0') } as unknown) as PythonEnvironment;
         const resource = Uri.file('x');
 
         when(helper.getBestInterpreter(deepEqual(anything()))).thenReturn(winRegInterpreterInfo);

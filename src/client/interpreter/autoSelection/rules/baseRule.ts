@@ -23,7 +23,9 @@ export enum NextAction {
 @injectable()
 export abstract class BaseRuleService implements IInterpreterAutoSelectionRule {
     protected nextRule?: IInterpreterAutoSelectionRule;
+
     private readonly stateStore: IPersistentState<PythonEnvironment | undefined>;
+
     constructor(
         @unmanaged() protected readonly ruleName: AutoSelectionRule,
         @inject(IFileSystem) private readonly fs: IFileSystem,
@@ -34,9 +36,11 @@ export abstract class BaseRuleService implements IInterpreterAutoSelectionRule {
             undefined,
         );
     }
+
     public setNextRule(rule: IInterpreterAutoSelectionRule): void {
         this.nextRule = rule;
     }
+
     @traceDecorators.verbose('autoSelectInterpreter')
     public async autoSelectInterpreter(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<void> {
         await this.clearCachedInterpreterIfInvalid(resource);
@@ -53,15 +57,18 @@ export abstract class BaseRuleService implements IInterpreterAutoSelectionRule {
             await this.next(resource, manager);
         }
     }
+
     public getPreviouslyAutoSelectedInterpreter(_resource: Resource): PythonEnvironment | undefined {
-        const value = this.stateStore.value;
+        const { value } = this.stateStore;
         traceVerbose(`Current value for rule ${this.ruleName} is ${value ? JSON.stringify(value) : 'nothing'}`);
         return value;
     }
+
     protected abstract onAutoSelectInterpreter(
         resource: Resource,
         manager?: IInterpreterAutoSelectionService,
     ): Promise<NextAction>;
+
     @traceDecorators.verbose('setGlobalInterpreter')
     protected async setGlobalInterpreter(
         interpreter?: PythonEnvironment,
@@ -86,7 +93,8 @@ export abstract class BaseRuleService implements IInterpreterAutoSelectionRule {
 
         return false;
     }
-    protected async clearCachedInterpreterIfInvalid(resource: Resource) {
+
+    protected async clearCachedInterpreterIfInvalid(resource: Resource): Promise<void> {
         if (!this.stateStore.value || (await this.fs.fileExists(this.stateStore.value.path))) {
             return;
         }
@@ -97,13 +105,18 @@ export abstract class BaseRuleService implements IInterpreterAutoSelectionRule {
         );
         await this.cacheSelectedInterpreter(resource, undefined);
     }
-    protected async cacheSelectedInterpreter(_resource: Resource, interpreter: PythonEnvironment | undefined) {
+
+    protected async cacheSelectedInterpreter(
+        _resource: Resource,
+        interpreter: PythonEnvironment | undefined,
+    ): Promise<void> {
         const interpreterPath = interpreter ? interpreter.path : '';
         const interpreterPathInCache = this.stateStore.value ? this.stateStore.value.path : '';
         const updated = interpreterPath === interpreterPathInCache;
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_AUTO_SELECTION, {}, { rule: this.ruleName, updated });
         await this.stateStore.updateValue(interpreter);
     }
+
     protected async next(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<void> {
         traceVerbose(`Executing next rule from ${this.ruleName}`);
         return this.nextRule && manager ? this.nextRule.autoSelectInterpreter(resource, manager) : undefined;

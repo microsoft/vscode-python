@@ -6,10 +6,8 @@ import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { traceDecorators } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
 import { IDisposableRegistry } from '../../../common/types';
-import { createDeferred, Deferred, iterEmpty } from '../../../common/utils/async';
-import { getURIFilter } from '../../../common/utils/misc';
+import { createDeferred, Deferred } from '../../../common/utils/async';
 import { OSType } from '../../../common/utils/platform';
-import { Disposables, IDisposable } from '../../../common/utils/resourceLifecycle';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -24,140 +22,8 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { PythonEnvInfo } from '../../base/info';
-import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../base/locator';
-import { combineIterators, Locators } from '../../base/locators';
-import { LazyResourceBasedLocator } from '../../base/locators/common/resourceBasedLocator';
 import { PythonEnvironment } from '../../info';
 import { isHiddenInterpreter } from './services/interpreterFilter';
-
-/**
- * A wrapper around all locators used by the extension.
- */
-export class ExtensionLocators<I = PythonEnvInfo> extends Locators<I> {
-    constructor(
-        // These are expected to be low-level locators (e.g. system).
-        nonWorkspace: ILocator<I>[],
-        // This is expected to be a locator wrapping any found in
-        // the workspace (i.e. WorkspaceLocators).
-        workspace: ILocator<I>,
-    ) {
-        super([...nonWorkspace, workspace]);
-    }
-}
-
-type WorkspaceLocatorFactoryResult<I> = ILocator<I> & Partial<IDisposable>;
-type WorkspaceLocatorFactory<I = PythonEnvInfo> = (root: Uri) => WorkspaceLocatorFactoryResult<I>[];
-
-type RootURI = string;
-
-export type WatchRootsArgs = {
-    initRoot(root: Uri): void;
-    addRoot(root: Uri): void;
-    removeRoot(root: Uri): void;
-};
-type WatchRootsFunc = (args: WatchRootsArgs) => IDisposable;
-
-// XXX Factor out RootedLocators and MultiRootedLocators.
-
-/**
- * The collection of all workspace-specific locators used by the extension.
- *
- * The factories are used to produce the locators for each workspace folder.
- */
-export class WorkspaceLocators<I = PythonEnvInfo> extends LazyResourceBasedLocator<I> {
-    private readonly locators: Record<RootURI, [ILocator<I>, IDisposable]> = {};
-
-    private readonly roots: Record<RootURI, Uri> = {};
-
-    constructor(private readonly watchRoots: WatchRootsFunc, private readonly factories: WorkspaceLocatorFactory<I>[]) {
-        super();
-    }
-
-    public async dispose(): Promise<void> {
-        await super.dispose();
-
-        // Clear all the roots.
-        const roots = Object.keys(this.roots).map((key) => this.roots[key]);
-        roots.forEach((root) => this.removeRoot(root));
-    }
-
-    protected doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<I> {
-        const iterators = Object.keys(this.locators).map((key) => {
-            if (query?.searchLocations !== undefined) {
-                const root = this.roots[key];
-                // Match any related search location.
-                const filter = getURIFilter(root, { checkParent: true, checkChild: true, checkExact: true });
-                // Ignore any requests for global envs.
-                if (!query.searchLocations.roots.some(filter)) {
-                    // This workspace folder did not match the query, so skip it!
-                    return iterEmpty<I>();
-                }
-            }
-            // The query matches or was not location-specific.
-            const [locator] = this.locators[key];
-            return locator.iterEnvs(query);
-        });
-        return combineIterators(iterators);
-    }
-
-    protected async initResources(): Promise<void> {
-        const disposable = this.watchRoots({
-            initRoot: (root: Uri) => this.addRoot(root),
-            addRoot: (root: Uri) => {
-                // Drop the old one, if necessary.
-                this.removeRoot(root);
-                this.addRoot(root);
-                this.emitter.fire({ searchLocation: root });
-            },
-            removeRoot: (root: Uri) => {
-                this.removeRoot(root);
-                this.emitter.fire({ searchLocation: root });
-            },
-        });
-        this.disposables.push(disposable);
-    }
-
-    private addRoot(root: Uri): void {
-        // Create the root's locator, wrapping each factory-generated locator.
-        const locators: ILocator<I>[] = [];
-        const disposables = new Disposables();
-        this.factories.forEach((create) => {
-            create(root).forEach((loc) => {
-                locators.push(loc);
-                if (loc.dispose !== undefined) {
-                    disposables.push(loc as IDisposable);
-                }
-            });
-        });
-        const locator = new Locators(locators);
-        // Cache it.
-        const key = root.toString();
-        this.locators[key] = [locator, disposables];
-        this.roots[key] = root;
-        // Hook up the watchers.
-        disposables.push(
-            locator.onChanged((e) => {
-                if (e.searchLocation === undefined) {
-                    e.searchLocation = root;
-                }
-                this.emitter.fire(e);
-            }),
-        );
-    }
-
-    private removeRoot(root: Uri): void {
-        const key = root.toString();
-        const found = this.locators[key];
-        if (found === undefined) {
-            return;
-        }
-        const [, disposables] = found;
-        delete this.locators[key];
-        delete this.roots[key];
-        disposables.dispose();
-    }
-}
 
 /**
  * Facilitates locating Python interpreters.
