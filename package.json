@@ -368,6 +368,11 @@
             },
             {
                 "category": "Python",
+                "command": "python.refreshTests",
+                "title": "%python.command.python.refreshTests.title%"
+            },
+            {
+                "category": "Python",
                 "command": "python.reportIssue",
                 "title": "%python.command.python.reportIssue.title%"
             },
