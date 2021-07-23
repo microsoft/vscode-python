@@ -32,7 +32,7 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
 
     public stop() {
         if (this.server) {
-            this.server!.close();
+            this.server.close();
             this.server = undefined;
         }
     }
@@ -41,8 +41,8 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
         this.ipcBuffer = '';
         this.startedDef = createDeferred<number>();
         this.server = net.createServer(this.connectionListener.bind(this));
-        this.server!.maxConnections = MaxConnections;
-        this.server!.on('error', (err) => {
+        this.server.maxConnections = MaxConnections;
+        this.server.on('error', (err) => {
             if (this.startedDef) {
                 this.startedDef.reject(err);
                 this.startedDef = undefined;
@@ -53,14 +53,14 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
         if (host.trim().length === 0) {
             host = 'localhost';
         }
-        this.server!.on('connection', (socket: net.Socket) => {
+        this.server.on('connection', (socket: net.Socket) => {
             this.emit('start', socket);
         });
-        this.server!.listen(port, host, () => {
-            this.startedDef!.resolve((this.server!.address() as net.AddressInfo).port);
+        this.server.listen(port, host, () => {
+            this.startedDef?.resolve((this.server?.address() as net.AddressInfo).port);
             this.startedDef = undefined;
         });
-        return this.startedDef!.promise;
+        return this.startedDef?.promise;
     }
 
     private connectionListener(socket: net.Socket) {
@@ -114,11 +114,12 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
     private onCloseSocket() {
         for (let i = 0, count = this.sockets.length; i < count; i += 1) {
             const socket = this.sockets[i];
-            let destroyedSocketId = false;
+
             if (socket && socket.readable) {
                 continue;
             }
 
+            let destroyedSocketId;
             if ((socket as any).id) {
                 destroyedSocketId = (socket as any).id;
             }

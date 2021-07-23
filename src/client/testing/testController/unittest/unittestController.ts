@@ -201,17 +201,15 @@ for s in generate_test_cases(suite):
         let runRequest = request;
         if (!runRequest.include) {
             const testItem = testController.items.get(workspace.uri.fsPath);
-
             if (testItem) {
                 runRequest = new TestRunRequest([testItem], undefined, request.profile);
             }
         }
 
         const settings = this.configService.getSettings(workspace.uri);
-
         return this.runner.runTests(
             testController,
-            request,
+            runRequest,
             debug,
             {
                 workspaceFolder: workspace.uri,

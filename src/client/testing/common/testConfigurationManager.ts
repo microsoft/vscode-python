@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { OutputChannel, QuickPickItem, Uri } from 'vscode';
+import { OutputChannel, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -77,18 +77,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
 
         items = [{ label: '.', description: 'Root directory' }, ...items];
         items = customOptions.concat(items);
-        const def = createDeferred<string>();
-        const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        appShell.showQuickPick(items, options).then((item) => {
-            if (!item) {
-                this.handleCancelled(); // This will throw an exception.
-                return;
-            }
-
-            def.resolve(item.label);
-        });
-
-        return def.promise;
+        return this.showQuickPick(items, options);
     }
 
     protected selectTestFilePattern(): Promise<string> {
@@ -106,18 +95,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
             { label: '*test*.py', description: "Python Files containing the word 'test'" },
         ];
 
-        const def = createDeferred<string>();
-        const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        appShell.showQuickPick(items, options).then((item) => {
-            if (!item) {
-                this.handleCancelled(); // This will throw an exception.
-                return;
-            }
-
-            def.resolve(item.label);
-        });
-
-        return def.promise;
+        return this.showQuickPick(items, options);
     }
 
     protected getTestDirs(rootDir: string): Promise<string[]> {
@@ -133,5 +111,19 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
             // The test dirs are now on top.
             return possibleTestDirs;
         });
+    }
+
+    private showQuickPick(items: QuickPickItem[], options: QuickPickOptions): Promise<string> {
+        const def = createDeferred<string>();
+        const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        appShell.showQuickPick(items, options).then((item) => {
+            if (!item) {
+                this.handleCancelled(); // This will throw an exception.
+                return;
+            }
+
+            def.resolve(item.label);
+        });
+        return def.promise;
     }
 }

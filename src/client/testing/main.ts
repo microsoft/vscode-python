@@ -91,7 +91,6 @@ export class UnitTestManagementService implements IExtensionActivationService, D
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
 
         const disposables = [
-            // TODO: register command to refresh test data
             commandManager.registerCommand(
                 constants.Commands.Tests_Configure,
                 (_, _cmdSource: constants.CommandSource = constants.CommandSource.commandPalette, resource?: Uri) => {
