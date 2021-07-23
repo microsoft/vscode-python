@@ -121,7 +121,7 @@
                     {
                         "id": "python.installPythonMac",
                         "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Open Terminal](workbench.action.terminal.new)\n",
+                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Open Terminal](command:workbench.action.terminal.new)\n",
                         "media": {
                             "markdown": "resources/walkthrough/install-python-macos.md"
                         },
@@ -131,7 +131,7 @@
                     {
                         "id": "python.installPythonLinux",
                         "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Open Terminal](workbench.action.terminal.new)\n",
+                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Open Terminal](command:workbench.action.terminal.new)\n",
                         "media": {
                             "markdown": "resources/walkthrough/install-python-linux.md"
                         },
