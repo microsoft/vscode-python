@@ -206,7 +206,7 @@
                             "altText": "Open a folder"
                         },
                         "completionEvents": [
-                            "workbench.action.files.openFileFolder"
+                            "onCommand:workbench.action.files.openFileFolder"
                         ],
                         "when": "workspacePlatform == mac && workspaceFolderCount == 0"
                     },
@@ -219,7 +219,7 @@
                             "altText": "Open a folder"
                         },
                         "completionEvents": [
-                            "workbench.action.files.openFolder"
+                            "onCommand:workbench.action.files.openFolder"
                         ],
                         "when": "workspacePlatform != mac && workspaceFolderCount == 0"
                     },
@@ -232,7 +232,7 @@
                             "altText": "Creating a new Jupyter notebook"
                         },
                         "completionEvents": [
-                            "jupyter.createnewnotebook"
+                            "onCommand:jupyter.createnewnotebook"
                         ]
                     },
                     {
