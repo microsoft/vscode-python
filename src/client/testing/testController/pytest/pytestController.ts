@@ -6,6 +6,7 @@ import { flatten } from 'lodash';
 import * as path from 'path';
 import { CancellationToken, TestItem, TestRunRequest, Uri, TestController, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
+import { traceError } from '../../../common/logger';
 import { runAdapter } from '../../../common/process/internal/scripts/testing_tools';
 import { IConfigurationService } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -147,9 +148,6 @@ export class PytestController implements ITestFrameworkController {
                 return previous.promise;
             }
 
-            const deferred = createDeferred<void>();
-            this.discovering.set(workspace.uri.fsPath, deferred);
-
             const settings = this.configService.getSettings(workspace.uri);
             const options: TestDiscoveryOptions = {
                 workspaceFolder: workspace.uri,
@@ -181,16 +179,24 @@ export class PytestController implements ITestFrameworkController {
                 }));
             }
 
-            // This is where we execute pytest discovery via a common helper.
-            const rawTestData = flatten(
-                await Promise.all(discoveryRunOptions.map((o) => this.discoveryHelper.runTestDiscovery(o))),
-            );
-            this.testData.set(workspace.uri.fsPath, rawTestData);
+            const deferred = createDeferred<void>();
+            this.discovering.set(workspace.uri.fsPath, deferred);
 
-            // Discovery has finished running we have the raw test data at this point.
-            deferred.resolve();
-            this.discovering.delete(workspace.uri.fsPath);
-
+            let rawTestData: RawDiscoveredTests[] = [];
+            try {
+                // This is where we execute pytest discovery via a common helper.
+                rawTestData = flatten(
+                    await Promise.all(discoveryRunOptions.map((o) => this.discoveryHelper.runTestDiscovery(o))),
+                );
+                this.testData.set(workspace.uri.fsPath, rawTestData);
+                deferred.resolve();
+            } catch (ex) {
+                traceError('Error discovering pytest tests: ', ex);
+                deferred.reject(ex);
+            } finally {
+                // Discovery has finished running we have the raw test data at this point.
+                this.discovering.delete(workspace.uri.fsPath);
+            }
             const root = rawTestData.length === 1 ? rawTestData[0].root : workspace.uri.fsPath;
             const workspaceNode = testController.items.get(root);
             if (workspaceNode) {

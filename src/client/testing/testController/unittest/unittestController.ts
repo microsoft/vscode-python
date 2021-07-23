@@ -25,6 +25,7 @@ import {
     getWorkspaceNode,
     updateTestItemFromRawData,
 } from '../common/testItemUtilities';
+import { traceError } from '../../../common/logger';
 
 @injectable()
 export class UnittestController implements ITestFrameworkController {
@@ -94,9 +95,6 @@ export class UnittestController implements ITestFrameworkController {
                 return previous.promise;
             }
 
-            const deferred = createDeferred<void>();
-            this.discovering.set(workspace.uri.fsPath, deferred);
-
             const settings = this.configService.getSettings(workspace.uri);
             const options: TestDiscoveryOptions = {
                 workspaceFolder: workspace.uri,
@@ -144,18 +142,32 @@ for s in generate_test_cases(suite):
                 outChannel: options.outChannel,
             };
 
-            const content = await this.discoveryRunner.run(UNITTEST_PROVIDER, runOptions);
-            const rawTestData = await testDiscoveryParser(
-                options.cwd,
-                path.isAbsolute(startDir) ? path.relative(options.cwd, startDir) : startDir,
-                getTestIds(content),
-                options.token,
-            );
-            this.testData.set(workspace.uri.fsPath, rawTestData);
+            const deferred = createDeferred<void>();
+            this.discovering.set(workspace.uri.fsPath, deferred);
 
-            // Discovery has finished running we have the raw test data at this point.
-            deferred.resolve();
-            this.discovering.delete(workspace.uri.fsPath);
+            let rawTestData: RawDiscoveredTests | undefined;
+            try {
+                const content = await this.discoveryRunner.run(UNITTEST_PROVIDER, runOptions);
+                rawTestData = await testDiscoveryParser(
+                    options.cwd,
+                    path.isAbsolute(startDir) ? path.relative(options.cwd, startDir) : startDir,
+                    getTestIds(content),
+                    options.token,
+                );
+                this.testData.set(workspace.uri.fsPath, rawTestData);
+                deferred.resolve();
+            } catch (ex) {
+                traceError('Error discovering unittest tests: ', ex);
+                deferred.reject(ex);
+            } finally {
+                // Discovery has finished running we have the raw test data at this point.
+                this.discovering.delete(workspace.uri.fsPath);
+            }
+
+            if (!rawTestData) {
+                // No test data is available
+                return Promise.resolve();
+            }
 
             const workspaceNode = testController.items.get(rawTestData.root);
             if (workspaceNode) {
