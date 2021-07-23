@@ -1,6 +1,6 @@
 # Install Python on Linux
 
-To install the latest version of Python on [Debian-based Linux distributions](https://www.debian.org/), you can run the following commands:
+To install the latest version of Python on [Debian-based Linux distributions](https://www.debian.org/), you can create a new terminal (<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>`</kbd>) and run the following commands:
 
 
 ```
