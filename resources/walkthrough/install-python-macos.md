@@ -1,6 +1,6 @@
 # Install Python on macOS
 
-If you have [Homebrew](https://brew.sh/) installed, you can install Python by running the following command in the terminal (<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>`</kbd>):
+If you have [Homebrew](https://brew.sh/) installed, you can install Python by running the following command in the terminal (<kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>`</kbd>):
 
 
 ```
