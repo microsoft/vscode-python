@@ -2,7 +2,7 @@
 
 To run and debug your Python file, you can follow the steps below:
 
-1. [Open](command:workbench.action.files.openFile) your Python file (<kbd>Cmd</kbd> + <kbd>O</kbd>) in Visual Studio Code.
+1. [Open](command:workbench.action.files.openFileFolder) your Python file (<kbd>Cmd</kbd> + <kbd>O</kbd>) in Visual Studio Code.
 
 2. To run your file using the Python interpreter, you can click on the play button on the top right of the editor.
 
