@@ -9,27 +9,25 @@ import {
     TestItem,
     TestRunRequest,
     tests,
-    Disposable,
     WorkspaceFolder,
     RelativePattern,
     TestRunProfileKind,
 } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { IConfigurationService, Resource } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { ITestController, ITestFrameworkController } from './common/types';
 
 @injectable()
-export class PythonTestController implements ITestController, Disposable {
+export class PythonTestController implements ITestController {
     private readonly testController: TestController;
-
-    private readonly disposables: Disposable[] = [];
 
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configSettings: IConfigurationService,
         @inject(ITestFrameworkController) @named(PYTEST_PROVIDER) private readonly pytest: ITestFrameworkController,
         @inject(ITestFrameworkController) @named(UNITTEST_PROVIDER) private readonly unittest: ITestFrameworkController,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
     ) {
         this.testController = tests.createTestController('python-tests', 'Python Tests');
         this.disposables.push(this.testController);
@@ -44,10 +42,6 @@ export class PythonTestController implements ITestController, Disposable {
             ),
         );
         this.testController.resolveHandler = this.resolveChildren.bind(this);
-    }
-
-    public dispose(): void {
-        this.disposables.forEach((d) => d.dispose());
     }
 
     public async refreshTestData(uri?: Resource): Promise<void> {
