@@ -112,7 +112,7 @@
                     {
                         "id": "python.installPythonWin",
                         "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python from the [Microsoft Store](https://aka.ms/AAd9rms).\n\n[Install Python](https://aka.ms/AAd9rms)\n \nTip: Reload the window after installation (Ctrl + R)",
+                        "description": "The Python Extension requires Python to be installed. Install Python from the [Microsoft Store](https://aka.ms/AAd9rms).\n\n[Install Python](https://aka.ms/AAd9rms)\n \nTip: Reload the window after installation (`Developer: Reload Window` command from the [Command Palette](command:workbench.action.showCommands))",
                         "media": {
                             "markdown": "resources/walkthrough/install-python-windows.md"
                         },
@@ -141,7 +141,7 @@
                     {
                         "id": "python.selectInterpreter",
                         "title": "Select a Python Interpreter",
-                        "description": "Choose which Python interpreter/environment you want to use for your Python project.\n[Select Python Interpreter](command:python.setInterpreter)\nTip: Reload the window (Ctrl + R) if you installed Python but don't see it in the interpreters list.",
+                        "description": "Choose which Python interpreter/environment you want to use for your Python project.\n[Select Python Interpreter](command:python.setInterpreter)\nTip: Reload the window after installation (`Developer: Reload Window` command in the [Command Palette](command:workbench.action.showCommands))",
                         "media": {
                             "altText": "selecting a python interpreter from the status bar",
                             "image": {
