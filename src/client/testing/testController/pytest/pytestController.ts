@@ -235,7 +235,6 @@ export class PytestController implements ITestFrameworkController {
         let runRequest = request;
         if (!runRequest.include) {
             const testItem = testController.items.get(workspace.uri.fsPath);
-
             if (testItem) {
                 runRequest = new TestRunRequest([testItem], undefined, request.profile);
             }

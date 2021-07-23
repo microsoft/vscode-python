@@ -408,7 +408,7 @@ function updateTestItemFromRawDataInternal(
         rawTestCaseNodes
             .filter((r) => !existingNodes.includes(r.id))
             .forEach((r) => {
-                const childItem = createTestCaseItem(testController, idToRawData, testRoot, r as RawTest);
+                const childItem = createTestCaseItem(testController, idToRawData, testRoot, r);
                 item.children.add(childItem);
             });
 
@@ -427,7 +427,7 @@ function updateTestItemFromRawDataInternal(
 
     if (rawCaseData.length === 1) {
         // This is a test case node
-        updateTestCaseItem(item, idToRawData, testRoot, rawCaseData[0] as RawTest);
+        updateTestCaseItem(item, idToRawData, testRoot, rawCaseData[0]);
         return;
     }
 

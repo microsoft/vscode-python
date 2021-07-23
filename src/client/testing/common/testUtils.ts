@@ -40,7 +40,6 @@ export function convertFileToPackage(filePath: string): string {
 
 @injectable()
 export class TestsHelper implements ITestsHelper {
-    constructor() {}
     public parseProviderName(product: UnitTestProduct): TestProvider {
         switch (product) {
             case Product.pytest:
