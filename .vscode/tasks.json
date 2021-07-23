@@ -12,22 +12,13 @@
             "type": "npm",
             "script": "compile",
             "isBackground": true,
-            "problemMatcher": ["$tsc-watch"],
+            "problemMatcher": [
+                "$tsc-watch"
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
-        },
-        {
-            "label": "Compile Web Views",
-            "type": "npm",
-            "script": "compile-webviews-watch",
-            "isBackground": true,
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": ["$tsc-watch"]
         },
         {
             "label": "Run Unit Tests",

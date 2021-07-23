@@ -2026,7 +2026,6 @@
         "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",
-        "kill-compile-webviews-watchd": "deemon --kill npm run compile-webviews-watch",
         "checkDependencies": "gulp checkDependencies",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "mocha --config ./build/.mocha.unittests.json",
