@@ -325,11 +325,6 @@
             },
             {
                 "category": "Python",
-                "command": "python.startPage.open",
-                "title": "%python.command.python.startPage.open.title%"
-            },
-            {
-                "category": "Python",
                 "command": "python.startREPL",
                 "title": "%python.command.python.startREPL.title%"
             },
@@ -1066,12 +1061,6 @@
                     "scope": "resource",
                     "type": "string"
                 },
-                "python.showStartPage": {
-                    "default": true,
-                    "description": "Show the Python Start Page when a new update is released.",
-                    "scope": "application",
-                    "type": "boolean"
-                },
                 "python.sortImports.args": {
                     "default": [],
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
@@ -1795,11 +1784,6 @@
                     "command": "python.runTestNode",
                     "title": "Run",
                     "when": "config.noExists"
-                },
-                {
-                    "category": "Python",
-                    "command": "python.startPage.open",
-                    "title": "%python.command.python.startPage.open.title%"
                 },
                 {
                     "category": "Python",
