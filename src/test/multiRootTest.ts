@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { runTests } from 'vscode-test';
+import { runTests } from '@vscode/test-electron';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 import { initializeLogger } from './testLogger';
 
