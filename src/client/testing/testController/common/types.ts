@@ -30,15 +30,17 @@ export interface ITestDiscoveryHelper {
     runTestDiscovery(options: TestDiscoveryOptions): Promise<RawDiscoveredTests[]>;
 }
 
+export type TestRefreshOptions = { forceRefresh: boolean };
+
 export const ITestController = Symbol('ITestController');
 export interface ITestController {
-    refreshTestData(resource?: Uri): Promise<void>;
+    refreshTestData(resource?: Uri, options?: TestRefreshOptions): Promise<void>;
 }
 
 export const ITestFrameworkController = Symbol('ITestFrameworkController');
 export interface ITestFrameworkController {
     resolveChildren(testController: TestController, item: TestItem): Promise<void>;
-    refreshTestData(testController: TestController, resource?: Uri): Promise<void>;
+    refreshTestData(testController: TestController, resource?: Uri, token?: CancellationToken): Promise<void>;
     runTests(
         testController: TestController,
         request: TestRunRequest,

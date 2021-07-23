@@ -16,6 +16,7 @@ import { ITestConfigurationService, ITestsHelper } from './common/types';
 import { ITestingService } from './types';
 import { IExtensionActivationService } from '../activation/types';
 import { ITestController } from './testController/common/types';
+import { traceVerbose } from '../common/logger';
 
 @injectable()
 export class TestingService implements ITestingService {
@@ -87,28 +88,27 @@ export class UnitTestManagementService implements IExtensionActivationService, D
     }
 
     public registerCommands(): void {
-        const disposablesRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
 
-        const disposables = [
+        this.disposableRegistry.push(
             commandManager.registerCommand(
                 constants.Commands.Tests_Configure,
                 (_, _cmdSource: constants.CommandSource = constants.CommandSource.commandPalette, resource?: Uri) => {
                     // Ignore the exceptions returned.
                     // This command will be invoked from other places of the extension.
                     this.configureTests(resource).ignoreErrors();
-                    this.testController?.refreshTestData(resource);
+                    traceVerbose('Testing: Trigger refresh after config change');
+                    this.testController?.refreshTestData(resource, { forceRefresh: true });
                 },
             ),
             commandManager.registerCommand(
                 constants.Commands.Test_Refresh,
                 (_, _cmdSource: constants.CommandSource = constants.CommandSource.commandPalette, resource?: Uri) => {
-                    this.testController?.refreshTestData(resource);
+                    traceVerbose('Testing: Manually triggered test refresh');
+                    this.testController?.refreshTestData(resource, { forceRefresh: true });
                 },
             ),
-        ];
-
-        disposablesRegistry.push(...disposables);
+        );
     }
 
     public registerHandlers() {
@@ -120,10 +120,9 @@ export class UnitTestManagementService implements IExtensionActivationService, D
                 }
                 this.configChangedTimer = setTimeout(() => this.configurationChangeHandler(e), 1000);
             }),
-        );
-        this.disposableRegistry.push(
-            interpreterService.onDidChangeInterpreter(() => {
-                this.testController?.refreshTestData();
+            interpreterService.onDidChangeInterpreter(async () => {
+                traceVerbose('Testing: Trigerred refresh due to interpreter change.');
+                await this.testController?.refreshTestData(undefined, { forceRefresh: true });
             }),
         );
     }
