@@ -106,13 +106,13 @@
             {
                 "id": "pythonWelcome",
                 "title": "Get started with Python development",
-                "when": "false",
+                "when":"false",
                 "description": "Your first steps to set up a Python project with all the powerful tools and features that the Python extension has to offer!",
                 "steps": [
                     {
                         "id": "python.installPythonWin",
                         "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python from the [Microsoft Store](https://aka.ms/AAd9rms).\n\n[Install Python](https://aka.ms/AAd9rms)\n \nTip: Reload the window after installation (`Developer: Reload Window` command from the [Command Palette](command:workbench.action.showCommands))",
+                        "description": "The Python Extension requires Python to be installed. Install Python from the [Microsoft Store](https://aka.ms/AAd9rms).\n\n[Install Python](https://aka.ms/AAd9rms)\n \nTip: Reload the window after installation (``Developer: Reload Window`` command from the [Command Palette](command:workbench.action.showCommands))",
                         "media": {
                             "markdown": "resources/walkthrough/install-python-windows.md"
                         },
@@ -141,7 +141,7 @@
                     {
                         "id": "python.selectInterpreter",
                         "title": "Select a Python Interpreter",
-                        "description": "Choose which Python interpreter/environment you want to use for your Python project.\n[Select Python Interpreter](command:python.setInterpreter)\nTip: Reload the window after installation (`Developer: Reload Window` command in the [Command Palette](command:workbench.action.showCommands))",
+                        "description": "Choose which Python interpreter/environment you want to use for your Python project.\n[Select Python Interpreter](command:python.setInterpreter)\nTip: Reload the window after installation (``Developer: Reload Window`` command in the [Command Palette](command:workbench.action.showCommands))",
                         "media": {
                             "altText": "selecting a python interpreter from the status bar",
                             "image": {
@@ -173,7 +173,7 @@
                     {
                         "id": "python.learnMore",
                         "title": "Learn more",
-                        "description": "• Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands).\n• [Signup](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list.\n• Explore more features in our [Tutorials](https://aka.ms/AA8dqti) or check [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n• Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
+                        "description": "• Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands).\n• [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list.\n• Explore more features in our [Tutorials](https://aka.ms/AA8dqti) or check [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n• Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
                         "media": {
                             "image": "resources/walkthrough/python-docs-learn-more.png",
                             "altText": "Documentation page for Python in VS Code"
