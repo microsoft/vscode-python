@@ -51,7 +51,8 @@ export type PythonEnvUpdatedEvent<I = PythonEnvInfo> = {
  */
 export interface IPythonEnvsIterator<I = PythonEnvInfo> extends IAsyncIterableIterator<I> {
     /**
-     * Provides possible updates for already-iterated envs.
+     * TODO: Note updates might even contain new environments which have not been iterated yet.
+     * Will have to change type of `onUpdated` property accordingly.
      *
      * Once there are no more updates, `null` is emitted.
      *
