@@ -9,7 +9,6 @@ import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceInfo } from '../common/logger';
-import { Telemetry } from '../common/startPage/constants';
 import type { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { isPromise } from '../common/utils/async';
@@ -1695,33 +1694,6 @@ export interface IEventNamePropertyMapping {
          */
         selection: 'Do not show again' | undefined;
     };
-
-    [Telemetry.WebviewStyleUpdate]: never | undefined;
-    [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
-    [Telemetry.WebviewStartup]: { type: string };
-    [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
-    [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
-    [Telemetry.ShiftEnterBannerShown]: never | undefined;
-
-    // Start Page Events
-    [Telemetry.StartPageViewed]: never | undefined;
-    [Telemetry.StartPageOpenedFromCommandPalette]: never | undefined;
-    [Telemetry.StartPageOpenedFromNewInstall]: never | undefined;
-    [Telemetry.StartPageOpenedFromNewUpdate]: never | undefined;
-    [Telemetry.StartPageWebViewError]: never | undefined;
-    [Telemetry.StartPageTime]: never | undefined;
-    [Telemetry.StartPageClickedDontShowAgain]: never | undefined;
-    [Telemetry.StartPageClosedWithoutAction]: never | undefined;
-    [Telemetry.StartPageUsedAnActionOnFirstTime]: never | undefined;
-    [Telemetry.StartPageOpenBlankNotebook]: never | undefined;
-    [Telemetry.StartPageOpenBlankPythonFile]: never | undefined;
-    [Telemetry.StartPageOpenInteractiveWindow]: never | undefined;
-    [Telemetry.StartPageOpenCommandPalette]: never | undefined;
-    [Telemetry.StartPageOpenCommandPaletteWithOpenNBSelected]: never | undefined;
-    [Telemetry.StartPageOpenSampleNotebook]: never | undefined;
-    [Telemetry.StartPageOpenFileBrowser]: never | undefined;
-    [Telemetry.StartPageOpenFolder]: never | undefined;
-    [Telemetry.StartPageOpenWorkspace]: never | undefined;
 
     // TensorBoard integration events
     /**

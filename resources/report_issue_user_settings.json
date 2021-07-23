@@ -4,7 +4,6 @@
     "onDidChange": false,
     "defaultInterpreterPath": "placeholder",
     "defaultLS": true,
-    "showStartPage": true,
     "downloadLanguageServer": true,
     "jediPath": false,
     "jediMemoryLimit": false,
@@ -38,7 +37,7 @@
         "lintOnSave": true,
         "maxNumberOfProblems": false,
         "banditArgs": "placeholder",
-        "banditEnabled" : true,
+        "banditEnabled": true,
         "banditPath": "placeholder",
         "mypyArgs": "placeholder",
         "mypyCategorySeverity": false,
@@ -104,7 +103,7 @@
         "typeshedPaths": "placeholder"
     },
     "workspaceSymbols": {
-        "ctagsPath":"placeholder",
+        "ctagsPath": "placeholder",
         "enabled": true,
         "exclusionPatterns": true,
         "rebuildOnFileSave": true,

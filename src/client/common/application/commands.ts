@@ -45,7 +45,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.Tests_Ask_To_Stop_Test]: [];
     [Commands.Tests_Discovering]: [];
     [Commands.PickLocalProcess]: [];
-    [Commands.OpenStartPage]: [];
     [Commands.ClearStorage]: [];
     [Commands.ReportIssue]: [];
     [Commands.RefreshTensorBoard]: [];
