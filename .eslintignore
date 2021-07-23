@@ -320,7 +320,6 @@ src/client/language/iterableTextRange.ts
 src/client/language/unicode.ts
 
 src/client/testing/serviceRegistry.ts
-src/client/testing/unittest/testConfigurationManager.ts
 src/client/testing/main.ts
 src/client/testing/configurationFactory.ts
 src/client/testing/common/debugLauncher.ts

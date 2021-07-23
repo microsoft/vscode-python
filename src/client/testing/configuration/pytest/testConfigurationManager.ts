@@ -1,10 +1,10 @@
 import * as path from 'path';
 import { QuickPickItem, Uri } from 'vscode';
-import { IFileSystem } from '../../common/platform/types';
-import { Product } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
-import { TestConfigurationManager } from '../common/testConfigurationManager';
-import { ITestConfigSettingsService } from '../common/types';
+import { IFileSystem } from '../../../common/platform/types';
+import { Product } from '../../../common/types';
+import { IServiceContainer } from '../../../ioc/types';
+import { TestConfigurationManager } from '../../common/testConfigurationManager';
+import { ITestConfigSettingsService } from '../../common/types';
 
 export class ConfigurationManager extends TestConfigurationManager {
     constructor(workspace: Uri, serviceContainer: IServiceContainer, cfg?: ITestConfigSettingsService) {
