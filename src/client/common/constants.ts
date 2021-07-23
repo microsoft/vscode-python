@@ -38,6 +38,7 @@ export namespace Commands {
     export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
     export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
     export const Tests_Configure = 'python.configureTests';
+    export const Test_Refresh = 'python.refreshTests';
     export const Sort_Imports = 'python.sortImports';
     export const ViewOutput = 'python.viewOutput';
     export const Refactor_Extract_Variable = 'python.refactorExtractVariable';
