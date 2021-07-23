@@ -7,7 +7,8 @@ If you have [Homebrew](https://brew.sh/) installed, you can install Python by ru
 brew install python
 ```
 
-If you don't have homebrew, you can download a Python installer for macOS from [python.org](https://www.python.org/downloads/mac-osx/).
+If you don't have Homebrew, you can download a Python installer for macOS from [python.org](https://www.python.org/downloads/mac-osx/).
+
 
 To verify if Python was succefully installed, run the following command in the terminal:
 
