@@ -12,8 +12,8 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { ITestConfigSettingsService, ITestConfigurationManagerFactory } from '../../client/testing/common/types';
 import { TestConfigurationManagerFactory } from '../../client/testing/configurationFactory';
 import { TEST_OUTPUT_CHANNEL } from '../../client/testing/constants';
-import * as pytest from '../../client/testing/pytest/testConfigurationManager';
-import * as unittest from '../../client/testing/unittest/testConfigurationManager';
+import * as pytest from '../../client/testing/configuration/pytest/testConfigurationManager';
+import * as unittest from '../../client/testing/configuration/unittest/testConfigurationManager';
 
 use(chaiAsPromised);
 
