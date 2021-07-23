@@ -12,9 +12,7 @@ import { Product } from '../../../../client/common/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { UNIT_TEST_PRODUCTS } from '../../../../client/testing/common/constants';
-import {
-    TestConfigSettingsService,
-} from '../../../../client/testing/common/configSettingService';
+import { TestConfigSettingsService } from '../../../../client/testing/common/configSettingService';
 import { ITestConfigSettingsService, UnitTestProduct } from '../../../../client/testing/common/types';
 import { BufferedTestConfigSettingsService } from '../../../../client/testing/common/bufferedTestConfigSettingService';
 
