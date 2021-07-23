@@ -495,7 +495,6 @@ src/client/common/nuget/nugetService.ts
 src/client/common/cancellation.ts
 src/client/common/interpreterPathService.ts
 
-src/client/common/application/customEditorService.ts
 src/client/common/application/applicationShell.ts
 src/client/common/application/languageService.ts
 src/client/common/application/notebook.ts
@@ -504,8 +503,6 @@ src/client/common/application/workspace.ts
 src/client/common/application/debugSessionTelemetry.ts
 src/client/common/application/extensions.ts
 src/client/common/application/documentManager.ts
-src/client/common/application/webPanels/webPanelProvider.ts
-src/client/common/application/webPanels/webPanel.ts
 src/client/common/application/debugService.ts
 src/client/common/application/commands/reloadCommand.ts
 src/client/common/application/terminalManager.ts
