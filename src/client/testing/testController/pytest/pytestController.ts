@@ -138,7 +138,7 @@ export class PytestController implements ITestFrameworkController {
         return Promise.resolve();
     }
 
-    public async refreshTestData(testController: TestController, uri: Uri): Promise<void> {
+    public async refreshTestData(testController: TestController, uri: Uri, token?: CancellationToken): Promise<void> {
         const workspace = this.workspaceService.getWorkspaceFolder(uri);
         if (workspace) {
             // Discovery is expensive. So if it is already running then use the promise
@@ -154,6 +154,7 @@ export class PytestController implements ITestFrameworkController {
                 cwd: settings.testing.cwd ?? workspace.uri.fsPath,
                 args: settings.testing.pytestArgs,
                 ignoreCache: true,
+                token,
             };
 
             // Get individual test directories selected by the user.

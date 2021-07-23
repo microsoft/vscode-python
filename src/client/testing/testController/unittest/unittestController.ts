@@ -85,7 +85,7 @@ export class UnittestController implements ITestFrameworkController {
         return Promise.resolve();
     }
 
-    public async refreshTestData(testController: TestController, uri: Uri): Promise<void> {
+    public async refreshTestData(testController: TestController, uri: Uri, token?: CancellationToken): Promise<void> {
         const workspace = this.workspaceService.getWorkspaceFolder(uri);
         if (workspace) {
             // Discovery is expensive. So if it is already running then use the promise
@@ -101,6 +101,7 @@ export class UnittestController implements ITestFrameworkController {
                 cwd: settings.testing.cwd ?? workspace.uri.fsPath,
                 args: settings.testing.unittestArgs,
                 ignoreCache: true,
+                token,
             };
 
             const startDir = unittestGetTestFolders(options.args)[0];
