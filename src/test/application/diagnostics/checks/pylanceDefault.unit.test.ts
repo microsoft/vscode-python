@@ -19,19 +19,16 @@ import {
     IDiagnostic,
     IDiagnosticFilterService,
     IDiagnosticHandlerService,
-    IDiagnosticsService,
 } from '../../../../client/application/diagnostics/types';
-import { IStartPage } from '../../../../client/common/startPage/types';
 import { IExtensionContext } from '../../../../client/common/types';
 import { Common, Diagnostics } from '../../../../client/common/utils/localize';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
 suite('Application Diagnostics - Pylance informational prompt', () => {
     let serviceContainer: typemoq.IMock<IServiceContainer>;
-    let diagnosticService: IDiagnosticsService;
+    let diagnosticService: PylanceDefaultDiagnosticService;
     let filterService: typemoq.IMock<IDiagnosticFilterService>;
     let messageHandler: typemoq.IMock<IDiagnosticHandlerService<MessageCommandPrompt>>;
-    let startPage: typemoq.IMock<IStartPage>;
     let context: typemoq.IMock<IExtensionContext>;
     let memento: typemoq.IMock<ExtensionContext['globalState']>;
 
@@ -39,7 +36,6 @@ suite('Application Diagnostics - Pylance informational prompt', () => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         filterService = typemoq.Mock.ofType<IDiagnosticFilterService>();
         messageHandler = typemoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
-        startPage = typemoq.Mock.ofType<IStartPage>();
         context = typemoq.Mock.ofType<IExtensionContext>();
         memento = typemoq.Mock.ofType<ExtensionContext['globalState']>();
 
@@ -55,7 +51,7 @@ suite('Application Diagnostics - Pylance informational prompt', () => {
                     BaseDiagnosticsService.handledDiagnosticCodeKeys.shift();
                 }
             }
-        })(serviceContainer.object, context.object, startPage.object, messageHandler.object, []);
+        })(serviceContainer.object, context.object, messageHandler.object, []);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (diagnosticService as any)._clear();
     });
@@ -66,7 +62,7 @@ suite('Application Diagnostics - Pylance informational prompt', () => {
     });
 
     function setupMementos(version?: string, promptShown?: boolean) {
-        startPage.setup((s) => s.initialMementoValue).returns(() => version);
+        diagnosticService.initialMementoValue = version;
         memento.setup((m) => m.get(PYLANCE_PROMPT_MEMENTO)).returns(() => promptShown);
     }
 
