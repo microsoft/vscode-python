@@ -13,16 +13,20 @@ import {
     RelativePattern,
     TestRunProfileKind,
     CancellationTokenSource,
+    Disposable,
 } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceVerbose } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
+import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { ITestController, ITestFrameworkController, TestRefreshOptions } from './common/types';
 
 @injectable()
 export class PythonTestController implements ITestController {
     private readonly testController: TestController;
+
+    private readonly delayTrigger: IDelayedTrigger & Disposable;
 
     private refreshCancellation: CancellationTokenSource;
 
@@ -34,8 +38,12 @@ export class PythonTestController implements ITestController {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
     ) {
         this.refreshCancellation = new CancellationTokenSource();
+
         this.testController = tests.createTestController('python-tests', 'Python Tests');
         this.disposables.push(this.testController);
+
+        this.delayTrigger = new DelayedTrigger(this.refreshTestData.bind(this), 250, 'Refresh Test Data');
+        this.disposables.push(this.delayTrigger);
 
         this.disposables.push(
             this.testController.createRunProfile('Run Tests', TestRunProfileKind.Run, this.runTests.bind(this), true),
@@ -128,36 +136,48 @@ export class PythonTestController implements ITestController {
         const watcher = this.workspaceService.createFileSystemWatcher(pattern);
         this.disposables.push(watcher);
 
-        watcher.onDidChange((uri) => {
-            traceVerbose(`Testing: Trigger refresh after change in ${uri.fsPath}`);
-            this.refreshTestData(uri);
-        });
-        watcher.onDidCreate((uri) => {
-            traceVerbose(`Testing: Trigger refresh after creating ${uri.fsPath}`);
-            this.refreshTestData(uri);
-        });
-        watcher.onDidDelete((uri) => {
-            traceVerbose(`Testing: Trigger refresh after deleting in ${uri.fsPath}`);
-            this.refreshTestData(uri);
-        });
+        this.disposables.push(
+            watcher.onDidChange((uri) => {
+                traceVerbose(`Testing: Trigger refresh after change in ${uri.fsPath}`);
+                this.delayTrigger.trigger(uri);
+            }),
+        );
+        this.disposables.push(
+            watcher.onDidCreate((uri) => {
+                traceVerbose(`Testing: Trigger refresh after creating ${uri.fsPath}`);
+                this.delayTrigger.trigger(uri);
+            }),
+        );
+        this.disposables.push(
+            watcher.onDidDelete((uri) => {
+                traceVerbose(`Testing: Trigger refresh after deleting in ${uri.fsPath}`);
+                this.delayTrigger.trigger(uri);
+            }),
+        );
     }
 
     private watchForTestContentChanges(workspace: WorkspaceFolder): void {
-        const pattern = new RelativePattern(workspace, '**/*test*.py');
+        const pattern = new RelativePattern(workspace, '**/*.py');
         const watcher = this.workspaceService.createFileSystemWatcher(pattern);
         this.disposables.push(watcher);
 
-        watcher.onDidChange((uri) => {
-            traceVerbose(`Testing: Trigger refresh after change in ${uri.fsPath}`);
-            this.refreshTestData(uri);
-        });
-        watcher.onDidCreate((uri) => {
-            traceVerbose(`Testing: Trigger refresh after creating ${uri.fsPath}`);
-            this.refreshTestData(uri);
-        });
-        watcher.onDidDelete((uri) => {
-            traceVerbose(`Testing: Trigger refresh after deleting in ${uri.fsPath}`);
-            this.refreshTestData(uri);
-        });
+        this.disposables.push(
+            watcher.onDidChange((uri) => {
+                traceVerbose(`Testing: Trigger refresh after change in ${uri.fsPath}`);
+                this.delayTrigger.trigger(uri);
+            }),
+        );
+        this.disposables.push(
+            watcher.onDidCreate((uri) => {
+                traceVerbose(`Testing: Trigger refresh after creating ${uri.fsPath}`);
+                this.delayTrigger.trigger(uri);
+            }),
+        );
+        this.disposables.push(
+            watcher.onDidDelete((uri) => {
+                traceVerbose(`Testing: Trigger refresh after deleting in ${uri.fsPath}`);
+                this.delayTrigger.trigger(uri);
+            }),
+        );
     }
 }
