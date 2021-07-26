@@ -88,7 +88,6 @@
         "onCommand:python.switchToDailyChannel",
         "onCommand:python.switchToWeeklyChannel",
         "onCommand:python.clearWorkspaceInterpreter",
-        "onCommand:python.startPage.open",
         "onCommand:python.enableSourceMapSupport",
         "onCommand:python.launchTensorBoard",
         "onCommand:python.clearPersistentStorage",
@@ -323,11 +322,6 @@
                 "category": "Python Refactor",
                 "command": "python.sortImports",
                 "title": "%python.command.python.sortImports.title%"
-            },
-            {
-                "category": "Python",
-                "command": "python.startPage.open",
-                "title": "%python.command.python.startPage.open.title%"
             },
             {
                 "category": "Python",
@@ -1067,12 +1061,6 @@
                     "scope": "resource",
                     "type": "string"
                 },
-                "python.showStartPage": {
-                    "default": true,
-                    "description": "Show the Python Start Page when a new update is released.",
-                    "scope": "application",
-                    "type": "boolean"
-                },
                 "python.sortImports.args": {
                     "default": [],
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
@@ -1796,11 +1784,6 @@
                     "command": "python.runTestNode",
                     "title": "Run",
                     "when": "config.noExists"
-                },
-                {
-                    "category": "Python",
-                    "command": "python.startPage.open",
-                    "title": "%python.command.python.startPage.open.title%"
                 },
                 {
                     "category": "Python",
