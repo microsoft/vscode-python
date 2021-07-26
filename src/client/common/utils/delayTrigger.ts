@@ -15,7 +15,7 @@ export interface IDelayedTrigger {
  * DelayedTrigger can be used to prevent some action being called too
  * often within a given duration. This was added to support file watching
  * for tests. Suppose we are watching for *.py files. If the user installs
- * and new package or runs formatter on the entire workspace. This could
+ * a new package or runs a formatter on the entire workspace. This could
  * trigger too many discover test calls which are expensive. We could
  * debounce, but the limitation with debounce is that it might run before
  * the package has finished installing. With delayed trigger approach
@@ -48,15 +48,14 @@ export class DelayedTrigger implements IDelayedTrigger, Disposable {
         }
 
         this.timerId = setTimeout(
-            (...args2: any[]) => {
+            () => {
                 this.calledCounter += 1;
                 traceVerbose(
                     `Delay Trigger[${this.name}]: triggered=${this.triggeredCounter}, called=${this.calledCounter}`,
                 );
-                this.callback(...args2);
+                this.callback(...args);
             },
-            this.ms,
-            ...args,
+            this.ms
         );
     }
 
