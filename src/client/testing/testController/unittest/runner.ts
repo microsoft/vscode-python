@@ -104,7 +104,9 @@ export class UnittestRunner implements ITestsRunner {
                     runInstance.appendOutput(text);
                     counts.passed += 1;
                 } else if (data.outcome === 'failed') {
-                    const traceback = data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n');
+                    const traceback = data.traceback
+                        ? data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n')
+                        : '';
                     const text = `${rawTestCase.rawId} Failed: ${data.message}\r\n${traceback}\r\n`;
                     const message = new TestMessage(text);
 
@@ -119,7 +121,9 @@ export class UnittestRunner implements ITestsRunner {
                         stopTesting = true;
                     }
                 } else if (data.outcome === 'error') {
-                    const traceback = data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n');
+                    const traceback = data.traceback
+                        ? data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n')
+                        : '';
                     const text = `${rawTestCase.rawId} Failed with Error: ${data.message}\r\n${traceback}\r\n`;
                     const message = new TestMessage(text);
 
@@ -134,7 +138,9 @@ export class UnittestRunner implements ITestsRunner {
                         stopTesting = true;
                     }
                 } else if (data.outcome === 'skipped') {
-                    const traceback = data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n');
+                    const traceback = data.traceback
+                        ? data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n')
+                        : '';
                     const text = `${rawTestCase.rawId} Skipped: ${data.message}\r\n${traceback}\r\n`;
                     runInstance.skipped(testCase);
                     runInstance.appendOutput(text);
