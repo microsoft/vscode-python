@@ -127,7 +127,7 @@ export class UnittestRunner implements ITestsRunner {
                         message.location = new Location(testCase.uri, testCase.range);
                     }
 
-                    runInstance.failed(testCase, message);
+                    runInstance.errored(testCase, message);
                     runInstance.appendOutput(text);
                     counts.errored += 1;
                     if (failFast) {
@@ -146,6 +146,7 @@ export class UnittestRunner implements ITestsRunner {
                     if (testCase.uri && testCase.range) {
                         message.location = new Location(testCase.uri, testCase.range);
                     }
+                    runInstance.errored(testCase, message);
                 }
             }
         });
@@ -209,6 +210,8 @@ export class UnittestRunner implements ITestsRunner {
             this.server.stop();
         }
 
+        runInstance.appendOutput(`Total number of tests expected to run: ${testCaseNodes.length}\r\n`);
+        runInstance.appendOutput(`Total number of tests run: ${counts.total}\r\n`);
         runInstance.appendOutput(`Total number of tests passed: ${counts.passed}\r\n`);
         runInstance.appendOutput(`Total number of tests failed: ${counts.failed}\r\n`);
         runInstance.appendOutput(`Total number of tests failed with errors: ${counts.errored}\r\n`);
