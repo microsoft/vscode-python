@@ -13,7 +13,6 @@ import {
     RelativePattern,
     TestRunProfileKind,
     CancellationTokenSource,
-    Disposable,
 } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceVerbose } from '../../common/logger';
@@ -26,7 +25,7 @@ import { ITestController, ITestFrameworkController, TestRefreshOptions } from '.
 export class PythonTestController implements ITestController {
     private readonly testController: TestController;
 
-    private readonly delayTrigger: IDelayedTrigger & Disposable;
+    private readonly refreshData: IDelayedTrigger;
 
     private refreshCancellation: CancellationTokenSource;
 
@@ -42,8 +41,9 @@ export class PythonTestController implements ITestController {
         this.testController = tests.createTestController('python-tests', 'Python Tests');
         this.disposables.push(this.testController);
 
-        this.delayTrigger = new DelayedTrigger(this.refreshTestData.bind(this), 250, 'Refresh Test Data');
-        this.disposables.push(this.delayTrigger);
+        const delayTrigger = new DelayedTrigger(this.refreshTestDataInternal.bind(this), 250, 'Refresh Test Data');
+        this.disposables.push(delayTrigger);
+        this.refreshData = delayTrigger;
 
         this.disposables.push(
             this.testController.createRunProfile('Run Tests', TestRunProfileKind.Run, this.runTests.bind(this), true),
@@ -55,15 +55,26 @@ export class PythonTestController implements ITestController {
             ),
         );
         this.testController.resolveHandler = this.resolveChildren.bind(this);
+
+        this.watchForTestChanges();
     }
 
-    public async refreshTestData(uri?: Resource, options?: TestRefreshOptions): Promise<void> {
-        traceVerbose(`Testing: Refreshing test data for ${uri?.fsPath}`);
+    public refreshTestData(uri?: Resource, options?: TestRefreshOptions): Promise<void> {
         if (options?.forceRefresh) {
             this.refreshCancellation.cancel();
             this.refreshCancellation.dispose();
             this.refreshCancellation = new CancellationTokenSource();
+            traceVerbose('Testing: Forcing test data refresh');
+            return this.refreshTestDataInternal(uri);
         }
+
+        this.refreshData.trigger(uri);
+        return Promise.resolve();
+    }
+
+    private async refreshTestDataInternal(uri?: Resource): Promise<void> {
+        traceVerbose(`Testing: Refreshing test data for ${uri?.fsPath}`);
+
         const settings = this.configSettings.getSettings(uri);
         if (settings.testing.pytestEnabled) {
             return this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
@@ -85,10 +96,9 @@ export class PythonTestController implements ITestController {
                 return this.unittest.resolveChildren(this.testController, item);
             }
         } else {
-            traceVerbose('Testing: Setting up test resolver');
-            this.watchForTestChanges();
+            traceVerbose('Testing: Resolving all workspaces');
             const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
-            await Promise.all(workspaces.map((workspace) => this.refreshTestData(workspace.uri)));
+            await Promise.all(workspaces.map((workspace) => this.refreshTestDataInternal(workspace.uri)));
         }
         return Promise.resolve();
     }
@@ -139,19 +149,19 @@ export class PythonTestController implements ITestController {
         this.disposables.push(
             watcher.onDidChange((uri) => {
                 traceVerbose(`Testing: Trigger refresh after change in ${uri.fsPath}`);
-                this.delayTrigger.trigger(uri);
+                this.refreshData.trigger(uri);
             }),
         );
         this.disposables.push(
             watcher.onDidCreate((uri) => {
                 traceVerbose(`Testing: Trigger refresh after creating ${uri.fsPath}`);
-                this.delayTrigger.trigger(uri);
+                this.refreshData.trigger(uri);
             }),
         );
         this.disposables.push(
             watcher.onDidDelete((uri) => {
                 traceVerbose(`Testing: Trigger refresh after deleting in ${uri.fsPath}`);
-                this.delayTrigger.trigger(uri);
+                this.refreshData.trigger(uri);
             }),
         );
     }
@@ -164,19 +174,19 @@ export class PythonTestController implements ITestController {
         this.disposables.push(
             watcher.onDidChange((uri) => {
                 traceVerbose(`Testing: Trigger refresh after change in ${uri.fsPath}`);
-                this.delayTrigger.trigger(uri);
+                this.refreshData.trigger(uri);
             }),
         );
         this.disposables.push(
             watcher.onDidCreate((uri) => {
                 traceVerbose(`Testing: Trigger refresh after creating ${uri.fsPath}`);
-                this.delayTrigger.trigger(uri);
+                this.refreshData.trigger(uri);
             }),
         );
         this.disposables.push(
             watcher.onDidDelete((uri) => {
                 traceVerbose(`Testing: Trigger refresh after deleting in ${uri.fsPath}`);
-                this.delayTrigger.trigger(uri);
+                this.refreshData.trigger(uri);
             }),
         );
     }
