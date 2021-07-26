@@ -90,9 +90,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
     public async activate(): Promise<void> {
         if (this.appEnvironment.uiKind === UIKind.Web) {
             // We're running in Codespaces browser-based editor, do not open start page.
-            return;
         }
-        this.activateBackground().ignoreErrors();
     }
 
     public dispose(): Promise<void> {
@@ -299,21 +297,6 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
         // if savedVersion != version, there was an update
         await this.context.globalState.update(EXTENSION_VERSION_MEMENTO, version);
         return shouldShowStartPage;
-    }
-
-    private async activateBackground(): Promise<void> {
-        const settings = this.configuration.getSettings();
-
-        if (settings.showStartPage && this.appEnvironment.extensionChannel === 'stable') {
-            // extesionVersionChanged() reads CHANGELOG.md
-            // So we use separate if's to try and avoid reading a file every time
-            const firstTimeOrUpdate = await this.extensionVersionChanged();
-
-            if (firstTimeOrUpdate) {
-                this.firstTime = true;
-                this.open().ignoreErrors();
-            }
-        }
     }
 
     // eslint-disable-next-line class-methods-use-this
