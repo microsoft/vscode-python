@@ -17,6 +17,7 @@ import { ITestingService } from './types';
 import { IExtensionActivationService } from '../activation/types';
 import { ITestController } from './testController/common/types';
 import { traceVerbose } from '../common/logger';
+import { DelayedTrigger, IDelayedTrigger } from '../common/utils/delayTrigger';
 
 @injectable()
 export class TestingService implements ITestingService {
@@ -29,12 +30,12 @@ export class TestingService implements ITestingService {
 }
 
 @injectable()
-export class UnitTestManagementService implements IExtensionActivationService, Disposable {
+export class UnitTestManagementService implements IExtensionActivationService {
     private activatedOnce: boolean = false;
     private readonly disposableRegistry: Disposable[];
     private workspaceService: IWorkspaceService;
     private testController: ITestController | undefined;
-    private configChangedTimer?: NodeJS.Timer | number;
+    private configChangeTrigger: IDelayedTrigger;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.disposableRegistry = serviceContainer.get<Disposable[]>(IDisposableRegistry);
@@ -42,13 +43,14 @@ export class UnitTestManagementService implements IExtensionActivationService, D
         if (tests && !!tests.createTestController) {
             this.testController = serviceContainer.get<ITestController>(ITestController);
         }
-        this.disposableRegistry.push(this);
-    }
-    public dispose() {
-        if (this.configChangedTimer) {
-            clearTimeout(this.configChangedTimer as any);
-            this.configChangedTimer = undefined;
-        }
+
+        const trigger = new DelayedTrigger(
+            this.configurationChangeHandler.bind(this),
+            500,
+            'Test Configuration Change',
+        );
+        this.configChangeTrigger = trigger;
+        this.disposableRegistry.push(trigger);
     }
 
     public async activate(): Promise<void> {
@@ -115,13 +117,10 @@ export class UnitTestManagementService implements IExtensionActivationService, D
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.disposableRegistry.push(
             this.workspaceService.onDidChangeConfiguration((e) => {
-                if (this.configChangedTimer) {
-                    clearTimeout(this.configChangedTimer as any);
-                }
-                this.configChangedTimer = setTimeout(() => this.configurationChangeHandler(e), 1000);
+                this.configChangeTrigger.trigger(e);
             }),
             interpreterService.onDidChangeInterpreter(async () => {
-                traceVerbose('Testing: Trigerred refresh due to interpreter change.');
+                traceVerbose('Testing: Triggered refresh due to interpreter change.');
                 await this.testController?.refreshTestData(undefined, { forceRefresh: true });
             }),
         );

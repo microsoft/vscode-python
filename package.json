@@ -1876,8 +1876,7 @@
         "viewsWelcome": [
             {
                 "view": "testing",
-                "contents": "Configure a test framework to see your tests here.\n[Configure Python Tests](command:python.configureTests)",
-                "when": "!testsDiscovered"
+                "contents": "Configure a test framework to see your tests here.\n[Configure Python Tests](command:python.configureTests)"
             }
         ],
         "yamlValidation": [
