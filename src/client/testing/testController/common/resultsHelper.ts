@@ -112,7 +112,7 @@ export async function updateResultFromJunitXml(
                         message.location = new Location(node.uri, node.range);
                     }
 
-                    runInstance.failed(node, message);
+                    runInstance.errored(node, message);
                     runInstance.appendOutput(text);
                 } else if (result.failure) {
                     failures += 1;
@@ -147,10 +147,12 @@ export async function updateResultFromJunitXml(
                 if (node.uri && node.range) {
                     message.location = new Location(node.uri, node.range);
                 }
-                runInstance.failed(node, message);
+                runInstance.errored(node, message);
             }
         });
 
+        runInstance.appendOutput(`Total number of tests expected to run: ${testCaseNodes.length}\r\n`);
+        runInstance.appendOutput(`Total number of tests run: ${passed + failures + errors + skipped}\r\n`);
         runInstance.appendOutput(`Total number of tests passed: ${passed}\r\n`);
         runInstance.appendOutput(`Total number of tests failed: ${failures}\r\n`);
         runInstance.appendOutput(`Total number of tests failed with errors: ${errors}\r\n`);
