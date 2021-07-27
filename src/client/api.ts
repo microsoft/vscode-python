@@ -11,6 +11,7 @@ import { IConfigurationService, Resource } from './common/types';
 import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
+import { DataWranglerExtensionIntegration } from './jupyter/dataWranglerIntegration';
 import { JupyterExtensionIntegration } from './jupyter/jupyterIntegration';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './jupyter/types';
 
@@ -26,6 +27,9 @@ export interface IExtensionApi {
      * @memberof IExtensionApi
      */
     ready: Promise<void>;
+    dataWrangler: {
+        registerHooks(): void;
+    };
     jupyter: {
         registerHooks(): void;
     };
@@ -104,13 +108,23 @@ export function buildApi(
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     serviceManager.addSingleton<JupyterExtensionIntegration>(JupyterExtensionIntegration, JupyterExtensionIntegration);
+    serviceManager.addSingleton<DataWranglerExtensionIntegration>(
+        DataWranglerExtensionIntegration,
+        DataWranglerExtensionIntegration,
+    );
     const jupyterIntegration = serviceContainer.get<JupyterExtensionIntegration>(JupyterExtensionIntegration);
+    const dataWranglerIntegration = serviceContainer.get<DataWranglerExtensionIntegration>(
+        DataWranglerExtensionIntegration,
+    );
     const api: IExtensionApi = {
         // 'ready' will propagate the exception, but we must log it here first.
         ready: ready.catch((ex) => {
             traceError('Failure during activation.', ex);
             return Promise.reject(ex);
         }),
+        dataWrangler: {
+            registerHooks: () => dataWranglerIntegration.integrateWithDataWranglerExtension(),
+        },
         jupyter: {
             registerHooks: () => jupyterIntegration.integrateWithJupyterExtension(),
         },
