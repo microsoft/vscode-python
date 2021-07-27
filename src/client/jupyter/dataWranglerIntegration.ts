@@ -4,28 +4,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable, named } from 'inversify';
-import { dirname } from 'path';
-import { CancellationToken, Extension, Memento, Uri } from 'vscode';
-import { ILanguageServerCache } from '../activation/types';
+import { inject, injectable } from 'inversify';
+import { CancellationToken, Extension, Uri } from 'vscode';
 import { DATA_WRANGLER_EXTENSION_ID } from '../common/constants';
 import { InterpreterUri, ModuleInstallFlags } from '../common/installer/types';
 import {
-    GLOBAL_MEMENTO,
     IExperimentService,
     IExtensions,
     IInstaller,
-    IMemento,
     InstallerResponse,
     Product,
     ProductInstallStatus,
     Resource,
 } from '../common/types';
-import { isResource } from '../common/utils/misc';
-import { getDebugpyPackagePath } from '../debugger/extension/adapter/remoteLaunchers';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
-import { IComponentAdapter, IInterpreterDisplay, IInterpreterService } from '../interpreter/contracts';
+import { IComponentAdapter, IInterpreterService } from '../interpreter/contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import {
     IDataViewerDataProvider,
@@ -47,9 +41,6 @@ export class DataWranglerExtensionIntegration {
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IEnvironmentActivationService) private readonly envActivation: IEnvironmentActivationService,
-        @inject(ILanguageServerCache) private readonly languageServerCache: ILanguageServerCache,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
-        @inject(IInterpreterDisplay) private interpreterDisplay: IInterpreterDisplay,
         @inject(IComponentAdapter) private pyenvs: IComponentAdapter,
         @inject(IExperimentService) private experimentService: IExperimentService,
     ) {}
@@ -95,27 +86,6 @@ export class DataWranglerExtensionIntegration {
                 resource?: InterpreterUri,
             ): Promise<ProductInstallStatus> =>
                 this.installer.isProductVersionCompatible(product, semVerRequirement, resource),
-            getDebuggerPath: async () => dirname(getDebugpyPackagePath()),
-            getInterpreterPathSelectedForJupyterServer: () =>
-                this.globalState.get<string | undefined>('INTERPRETER_PATH_SELECTED_FOR_JUPYTER_SERVER'),
-            getLanguageServer: async (r: InterpreterUri) => {
-                const resource = isResource(r) ? r : undefined;
-                const interpreter = !isResource(r) ? r : undefined;
-                const client = await this.languageServerCache.get(resource, interpreter);
-
-                // Some language servers don't support the connection yet. (like Jedi until we switch to LSP)
-                if (client && client.connection && client.capabilities) {
-                    return {
-                        connection: client.connection,
-                        capabilities: client.capabilities,
-                        dispose: client.dispose,
-                    };
-                }
-                return undefined;
-            },
-            registerInterpreterStatusFilter: this.interpreterDisplay.registerVisibilityFilter.bind(
-                this.interpreterDisplay,
-            ),
         });
         return undefined;
     }

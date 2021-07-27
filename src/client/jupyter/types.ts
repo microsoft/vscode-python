@@ -92,6 +92,20 @@ export const ProductMapping: { [key in JupyterProductToInstall]: Product } = {
     [JupyterProductToInstall.pandas]: Product.pandas,
 };
 
+type MsToolsExtensionApi = {
+    /**
+     * Launches Data Viewer component.
+     * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
+     * @param {string} title Data Viewer title
+     */
+    showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
+    /**
+     * Registers a remote server provider component that's used to pick remote jupyter server URIs
+     * @param serverProvider object called back when picking jupyter server URI
+     */
+    registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
+};
+
 export interface PythonApiForJupyterExtension extends PythonApiForDataWranglerExtension {
     /**
      * Returns path to where `debugpy` is. In python extension this is `/pythonFiles/lib/python`.
@@ -112,7 +126,13 @@ export interface PythonApiForJupyterExtension extends PythonApiForDataWranglerEx
     registerInterpreterStatusFilter(filter: IInterpreterStatusbarVisibilityFilter): void;
 }
 
-export interface JupyterExtensionApi extends DataWranglerExtensionApi {}
+export interface JupyterExtensionApi extends MsToolsExtensionApi {
+    /**
+     * Registers python extension specific parts with the jupyter extension
+     * @param interpreterService
+     */
+    registerPythonApi(interpreterService: PythonApiForJupyterExtension): void;
+}
 
 export interface PythonApiForDataWranglerExtension {
     /**
@@ -160,21 +180,10 @@ export interface PythonApiForDataWranglerExtension {
     ): Promise<ProductInstallStatus>;
 }
 
-export type DataWranglerExtensionApi = {
+export interface DataWranglerExtensionApi extends MsToolsExtensionApi {
     /**
-     * Registers python extension specific parts with the jupyter extension
+     * Registers python extension specific parts with the data wrangler extension
      * @param interpreterService
      */
-    registerPythonApi(interpreterService: PythonApiForJupyterExtension): void;
-    /**
-     * Launches Data Viewer component.
-     * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
-     * @param {string} title Data Viewer title
-     */
-    showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
-    /**
-     * Registers a remote server provider component that's used to pick remote jupyter server URIs
-     * @param serverProvider object called back when picking jupyter server URI
-     */
-    registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
-};
+    registerPythonApi(interpreterService: PythonApiForDataWranglerExtension): void;
+}
