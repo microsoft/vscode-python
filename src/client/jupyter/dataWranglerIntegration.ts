@@ -27,14 +27,19 @@ import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import { IComponentAdapter, IInterpreterDisplay, IInterpreterService } from '../interpreter/contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { IDataViewerDataProvider, IJupyterUriProvider } from './types';
+import {
+    IDataViewerDataProvider,
+    IJupyterUriProvider,
+    DataWranglerExtensionApi,
+    JupyterProductToInstall,
+    ProductMapping,
+} from './types';
 import { inDiscoveryExperiment } from '../common/experiments/helpers';
 import { isWindowsStoreInterpreter } from '../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
-import { JupyterExtensionApi, JupyterProductToInstall, ProductMapping } from './jupyterIntegration';
 
 @injectable()
 export class DataWranglerExtensionIntegration {
-    private dataWranglerExtension: Extension<JupyterExtensionApi> | undefined;
+    private dataWranglerExtension: Extension<DataWranglerExtensionApi> | undefined;
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
@@ -49,9 +54,9 @@ export class DataWranglerExtensionIntegration {
         @inject(IExperimentService) private experimentService: IExperimentService,
     ) {}
 
-    public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
+    public registerApi(dataWranglerExtensionApi: DataWranglerExtensionApi): DataWranglerExtensionApi | undefined {
         // Forward python parts
-        jupyterExtensionApi.registerPythonApi({
+        dataWranglerExtensionApi.registerPythonApi({
             onDidChangeInterpreter: this.interpreterService.onDidChangeInterpreter,
             getActiveInterpreter: async (resource?: Uri) => this.interpreterService.getActiveInterpreter(resource),
             getInterpreterDetails: async (pythonPath: string) =>
@@ -93,7 +98,7 @@ export class DataWranglerExtensionIntegration {
             getDebuggerPath: async () => dirname(getDebugpyPackagePath()),
             getInterpreterPathSelectedForJupyterServer: () =>
                 this.globalState.get<string | undefined>('INTERPRETER_PATH_SELECTED_FOR_JUPYTER_SERVER'),
-            getLanguageServer: async (r) => {
+            getLanguageServer: async (r: InterpreterUri) => {
                 const resource = isResource(r) ? r : undefined;
                 const interpreter = !isResource(r) ? r : undefined;
                 const client = await this.languageServerCache.get(resource, interpreter);
@@ -140,9 +145,11 @@ export class DataWranglerExtensionIntegration {
         return undefined;
     }
 
-    private async getExtensionApi(): Promise<JupyterExtensionApi | undefined> {
+    private async getExtensionApi(): Promise<DataWranglerExtensionApi | undefined> {
         if (!this.dataWranglerExtension) {
-            const dataWranglerExtension = this.extensions.getExtension<JupyterExtensionApi>(DATA_WRANGLER_EXTENSION_ID);
+            const dataWranglerExtension = this.extensions.getExtension<DataWranglerExtensionApi>(
+                DATA_WRANGLER_EXTENSION_ID,
+            );
             if (!dataWranglerExtension) {
                 return undefined;
             }
