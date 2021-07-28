@@ -1,12 +1,5 @@
 # Changelog
 
-## 2021.7.28 (28 July 2021)
-
-### Enhancements
-1. Changed "python.languageServer" to "Pylance" (thanks [jasleen101010](https://github.com/jasleen101010))
-   ([#13007](https://github.com/microsoft/vscode-python/issues/13007))
-
-
 ## 2021.7.1 (21 July 2021)
 
 ### Enhancements
