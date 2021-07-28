@@ -164,7 +164,7 @@
                     {
                         "id": "python.learnMore",
                         "title": "Learn more",
-                        "description": "- Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands).\n- [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list.\n- Explore more features in our [Tutorials](https://aka.ms/AA8dqti) or check [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\nï¿½ Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
+                        "description": "- Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands).\n- [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list.\n- Explore more features in our [Tutorials](https://aka.ms/AA8dqti) or check [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n- Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
                         "media": {
                             "image": "resources/walkthrough/python-docs-learn-more.png",
                             "altText": "Documentation page for Python in VS Code"
@@ -249,7 +249,7 @@
                     {
                         "id": "python.dataScienceLearnMore",
                         "title": "Learn more",
-                        "description": "â€¢ Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands).\nâ€¢ [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list.\nâ€¢ Explore more features in our [Tutorials](https://aka.ms/AAdar6q) or check the [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\nâ€¢ Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
+                        "description": "• Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands).\n• [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list.\n• Explore more features in our [Tutorials](https://aka.ms/AAdar6q) or check the [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n• Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
                         "media": {
                             "image": "resources/walkthrough/datascience-learn-more.png",
                             "altText": "Learning more from python visual studio code documentation"
