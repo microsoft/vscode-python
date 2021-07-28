@@ -213,9 +213,15 @@ for s in generate_test_cases(suite):
     ): Promise<void> {
         let runRequest = request;
         if (!runRequest.include) {
-            const testItem = testController.items.get(workspace.uri.fsPath);
-            if (testItem) {
-                runRequest = new TestRunRequest([testItem], undefined, request.profile);
+            const testItems: TestItem[] = [];
+            testController.items.forEach((i) => {
+                const w = this.workspaceService.getWorkspaceFolder(i.uri);
+                if (w?.uri.fsPath === workspace.uri.fsPath) {
+                    testItems.push(i);
+                }
+            });
+            if (testItems.length > 0) {
+                runRequest = new TestRunRequest(testItems, undefined, request.profile);
             }
         }
 
