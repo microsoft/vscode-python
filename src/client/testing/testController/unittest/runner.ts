@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable, inject, named } from 'inversify';
-import { Location, TestController, TestItem, TestMessage, TestRun, TestRunRequest } from 'vscode';
+import { Location, TestItem, TestMessage, TestRun, TestRunProfileKind } from 'vscode';
 import { traceError, traceInfo } from '../../../common/logger';
 import * as internalScripts from '../../../common/process/internal/scripts';
 import { IOutputChannel } from '../../../common/types';
@@ -12,7 +12,7 @@ import { UNITTEST_PROVIDER } from '../../common/constants';
 import { ITestRunner, ITestDebugLauncher, IUnitTestSocketServer, LaunchOptions, Options } from '../../common/types';
 import { TEST_OUTPUT_CHANNEL } from '../../constants';
 import { getTestCaseNodes } from '../common/testItemUtilities';
-import { ITestsRunner, TestData, TestRunInstanceOptions, TestRunOptions } from '../common/types';
+import { ITestRun, ITestsRunner, TestData, TestRunInstanceOptions, TestRunOptions } from '../common/types';
 import { getTestRunArgs } from './arguments';
 
 interface ITestData {
@@ -32,47 +32,32 @@ export class UnittestRunner implements ITestsRunner {
     ) {}
 
     public async runTests(
-        testController: TestController,
-        request: TestRunRequest,
-        debug: boolean,
+        testRun: ITestRun,
         options: TestRunOptions,
         idToRawData: Map<string, TestData>,
     ): Promise<void> {
         const runOptions: TestRunInstanceOptions = {
             ...options,
-            exclude: request.exclude,
-            debug,
+            exclude: testRun.excludes,
+            debug: testRun.runKind === TestRunProfileKind.Debug,
         };
 
-        const runInstance = testController.createTestRun(
-            request,
-            `Running Tests for Workspace ${runOptions.workspaceFolder.fsPath}`,
-            true,
-        );
-        const dispose = options.token.onCancellationRequested(() => {
-            runInstance.end();
-        });
         try {
-            await Promise.all(
-                (request.include ?? []).map((testNode) => this.runTest(testNode, runInstance, runOptions, idToRawData)),
-            );
+            await this.runTest(testRun.includes, testRun.runInstance, runOptions, idToRawData);
         } catch (ex) {
-            runInstance.appendOutput(`Error while running tests:\r\n${ex}\r\n\r\n`);
-        } finally {
-            runInstance.appendOutput(`Finished running tests!\r\n`);
-            runInstance.end();
-            dispose.dispose();
+            testRun.runInstance.appendOutput(`Error while running tests:\r\n${ex}\r\n\r\n`);
         }
     }
 
     private async runTest(
-        testNode: TestItem,
+        testNodes: TestItem[],
         runInstance: TestRun,
         options: TestRunInstanceOptions,
         idToRawData: Map<string, TestData>,
     ): Promise<void> {
-        runInstance.appendOutput(`Running tests: ${testNode.label}\r\n`);
-        const testCaseNodes = getTestCaseNodes(testNode);
+        runInstance.appendOutput(`Running tests (unittest): ${testNodes.map((t) => t.id).join(' ; ')}\r\n`);
+        const testCaseNodes: TestItem[] = [];
+        testNodes.forEach((t) => testCaseNodes.push(...getTestCaseNodes(t)));
         const tested: string[] = [];
 
         const counts = {
@@ -204,7 +189,7 @@ export class UnittestRunner implements ITestsRunner {
                 if (stopTesting || options.token.isCancellationRequested) {
                     break;
                 }
-
+                runInstance.appendOutput(`Running tests: ${testCaseNode.id}\r\n`);
                 const rawTestCaseNode = idToRawData.get(testCaseNode.id);
                 if (rawTestCaseNode) {
                     // VS Code API requires that we set the run state on the leaf nodes. The state of the
