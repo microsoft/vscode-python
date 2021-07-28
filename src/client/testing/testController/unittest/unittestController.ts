@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, TestController, TestItem, TestRunRequest, Uri, WorkspaceFolder } from 'vscode';
+import { CancellationToken, TestController, TestItem, Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { IConfigurationService } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -11,6 +11,7 @@ import { UNITTEST_PROVIDER } from '../../common/constants';
 import { ITestRunner, Options, TestDiscoveryOptions } from '../../common/types';
 import {
     ITestFrameworkController,
+    ITestRun,
     ITestsRunner,
     RawDiscoveredTests,
     RawTest,
@@ -204,32 +205,10 @@ for s in generate_test_cases(suite):
         return Promise.resolve();
     }
 
-    public runTests(
-        testController: TestController,
-        request: TestRunRequest,
-        debug: boolean,
-        workspace: WorkspaceFolder,
-        token: CancellationToken,
-    ): Promise<void> {
-        let runRequest = request;
-        if (!runRequest.include) {
-            const testItems: TestItem[] = [];
-            testController.items.forEach((i) => {
-                const w = this.workspaceService.getWorkspaceFolder(i.uri);
-                if (w?.uri.fsPath === workspace.uri.fsPath) {
-                    testItems.push(i);
-                }
-            });
-            if (testItems.length > 0) {
-                runRequest = new TestRunRequest(testItems, undefined, request.profile);
-            }
-        }
-
+    public runTests(testRun: ITestRun, workspace: WorkspaceFolder, token: CancellationToken): Promise<void> {
         const settings = this.configService.getSettings(workspace.uri);
         return this.runner.runTests(
-            testController,
-            runRequest,
-            debug,
+            testRun,
             {
                 workspaceFolder: workspace.uri,
                 cwd: settings.testing.cwd ?? workspace.uri.fsPath,

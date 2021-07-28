@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, TestController, TestItem, TestRunRequest, Uri, WorkspaceFolder } from 'vscode';
+import { CancellationToken, TestController, TestItem, TestRun, TestRunProfileKind, Uri, WorkspaceFolder } from 'vscode';
 import { TestDiscoveryOptions } from '../../common/types';
 
 export type TestRunInstanceOptions = TestRunOptions & {
@@ -37,28 +37,23 @@ export interface ITestController {
     refreshTestData(resource?: Uri, options?: TestRefreshOptions): Promise<void>;
 }
 
+export interface ITestRun {
+    includes: TestItem[];
+    excludes: TestItem[];
+    runKind: TestRunProfileKind;
+    runInstance: TestRun;
+}
+
 export const ITestFrameworkController = Symbol('ITestFrameworkController');
 export interface ITestFrameworkController {
     resolveChildren(testController: TestController, item: TestItem): Promise<void>;
     refreshTestData(testController: TestController, resource?: Uri, token?: CancellationToken): Promise<void>;
-    runTests(
-        testController: TestController,
-        request: TestRunRequest,
-        debug: boolean,
-        workspace: WorkspaceFolder,
-        token: CancellationToken,
-    ): Promise<void>;
+    runTests(testRun: ITestRun, workspace: WorkspaceFolder, token: CancellationToken): Promise<void>;
 }
 
 export const ITestsRunner = Symbol('ITestsRunner');
 export interface ITestsRunner {
-    runTests(
-        testController: TestController,
-        request: TestRunRequest,
-        debug: boolean,
-        options: TestRunOptions,
-        idToRawData: Map<string, TestData>,
-    ): Promise<void>;
+    runTests(testRun: ITestRun, options: TestRunOptions, idToRawData: Map<string, TestData>): Promise<void>;
 }
 
 export type TestRunOptions = {

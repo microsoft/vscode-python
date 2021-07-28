@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { Disposable, TestController, TestItem, TestRun, TestRunRequest } from 'vscode';
+import { Disposable, TestItem, TestRun, TestRunProfileKind } from 'vscode';
 import { IOutputChannel } from '../../../common/types';
 import { PYTEST_PROVIDER } from '../../common/constants';
 import { ITestDebugLauncher, ITestRunner, LaunchOptions, Options } from '../../common/types';
@@ -11,7 +11,7 @@ import { filterArguments, getOptionValues } from '../common/argumentsHelper';
 import { createTemporaryFile } from '../common/externalDependencies';
 import { updateResultFromJunitXml } from '../common/resultsHelper';
 import { getTestCaseNodes } from '../common/testItemUtilities';
-import { ITestsRunner, TestData, TestRunInstanceOptions, TestRunOptions } from '../common/types';
+import { ITestRun, ITestsRunner, TestData, TestRunInstanceOptions, TestRunOptions } from '../common/types';
 import { removePositionalFoldersAndFiles } from './arguments';
 
 const JunitXmlArgOld = '--junitxml';
@@ -36,31 +36,24 @@ export class PytestRunner implements ITestsRunner {
     ) {}
 
     public async runTests(
-        testController: TestController,
-        request: TestRunRequest,
-        debug: boolean,
+        testRun: ITestRun,
         options: TestRunOptions,
         idToRawData: Map<string, TestData>,
     ): Promise<void> {
         const runOptions: TestRunInstanceOptions = {
             ...options,
-            exclude: request.exclude,
-            debug,
+            exclude: testRun.excludes,
+            debug: testRun.runKind === TestRunProfileKind.Debug,
         };
-        const runInstance = testController.createTestRun(
-            request,
-            `Running Tests for Workspace ${runOptions.workspaceFolder.fsPath}`,
-            true,
-        );
+
         try {
             await Promise.all(
-                (request.include ?? []).map((testNode) => this.runTest(testNode, runInstance, runOptions, idToRawData)),
+                testRun.includes.map((testNode) =>
+                    this.runTest(testNode, testRun.runInstance, runOptions, idToRawData),
+                ),
             );
         } catch (ex) {
-            runInstance.appendOutput(`Error while running tests:\r\n${ex}\r\n\r\n`);
-        } finally {
-            runInstance.appendOutput(`Finished running tests!\r\n`);
-            runInstance.end();
+            testRun.runInstance.appendOutput(`Error while running tests:\r\n${ex}\r\n\r\n`);
         }
     }
 
@@ -70,7 +63,7 @@ export class PytestRunner implements ITestsRunner {
         options: TestRunInstanceOptions,
         idToRawData: Map<string, TestData>,
     ): Promise<void> {
-        runInstance.appendOutput(`Running tests: ${testNode.label}\r\n`);
+        runInstance.appendOutput(`Running tests (pytest): ${testNode.id}\r\n`);
 
         // VS Code API requires that we set the run state on the leaf nodes. The state of the
         // parent nodes are computed based on the state of child nodes.

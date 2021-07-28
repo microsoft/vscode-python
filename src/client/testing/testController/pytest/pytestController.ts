@@ -4,7 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import { flatten } from 'lodash';
 import * as path from 'path';
-import { CancellationToken, TestItem, TestRunRequest, Uri, TestController, WorkspaceFolder } from 'vscode';
+import { CancellationToken, TestItem, Uri, TestController, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
 import { runAdapter } from '../../../common/process/internal/scripts/testing_tools';
@@ -25,6 +25,7 @@ import {
     ITestsRunner,
     TestData,
     RawDiscoveredTests,
+    ITestRun,
 } from '../common/types';
 import { preparePytestArgumentsForDiscovery, pytestGetTestFolders } from './arguments';
 
@@ -79,8 +80,8 @@ export class PytestController implements ITestFrameworkController {
                         item.description = workspace.uri.fsPath;
 
                         // To figure out which top level nodes have to removed. First we get all the
-                        // existing nodes. Then if they have data we keep thoese nodes, Nodes with
-                        // node data will be removed after we check the raw data.
+                        // existing nodes. Then if they have data we keep those nodes, Nodes without
+                        // data will be removed after we check the raw data.
                         let subRootWithNoData: string[] = [];
                         item.children.forEach((c) => subRootWithNoData.push(c.id));
 
@@ -232,32 +233,10 @@ export class PytestController implements ITestFrameworkController {
         return Promise.resolve();
     }
 
-    public runTests(
-        testController: TestController,
-        request: TestRunRequest,
-        debug: boolean,
-        workspace: WorkspaceFolder,
-        token: CancellationToken,
-    ): Promise<void> {
-        let runRequest = request;
-        if (!runRequest.include) {
-            const testItems: TestItem[] = [];
-            testController.items.forEach((i) => {
-                const w = this.workspaceService.getWorkspaceFolder(i.uri);
-                if (w?.uri.fsPath === workspace.uri.fsPath) {
-                    testItems.push(i);
-                }
-            });
-            if (testItems.length > 0) {
-                runRequest = new TestRunRequest(testItems, undefined, request.profile);
-            }
-        }
-
+    public runTests(testRun: ITestRun, workspace: WorkspaceFolder, token: CancellationToken): Promise<void> {
         const settings = this.configService.getSettings(workspace.uri);
         return this.runner.runTests(
-            testController,
-            runRequest,
-            debug,
+            testRun,
             {
                 workspaceFolder: workspace.uri,
                 cwd: settings.testing.cwd ?? workspace.uri.fsPath,
