@@ -44,7 +44,11 @@ export class UnittestRunner implements ITestsRunner {
             debug,
         };
 
-        const runInstance = testController.createTestRun(request);
+        const runInstance = testController.createTestRun(
+            request,
+            `Running Tests for Workspace ${runOptions.workspaceFolder.fsPath}`,
+            true,
+        );
         const dispose = options.token.onCancellationRequested(() => {
             runInstance.end();
         });
