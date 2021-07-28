@@ -1796,11 +1796,6 @@
                 },
                 {
                     "category": "Python",
-                    "command": "python.startPage.open",
-                    "title": "%python.command.python.startPage.open.title%"
-                },
-                {
-                    "category": "Python",
                     "command": "python.switchOffInsidersChannel",
                     "title": "%python.command.python.switchOffInsidersChannel.title%",
                     "when": "config.python.insidersChannel != 'default'"
