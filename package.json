@@ -663,17 +663,15 @@
                         "Default",
                         "Jedi",
                         "JediLSP",
-                        "Microsoft",
-                        "None",
-                        "Pylance"
+                        "Pylance",
+                        "None"
                     ],
                     "enumDescriptions": [
                         "Automatically select a language server: Pylance if installed and available, otherwise fallback to Jedi.",
-                        "Disable language server capabilities.",
                         "Use Jedi as a language server.",
                         "Use Jedi behind the Language Server Protocol (LSP) as a language server.",
                         "Use Pylance as a language server.",
-                        "Use the Microsoft Python Language Server (MPLS) as a language server. (legacy)"
+                        "Disable language server capabilities."
                     ],
                     "scope": "window",
                     "type": "string"
