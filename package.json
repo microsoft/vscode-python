@@ -244,7 +244,11 @@
                         "title": "Open the Python Interactive Window",
                         "description": "The Python Interactive Window is a Python shell where you can execute and view the results of your Python code. You can create cells on a Python file by typing ``#%%``.\n \nTo open the interactive window anytime, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create Interactive Window``.\n[Open Interactive Window](command:toSide:jupyter.createnewinteractive)",
                         "media": {
-                            "image": "resources/walkthrough/interactive-window.png",
+                            "image": {
+                                "dark": "resources/walkthrough/interactive-window-dark.png",
+                                "light": "resources/walkthrough/interactive-window-light.png",
+                                "hc": "resources/walkthrough/interactive-window-hc.png"
+                            },
                             "altText": "Opening python interactive window"
                         },
                         "completionEvents": [
