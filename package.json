@@ -92,6 +92,7 @@
         "onCommand:python.launchTensorBoard",
         "onCommand:python.clearPersistentStorage",
         "onWalkthrough:pythonWelcome",
+        "onWalkthrough:pythonDataScienceWelcome",
         "workspaceContains:mspythonconfig.json",
         "workspaceContains:pyproject.toml",
         "workspaceContains:Pipfile",
