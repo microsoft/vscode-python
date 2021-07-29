@@ -47,16 +47,13 @@ export class DelayedTrigger implements IDelayedTrigger, Disposable {
             clearTimeout(this.timerId);
         }
 
-        this.timerId = setTimeout(
-            () => {
-                this.calledCounter += 1;
-                traceVerbose(
-                    `Delay Trigger[${this.name}]: triggered=${this.triggeredCounter}, called=${this.calledCounter}`,
-                );
-                this.callback(...args);
-            },
-            this.ms
-        );
+        this.timerId = setTimeout(() => {
+            this.calledCounter += 1;
+            traceVerbose(
+                `Delay Trigger[${this.name}]: triggered=${this.triggeredCounter}, called=${this.calledCounter}`,
+            );
+            this.callback(...args);
+        }, this.ms);
     }
 
     public dispose(): void {
