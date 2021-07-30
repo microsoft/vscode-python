@@ -87,16 +87,16 @@ export class UnittestRunner implements ITestsRunner {
             if (testCase && rawTestCase) {
                 tested.push(rawTestCase.runId);
 
-                if (data.outcome === 'passed') {
+                if (data.outcome === 'passed' || data.outcome === 'failed-expected') {
                     const text = `${rawTestCase.rawId} Passed\r\n`;
                     runInstance.passed(testCase);
                     runInstance.appendOutput(text);
                     counts.passed += 1;
-                } else if (data.outcome === 'failed') {
+                } else if (data.outcome === 'failed' || data.outcome === 'passed-unexpected') {
                     const traceback = data.traceback
                         ? data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n')
                         : '';
-                    const text = `${rawTestCase.rawId} Failed: ${data.message}\r\n${traceback}\r\n`;
+                    const text = `${rawTestCase.rawId} Failed: ${data.message ?? data.outcome}\r\n${traceback}\r\n`;
                     const message = new TestMessage(text);
 
                     if (testCase.uri && testCase.range) {
