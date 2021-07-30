@@ -367,14 +367,25 @@
                 "title": "%python.command.python.refreshTensorBoard.title%"
             },
             {
-                "category": "Python",
+                "category": "Test",
                 "command": "python.refreshTests",
+                "icon": "$(refresh)",
                 "title": "%python.command.python.refreshTests.title%"
             },
             {
                 "category": "Python",
                 "command": "python.reportIssue",
                 "title": "%python.command.python.reportIssue.title%"
+            },
+            {
+                "category": "Test",
+                "command": "testing.reRunFailTests",
+
+                "icon": {
+                    "dark": "resources/dark/run-failed-tests.svg",
+                    "light": "resources/light/run-failed-tests.svg"
+                },
+                "title": "%python.command.testing.rerunFailedTests.title%"
             },
             {
                 "category": "Python",
@@ -1873,6 +1884,18 @@
                     "command": "python.execInTerminal",
                     "group": "Python",
                     "when": "resourceLangId == python"
+                }
+            ],
+            "view/title":[
+                {
+                    "command": "python.refreshTests",
+                    "when": "view == workbench.view.testing",
+                    "group": "navigation"
+                },
+                {
+                    "command": "testing.reRunFailTests",
+                    "when": "view == workbench.view.testing",
+                    "group": "navigation"
                 }
             ]
         },
