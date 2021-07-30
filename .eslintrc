@@ -5,7 +5,9 @@
         "mocha": true
     },
     "parser": "@typescript-eslint/parser",
-    "plugins": ["@typescript-eslint"],
+    "plugins": [
+        "@typescript-eslint"
+    ],
     "extends": [
         "airbnb",
         "plugin:@typescript-eslint/recommended",
@@ -27,7 +29,9 @@
         "no-dupe-class-members": "off",
         "@typescript-eslint/no-dupe-class-members": "error",
         "no-empty-function": "off",
-        "@typescript-eslint/no-empty-function": ["error"],
+        "@typescript-eslint/no-empty-function": [
+            "error"
+        ],
         "@typescript-eslint/no-empty-interface": "off",
         "@typescript-eslint/no-explicit-any": "error",
         "@typescript-eslint/no-non-null-assertion": "off",
@@ -49,9 +53,15 @@
         "no-useless-constructor": "off",
         "@typescript-eslint/no-useless-constructor": "error",
         "@typescript-eslint/no-var-requires": "off",
-
         // Other rules
-        "class-methods-use-this": ["error", {"exceptMethods": ["dispose"]}],
+        "class-methods-use-this": [
+            "error",
+            {
+                "exceptMethods": [
+                    "dispose"
+                ]
+            }
+        ],
         "func-names": "off",
         "import/extensions": "off",
         "import/namespace": "off",
@@ -59,7 +69,10 @@
         "import/no-unresolved": [
             "error",
             {
-                "ignore": ["monaco-editor", "vscode"]
+                "ignore": [
+                    "monaco-editor",
+                    "vscode"
+                ]
             }
         ],
         "import/prefer-default-export": "off",
@@ -77,7 +90,6 @@
                 "selector": "ForInStatement",
                 "message": "for..in loops iterate over the entire prototype chain, which is virtually never what you want. Use Object.{keys,values,entries}, and iterate over the resulting array."
             },
-
             {
                 "selector": "LabeledStatement",
                 "message": "Labels are a form of GOTO; using them makes code confusing and hard to maintain and understand."
@@ -97,12 +109,6 @@
             }
         ],
         "operator-assignment": "off",
-        "react/jsx-filename-extension": [
-            1,
-            {
-                "extensions": [".tsx"]
-            }
-        ],
         "strict": "off"
     }
 }
