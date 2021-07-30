@@ -1669,19 +1669,6 @@ export interface IEventNamePropertyMapping {
         terminal: TerminalShellType;
     };
 
-    /**
-     * Telemetry event sent when the notification about the Jupyter extension not being installed is closed.
-     */
-    [EventName.JUPYTER_NOT_INSTALLED_NOTIFICATION_ACTION]: {
-        /**
-         * Action selected by the user in response to the notification:
-         * close the notification using the close button, or "Do not show again".
-         *
-         * @type {('Do not show again' | undefined)}
-         */
-        selection: 'Do not show again' | undefined;
-    };
-
     // TensorBoard integration events
     /**
      * Telemetry event sent after the user has clicked on an option in the prompt we display
