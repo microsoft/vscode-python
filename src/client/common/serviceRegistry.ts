@@ -113,8 +113,6 @@ import {
 
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { Random } from './utils/random';
-import { JupyterNotInstalledNotificationHelper } from '../jupyter/jupyterNotInstalledNotificationHelper';
-import { IJupyterNotInstalledNotificationHelper } from '../jupyter/types';
 import { InterpreterPathProxyService } from './interpreterPathProxyService';
 
 export function registerTypes(serviceManager: IServiceManager): void {
@@ -140,10 +138,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IJupyterExtensionDependencyManager>(
         IJupyterExtensionDependencyManager,
         JupyterExtensionDependencyManager,
-    );
-    serviceManager.addSingleton<IJupyterNotInstalledNotificationHelper>(
-        IJupyterNotInstalledNotificationHelper,
-        JupyterNotInstalledNotificationHelper,
     );
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);

@@ -131,8 +131,6 @@ import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initializeTest } from '../initialize';
-import { JupyterNotInstalledNotificationHelper } from '../../client/jupyter/jupyterNotInstalledNotificationHelper';
-import { IJupyterNotInstalledNotificationHelper } from '../../client/jupyter/types';
 
 chaiUse(chaiAsPromised);
 
@@ -241,10 +239,6 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<IJupyterExtensionDependencyManager>(
                 IJupyterExtensionDependencyManager,
                 JupyterExtensionDependencyManager,
-            );
-            ioc.serviceManager.addSingleton<IJupyterNotInstalledNotificationHelper>(
-                IJupyterNotInstalledNotificationHelper,
-                JupyterNotInstalledNotificationHelper,
             );
             ioc.serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
             ioc.serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);

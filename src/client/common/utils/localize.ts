@@ -131,13 +131,6 @@ export namespace Pylance {
     export const pylanceRevertToJedi = localize('Pylance.pylanceRevertToJedi', 'Revert to Jedi');
 }
 
-export namespace Jupyter {
-    export const jupyterExtensionNotInstalled = localize(
-        'Jupyter.extensionNotInstalled',
-        "This feature is available in the Jupyter extension, which isn't currently installed.",
-    );
-}
-
 export namespace TensorBoard {
     export const enterRemoteUrl = localize('TensorBoard.enterRemoteUrl', 'Enter remote URL');
     export const enterRemoteUrlDetail = localize(
