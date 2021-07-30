@@ -200,6 +200,7 @@ export class PytestController implements ITestFrameworkController {
                 deferred.resolve();
             } catch (ex) {
                 traceError('Error discovering pytest tests:\r\n', ex);
+                const message = getTestDiscoveryExceptions(ex.message);
 
                 // Report also on the test view. Getting root node is more complicated due to fact
                 // that in pytest project can be organized in many ways
@@ -209,7 +210,7 @@ export class PytestController implements ITestFrameworkController {
                         label: `Pytest Discovery Error [${path.basename(workspace.uri.fsPath)}]`,
                         error: util.format(
                             'Error discovering pytest tests (see Output > Python):\r\n',
-                            getTestDiscoveryExceptions(ex.message),
+                            message.length > 0 ? message : ex,
                         ),
                     }),
                 );
