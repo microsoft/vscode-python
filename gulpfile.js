@@ -13,7 +13,6 @@ const ts = require('gulp-typescript');
 const spawn = require('cross-spawn');
 const path = require('path');
 const del = require('del');
-const fs = require('fs-extra');
 const fsExtra = require('fs-extra');
 const glob = require('glob');
 const _ = require('lodash');
@@ -200,7 +199,7 @@ gulp.task('renameSourceMaps', async () => {
     // By default source maps will be disabled in the extension.
     // Users will need to use the command `python.enableSourceMapSupport` to enable source maps.
     const extensionSourceMap = path.join(__dirname, 'out', 'client', 'extension.js.map');
-    await fs.rename(extensionSourceMap, `${extensionSourceMap}.disabled`);
+    await fsExtra.rename(extensionSourceMap, `${extensionSourceMap}.disabled`);
 });
 
 gulp.task('verifyBundle', async () => {
@@ -360,7 +359,7 @@ function hasNativeDependencies() {
         path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep),
     )
         .filter((item) => item.length > 0)
-        .filter((item) => !item.includes('zeromq') && item !== 'fsevents' && !item.includes('canvas')) // This is a known native. Allow this one for now
+        .filter((item) => item !== 'fsevents')
         .filter(
             (item) =>
                 jsonProperties.findIndex((flattenedDependency) =>
