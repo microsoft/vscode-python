@@ -70,7 +70,7 @@ suite('TensorBoard session creation', async () => {
     setup(async () => {
         sandbox = sinon.createSandbox();
         ({ serviceManager } = await initialize());
-        sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(true);
+        sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(false);
         experimentService = serviceManager.get<IExperimentService>(IExperimentService);
 
         const interpreterService = serviceManager.get<IInterpreterService>(IInterpreterService);
