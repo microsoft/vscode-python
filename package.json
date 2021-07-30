@@ -189,7 +189,7 @@
                     {
                         "id": "python.installPython",
                         "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python from [Anaconda](https://www.anaconda.com) to use the Python extension.\n \n[Install Python with Anaconda](command:workbench.action.reloadWindow)",
+                        "description": "The Python Extension requires Python to be installed. Install Python from [Anaconda](https://www.anaconda.com) to use the Python extension.\n \n[Install Python with Anaconda](https://www.anaconda.com)",
                         "media": {
                             "image": "resources/walkthrough/anaconda-install.png",
                             "altText": "Screenshot of anaconda webpage"
