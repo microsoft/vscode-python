@@ -75,6 +75,18 @@ export class PythonTestController implements ITestController {
             this.refreshCancellation.cancel();
             this.refreshCancellation.dispose();
             this.refreshCancellation = new CancellationTokenSource();
+
+            if (uri === undefined) {
+                // This is a special case where we want everything to be re-discovered.
+                traceVerbose('Testing: Clearing all discovered tests');
+                const ids: string[] = [];
+                this.testController.items.forEach((i) => ids.push(i.id));
+                ids.forEach((id) => this.testController.items.delete(id));
+
+                traceVerbose('Testing: Forcing test data refresh');
+                return this.refreshTestDataInternal(undefined);
+            }
+
             traceVerbose('Testing: Forcing test data refresh');
             return this.refreshTestDataInternal(uri);
         }
@@ -84,14 +96,35 @@ export class PythonTestController implements ITestController {
     }
 
     private async refreshTestDataInternal(uri?: Resource): Promise<void> {
-        traceVerbose(`Testing: Refreshing test data for ${uri?.fsPath}`);
+        if (uri) {
+            traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
 
-        const settings = this.configSettings.getSettings(uri);
-        if (settings.testing.pytestEnabled) {
-            return this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
-        }
-        if (settings.testing.unittestEnabled) {
-            return this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+            const settings = this.configSettings.getSettings(uri);
+            if (settings.testing.pytestEnabled) {
+                return this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+            }
+            if (settings.testing.unittestEnabled) {
+                return this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+            }
+
+            // If we are here we may have to remove an existing node from the tree
+            // This handles the case where user removes test settings. Which should remove the
+            // tests for that particular case from the tree view
+            const workspace = this.workspaceService.getWorkspaceFolder(uri);
+            if (workspace) {
+                const toDelete: string[] = [];
+                this.testController.items.forEach((i: TestItem) => {
+                    const w = this.workspaceService.getWorkspaceFolder(i.uri);
+                    if (w?.uri.fsPath === workspace.uri.fsPath) {
+                        toDelete.push(i.id);
+                    }
+                });
+                toDelete.forEach((i) => this.testController.items.delete(i));
+            }
+        } else {
+            traceVerbose('Testing: Refreshing all test data');
+            const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
+            await Promise.all(workspaces.map((workspace) => this.refreshTestDataInternal(workspace.uri)));
         }
         return Promise.resolve();
     }
@@ -107,7 +140,7 @@ export class PythonTestController implements ITestController {
                 return this.unittest.resolveChildren(this.testController, item);
             }
         } else {
-            traceVerbose('Testing: Resolving all workspaces');
+            traceVerbose('Testing: Refreshing all test data');
             const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
             await Promise.all(workspaces.map((workspace) => this.refreshTestDataInternal(workspace.uri)));
         }

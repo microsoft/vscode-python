@@ -26,6 +26,16 @@ export function removeItemByIdFromChildren(
     });
 }
 
+export function createErrorTestItem(
+    testController: TestController,
+    options: { id: string; label: string; error: string },
+): TestItem {
+    const testItem = testController.createTestItem(options.id, options.label);
+    testItem.canResolveChildren = false;
+    testItem.error = options.error;
+    return testItem;
+}
+
 export function createWorkspaceRootTestItem(
     testController: TestController,
     idToRawData: Map<string, TestData>,
