@@ -4,6 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import { flatten } from 'lodash';
 import * as path from 'path';
+import * as util from 'util';
 import { CancellationToken, TestItem, Uri, TestController, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
@@ -13,6 +14,7 @@ import { createDeferred, Deferred } from '../../../common/utils/async';
 import { PYTEST_PROVIDER } from '../../common/constants';
 import { TestDiscoveryOptions } from '../../common/types';
 import {
+    createErrorTestItem,
     createWorkspaceRootTestItem,
     getNodeByUri,
     getWorkspaceNode,
@@ -191,9 +193,27 @@ export class PytestController implements ITestFrameworkController {
                     await Promise.all(discoveryRunOptions.map((o) => this.discoveryHelper.runTestDiscovery(o))),
                 );
                 this.testData.set(workspace.uri.fsPath, rawTestData);
+
+                // Remove error node
+                testController.items.delete(`DiscoveryError:${workspace.uri.fsPath}`);
+
                 deferred.resolve();
             } catch (ex) {
-                traceError('Error discovering pytest tests: ', ex);
+                traceError('Error discovering pytest tests:\r\n', ex);
+
+                // Report also on the test view. Getting root node is more complicated due to fact
+                // that in pytest project can be organized in many ways
+                testController.items.add(
+                    createErrorTestItem(testController, {
+                        id: `DiscoveryError:${workspace.uri.fsPath}`,
+                        label: `Pytest Discovery Error [${path.basename(workspace.uri.fsPath)}]`,
+                        error: util.format(
+                            'Error discovering pytest tests (see Output > Python):\r\n',
+                            getTestDiscoveryExceptions(ex.message),
+                        ),
+                    }),
+                );
+
                 deferred.reject(ex);
             } finally {
                 // Discovery has finished running we have the raw test data at this point.
@@ -246,4 +266,18 @@ export class PytestController implements ITestFrameworkController {
             this.idToRawData,
         );
     }
+}
+
+function getTestDiscoveryExceptions(content: string): string {
+    const lines = content.split(/\r?\n/g);
+    let start = false;
+    let exceptions = '';
+    for (const line of lines) {
+        if (start) {
+            exceptions += `${line}\r\n`;
+        } else if (line.includes(' ERRORS ')) {
+            start = true;
+        }
+    }
+    return exceptions;
 }

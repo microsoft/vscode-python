@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+import * as util from 'util';
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, TestController, TestItem, Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
@@ -21,6 +22,7 @@ import {
 import { unittestGetTestFolders, unittestGetTestPattern } from './arguments';
 import { execCode } from '../../../common/process/internal/python';
 import {
+    createErrorTestItem,
     createWorkspaceRootTestItem,
     getNodeByUri,
     getWorkspaceNode,
@@ -128,10 +130,23 @@ def generate_test_cases(suite):
 loader = unittest.TestLoader()
 suite = loader.discover("${startDir}", pattern="${pattern}")
 
-print("start") #Don't remove this line
+print("start")  # Don't remove this line
+loader_errors = []
 for s in generate_test_cases(suite):
     tm = getattr(s, s._testMethodName)
-    print(s.id().replace('.',':') + ":" + get_sourceline(tm))
+    testId = s.id()
+    if testId.startswith("unittest.loader._FailedTest"):
+        loader_errors.append(s._exception)
+    else:
+        print(testId.replace(".", ":") + ":" + get_sourceline(tm))
+
+for error in loader_errors:
+    try:
+        print("=== exception start ===")
+        print(error.msg)
+        print("=== exception end ===")
+    except:
+        pass
 `;
 
             const runOptions: Options = {
@@ -157,9 +172,44 @@ for s in generate_test_cases(suite):
                     options.token,
                 );
                 this.testData.set(workspace.uri.fsPath, rawTestData);
+
+                const exceptions = getTestDiscoveryExceptions(content);
+                if (exceptions.length === 0) {
+                    // Remove error node
+                    testController.items.delete(`DiscoveryError:${workspace.uri.fsPath}`);
+                } else {
+                    traceError('Error discovering unittest tests:\r\n', exceptions.join('\r\n\r\n'));
+
+                    let errorNode = testController.items.get(`DiscoveryError:${workspace.uri.fsPath}`);
+                    const message = util.format(
+                        'Error discovering unittest tests (see Output > Python):\r\n',
+                        exceptions.join('\r\n\r\n'),
+                    );
+                    if (errorNode === undefined) {
+                        errorNode = createErrorTestItem(testController, {
+                            id: `DiscoveryError:${workspace.uri.fsPath}`,
+                            label: `Unittest Discovery Error [${path.basename(workspace.uri.fsPath)}]`,
+                            error: message,
+                        });
+                        errorNode.canResolveChildren = false;
+                        testController.items.add(errorNode);
+                    }
+                    errorNode.error = message;
+                }
+
                 deferred.resolve();
             } catch (ex) {
-                traceError('Error discovering unittest tests: ', ex);
+                traceError('Error discovering unittest tests:\r\n', ex);
+
+                // Report also on the test view.
+                testController.items.add(
+                    createErrorTestItem(testController, {
+                        id: `DiscoveryError:${workspace.uri.fsPath}`,
+                        label: `Unittest Discovery Error [${path.basename(workspace.uri.fsPath)}]`,
+                        error: util.format('Error discovering unittest tests (see Output > Python):\r\n', ex),
+                    }),
+                );
+
                 deferred.reject(ex);
             } finally {
                 // Discovery has finished running we have the raw test data at this point.
@@ -220,20 +270,44 @@ for s in generate_test_cases(suite):
     }
 }
 
+function getTestDiscoveryExceptions(content: string): string[] {
+    const lines = content.split(/\r?\n/g);
+    let start = false;
+    let data = '';
+    const exceptions: string[] = [];
+    for (const line of lines) {
+        if (start) {
+            if (line.startsWith('=== exception end ===')) {
+                exceptions.push(data);
+                start = false;
+            } else {
+                data += `${line}\r\n`;
+            }
+        } else if (line.startsWith('=== exception start ===')) {
+            start = true;
+            data = '';
+        }
+    }
+    return exceptions;
+}
+
 function getTestIds(content: string): string[] {
     let startedCollecting = false;
-    return content
-        .split(/\r?\n/g)
-        .map((line) => {
-            if (!startedCollecting) {
-                if (line === 'start') {
-                    startedCollecting = true;
-                }
-                return '';
+    const lines = content.split(/\r?\n/g);
+
+    const ids: string[] = [];
+    for (const line of lines) {
+        if (!startedCollecting) {
+            if (line === 'start') {
+                startedCollecting = true;
             }
-            return line.trim();
-        })
-        .filter((line) => line.length > 0);
+            if (line.startsWith('===')) {
+                break;
+            }
+        }
+        ids.push(line.trim());
+    }
+    return ids.filter((id) => id.length > 0);
 }
 
 function testDiscoveryParser(
