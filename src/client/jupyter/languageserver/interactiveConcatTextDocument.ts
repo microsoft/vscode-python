@@ -49,12 +49,7 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
         return !this._notebook.getCells().some((cell) => !cell.document.isClosed) && !!this._input?.isClosed;
     }
 
-    constructor(
-        private _notebook: NotebookDocument,
-        private _selector: string,
-        notebookApi: IVSCodeNotebook,
-        inputDocument?: TextDocument,
-    ) {
+    constructor(private _notebook: NotebookDocument, private _selector: string, notebookApi: IVSCodeNotebook) {
         this._concatTextDocument = notebookApi.createConcatTextDocument(_notebook, this._selector);
 
         this._concatTextDocument.onDidChange(() => {
@@ -69,11 +64,6 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
                 this._onDidChange.fire();
             }
         });
-
-        /** for testing only */
-        if (inputDocument) {
-            this._input = inputDocument;
-        }
 
         const counter = /Interactive-(\d+)\.interactive/.exec(this._notebook.uri.path);
         if (counter) {
@@ -133,14 +123,12 @@ export class InteractiveConcatTextDocument implements IConcatTextDocument {
 
     getText(range?: Range): string {
         if (!range) {
-            let result = '';
             if (this._lineCounts[0] === 0) {
                 // empty
                 return this._input?.getText() ?? '';
-            } else {
-                result += `${this._concatTextDocument.getText()}\n${this._input?.getText() ?? ''}`;
             }
-            return result;
+
+            return `${this._concatTextDocument.getText()}\n${this._input?.getText() ?? ''}`;
         }
 
         if (range.isEmpty) {
