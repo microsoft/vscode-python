@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2021.8.0-dev",
+    "version": "2021.8.0-rc",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -230,9 +230,9 @@
                         "description": "To create a new Jupyter Notebook, you can right click in the file explorer and create a new file with an .ipynb extension anytime.\n \nAlternatively, you can open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create New Blank Notebook``.\n[Create new Jupyter Notebook](command:toSide:jupyter.createnewnotebook)",
                         "media": {
                             "image": {
-                             "light": "resources/walkthrough/new-notebook-light.png",
-                             "dark": "resources/walkthrough/new-notebook-dark.png",
-                             "hc": "resources/walkthrough/new-notebook-hc.png"
+                                "light": "resources/walkthrough/new-notebook-light.png",
+                                "dark": "resources/walkthrough/new-notebook-dark.png",
+                                "hc": "resources/walkthrough/new-notebook-hc.png"
                             },
                             "altText": "Creating a new Jupyter notebook"
                         },
