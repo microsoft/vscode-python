@@ -38,6 +38,7 @@ import { initializeStandard, initializeComponents, initializeGlobals } from './e
 import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 import { IStartupDurations } from './types';
+import { logTime } from './common/performance';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -90,6 +91,7 @@ async function activateUnsafe(
     startupStopWatch: StopWatch,
     startupDurations: IStartupDurations,
 ): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
+    logTime('Activation started');
     const activationDeferred = createDeferred<void>();
     displayProgress(activationDeferred.promise);
     startupDurations.startActivateTime = startupStopWatch.elapsedTime;
@@ -97,9 +99,12 @@ async function activateUnsafe(
     //===============================================
     // activation starts here
 
+    logTime('Initializing globals');
     // First we initialize.
     const ext = initializeGlobals(context);
     activatedServiceContainer = ext.legacyIOC.serviceContainer;
+
+    logTime('Initializing standard');
     // Note standard utils especially experiment and platform code are fundamental to the extension
     // and should be available before we activate anything else.Hence register them first.
     initializeStandard(ext);
@@ -107,9 +112,12 @@ async function activateUnsafe(
     const experimentService = activatedServiceContainer.get<IExperimentService>(IExperimentService);
     // This guarantees that all experiment information has loaded & all telemetry will contain experiment info.
     await experimentService.activate();
+
+    logTime('Initializing components');
     const components = await initializeComponents(ext);
 
     // Then we finish activating.
+    logTime('Activating components');
     const componentsActivated = await activateComponents(ext, components);
     const nonBlocking = componentsActivated.map((r) => r.fullyReady);
     const activationPromise = (async () => {
@@ -122,7 +130,9 @@ async function activateUnsafe(
     startupDurations.totalActivateTime = startupStopWatch.elapsedTime - startupDurations.startActivateTime;
     activationDeferred.resolve();
 
+    logTime('Building api');
     const api = buildApi(activationPromise, ext.legacyIOC.serviceManager, ext.legacyIOC.serviceContainer);
+    logTime('Activation done');
     return [api, activationPromise, ext.legacyIOC.serviceContainer];
 }
 
