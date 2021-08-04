@@ -54,6 +54,7 @@ import * as pythonEnvironments from './pythonEnvironments';
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
 import { setDefaultLanguageServer } from './activation/common/defaultlanguageServer';
+import { logTime } from './common/performance';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -76,12 +77,16 @@ export async function activateComponents(
     // activate them parallelly with the other components.
     // https://github.com/microsoft/vscode-python/issues/15380
     // These will go away eventually once everything is refactored into components.
+    logTime('Activating legacy');
     const legacyActivationResult = await activateLegacy(ext);
+    logTime('Activating environments discovery');
     const promises: Promise<ActivationResult>[] = [
         // More component activations will go here
         pythonEnvironments.activate(components.pythonEnvs),
     ];
-    return Promise.all([legacyActivationResult, ...promises]);
+    const result = await Promise.all([legacyActivationResult, ...promises]);
+    logTime('Activating components done');
+    return result;
 }
 
 /// //////////////////////////
@@ -94,6 +99,7 @@ export async function activateComponents(
 // See https://github.com/microsoft/vscode-python/issues/10454.
 
 async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
+    logTime('Activating legacy - start');
     const { context, legacyIOC } = ext;
     const { serviceManager, serviceContainer } = legacyIOC;
 
@@ -101,29 +107,41 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     const standardOutputChannel = serviceManager.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
 
+    logTime('Activating legacy - install telemetry');
     // We need to setup this property before any telemetry is sent
     const fs = serviceManager.get<IFileSystem>(IFileSystem);
     await setExtensionInstallTelemetryProperties(fs);
-
+    logTime('Activating legacy - proposed API');
     const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
     const { enableProposedApi } = applicationEnv.packageJson;
     serviceManager.addSingletonInstance<boolean>(UseProposedApi, enableProposedApi);
     // Feature specific registrations.
+    logTime('Activating legacy - testing registration');
     unitTestsRegisterTypes(serviceManager);
+    logTime('Activating legacy - linting registration');
     lintersRegisterTypes(serviceManager);
+    logTime('Activating legacy - interpreters registration');
     interpretersRegisterTypes(serviceManager);
+    logTime('Activating legacy - formatters registration');
     formattersRegisterTypes(serviceManager);
+    logTime('Activating legacy - installers registration');
     installerRegisterTypes(serviceManager);
+    logTime('Activating legacy - terminal registration');
     commonRegisterTerminalTypes(serviceManager);
+    logTime('Activating legacy - debugger registration');
     debugConfigurationRegisterTypes(serviceManager);
+    logTime('Activating legacy - tensor registration');
     tensorBoardRegisterTypes(serviceManager);
 
+    logTime('Activating legacy - experiment service');
     const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
 
+    logTime('Activating legacy - language server setting');
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
     await setDefaultLanguageServer(experimentService, extensions, serviceManager);
 
+    logTime('Activating legacy - logging setting');
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
     // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
@@ -132,6 +150,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     const languageServerType = configuration.getSettings().languageServer;
 
+    logTime('Activating legacy - language feature registrations');
     // Language feature registrations.
     appRegisterTypes(serviceManager, languageServerType);
     providersRegisterTypes(serviceManager);
@@ -139,72 +158,91 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     // "initialize" "services"
 
+    logTime('Activating legacy - interpreter manager');
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
     interpreterManager.initialize();
 
+    logTime('Activating legacy - debug session handlers');
     const handlers = serviceManager.getAll<IDebugSessionEventHandlers>(IDebugSessionEventHandlers);
     const disposables = serviceManager.get<IDisposableRegistry>(IDisposableRegistry);
     const dispatcher = new DebugSessionEventDispatcher(handlers, DebugService.instance, disposables);
     dispatcher.registerEventHandlers();
 
+    logTime('Activating legacy - open start page');
     const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
     const outputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
     cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
 
+    logTime('Activating legacy - more registrations');
     serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
     serviceContainer.get<ILanguageServerExtension>(ILanguageServerExtension).register();
 
     // "activate" everything else
-
+    logTime('Activating legacy - extension activation manager');
     const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
     context.subscriptions.push(manager);
 
+    logTime('Activating legacy - interpreter manager refresh');
     // Settings are dependent on Experiment service, so we need to initialize it after experiments are activated.
     serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().initialize();
     await interpreterManager
         .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
         .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
 
+    logTime('Activating legacy - activation manager activate');
     const activationPromise = manager.activate();
 
+    logTime('Activating legacy - terminal activation registrations');
     serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
     const pythonSettings = configuration.getSettings();
 
+    logTime('Activating legacy - refactoring provider');
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
 
+    logTime('Activating legacy - import sorter');
     const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
     sortImports.registerCommands();
 
+    logTime('Activating legacy - code execution manager');
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
+    logTime('Activating legacy - linter commands');
     context.subscriptions.push(new LinterCommands(serviceManager));
 
+    logTime('Activating legacy - LS config');
     languages.setLanguageConfiguration(PYTHON_LANGUAGE, getLanguageConfiguration());
 
+    logTime('Activating legacy - document formatting');
     if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'internalConsole') {
         const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
         context.subscriptions.push(languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
         context.subscriptions.push(languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
     }
 
+    logTime('Activating legacy - REPL provider');
     context.subscriptions.push(new ReplProvider(serviceContainer));
 
+    logTime('Activating legacy - terminal provider');
     const terminalProvider = new TerminalProvider(serviceContainer);
     terminalProvider.initialize(window.activeTerminal).ignoreErrors();
     context.subscriptions.push(terminalProvider);
 
+    logTime('Activating legacy - code action provider');
     context.subscriptions.push(
         languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), {
             providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports],
         }),
     );
 
+    logTime('Activating legacy - debug config provider');
     serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationService).forEach((debugConfigProvider) => {
         context.subscriptions.push(debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfigProvider));
     });
 
+    logTime('Activating legacy - debugger banner');
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
 
+    logTime('Activating legacy - done');
     return { fullyReady: activationPromise };
 }
