@@ -10,6 +10,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
 import { PVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { logTime } from '../performance';
 import { GLOBAL_MEMENTO, IExperimentService, IMemento, IOutputChannel } from '../types';
 import { Experiments } from '../utils/localize';
 import { ExperimentationTelemetry } from './telemetry';
@@ -39,6 +40,7 @@ export class ExperimentService implements IExperimentService {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
     ) {
+        logTime('Experiment Service - constructor start');
         const settings = this.workspaceService.getConfiguration('python');
         // Users can only opt in or out of experiment groups, not control groups.
         const optInto = settings.get<string[]>('experiments.optInto') || [];
@@ -77,14 +79,17 @@ export class ExperimentService implements IExperimentService {
         );
 
         this.logExperiments();
+        logTime('Experiment Service - constructor done');
     }
 
     public async activate(): Promise<void> {
+        logTime('Experiment Service - activation start');
         if (this.experimentationService) {
             await this.experimentationService.initializePromise;
             await this.experimentationService.initialFetch;
         }
         sendOptInOptOutTelemetry(this._optInto, this._optOutFrom, this.appEnvironment.packageJson);
+        logTime('Experiment Service - activation done');
     }
 
     public async inExperiment(experiment: string): Promise<boolean> {

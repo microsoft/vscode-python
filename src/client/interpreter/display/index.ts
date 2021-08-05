@@ -3,6 +3,7 @@ import { Disposable, OutputChannel, StatusBarAlignment, StatusBarItem, Uri } fro
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import '../../common/extensions';
+import { logTime } from '../../common/performance';
 import {
     IDisposableRegistry,
     IInterpreterPathProxyService,
@@ -61,6 +62,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
     }
     public async refresh(resource?: Uri) {
         // Use the workspace Uri if available
+        logTime('Interpreter Refresh - workspace');
         if (resource && this.workspaceService.getWorkspaceFolder(resource)) {
             resource = this.workspaceService.getWorkspaceFolder(resource)!.uri;
         }
@@ -68,6 +70,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
             const wkspc = this.helper.getActiveWorkspaceUri(resource);
             resource = wkspc ? wkspc.folderUri : undefined;
         }
+        logTime('Interpreter Refresh - update display');
         await this.updateDisplay(resource);
     }
     public registerVisibilityFilter(filter: IInterpreterStatusbarVisibilityFilter) {
@@ -83,11 +86,15 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         }
     }
     private async updateDisplay(workspaceFolder?: Uri) {
+        logTime('Interpreter Refresh - get interpreter path');
         const interpreterPath = this.interpreterPathExpHelper.get(workspaceFolder);
         if (!interpreterPath || interpreterPath === 'python') {
+            logTime('Interpreter Refresh - auto select');
             await this.autoSelection.autoSelectInterpreter(workspaceFolder); // Block on this only if no interpreter selected.
         }
+        logTime('Interpreter Refresh - get active interpreter');
         const interpreter = await this.interpreterService.getActiveInterpreter(workspaceFolder);
+        logTime('Interpreter Refresh - update display');
         this.currentlySelectedWorkspaceFolder = workspaceFolder;
         if (interpreter) {
             this.statusBar.color = '';
@@ -111,6 +118,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         }
         this.statusBarCanBeDisplayed = true;
         this.updateVisibility();
+        logTime('Interpreter Refresh - done');
     }
     private updateVisibility() {
         if (!this.statusBarCanBeDisplayed) {
