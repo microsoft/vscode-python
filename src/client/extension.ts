@@ -107,7 +107,10 @@ async function activateUnsafe(
     const experimentService = activatedServiceContainer.get<IExperimentService>(IExperimentService);
     // This guarantees that all experiment information has loaded & all telemetry will contain experiment info.
     await experimentService.activate();
+    console.time('Time taken to display');
+    const stopWatch = new StopWatch();
     const components = await initializeComponents(ext);
+    console.log('Time taken to initialize components', stopWatch.elapsedTime);
 
     // Then we finish activating.
     const componentsActivated = await activateComponents(ext, components);

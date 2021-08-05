@@ -12,6 +12,7 @@ import { IApplicationEnvironment, IWorkspaceService } from '../application/types
 import { PVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { GLOBAL_MEMENTO, IExperimentService, IMemento, IOutputChannel } from '../types';
 import { Experiments } from '../utils/localize';
+import { StopWatch } from '../utils/stopWatch';
 import { ExperimentationTelemetry } from './telemetry';
 
 const EXP_MEMENTO_KEY = 'VSCode.ABExp.FeatureData';
@@ -81,17 +82,47 @@ export class ExperimentService implements IExperimentService {
 
     public async activate(): Promise<void> {
         if (this.experimentationService) {
+            const stopwatch = new StopWatch();
             await this.experimentationService.initializePromise;
+            console.log('Time to initialize promise', stopwatch.elapsedTime);
             await this.experimentationService.initialFetch;
+            console.log('Time to initialize experiments', stopwatch.elapsedTime);
         }
         sendOptInOptOutTelemetry(this._optInto, this._optOutFrom, this.appEnvironment.packageJson);
     }
 
     public async inExperiment(experiment: string): Promise<boolean> {
-        return this.inExperimentSync(experiment);
+        const stopwatch = new StopWatch();
+        if (!this.experimentationService) {
+            return false;
+        }
+
+        // Currently the service doesn't support opting in and out of experiments.
+        // so we need to perform these checks manually.
+        if (this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
+            return false;
+        }
+
+        if (this._optInto.includes('All') || this._optInto.includes(experiment)) {
+            // Check if the user was already in the experiment server-side. We need to do
+            // this to ensure the experiment service is ready and internal states are fully
+            // synced with the experiment server.
+            await this.experimentationService.getTreatmentVariableAsync(EXP_CONFIG_ID, experiment, true);
+            return true;
+        }
+
+        const treatmentVariable = await this.experimentationService.getTreatmentVariableAsync(
+            EXP_CONFIG_ID,
+            experiment,
+            true,
+        );
+
+        console.log('Time to inExperiment', experiment, stopwatch.elapsedTime);
+        return treatmentVariable !== undefined;
     }
 
     public inExperimentSync(experiment: string): boolean {
+        const stopwatch = new StopWatch();
         if (!this.experimentationService) {
             return false;
         }
@@ -114,6 +145,7 @@ export class ExperimentService implements IExperimentService {
         // it means that the value for this experiment was not found on the server.
         const treatmentVariable = this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment);
 
+        console.log('Time to inExperimentSync', experiment, stopwatch.elapsedTime);
         return treatmentVariable !== undefined;
     }
 

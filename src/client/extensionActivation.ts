@@ -169,6 +169,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     await interpreterManager
         .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
         .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
+    console.timeEnd('Time taken to display');
 
     const activationPromise = manager.activate();
 
