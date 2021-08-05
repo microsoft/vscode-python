@@ -1,17 +1,17 @@
 # Changelog
 
-## 2021.8.0-rc (2 August 2021)
+## 2021.8.0 (5 August 2021)
 
 ### Enhancements
 
-1. Add new getting started page using VS Code's API
+1. Add new getting started page using VS Code's API to replace our custom start page.
    ([#16678](https://github.com/Microsoft/vscode-python/issues/16678))
 1. Replace deprecated vscode-test with @vscode/test-electron for CI. (thanks [iChenLei](https://github.com/iChenLei))
    ([#16765](https://github.com/Microsoft/vscode-python/issues/16765))
 
 ### Code Health
 
-1. Sort Settings Alphabetically (thanks [bfarahdel](https://github.com/bfarahdel))
+1. Sort Settings Alphabetically. (thanks [bfarahdel](https://github.com/bfarahdel))
    ([#8406](https://github.com/Microsoft/vscode-python/issues/8406))
 1. Changed default language server to `Pylance` for extension development. (thanks [jasleen101010](https://github.com/jasleen101010))
    ([#13007](https://github.com/Microsoft/vscode-python/issues/13007))
