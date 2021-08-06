@@ -30,7 +30,7 @@ import { ProgressLocation, ProgressOptions, window } from 'vscode';
 import { buildApi, IExtensionApi } from './api';
 import { IApplicationShell } from './common/application/types';
 import { traceError } from './common/logger';
-import { IAsyncDisposableRegistry, IExtensionContext } from './common/types';
+import { IAsyncDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
 import { activateComponents } from './extensionActivation';
@@ -103,6 +103,10 @@ async function activateUnsafe(
     // Note standard utils especially experiment and platform code are fundamental to the extension
     // and should be available before we activate anything else.Hence register them first.
     initializeStandard(ext);
+    // We need to activate experiments before initializing components as objects are created or not created based on experiments.
+    const experimentService = activatedServiceContainer.get<IExperimentService>(IExperimentService);
+    // This guarantees that all experiment information has loaded & all telemetry will contain experiment info.
+    await experimentService.activate();
     const components = await initializeComponents(ext);
 
     // Then we finish activating.
