@@ -380,7 +380,6 @@
             {
                 "category": "Test",
                 "command": "testing.reRunFailTests",
-
                 "icon": {
                     "dark": "resources/dark/run-failed-tests.svg",
                     "light": "resources/light/run-failed-tests.svg"
@@ -606,7 +605,8 @@
                             "pythonJediLSP",
                             "pythonSortEnvs",
                             "pythonSurveyNotification",
-                            "pythonTensorboardExperiment"
+                            "pythonTensorboardExperiment",
+                            "pythonRunFailedTestsButtonDisplayed"
                         ]
                     },
                     "scope": "machine",
@@ -624,7 +624,8 @@
                             "pythonJediLSP",
                             "pythonSortEnvs",
                             "pythonSurveyNotification",
-                            "pythonTensorboardExperiment"
+                            "pythonTensorboardExperiment",
+                            "pythonRunFailedTestsButtonDisplayed"
                         ]
                     },
                     "scope": "machine",
@@ -1886,7 +1887,7 @@
                     "when": "resourceLangId == python"
                 }
             ],
-            "view/title":[
+            "view/title": [
                 {
                     "command": "python.refreshTests",
                     "when": "view == workbench.view.testing",
@@ -1894,7 +1895,7 @@
                 },
                 {
                     "command": "testing.reRunFailTests",
-                    "when": "view == workbench.view.testing",
+                    "when": "view == workbench.view.testing && hasFailedTests && showRunFailedTests",
                     "group": "navigation"
                 }
             ]

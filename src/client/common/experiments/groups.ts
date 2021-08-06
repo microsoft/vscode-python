@@ -48,3 +48,8 @@ export enum TorchProfiler {
 export enum EnvironmentSorting {
     experiment = 'pythonSortEnvs',
 }
+
+// Experiment to show the failed tests button
+export enum ShowRunFailedTests {
+    experiment = 'pythonRunFailedTestsButtonDisplayed',
+}

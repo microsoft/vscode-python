@@ -1,11 +1,11 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Disposable, Uri, tests } from 'vscode';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
+import { ConfigurationChangeEvent, Disposable, Uri, tests, TestResultState } from 'vscode';
+import { IApplicationShell, ICommandManager, IContextKeyManager, IWorkspaceService } from '../common/application/types';
 import * as constants from '../common/constants';
 import '../common/extensions';
-import { IDisposableRegistry, Product } from '../common/types';
+import { IDisposableRegistry, IExperimentService, Product } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { EventName } from '../telemetry/constants';
@@ -18,6 +18,9 @@ import { IExtensionActivationService } from '../activation/types';
 import { ITestController } from './testController/common/types';
 import { traceVerbose } from '../common/logger';
 import { DelayedTrigger, IDelayedTrigger } from '../common/utils/delayTrigger';
+import { ShowRunFailedTests } from '../common/experiments/groups';
+import { ExtensionContextKey } from '../common/application/contextKeys';
+import { CheckForFailedTests, UpdateTestResultMap } from './testController/common/testItemUtilities';
 
 @injectable()
 export class TestingService implements ITestingService {
@@ -34,23 +37,29 @@ export class UnitTestManagementService implements IExtensionActivationService {
     private activatedOnce: boolean = false;
     private readonly disposableRegistry: Disposable[];
     private workspaceService: IWorkspaceService;
+    private context: IContextKeyManager;
     private testController: ITestController | undefined;
     private configChangeTrigger: IDelayedTrigger;
+
+    // This is temporarily needed until the proposed API settles for this part
+    private testStateMap: Map<string, TestResultState> = new Map();
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.disposableRegistry = serviceContainer.get<Disposable[]>(IDisposableRegistry);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.context = this.serviceContainer.get<IContextKeyManager>(IContextKeyManager);
+
         if (tests && !!tests.createTestController) {
             this.testController = serviceContainer.get<ITestController>(ITestController);
         }
 
-        const trigger = new DelayedTrigger(
+        const configChangeTrigger = new DelayedTrigger(
             this.configurationChangeHandler.bind(this),
             500,
             'Test Configuration Change',
         );
-        this.configChangeTrigger = trigger;
-        this.disposableRegistry.push(trigger);
+        this.configChangeTrigger = configChangeTrigger;
+        this.disposableRegistry.push(configChangeTrigger);
     }
 
     public async activate(): Promise<void> {
@@ -61,9 +70,34 @@ export class UnitTestManagementService implements IExtensionActivationService {
 
         this.registerHandlers();
         this.registerCommands();
+
+        const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
+        await this.context.setContext(
+            ExtensionContextKey.ShowRunFailedTests,
+            await experiments.inExperiment(ShowRunFailedTests.experiment),
+        );
+
+        if (!!tests.testResults) {
+            await this.updateTestUIButtons();
+            this.disposableRegistry.push(
+                tests.onDidChangeTestResults(() => {
+                    this.updateTestUIButtons();
+                }),
+            );
+        }
     }
 
-    public async configurationChangeHandler(eventArgs: ConfigurationChangeEvent) {
+    private async updateTestUIButtons() {
+        // See if we already have stored tests results from previous runs.
+        // The tests results currently has a historical test status based on runs. To get a
+        // full picture of the tests state these need to be reduced by test id.
+        UpdateTestResultMap(this.testStateMap, tests.testResults);
+
+        const hasFailedTests = CheckForFailedTests(this.testStateMap);
+        await this.context.setContext(ExtensionContextKey.HasFailedTests, hasFailedTests);
+    }
+
+    private async configurationChangeHandler(eventArgs: ConfigurationChangeEvent) {
         const workspaces = this.workspaceService.workspaceFolders ?? [];
         const changedWorkspaces: Uri[] = workspaces
             .filter((w) => eventArgs.affectsConfiguration('python.testing', w.uri))
@@ -73,7 +107,7 @@ export class UnitTestManagementService implements IExtensionActivationService {
     }
 
     @captureTelemetry(EventName.UNITTEST_CONFIGURE, undefined, false)
-    public async configureTests(resource?: Uri) {
+    private async configureTests(resource?: Uri) {
         let wkspace: Uri | undefined;
         if (resource) {
             const wkspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
@@ -89,7 +123,7 @@ export class UnitTestManagementService implements IExtensionActivationService {
         await configurationService.promptToEnableAndConfigureTestFramework(wkspace!);
     }
 
-    public registerCommands(): void {
+    private registerCommands(): void {
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
 
         this.disposableRegistry.push(
@@ -113,7 +147,7 @@ export class UnitTestManagementService implements IExtensionActivationService {
         );
     }
 
-    public registerHandlers() {
+    private registerHandlers() {
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.disposableRegistry.push(
             this.workspaceService.onDidChangeConfiguration((e) => {

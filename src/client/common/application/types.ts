@@ -65,6 +65,7 @@ import type { NotebookConcatTextDocument, NotebookDocument } from 'vscode-propos
 import { Channel } from '../constants';
 import { IAsyncDisposable, Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';
+import { ExtensionContextKey } from './contextKeys';
 
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
@@ -491,6 +492,11 @@ export interface ICommandManager {
      * @return Thenable that resolves to a list of command ids.
      */
     getCommands(filterInternal?: boolean): Thenable<string[]>;
+}
+
+export const IContextKeyManager = Symbol('IContextKeyManager');
+export interface IContextKeyManager {
+    setContext(key: ExtensionContextKey, value: boolean): Promise<void>;
 }
 
 export const IJupyterExtensionDependencyManager = Symbol('IJupyterExtensionDependencyManager');

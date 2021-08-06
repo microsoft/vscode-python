@@ -46,6 +46,7 @@ import {
     IApplicationShell,
     IClipboard,
     ICommandManager,
+    IContextKeyManager,
     IDebugService,
     IDocumentManager,
     IJupyterExtensionDependencyManager,
@@ -120,6 +121,7 @@ import { Random } from './utils/random';
 import { JupyterNotInstalledNotificationHelper } from '../jupyter/jupyterNotInstalledNotificationHelper';
 import { IJupyterNotInstalledNotificationHelper } from '../jupyter/types';
 import { InterpreterPathProxyService } from './interpreterPathProxyService';
+import { ContextKeyManager } from './application/contextKeyManager';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
@@ -150,6 +152,7 @@ export function registerTypes(serviceManager: IServiceManager): void {
         JupyterNotInstalledNotificationHelper,
     );
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
+    serviceManager.addSingleton<IContextKeyManager>(IContextKeyManager, ContextKeyManager);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
