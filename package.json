@@ -1216,11 +1216,11 @@
                 },
                 "python.testing.unittestArgs": {
                     "default": [
-                        "*test*.py",
-                        "-p",
-                        "-s",
                         "-v",
-                        "."
+                        "-s",
+                        ".",
+                        "-p",
+                        "*test*.py"
                     ],
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "items": {
