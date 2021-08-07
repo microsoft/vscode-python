@@ -49,7 +49,12 @@ export enum EnvironmentSorting {
     experiment = 'pythonSortEnvs',
 }
 
-// Experiment to show the failed tests button
+// Experiment to show the run failed tests button
 export enum ShowRunFailedTests {
     experiment = 'pythonRunFailedTestsButtonDisplayed',
+}
+
+// Experiment to show the run failed tests button
+export enum ShowRefreshTests {
+    experiment = 'pythonRefreshTestsButtonDisplayed',
 }

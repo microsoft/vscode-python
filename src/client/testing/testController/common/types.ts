@@ -1,7 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, TestController, TestItem, TestRun, TestRunProfileKind, Uri, WorkspaceFolder } from 'vscode';
+import {
+    CancellationToken,
+    Event,
+    TestController,
+    TestItem,
+    TestRun,
+    TestRunProfileKind,
+    Uri,
+    WorkspaceFolder,
+} from 'vscode';
 import { TestDiscoveryOptions } from '../../common/types';
 
 export type TestRunInstanceOptions = TestRunOptions & {
@@ -35,6 +44,9 @@ export type TestRefreshOptions = { forceRefresh: boolean };
 export const ITestController = Symbol('ITestController');
 export interface ITestController {
     refreshTestData(resource?: Uri, options?: TestRefreshOptions): Promise<void>;
+    stopRefreshing(): void;
+    onRefreshingCompleted: Event<void>;
+    onRefreshingStarted: Event<void>;
 }
 
 export interface ITestRun {

@@ -14,6 +14,7 @@ import {
     TestRunProfileKind,
     CancellationTokenSource,
     Uri,
+    EventEmitter,
 } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceVerbose } from '../../common/logger';
@@ -30,6 +31,14 @@ export class PythonTestController implements ITestController {
     private readonly refreshData: IDelayedTrigger;
 
     private refreshCancellation: CancellationTokenSource;
+
+    private readonly refreshingCompletedEvent: EventEmitter<void> = new EventEmitter<void>();
+
+    private readonly refreshingStartedEvent: EventEmitter<void> = new EventEmitter<void>();
+
+    public readonly onRefreshingCompleted = this.refreshingCompletedEvent.event;
+
+    public readonly onRefreshingStarted = this.refreshingStartedEvent.event;
 
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -72,10 +81,6 @@ export class PythonTestController implements ITestController {
 
     public refreshTestData(uri?: Resource, options?: TestRefreshOptions): Promise<void> {
         if (options?.forceRefresh) {
-            this.refreshCancellation.cancel();
-            this.refreshCancellation.dispose();
-            this.refreshCancellation = new CancellationTokenSource();
-
             if (uri === undefined) {
                 // This is a special case where we want everything to be re-discovered.
                 traceVerbose('Testing: Clearing all discovered tests');
@@ -95,37 +100,44 @@ export class PythonTestController implements ITestController {
         return Promise.resolve();
     }
 
+    public stopRefreshing(): void {
+        this.refreshCancellation.cancel();
+        this.refreshCancellation.dispose();
+        this.refreshCancellation = new CancellationTokenSource();
+    }
+
     private async refreshTestDataInternal(uri?: Resource): Promise<void> {
+        this.refreshingStartedEvent.fire();
         if (uri) {
             traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
 
             const settings = this.configSettings.getSettings(uri);
             if (settings.testing.pytestEnabled) {
-                return this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
-            }
-            if (settings.testing.unittestEnabled) {
-                return this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
-            }
-
-            // If we are here we may have to remove an existing node from the tree
-            // This handles the case where user removes test settings. Which should remove the
-            // tests for that particular case from the tree view
-            const workspace = this.workspaceService.getWorkspaceFolder(uri);
-            if (workspace) {
-                const toDelete: string[] = [];
-                this.testController.items.forEach((i: TestItem) => {
-                    const w = this.workspaceService.getWorkspaceFolder(i.uri);
-                    if (w?.uri.fsPath === workspace.uri.fsPath) {
-                        toDelete.push(i.id);
-                    }
-                });
-                toDelete.forEach((i) => this.testController.items.delete(i));
+                await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+            } else if (settings.testing.unittestEnabled) {
+                await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+            } else {
+                // If we are here we may have to remove an existing node from the tree
+                // This handles the case where user removes test settings. Which should remove the
+                // tests for that particular case from the tree view
+                const workspace = this.workspaceService.getWorkspaceFolder(uri);
+                if (workspace) {
+                    const toDelete: string[] = [];
+                    this.testController.items.forEach((i: TestItem) => {
+                        const w = this.workspaceService.getWorkspaceFolder(i.uri);
+                        if (w?.uri.fsPath === workspace.uri.fsPath) {
+                            toDelete.push(i.id);
+                        }
+                    });
+                    toDelete.forEach((i) => this.testController.items.delete(i));
+                }
             }
         } else {
             traceVerbose('Testing: Refreshing all test data');
             const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
             await Promise.all(workspaces.map((workspace) => this.refreshTestDataInternal(workspace.uri)));
         }
+        this.refreshingCompletedEvent.fire();
         return Promise.resolve();
     }
 

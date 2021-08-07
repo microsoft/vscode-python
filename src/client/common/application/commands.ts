@@ -92,5 +92,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Exec_In_Terminal_Icon]: [undefined, Uri];
     [Commands.Tests_Configure]: [undefined, undefined | CommandSource, undefined | Uri];
     [Commands.Test_Refresh]: [undefined, undefined | CommandSource, undefined | Uri];
+    [Commands.Test_Refreshing]: [];
+    [Commands.Test_Stop_Refreshing]: [];
     [Commands.LaunchTensorBoard]: [TensorBoardEntrypoint, TensorBoardEntrypointTrigger];
 }

@@ -199,18 +199,19 @@ for error in loader_errors:
 
                 deferred.resolve();
             } catch (ex) {
-                traceError('Error discovering unittest tests:\r\n', ex);
+                const cancel = options.token?.isCancellationRequested ? 'Cancelled' : 'Error';
+                traceError(`${cancel} discovering unittest tests:\r\n`, ex);
 
                 // Report also on the test view.
                 testController.items.add(
                     createErrorTestItem(testController, {
                         id: `DiscoveryError:${workspace.uri.fsPath}`,
                         label: `Unittest Discovery Error [${path.basename(workspace.uri.fsPath)}]`,
-                        error: util.format('Error discovering unittest tests (see Output > Python):\r\n', ex),
+                        error: util.format(`${cancel} discovering unittest tests (see Output > Python):\r\n`, ex),
                     }),
                 );
 
-                deferred.reject(ex);
+                deferred.reject(ex as Error);
             } finally {
                 // Discovery has finished running we have the raw test data at this point.
                 this.discovering.delete(workspace.uri.fsPath);

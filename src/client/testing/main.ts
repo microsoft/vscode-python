@@ -18,7 +18,7 @@ import { IExtensionActivationService } from '../activation/types';
 import { ITestController } from './testController/common/types';
 import { traceVerbose } from '../common/logger';
 import { DelayedTrigger, IDelayedTrigger } from '../common/utils/delayTrigger';
-import { ShowRunFailedTests } from '../common/experiments/groups';
+import { ShowRefreshTests, ShowRunFailedTests } from '../common/experiments/groups';
 import { ExtensionContextKey } from '../common/application/contextKeys';
 import { checkForFailedTests, updateTestResultMap } from './testController/common/testItemUtilities';
 
@@ -71,12 +71,6 @@ export class UnitTestManagementService implements IExtensionActivationService {
         this.registerHandlers();
         this.registerCommands();
 
-        const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
-        await this.context.setContext(
-            ExtensionContextKey.ShowRunFailedTests,
-            await experiments.inExperiment(ShowRunFailedTests.experiment),
-        );
-
         if (!!tests.testResults) {
             await this.updateTestUIButtons();
             this.disposableRegistry.push(
@@ -85,6 +79,26 @@ export class UnitTestManagementService implements IExtensionActivationService {
                 }),
             );
         }
+
+        if (this.testController) {
+            this.testController.onRefreshingStarted(async () => {
+                await this.context.setContext(ExtensionContextKey.RefreshingTests, true);
+            });
+            this.testController.onRefreshingCompleted(async () => {
+                await this.context.setContext(ExtensionContextKey.RefreshingTests, false);
+            });
+        }
+
+        // Enable buttons based on experiment
+        const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
+        await this.context.setContext(
+            ExtensionContextKey.InShowRunFailedTestsExperiment,
+            await experiments.inExperiment(ShowRunFailedTests.experiment),
+        );
+        await this.context.setContext(
+            ExtensionContextKey.InShowRefreshingTestsExperiment,
+            await experiments.inExperiment(ShowRefreshTests.experiment),
+        );
     }
 
     private async updateTestUIButtons() {
@@ -139,11 +153,23 @@ export class UnitTestManagementService implements IExtensionActivationService {
             ),
             commandManager.registerCommand(
                 constants.Commands.Test_Refresh,
-                (_, _cmdSource: constants.CommandSource = constants.CommandSource.commandPalette, resource?: Uri) => {
+                async (
+                    _,
+                    _cmdSource: constants.CommandSource = constants.CommandSource.commandPalette,
+                    resource?: Uri,
+                ) => {
                     traceVerbose('Testing: Manually triggered test refresh');
                     this.testController?.refreshTestData(resource, { forceRefresh: true });
                 },
             ),
+            commandManager.registerCommand(constants.Commands.Test_Refreshing, () => {
+                // We don't do anything if this is clicked. This is just to show
+                // the spinning refresh icon.
+            }),
+            commandManager.registerCommand(constants.Commands.Test_Stop_Refreshing, () => {
+                traceVerbose('Testing: Stop refreshing clicked.');
+                this.testController?.stopRefreshing();
+            }),
         );
     }
 

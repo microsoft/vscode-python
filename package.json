@@ -373,6 +373,21 @@
                 "title": "%python.command.python.refreshTests.title%"
             },
             {
+                "category": "Test",
+                "command": "python.refreshingTests",
+                "icon": {
+                    "dark": "resources/dark/discovering-tests.svg",
+                    "light": "resources/light/discovering-tests.svg"
+                },
+                "title": "%python.command.python.refreshingTests.title%"
+            },
+            {
+                "category": "Test",
+                "command": "python.stopRefreshingTests",
+                "icon": "$(stop-circle)",
+                "title": "%python.command.python.stopRefreshingTests.title%"
+            },
+            {
                 "category": "Python",
                 "command": "python.reportIssue",
                 "title": "%python.command.python.reportIssue.title%"
@@ -606,7 +621,8 @@
                             "pythonSortEnvs",
                             "pythonSurveyNotification",
                             "pythonTensorboardExperiment",
-                            "pythonRunFailedTestsButtonDisplayed"
+                            "pythonRunFailedTestsButtonDisplayed",
+                            "pythonRefreshTestsButtonDisplayed"
                         ]
                     },
                     "scope": "machine",
@@ -625,7 +641,8 @@
                             "pythonSortEnvs",
                             "pythonSurveyNotification",
                             "pythonTensorboardExperiment",
-                            "pythonRunFailedTestsButtonDisplayed"
+                            "pythonRunFailedTestsButtonDisplayed",
+                            "pythonRefreshTestsButtonDisplayed"
                         ]
                     },
                     "scope": "machine",
@@ -1890,13 +1907,23 @@
             "view/title": [
                 {
                     "command": "python.refreshTests",
-                    "when": "view == workbench.view.testing",
-                    "group": "navigation"
+                    "when": "view == workbench.view.testing && !refreshingTests && inShowRefreshingTestsExperiment",
+                    "group": "navigation@0"
+                },
+                {
+                    "command": "python.refreshingTests",
+                    "when": "view == workbench.view.testing && refreshingTests && inShowRefreshingTestsExperiment",
+                    "group": "navigation@0"
+                },
+                {
+                    "command": "python.stopRefreshingTests",
+                    "when": "view == workbench.view.testing && refreshingTests && inShowRefreshingTestsExperiment",
+                    "group": "navigation@0"
                 },
                 {
                     "command": "testing.reRunFailTests",
-                    "when": "view == workbench.view.testing && hasFailedTests && showRunFailedTests",
-                    "group": "navigation"
+                    "when": "view == workbench.view.testing && hasFailedTests && inShowRunFailedTestsExperiment",
+                    "group": "navigation@1"
                 }
             ]
         },

@@ -3,5 +3,7 @@
 
 export enum ExtensionContextKey {
     HasFailedTests = 'hasFailedTests',
-    ShowRunFailedTests = 'showRunFailedTests',
+    InShowRunFailedTestsExperiment = 'inShowRunFailedTestsExperiment',
+    RefreshingTests = 'refreshingTests',
+    InShowRefreshingTestsExperiment = 'inShowRefreshingTestsExperiment',
 }

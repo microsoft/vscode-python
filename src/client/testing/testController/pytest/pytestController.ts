@@ -199,8 +199,9 @@ export class PytestController implements ITestFrameworkController {
 
                 deferred.resolve();
             } catch (ex) {
-                traceError('Error discovering pytest tests:\r\n', ex);
-                const message = getTestDiscoveryExceptions(ex.message);
+                const cancel = options.token?.isCancellationRequested ? 'Cancelled' : 'Error';
+                traceError(`${cancel} discovering pytest tests:\r\n`, ex);
+                const message = getTestDiscoveryExceptions((ex as Error).message);
 
                 // Report also on the test view. Getting root node is more complicated due to fact
                 // that in pytest project can be organized in many ways
@@ -209,13 +210,13 @@ export class PytestController implements ITestFrameworkController {
                         id: `DiscoveryError:${workspace.uri.fsPath}`,
                         label: `Pytest Discovery Error [${path.basename(workspace.uri.fsPath)}]`,
                         error: util.format(
-                            'Error discovering pytest tests (see Output > Python):\r\n',
+                            `${cancel} discovering pytest tests (see Output > Python):\r\n`,
                             message.length > 0 ? message : ex,
                         ),
                     }),
                 );
 
-                deferred.reject(ex);
+                deferred.reject(ex as Error);
             } finally {
                 // Discovery has finished running we have the raw test data at this point.
                 this.discovering.delete(workspace.uri.fsPath);

@@ -39,6 +39,9 @@ export namespace Commands {
     export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
     export const Tests_Configure = 'python.configureTests';
     export const Test_Refresh = 'python.refreshTests';
+    // `python.refreshingTests` is a dummy command just to show the spinning icon
+    export const Test_Refreshing = 'python.refreshingTests';
+    export const Test_Stop_Refreshing = 'python.stopRefreshingTests';
     export const Sort_Imports = 'python.sortImports';
     export const ViewOutput = 'python.viewOutput';
     export const Refactor_Extract_Variable = 'python.refactorExtractVariable';
