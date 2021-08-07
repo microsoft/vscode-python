@@ -193,7 +193,11 @@
                         "title": "Open an existing Python project",
                         "description": "If you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFileFolder)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
                         "media": {
-                            "image": "images/OpenOrCreateNotebook.gif",
+                            "image": {
+                                "light": "resources/walkthrough/open-folder-light.png",
+                                "dark": "resources/walkthrough/open-folder-dark.png",
+                                "hc": "resources/walkthrough/open-folder-hc.png"
+                               },
                             "altText": "Open a folder"
                         },
                         "completionEvents": [
@@ -206,7 +210,11 @@
                         "title": "Open an existing Python project",
                         "description": "To start, open a Python folder/project.\nIf you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFolder)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
                         "media": {
-                            "image": "images/OpenOrCreateNotebook.gif",
+                            "image": {
+                                "light": "resources/walkthrough/open-folder-light.png",
+                                "dark": "resources/walkthrough/open-folder-dark.png",
+                                "hc": "resources/walkthrough/open-folder-hc.png"
+                               },
                             "altText": "Open a folder"
                         },
                         "completionEvents": [
