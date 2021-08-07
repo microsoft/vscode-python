@@ -266,6 +266,18 @@ suite('getEnvTypeHeuristic tests', () => {
 
             assert.strictEqual(envTypeHeuristic, EnvTypeHeuristic.Global);
         });
+
+        test('If envPath is not set, fallback to path', () => {
+            const environment = {
+                envType,
+                path: path.join(workspacePath, 'my-environment'),
+                version: { major: 3, minor: 10, patch: 2 },
+            } as PythonEnvironment;
+
+            const envTypeHeuristic = getEnvTypeHeuristic(environment, workspacePath);
+
+            assert.strictEqual(envTypeHeuristic, EnvTypeHeuristic.Local);
+        });
     });
 
     const globalInterpretersEnvTypes = [
