@@ -528,24 +528,24 @@ export function getNodeByUri(root: TestItem, uri: Uri): TestItem | undefined {
     return undefined;
 }
 
-function UpdateTestResultMapForSnapshot(resultMap: Map<string, TestResultState>, snapshot: TestResultSnapshot) {
+function updateTestResultMapForSnapshot(resultMap: Map<string, TestResultState>, snapshot: TestResultSnapshot) {
     for (const taskState of snapshot.taskStates) {
         resultMap.set(snapshot.id, taskState.state);
     }
-    snapshot.children.forEach((child) => UpdateTestResultMapForSnapshot(resultMap, child));
+    snapshot.children.forEach((child) => updateTestResultMapForSnapshot(resultMap, child));
 }
 
-export function UpdateTestResultMap(
+export function updateTestResultMap(
     resultMap: Map<string, TestResultState>,
     testResults: readonly TestRunResult[],
 ): void {
     const ordered = new Array(...testResults).sort((a, b) => a.completedAt - b.completedAt);
     ordered.forEach((testResult) => {
-        testResult.results.forEach((snapshot) => UpdateTestResultMapForSnapshot(resultMap, snapshot));
+        testResult.results.forEach((snapshot) => updateTestResultMapForSnapshot(resultMap, snapshot));
     });
 }
 
-export function CheckForFailedTests(resultMap: Map<string, TestResultState>): boolean {
+export function checkForFailedTests(resultMap: Map<string, TestResultState>): boolean {
     return (
         Array.from(resultMap.values()).find(
             (state) => state === TestResultState.Failed || state === TestResultState.Errored,

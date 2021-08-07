@@ -20,7 +20,7 @@ import { traceVerbose } from '../common/logger';
 import { DelayedTrigger, IDelayedTrigger } from '../common/utils/delayTrigger';
 import { ShowRunFailedTests } from '../common/experiments/groups';
 import { ExtensionContextKey } from '../common/application/contextKeys';
-import { CheckForFailedTests, UpdateTestResultMap } from './testController/common/testItemUtilities';
+import { checkForFailedTests, updateTestResultMap } from './testController/common/testItemUtilities';
 
 @injectable()
 export class TestingService implements ITestingService {
@@ -91,9 +91,9 @@ export class UnitTestManagementService implements IExtensionActivationService {
         // See if we already have stored tests results from previous runs.
         // The tests results currently has a historical test status based on runs. To get a
         // full picture of the tests state these need to be reduced by test id.
-        UpdateTestResultMap(this.testStateMap, tests.testResults);
+        updateTestResultMap(this.testStateMap, tests.testResults);
 
-        const hasFailedTests = CheckForFailedTests(this.testStateMap);
+        const hasFailedTests = checkForFailedTests(this.testStateMap);
         await this.context.setContext(ExtensionContextKey.HasFailedTests, hasFailedTests);
     }
 
