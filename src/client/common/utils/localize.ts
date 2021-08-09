@@ -421,10 +421,6 @@ export namespace ExtensionSurveyBanner {
     export const bannerLabelYes = localize('ExtensionSurveyBanner.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('ExtensionSurveyBanner.bannerLabelNo', 'No, thanks');
     export const maybeLater = localize('ExtensionSurveyBanner.maybeLater', 'Maybe later');
-    export const mplsMessage = localize(
-        'ExtensionSurveyBanner.mplsMessage',
-        'Can you please take 2 minutes to tell us about your experience using the Microsoft Python Language Server?',
-    );
 }
 
 export namespace Products {

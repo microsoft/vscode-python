@@ -85,7 +85,6 @@
     "ExtensionSurveyBanner.bannerLabelYes": "Yes, take survey now",
     "ExtensionSurveyBanner.bannerLabelNo": "No, thanks",
     "ExtensionSurveyBanner.maybeLater": "Maybe later",
-    "ExtensionSurveyBanner.mplsMessage": "Can you please take 2 minutes to tell us about your experience using the Microsoft Python Language Server?",
     "ExtensionChannels.installingInsidersMessage": "Installing Insiders... ",
     "ExtensionChannels.installingStableMessage": "Installing Stable... ",
     "ExtensionChannels.installationCompleteMessage": "complete.",
