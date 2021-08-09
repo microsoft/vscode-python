@@ -84,9 +84,11 @@ export class PythonTestController implements ITestController {
             if (uri === undefined) {
                 // This is a special case where we want everything to be re-discovered.
                 traceVerbose('Testing: Clearing all discovered tests');
-                const ids: string[] = [];
-                this.testController.items.forEach((i) => ids.push(i.id));
-                ids.forEach((id) => this.testController.items.delete(id));
+                this.testController.items.forEach((item) => {
+                    const ids: string[] = [];
+                    item.children.forEach((child) => ids.push(child.id));
+                    ids.forEach((id) => item.children.delete(id));
+                });
 
                 traceVerbose('Testing: Forcing test data refresh');
                 return this.refreshTestDataInternal(undefined);

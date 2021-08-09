@@ -373,9 +373,9 @@ function testDiscoveryParser(
 
                 const folderParts = [];
                 for (const folder of folders) {
-                    const parentId = folderParts.length === 0 ? testDir : `${folderParts.join('/')}`;
+                    const parentId = folderParts.length === 0 ? testDir : `./${folderParts.join('/')}`;
                     folderParts.push(folder);
-                    const pathId = `${folderParts.join('/')}`;
+                    const pathId = `./${folderParts.join('/')}`;
                     const rawFolder = parents.find((f) => f.id === pathId);
                     if (!rawFolder) {
                         parents.push({
