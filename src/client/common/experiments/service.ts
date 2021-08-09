@@ -93,16 +93,16 @@ export class ExperimentService implements IExperimentService {
     }
 
     public async inExperiment(experiment: string): Promise<boolean> {
-        logTime('Experiment Service - in experiment start');
+        logTime(`Experiment Service - in experiment start [${experiment}]`);
         if (!this.experimentationService) {
-            logTime('Experiment Service - in experiment done (no service)');
+            logTime(`Experiment Service - in experiment done (no service)[${experiment}]`);
             return false;
         }
 
         // Currently the service doesn't support opting in and out of experiments.
         // so we need to perform these checks manually.
         if (this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
-            logTime('Experiment Service - in experiment done (opted out)');
+            logTime(`Experiment Service - in experiment done (opted out)[${experiment}]`);
             return false;
         }
 
@@ -111,7 +111,7 @@ export class ExperimentService implements IExperimentService {
             // this to ensure the experiment service is ready and internal states are fully
             // synced with the experiment server.
             await this.experimentationService.getTreatmentVariableAsync(EXP_CONFIG_ID, experiment, true);
-            logTime('Experiment Service - in experiment done (opted-in)');
+            logTime(`Experiment Service - in experiment done (opted-in)[${experiment}]`);
             return true;
         }
 
@@ -120,7 +120,7 @@ export class ExperimentService implements IExperimentService {
             experiment,
             true,
         );
-        logTime('Experiment Service - in experiment done');
+        logTime(`Experiment Service - in experiment done [${experiment}]`);
         return treatmentVariable !== undefined;
     }
 
