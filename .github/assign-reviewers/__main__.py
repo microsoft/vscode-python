@@ -137,35 +137,35 @@ async def main(token: str):
     with config_file.open(encoding="utf-8") as file:
         config: ConfigData = yaml.safe_load(file)
     event = gidgethub.actions.event()
-    author = event["pull_request"]["user"]["login"]
-    available_reviewers = frozenset(config["reviewers"])
-    print("Available reviewers:", available_reviewers)
-    assigned_reviewers = {
-        reviewer["login"] for reviewer in event["pull_request"]["requested_reviewers"]
-    }
-    print("Reviewers already requested:", assigned_reviewers)
+    # author = event["pull_request"]["user"]["login"]
+    # available_reviewers = frozenset(config["reviewers"])
+    # print("Available reviewers:", available_reviewers)
+    # assigned_reviewers = {
+    #     reviewer["login"] for reviewer in event["pull_request"]["requested_reviewers"]
+    # }
+    # print("Reviewers already requested:", assigned_reviewers)
     async with httpx.AsyncClient(timeout=None) as client:
         gh = gidgethub.httpx.GitHubAPI(
             client, event["repository"]["full_name"], oauth_token=token
         )
-        already_reviewers = await already_reviewed(gh)
-        print("People who have already reviewed:", already_reviewers)
-        team_reviewers, reviewers_to_add = select_reviewers(
-            author=author,
-            available_reviewers=available_reviewers,
-            assigned_reviewers=assigned_reviewers,
-            already_reviewers=already_reviewers,
-            count=int(config["numberOfReviewers"]),
-        )
+        # already_reviewers = await already_reviewed(gh)
+        # print("People who have already reviewed:", already_reviewers)
+        # team_reviewers, reviewers_to_add = select_reviewers(
+        #     author=author,
+        #     available_reviewers=available_reviewers,
+        #     assigned_reviewers=assigned_reviewers,
+        #     already_reviewers=already_reviewers,
+        #     count=int(config["numberOfReviewers"]),
+        # )
         async with trio.open_nursery() as nursery:
             if not event["pull_request"]["assignee"]:
                 nursery.start_soon(
-                    add_assignee, gh, frozenset(config["team"]), team_reviewers
+                    add_assignee, gh, frozenset(config["team"]), config["reviewers"]
                 )
-            if reviewers_to_add and not event["pull_request"]["draft"]:
-                nursery.start_soon(add_reviewers, gh, reviewers_to_add)
-            else:
-                print("No reviewers to add or PR is in draft")
+            # if reviewers_to_add and not event["pull_request"]["draft"]:
+            #     nursery.start_soon(add_reviewers, gh, reviewers_to_add)
+            # else:
+            #     print("No reviewers to add or PR is in draft")
 
 
 if __name__ == "__main__":
