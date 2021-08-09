@@ -68,6 +68,7 @@ import { toSemverLikeVersion } from './base/info/pythonVersion';
 import { PythonVersion } from './info/pythonVersion';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { EnvironmentInfoServiceQueuePriority, getEnvironmentInfoService } from './base/info/environmentInfoService';
+import { logTime } from '../common/performance';
 
 const convertedKinds = new Map(
     Object.entries({
@@ -175,24 +176,32 @@ class ComponentAdapter implements IComponentAdapter {
 
     // Implements IInterpreterHelper
     public async getInterpreterInformation(pythonPath: string): Promise<Partial<PythonEnvironment> | undefined> {
+        logTime(`Interpreter Info - start ${pythonPath}`);
         const env = await this.api.resolveEnv(pythonPath);
-        return env ? convertEnvInfo(env) : undefined;
+        const envInfo = env ? convertEnvInfo(env) : undefined;
+        logTime(`Interpreter Info - stop ${pythonPath}`);
+        return envInfo;
     }
 
     // eslint-disable-next-line class-methods-use-this
     public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean> {
+        logTime(`Interpreter MacDefault - start ${pythonPath}`);
         // While `ComponentAdapter` represents how the component would be used in the rest of the
         // extension, we cheat here for the sake of performance.  This is not a problem because when
         // we start using the component's public API directly we will be dealing with `PythonEnvInfo`
         // instead of just `pythonPath`.
-        return isMacDefaultPythonPath(pythonPath);
+        const value = isMacDefaultPythonPath(pythonPath);
+        logTime(`Interpreter MacDefault - done ${pythonPath}`);
+        return value;
     }
 
     // Implements IInterpreterService
 
     // We use the same getInterpreters() here as for IInterpreterLocatorService.
     public async getInterpreterDetails(pythonPath: string): Promise<PythonEnvironment | undefined> {
+        logTime(`Interpreter Details - start ${pythonPath}`);
         const env = await this.api.resolveEnv(pythonPath);
+        logTime(`Interpreter Details - resolve done ${pythonPath}`);
         if (!env) {
             return undefined;
         }
@@ -204,21 +213,27 @@ class ComponentAdapter implements IComponentAdapter {
                 env.version = info.version;
             }
         }
-        return convertEnvInfo(env);
+        const envInfo = convertEnvInfo(env);
+        logTime(`Interpreter Details - done ${pythonPath}`);
+        return envInfo;
     }
 
     // Implements ICondaService
 
     // eslint-disable-next-line class-methods-use-this
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean> {
+        logTime(`Interpreter isConda - start ${interpreterPath}`);
         // While `ComponentAdapter` represents how the component would be used in the rest of the
         // extension, we cheat here for the sake of performance.  This is not a problem because when
         // we start using the component's public API directly we will be dealing with `PythonEnvInfo`
         // instead of just `pythonPath`.
-        return isCondaEnvironment(interpreterPath);
+        const value = isCondaEnvironment(interpreterPath);
+        logTime(`Interpreter isConda - stop ${interpreterPath}`);
+        return value;
     }
 
     public async getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined> {
+        logTime(`Interpreter getConda - start ${interpreterPath}`);
         if (!(await isCondaEnvironment(interpreterPath))) {
             // Undefined is expected here when the env is not Conda env.
             return undefined;
@@ -232,20 +247,28 @@ class ComponentAdapter implements IComponentAdapter {
             return undefined;
         }
 
-        return { name: env.name, path: env.location };
+        const data = { name: env.name, path: env.location };
+        logTime(`Interpreter getConda - stop ${interpreterPath}`);
+        return data;
     }
 
     // eslint-disable-next-line class-methods-use-this
     public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean> {
+        logTime(`Interpreter winStore - start ${pythonPath}`);
         // Eventually we won't be calling 'isWindowsStoreInterpreter' in the component adapter, so we won't
         // need to use 'isWindowsStoreEnvironment' directly here. This is just a temporary implementation.
-        return isWindowsStoreEnvironment(pythonPath);
+        const value = isWindowsStoreEnvironment(pythonPath);
+        logTime(`Interpreter winStore - stop ${pythonPath}`);
+        return value;
     }
 
     // Implements IInterpreterLocatorService
     public get hasInterpreters(): Promise<boolean> {
+        logTime(`Interpreter has - start`);
         const iterator = this.api.iterEnvs();
-        return iterator.next().then((res) => !res.done);
+        const ret = iterator.next().then((res) => !res.done);
+        logTime(`Interpreter has - stop`);
+        return ret;
     }
 
     public async getInterpreters(
@@ -253,6 +276,7 @@ class ComponentAdapter implements IComponentAdapter {
         options?: GetInterpreterOptions,
         source?: PythonEnvSource[],
     ): Promise<PythonEnvironment[]> {
+        logTime(`Interpreter getInterpreters - start`);
         // Notify locators are locating.
         this.refreshing.fire();
 
@@ -264,6 +288,7 @@ class ComponentAdapter implements IComponentAdapter {
         // Notify all locators have completed locating. Note it's crucial to notify this even when getInterpretersViaAPI
         // fails, to ensure "Python extension loading..." text disappears.
         this.refreshed.fire();
+        logTime(`Interpreter getInterpreters - stop`);
         return legacyEnvs;
     }
 
