@@ -97,6 +97,7 @@ export class ExperimentService implements IExperimentService {
     }
 
     public inExperimentSync(experiment: string): boolean {
+        logTime(`In Experiment - start ${experiment}`);
         if (!this.experimentationService) {
             return false;
         }
@@ -104,6 +105,7 @@ export class ExperimentService implements IExperimentService {
         // Currently the service doesn't support opting in and out of experiments.
         // so we need to perform these checks manually.
         if (this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
+            logTime(`In Experiment - done opt-out ${experiment}`);
             return false;
         }
 
@@ -112,13 +114,14 @@ export class ExperimentService implements IExperimentService {
             // this to ensure the experiment service is ready and internal states are fully
             // synced with the experiment server.
             this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment);
+            logTime(`In Experiment - done opt-in ${experiment}`);
             return true;
         }
 
         // If getTreatmentVariable returns undefined,
         // it means that the value for this experiment was not found on the server.
         const treatmentVariable = this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment);
-
+        logTime(`In Experiment - done ${experiment}`);
         return treatmentVariable !== undefined;
     }
 
@@ -131,6 +134,7 @@ export class ExperimentService implements IExperimentService {
     }
 
     private logExperiments() {
+        logTime(`log experiments - start`);
         if (this._optOutFrom.includes('All')) {
             // We prioritize opt out first
             this.output.appendLine(Experiments.optedOutOf().format('All'));
@@ -177,6 +181,7 @@ export class ExperimentService implements IExperimentService {
                 this.output.appendLine(Experiments.inGroup().format(exp));
             }
         });
+        logTime(`log experiments - done`);
     }
 }
 
