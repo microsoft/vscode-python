@@ -1,17 +1,82 @@
 # Changelog
 
-## 2021.8.0-rc (2 August 2021)
+## 2021.8.1 (6 August 2021)
+
+### Fixes
+
+1. Fix random delay before running python code.
+   ([#16768](https://github.com/Microsoft/vscode-python/issues/16768))
+1. Fix the order of default unittest arguments.
+   (thanks [Nikolay Kondratyev](https://github.com/kondratyev-nv/))
+   ([#16882](https://github.com/Microsoft/vscode-python/issues/16882))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2021.8.0 (5 August 2021)
 
 ### Enhancements
 
-1. Add new getting started page using VS Code's API
+1. Add new getting started page using VS Code's API to replace our custom start page.
    ([#16678](https://github.com/Microsoft/vscode-python/issues/16678))
 1. Replace deprecated vscode-test with @vscode/test-electron for CI. (thanks [iChenLei](https://github.com/iChenLei))
    ([#16765](https://github.com/Microsoft/vscode-python/issues/16765))
 
 ### Code Health
 
-1. Sort Settings Alphabetically (thanks [bfarahdel](https://github.com/bfarahdel))
+1. Sort Settings Alphabetically. (thanks [bfarahdel](https://github.com/bfarahdel))
    ([#8406](https://github.com/Microsoft/vscode-python/issues/8406))
 1. Changed default language server to `Pylance` for extension development. (thanks [jasleen101010](https://github.com/jasleen101010))
    ([#13007](https://github.com/Microsoft/vscode-python/issues/13007))
