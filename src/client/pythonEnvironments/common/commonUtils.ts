@@ -249,17 +249,17 @@ async function checkPythonExecutable(
         filterFile?: (f: string | DirEntry) => Promise<boolean>;
     },
 ): Promise<boolean> {
-    logTime(`checkPythonExecutable - start ${executable}`);
     const matchFilename = opts.matchFilename || matchPythonBinFilename;
     const filename = typeof executable === 'string' ? executable : executable.filename;
+    logTime(`checkPythonExecutable - start ${filename}`);
 
     if (opts.filterFile && !(await opts.filterFile(executable))) {
-        logTime(`checkPythonExecutable - done ${executable}`);
+        logTime(`checkPythonExecutable - done (false) ${filename}`);
         return false;
     }
 
     if (!matchFilename(filename)) {
-        logTime(`checkPythonExecutable - done ${executable}`);
+        logTime(`checkPythonExecutable - done (false) ${filename}`);
         return false;
     }
 
@@ -272,7 +272,7 @@ async function checkPythonExecutable(
     //
     // Regardless, currently there is no code that would use such
     // an option, so for now we don't bother supporting it.
-    logTime(`checkPythonExecutable - done ${executable}`);
+    logTime(`checkPythonExecutable - done (true) ${executable}`);
     return true;
 }
 

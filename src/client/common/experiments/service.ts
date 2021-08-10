@@ -85,8 +85,11 @@ export class ExperimentService implements IExperimentService {
     public async activate(): Promise<void> {
         logTime('Experiment Service - activation start');
         if (this.experimentationService) {
+            logTime('Experiment Service - activation init');
             await this.experimentationService.initializePromise;
+            logTime('Experiment Service - activation init done');
             await this.experimentationService.initialFetch;
+            logTime('Experiment Service - activation fetch done');
         }
         sendOptInOptOutTelemetry(this._optInto, this._optOutFrom, this.appEnvironment.packageJson);
         logTime('Experiment Service - activation done');
