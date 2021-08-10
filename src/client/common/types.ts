@@ -515,17 +515,6 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
     push(disposable: IDisposable | IAsyncDisposable): void;
 }
 
-/* ABExperiments field carries the identity, and the range of the experiment,
- where the experiment is valid for users falling between the number 'min' and 'max'
- More details: https://en.wikipedia.org/wiki/A/B_testing
-*/
-export type ABExperiments = {
-    name: string; // Name of the experiment
-    salt: string; // Salt string for the experiment
-    min: number; // Lower limit for the experiment
-    max: number; // Upper limit for the experiment
-}[];
-
 /**
  * Experiment service leveraging VS Code's experiment framework.
  */
