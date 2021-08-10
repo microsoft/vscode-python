@@ -5,28 +5,23 @@ import { Event, EventEmitter } from 'vscode';
 import '../../../../common/extensions';
 import { createDeferred } from '../../../../common/utils/async';
 import { PythonEnvInfo } from '../../info';
-import { IPythonEnvsIterator, IResolvingLocator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
-import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
+import { IResolvingLocator, PythonLocatorQuery } from '../../locator';
+import { PythonEnvChangedEvent, PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { IEnvsCollectionCache } from './envsCollectionCache';
 
 /**
- * A locator that stores the known environments in the given cache.
+ * A service which maintains the collection of known environments.
  */
 export class EnvsCollectionService {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
-    private readonly watcher = new PythonEnvsWatcher();
+    private readonly watcher = new PythonEnvsWatcher<PythonEnvChangedEvent>();
 
     private currentRefreshPromise: Promise<void> | undefined;
 
     private readonly refreshing = new EventEmitter<void>();
 
     private readonly refreshed = new EventEmitter<void>();
-
-    constructor(private readonly cache: IEnvsCollectionCache, private readonly locator: IResolvingLocator) {
-        this.onChanged = this.watcher.onChanged;
-        this.locator.onChanged((event) => this.ensureNextRefresh(this.iterEnvs(), event));
-    }
 
     public get onRefreshing(): Event<void> {
         return this.refreshing.event;
@@ -36,38 +31,47 @@ export class EnvsCollectionService {
         return this.refreshed.event;
     }
 
-    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
-        const incomingIterator = this.locator.iterEnvs(query);
-        const iterator = this.iterEnvsFromCache(incomingIterator, didUpdate, query);
-        iterator.onUpdated = didUpdate.event;
-        return iterator;
+    public async initResources(): Promise<void> {
+        const outOfDateEnvs = await this.cache.validateCache();
+        const envs = await Promise.all(
+            outOfDateEnvs.map((env) => env.executable.filename).map((executable) => this.resolveEnv(executable)),
+        );
+        const uptoDateEnvs = envs.filter((e) => e !== undefined).map((e) => e!);
+        uptoDateEnvs.map((e) => this.cache.addEnv(e));
     }
 
-    private async *iterEnvsFromCache(
-        iterator: IPythonEnvsIterator,
-        didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
-        query?: PythonLocatorQuery,
-    ): IPythonEnvsIterator {
-        const cachedEnvs = this.cache.getAllEnvs();
-        if (query?.ignoreCache || cachedEnvs === undefined) {
-            this.ensureRecentRefresh(iterator).ignoreErrors();
-        }
-        this.cache.onUpdated((e) => {
-            didUpdate.fire(e);
+    constructor(private readonly cache: IEnvsCollectionCache, private readonly locator: IResolvingLocator) {
+        this.onChanged = this.watcher.onChanged;
+        this.locator.onChanged((event) => this.ensureNewRefresh(event));
+        this.cache.onChanged((e) => {
+            this.watcher.fire(e);
         });
-        if (cachedEnvs) {
-            yield* cachedEnvs;
+    }
+
+    public async resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
+        const cachedEnvs = this.cache.filterEnvs(executablePath);
+        if (cachedEnvs.length > 0 && this.currentRefreshPromise === undefined) {
+            return cachedEnvs[0];
         }
-        this.onRefreshed(() => didUpdate.fire(null));
+        return this.locator.resolveEnv(executablePath);
+    }
+
+    public async getEnvs(query?: PythonLocatorQuery): Promise<PythonEnvInfo[]> {
+        const cachedEnvs = this.cache.getAllEnvs();
+        if (query?.ignoreCache) {
+            await this.ensureCurrentRefresh(query);
+        } else if (cachedEnvs.length === 0) {
+            this.ensureCurrentRefresh(query).ignoreErrors();
+        }
+        return cachedEnvs;
     }
 
     /**
      * Ensures we have a current alive refresh going on.
      */
-    private async ensureRecentRefresh(iterator: IPythonEnvsIterator): Promise<void> {
+    private async ensureCurrentRefresh(query?: PythonLocatorQuery): Promise<void> {
         if (!this.currentRefreshPromise) {
-            this.currentRefreshPromise = this.triggerRefresh(iterator);
+            this.currentRefreshPromise = this.triggerRefresh(query);
         }
         return this.currentRefreshPromise.then(() => {
             this.currentRefreshPromise = undefined;
@@ -77,17 +81,17 @@ export class EnvsCollectionService {
     /**
      * Ensure we initialize a fresh refresh after the current refresh (if any) is done.
      */
-    private async ensureNextRefresh(iterator: IPythonEnvsIterator, event: PythonEnvsChangedEvent): Promise<void> {
+    private async ensureNewRefresh(event: PythonEnvsChangedEvent): Promise<void> {
         const nextRefreshPromise = this.currentRefreshPromise
-            ? this.currentRefreshPromise.then(() => this.triggerRefresh(iterator))
-            : this.triggerRefresh(iterator);
+            ? this.currentRefreshPromise.then(() => this.triggerRefresh())
+            : this.triggerRefresh();
         return nextRefreshPromise.then(() => {
             // Once refresh of cache is complete, notify changes.
-            this.watcher.fire(event);
+            this.watcher.fire({ type: event.type, searchLocation: event.searchLocation });
         });
     }
 
-    private async triggerRefresh(iterator: IPythonEnvsIterator): Promise<void> {
+    private async triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
         this.refreshing.fire();
         const seen: PythonEnvInfo[] = [];
         const state = {
@@ -96,6 +100,7 @@ export class EnvsCollectionService {
         };
         const refreshComplete = createDeferred<void>();
 
+        const iterator = this.locator.iterEnvs(query);
         if (iterator.onUpdated !== undefined) {
             const listener = iterator.onUpdated(async (event) => {
                 if (event === null) {
@@ -124,6 +129,8 @@ export class EnvsCollectionService {
 
         await refreshComplete.promise;
         this.refreshed.fire();
+        // All valid envs in cache must have updated info by now.
+        await this.cache.validateCache(true);
         await this.cache.flush();
     }
 }

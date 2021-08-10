@@ -3,7 +3,7 @@
 
 import { Event } from 'vscode';
 import { PythonEnvInfo } from '../../info';
-import { PythonEnvUpdatedEvent } from '../../locator';
+import { BasicPythonEnvChangedEvent } from '../../watcher';
 
 /**
  * Represents the environment info cache to be used by the cache locator.
@@ -14,12 +14,26 @@ export interface IEnvsCollectionCache {
      *
      * @return An array of cached environment info, or `undefined` if there are none.
      */
-    getAllEnvs(): PythonEnvInfo[] | undefined;
+    getAllEnvs(): PythonEnvInfo[];
 
-    updateEnv(old: PythonEnvInfo, env: PythonEnvInfo | undefined): void;
+    /**
+     * Updates environment in cache using the value provided.
+     */
+    updateEnv(oldValue: PythonEnvInfo, newValue: PythonEnvInfo | undefined): void;
 
-    onUpdated: Event<PythonEnvUpdatedEvent>;
+    /**
+     * Filter envs based on executable path.
+     */
+    filterEnvs(executablePath: string): PythonEnvInfo[];
 
+    /**
+     * Fires with details if the cache changes.
+     */
+    onChanged: Event<BasicPythonEnvChangedEvent>;
+
+    /**
+     * Adds environment to cache.
+     */
     addEnv(env: PythonEnvInfo): void;
 
     /**
@@ -34,4 +48,13 @@ export interface IEnvsCollectionCache {
      * Writes the content of the in-memory cache to persistent storage.
      */
     flush(): Promise<void>;
+
+    /**
+     * Re-check if envs in cache are still upto date. If an env is no longer valid or needs to be updated, remove it from cache.
+     *
+     * Returns the list of envs whose details are outdated.
+     *
+     * @param noUpdateCheck Do not check if envs have outdated info.
+     */
+    validateCache(noUpdateCheck?: boolean): Promise<PythonEnvInfo[]>;
 }
