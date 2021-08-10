@@ -197,7 +197,7 @@
                                 "light": "resources/walkthrough/open-folder-light.png",
                                 "dark": "resources/walkthrough/open-folder-dark.png",
                                 "hc": "resources/walkthrough/open-folder-hc.png"
-                               },
+                            },
                             "altText": "Open a folder"
                         },
                         "completionEvents": [
@@ -214,7 +214,7 @@
                                 "light": "resources/walkthrough/open-folder-light.png",
                                 "dark": "resources/walkthrough/open-folder-dark.png",
                                 "hc": "resources/walkthrough/open-folder-hc.png"
-                               },
+                            },
                             "altText": "Open a folder"
                         },
                         "completionEvents": [
