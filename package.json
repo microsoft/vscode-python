@@ -92,6 +92,7 @@
         "workspaceContains:app.py"
     ],
     "main": "./out/client/extension",
+    "browser": "./out/client/browser/extension",
     "contributes": {
         "walkthroughs": [
             {
