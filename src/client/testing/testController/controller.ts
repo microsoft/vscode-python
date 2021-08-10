@@ -158,6 +158,7 @@ export class PythonTestController implements ITestController {
             }
         } else {
             traceVerbose('Testing: Refreshing all test data');
+            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'auto' });
             const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
             await Promise.all(workspaces.map((workspace) => this.refreshTestDataInternal(workspace.uri)));
         }

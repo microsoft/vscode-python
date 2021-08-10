@@ -1512,9 +1512,14 @@ export interface IEventNamePropertyMapping {
         /**
          * Carries the source which triggered discovering of tests
          *
-         * @type {('ui' | 'commandpalette' | 'watching')}
+         * @type {('auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter')}
+         * auto           : Triggered by VS Code editor.
+         * ui             : Triggered by clicking a button.
+         * commandpalette : Triggered by running the command from the command palette.
+         * watching       : Triggered by filesystem or content changes.
+         * interpreter    : Triggered by interpreter change.
          */
-        trigger: 'ui' | 'commandpalette' | 'watching' | 'interpreter';
+        trigger: 'auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter';
     };
     /**
      * Telemetry event sent with details about discovering tests
