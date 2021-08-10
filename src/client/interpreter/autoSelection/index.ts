@@ -45,6 +45,8 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
 
     private readonly rules: IInterpreterAutoSelectionRule[] = [];
 
+    private didCallInterpreterAutoselection = false;
+
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
@@ -127,10 +129,14 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
             await this.initializeStore(resource);
             await this.clearWorkspaceStoreIfInvalid(resource);
 
-            if (await this.experimentService.inExperiment(EnvironmentSorting.experiment)) {
-                await this.autoselectInterpreterWithLocators(resource);
-            } else {
-                await this.autoselectInterpreterWithRules(resource);
+            if (!this.didCallInterpreterAutoselection) {
+                if (await this.experimentService.inExperiment(EnvironmentSorting.experiment)) {
+                    await this.autoselectInterpreterWithLocators(resource);
+                } else {
+                    await this.autoselectInterpreterWithRules(resource);
+                }
+
+                this.didCallInterpreterAutoselection = true;
             }
 
             deferred.resolve();
