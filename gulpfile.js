@@ -41,7 +41,7 @@ gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done
 
 gulp.task('output:clean', () => del(['coverage']));
 
-gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/server']));
+gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
 gulp.task('clean:out', () => del(['out']));
 
