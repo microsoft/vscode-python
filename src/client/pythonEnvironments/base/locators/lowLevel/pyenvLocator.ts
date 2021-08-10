@@ -9,6 +9,7 @@ import { FSWatchingLocator } from './fsWatchingLocator';
 import { getInterpreterPathFromDir } from '../../../common/commonUtils';
 import { getSubDirs } from '../../../common/externalDependencies';
 import { getPyenvDir } from '../../../common/environmentManagers/pyenv';
+import { logTime } from '../../../../common/performance';
 
 function getPyenvVersionsDir(): string {
     return path.join(getPyenvDir(), 'versions');
@@ -21,6 +22,8 @@ function getPyenvVersionsDir(): string {
  * all the environments (global or virtual) in that directory.
  */
 async function* getPyenvEnvironments(): AsyncIterableIterator<BasicEnvInfo> {
+    logTime('PyenvLocator - start');
+
     const pyenvVersionDir = getPyenvVersionsDir();
 
     const subDirs = getSubDirs(pyenvVersionDir, { resolveSymlinks: true });
@@ -29,6 +32,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<BasicEnvInfo> {
 
         if (interpreterPath) {
             try {
+                logTime(`PyenvLocator - yielding ${interpreterPath}`);
                 yield {
                     kind: PythonEnvKind.Pyenv,
                     executablePath: interpreterPath,
@@ -38,6 +42,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<BasicEnvInfo> {
             }
         }
     }
+    logTime('PyenvLocator - done');
 }
 
 export class PyenvLocator extends FSWatchingLocator<BasicEnvInfo> {

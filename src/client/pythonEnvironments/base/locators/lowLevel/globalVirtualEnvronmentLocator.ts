@@ -19,6 +19,7 @@ import {
 } from '../../../common/environmentManagers/simplevirtualenvs';
 import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
+import { logTime } from '../../../../common/performance';
 
 const DEFAULT_SEARCH_DEPTH = 2;
 /**
@@ -99,7 +100,9 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator<BasicEnvI
         const searchDepth = this.searchDepth ?? DEFAULT_SEARCH_DEPTH;
 
         async function* iterator() {
+            logTime(`GlobalVirtualEnvironmentLocator - start`);
             const envRootDirs = await getGlobalVirtualEnvDirs();
+            logTime(`GlobalVirtualEnvironmentLocator - got dirs`);
             const envGenerators = envRootDirs.map((envRootDir) => {
                 async function* generator() {
                     traceVerbose(`Searching for global virtual envs in: ${envRootDir}`);
@@ -116,8 +119,10 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator<BasicEnvI
                             // We should extract the kind here to avoid doing is*Environment()
                             // check multiple times. Those checks are file system heavy and
                             // we can use the kind to determine this anyway.
+                            logTime(`GlobalVirtualEnvironmentLocator - getting kind ${filename}`);
                             const kind = await getVirtualEnvKind(filename);
                             try {
+                                logTime(`GlobalVirtualEnvironmentLocator - yielding ${filename}`);
                                 yield { kind, executablePath: filename };
                                 traceVerbose(`Global Virtual Environment: [added] ${filename}`);
                             } catch (ex) {

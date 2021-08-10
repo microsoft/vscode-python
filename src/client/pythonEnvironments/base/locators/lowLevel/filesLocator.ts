@@ -5,6 +5,7 @@
 /* eslint-disable max-classes-per-file */
 
 import { Event } from 'vscode';
+import { logTime } from '../../../../common/performance';
 import { iterPythonExecutablesInDir } from '../../../common/commonUtils';
 import { PythonEnvKind, PythonEnvSource } from '../../info';
 import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
@@ -62,7 +63,10 @@ export class DirFilesLocator extends FoundFilesLocator {
 // instance.
 
 async function* getExecutablesDefault(dirname: string): AsyncIterableIterator<string> {
+    logTime(`getExecutablesDefault - start`);
     for await (const entry of iterPythonExecutablesInDir(dirname)) {
+        logTime(`getExecutablesDefault - yielding ${entry.filename}`);
         yield entry.filename;
     }
+    logTime(`getExecutablesDefault - done`);
 }

@@ -5,6 +5,7 @@
 /* eslint-disable max-classes-per-file */
 
 import { Event } from 'vscode';
+import { logTime } from '../../../../common/performance';
 import { getSearchPathEntries } from '../../../../common/utils/exec';
 import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
 import { iterPythonExecutablesInDir, looksLikeBasicGlobalPython } from '../../../common/commonUtils';
@@ -65,11 +66,14 @@ export class WindowsPathEnvVarLocator implements ILocator<BasicEnvInfo>, IDispos
 }
 
 async function* getExecutables(dirname: string): AsyncIterableIterator<string> {
+    logTime(`getExecutables - start`);
     for await (const entry of iterPythonExecutablesInDir(dirname)) {
         if (await looksLikeBasicGlobalPython(entry)) {
+            logTime(`getExecutables - yielding ${entry.filename}`);
             yield entry.filename;
         }
     }
+    logTime(`getExecutables - done`);
 }
 
 function getDirFilesLocator(

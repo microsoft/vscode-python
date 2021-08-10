@@ -24,6 +24,7 @@ import {
 } from '../../../common/environmentManagers/simplevirtualenvs';
 import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
+import { logTime } from '../../../../common/performance';
 /**
  * Default number of levels of sub-directories to recurse when looking for interpreters.
  */
@@ -97,7 +98,9 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator<BasicEnvI
     // eslint-disable-next-line class-methods-use-this
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         async function* iterator() {
+            logTime(`CustomVirtualEnvironmentLocator - start`);
             const envRootDirs = await getCustomVirtualEnvDirs();
+            logTime(`CustomVirtualEnvironmentLocator - got dirs`);
             const envGenerators = envRootDirs.map((envRootDir) => {
                 async function* generator() {
                     traceVerbose(`Searching for custom virtual envs in: ${envRootDir}`);
@@ -115,7 +118,10 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator<BasicEnvI
                                 // We should extract the kind here to avoid doing is*Environment()
                                 // check multiple times. Those checks are file system heavy and
                                 // we can use the kind to determine this anyway.
+                                logTime(`CustomVirtualEnvironmentLocator - getting kind ${filename}`);
                                 const kind = await getVirtualEnvKind(filename);
+
+                                logTime(`CustomVirtualEnvironmentLocator - yielding ${filename}`);
                                 yield { kind, executablePath: filename };
                                 traceVerbose(`Custom Virtual Environment: [added] ${filename}`);
                             } catch (ex) {
@@ -130,6 +136,7 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator<BasicEnvI
             });
 
             yield* iterable(chain(envGenerators));
+            logTime(`CustomVirtualEnvironmentLocator - done`);
         }
 
         return iterator();

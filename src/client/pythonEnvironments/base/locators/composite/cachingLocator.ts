@@ -3,6 +3,7 @@
 
 import { Event } from 'vscode';
 import '../../../../common/extensions';
+import { logTime } from '../../../../common/performance';
 import { BackgroundRequestLooper } from '../../../../common/utils/backgroundLoop';
 import { logWarning } from '../../../../logging';
 import { IEnvsCache } from '../../envsCache';
@@ -31,21 +32,28 @@ export class CachingLocator extends LazyResourceBasedLocator implements IResolvi
     }
 
     protected async *doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+        logTime('Caching Locator - iter envs start');
         if (query?.ignoreCache) {
             // Ignore current cache, refill it with fresh environments.
             await this.refreshCache!();
         }
         yield* this.iterFromCache(query);
+        logTime('Caching Locator - iter envs stop');
     }
 
     public async resolveEnv(env: string): Promise<PythonEnvInfo | undefined> {
+        logTime('Caching Locator - resolve env start');
         await this.ensureResourcesReady();
+        logTime('Caching Locator - resolve env resource ready');
         let matchingEnvs = this.filterMatchingEnvsFromCache(env);
         if (matchingEnvs.length > 0) {
+            logTime('Caching Locator - resolve env done (cache-hit)');
             return matchingEnvs[0];
         }
+        logTime('Caching Locator - resolve env (cache-miss)');
         // Fall back to the underlying locator.
         const resolved = await this.locator.resolveEnv(env);
+        logTime('Caching Locator - resolve env expensive resolve');
         if (resolved !== undefined) {
             // Add resolved env to cache if it doesn't already exist in cache
             // The cache may have changed, query again for matching envs
@@ -55,9 +63,13 @@ export class CachingLocator extends LazyResourceBasedLocator implements IResolvi
                 if (envs !== undefined) {
                     envs.push(resolved);
                     await this.updateCache(envs);
+                    logTime('Caching Locator - resolve env (cache-update)');
                 }
+            } else {
+                logTime('Caching Locator - resolve env (skip cache-update)');
             }
         }
+        logTime('Caching Locator - resolve env done (cache-miss)');
         return resolved;
     }
 
@@ -77,6 +89,7 @@ export class CachingLocator extends LazyResourceBasedLocator implements IResolvi
     }
 
     protected async initResources(): Promise<void> {
+        logTime('Caching Locator - initializing resources');
         // We use a looper in the refresh methods, so we create one here
         // and start it.
         const looper = new BackgroundRequestLooper({
@@ -98,6 +111,7 @@ export class CachingLocator extends LazyResourceBasedLocator implements IResolvi
             // but do not block on it as we already have most envs in cache.
             this.ensureRecentRefresh(looper).ignoreErrors();
         }
+        logTime('Caching Locator - initializing resources done');
     }
 
     protected async initWatchers(): Promise<void> {
