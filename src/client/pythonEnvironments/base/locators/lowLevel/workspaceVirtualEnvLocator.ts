@@ -13,6 +13,7 @@ import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
 import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
+import { logTime } from '../../../../common/performance';
 
 /**
  * Default number of levels of sub-directories to recurse when looking for interpreters.
@@ -61,7 +62,9 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator<BasicE
 
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         async function* iterator(root: string) {
+            logTime(`WorkspaceVirtualEnvironmentLocator - start`);
             const envRootDirs = await getWorkspaceVirtualEnvDirs(root);
+            logTime(`WorkspaceVirtualEnvironmentLocator - got dirs`);
             const envGenerators = envRootDirs.map((envRootDir) => {
                 async function* generator() {
                     traceVerbose(`Searching for workspace virtual envs in: ${envRootDir}`);
@@ -78,7 +81,9 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator<BasicE
                             // We should extract the kind here to avoid doing is*Environment()
                             // check multiple times. Those checks are file system heavy and
                             // we can use the kind to determine this anyway.
+                            logTime(`WorkspaceVirtualEnvironmentLocator - getting kind ${filename}`);
                             const kind = await getVirtualEnvKind(filename);
+                            logTime(`WorkspaceVirtualEnvironmentLocator - yielding ${filename}`);
                             yield { kind, executablePath: filename };
                             traceVerbose(`Workspace Virtual Environment: [added] ${filename}`);
                         } else {
@@ -90,6 +95,7 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator<BasicE
             });
 
             yield* iterable(chain(envGenerators));
+            logTime(`WorkspaceVirtualEnvironmentLocator - done`);
         }
 
         return iterator(this.root);

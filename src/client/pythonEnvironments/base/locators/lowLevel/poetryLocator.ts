@@ -14,6 +14,7 @@ import { pathExists } from '../../../common/externalDependencies';
 import { isPoetryEnvironment, localPoetryEnvDirName, Poetry } from '../../../common/environmentManagers/poetry';
 import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
+import { logTime } from '../../../../common/performance';
 
 /**
  * Gets all default virtual environment locations to look for in a workspace.
@@ -70,17 +71,21 @@ export class PoetryLocator extends FSWatchingLocator<BasicEnvInfo> {
 
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         async function* iterator(root: string) {
+            logTime(`PoetryLocator - start`);
             const envDirs = await getVirtualEnvDirs(root);
+            logTime(`PoetryLocator - got dirs`);
             const envGenerators = envDirs.map((envDir) => {
                 async function* generator() {
                     traceVerbose(`Searching for poetry virtual envs in: ${envDir}`);
                     const filename = await getInterpreterPathFromDir(envDir);
                     if (filename !== undefined) {
+                        logTime(`PoetryLocator - get kind ${filename}`);
                         const kind = await getVirtualEnvKind(filename);
                         try {
                             // We should extract the kind here to avoid doing is*Environment()
                             // check multiple times. Those checks are file system heavy and
                             // we can use the kind to determine this anyway.
+                            logTime(`PoetryLocator - yielding ${filename}`);
                             yield { executablePath: filename, kind };
                             traceVerbose(`Poetry Virtual Environment: [added] ${filename}`);
                         } catch (ex) {
@@ -92,6 +97,7 @@ export class PoetryLocator extends FSWatchingLocator<BasicEnvInfo> {
             });
 
             yield* iterable(chain(envGenerators));
+            logTime(`PoetryLocator - done`);
         }
 
         return iterator(this.root);

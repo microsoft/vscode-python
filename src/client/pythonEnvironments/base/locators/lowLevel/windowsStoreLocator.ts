@@ -9,6 +9,7 @@ import { IPythonEnvsIterator, BasicEnvInfo } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
 import { PythonEnvStructure } from '../../../common/pythonBinariesWatcher';
 import { isStorePythonInstalled, getWindowsStoreAppsRoot } from '../../../common/environmentManagers/windowsStoreEnv';
+import { logTime } from '../../../../common/performance';
 
 /**
  * This is a glob pattern which matches following file names:
@@ -93,11 +94,14 @@ export class WindowsStoreLocator extends FSWatchingLocator<BasicEnvInfo> {
 
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const iterator = async function* (kind: PythonEnvKind) {
+            logTime(`WindowsStoreLocator - start`);
             const exes = await getWindowsStorePythonExes();
+            logTime(`WindowsStoreLocator - get exes`);
             yield* exes.map(async (executablePath: string) => ({
                 kind,
                 executablePath,
             }));
+            logTime(`WindowsStoreLocator - done`);
         };
         return iterator(this.kind);
     }
