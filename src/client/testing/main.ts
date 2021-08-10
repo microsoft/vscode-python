@@ -9,7 +9,7 @@ import { IDisposableRegistry, IExperimentService, Product } from '../common/type
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { EventName } from '../telemetry/constants';
-import { captureTelemetry } from '../telemetry/index';
+import { captureTelemetry, sendTelemetryEvent } from '../telemetry/index';
 import { selectTestWorkspace } from './common/testUtils';
 import { TestSettingsPropertyNames } from './configuration/types';
 import { ITestConfigurationService, ITestsHelper } from './common/types';
@@ -155,10 +155,13 @@ export class UnitTestManagementService implements IExtensionActivationService {
                 constants.Commands.Test_Refresh,
                 async (
                     _,
-                    _cmdSource: constants.CommandSource = constants.CommandSource.commandPalette,
+                    cmdSource: constants.CommandSource = constants.CommandSource.commandPalette,
                     resource?: Uri,
                 ) => {
                     traceVerbose('Testing: Manually triggered test refresh');
+                    sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, {
+                        trigger: cmdSource,
+                    });
                     this.testController?.refreshTestData(resource, { forceRefresh: true });
                 },
             ),
@@ -168,6 +171,7 @@ export class UnitTestManagementService implements IExtensionActivationService {
             }),
             commandManager.registerCommand(constants.Commands.Test_Stop_Refreshing, () => {
                 traceVerbose('Testing: Stop refreshing clicked.');
+                sendTelemetryEvent(EventName.UNITTEST_DISCOVERING_STOP);
                 this.testController?.stopRefreshing();
             }),
         );
@@ -181,6 +185,7 @@ export class UnitTestManagementService implements IExtensionActivationService {
             }),
             interpreterService.onDidChangeInterpreter(async () => {
                 traceVerbose('Testing: Triggered refresh due to interpreter change.');
+                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'interpreter' });
                 await this.testController?.refreshTestData(undefined, { forceRefresh: true });
             }),
         );

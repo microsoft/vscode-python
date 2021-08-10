@@ -23,11 +23,8 @@ export const AppinsightsKey = 'AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217';
 export type Channel = 'stable' | 'insiders';
 
 export enum CommandSource {
-    auto = 'auto',
     ui = 'ui',
-    codelens = 'codelens',
     commandPalette = 'commandpalette',
-    testExplorer = 'testExplorer',
 }
 
 export namespace Commands {

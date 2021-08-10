@@ -24,7 +24,6 @@ import {
     TensorBoardSessionStartResult,
     TensorBoardEntrypoint,
 } from '../tensorBoard/constants';
-import { TestProvider } from '../testing/types';
 import { EventName, PlatformErrors } from './constants';
 import type { LinterTrigger, TestTool } from './types';
 import { JupyterNotInstalledOrigin } from '../jupyter/types';
@@ -1507,21 +1506,37 @@ export interface IEventNamePropertyMapping {
         interpreterType?: EnvironmentType;
     };
     /**
+     * Telemetry event sent indicating the trigger source for discovery.
+     */
+    [EventName.UNITTEST_DISCOVERY_TRIGGER]: {
+        /**
+         * Carries the source which triggered discovering of tests
+         *
+         * @type {('ui' | 'commandpalette' | 'watching')}
+         */
+        trigger: 'ui' | 'commandpalette' | 'watching' | 'interpreter';
+    };
+    /**
      * Telemetry event sent with details about discovering tests
      */
-    [EventName.UNITTEST_DISCOVER]: {
+    [EventName.UNITTEST_DISCOVERING]: {
         /**
          * The test framework used to discover tests
          *
          * @type {TestTool}
          */
         tool: TestTool;
+    };
+    /**
+     * Telemetry event sent with details about discovering tests
+     */
+    [EventName.UNITTEST_DISCOVERY_DONE]: {
         /**
-         * Carries the source which triggered discovering of tests
+         * The test framework used to discover tests
          *
-         * @type {('ui' | 'commandpalette')}
+         * @type {TestTool}
          */
-        trigger: 'ui' | 'commandpalette';
+        tool: TestTool;
         /**
          * Carries `true` if discovering tests failed, `false` otherwise
          *
@@ -1530,42 +1545,9 @@ export interface IEventNamePropertyMapping {
         failed: boolean;
     };
     /**
-     * Telemetry event is sent if we are doing test discovery using python code
+     * Telemetry event sent when cancelling discovering tests
      */
-    [EventName.UNITTEST_DISCOVER_WITH_PYCODE]: never | undefined;
-    /**
-     * Telemetry event sent when user clicks a file, function, or suite in test explorer.
-     */
-    [EventName.UNITTEST_NAVIGATE]: {
-        /**
-         * Carries `true` if user clicks a file, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        byFile?: boolean;
-        /**
-         * Carries `true` if user clicks a function, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        byFunction?: boolean;
-        /**
-         * Carries `true` if user clicks a suite, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        bySuite?: boolean;
-        /**
-         * Carries `true` if we are changing focus to the suite/file/function, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        focusCode?: boolean;
-    };
-    /**
-     * Tracks number of workspace folders shown in test explorer
-     */
-    [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
+    [EventName.UNITTEST_DISCOVERING_STOP]: never | undefined;
     /**
      * Telemetry event sent with details about running the tests, what is being run, what framework is being used etc.
      */
@@ -1575,44 +1557,22 @@ export interface IEventNamePropertyMapping {
          */
         tool: TestTool;
         /**
-         * Carries info what is being run
-         */
-        scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
-        /**
          * Carries `true` if debugging, `false` otherwise
          */
         debugging: boolean;
-        /**
-         * Carries what triggered the execution of the tests
-         */
-        triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto' | 'testExplorer';
-        /**
-         * Carries `true` if running tests failed, `false` otherwise
-         */
-        failed: boolean;
     };
     /**
-     * Telemetry event sent when cancelling running or discovering tests
+     * Telemetry event sent when cancelling running tests
      */
-    [EventName.UNITTEST_STOP]: never | undefined;
+    [EventName.UNITTEST_RUN_STOP]: never | undefined;
     /**
-     * Telemetry event sent when disabling all test frameworks
+     * Telemetry event sent when run all failed test command is triggered
      */
-    [EventName.UNITTEST_DISABLE]: never | undefined;
+    [EventName.UNITTEST_RUN_ALL_FAILED]: never | undefined;
     /**
-     * Telemetry event sent when viewing Python test log output
+     * Telemetry event sent when testing is disabled for a workspace.
      */
-    [EventName.UNITTEST_VIEW_OUTPUT]: never | undefined;
-    /**
-     * Tracks which testing framework has been enabled by the user.
-     * Telemetry is sent when settings have been modified by the user.
-     * Values sent include:
-     * unittest -   If this value is `true`, then unittest has been enabled by the user.
-     * pytest   -   If this value is `true`, then pytest has been enabled by the user.
-     * @type {(never | undefined)}
-     * @memberof IEventNamePropertyMapping
-     */
-    [EventName.UNITTEST_ENABLED]: Partial<Record<TestProvider, undefined | boolean>>;
+    [EventName.UNITTEST_DISABLED]: never | undefined;
     /**
      * Telemetry sent when building workspace symbols
      */

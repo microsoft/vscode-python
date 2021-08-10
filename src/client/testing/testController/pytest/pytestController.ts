@@ -11,6 +11,8 @@ import { traceError } from '../../../common/logger';
 import { runAdapter } from '../../../common/process/internal/scripts/testing_tools';
 import { IConfigurationService } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { EventName } from '../../../telemetry/constants';
 import { PYTEST_PROVIDER } from '../../common/constants';
 import { TestDiscoveryOptions } from '../../common/types';
 import {
@@ -142,6 +144,7 @@ export class PytestController implements ITestFrameworkController {
     }
 
     public async refreshTestData(testController: TestController, uri: Uri, token?: CancellationToken): Promise<void> {
+        sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: 'pytest' });
         const workspace = this.workspaceService.getWorkspaceFolder(uri);
         if (workspace) {
             // Discovery is expensive. So if it is already running then use the promise
@@ -199,6 +202,7 @@ export class PytestController implements ITestFrameworkController {
 
                 deferred.resolve();
             } catch (ex) {
+                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: 'pytest', failed: true });
                 const cancel = options.token?.isCancellationRequested ? 'Cancelled' : 'Error';
                 traceError(`${cancel} discovering pytest tests:\r\n`, ex);
                 const message = getTestDiscoveryExceptions((ex as Error).message);
@@ -252,6 +256,7 @@ export class PytestController implements ITestFrameworkController {
                 await this.resolveChildren(testController, newItem);
             }
         }
+        sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: 'pytest', failed: false });
         return Promise.resolve();
     }
 
