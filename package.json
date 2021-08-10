@@ -2144,6 +2144,7 @@
         "ts-mock-imports": "^1.3.7",
         "ts-mockito": "^2.5.0",
         "ts-node": "^10.2.0",
+        "tsconfig-paths-webpack-plugin": "^3.5.1",
         "typemoq": "^2.1.0",
         "typescript": "4.1.5",
         "typescript-formatter": "^7.1.0",
