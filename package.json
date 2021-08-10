@@ -2130,6 +2130,7 @@
         "nock": "^10.0.6",
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
+        "node-loader": "^2.0.0",
         "nyc": "^15.0.0",
         "prettier": "^2.0.2",
         "range-inclusive": "^1.0.2",
