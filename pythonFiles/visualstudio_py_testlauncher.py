@@ -162,11 +162,11 @@ class VsTestResult(unittest.TextTestResult):
 
     def addExpectedFailure(self, test, err):
         super(VsTestResult, self).addExpectedFailure(test, err)
-        self.sendResult(test, "failed", err)
+        self.sendResult(test, "failed-expected", err)
 
     def addUnexpectedSuccess(self, test):
         super(VsTestResult, self).addUnexpectedSuccess(test)
-        self.sendResult(test, "passed")
+        self.sendResult(test, "passed-unexpected")
 
     def sendResult(self, test, outcome, trace=None):
         if _channel is not None:

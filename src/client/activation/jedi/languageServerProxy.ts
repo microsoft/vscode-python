@@ -14,12 +14,9 @@ import { ChildProcess } from 'child_process';
 import { DeprecatePythonPath } from '../../common/experiments/groups';
 import { traceDecorators, traceError } from '../../common/logger';
 import { IExperimentService, IInterpreterPathService, Resource } from '../../common/types';
-import { swallowExceptions } from '../../common/utils/decorators';
-import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ITestingService } from '../../testing/types';
 import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import { ProgressReporting } from '../progress';
@@ -40,7 +37,6 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
 
     constructor(
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
-        @inject(ITestingService) private readonly testManager: ITestingService,
         @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
     ) {}
@@ -122,12 +118,6 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         this.disposables.push(this.languageClient.start());
         await this.serverReady();
 
-        if (this.disposed) {
-            // Check if it got disposed in the interim.
-            return Promise.resolve();
-        }
-
-        await this.registerTestServices();
         return Promise.resolve();
     }
 
@@ -147,14 +137,6 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         if (this.languageClient) {
             await this.languageClient.onReady();
         }
-    }
-
-    @swallowExceptions('Activating Unit Tests Manager for Jedi language server')
-    protected async registerTestServices(): Promise<void> {
-        if (!this.languageClient) {
-            throw new Error('languageClient not initialized');
-        }
-        await this.testManager.activate(new LanguageServerSymbolProvider(this.languageClient));
     }
 
     private registerHandlers() {

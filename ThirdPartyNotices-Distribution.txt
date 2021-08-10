@@ -8046,7 +8046,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------
 
-isort 5.8.0 - MIT
+isort 5.9.3 - MIT
 
 
 Copyright 2017 Jack Evans
@@ -12581,3 +12581,4 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 For more information, please refer to <http://unlicense.org/>
 
 ---------------------------------------------------------
+

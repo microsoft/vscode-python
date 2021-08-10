@@ -6,4 +6,4 @@
 # IntelliSense via Jedi
 jedi<0.18  # For Python 2.7 support
 # Sort Imports
-isort==5.9.2; python_version >= '3.6'
+isort==5.9.3; python_version >= '3.6'

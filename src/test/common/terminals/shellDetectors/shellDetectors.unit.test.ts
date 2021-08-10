@@ -6,6 +6,7 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { instance, mock, when } from 'ts-mockito';
+import { Terminal } from 'vscode';
 import { ApplicationEnvironment } from '../../../../client/common/application/applicationEnvironment';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { PlatformService } from '../../../../client/common/platform/platformService';
@@ -91,7 +92,18 @@ suite('Shell Detectors', () => {
             'Should be undefined when there is no temrinal',
         );
     });
-    test('Identify shell based on VSC Environment', async () => {
+    test('Identify shell based on custom VSC shell path', async () => {
+        const shellDetector = new VSCEnvironmentShellDetector(instance(appEnv));
+        shellPathsAndIdentification.forEach((shellType, shellPath) => {
+            when(appEnv.shell).thenReturn('defaultshellPath');
+            expect(
+                shellDetector.identify(telemetryProperties, ({
+                    creationOptions: { shellPath },
+                } as unknown) as Terminal),
+            ).to.equal(shellType, `Incorrect Shell Type from identifyShellByTerminalName, for path '${shellPath}'`);
+        });
+    });
+    test('Identify shell based on VSC API', async () => {
         const shellDetector = new VSCEnvironmentShellDetector(instance(appEnv));
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
             when(appEnv.shell).thenReturn(shellPath);

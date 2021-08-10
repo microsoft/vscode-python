@@ -168,7 +168,11 @@ function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment, work
 export function getEnvTypeHeuristic(environment: PythonEnvironment, workspacePath: string): EnvTypeHeuristic {
     const { envType } = environment;
 
-    if (workspacePath.length > 0 && environment.envPath && isParentPath(environment.envPath, workspacePath)) {
+    if (
+        workspacePath.length > 0 &&
+        ((environment.envPath && isParentPath(environment.envPath, workspacePath)) ||
+            (environment.path && isParentPath(environment.path, workspacePath)))
+    ) {
         return EnvTypeHeuristic.Local;
     }
 

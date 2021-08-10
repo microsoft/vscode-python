@@ -46,6 +46,7 @@ import {
     IApplicationShell,
     IClipboard,
     ICommandManager,
+    IContextKeyManager,
     IDebugService,
     IDocumentManager,
     IJupyterExtensionDependencyManager,
@@ -114,6 +115,7 @@ import {
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { Random } from './utils/random';
 import { InterpreterPathProxyService } from './interpreterPathProxyService';
+import { ContextKeyManager } from './application/contextKeyManager';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
@@ -140,6 +142,7 @@ export function registerTypes(serviceManager: IServiceManager): void {
         JupyterExtensionDependencyManager,
     );
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
+    serviceManager.addSingleton<IContextKeyManager>(IContextKeyManager, ContextKeyManager);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);

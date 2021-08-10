@@ -41,7 +41,6 @@ import {
     IExperimentService,
     IOutputChannel,
     IPythonSettings,
-    ModuleNamePurpose,
     Product,
 } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
@@ -672,7 +671,7 @@ function getModuleNamesForTesting(): { name: string; value: Product; moduleName:
             const mockOutChnl = TypeMoq.Mock.ofType<OutputChannel>().object;
             try {
                 const prodInstaller = new ProductInstaller(mockSvc, mockOutChnl);
-                moduleName = prodInstaller.translateProductToModuleName(product.value, ModuleNamePurpose.install);
+                moduleName = prodInstaller.translateProductToModuleName(product.value);
                 return { name: product.name, value: product.value, moduleName };
             } catch {
                 return undefined;

@@ -2,17 +2,8 @@
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": false,
     "python.workspaceSymbols.enabled": false,
-    "python.testing.nosetestArgs": [],
     "python.testing.pytestArgs": [],
-    "python.testing.unittestArgs": [
-        "-s=./tests",
-        "-p=test_*.py",
-        "-v",
-        "-s",
-        ".",
-        "-p",
-        "*test*.py"
-    ],
+    "python.testing.unittestArgs": ["-s=./tests", "-p=test_*.py", "-v", "-s", ".", "-p", "*test*.py"],
     "python.sortImports.args": [],
     "python.linting.lintOnSave": false,
     "python.linting.enabled": true,

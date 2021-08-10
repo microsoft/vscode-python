@@ -9,7 +9,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestConfiguringTelemetry } from '../../telemetry/types';
-import { BufferedTestConfigSettingsService } from '../common/services/configSettingService';
+import { BufferedTestConfigSettingsService } from '../common/bufferedTestConfigSettingService';
 import {
     ITestConfigSettingsService,
     ITestConfigurationManager,
@@ -38,18 +38,17 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
     public async displayTestFrameworkError(wkspace: Uri): Promise<void> {
         const settings = this.configurationService.getSettings(wkspace);
         let enabledCount = settings.testing.pytestEnabled ? 1 : 0;
-        enabledCount += settings.testing.nosetestsEnabled ? 1 : 0;
         enabledCount += settings.testing.unittestEnabled ? 1 : 0;
         if (enabledCount > 1) {
             return this._promptToEnableAndConfigureTestFramework(
                 wkspace,
-                'Enable only one of the test frameworks (unittest, pytest or nosetest).',
+                'Enable only one of the test frameworks (unittest or pytest).',
                 true,
             );
         }
         const option = 'Enable and configure a Test Framework';
         const item = await this.appShell.showInformationMessage(
-            'No test framework configured (unittest, pytest or nosetest)',
+            'No test framework configured (unittest, or pytest)',
             option,
         );
         if (item !== option) {
@@ -72,12 +71,6 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
                 description: 'pytest framework',
 
                 detail: 'http://docs.pytest.org/',
-            },
-            {
-                label: 'nose',
-                product: Product.nosetest,
-                description: 'nose framework',
-                detail: 'https://nose.readthedocs.io/',
             },
         ];
         const options = {

@@ -59,11 +59,6 @@ import {
     LanguageServerType,
 } from './types';
 import { JediLanguageServerActivator } from './jedi/activator';
-import { IDiagnosticsService } from '../application/diagnostics/types';
-import {
-    MPLSSurveyDiagnosticService,
-    MPLSSurveyDiagnosticServiceId,
-} from '../application/diagnostics/checks/mplsSurvey';
 
 export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType): void {
     serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
@@ -114,11 +109,6 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
             DotNetLanguageServerPackageService,
         );
         registerDotNetTypes(serviceManager);
-        serviceManager.addSingleton<IDiagnosticsService>(
-            IDiagnosticsService,
-            MPLSSurveyDiagnosticService,
-            MPLSSurveyDiagnosticServiceId,
-        );
     } else if (languageServerType === LanguageServerType.Node) {
         serviceManager.add<ILanguageServerAnalysisOptions>(
             ILanguageServerAnalysisOptions,

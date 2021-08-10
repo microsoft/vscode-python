@@ -12,11 +12,9 @@ import { Product } from '../../../../client/common/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { UNIT_TEST_PRODUCTS } from '../../../../client/testing/common/constants';
-import {
-    BufferedTestConfigSettingsService,
-    TestConfigSettingsService,
-} from '../../../../client/testing/common/services/configSettingService';
+import { TestConfigSettingsService } from '../../../../client/testing/common/configSettingService';
 import { ITestConfigSettingsService, UnitTestProduct } from '../../../../client/testing/common/types';
+import { BufferedTestConfigSettingsService } from '../../../../client/testing/common/bufferedTestConfigSettingService';
 
 use(chaiPromise);
 
@@ -50,8 +48,6 @@ suite('Unit Tests - ConfigSettingsService', () => {
                             return 'testing.unittestArgs';
                         case Product.pytest:
                             return 'testing.pytestArgs';
-                        case Product.nosetest:
-                            return 'testing.nosetestArgs';
                         default:
                             throw new Error('Invalid Test Product');
                     }
@@ -62,8 +58,6 @@ suite('Unit Tests - ConfigSettingsService', () => {
                             return 'testing.unittestEnabled';
                         case Product.pytest:
                             return 'testing.pytestEnabled';
-                        case Product.nosetest:
-                            return 'testing.nosetestsEnabled';
                         default:
                             throw new Error('Invalid Test Product');
                     }
@@ -241,9 +235,6 @@ suite('Unit Tests - BufferedTestConfigSettingsService', () => {
         cfg.setup((c) => c.disable(typeMoq.It.isValue(testDir), typeMoq.It.isValue(Product.unittest)))
             .returns(() => Promise.resolve())
             .verifiable(typeMoq.Times.once());
-        cfg.setup((c) => c.disable(typeMoq.It.isValue(testDir), typeMoq.It.isValue(Product.nosetest)))
-            .returns(() => Promise.resolve())
-            .verifiable(typeMoq.Times.once());
         cfg.setup((c) => c.enable(typeMoq.It.isValue(testDir), typeMoq.It.isValue(Product.pytest)))
             .returns(() => Promise.resolve())
             .verifiable(typeMoq.Times.once());
@@ -251,7 +242,6 @@ suite('Unit Tests - BufferedTestConfigSettingsService', () => {
         const delayed = new BufferedTestConfigSettingsService();
         await delayed.updateTestArgs(testDir, Product.pytest, newArgs);
         await delayed.disable(testDir, Product.unittest);
-        await delayed.disable(testDir, Product.nosetest);
         await delayed.enable(testDir, Product.pytest);
         await delayed.apply(cfg.object);
 

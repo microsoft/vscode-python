@@ -37,27 +37,13 @@ export namespace Commands {
     export const Exec_In_Terminal_Icon = 'python.execInTerminal-icon';
     export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
     export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
-    export const Tests_View_UI = 'python.viewTestUI';
-    export const Tests_Picker_UI = 'python.selectTestToRun';
-    export const Tests_Picker_UI_Debug = 'python.selectTestToDebug';
     export const Tests_Configure = 'python.configureTests';
-    export const Tests_Discover = 'python.discoverTests';
-    export const Tests_Discovering = 'python.discoveringTests';
-    export const Tests_Run_Failed = 'python.runFailedTests';
+    export const Test_Refresh = 'python.refreshTests';
+    // `python.refreshingTests` is a dummy command just to show the spinning icon
+    export const Test_Refreshing = 'python.refreshingTests';
+    export const Test_Stop_Refreshing = 'python.stopRefreshingTests';
     export const Sort_Imports = 'python.sortImports';
-    export const Tests_Run = 'python.runtests';
-    export const Tests_Run_Parametrized = 'python.runParametrizedTests';
-    export const Tests_Debug = 'python.debugtests';
-    export const Tests_Ask_To_Stop_Test = 'python.askToStopTests';
-    export const Tests_Ask_To_Stop_Discovery = 'python.askToStopTestDiscovery';
-    export const Tests_Stop = 'python.stopTests';
-    export const Test_Reveal_Test_Item = 'python.revealTestItem';
     export const ViewOutput = 'python.viewOutput';
-    export const Tests_ViewOutput = 'python.viewTestOutput';
-    export const Tests_Select_And_Run_Method = 'python.selectAndRunTestMethod';
-    export const Tests_Select_And_Debug_Method = 'python.selectAndDebugTestMethod';
-    export const Tests_Select_And_Run_File = 'python.selectAndRunTestFile';
-    export const Tests_Run_Current_File = 'python.runCurrentTestFile';
     export const Refactor_Extract_Variable = 'python.refactorExtractVariable';
     export const Refactor_Extract_Method = 'python.refactorExtractMethod';
     export const Build_Workspace_Symbols = 'python.buildWorkspaceSymbols';
@@ -67,12 +53,6 @@ export namespace Commands {
     export const Enable_Linter = 'python.enableLinting';
     export const Run_Linter = 'python.runLinting';
     export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
-    export const navigateToTestFunction = 'navigateToTestFunction';
-    export const navigateToTestSuite = 'navigateToTestSuite';
-    export const navigateToTestFile = 'navigateToTestFile';
-    export const openTestNodeInEditor = 'python.openTestNodeInEditor';
-    export const runTestNode = 'python.runTestNode';
-    export const debugTestNode = 'python.debugTestNode';
     export const SwitchOffInsidersChannel = 'python.switchOffInsidersChannel';
     export const SwitchToInsidersDaily = 'python.switchToDailyChannel';
     export const SwitchToInsidersWeekly = 'python.switchToWeeklyChannel';
@@ -95,17 +75,6 @@ export namespace Octicons {
     export const Installing = '$(desktop-download)';
     export const Search_Stop = '$(search-stop)';
     export const Star = '$(star)';
-}
-
-export const Button_Text_Tests_View_Output = 'View Output';
-
-export namespace Text {
-    export const CodeLensRunUnitTest = 'Run Test';
-    export const CodeLensDebugUnitTest = 'Debug Test';
-}
-export namespace Delays {
-    // Max time to wait before aborting the generation of code lenses for unit tests
-    export const MaxUnitTestCodeLensDelay = 5000;
 }
 
 export const DEFAULT_INTERPRETER_SETTING = 'python';

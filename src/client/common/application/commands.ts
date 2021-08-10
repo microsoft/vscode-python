@@ -6,7 +6,6 @@
 import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as LSCommands } from '../../activation/commands';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../tensorBoard/constants';
-import { TestDataItem, TestFunction, TestsToRun, TestWorkspaceFolder } from '../../testing/common/types';
 import { Channel, Commands, CommandSource } from '../constants';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
@@ -40,10 +39,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.Exec_Selection_In_Terminal]: [];
     [Commands.Exec_Selection_In_Django_Shell]: [];
     [Commands.Create_Terminal]: [];
-    [Commands.Tests_View_UI]: [];
-    [Commands.Tests_Ask_To_Stop_Discovery]: [];
-    [Commands.Tests_Ask_To_Stop_Test]: [];
-    [Commands.Tests_Discovering]: [];
     [Commands.PickLocalProcess]: [];
     [Commands.ClearStorage]: [];
     [Commands.ReportIssue]: [];
@@ -94,42 +89,9 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];
     [Commands.Exec_In_Terminal_Icon]: [undefined, Uri];
-    [Commands.Tests_ViewOutput]: [undefined, CommandSource];
-    [Commands.Tests_Select_And_Run_File]: [undefined, CommandSource];
-    [Commands.Tests_Run_Current_File]: [undefined, CommandSource];
-    [Commands.Tests_Stop]: [undefined, Uri];
-    [Commands.Test_Reveal_Test_Item]: [TestDataItem];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.Tests_Run]: [
-        undefined | TestWorkspaceFolder,
-        undefined | CommandSource,
-        undefined | Uri,
-        undefined | TestsToRun,
-    ];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.Tests_Debug]: [
-        undefined | TestWorkspaceFolder,
-        undefined | CommandSource,
-        undefined | Uri,
-        undefined | TestsToRun,
-    ];
-    [Commands.Tests_Run_Parametrized]: [undefined, undefined | CommandSource, Uri, TestFunction[], boolean];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.Tests_Discover]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri];
-    [Commands.Tests_Run_Failed]: [undefined, CommandSource, Uri];
-    [Commands.Tests_Select_And_Debug_Method]: [undefined, CommandSource, Uri];
-    [Commands.Tests_Select_And_Run_Method]: [undefined, CommandSource, Uri];
     [Commands.Tests_Configure]: [undefined, undefined | CommandSource, undefined | Uri];
-    [Commands.Tests_Picker_UI]: [undefined, undefined | CommandSource, Uri, TestFunction[]];
-    [Commands.Tests_Picker_UI_Debug]: [undefined, undefined | CommandSource, Uri, TestFunction[]];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.runTestNode]: [TestDataItem];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.debugTestNode]: [TestDataItem];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.openTestNodeInEditor]: [TestDataItem];
-    [Commands.navigateToTestFile]: [Uri, TestDataItem, boolean];
-    [Commands.navigateToTestFunction]: [Uri, TestDataItem, boolean];
-    [Commands.navigateToTestSuite]: [Uri, TestDataItem, boolean];
+    [Commands.Test_Refresh]: [undefined, undefined | CommandSource, undefined | Uri];
+    [Commands.Test_Refreshing]: [];
+    [Commands.Test_Stop_Refreshing]: [];
     [Commands.LaunchTensorBoard]: [TensorBoardEntrypoint, TensorBoardEntrypointTrigger];
 }

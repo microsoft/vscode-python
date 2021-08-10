@@ -1,4 +1,4 @@
-name: 'Assign reviewers'
+name: 'Assign PR'
 
 on:
   pull_request_target:
@@ -6,15 +6,13 @@ on:
       - 'opened'
       - 'reopened'
       - 'unassigned'
-      - 'review_request_removed'
-      - 'ready_for_review'
 
 permissions:
   pull-requests: write
 
 jobs:
   assign:
-    name: 'Assignee & Code Reviewers'
+    name: 'Assign PR'
     runs-on: ubuntu-latest
     if: github.repository == 'microsoft/vscode-python'
 

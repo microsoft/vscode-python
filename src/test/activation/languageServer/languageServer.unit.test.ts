@@ -4,7 +4,7 @@
 'use strict';
 
 import { expect } from 'chai';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { Disposable, LanguageClient, LanguageClientOptions, State, StateChangeEvent } from 'vscode-languageclient/node';
@@ -15,28 +15,19 @@ import { ICommandManager } from '../../../client/common/application/types';
 import '../../../client/common/extensions';
 import { IConfigurationService, IDisposable, IPythonSettings } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
-import { TestingService } from '../../../client/testing/main';
-import { ITestingService } from '../../../client/testing/types';
 
 //tslint:disable:no-require-imports no-require-imports no-var-requires no-any no-unnecessary-class max-func-body-length
 
 suite('Language Server - LanguageServer', () => {
-    class LanguageServerTest extends DotNetLanguageServerProxy {
-        public async registerTestServices() {
-            return super.registerTestServices();
-        }
-    }
     let clientFactory: ILanguageClientFactory;
-    let server: LanguageServerTest;
+    let server: DotNetLanguageServerProxy;
     let client: typemoq.IMock<LanguageClient>;
-    let testManager: ITestingService;
     let configService: typemoq.IMock<IConfigurationService>;
     let commandManager: typemoq.IMock<ICommandManager>;
     let stateChangeListener: ((e: StateChangeEvent) => void) | undefined;
     setup(() => {
         client = typemoq.Mock.ofType<LanguageClient>();
         clientFactory = mock(DotNetLanguageClientFactory);
-        testManager = mock(TestingService);
         configService = typemoq.Mock.ofType<IConfigurationService>();
 
         commandManager = typemoq.Mock.ofType<ICommandManager>();
@@ -45,7 +36,7 @@ suite('Language Server - LanguageServer', () => {
             .returns(() => {
                 return typemoq.Mock.ofType<Disposable>().object;
             });
-        server = new LanguageServerTest(instance(clientFactory), instance(testManager), configService.object);
+        server = new DotNetLanguageServerProxy(instance(clientFactory), configService.object);
 
         const stateChangeDisposable = typemoq.Mock.ofType<IDisposable>();
         client
@@ -125,7 +116,6 @@ suite('Language Server - LanguageServer', () => {
             .verifiable(typemoq.Times.once());
         await sleep(120);
 
-        verify(testManager.activate(anything())).once();
         client.verify((c) => c.sendRequest(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.atLeast(2));
     });
     test('Send telemetry when LS has started and disposes appropriately', async () => {
@@ -175,7 +165,6 @@ suite('Language Server - LanguageServer', () => {
             .verifiable(typemoq.Times.once());
         await sleep(120);
 
-        verify(testManager.activate(anything())).once();
         expect(() => server.loadExtension(loadExtensionArgs)).to.not.throw();
         client.verify((c) => c.sendRequest(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.once());
         client.verify((c) => c.stop(), typemoq.Times.never());
@@ -185,9 +174,6 @@ suite('Language Server - LanguageServer', () => {
 
         client.verify((c) => c.stop(), typemoq.Times.once());
         startDisposable.verify((d) => d.dispose(), typemoq.Times.once());
-    });
-    test('Ensure Errors raised when starting test manager are not bubbled up', async () => {
-        await server.registerTestServices();
     });
     test('Register telemetry handler if LS was downloadeded', async () => {
         client.verify((c) => c.sendRequest(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.never());
@@ -231,8 +217,6 @@ suite('Language Server - LanguageServer', () => {
             .returns(() => true as any)
             .verifiable(typemoq.Times.once());
         await sleep(120);
-
-        verify(testManager.activate(anything())).once();
 
         client.verify((c) => c.onTelemetry(typemoq.It.isAny()), typemoq.Times.once());
         pythonSettings.verifyAll();
@@ -281,8 +265,6 @@ suite('Language Server - LanguageServer', () => {
             .verifiable(typemoq.Times.once());
         await sleep(120);
 
-        verify(testManager.activate(anything())).once();
-
         client.verify((c) => c.onTelemetry(typemoq.It.isAny()), typemoq.Times.never());
         pythonSettings.verifyAll();
         configService.verifyAll();
@@ -327,7 +309,6 @@ suite('Language Server - LanguageServer', () => {
         // Promise should resolve without any errors.
         await promise;
 
-        verify(testManager.activate(anything())).never();
         client.verify((c) => c.onTelemetry(typemoq.It.isAny()), typemoq.Times.never());
         pythonSettings.verifyAll();
         configService.verifyAll();

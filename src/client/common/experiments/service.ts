@@ -88,30 +88,7 @@ export class ExperimentService implements IExperimentService {
     }
 
     public async inExperiment(experiment: string): Promise<boolean> {
-        if (!this.experimentationService) {
-            return false;
-        }
-
-        // Currently the service doesn't support opting in and out of experiments.
-        // so we need to perform these checks manually.
-        if (this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
-            return false;
-        }
-
-        if (this._optInto.includes('All') || this._optInto.includes(experiment)) {
-            // Check if the user was already in the experiment server-side. We need to do
-            // this to ensure the experiment service is ready and internal states are fully
-            // synced with the experiment server.
-            await this.experimentationService.getTreatmentVariableAsync(EXP_CONFIG_ID, experiment, true);
-            return true;
-        }
-
-        const treatmentVariable = await this.experimentationService.getTreatmentVariableAsync(
-            EXP_CONFIG_ID,
-            experiment,
-            true,
-        );
-        return treatmentVariable !== undefined;
+        return this.inExperimentSync(experiment);
     }
 
     public inExperimentSync(experiment: string): boolean {
