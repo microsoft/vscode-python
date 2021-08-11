@@ -3,7 +3,6 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { logTime } from '../../common/performance';
 import { convertFileType, DirEntry, FileType, getFileFilter, getFileType } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { logError } from '../../logging';
@@ -251,15 +250,11 @@ async function checkPythonExecutable(
 ): Promise<boolean> {
     const matchFilename = opts.matchFilename || matchPythonBinFilename;
     const filename = typeof executable === 'string' ? executable : executable.filename;
-    logTime(`checkPythonExecutable - start ${filename}`);
-
-    if (opts.filterFile && !(await opts.filterFile(executable))) {
-        logTime(`checkPythonExecutable - done (false) ${filename}`);
+    if (!matchFilename(filename)) {
         return false;
     }
 
-    if (!matchFilename(filename)) {
-        logTime(`checkPythonExecutable - done (false) ${filename}`);
+    if (opts.filterFile && !(await opts.filterFile(executable))) {
         return false;
     }
 
@@ -272,7 +267,6 @@ async function checkPythonExecutable(
     //
     // Regardless, currently there is no code that would use such
     // an option, so for now we don't bother supporting it.
-    logTime(`checkPythonExecutable - done (true) ${executable}`);
     return true;
 }
 
