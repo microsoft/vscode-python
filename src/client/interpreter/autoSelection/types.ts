@@ -42,10 +42,3 @@ export enum AutoSelectionRule {
     systemWide = 'system',
     windowsRegistry = 'windowsRegistry',
 }
-
-export const IInterpreterAutoSelectionRule = Symbol('IInterpreterAutoSelectionRule');
-export interface IInterpreterAutoSelectionRule {
-    setNextRule(rule: IInterpreterAutoSelectionRule): void;
-    autoSelectInterpreter(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<void>;
-    getPreviouslyAutoSelectedInterpreter(resource: Resource): PythonEnvironment | undefined;
-}

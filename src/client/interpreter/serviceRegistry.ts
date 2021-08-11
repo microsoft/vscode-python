@@ -9,13 +9,7 @@ import { EnvironmentActivationService } from './activation/service';
 import { IEnvironmentActivationService } from './activation/types';
 import { InterpreterAutoSelectionService } from './autoSelection/index';
 import { InterpreterAutoSelectionProxyService } from './autoSelection/proxy';
-import { WorkspaceVirtualEnvInterpretersAutoSelectionRule } from './autoSelection/rules/workspaceEnv';
-import {
-    AutoSelectionRule,
-    IInterpreterAutoSelectionRule,
-    IInterpreterAutoSelectionService,
-    IInterpreterAutoSelectionProxyService,
-} from './autoSelection/types';
+import { IInterpreterAutoSelectionService, IInterpreterAutoSelectionProxyService } from './autoSelection/types';
 import { EnvironmentTypeComparer } from './configuration/environmentTypeComparer';
 import { InterpreterComparer } from './configuration/interpreterComparer';
 import { ResetInterpreterCommand } from './configuration/interpreterSelector/commands/resetInterpreter';
@@ -104,11 +98,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
         InterpreterLocatorProgressStatubarHandler,
     );
 
-    serviceManager.addSingleton<IInterpreterAutoSelectionRule>(
-        IInterpreterAutoSelectionRule,
-        WorkspaceVirtualEnvInterpretersAutoSelectionRule,
-        AutoSelectionRule.workspaceVirtualEnvs,
-    );
     serviceManager.addSingleton<IInterpreterAutoSelectionService>(
         IInterpreterAutoSelectionService,
         InterpreterAutoSelectionService,

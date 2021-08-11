@@ -685,10 +685,6 @@ export interface IEventNamePropertyMapping {
          */
         usingUserDefinedInterpreter: boolean;
         /**
-         * If interpreter is auto selected for the workspace
-         */
-        usingAutoSelectedWorkspaceInterpreter: boolean;
-        /**
          * If global interpreter is being used
          */
         usingGlobalInterpreter: boolean;

@@ -9,10 +9,7 @@ import { EnvironmentActivationService } from '../../client/interpreter/activatio
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSelection';
 import { InterpreterAutoSelectionProxyService } from '../../client/interpreter/autoSelection/proxy';
-import { WorkspaceVirtualEnvInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/workspaceEnv';
 import {
-    AutoSelectionRule,
-    IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService,
     IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
@@ -77,11 +74,6 @@ suite('Interpreters - Service Registry', () => {
 
             [IExtensionSingleActivationService, InterpreterLocatorProgressStatubarHandler],
 
-            [
-                IInterpreterAutoSelectionRule,
-                WorkspaceVirtualEnvInterpretersAutoSelectionRule,
-                AutoSelectionRule.workspaceVirtualEnvs,
-            ],
             [IInterpreterAutoSelectionProxyService, InterpreterAutoSelectionProxyService],
             [IInterpreterAutoSelectionService, InterpreterAutoSelectionService],
 
