@@ -327,6 +327,10 @@ export interface IEventNamePropertyMapping {
         enabled: boolean;
     };
     /**
+     * Telemetry event sent when debug in terminal button was used to debug current file.
+     */
+    [EventName.DEBUG_IN_TERMINAL_BUTTON]: never | undefined;
+    /**
      * Telemetry event captured when debug adapter executable is created
      */
     [EventName.DEBUG_ADAPTER_USING_WHEELS_PATH]: {

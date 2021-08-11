@@ -8,6 +8,8 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDebugService } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import { IDisposableRegistry } from '../../common/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 
 @injectable()
 export class DebugCommands implements IExtensionSingleActivationService {
@@ -20,6 +22,7 @@ export class DebugCommands implements IExtensionSingleActivationService {
     public activate(): Promise<void> {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.Debug_In_Terminal, (file: Uri) => {
+                sendTelemetryEvent(EventName.DEBUG_IN_TERMINAL_BUTTON);
                 this.debugService.startDebugging(undefined, {
                     name: `Debug ${path.basename(file.fsPath)}`,
                     type: 'python',

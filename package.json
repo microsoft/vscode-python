@@ -332,10 +332,7 @@
             {
                 "category": "Python",
                 "command": "python.execInTerminal-icon",
-                "icon": {
-                    "dark": "resources/dark/run-file.svg",
-                    "light": "resources/light/run-file.svg"
-                },
+                "icon": "$(play)",
                 "title": "%python.command.python.execInTerminal.title%"
             },
             {
