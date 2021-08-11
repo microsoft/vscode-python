@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import * as vscode from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/browser';
@@ -8,9 +11,12 @@ interface BrowserConfig {
     distUrl: string; // URL to Pylance's dist folder.
 }
 
-declare interface DedicatedWorkerGlobalScope {}
-
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+    // Run in a promise and return early so that VS Code can go activate Pylance.
+    runPylance(context);
+}
+
+async function runPylance(context: vscode.ExtensionContext): Promise<void> {
     const pylanceExtension = vscode.extensions.getExtension<ILSExtensionApi>(PYLANCE_EXTENSION_ID);
     const pylanceApi = await pylanceExtension?.activate();
     if (!pylanceApi?.languageServerFolder) {
@@ -20,7 +26,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const { path: distUrl } = await pylanceApi.languageServerFolder();
 
     try {
-        const worker = new Worker(`${distUrl}/browser.server.js`);
+        const worker = new Worker(`${distUrl}/browser.server.bundle.js`);
 
         // Pass the configuration as the first message to the worker so it can
         // have info like the URL of the dist folder early enough.

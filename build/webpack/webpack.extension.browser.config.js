@@ -1,68 +1,74 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// @ts-check
+
 'use strict';
 
 const path = require('path');
-// eslint-disable-next-line camelcase
-const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
-const constants = require('../constants');
-const common = require('./common');
 
-const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.browser.json');
-// Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via
-// NormalModuleReplacementPlugin. We need to ensure they do not get bundled into the output
-// (as they are large).
-const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
-const config = {
-    mode: 'production',
-    target: 'webworker',
+const packageRoot = path.resolve(__dirname, '..', '..');
+const outDir = path.resolve(packageRoot, 'dist');
+
+/** @type {(env: any, argv: { mode: 'production' | 'development' | 'none' }) => import('webpack').Configuration} */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const nodeConfig = (_, { mode }) => ({
+    context: packageRoot,
     entry: {
         extension: './src/client/browser/extension.ts',
     },
+    target: 'webworker',
+    output: {
+        filename: '[name].browser.js',
+        path: outDir,
+        libraryTarget: 'commonjs2',
+        devtoolModuleFilenameTemplate: '../../[resource-path]',
+    },
     devtool: 'source-map',
-    node: {
-        __dirname: false,
+    // stats: {
+    //     all: false,
+    //     errors: true,
+    //     warnings: true,
+    // },
+    resolve: {
+        extensions: ['.ts', '.js'],
+    },
+    externals: {
+        vscode: 'commonjs vscode',
+
+        // These dependencies are ignored because we don't use them, and App Insights has try-catch protecting their loading if they don't exist
+        // See: https://github.com/microsoft/vscode-extension-telemetry/issues/41#issuecomment-598852991
+        'applicationinsights-native-metrics': 'commonjs applicationinsights-native-metrics',
+        '@opentelemetry/tracing': 'commonjs @opentelemetry/tracing',
     },
     module: {
         rules: [
             {
                 test: /\.ts$/,
-                use: [
-                    {
-                        loader: path.join(__dirname, 'loaders', 'externalizeDependencies.js'),
-                    },
-                ],
+                loader: 'ts-loader',
+                options: {
+                    configFile: 'tsconfig.json',
+                },
             },
             {
-                test: /\.ts$/,
-                exclude: /node_modules/,
-                use: [
-                    {
-                        loader: 'ts-loader',
-                    },
-                ],
+                test: /\.node$/,
+                loader: 'node-loader',
             },
         ],
     },
-    externals: ['vscode', 'commonjs', ...existingModulesInOutDir],
-    plugins: [...common.getDefaultPlugins('extension')],
-    resolve: {
-        alias: {
-            // Pointing pdfkit to a dummy js file so webpack doesn't fall over.
-            // Since pdfkit has been externalized (it gets updated with the valid code by copying the pdfkit files
-            // into the right destination).
-            pdfkit: path.resolve(__dirname, 'pdfkit.js'),
-        },
-        extensions: ['.ts', '.js'],
-        plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })],
-    },
-    output: {
-        filename: '[name].browser.js',
-        path: path.resolve(constants.ExtensionRootDir, 'out', 'client'),
-        libraryTarget: 'commonjs2',
-        devtoolModuleFilenameTemplate: '../../[resource-path]',
-    },
-};
+    // optimization: {
+    //     usedExports: true,
+    //     splitChunks: {
+    //         cacheGroups: {
+    //             defaultVendors: {
+    //                 name: 'vendor',
+    //                 test: /[\\/]node_modules[\\/]/,
+    //                 chunks: 'all',
+    //                 priority: -10,
+    //             },
+    //         },
+    //     },
+    // },
+});
 
-exports.default = config;
+module.exports = nodeConfig;
