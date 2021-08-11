@@ -45,8 +45,6 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
 
     private readonly rules: IInterpreterAutoSelectionRule[] = [];
 
-    private didCallInterpreterAutoselection = false;
-
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
@@ -129,14 +127,10 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
             await this.initializeStore(resource);
             await this.clearWorkspaceStoreIfInvalid(resource);
 
-            if (!this.didCallInterpreterAutoselection) {
-                if (await this.experimentService.inExperiment(EnvironmentSorting.experiment)) {
-                    await this.autoselectInterpreterWithLocators(resource);
-                } else {
-                    await this.autoselectInterpreterWithRules(resource);
-                }
-
-                this.didCallInterpreterAutoselection = true;
+            if (await this.experimentService.inExperiment(EnvironmentSorting.experiment)) {
+                await this.autoselectInterpreterWithLocators(resource);
+            } else {
+                await this.autoselectInterpreterWithRules(resource);
             }
 
             deferred.resolve();
@@ -247,6 +241,12 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         return undefined;
     }
 
+    private getAutoSelectionInterpretersQueryState(): IPersistentState<boolean | undefined> {
+        const key = `autoSelectionInterpretersQueried`;
+
+        return this.stateFactory.createWorkspacePersistentState(key, undefined);
+    }
+
     private async autoselectInterpreterWithRules(resource: Resource): Promise<void> {
         await this.userDefinedInterpreter.autoSelectInterpreter(resource, this);
 
@@ -266,7 +266,11 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
      * As such, we can sort interpreters based on what it returns.
      */
     private async autoselectInterpreterWithLocators(resource: Resource): Promise<void> {
-        const interpreters = await this.interpreterService.getInterpreters(resource, { ignoreCache: true });
+        // Do not perform a full interpreter search if we already have cached interpreters for this workspace.
+        const queriedState = this.getAutoSelectionInterpretersQueryState();
+        const interpreters = await this.interpreterService.getInterpreters(resource, {
+            ignoreCache: queriedState.value !== true,
+        });
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
 
         // When auto-selecting an intepreter for a workspace, we either want to return a local one
@@ -283,6 +287,8 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         } else {
             this.setGlobalInterpreter(filteredInterpreters[0]);
         }
+
+        queriedState.updateValue(true);
 
         this.didAutoSelectedInterpreterEmitter.fire();
     }

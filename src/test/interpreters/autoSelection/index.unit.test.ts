@@ -167,64 +167,6 @@ suite('Interpreters - Auto Selection', () => {
             expect(eventFired).to.deep.equal(true, 'event not fired');
             verify(userDefinedInterpreter.autoSelectInterpreter(undefined, autoSelectionService)).once();
         });
-
-        test('Rules are called if it is the first time auto-selection is called', async () => {
-            const resource = Uri.parse('resource');
-            const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
-
-            autoSelectionService = new InterpreterAutoSelectionServiceTest(
-                instance(workspaceService),
-                instance(stateFactory),
-                instance(fs),
-                instance(experiments),
-                instance(interpreterService),
-                interpreterComparer,
-                instance(systemInterpreter),
-                instance(currentPathInterpreter),
-                instance(winRegInterpreter),
-                instance(cachedPaths),
-                instance(userDefinedInterpreter),
-                instance(workspaceInterpreter),
-                instance(proxy),
-                instance(helper),
-            );
-
-            autoSelectionService.initializeStore = () => Promise.resolve();
-
-            await autoSelectionService.autoSelectInterpreter(resource);
-
-            verify(userDefinedInterpreter.autoSelectInterpreter(resource, autoSelectionService)).once();
-        });
-
-        test('Rules are only called once if auto-selection is called multiple times', async () => {
-            const resource = Uri.parse('resource');
-            const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
-
-            autoSelectionService = new InterpreterAutoSelectionServiceTest(
-                instance(workspaceService),
-                instance(stateFactory),
-                instance(fs),
-                instance(experiments),
-                instance(interpreterService),
-                interpreterComparer,
-                instance(systemInterpreter),
-                instance(currentPathInterpreter),
-                instance(winRegInterpreter),
-                instance(cachedPaths),
-                instance(userDefinedInterpreter),
-                instance(workspaceInterpreter),
-                instance(proxy),
-                instance(helper),
-            );
-
-            autoSelectionService.initializeStore = () => Promise.resolve();
-
-            await autoSelectionService.autoSelectInterpreter(resource);
-
-            await autoSelectionService.autoSelectInterpreter(resource);
-
-            verify(userDefinedInterpreter.autoSelectInterpreter(resource, autoSelectionService)).once();
-        });
     });
 
     suite('When using locator-based auto-selection', () => {
@@ -326,11 +268,19 @@ suite('Interpreters - Auto Selection', () => {
             verify(state.updateValue(systemEnv)).once();
         });
 
-        test('Locators are called if it is the first time auto-selection is called', async () => {
+        test('getInterpreters is called with ignoreCache at true if there is no value set in the workspace persistent state', async () => {
             const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
+            const options: { ignoreCache: boolean }[] = [];
+            const queryState = mock(PersistentState) as PersistentState<boolean | undefined>;
 
-            when(interpreterService.getInterpreters(resource, anything())).thenCall(() =>
-                Promise.resolve([
+            when(queryState.value).thenReturn(undefined);
+            when(stateFactory.createWorkspacePersistentState<boolean | undefined>(anyString(), undefined)).thenReturn(
+                instance(queryState),
+            );
+            when(interpreterService.getInterpreters(resource, anything())).thenCall((_, opts) => {
+                options.push(opts);
+
+                return Promise.resolve([
                     {
                         envType: EnvironmentType.Conda,
                         envPath: path.join('some', 'conda', 'env'),
@@ -341,8 +291,8 @@ suite('Interpreters - Auto Selection', () => {
                         envPath: path.join('some', 'pipenv', 'env'),
                         version: { major: 3, minor: 10, patch: 0 },
                     } as PythonEnvironment,
-                ]),
-            );
+                ]);
+            });
 
             autoSelectionService = new InterpreterAutoSelectionServiceTest(
                 instance(workspaceService),
@@ -366,13 +316,22 @@ suite('Interpreters - Auto Selection', () => {
             await autoSelectionService.autoSelectInterpreter(resource);
 
             verify(interpreterService.getInterpreters(resource, anything())).once();
+            expect(options).to.deep.equal([{ ignoreCache: true }], 'getInterpreters options are different');
         });
 
-        test('Locators are only called once if auto-selection is called multiple times', async () => {
+        test('getInterpreters is called with ignoreCache at false if there is a value set in the workspace persistent state', async () => {
             const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
+            const options: { ignoreCache: boolean }[] = [];
+            const queryState = mock(PersistentState) as PersistentState<boolean | undefined>;
 
-            when(interpreterService.getInterpreters(resource, anything())).thenCall(() =>
-                Promise.resolve([
+            when(queryState.value).thenReturn(true);
+            when(stateFactory.createWorkspacePersistentState<boolean | undefined>(anyString(), undefined)).thenReturn(
+                instance(queryState),
+            );
+            when(interpreterService.getInterpreters(resource, anything())).thenCall((_, opts) => {
+                options.push(opts);
+
+                return Promise.resolve([
                     {
                         envType: EnvironmentType.Conda,
                         envPath: path.join('some', 'conda', 'env'),
@@ -383,8 +342,8 @@ suite('Interpreters - Auto Selection', () => {
                         envPath: path.join('some', 'pipenv', 'env'),
                         version: { major: 3, minor: 10, patch: 0 },
                     } as PythonEnvironment,
-                ]),
-            );
+                ]);
+            });
 
             autoSelectionService = new InterpreterAutoSelectionServiceTest(
                 instance(workspaceService),
@@ -407,9 +366,8 @@ suite('Interpreters - Auto Selection', () => {
 
             await autoSelectionService.autoSelectInterpreter(resource);
 
-            await autoSelectionService.autoSelectInterpreter(resource);
-
             verify(interpreterService.getInterpreters(resource, anything())).once();
+            expect(options).to.deep.equal([{ ignoreCache: false }], 'getInterpreters options are different');
         });
     });
 
