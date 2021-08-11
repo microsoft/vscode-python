@@ -9,11 +9,6 @@ import { EnvironmentActivationService } from './activation/service';
 import { IEnvironmentActivationService } from './activation/types';
 import { InterpreterAutoSelectionService } from './autoSelection/index';
 import { InterpreterAutoSelectionProxyService } from './autoSelection/proxy';
-import { CachedInterpretersAutoSelectionRule } from './autoSelection/rules/cached';
-import { CurrentPathInterpretersAutoSelectionRule } from './autoSelection/rules/currentPath';
-import { SettingsInterpretersAutoSelectionRule } from './autoSelection/rules/settings';
-import { SystemWideInterpretersAutoSelectionRule } from './autoSelection/rules/system';
-import { WindowsRegistryInterpretersAutoSelectionRule } from './autoSelection/rules/winRegistry';
 import { WorkspaceVirtualEnvInterpretersAutoSelectionRule } from './autoSelection/rules/workspaceEnv';
 import {
     AutoSelectionRule,
@@ -111,33 +106,8 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
 
     serviceManager.addSingleton<IInterpreterAutoSelectionRule>(
         IInterpreterAutoSelectionRule,
-        CurrentPathInterpretersAutoSelectionRule,
-        AutoSelectionRule.currentPath,
-    );
-    serviceManager.addSingleton<IInterpreterAutoSelectionRule>(
-        IInterpreterAutoSelectionRule,
-        SystemWideInterpretersAutoSelectionRule,
-        AutoSelectionRule.systemWide,
-    );
-    serviceManager.addSingleton<IInterpreterAutoSelectionRule>(
-        IInterpreterAutoSelectionRule,
-        WindowsRegistryInterpretersAutoSelectionRule,
-        AutoSelectionRule.windowsRegistry,
-    );
-    serviceManager.addSingleton<IInterpreterAutoSelectionRule>(
-        IInterpreterAutoSelectionRule,
         WorkspaceVirtualEnvInterpretersAutoSelectionRule,
         AutoSelectionRule.workspaceVirtualEnvs,
-    );
-    serviceManager.addSingleton<IInterpreterAutoSelectionRule>(
-        IInterpreterAutoSelectionRule,
-        CachedInterpretersAutoSelectionRule,
-        AutoSelectionRule.cachedInterpreters,
-    );
-    serviceManager.addSingleton<IInterpreterAutoSelectionRule>(
-        IInterpreterAutoSelectionRule,
-        SettingsInterpretersAutoSelectionRule,
-        AutoSelectionRule.settings,
     );
     serviceManager.addSingleton<IInterpreterAutoSelectionService>(
         IInterpreterAutoSelectionService,

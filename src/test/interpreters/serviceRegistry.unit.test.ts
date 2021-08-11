@@ -9,11 +9,6 @@ import { EnvironmentActivationService } from '../../client/interpreter/activatio
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSelection';
 import { InterpreterAutoSelectionProxyService } from '../../client/interpreter/autoSelection/proxy';
-import { CachedInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/cached';
-import { CurrentPathInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/currentPath';
-import { SettingsInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/settings';
-import { SystemWideInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/system';
-import { WindowsRegistryInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/winRegistry';
 import { WorkspaceVirtualEnvInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/workspaceEnv';
 import {
     AutoSelectionRule,
@@ -82,20 +77,11 @@ suite('Interpreters - Service Registry', () => {
 
             [IExtensionSingleActivationService, InterpreterLocatorProgressStatubarHandler],
 
-            [IInterpreterAutoSelectionRule, CurrentPathInterpretersAutoSelectionRule, AutoSelectionRule.currentPath],
-            [IInterpreterAutoSelectionRule, SystemWideInterpretersAutoSelectionRule, AutoSelectionRule.systemWide],
-            [
-                IInterpreterAutoSelectionRule,
-                WindowsRegistryInterpretersAutoSelectionRule,
-                AutoSelectionRule.windowsRegistry,
-            ],
             [
                 IInterpreterAutoSelectionRule,
                 WorkspaceVirtualEnvInterpretersAutoSelectionRule,
                 AutoSelectionRule.workspaceVirtualEnvs,
             ],
-            [IInterpreterAutoSelectionRule, CachedInterpretersAutoSelectionRule, AutoSelectionRule.cachedInterpreters],
-            [IInterpreterAutoSelectionRule, SettingsInterpretersAutoSelectionRule, AutoSelectionRule.settings],
             [IInterpreterAutoSelectionProxyService, InterpreterAutoSelectionProxyService],
             [IInterpreterAutoSelectionService, InterpreterAutoSelectionService],
 
