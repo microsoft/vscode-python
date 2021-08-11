@@ -67,7 +67,7 @@ gulp.task('webpack', async () => {
     // Build node_modules.
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.browser.config.js', 'browser');
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.browser.config.js', 'browser');
 });
 
 gulp.task('addExtensionPackDependencies', async () => {
