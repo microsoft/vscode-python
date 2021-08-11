@@ -44,11 +44,6 @@ export enum TorchProfiler {
     experiment = 'PythonPyTorchProfiler',
 }
 
-// Experiment to use the new environment sorting algorithm in the interpreter quickpick.
-export enum EnvironmentSorting {
-    experiment = 'pythonSortEnvs',
-}
-
 // Experiment to show the run failed tests button
 export enum ShowRunFailedTests {
     experiment = 'pythonRunFailedTestsButtonDisplayed',
