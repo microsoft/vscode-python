@@ -7,10 +7,8 @@ import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
-import { DeprecatePythonPath, EnvironmentSorting } from '../../../client/common/experiments/groups';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IExperimentService } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentTypeComparer } from '../../../client/interpreter/configuration/environmentTypeComparer';
 import { InterpreterSelector } from '../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
@@ -51,9 +49,7 @@ class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
 suite('Interpreters - selector', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
-    let oldComparer: TypeMoq.IMock<IInterpreterComparer>;
     let newComparer: TypeMoq.IMock<IInterpreterComparer>;
-    let experimentsManager: TypeMoq.IMock<IExperimentService>;
     const ignoreCache = false;
     class TestInterpreterSelector extends InterpreterSelector {
         public async suggestionToQuickPickItem(
@@ -67,9 +63,6 @@ suite('Interpreters - selector', () => {
     let selector: TestInterpreterSelector;
 
     setup(() => {
-        experimentsManager = TypeMoq.Mock.ofType<IExperimentService>();
-        experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
-        oldComparer = TypeMoq.Mock.ofType<IInterpreterComparer>();
         newComparer = TypeMoq.Mock.ofType<IInterpreterComparer>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
@@ -77,29 +70,16 @@ suite('Interpreters - selector', () => {
             .setup((x) => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
             .returns((a: string, b: string) => a === b);
 
-        oldComparer.setup((c) => c.compare(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => 0);
         newComparer.setup((c) => c.compare(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => 0);
-        selector = new TestInterpreterSelector(
-            interpreterService.object,
-            oldComparer.object,
-            newComparer.object,
-            new PathUtils(false),
-            experimentsManager.object,
-        );
+        selector = new TestInterpreterSelector(interpreterService.object, newComparer.object, new PathUtils(false));
     });
 
     [true, false].forEach((isWindows) => {
         test(`Suggestions (${isWindows ? 'Windows' : 'Non-Windows'})`, async () => {
-            experimentsManager
-                .setup((e) => e.inExperiment(EnvironmentSorting.experiment))
-                .returns(() => Promise.resolve(false));
-
             selector = new TestInterpreterSelector(
                 interpreterService.object,
-                oldComparer.object,
                 newComparer.object,
                 new PathUtils(isWindows),
-                experimentsManager.object,
             );
 
             const initial: PythonEnvironment[] = [
@@ -141,53 +121,7 @@ suite('Interpreters - selector', () => {
         });
     });
 
-    test('Should use the old comparison logic when not in the EnvironmentSorting experiment', async () => {
-        const environments: PythonEnvironment[] = [
-            { displayName: '1', path: 'c:/path1/path1', envType: EnvironmentType.Unknown },
-            { displayName: '2', path: 'c:/path1/path1', envType: EnvironmentType.Unknown },
-            { displayName: '2', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
-            { displayName: '2 (virtualenv)', path: 'c:/path2/path2', envType: EnvironmentType.VirtualEnv },
-            { displayName: '3', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
-            { displayName: '4', path: 'c:/path4/path4', envType: EnvironmentType.Conda },
-        ].map((item) => ({ ...info, ...item }));
-        interpreterService
-            .setup((x) => x.getInterpreters(TypeMoq.It.isAny(), { onSuggestion: true, ignoreCache }))
-            .returns(() => new Promise((resolve) => resolve(environments)));
-
-        experimentsManager
-            .setup((e) => e.inExperiment(EnvironmentSorting.experiment))
-            .returns(() => Promise.resolve(false));
-
-        await selector.getSuggestions(undefined, ignoreCache);
-
-        oldComparer.verify((c) => c.compare(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.atLeastOnce());
-        newComparer.verify((c) => c.compare(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
-    });
-
-    test('Should use the new comparison logic when in the EnvironmentSorting experiment', async () => {
-        const environments: PythonEnvironment[] = [
-            { displayName: '1', path: 'c:/path1/path1', envType: EnvironmentType.Unknown },
-            { displayName: '2', path: 'c:/path1/path1', envType: EnvironmentType.Unknown },
-            { displayName: '2', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
-            { displayName: '2 (virtualenv)', path: 'c:/path2/path2', envType: EnvironmentType.VirtualEnv },
-            { displayName: '3', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
-            { displayName: '4', path: 'c:/path4/path4', envType: EnvironmentType.Conda },
-        ].map((item) => ({ ...info, ...item }));
-        interpreterService
-            .setup((x) => x.getInterpreters(TypeMoq.It.isAny(), { onSuggestion: true, ignoreCache }))
-            .returns(() => new Promise((resolve) => resolve(environments)));
-
-        experimentsManager
-            .setup((e) => e.inExperiment(EnvironmentSorting.experiment))
-            .returns(() => Promise.resolve(true));
-
-        await selector.getSuggestions(undefined, ignoreCache);
-
-        oldComparer.verify((c) => c.compare(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
-        newComparer.verify((c) => c.compare(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.atLeastOnce());
-    });
-
-    test('Should sort environments with local ones first when in the EnvironmentSorting experiment', async () => {
+    test('Should sort environments with local ones first', async () => {
         const workspacePath = path.join('path', 'to', 'workspace');
 
         const environments: PythonEnvironment[] = [
@@ -222,10 +156,6 @@ suite('Interpreters - selector', () => {
             .setup((x) => x.getInterpreters(TypeMoq.It.isAny(), { onSuggestion: true, ignoreCache }))
             .returns(() => new Promise((resolve) => resolve(environments)));
 
-        experimentsManager
-            .setup((e) => e.inExperiment(EnvironmentSorting.experiment))
-            .returns(() => Promise.resolve(true));
-
         const interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
         interpreterHelper
             .setup((i) => i.getActiveWorkspaceUri(TypeMoq.It.isAny()))
@@ -235,10 +165,8 @@ suite('Interpreters - selector', () => {
 
         selector = new TestInterpreterSelector(
             interpreterService.object,
-            oldComparer.object,
             environmentTypeComparer,
             new PathUtils(getOSType() === OSType.Windows),
-            experimentsManager.object,
         );
 
         const result = await selector.getSuggestions(undefined, ignoreCache);
