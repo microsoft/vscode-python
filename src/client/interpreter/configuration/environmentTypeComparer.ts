@@ -67,7 +67,7 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
             return 1;
         }
 
-        // Check alphabetical order (same way as the InterpreterComparer class).
+        // Check alphabetical order.
         const nameA = getSortName(a, this.interpreterHelper);
         const nameB = getSortName(b, this.interpreterHelper);
         if (nameA === nameB) {
@@ -78,9 +78,7 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
     }
 }
 
-// This function is exported because the InterpreterComparer class uses the same logic.
-// Once it gets removed as we ramp up #16520, we can restrict this function to this file.
-export function getSortName(info: PythonEnvironment, interpreterHelper: IInterpreterHelper): string {
+function getSortName(info: PythonEnvironment, interpreterHelper: IInterpreterHelper): string {
     const sortNameParts: string[] = [];
     const envSuffixParts: string[] = [];
 

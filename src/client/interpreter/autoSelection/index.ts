@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
@@ -15,7 +15,7 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { EnvTypeHeuristic, getEnvTypeHeuristic } from '../configuration/environmentTypeComparer';
-import { InterpreterComparisonType, IInterpreterComparer } from '../configuration/types';
+import { IInterpreterComparer } from '../configuration/types';
 import { IInterpreterHelper, IInterpreterService } from '../contracts';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSelectionProxyService } from './types';
 
@@ -42,9 +42,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IInterpreterComparer)
-        @named(InterpreterComparisonType.EnvType)
-        private readonly envTypeComparer: IInterpreterComparer,
+        @inject(IInterpreterComparer) private readonly envTypeComparer: IInterpreterComparer,
         @inject(IInterpreterAutoSelectionProxyService) proxy: IInterpreterAutoSelectionProxyService,
         @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
     ) {

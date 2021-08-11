@@ -14,7 +14,6 @@ import {
     IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { EnvironmentTypeComparer } from '../../client/interpreter/configuration/environmentTypeComparer';
-import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
 import { ResetInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/resetInterpreter';
 import { SetInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/setInterpreter';
 import { SetShebangInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/setShebangInterpreter';
@@ -24,7 +23,6 @@ import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/config
 import {
     IInterpreterComparer,
     IInterpreterSelector,
-    InterpreterComparisonType,
     IPythonPathUpdaterServiceFactory,
     IPythonPathUpdaterServiceManager,
 } from '../../client/interpreter/configuration/types';
@@ -69,8 +67,7 @@ suite('Interpreters - Service Registry', () => {
             [IInterpreterSelector, InterpreterSelector],
             [IShebangCodeLensProvider, ShebangCodeLensProvider],
             [IInterpreterHelper, InterpreterHelper],
-            [IInterpreterComparer, InterpreterComparer, InterpreterComparisonType.Default],
-            [IInterpreterComparer, EnvironmentTypeComparer, InterpreterComparisonType.EnvType],
+            [IInterpreterComparer, EnvironmentTypeComparer],
 
             [IExtensionSingleActivationService, InterpreterLocatorProgressStatubarHandler],
 

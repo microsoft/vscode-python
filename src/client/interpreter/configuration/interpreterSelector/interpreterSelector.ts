@@ -3,17 +3,12 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Disposable, Uri } from 'vscode';
 import { IPathUtils, Resource } from '../../../common/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { IInterpreterService } from '../../contracts';
-import {
-    IInterpreterComparer,
-    IInterpreterQuickPickItem,
-    IInterpreterSelector,
-    InterpreterComparisonType,
-} from '../types';
+import { IInterpreterComparer, IInterpreterQuickPickItem, IInterpreterSelector } from '../types';
 
 @injectable()
 export class InterpreterSelector implements IInterpreterSelector {
@@ -21,9 +16,7 @@ export class InterpreterSelector implements IInterpreterSelector {
 
     constructor(
         @inject(IInterpreterService) private readonly interpreterManager: IInterpreterService,
-        @inject(IInterpreterComparer)
-        @named(InterpreterComparisonType.EnvType)
-        private readonly envTypeComparer: IInterpreterComparer,
+        @inject(IInterpreterComparer) private readonly envTypeComparer: IInterpreterComparer,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
     ) {}
 

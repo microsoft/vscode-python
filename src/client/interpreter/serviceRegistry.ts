@@ -11,7 +11,6 @@ import { InterpreterAutoSelectionService } from './autoSelection/index';
 import { InterpreterAutoSelectionProxyService } from './autoSelection/proxy';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSelectionProxyService } from './autoSelection/types';
 import { EnvironmentTypeComparer } from './configuration/environmentTypeComparer';
-import { InterpreterComparer } from './configuration/interpreterComparer';
 import { ResetInterpreterCommand } from './configuration/interpreterSelector/commands/resetInterpreter';
 import { SetInterpreterCommand } from './configuration/interpreterSelector/commands/setInterpreter';
 import { SetShebangInterpreterCommand } from './configuration/interpreterSelector/commands/setShebangInterpreter';
@@ -21,7 +20,6 @@ import { PythonPathUpdaterServiceFactory } from './configuration/pythonPathUpdat
 import {
     IInterpreterComparer,
     IInterpreterSelector,
-    InterpreterComparisonType,
     IPythonPathUpdaterServiceFactory,
     IPythonPathUpdaterServiceManager,
 } from './configuration/types';
@@ -82,16 +80,7 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
     serviceManager.addSingleton<IShebangCodeLensProvider>(IShebangCodeLensProvider, ShebangCodeLensProvider);
     serviceManager.addSingleton<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
 
-    serviceManager.addSingleton<IInterpreterComparer>(
-        IInterpreterComparer,
-        InterpreterComparer,
-        InterpreterComparisonType.Default,
-    );
-    serviceManager.addSingleton<IInterpreterComparer>(
-        IInterpreterComparer,
-        EnvironmentTypeComparer,
-        InterpreterComparisonType.EnvType,
-    );
+    serviceManager.addSingleton<IInterpreterComparer>(IInterpreterComparer, EnvironmentTypeComparer);
 
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
