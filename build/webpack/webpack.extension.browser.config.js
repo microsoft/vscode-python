@@ -47,7 +47,7 @@ const nodeConfig = (_, { mode }) => ({
                 test: /\.ts$/,
                 loader: 'ts-loader',
                 options: {
-                    configFile: 'tsconfig.json',
+                    configFile: 'tsconfig.browser.json',
                 },
             },
             {

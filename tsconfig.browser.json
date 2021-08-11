@@ -1,6 +1,6 @@
 {
-        "extends": "./tsconfig.extension.json",
+        "extends": "./tsconfig.json",
         "include": [
-            "./src/browser"
+            "./src/client/browser"
         ]
 }
