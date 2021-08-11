@@ -241,8 +241,9 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         return undefined;
     }
 
-    private getAutoSelectionInterpretersQueryState(): IPersistentState<boolean | undefined> {
-        const key = `autoSelectionInterpretersQueried`;
+    private getAutoSelectionInterpretersQueryState(resource: Resource): IPersistentState<boolean | undefined> {
+        const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
+        const key = `autoSelectionInterpretersQueried-${workspaceUri?.folderUri.fsPath || 'global'}`;
 
         return this.stateFactory.createWorkspacePersistentState(key, undefined);
     }
@@ -267,7 +268,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
      */
     private async autoselectInterpreterWithLocators(resource: Resource): Promise<void> {
         // Do not perform a full interpreter search if we already have cached interpreters for this workspace.
-        const queriedState = this.getAutoSelectionInterpretersQueryState();
+        const queriedState = this.getAutoSelectionInterpretersQueryState(resource);
         const interpreters = await this.interpreterService.getInterpreters(resource, {
             ignoreCache: queriedState.value !== true,
         });
