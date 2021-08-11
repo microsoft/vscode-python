@@ -66,7 +66,6 @@ export class UnittestController implements ITestFrameworkController {
                     }
 
                     if (rawTestData.tests.length > 0) {
-                        item.description = item.id;
                         updateTestItemFromRawData(item, testController, this.idToRawData, item.id, [rawTestData]);
                     } else {
                         this.idToRawData.delete(item.id);

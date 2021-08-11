@@ -51,7 +51,6 @@ export function createWorkspaceRootTestItem(
     options: { id: string; label: string; uri: Uri; runId: string; parentId?: string; rawId?: string },
 ): TestItem {
     const testItem = testController.createTestItem(options.id, options.label, options.uri);
-    testItem.description = options.uri.fsPath;
     testItem.canResolveChildren = true;
     idToRawData.set(options.id, {
         ...options,
@@ -112,7 +111,6 @@ function createFolderOrFileTestItem(
     const label = path.basename(fullPath);
     const testItem = testController.createTestItem(fullPath, label, uri);
 
-    testItem.description = fullPath;
     testItem.canResolveChildren = true;
 
     idToRawData.set(testItem.id, {
@@ -139,7 +137,6 @@ function updateFolderOrFileTestItem(
 
     item.label = path.basename(fullPath);
 
-    item.description = fullPath;
     item.canResolveChildren = true;
 
     idToRawData.set(item.id, {
@@ -173,7 +170,6 @@ function createCollectionTestItem(
 
     const testItem = testController.createTestItem(id, label, uri);
 
-    testItem.description = id;
     testItem.canResolveChildren = true;
 
     idToRawData.set(testItem.id, {
@@ -193,9 +189,6 @@ function updateCollectionTestItem(
     testRoot: string,
     rawData: RawTestSuite | RawTestFunction,
 ): void {
-    // id can look like test_something.py::SomeClass
-    const id = path.join(testRoot, rawData.id);
-
     // We need the actual document path so we can set the location for the tests. This will be
     // used to provide test result status next to the tests.
     const documentPath = path.join(testRoot, rawData.id.substr(0, rawData.id.indexOf(':')));
@@ -206,7 +199,6 @@ function updateCollectionTestItem(
     const parentId = getParentIdFromRawParentId(idToRawData, testRoot, rawData);
     const runId = getRunIdFromRawData(rawData);
 
-    item.description = id;
     item.canResolveChildren = true;
 
     idToRawData.set(item.id, {
@@ -242,7 +234,6 @@ function createTestCaseItem(
 
     const testItem = testController.createTestItem(id, label, uri);
 
-    testItem.description = id;
     testItem.canResolveChildren = false;
     testItem.range = getRangeFromRawSource(rawData);
 
@@ -263,11 +254,6 @@ function updateTestCaseItem(
     testRoot: string,
     rawData: RawTest,
 ): void {
-    // id can look like:
-    // test_something.py::SomeClass::someTest
-    // test_something.py::SomeClass::someTest[x1]
-    const id = path.join(testRoot, rawData.id);
-
     // We need the actual document path so we can set the location for the tests. This will be
     // used to provide test result status next to the tests.
     const documentPath = path.join(testRoot, rawData.source.substr(0, rawData.source.indexOf(':')));
@@ -278,7 +264,6 @@ function updateTestCaseItem(
     const parentId = getParentIdFromRawParentId(idToRawData, testRoot, rawData);
     const runId = getRunIdFromRawData(rawData);
 
-    item.description = id;
     item.canResolveChildren = false;
     item.range = getRangeFromRawSource(rawData);
 

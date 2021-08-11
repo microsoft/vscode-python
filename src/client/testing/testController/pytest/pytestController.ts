@@ -73,7 +73,6 @@ export class PytestController implements ITestFrameworkController {
                     // This is the workspace root node
                     if (rawTestData.length === 1) {
                         if (rawTestData[0].tests.length > 0) {
-                            item.description = item.id;
                             updateTestItemFromRawData(item, testController, this.idToRawData, item.id, rawTestData);
                         } else {
                             this.idToRawData.delete(item.id);
@@ -81,8 +80,6 @@ export class PytestController implements ITestFrameworkController {
                             return Promise.resolve();
                         }
                     } else {
-                        item.description = workspace.uri.fsPath;
-
                         // To figure out which top level nodes have to removed. First we get all the
                         // existing nodes. Then if they have data we keep those nodes, Nodes without
                         // data will be removed after we check the raw data.
