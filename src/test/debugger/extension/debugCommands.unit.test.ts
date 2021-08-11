@@ -53,15 +53,7 @@ suite('Debugging - commands', () => {
                 callback = cb;
             });
         debugService
-            .setup((d) =>
-                d.startDebugging(undefined, {
-                    name: `Debug test.py`,
-                    type: 'python',
-                    request: 'launch',
-                    program: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'test.py'),
-                    console: 'integratedTerminal',
-                }),
-            )
+            .setup((d) => d.startDebugging(undefined, typemoq.It.isAny()))
             .returns(() => Promise.resolve(true))
             .verifiable(typemoq.Times.once());
 
