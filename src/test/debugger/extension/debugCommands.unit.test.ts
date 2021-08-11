@@ -3,6 +3,7 @@
 
 import * as path from 'path';
 import * as typemoq from 'typemoq';
+import * as sinon from 'sinon';
 import { Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { ICommandManager, IDebugService } from '../../../client/common/application/types';
@@ -10,6 +11,7 @@ import { Commands } from '../../../client/common/constants';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { DebugCommands } from '../../../client/debugger/extension/debugCommands';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+import * as telemetry from '../../../client/telemetry';
 
 suite('Debugging - commands', () => {
     let commandManager: typemoq.IMock<ICommandManager>;
@@ -22,6 +24,10 @@ suite('Debugging - commands', () => {
         debugService = typemoq.Mock.ofType<IDebugService>();
 
         disposables = typemoq.Mock.ofType<IDisposableRegistry>();
+        sinon.stub(telemetry, 'sendTelemetryEvent').returns();
+    });
+    teardown(() => {
+        sinon.restore();
     });
     test('Test registering debug file command', async () => {
         commandManager
