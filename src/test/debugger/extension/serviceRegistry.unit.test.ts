@@ -31,6 +31,7 @@ import {
     IDebugConfigurationProviderFactory,
     IDebugConfigurationResolver,
 } from '../../../client/debugger/extension/configuration/types';
+import { DebugCommands } from '../../../client/debugger/extension/debugCommands';
 import { ChildProcessAttachEventHandler } from '../../../client/debugger/extension/hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from '../../../client/debugger/extension/hooks/childProcessAttachService';
 import { IChildProcessAttachService, IDebugSessionEventHandlers } from '../../../client/debugger/extension/hooks/types';
@@ -211,6 +212,12 @@ suite('Debugging - Service Registry', () => {
             serviceManager.addSingleton<IAttachProcessProviderFactory>(
                 IAttachProcessProviderFactory,
                 AttachProcessProviderFactory,
+            ),
+        ).once();
+        verify(
+            serviceManager.addSingleton<IExtensionSingleActivationService>(
+                IExtensionSingleActivationService,
+                DebugCommands,
             ),
         ).once();
     });

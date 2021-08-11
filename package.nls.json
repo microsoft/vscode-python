@@ -4,6 +4,7 @@
     "python.command.python.createTerminal.title": "Create Terminal",
     "python.command.python.buildWorkspaceSymbols.title": "Build Workspace Symbols",
     "python.command.python.execInTerminal.title": "Run Python File in Terminal",
+    "python.command.python.debugInTerminal.title": "Debug Python File in Terminal",
     "python.command.python.setInterpreter.title": "Select Interpreter",
     "python.command.python.switchOffInsidersChannel.title": "Switch to Default Channel",
     "python.command.python.switchToDailyChannel.title": "Switch to Insiders Daily Channel",

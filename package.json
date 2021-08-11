@@ -59,6 +59,7 @@
         "onLanguage:python",
         "onDebugResolve:python",
         "onCommand:python.execInTerminal",
+        "onCommand:python.debugInTerminal",
         "onCommand:python.sortImports",
         "onCommand:python.setInterpreter",
         "onCommand:python.setShebangInterpreter",
@@ -197,7 +198,7 @@
                                 "light": "resources/walkthrough/open-folder-light.png",
                                 "dark": "resources/walkthrough/open-folder-dark.png",
                                 "hc": "resources/walkthrough/open-folder-hc.png"
-                               },
+                            },
                             "altText": "Open a folder"
                         },
                         "completionEvents": [
@@ -214,7 +215,7 @@
                                 "light": "resources/walkthrough/open-folder-light.png",
                                 "dark": "resources/walkthrough/open-folder-dark.png",
                                 "hc": "resources/walkthrough/open-folder-hc.png"
-                               },
+                            },
                             "altText": "Open a folder"
                         },
                         "completionEvents": [
@@ -336,6 +337,12 @@
                     "light": "resources/light/run-file.svg"
                 },
                 "title": "%python.command.python.execInTerminal.title%"
+            },
+            {
+                "category": "Python",
+                "command": "python.debugInTerminal",
+                "icon": "$(debug-alt)",
+                "title": "%python.command.python.debugInTerminal.title%"
             },
             {
                 "category": "Python",
@@ -1902,6 +1909,12 @@
                     "command": "python.execInTerminal-icon",
                     "group": "navigation",
                     "title": "%python.command.python.execInTerminal.title%",
+                    "when": "resourceLangId == python && !isInDiffEditor"
+                },
+                {
+                    "command": "python.debugInTerminal",
+                    "group": "navigation",
+                    "title": "%python.command.python.debugInTerminal.title%",
                     "when": "resourceLangId == python && !isInDiffEditor"
                 }
             ],
