@@ -24,7 +24,9 @@ suite('Debugging - commands', () => {
         debugService = typemoq.Mock.ofType<IDebugService>();
 
         disposables = typemoq.Mock.ofType<IDisposableRegistry>();
-        sinon.stub(telemetry, 'sendTelemetryEvent').returns();
+        sinon.stub(telemetry, 'sendTelemetryEvent').callsFake(() => {
+            /** noop */
+        });
     });
     teardown(() => {
         sinon.restore();
